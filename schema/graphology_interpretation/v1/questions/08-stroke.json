@@ -1,0 +1,221 @@
+[
+  {
+    "question_id": "Q_STROKE_APPEARANCE",
+    "version": "1.0.0",
+    "selector_id": "SEL_STROKE_APPEARANCE",
+    "domain_id": "STROKE",
+    "scope": "INDIVIDUAL",
+    "prompt_template_key": "question.q_stroke_appearance",
+    "prompt_text_en": "Which trace appearances can be judged from the image?",
+    "text_origin": "APPLICATION_AUTHORED",
+    "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+    "source_refs": [
+      {
+        "source_id": "IHAS",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "CONTIN",
+        "relationship": "domain_or_term_basis"
+      }
+    ],
+    "answer_mode": "SELECTOR",
+    "answer_owner": "PREMIUM_VISUAL",
+    "model_call_role": "ANSWER",
+    "required_inputs": [
+      "AUTHORIZED_IMAGE",
+      "IDENTIFIED_EVIDENCE_REGION"
+    ],
+    "required_fact_classes": [
+      "AI_VISUAL_DESCRIPTION_NOT_CANONICAL_MEASUREMENT"
+    ],
+    "required_candidate_kinds": [],
+    "minimum_supporting_fact_count": null,
+    "minimum_supporting_association_count": null,
+    "fallback_value_id": null,
+    "answer_state_policy": "ANSWER_STATE_V1",
+    "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+    "report_target": "graphology.stroke",
+    "note": "Pastose-looking is not a measurement of force; camera/ink/nib can contribute.",
+    "order_in_domain": 1,
+    "source_status": "DRAFT_NOT_ACTIVATED",
+    "runtime_status": "DRAFT_NOT_ACTIVE",
+    "enabled": false
+  },
+  {
+    "question_id": "Q_STROKE_SHADING",
+    "version": "1.0.0",
+    "selector_id": "SEL_STROKE_SHADING",
+    "domain_id": "STROKE",
+    "scope": "INDIVIDUAL",
+    "prompt_template_key": "question.q_stroke_shading",
+    "prompt_text_en": "What visible downstroke/upstroke thickness contrast occurs?",
+    "text_origin": "APPLICATION_AUTHORED",
+    "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+    "source_refs": [
+      {
+        "source_id": "IHAS",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "CONTIN",
+        "relationship": "domain_or_term_basis"
+      }
+    ],
+    "answer_mode": "SELECTOR",
+    "answer_owner": "PREMIUM_VISUAL",
+    "model_call_role": "ANSWER",
+    "required_inputs": [
+      "IDENTIFIED_DIRECTIONAL_STROKES",
+      "AUTHORIZED_IMAGE",
+      "IDENTIFIED_EVIDENCE_REGION"
+    ],
+    "required_fact_classes": [
+      "AI_VISUAL_DESCRIPTION_NOT_CANONICAL_MEASUREMENT"
+    ],
+    "required_candidate_kinds": [],
+    "minimum_supporting_fact_count": null,
+    "minimum_supporting_association_count": null,
+    "fallback_value_id": null,
+    "answer_state_policy": "ANSWER_STATE_V1",
+    "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+    "report_target": "graphology.stroke",
+    "note": "Do not infer movement chronology solely from a static trace.",
+    "order_in_domain": 2,
+    "source_status": "DRAFT_NOT_ACTIVATED",
+    "runtime_status": "DRAFT_NOT_ACTIVE",
+    "enabled": false
+  },
+  {
+    "question_id": "Q_STROKE_DARKNESS",
+    "version": "1.0.0",
+    "selector_id": "SEL_STROKE_DARKNESS",
+    "domain_id": "STROKE",
+    "scope": "INDIVIDUAL",
+    "prompt_template_key": "question.q_stroke_darkness",
+    "prompt_text_en": "Which verified ink-darkness variation is relevant?",
+    "text_origin": "APPLICATION_AUTHORED",
+    "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+    "source_refs": [
+      {
+        "source_id": "IHAS",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "CONTIN",
+        "relationship": "domain_or_term_basis"
+      }
+    ],
+    "answer_mode": "SELECTOR",
+    "answer_owner": "PREMIUM_EDITOR",
+    "model_call_role": "ANSWER",
+    "required_inputs": [
+      "CURRENT_REPORT_CANDIDATES"
+    ],
+    "required_fact_classes": [
+      "SELECTION_OR_SYNTHESIS_OF_SUPPLIED_CANDIDATES"
+    ],
+    "required_candidate_kinds": [
+      "INK_APPEARANCE_FACT"
+    ],
+    "minimum_supporting_fact_count": null,
+    "minimum_supporting_association_count": null,
+    "fallback_value_id": null,
+    "answer_state_policy": "ANSWER_STATE_V1",
+    "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+    "report_target": "graphology.stroke",
+    "note": "",
+    "order_in_domain": 3,
+    "source_status": "DRAFT_NOT_ACTIVATED",
+    "runtime_status": "DRAFT_NOT_ACTIVE",
+    "enabled": false
+  },
+  {
+    "question_id": "Q_STROKE_WIDTH",
+    "version": "1.0.0",
+    "selector_id": "SEL_STROKE_WIDTH",
+    "domain_id": "STROKE",
+    "scope": "INDIVIDUAL",
+    "prompt_template_key": "question.q_stroke_width",
+    "prompt_text_en": "Which measured thickness characteristics are reliable enough to explain?",
+    "text_origin": "APPLICATION_AUTHORED",
+    "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+    "source_refs": [
+      {
+        "source_id": "IHAS",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "CONTIN",
+        "relationship": "domain_or_term_basis"
+      }
+    ],
+    "answer_mode": "SELECTOR",
+    "answer_owner": "PREMIUM_EDITOR",
+    "model_call_role": "ANSWER",
+    "required_inputs": [
+      "CURRENT_REPORT_CANDIDATES"
+    ],
+    "required_fact_classes": [
+      "SELECTION_OR_SYNTHESIS_OF_SUPPLIED_CANDIDATES"
+    ],
+    "required_candidate_kinds": [
+      "THICKNESS_FACT"
+    ],
+    "minimum_supporting_fact_count": null,
+    "minimum_supporting_association_count": null,
+    "fallback_value_id": null,
+    "answer_state_policy": "ANSWER_STATE_V1",
+    "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+    "report_target": "graphology.stroke",
+    "note": "",
+    "order_in_domain": 4,
+    "source_status": "DRAFT_NOT_ACTIVATED",
+    "runtime_status": "DRAFT_NOT_ACTIVE",
+    "enabled": false
+  },
+  {
+    "question_id": "Q_STROKE_PRESSURE_LIMIT",
+    "version": "1.0.0",
+    "selector_id": "SEL_STROKE_PRESSURE_LIMIT",
+    "domain_id": "STROKE",
+    "scope": "INDIVIDUAL",
+    "prompt_template_key": "question.q_stroke_pressure_limit",
+    "prompt_text_en": "What can be said about pressure with the available acquisition mode?",
+    "text_origin": "APPLICATION_AUTHORED",
+    "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+    "source_refs": [
+      {
+        "source_id": "IHAS",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "CONTIN",
+        "relationship": "domain_or_term_basis"
+      }
+    ],
+    "answer_mode": "SELECTOR",
+    "answer_owner": "DETERMINISTIC",
+    "model_call_role": "READ_ONLY_CONTEXT_OR_PRECOMPUTED",
+    "required_inputs": [
+      "ACQUISITION_METADATA"
+    ],
+    "required_fact_classes": [
+      "PRECOMPUTED_DESCRIPTION"
+    ],
+    "required_candidate_kinds": [
+      "ACQUISITION_LIMITATION"
+    ],
+    "minimum_supporting_fact_count": null,
+    "minimum_supporting_association_count": null,
+    "fallback_value_id": null,
+    "answer_state_policy": "ANSWER_STATE_V1",
+    "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+    "report_target": "graphology.stroke",
+    "note": "Photo: not measurable as physical force. Original-paper impression and uncalibrated stylus units are not Newtons.",
+    "order_in_domain": 5,
+    "source_status": "DRAFT_NOT_ACTIVATED",
+    "runtime_status": "DRAFT_NOT_ACTIVE",
+    "enabled": false
+  }
+]
