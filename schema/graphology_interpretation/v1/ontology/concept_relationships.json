@@ -13,10 +13,10 @@
   ],
   "relationships": [
     {
-      "relationship_id": "REL_IHAS_THREAD_MORETTI_FILIFORME_NOT_EQUIVALENT",
+      "relationship_id": "REL_IHAS_THREAD_MORETTI_FILIFORME_UNMAPPED",
       "left_concept_id": "IHAS_THREAD",
       "right_concept_id": "MORETTI_FILIFORME",
-      "relationship_type": "NOT_EQUIVALENT",
+      "relationship_type": "UNMAPPED",
       "source_refs": [
         {
           "source_id": "IHAS",
@@ -27,7 +27,7 @@
           "locator": "La pressione"
         }
       ],
-      "rationale": "The frozen research explicitly warns that connector 'thread' and Moretti 'Filiforme' must not be equated by translation alone.",
+      "rationale": "The frozen research warns against equating connector 'thread' and Moretti 'Filiforme' by translation alone; their actual relationship remains unresolved pending source review.",
       "runtime_status": "ONTOLOGY_ONLY"
     }
   ]
