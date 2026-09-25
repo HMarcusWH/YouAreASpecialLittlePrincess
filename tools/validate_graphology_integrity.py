@@ -25,6 +25,24 @@ EXPECTED_PENDING_STAGE={
     ],
 }
 
+EXPECTED_REVIEWED_STAGE={
+    "manifest_status":"REVIEWED_READY_FOR_T15",
+    "production_scope":"COMPLETE_DATABASE_REVIEWED",
+    "t26_status":"DONE",
+    "compiled_runtime_artifact_status":"REVIEWED_READY_FOR_T15",
+    "runtime_activation":False,
+    "artifact_status":"REVIEWED_READY_FOR_T15",
+    "artifact_runtime_activation":False,
+    "required_exclusions":EXPECTED_PENDING_STAGE["required_exclusions"],
+}
+EXPECTED_LINEAGE={
+    "research_import_merge":"f96aa6b54cfaf91f0a8243e7c7e266baa053eedc",
+    "ontology_foundation_merge":"ee2a92c7388bcf5b9aec225a093aef315e300987",
+    "selector_foundation_merge":"8d6003c24473a6cefb2ac13211c778701748d0d3",
+    "traditional_structure_merge":"48897ff35949710d870d0b16096ada5d63c3626d",
+    "database_completion_merge":"c6561b0e7748545751d0107c284810de788c03d5",
+}
+
 def validate(repo: Path) -> list[str]:
     root=repo/"schema/graphology_interpretation/v1"; errors=list(verify_research_baseline(repo))
     manifest=load(root/"manifest.json"); stage_doc=load(root/"stage_contract.json")
@@ -34,6 +52,10 @@ def validate(repo: Path) -> list[str]:
         errors.append("stage contract current stage must remain pending review")
     if stage_doc.get("stages",{}).get("POPULATED_PENDING_REVIEW")!=EXPECTED_PENDING_STAGE:
         errors.append("pending-review stage contract drift")
+    if stage_doc.get("stages",{}).get("REVIEWED_READY_FOR_T15")!=EXPECTED_REVIEWED_STAGE:
+        errors.append("reviewed-ready stage contract drift")
+    if set(stage_doc.get("stages",{}))!={"POPULATED_PENDING_REVIEW","REVIEWED_READY_FOR_T15"}:
+        errors.append("unexpected stage contract entry")
     stage=EXPECTED_PENDING_STAGE
     artifact=load(repo/"schema/premium_interpretation_database_v1.json"); tasks=load(repo/"docs/roadmap/tasks.json")
     sources=load(root/"ontology/sources.json"); schools=load(root/"ontology/schools.json"); domains=load(root/"ontology/domains.json")
@@ -48,6 +70,16 @@ def validate(repo: Path) -> list[str]:
       "compiled_runtime_artifact_status":stage["compiled_runtime_artifact_status"],"runtime_activation":stage["runtime_activation"],
     }.items():
         if manifest.get(key)!=expected: errors.append(f"manifest stage mismatch: {key}")
+    expected_manifest_identity={
+        "database_id":"graphology-interpretation","version":"1.0.0-rc.1",
+        "research_snapshot":"research/graphology/foundations-v0.1",
+        "canonical_feature_database":"schema/graphology_feature_database_v1.json",
+        "compiled_runtime_artifact":"schema/premium_interpretation_database_v1.json",
+        "next_pr":"T15 — OpenAI adapter after T26 review/finalization",
+    }
+    for key,val in expected_manifest_identity.items():
+        if manifest.get(key)!=val: errors.append(f"manifest identity/path drift: {key}")
+    if manifest.get("construction_lineage")!=EXPECTED_LINEAGE: errors.append("manifest construction lineage drift")
     if manifest.get("research_baseline_commit")!="f96aa6b54cfaf91f0a8243e7c7e266baa053eedc": errors.append("manifest research baseline mismatch")
     if artifact.get("status")!=stage["artifact_status"] or artifact.get("runtime_activation")!=stage["artifact_runtime_activation"]: errors.append("artifact stage mismatch")
     if next(x for x in tasks["tasks"] if x["id"]=="T26")["status"]!=stage["t26_status"]: errors.append("T26 task stage mismatch")

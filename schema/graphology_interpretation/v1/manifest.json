@@ -49,7 +49,7 @@
     "compiled_source_records": 15,
     "compiled_source_claims": 6
   },
-  "next_pr": "T26 PR 5 — Codex review repairs and finalization",
+  "next_pr": "T15 — OpenAI adapter after T26 review/finalization",
   "construction_lineage": {
     "research_import_merge": "f96aa6b54cfaf91f0a8243e7c7e266baa053eedc",
     "ontology_foundation_merge": "ee2a92c7388bcf5b9aec225a093aef315e300987",
