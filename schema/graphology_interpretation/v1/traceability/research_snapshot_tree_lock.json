@@ -1,0 +1,148 @@
+{
+  "version": "graphology-research-snapshot-tree-lock/1",
+  "research_baseline_commit": "f96aa6b54cfaf91f0a8243e7c7e266baa053eedc",
+  "research_snapshot": "research/graphology/foundations-v0.1",
+  "file_count": 28,
+  "files": [
+    {
+      "path": "README.md",
+      "git_blob_sha": "001739d00189b80c05e1c7f1c299c0fa3f0502e2",
+      "size": 3128
+    },
+    {
+      "path": "blueprint/metadata.json",
+      "git_blob_sha": "a30fa2cdf6cb4bef1d08ec35dceb32bf5bb09467",
+      "size": 21613
+    },
+    {
+      "path": "blueprint/questions/01-context.json",
+      "git_blob_sha": "da23776252ac574b6f647f1e9b993f0101e1fbe5",
+      "size": 6182
+    },
+    {
+      "path": "blueprint/questions/02-global.json",
+      "git_blob_sha": "81a4acb4fd6216f2d4e56f938ac4ca541f2ddc45",
+      "size": 5115
+    },
+    {
+      "path": "blueprint/questions/03-space.json",
+      "git_blob_sha": "c4663820bff3e57a1ea85dc9cf930d31c91e56e5",
+      "size": 7144
+    },
+    {
+      "path": "blueprint/questions/04-size.json",
+      "git_blob_sha": "f5dbae9b25a2c6f17b1588b187ef797621c864cd",
+      "size": 6089
+    },
+    {
+      "path": "blueprint/questions/05-direction.json",
+      "git_blob_sha": "85d3c3c538b320e76ac88e6bb5c7529e2eedc25e",
+      "size": 5047
+    },
+    {
+      "path": "blueprint/questions/06-connection.json",
+      "git_blob_sha": "c8261072e05cdbc7d2a2ac912c3158ddeb258b74",
+      "size": 4626
+    },
+    {
+      "path": "blueprint/questions/07-form.json",
+      "git_blob_sha": "2981823727181cf4708793a1b5e3dc98ecd65091",
+      "size": 7298
+    },
+    {
+      "path": "blueprint/questions/08-stroke.json",
+      "git_blob_sha": "f43eb71dff5f78751429b07dabe7ff05a3f9369e",
+      "size": 5719
+    },
+    {
+      "path": "blueprint/questions/09-movement.json",
+      "git_blob_sha": "a5f019274cdefec466b06be3ace0414b20405326",
+      "size": 7433
+    },
+    {
+      "path": "blueprint/questions/10-detail.json",
+      "git_blob_sha": "7329fd76c2e7a6f1f2ef2ff5153bdd2cd90a7624",
+      "size": 14119
+    },
+    {
+      "path": "blueprint/questions/11-signature.json",
+      "git_blob_sha": "17c1ca9b038a9508e82b83c4b638b2d5cfb9f587",
+      "size": 6811
+    },
+    {
+      "path": "blueprint/questions/12-hierarchy.json",
+      "git_blob_sha": "7fb2a4dcb1cffdfacc28c9311bb7b33704ea2c4d",
+      "size": 8612
+    },
+    {
+      "path": "blueprint/questions/13-interpretation.json",
+      "git_blob_sha": "7d1189e8e7d15ea490edcc57ed680f14a6ccb362",
+      "size": 7231
+    },
+    {
+      "path": "blueprint/questions/14-reference.json",
+      "git_blob_sha": "5dcf2bca4816a66dca00cbede1f0eba6cfd7169a",
+      "size": 3768
+    },
+    {
+      "path": "blueprint/questions/15-pair.json",
+      "git_blob_sha": "93138a6eed3b5a92723391b0daa198a58e85a7e0",
+      "size": 4024
+    },
+    {
+      "path": "blueprint/questions/16-history.json",
+      "git_blob_sha": "7c5d1a2780dcd9123be5486ff1e772cb7ac50e81",
+      "size": 3653
+    },
+    {
+      "path": "blueprint/value_sets.json",
+      "git_blob_sha": "7fd403650b4f594e89869bec8e0fbc2020281f42",
+      "size": 25961
+    },
+    {
+      "path": "catalogue_index.md",
+      "git_blob_sha": "9d1e6a5c5e6392a923ebc8000522f0e0824b5d7e",
+      "size": 2916
+    },
+    {
+      "path": "graphology_foundations.md",
+      "git_blob_sha": "ff718c6997c650cdb31f4347fb518f7c90c9085a",
+      "size": 23317
+    },
+    {
+      "path": "provenance/catalogue_preamble.md",
+      "git_blob_sha": "3c06a7ab4314d10ecced8a73ca73cc79e9ab65d5",
+      "size": 708
+    },
+    {
+      "path": "provenance/import_manifest.json",
+      "git_blob_sha": "00c2fe4d0ba6ca4d95fb5fd9441de066937b2f2c",
+      "size": 9703
+    },
+    {
+      "path": "provenance/import_validation.json",
+      "git_blob_sha": "2769824d7ae7bb2ba612cd508ebdd3ecefa335a0",
+      "size": 6893
+    },
+    {
+      "path": "provenance/original_README.md",
+      "git_blob_sha": "a21b9f4207747d83ce824617c7a1228a67b843d0",
+      "size": 1082
+    },
+    {
+      "path": "provenance/original_SHA256SUMS.json",
+      "git_blob_sha": "31eaee35081ee8a3373ded606a0c35121b01cc05",
+      "size": 579
+    },
+    {
+      "path": "provenance/original_validation_report.json",
+      "git_blob_sha": "7b1906fc8639822d12a920a7897196e6ab1a4f64",
+      "size": 3092
+    },
+    {
+      "path": "sources.json",
+      "git_blob_sha": "350bf24b7752d8c6151611d3fac44747e45ed63f",
+      "size": 10848
+    }
+  ]
+}
