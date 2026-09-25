@@ -11409,5 +11409,656 @@
       ],
       "pack_activation_rule": "A pack remains inactive until every included association has reviewed operational premises, applicability, counterevidence behavior, source provenance, and explicit promotion evidence."
     }
-  }
+  },
+  "research_baseline_commit": "f96aa6b54cfaf91f0a8243e7c7e266baa053eedc",
+  "sources": [
+    {
+      "source_id": "BIG26",
+      "title": "British Institute of Graphologists: Syllabus Overview 2026",
+      "url": "https://members.britishgraphology.org/wp-content/uploads/2025/10/BIG-SYLLABUS-OVERVIEW-2026.pdf",
+      "source_kind": "PROFESSIONAL_BODY_PRIMARY_CURRICULUM",
+      "access_depth": "Parsed six-page text; printed page 2 screenshot inspected",
+      "locator": "Printed pp.2–4, Part 1, Observation / Interpretation / Profiling",
+      "supports": "An observation-to-interpretation-to-profile protocol; within-script hierarchy; corroboration and contextual synthesis.",
+      "does_not_establish": "Empirical personality validity; our proposed numerical thresholds; permission to reproduce worksheets.",
+      "review_date": "2026-09-25",
+      "reuse_clearance": "NOT_ASSESSED; links and original paraphrases only",
+      "production_status": "REGISTERED_PROVENANCE_SOURCE",
+      "runtime_role": "PROVENANCE_ONLY"
+    },
+    {
+      "source_id": "BIGCOURSE",
+      "title": "BIG: Courses",
+      "url": "https://www.britishgraphology.org/courses/",
+      "source_kind": "PROFESSIONAL_BODY_PRIMARY_CURRICULUM",
+      "access_depth": "Public course page",
+      "locator": "Syllabus description",
+      "supports": "The institution identifies Hilliger as the basis of its syllabus.",
+      "does_not_establish": "That this syllabus represents every graphology school.",
+      "review_date": "2026-09-25",
+      "reuse_clearance": "NOT_ASSESSED; links and original paraphrases only",
+      "production_status": "REGISTERED_PROVENANCE_SOURCE",
+      "runtime_role": "PROVENANCE_ONLY"
+    },
+    {
+      "source_id": "AHAF",
+      "title": "AHAF: Handwriting Analysis Courses",
+      "url": "https://ahafhandwriting.org/Handwriting_Analysis_Courses",
+      "source_kind": "PROFESSIONAL_BODY_PRIMARY_CURRICULUM",
+      "access_depth": "Full public page",
+      "locator": "AHAF Approved Courses / Graphology",
+      "supports": "Approved teaching is gestalt-based; the introductory framework uses space, form and movement; graphology and questioned-document examination are distinguished.",
+      "does_not_establish": "Psychological validity; all American schools being identical; our app being certified.",
+      "review_date": "2026-09-25",
+      "reuse_clearance": "NOT_ASSESSED; links and original paraphrases only",
+      "production_status": "REGISTERED_PROVENANCE_SOURCE",
+      "runtime_role": "PROVENANCE_ONLY"
+    },
+    {
+      "source_id": "IHAS",
+      "title": "International Handwriting Analysis Society: Graphology Terms",
+      "url": "https://handwritingfoundation.org/graphology-terms/",
+      "source_kind": "PROFESSIONAL_ASSOCIATION_PRIMARY_GLOSSARY",
+      "access_depth": "Indexed glossary text; direct fetch intermittently failed",
+      "locator": "Entries on connection, rhythm, pressure, shading, width, zones and letter detail",
+      "supports": "Descriptive vocabulary and several distinct senses; particularly connector shape, joining extent, apparent rhythm and stroke appearance.",
+      "does_not_establish": "Quantitative cutoffs; a complete clinical or personality inference system.",
+      "review_date": "2026-09-25",
+      "reuse_clearance": "NOT_ASSESSED; links and original paraphrases only",
+      "production_status": "REGISTERED_PROVENANCE_SOURCE",
+      "runtime_role": "PROVENANCE_ONLY"
+    },
+    {
+      "source_id": "CNPG_A",
+      "title": "CNPG: Cycle 1 Module A",
+      "url": "https://www.cnpg-formation.com/formation/CCG-1A.php",
+      "source_kind": "TRAINING_PROVIDER_PRIMARY_CURRICULUM",
+      "access_depth": "Public programme",
+      "locator": "Programme 1.2–1.3.4",
+      "supports": "Jaminian genre teaching and the space/form/movement/stroke grouping.",
+      "does_not_establish": "Exact complete genre/species catalogue or thresholds; our additional application categories.",
+      "review_date": "2026-09-25",
+      "reuse_clearance": "NOT_ASSESSED; links and original paraphrases only",
+      "production_status": "REGISTERED_PROVENANCE_SOURCE",
+      "runtime_role": "PROVENANCE_ONLY"
+    },
+    {
+      "source_id": "CNPG_B",
+      "title": "CNPG: Cycle 1 Module B",
+      "url": "https://www.cnpg-formation.com/formation/CCG-1B.php",
+      "source_kind": "TRAINING_PROVIDER_PRIMARY_CURRICULUM",
+      "access_depth": "Public programme",
+      "locator": "Programme 2.1–2.8",
+      "supports": "Contextual synthesis including harmony, form/movement, tension and text/signature comparison.",
+      "does_not_establish": "An implementable or validated scoring formula for these constructs.",
+      "review_date": "2026-09-25",
+      "reuse_clearance": "NOT_ASSESSED; links and original paraphrases only",
+      "production_status": "REGISTERED_PROVENANCE_SOURCE",
+      "runtime_role": "PROVENANCE_ONLY"
+    },
+    {
+      "source_id": "SGB",
+      "title": "Swiss Graphological/Handwriting-Psychological Professional Association: curriculum",
+      "url": "https://sgb-graphologie.ch/cms/lehrplan.php",
+      "source_kind": "PROFESSIONAL_BODY_PRIMARY_CURRICULUM",
+      "access_depth": "Public curriculum",
+      "locator": "Semesters 1–2",
+      "supports": "Whole-pattern assessment and Klages concepts; a distinction between measured and assessed handwriting characteristics.",
+      "does_not_establish": "An exact founder-level Formniveau algorithm or cross-school equivalence.",
+      "review_date": "2026-09-25",
+      "reuse_clearance": "NOT_ASSESSED; links and original paraphrases only",
+      "production_status": "REGISTERED_PROVENANCE_SOURCE",
+      "runtime_role": "PROVENANCE_ONLY"
+    },
+    {
+      "source_id": "CJ1892",
+      "title": "Jules Crépieux-Jamin, Handwriting and Expression, trans. John Holt Schooling, 1892",
+      "url": "https://archive.org/stream/handwritingexpre00crpi/handwritingexpre00crpi_djvu.txt",
+      "source_kind": "HISTORICAL_AUTHOR_PRIMARY_TEXT_TRANSLATION",
+      "access_depth": "Existing archive transcription; targeted principles and prose inspected, not all tables/illustrations or later editions",
+      "locator": "Printed pp.35–53; pp.89–92; p.116; content/edition information",
+      "supports": "Signs can have contextual meanings and combine into resultants; absence does not automatically prove the opposite quality; source-specific historical associations.",
+      "does_not_establish": "Modern validity; an exact late-edition species inventory; safe modern implementation of every historical judgement.",
+      "review_date": "2026-09-25",
+      "reuse_clearance": "NOT_ASSESSED; links and original paraphrases only",
+      "production_status": "REGISTERED_PROVENANCE_SOURCE",
+      "runtime_role": "PROVENANCE_ONLY"
+    },
+    {
+      "source_id": "MORETTI_I",
+      "title": "Istituto Grafologico Internazionale Moretti: Scrittura 192",
+      "url": "https://istitutomoretti.it/manu-scribere-festival-della-scrittura-a-mano/",
+      "source_kind": "SCHOOL_INSTITUTION_PRIMARY_PUBLICATION_ABSTRACT",
+      "access_depth": "Public contents and abstract, not the full journal article",
+      "locator": "Antonella Roggero article abstract",
+      "supports": "School-specific concepts including triple width, axial inclination and Disuguale metodico remain in use.",
+      "does_not_establish": "The complete definitions or scoring tables; equivalence to generic component statistics.",
+      "review_date": "2026-09-25",
+      "reuse_clearance": "NOT_ASSESSED; links and original paraphrases only",
+      "production_status": "REGISTERED_PROVENANCE_SOURCE",
+      "runtime_role": "PROVENANCE_ONLY"
+    },
+    {
+      "source_id": "CARBONARI",
+      "title": "Studio Carbonari: Il metodo morettiano, 2011",
+      "url": "https://www.psicologiacarbonari.it/2011/09/07/il-metodo-morettiano/",
+      "source_kind": "PRACTITIONER_EXPOSITION_CITING_FOUNDER",
+      "access_depth": "Public exposition; cited Moretti/Palaferri originals not independently inspected",
+      "locator": "Quale tecnica: il metodo morettiano",
+      "supports": "Sign-role classification, decimi rating, and supportive/opposing/neutral relationships, attributed by the author to Moretti.",
+      "does_not_establish": "Direct inspection of the cited founder pages; endorsement of innate/clinical or sex-specific assumptions.",
+      "review_date": "2026-09-25",
+      "reuse_clearance": "NOT_ASSESSED; links and original paraphrases only",
+      "production_status": "REGISTERED_PROVENANCE_SOURCE",
+      "runtime_role": "PROVENANCE_ONLY"
+    },
+    {
+      "source_id": "CONTIN",
+      "title": "Practitioner exposition: Consulenza grafologica",
+      "url": "https://www.dottorcontin.com/consulenza-grafologica.html",
+      "source_kind": "PRACTITIONER_PRIMARY_EXPOSITION",
+      "access_depth": "Public sign-family list",
+      "locator": "Le principali categorie grafologiche nel sistema di Girolamo Moretti",
+      "supports": "Distinct width concepts and named Italian sign families, including regularity/variation and flow categories.",
+      "does_not_establish": "Founder-level completeness, reliable psychological or physiological interpretation, universal thresholds.",
+      "review_date": "2026-09-25",
+      "reuse_clearance": "NOT_ASSESSED; links and original paraphrases only",
+      "production_status": "REGISTERED_PROVENANCE_SOURCE",
+      "runtime_role": "PROVENANCE_ONLY"
+    },
+    {
+      "source_id": "DEBIASI",
+      "title": "Laura De Biasi: Origini, La Grafologia Morettiana",
+      "url": "https://www.peritografologo.eu/teoria-e-tecnica/grafologia-morettiana/",
+      "source_kind": "PRACTITIONER_PRIMARY_EXPOSITION",
+      "access_depth": "Public article",
+      "locator": "Paragraph on temperamento and surrounding methodology",
+      "supports": "School-specific four-temperament names and attention to whole-pattern interpretation.",
+      "does_not_establish": "An activated temperament classifier or equivalence to Big Five/MBTI/app archetypes.",
+      "review_date": "2026-09-25",
+      "reuse_clearance": "NOT_ASSESSED; links and original paraphrases only",
+      "production_status": "REGISTERED_PROVENANCE_SOURCE",
+      "runtime_role": "PROVENANCE_ONLY"
+    },
+    {
+      "source_id": "LEPOUTRE",
+      "title": "Myriam Lepoutre-Chanel: Cours de graphologie, les fondamentaux",
+      "url": "https://coursdegraphologie.com/cours-de-graphologie/",
+      "source_kind": "TRAINING_PROVIDER_PRIMARY_CURRICULUM",
+      "access_depth": "Public course outline",
+      "locator": "Séries 1–4",
+      "supports": "Hierarchical description; distinctive gestures; sign combinations; spatial and movement frameworks; text/signature.",
+      "does_not_establish": "A full reproduction of Hegar/Pulver/Klages theories or their validity.",
+      "review_date": "2026-09-25",
+      "reuse_clearance": "NOT_ASSESSED; links and original paraphrases only",
+      "production_status": "REGISTERED_PROVENANCE_SOURCE",
+      "runtime_role": "PROVENANCE_ONLY"
+    },
+    {
+      "source_id": "DAZZI2009",
+      "title": "Dazzi & Pedrabissi: Graphology and Personality, 2009",
+      "url": "https://www.research.unipd.it/handle/11577/2377610",
+      "source_kind": "RESEARCH_PRIMARY_ABSTRACT_INSTITUTIONAL_REPOSITORY",
+      "access_depth": "Abstract only; full paper access restricted",
+      "locator": "Abstract, DOI 10.2466/PR0.105.F.1255-1268",
+      "supports": "Two reported studies did not establish graphology as a personality measure; weak rater agreement in the first.",
+      "does_not_establish": "That geometrical measurements themselves are invalid; a complete review of all handwriting research.",
+      "review_date": "2026-09-25",
+      "reuse_clearance": "NOT_ASSESSED; links and original paraphrases only",
+      "production_status": "REGISTERED_PROVENANCE_SOURCE",
+      "runtime_role": "PROVENANCE_ONLY"
+    },
+    {
+      "source_id": "NETER1989",
+      "title": "Neter & Ben-Shakhar: Predictive Validity of Graphological Inferences, 1989",
+      "url": "https://cris.openu.ac.il/en/publications/the-predictive-validity-of-graphological-inferences-a-meta-analyt-2/",
+      "source_kind": "RESEARCH_PRIMARY_ABSTRACT_INSTITUTIONAL_REPOSITORY",
+      "access_depth": "Abstract / bibliographic record",
+      "locator": "Abstract, DOI 10.1016/0191-8869(89)90120-7",
+      "supports": "Personnel-selection evidence and the possibility that writing content, rather than graphical form, explains limited prediction.",
+      "does_not_establish": "A licence for recruitment assessment or a validation of our product.",
+      "review_date": "2026-09-25",
+      "reuse_clearance": "NOT_ASSESSED; links and original paraphrases only",
+      "production_status": "REGISTERED_PROVENANCE_SOURCE",
+      "runtime_role": "PROVENANCE_ONLY"
+    }
+  ],
+  "source_claims": [
+    {
+      "assertion_id": "METHOD_CJ_CONTEXT",
+      "source_id": "CJ1892",
+      "locator": "pp.35–53 and pp.89–92",
+      "claim_kind": "HISTORICAL_METHOD_PRINCIPLE",
+      "paraphrase": "A sign can have more than one interpretation and other signs change the synthesis.",
+      "runtime_role": "DESIGN_PRINCIPLE_CANDIDATE",
+      "empirical_status": "NOT_ESTABLISHED_AS_PERSONALITY_VALIDITY",
+      "production_status": "REGISTERED_PROVENANCE_ONLY"
+    },
+    {
+      "assertion_id": "METHOD_CJ_ABSENCE",
+      "source_id": "CJ1892",
+      "locator": "pp.51–53",
+      "claim_kind": "HISTORICAL_METHOD_PRINCIPLE",
+      "paraphrase": "Missing a particular positive indicator does not, on its own, establish the opposite personal quality.",
+      "runtime_role": "MISSINGNESS_GUARDRAIL",
+      "empirical_status": "LOGICAL_GUARDRAIL_NOT_VALIDATION",
+      "production_status": "REGISTERED_PROVENANCE_ONLY"
+    },
+    {
+      "assertion_id": "METHOD_BIG_SUPPORT",
+      "source_id": "BIG26",
+      "locator": "p.3 B.5",
+      "claim_kind": "SCHOOL_METHOD_REQUIREMENT",
+      "paraphrase": "The curriculum requires corroboration by two other movements before including an interpretation.",
+      "runtime_role": "SCHOOL_PROFILE_CONSTRAINT",
+      "app_adaptation": "At least three genuinely distinct support groups; correlated summaries do not count separately.",
+      "empirical_status": "SCHOOL_REQUIREMENT_NOT_STATISTICAL_PROOF",
+      "production_status": "REGISTERED_PROVENANCE_ONLY"
+    },
+    {
+      "assertion_id": "METHOD_MORETTI_RELATIONS",
+      "source_id": "CARBONARI",
+      "locator": "Quale tecnica, sign relations and laws",
+      "claim_kind": "PRACTITIONER_ACCOUNT_OF_SCHOOL_METHOD",
+      "paraphrase": "The exposition distinguishes sign roles, rated degree, and supportive or opposing interactions.",
+      "runtime_role": "PRESERVE_TYPED_RELATIONSHIPS",
+      "empirical_status": "NOT_ESTABLISHED_AS_PERSONALITY_VALIDITY",
+      "production_status": "REGISTERED_PROVENANCE_ONLY"
+    },
+    {
+      "assertion_id": "HIST_CJ_ANIMATION",
+      "source_id": "CJ1892",
+      "locator": "p.51",
+      "claim_kind": "HISTORICAL_INTERPRETIVE_ASSOCIATION",
+      "source_term": "animation",
+      "paraphrase": "The passage gives several alternative handwriting indicators for animation rather than one mandatory sign.",
+      "premise_examples": [
+        "Long t crossbar",
+        "Short t crossbar ending in a point",
+        "Ascending writing"
+      ],
+      "combination_logic": "ALTERNATIVES_IN_SOURCE_NOT_ALL_REQUIRED",
+      "runtime_role": "RESEARCH_ONLY_DO_NOT_EXECUTE",
+      "remaining_gaps": [
+        "Full qualifying context",
+        "Observable thresholds",
+        "Reviewed modern wording",
+        "Independent sign-detection validation"
+      ],
+      "empirical_status": "UNVALIDATED_TRADITIONAL_ASSOCIATION",
+      "production_status": "REGISTERED_RESEARCH_ONLY"
+    },
+    {
+      "assertion_id": "HIST_CJ_FIRMNESS",
+      "source_id": "CJ1892",
+      "locator": "p.51",
+      "claim_kind": "HISTORICAL_INTERPRETIVE_ASSOCIATION",
+      "source_term": "firmness",
+      "paraphrase": "The passage groups upright, rigid or angular forms among possible indicators of firmness.",
+      "combination_logic": "ALTERNATIVES_IN_SOURCE_NOT_UNIVERSAL_ONE_TO_ONE_RULE",
+      "runtime_role": "RESEARCH_ONLY_DO_NOT_EXECUTE",
+      "remaining_gaps": [
+        "Exact morphology and context",
+        "Operational thresholds",
+        "Contextual and language review"
+      ],
+      "empirical_status": "UNVALIDATED_TRADITIONAL_ASSOCIATION",
+      "production_status": "REGISTERED_RESEARCH_ONLY"
+    }
+  ],
+  "source_gaps": [
+    {
+      "gap_id": "GAP_JAMIN_RESULTANT",
+      "object_kind": "CONCEPT",
+      "object_id": "JAMIN_RESULTANT",
+      "implementation_state": "STRUCTURE_DRAFT; individual rule content not populated",
+      "blocks_runtime_activation": true,
+      "resolution_requirement": "Populate and review individual association content before runtime use."
+    },
+    {
+      "gap_id": "GAP_BIG_DOMINANCE",
+      "object_kind": "CONCEPT",
+      "object_id": "BIG_DOMINANCE",
+      "implementation_state": "NEEDS_REVIEWED_ASSIGNMENT_RUBRIC",
+      "blocks_runtime_activation": true,
+      "resolution_requirement": "Define and review the within-script assignment rubric."
+    },
+    {
+      "gap_id": "GAP_KLAGES_FORMNIVEAU",
+      "object_kind": "CONCEPT",
+      "object_id": "KLAGES_FORMNIVEAU",
+      "implementation_state": "TERM_VERIFIED_EXACT_METHOD_PENDING; not neatness or personal worth",
+      "blocks_runtime_activation": true,
+      "resolution_requirement": "Inspect and encode the exact source method; do not substitute neatness or personal-worth scores."
+    },
+    {
+      "gap_id": "GAP_MORETTI_TRIPLE_WIDTH",
+      "object_kind": "CONCEPT",
+      "object_id": "MORETTI_TRIPLE_WIDTH",
+      "implementation_state": "NO_AUTOMATIC_GLYPH_RATIO_EQUIVALENCE",
+      "blocks_runtime_activation": true,
+      "resolution_requirement": "Inspect exact school scoring and keep body width, letter gaps, and word gaps distinct."
+    },
+    {
+      "gap_id": "GAP_MORETTI_METHODICAL_VARIATION",
+      "object_kind": "CONCEPT",
+      "object_id": "MORETTI_METHODICAL_VARIATION",
+      "implementation_state": "Do not substitute CV or simple irregularity",
+      "blocks_runtime_activation": true,
+      "resolution_requirement": "Inspect the sign-specific method; do not substitute generic CV/irregularity."
+    },
+    {
+      "gap_id": "GAP_MORETTI_SIGN_ROLES",
+      "object_kind": "CONCEPT",
+      "object_id": "MORETTI_SIGN_ROLES",
+      "implementation_state": "ATTRIBUTION_VERIFIED_VIA_EXPOSITION_NOT_ORIGINAL",
+      "blocks_runtime_activation": true,
+      "resolution_requirement": "Review founder-level source material before activating role classification."
+    },
+    {
+      "gap_id": "GAP_MORETTI_DECIMI",
+      "object_kind": "CONCEPT",
+      "object_id": "MORETTI_DECIMI",
+      "implementation_state": "NO_AUTOMATED_SCORING_WITHOUT_SIGN_SPECIFIC_METHOD",
+      "blocks_runtime_activation": true,
+      "resolution_requirement": "Acquire sign-specific scoring methods; never reinterpret decimi as probability or percentile."
+    },
+    {
+      "gap_id": "GAP_MORETTI_TEMPERAMENTS",
+      "object_kind": "CONCEPT",
+      "object_id": "MORETTI_TEMPERAMENTS",
+      "implementation_state": "TERMS_RECORDED_NOT_RUNTIME_CLASSIFIER",
+      "blocks_runtime_activation": true,
+      "resolution_requirement": "Review primary definitions and conditions before any classifier exists."
+    },
+    {
+      "gap_id": "GAP_PULVER_SPACE",
+      "object_kind": "CONCEPT",
+      "object_id": "PULVER_SPACE",
+      "implementation_state": "CURRICULAR_PRESENCE_VERIFIED; exact claims/conditions pending",
+      "blocks_runtime_activation": true,
+      "resolution_requirement": "Inspect exact claims and applicability conditions before encoding interpretations."
+    },
+    {
+      "gap_id": "GAP_IHAS_THREAD",
+      "object_kind": "CONCEPT",
+      "object_id": "IHAS_THREAD",
+      "implementation_state": "DRAFT_OBSERVATION_RUBRIC",
+      "blocks_runtime_activation": true,
+      "resolution_requirement": "Define and validate an observation rubric before runtime assessment."
+    },
+    {
+      "gap_id": "GAP_MORETTI_FILIFORME",
+      "object_kind": "CONCEPT",
+      "object_id": "MORETTI_FILIFORME",
+      "implementation_state": "Do not equate with connector thread by translation alone",
+      "blocks_runtime_activation": true,
+      "resolution_requirement": "Inspect exact Moretti definition and keep it distinct from connector thread."
+    },
+    {
+      "gap_id": "GAP_UNRESOLVED_TERM_1",
+      "object_kind": "UNRESOLVED_SOURCE_TERM",
+      "object_id": "currency",
+      "source_id": "BIG26",
+      "locator": "Printed p.2 A.g",
+      "source_status": "TERM_PRESENT_DEFINITION_AND_RUBRIC_PENDING",
+      "blocks_runtime_activation": true,
+      "resolution_requirement": "Inspect a source definition and operational rubric before creating any runtime selector."
+    },
+    {
+      "gap_id": "GAP_REUSE_BIG26",
+      "object_kind": "SOURCE",
+      "object_id": "BIG26",
+      "gap_kind": "REUSE_CLEARANCE_NOT_ASSESSED",
+      "blocks_runtime_activation": false,
+      "resolution_requirement": "Assess reuse/licensing before reproducing source text or protected exemplars; links and original paraphrases remain the current boundary."
+    },
+    {
+      "gap_id": "GAP_REUSE_BIGCOURSE",
+      "object_kind": "SOURCE",
+      "object_id": "BIGCOURSE",
+      "gap_kind": "REUSE_CLEARANCE_NOT_ASSESSED",
+      "blocks_runtime_activation": false,
+      "resolution_requirement": "Assess reuse/licensing before reproducing source text or protected exemplars; links and original paraphrases remain the current boundary."
+    },
+    {
+      "gap_id": "GAP_REUSE_AHAF",
+      "object_kind": "SOURCE",
+      "object_id": "AHAF",
+      "gap_kind": "REUSE_CLEARANCE_NOT_ASSESSED",
+      "blocks_runtime_activation": false,
+      "resolution_requirement": "Assess reuse/licensing before reproducing source text or protected exemplars; links and original paraphrases remain the current boundary."
+    },
+    {
+      "gap_id": "GAP_REUSE_IHAS",
+      "object_kind": "SOURCE",
+      "object_id": "IHAS",
+      "gap_kind": "REUSE_CLEARANCE_NOT_ASSESSED",
+      "blocks_runtime_activation": false,
+      "resolution_requirement": "Assess reuse/licensing before reproducing source text or protected exemplars; links and original paraphrases remain the current boundary."
+    },
+    {
+      "gap_id": "GAP_REUSE_CNPG_A",
+      "object_kind": "SOURCE",
+      "object_id": "CNPG_A",
+      "gap_kind": "REUSE_CLEARANCE_NOT_ASSESSED",
+      "blocks_runtime_activation": false,
+      "resolution_requirement": "Assess reuse/licensing before reproducing source text or protected exemplars; links and original paraphrases remain the current boundary."
+    },
+    {
+      "gap_id": "GAP_REUSE_CNPG_B",
+      "object_kind": "SOURCE",
+      "object_id": "CNPG_B",
+      "gap_kind": "REUSE_CLEARANCE_NOT_ASSESSED",
+      "blocks_runtime_activation": false,
+      "resolution_requirement": "Assess reuse/licensing before reproducing source text or protected exemplars; links and original paraphrases remain the current boundary."
+    },
+    {
+      "gap_id": "GAP_REUSE_SGB",
+      "object_kind": "SOURCE",
+      "object_id": "SGB",
+      "gap_kind": "REUSE_CLEARANCE_NOT_ASSESSED",
+      "blocks_runtime_activation": false,
+      "resolution_requirement": "Assess reuse/licensing before reproducing source text or protected exemplars; links and original paraphrases remain the current boundary."
+    },
+    {
+      "gap_id": "GAP_REUSE_CJ1892",
+      "object_kind": "SOURCE",
+      "object_id": "CJ1892",
+      "gap_kind": "REUSE_CLEARANCE_NOT_ASSESSED",
+      "blocks_runtime_activation": false,
+      "resolution_requirement": "Assess reuse/licensing before reproducing source text or protected exemplars; links and original paraphrases remain the current boundary."
+    },
+    {
+      "gap_id": "GAP_REUSE_MORETTI_I",
+      "object_kind": "SOURCE",
+      "object_id": "MORETTI_I",
+      "gap_kind": "REUSE_CLEARANCE_NOT_ASSESSED",
+      "blocks_runtime_activation": false,
+      "resolution_requirement": "Assess reuse/licensing before reproducing source text or protected exemplars; links and original paraphrases remain the current boundary."
+    },
+    {
+      "gap_id": "GAP_REUSE_CARBONARI",
+      "object_kind": "SOURCE",
+      "object_id": "CARBONARI",
+      "gap_kind": "REUSE_CLEARANCE_NOT_ASSESSED",
+      "blocks_runtime_activation": false,
+      "resolution_requirement": "Assess reuse/licensing before reproducing source text or protected exemplars; links and original paraphrases remain the current boundary."
+    },
+    {
+      "gap_id": "GAP_REUSE_CONTIN",
+      "object_kind": "SOURCE",
+      "object_id": "CONTIN",
+      "gap_kind": "REUSE_CLEARANCE_NOT_ASSESSED",
+      "blocks_runtime_activation": false,
+      "resolution_requirement": "Assess reuse/licensing before reproducing source text or protected exemplars; links and original paraphrases remain the current boundary."
+    },
+    {
+      "gap_id": "GAP_REUSE_DEBIASI",
+      "object_kind": "SOURCE",
+      "object_id": "DEBIASI",
+      "gap_kind": "REUSE_CLEARANCE_NOT_ASSESSED",
+      "blocks_runtime_activation": false,
+      "resolution_requirement": "Assess reuse/licensing before reproducing source text or protected exemplars; links and original paraphrases remain the current boundary."
+    },
+    {
+      "gap_id": "GAP_REUSE_LEPOUTRE",
+      "object_kind": "SOURCE",
+      "object_id": "LEPOUTRE",
+      "gap_kind": "REUSE_CLEARANCE_NOT_ASSESSED",
+      "blocks_runtime_activation": false,
+      "resolution_requirement": "Assess reuse/licensing before reproducing source text or protected exemplars; links and original paraphrases remain the current boundary."
+    },
+    {
+      "gap_id": "GAP_REUSE_DAZZI2009",
+      "object_kind": "SOURCE",
+      "object_id": "DAZZI2009",
+      "gap_kind": "REUSE_CLEARANCE_NOT_ASSESSED",
+      "blocks_runtime_activation": false,
+      "resolution_requirement": "Assess reuse/licensing before reproducing source text or protected exemplars; links and original paraphrases remain the current boundary."
+    },
+    {
+      "gap_id": "GAP_REUSE_NETER1989",
+      "object_kind": "SOURCE",
+      "object_id": "NETER1989",
+      "gap_kind": "REUSE_CLEARANCE_NOT_ASSESSED",
+      "blocks_runtime_activation": false,
+      "resolution_requirement": "Assess reuse/licensing before reproducing source text or protected exemplars; links and original paraphrases remain the current boundary."
+    }
+  ],
+  "concept_relationships": {
+    "version": "graphology-concept-relationships/1",
+    "allowed_relationship_types": [
+      "EXACT_EQUIVALENT",
+      "BROADER_THAN",
+      "NARROWER_THAN",
+      "RELATED_TO",
+      "COMPONENT_OF",
+      "QUALIFIES",
+      "OPPOSES",
+      "NOT_EQUIVALENT",
+      "UNMAPPED"
+    ],
+    "relationships": [
+      {
+        "relationship_id": "REL_IHAS_THREAD_MORETTI_FILIFORME_UNMAPPED",
+        "left_concept_id": "IHAS_THREAD",
+        "right_concept_id": "MORETTI_FILIFORME",
+        "relationship_type": "UNMAPPED",
+        "source_refs": [
+          {
+            "source_id": "IHAS",
+            "locator": "Thread / Wavy line entries"
+          },
+          {
+            "source_id": "CONTIN",
+            "locator": "La pressione"
+          }
+        ],
+        "rationale": "The frozen research warns against equating connector 'thread' and Moretti 'Filiforme' by translation alone; their actual relationship remains unresolved pending source review.",
+        "runtime_status": "ONTOLOGY_ONLY"
+      }
+    ]
+  },
+  "answer_state_policy": {
+    "policy_id": "ANSWER_STATE_V1",
+    "states": {
+      "ANSWERED": "An eligible, evidenced answer exists.",
+      "OBSERVED_ABSENT": "The required object/opportunity is present but the specified sign is absent.",
+      "NOT_ASSESSABLE": "Available input cannot establish the sign.",
+      "NOT_APPLICABLE": "This question does not apply to this sample/context.",
+      "CONFLICTING_EVIDENCE": "Evidence disagrees in a way that prevents the proposed answer.",
+      "NO_ELIGIBLE_CANDIDATE": "No allowed dynamic candidate passed its checks."
+    },
+    "rules": [
+      "Unanswered -> selected values empty and text null, with reason.",
+      "Mixed is genuine regional heterogeneity and must reference its components; it is not a synonym for unknown.",
+      "No applicable t is not an absent t-bar.",
+      "Source sign absence never automatically activates opposite personality claims.",
+      "Confidence is separate, uncalibrated by default.",
+      "School intensity scores are never inference confidence or population percentile."
+    ],
+    "version": "graphology-answer-states/1",
+    "production_status": "DRAFT_NOT_ACTIVE",
+    "runtime_activation": false
+  },
+  "selection_contract": {
+    "selection_domain": [
+      "FIXED",
+      "DYNAMIC"
+    ],
+    "cardinality": [
+      "SINGLE",
+      "MULTIPLE"
+    ],
+    "reason": "Candidate origin and number selected are independent axes; do not conflate MULTI_SELECT with enum source.",
+    "version": "graphology-selection-contract/1",
+    "production_status": "DRAFT_NOT_ACTIVE",
+    "runtime_activation": false
+  },
+  "observation_envelope": {
+    "version": "graphology-observation-envelope/1",
+    "fields": [
+      "observation_id",
+      "descriptor_id",
+      "region_ids",
+      "observed_value_ids",
+      "answer_state",
+      "observed_frequency",
+      "observed_intensity",
+      "within_script_prominence",
+      "assessment_method",
+      "assessment_version",
+      "confidence_kind",
+      "confidence",
+      "source_claim_ids"
+    ],
+    "note": "Frequency, intensity, prominence, certainty and population rarity remain distinct; every non-observed numeric quantity may be null.",
+    "production_status": "DRAFT_NOT_ACTIVE",
+    "runtime_activation": false
+  },
+  "observation_policy": {
+    "version": "graphology-observation-policy/1",
+    "runtime_activation": false,
+    "descriptive_domains": [
+      "CONTEXT",
+      "GLOBAL",
+      "SPACE",
+      "SIZE",
+      "DIRECTION",
+      "CONNECTION",
+      "FORM",
+      "STROKE",
+      "MOVEMENT",
+      "DETAIL",
+      "SIGNATURE",
+      "HIERARCHY"
+    ],
+    "direct_observation_evidence_classes": [
+      "DECLARED_METADATA",
+      "PRECOMPUTED_DESCRIPTION",
+      "AI_VISUAL_DESCRIPTION_NOT_CANONICAL_MEASUREMENT"
+    ],
+    "include_rule": "A question gets an observation record when it is in a descriptive domain and either has a direct observation evidence class or references canonical handwriting features.",
+    "excluded_domains": [
+      "INTERPRETATION",
+      "REFERENCE",
+      "PAIR",
+      "HISTORY"
+    ],
+    "mapping_roles": {
+      "PRIMARY_VALUE": "May directly supply a deterministic selector value when that selector's reviewed rubric exists.",
+      "VARIABILITY_CONTEXT": "Qualifies heterogeneity/dispersion; must not determine a magnitude band.",
+      "DISTRIBUTION_CONTEXT": "Qualifies distribution/composition; must not replace the primary value.",
+      "CANDIDATE_INPUT": "Supplies facts to a dynamic candidate generator; does not directly determine a selector value.",
+      "AUXILIARY_CONTEXT": "Provides contextual evidence only; does not directly determine a selector value."
+    },
+    "safety_rules": [
+      "Fixed versus dynamic selector origin never decides whether an observation exists.",
+      "Only PRIMARY_VALUE may directly determine a deterministic selector band.",
+      "Missing observation evidence never becomes zero or an opposite trait."
+    ]
+  },
+  "observation_definitions": [],
+  "feature_mappings": []
 }
