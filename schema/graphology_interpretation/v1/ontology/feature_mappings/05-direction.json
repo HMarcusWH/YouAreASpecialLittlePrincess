@@ -1,0 +1,101 @@
+[
+  {
+    "mapping_id": "MAP_SEL_DIRECTION_SLANT_SLANT_ANGLE_MEAN",
+    "source_question_id": "Q_DIRECTION_SLANT",
+    "selector_id": "SEL_DIRECTION_SLANT",
+    "observation_id": "OBS_DIRECTION_SLANT",
+    "canonical_feature_id": "SLANT_ANGLE_MEAN",
+    "relationship": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "note": "Require a method whose baseline-relative convention matches this question; do not reinterpret a canvas-vertical angle silently. Preserve regional mixtures rather than averaging opposite slants into a falsely uniform upright result.",
+    "mapping_status": "DRAFT_SUPPORT_ONLY",
+    "runtime_activation": false
+  },
+  {
+    "mapping_id": "MAP_SEL_DIRECTION_SLANT_SLANT_LEFT_FRACTION",
+    "source_question_id": "Q_DIRECTION_SLANT",
+    "selector_id": "SEL_DIRECTION_SLANT",
+    "observation_id": "OBS_DIRECTION_SLANT",
+    "canonical_feature_id": "SLANT_LEFT_FRACTION",
+    "relationship": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "note": "Require a method whose baseline-relative convention matches this question; do not reinterpret a canvas-vertical angle silently. Preserve regional mixtures rather than averaging opposite slants into a falsely uniform upright result.",
+    "mapping_status": "DRAFT_SUPPORT_ONLY",
+    "runtime_activation": false
+  },
+  {
+    "mapping_id": "MAP_SEL_DIRECTION_SLANT_SLANT_VERTICAL_FRACTION",
+    "source_question_id": "Q_DIRECTION_SLANT",
+    "selector_id": "SEL_DIRECTION_SLANT",
+    "observation_id": "OBS_DIRECTION_SLANT",
+    "canonical_feature_id": "SLANT_VERTICAL_FRACTION",
+    "relationship": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "note": "Require a method whose baseline-relative convention matches this question; do not reinterpret a canvas-vertical angle silently. Preserve regional mixtures rather than averaging opposite slants into a falsely uniform upright result.",
+    "mapping_status": "DRAFT_SUPPORT_ONLY",
+    "runtime_activation": false
+  },
+  {
+    "mapping_id": "MAP_SEL_DIRECTION_SLANT_SLANT_RIGHT_FRACTION",
+    "source_question_id": "Q_DIRECTION_SLANT",
+    "selector_id": "SEL_DIRECTION_SLANT",
+    "observation_id": "OBS_DIRECTION_SLANT",
+    "canonical_feature_id": "SLANT_RIGHT_FRACTION",
+    "relationship": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "note": "Require a method whose baseline-relative convention matches this question; do not reinterpret a canvas-vertical angle silently. Preserve regional mixtures rather than averaging opposite slants into a falsely uniform upright result.",
+    "mapping_status": "DRAFT_SUPPORT_ONLY",
+    "runtime_activation": false
+  },
+  {
+    "mapping_id": "MAP_SEL_DIRECTION_SLOPE_BASELINE_ANGLE_MEAN",
+    "source_question_id": "Q_DIRECTION_SLOPE",
+    "selector_id": "SEL_DIRECTION_SLOPE",
+    "observation_id": "OBS_DIRECTION_SLOPE",
+    "canonical_feature_id": "BASELINE_ANGLE_MEAN",
+    "relationship": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "note": "",
+    "mapping_status": "DRAFT_SUPPORT_ONLY",
+    "runtime_activation": false
+  },
+  {
+    "mapping_id": "MAP_SEL_DIRECTION_SLOPE_BASELINE_ANGLE_STD",
+    "source_question_id": "Q_DIRECTION_SLOPE",
+    "selector_id": "SEL_DIRECTION_SLOPE",
+    "observation_id": "OBS_DIRECTION_SLOPE",
+    "canonical_feature_id": "BASELINE_ANGLE_STD",
+    "relationship": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "note": "",
+    "mapping_status": "DRAFT_SUPPORT_ONLY",
+    "runtime_activation": false
+  },
+  {
+    "mapping_id": "MAP_SEL_DIRECTION_SHAPE_BASELINE_WAVINESS",
+    "source_question_id": "Q_DIRECTION_SHAPE",
+    "selector_id": "SEL_DIRECTION_SHAPE",
+    "observation_id": "OBS_DIRECTION_SHAPE",
+    "canonical_feature_id": "BASELINE_WAVINESS",
+    "relationship": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "note": "Image classification of shape never replaces stored baseline points.",
+    "mapping_status": "DRAFT_SUPPORT_ONLY",
+    "runtime_activation": false
+  },
+  {
+    "mapping_id": "MAP_SEL_DIRECTION_SHAPE_BASELINE_CURVATURE",
+    "source_question_id": "Q_DIRECTION_SHAPE",
+    "selector_id": "SEL_DIRECTION_SHAPE",
+    "observation_id": "OBS_DIRECTION_SHAPE",
+    "canonical_feature_id": "BASELINE_CURVATURE",
+    "relationship": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "note": "Image classification of shape never replaces stored baseline points.",
+    "mapping_status": "DRAFT_SUPPORT_ONLY",
+    "runtime_activation": false
+  },
+  {
+    "mapping_id": "MAP_SEL_DIRECTION_VARIATION_SLANT_ANGLE_STD",
+    "source_question_id": "Q_DIRECTION_VARIATION",
+    "selector_id": "SEL_DIRECTION_VARIATION",
+    "observation_id": "OBS_DIRECTION_VARIATION",
+    "canonical_feature_id": "SLANT_ANGLE_STD",
+    "relationship": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "note": "A standard deviation does not establish patterned alternation.",
+    "mapping_status": "DRAFT_SUPPORT_ONLY",
+    "runtime_activation": false
+  }
+]

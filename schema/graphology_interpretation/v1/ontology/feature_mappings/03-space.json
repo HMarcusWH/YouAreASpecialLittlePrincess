@@ -1,0 +1,145 @@
+[
+  {
+    "mapping_id": "MAP_SEL_SPACE_BALANCE_PAGE_INK_AREA_RATIO",
+    "source_question_id": "Q_SPACE_BALANCE",
+    "selector_id": "SEL_SPACE_BALANCE",
+    "observation_id": "OBS_SPACE_BALANCE",
+    "canonical_feature_id": "PAGE_INK_AREA_RATIO",
+    "relationship": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "note": "",
+    "mapping_status": "DRAFT_SUPPORT_ONLY",
+    "runtime_activation": false
+  },
+  {
+    "mapping_id": "MAP_SEL_SPACE_BALANCE_PAGE_TEXT_AREA_RATIO",
+    "source_question_id": "Q_SPACE_BALANCE",
+    "selector_id": "SEL_SPACE_BALANCE",
+    "observation_id": "OBS_SPACE_BALANCE",
+    "canonical_feature_id": "PAGE_TEXT_AREA_RATIO",
+    "relationship": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "note": "",
+    "mapping_status": "DRAFT_SUPPORT_ONLY",
+    "runtime_activation": false
+  },
+  {
+    "mapping_id": "MAP_SEL_SPACE_MARGINS_MARGIN_TOP_REL",
+    "source_question_id": "Q_SPACE_MARGINS",
+    "selector_id": "SEL_SPACE_MARGINS",
+    "observation_id": null,
+    "canonical_feature_id": "MARGIN_TOP_REL",
+    "relationship": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "note": "Use supplied descriptions; no replacement of canonical ratios.",
+    "mapping_status": "DRAFT_SUPPORT_ONLY",
+    "runtime_activation": false
+  },
+  {
+    "mapping_id": "MAP_SEL_SPACE_MARGINS_MARGIN_BOTTOM_REL",
+    "source_question_id": "Q_SPACE_MARGINS",
+    "selector_id": "SEL_SPACE_MARGINS",
+    "observation_id": null,
+    "canonical_feature_id": "MARGIN_BOTTOM_REL",
+    "relationship": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "note": "Use supplied descriptions; no replacement of canonical ratios.",
+    "mapping_status": "DRAFT_SUPPORT_ONLY",
+    "runtime_activation": false
+  },
+  {
+    "mapping_id": "MAP_SEL_SPACE_MARGINS_MARGIN_LEFT_REL",
+    "source_question_id": "Q_SPACE_MARGINS",
+    "selector_id": "SEL_SPACE_MARGINS",
+    "observation_id": null,
+    "canonical_feature_id": "MARGIN_LEFT_REL",
+    "relationship": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "note": "Use supplied descriptions; no replacement of canonical ratios.",
+    "mapping_status": "DRAFT_SUPPORT_ONLY",
+    "runtime_activation": false
+  },
+  {
+    "mapping_id": "MAP_SEL_SPACE_MARGINS_MARGIN_RIGHT_REL",
+    "source_question_id": "Q_SPACE_MARGINS",
+    "selector_id": "SEL_SPACE_MARGINS",
+    "observation_id": null,
+    "canonical_feature_id": "MARGIN_RIGHT_REL",
+    "relationship": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "note": "Use supplied descriptions; no replacement of canonical ratios.",
+    "mapping_status": "DRAFT_SUPPORT_ONLY",
+    "runtime_activation": false
+  },
+  {
+    "mapping_id": "MAP_SEL_SPACE_MARGIN_TREND_LINE_START_DRIFT",
+    "source_question_id": "Q_SPACE_MARGIN_TREND",
+    "selector_id": "SEL_SPACE_MARGIN_TREND",
+    "observation_id": null,
+    "canonical_feature_id": "LINE_START_DRIFT",
+    "relationship": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "note": "",
+    "mapping_status": "DRAFT_SUPPORT_ONLY",
+    "runtime_activation": false
+  },
+  {
+    "mapping_id": "MAP_SEL_SPACE_MARGIN_TREND_LINE_END_DRIFT",
+    "source_question_id": "Q_SPACE_MARGIN_TREND",
+    "selector_id": "SEL_SPACE_MARGIN_TREND",
+    "observation_id": null,
+    "canonical_feature_id": "LINE_END_DRIFT",
+    "relationship": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "note": "",
+    "mapping_status": "DRAFT_SUPPORT_ONLY",
+    "runtime_activation": false
+  },
+  {
+    "mapping_id": "MAP_SEL_SPACE_WORD_WORD_SPACING_REL",
+    "source_question_id": "Q_SPACE_WORD",
+    "selector_id": "SEL_SPACE_WORD",
+    "observation_id": "OBS_SPACE_WORD",
+    "canonical_feature_id": "WORD_SPACING_REL",
+    "relationship": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "note": "A descriptive band and a population percentile are separate facts.",
+    "mapping_status": "DRAFT_SUPPORT_ONLY",
+    "runtime_activation": false
+  },
+  {
+    "mapping_id": "MAP_SEL_SPACE_WORD_WORD_SPACING_CV",
+    "source_question_id": "Q_SPACE_WORD",
+    "selector_id": "SEL_SPACE_WORD",
+    "observation_id": "OBS_SPACE_WORD",
+    "canonical_feature_id": "WORD_SPACING_CV",
+    "relationship": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "note": "A descriptive band and a population percentile are separate facts.",
+    "mapping_status": "DRAFT_SUPPORT_ONLY",
+    "runtime_activation": false
+  },
+  {
+    "mapping_id": "MAP_SEL_SPACE_LINE_LINE_SPACING_REL",
+    "source_question_id": "Q_SPACE_LINE",
+    "selector_id": "SEL_SPACE_LINE",
+    "observation_id": "OBS_SPACE_LINE",
+    "canonical_feature_id": "LINE_SPACING_REL",
+    "relationship": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "note": "",
+    "mapping_status": "DRAFT_SUPPORT_ONLY",
+    "runtime_activation": false
+  },
+  {
+    "mapping_id": "MAP_SEL_SPACE_LINE_LINE_SPACING_CV",
+    "source_question_id": "Q_SPACE_LINE",
+    "selector_id": "SEL_SPACE_LINE",
+    "observation_id": "OBS_SPACE_LINE",
+    "canonical_feature_id": "LINE_SPACING_CV",
+    "relationship": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "note": "",
+    "mapping_status": "DRAFT_SUPPORT_ONLY",
+    "runtime_activation": false
+  },
+  {
+    "mapping_id": "MAP_SEL_SPACE_LETTER_LETTER_SPACING_REL",
+    "source_question_id": "Q_SPACE_LETTER",
+    "selector_id": "SEL_SPACE_LETTER",
+    "observation_id": "OBS_SPACE_LETTER",
+    "canonical_feature_id": "LETTER_SPACING_REL",
+    "relationship": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "note": "Component spacing is not automatically letter spacing.",
+    "mapping_status": "DRAFT_SUPPORT_ONLY",
+    "runtime_activation": false
+  }
+]

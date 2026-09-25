@@ -1,0 +1,637 @@
+{
+  "version": "graphology-pr2-static-traceability/1",
+  "records": [
+    {
+      "research_kind": "VALUE_SET",
+      "research_id": "WRITING_STYLE",
+      "production_kind": "VALUE_SET",
+      "production_id": "WRITING_STYLE",
+      "disposition": "PROMOTED_AS_DRAFT_VALUE_SET",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "VALUE_SET",
+      "research_id": "TASK",
+      "production_kind": "VALUE_SET",
+      "production_id": "TASK",
+      "disposition": "PROMOTED_AS_DRAFT_VALUE_SET",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "VALUE_SET",
+      "research_id": "SURFACE",
+      "production_kind": "VALUE_SET",
+      "production_id": "SURFACE",
+      "disposition": "PROMOTED_AS_DRAFT_VALUE_SET",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "VALUE_SET",
+      "research_id": "CAPTURE_FRAME",
+      "production_kind": "VALUE_SET",
+      "production_id": "CAPTURE_FRAME",
+      "disposition": "PROMOTED_AS_DRAFT_VALUE_SET",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "VALUE_SET",
+      "research_id": "SCALE",
+      "production_kind": "VALUE_SET",
+      "production_id": "SCALE",
+      "disposition": "PROMOTED_AS_DRAFT_VALUE_SET",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "VALUE_SET",
+      "research_id": "DIRECTION_CONTEXT",
+      "production_kind": "VALUE_SET",
+      "production_id": "DIRECTION_CONTEXT",
+      "disposition": "PROMOTED_AS_DRAFT_VALUE_SET",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "VALUE_SET",
+      "research_id": "GLOBAL_BALANCE",
+      "production_kind": "VALUE_SET",
+      "production_id": "GLOBAL_BALANCE",
+      "disposition": "PROMOTED_AS_DRAFT_VALUE_SET",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "VALUE_SET",
+      "research_id": "COHERENCE",
+      "production_kind": "VALUE_SET",
+      "production_id": "COHERENCE",
+      "disposition": "PROMOTED_AS_DRAFT_VALUE_SET",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "VALUE_SET",
+      "research_id": "VARIATION_CHARACTER",
+      "production_kind": "VALUE_SET",
+      "production_id": "VARIATION_CHARACTER",
+      "disposition": "PROMOTED_AS_DRAFT_VALUE_SET",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "VALUE_SET",
+      "research_id": "SPACE_BALANCE",
+      "production_kind": "VALUE_SET",
+      "production_id": "SPACE_BALANCE",
+      "disposition": "PROMOTED_AS_DRAFT_VALUE_SET",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "VALUE_SET",
+      "research_id": "BAND3",
+      "production_kind": "VALUE_SET",
+      "production_id": "BAND3",
+      "disposition": "PROMOTED_AS_DRAFT_VALUE_SET",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "VALUE_SET",
+      "research_id": "TREND",
+      "production_kind": "VALUE_SET",
+      "production_id": "TREND",
+      "disposition": "PROMOTED_AS_DRAFT_VALUE_SET",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "VALUE_SET",
+      "research_id": "ZONE_RELATION",
+      "production_kind": "VALUE_SET",
+      "production_id": "ZONE_RELATION",
+      "disposition": "PROMOTED_AS_DRAFT_VALUE_SET",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "VALUE_SET",
+      "research_id": "RELATIVE_SIZE",
+      "production_kind": "VALUE_SET",
+      "production_id": "RELATIVE_SIZE",
+      "disposition": "PROMOTED_AS_DRAFT_VALUE_SET",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "VALUE_SET",
+      "research_id": "SLANT",
+      "production_kind": "VALUE_SET",
+      "production_id": "SLANT",
+      "disposition": "PROMOTED_AS_DRAFT_VALUE_SET",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "VALUE_SET",
+      "research_id": "BASELINE",
+      "production_kind": "VALUE_SET",
+      "production_id": "BASELINE",
+      "disposition": "PROMOTED_AS_DRAFT_VALUE_SET",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "VALUE_SET",
+      "research_id": "BASELINE_SHAPE",
+      "production_kind": "VALUE_SET",
+      "production_id": "BASELINE_SHAPE",
+      "disposition": "PROMOTED_AS_DRAFT_VALUE_SET",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "VALUE_SET",
+      "research_id": "CONNECTION_DEGREE",
+      "production_kind": "VALUE_SET",
+      "production_id": "CONNECTION_DEGREE",
+      "disposition": "PROMOTED_AS_DRAFT_VALUE_SET",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "VALUE_SET",
+      "research_id": "CONNECTOR_FORM",
+      "production_kind": "VALUE_SET",
+      "production_id": "CONNECTOR_FORM",
+      "disposition": "PROMOTED_AS_DRAFT_VALUE_SET",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "VALUE_SET",
+      "research_id": "FORM_GEOMETRY",
+      "production_kind": "VALUE_SET",
+      "production_id": "FORM_GEOMETRY",
+      "disposition": "PROMOTED_AS_DRAFT_VALUE_SET",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "VALUE_SET",
+      "research_id": "SIMPLIFICATION",
+      "production_kind": "VALUE_SET",
+      "production_id": "SIMPLIFICATION",
+      "disposition": "PROMOTED_AS_DRAFT_VALUE_SET",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "VALUE_SET",
+      "research_id": "LETTER_WIDTH",
+      "production_kind": "VALUE_SET",
+      "production_id": "LETTER_WIDTH",
+      "disposition": "PROMOTED_AS_DRAFT_VALUE_SET",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "VALUE_SET",
+      "research_id": "LOOP_FORM",
+      "production_kind": "VALUE_SET",
+      "production_id": "LOOP_FORM",
+      "disposition": "PROMOTED_AS_DRAFT_VALUE_SET",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "VALUE_SET",
+      "research_id": "STROKE_QUALITY",
+      "production_kind": "VALUE_SET",
+      "production_id": "STROKE_QUALITY",
+      "disposition": "PROMOTED_AS_DRAFT_VALUE_SET",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "VALUE_SET",
+      "research_id": "SHADING",
+      "production_kind": "VALUE_SET",
+      "production_id": "SHADING",
+      "disposition": "PROMOTED_AS_DRAFT_VALUE_SET",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "VALUE_SET",
+      "research_id": "MOVEMENT_IMPRESSION",
+      "production_kind": "VALUE_SET",
+      "production_id": "MOVEMENT_IMPRESSION",
+      "disposition": "PROMOTED_AS_DRAFT_VALUE_SET",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "VALUE_SET",
+      "research_id": "TEMPO_IMPRESSION",
+      "production_kind": "VALUE_SET",
+      "production_id": "TEMPO_IMPRESSION",
+      "disposition": "PROMOTED_AS_DRAFT_VALUE_SET",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "VALUE_SET",
+      "research_id": "GRAPHICAL_TENSION",
+      "production_kind": "VALUE_SET",
+      "production_id": "GRAPHICAL_TENSION",
+      "disposition": "PROMOTED_AS_DRAFT_VALUE_SET",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "VALUE_SET",
+      "research_id": "RHYTHM",
+      "production_kind": "VALUE_SET",
+      "production_id": "RHYTHM",
+      "disposition": "PROMOTED_AS_DRAFT_VALUE_SET",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "VALUE_SET",
+      "research_id": "GAP_DIRECTION",
+      "production_kind": "VALUE_SET",
+      "production_id": "GAP_DIRECTION",
+      "disposition": "PROMOTED_AS_DRAFT_VALUE_SET",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "VALUE_SET",
+      "research_id": "OVAL_CLOSURE",
+      "production_kind": "VALUE_SET",
+      "production_id": "OVAL_CLOSURE",
+      "disposition": "PROMOTED_AS_DRAFT_VALUE_SET",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "VALUE_SET",
+      "research_id": "DOT_FORM",
+      "production_kind": "VALUE_SET",
+      "production_id": "DOT_FORM",
+      "disposition": "PROMOTED_AS_DRAFT_VALUE_SET",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "VALUE_SET",
+      "research_id": "DIACRITIC_VARIANT",
+      "production_kind": "VALUE_SET",
+      "production_id": "DIACRITIC_VARIANT",
+      "disposition": "PROMOTED_AS_DRAFT_VALUE_SET",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "VALUE_SET",
+      "research_id": "LATERAL_OFFSET",
+      "production_kind": "VALUE_SET",
+      "production_id": "LATERAL_OFFSET",
+      "disposition": "PROMOTED_AS_DRAFT_VALUE_SET",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "VALUE_SET",
+      "research_id": "VERTICAL_POSITION",
+      "production_kind": "VALUE_SET",
+      "production_id": "VERTICAL_POSITION",
+      "disposition": "PROMOTED_AS_DRAFT_VALUE_SET",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "VALUE_SET",
+      "research_id": "TERMINAL_FORM",
+      "production_kind": "VALUE_SET",
+      "production_id": "TERMINAL_FORM",
+      "disposition": "PROMOTED_AS_DRAFT_VALUE_SET",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "VALUE_SET",
+      "research_id": "CAPITAL_CONNECTION",
+      "production_kind": "VALUE_SET",
+      "production_id": "CAPITAL_CONNECTION",
+      "disposition": "PROMOTED_AS_DRAFT_VALUE_SET",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "VALUE_SET",
+      "research_id": "SIGNATURE_LOCATION",
+      "production_kind": "VALUE_SET",
+      "production_id": "SIGNATURE_LOCATION",
+      "disposition": "PROMOTED_AS_DRAFT_VALUE_SET",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "VALUE_SET",
+      "research_id": "SIGNATURE_ADDON",
+      "production_kind": "VALUE_SET",
+      "production_id": "SIGNATURE_ADDON",
+      "disposition": "PROMOTED_AS_DRAFT_VALUE_SET",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "VALUE_SET",
+      "research_id": "DOMINANCE",
+      "production_kind": "VALUE_SET",
+      "production_id": "DOMINANCE",
+      "disposition": "PROMOTED_AS_DRAFT_VALUE_SET",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "VALUE_SET",
+      "research_id": "SIGN_RELATION",
+      "production_kind": "VALUE_SET",
+      "production_id": "SIGN_RELATION",
+      "disposition": "PROMOTED_AS_DRAFT_VALUE_SET",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "VALUE_SET",
+      "research_id": "CONCLUSION_STATE",
+      "production_kind": "VALUE_SET",
+      "production_id": "CONCLUSION_STATE",
+      "disposition": "PROMOTED_AS_DRAFT_VALUE_SET",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "VALUE_SET",
+      "research_id": "COMPARABILITY",
+      "production_kind": "VALUE_SET",
+      "production_id": "COMPARABILITY",
+      "disposition": "PROMOTED_AS_DRAFT_VALUE_SET",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "VALUE_SET",
+      "research_id": "DISAGREEMENT",
+      "production_kind": "VALUE_SET",
+      "production_id": "DISAGREEMENT",
+      "disposition": "PROMOTED_AS_DRAFT_VALUE_SET",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "CANDIDATE_KIND",
+      "research_id": "ACQUISITION_LIMITATION",
+      "production_kind": "CANDIDATE_KIND",
+      "production_id": "ACQUISITION_LIMITATION",
+      "disposition": "REGISTERED_NAME_ONLY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "CANDIDATE_KIND",
+      "research_id": "COPYBOOK_DIFFERENCE",
+      "production_kind": "CANDIDATE_KIND",
+      "production_id": "COPYBOOK_DIFFERENCE",
+      "disposition": "REGISTERED_NAME_ONLY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "CANDIDATE_KIND",
+      "research_id": "COUNTEREVIDENCE_GROUP",
+      "production_kind": "CANDIDATE_KIND",
+      "production_id": "COUNTEREVIDENCE_GROUP",
+      "disposition": "REGISTERED_NAME_ONLY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "CANDIDATE_KIND",
+      "research_id": "ELIGIBLE_REFERENCE_CLAIM",
+      "production_kind": "CANDIDATE_KIND",
+      "production_id": "ELIGIBLE_REFERENCE_CLAIM",
+      "disposition": "REGISTERED_NAME_ONLY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "CANDIDATE_KIND",
+      "research_id": "GRAPHIC_COMBINATION",
+      "production_kind": "CANDIDATE_KIND",
+      "production_id": "GRAPHIC_COMBINATION",
+      "disposition": "REGISTERED_NAME_ONLY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "CANDIDATE_KIND",
+      "research_id": "GRAPHIC_SIGN",
+      "production_kind": "CANDIDATE_KIND",
+      "production_id": "GRAPHIC_SIGN",
+      "disposition": "REGISTERED_NAME_ONLY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "CANDIDATE_KIND",
+      "research_id": "HISTORY_CAVEAT",
+      "production_kind": "CANDIDATE_KIND",
+      "production_id": "HISTORY_CAVEAT",
+      "disposition": "REGISTERED_NAME_ONLY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "CANDIDATE_KIND",
+      "research_id": "HISTORY_CHANGE",
+      "production_kind": "CANDIDATE_KIND",
+      "production_id": "HISTORY_CHANGE",
+      "disposition": "REGISTERED_NAME_ONLY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "CANDIDATE_KIND",
+      "research_id": "HISTORY_STABLE_PATTERN",
+      "production_kind": "CANDIDATE_KIND",
+      "production_id": "HISTORY_STABLE_PATTERN",
+      "disposition": "REGISTERED_NAME_ONLY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "CANDIDATE_KIND",
+      "research_id": "INITIAL_STROKE_DESCRIPTION",
+      "production_kind": "CANDIDATE_KIND",
+      "production_id": "INITIAL_STROKE_DESCRIPTION",
+      "disposition": "REGISTERED_NAME_ONLY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "CANDIDATE_KIND",
+      "research_id": "INK_APPEARANCE_FACT",
+      "production_kind": "CANDIDATE_KIND",
+      "production_id": "INK_APPEARANCE_FACT",
+      "disposition": "REGISTERED_NAME_ONLY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "CANDIDATE_KIND",
+      "research_id": "LINE_EDGE_TREND",
+      "production_kind": "CANDIDATE_KIND",
+      "production_id": "LINE_EDGE_TREND",
+      "disposition": "REGISTERED_NAME_ONLY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "CANDIDATE_KIND",
+      "research_id": "LOCAL_ONLY_SIGN",
+      "production_kind": "CANDIDATE_KIND",
+      "production_id": "LOCAL_ONLY_SIGN",
+      "disposition": "REGISTERED_NAME_ONLY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "CANDIDATE_KIND",
+      "research_id": "MARGIN_DESCRIPTION",
+      "production_kind": "CANDIDATE_KIND",
+      "production_id": "MARGIN_DESCRIPTION",
+      "disposition": "REGISTERED_NAME_ONLY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "CANDIDATE_KIND",
+      "research_id": "MEASUREMENT_CONFLICT_CANDIDATE",
+      "production_kind": "CANDIDATE_KIND",
+      "production_id": "MEASUREMENT_CONFLICT_CANDIDATE",
+      "disposition": "REGISTERED_NAME_ONLY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "CANDIDATE_KIND",
+      "research_id": "ORNAMENT_DESCRIPTION",
+      "production_kind": "CANDIDATE_KIND",
+      "production_id": "ORNAMENT_DESCRIPTION",
+      "disposition": "REGISTERED_NAME_ONLY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "CANDIDATE_KIND",
+      "research_id": "PAIR_DIFFERENCE",
+      "production_kind": "CANDIDATE_KIND",
+      "production_id": "PAIR_DIFFERENCE",
+      "disposition": "REGISTERED_NAME_ONLY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "CANDIDATE_KIND",
+      "research_id": "PAIR_SIMILARITY",
+      "production_kind": "CANDIDATE_KIND",
+      "production_id": "PAIR_SIMILARITY",
+      "disposition": "REGISTERED_NAME_ONLY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "CANDIDATE_KIND",
+      "research_id": "PAIR_TRADITIONAL_CONTRAST",
+      "production_kind": "CANDIDATE_KIND",
+      "production_id": "PAIR_TRADITIONAL_CONTRAST",
+      "disposition": "REGISTERED_NAME_ONLY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "CANDIDATE_KIND",
+      "research_id": "PPI_FORM_DESCRIPTION",
+      "production_kind": "CANDIDATE_KIND",
+      "production_id": "PPI_FORM_DESCRIPTION",
+      "disposition": "REGISTERED_NAME_ONLY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "CANDIDATE_KIND",
+      "research_id": "REFERENCE_CAVEAT",
+      "production_kind": "CANDIDATE_KIND",
+      "production_id": "REFERENCE_CAVEAT",
+      "disposition": "REGISTERED_NAME_ONLY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "CANDIDATE_KIND",
+      "research_id": "REPEATED_FORM_DESCRIPTION",
+      "production_kind": "CANDIDATE_KIND",
+      "production_id": "REPEATED_FORM_DESCRIPTION",
+      "disposition": "REGISTERED_NAME_ONLY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "CANDIDATE_KIND",
+      "research_id": "SIGNATURE_TEXT_DIFFERENCE",
+      "production_kind": "CANDIDATE_KIND",
+      "production_id": "SIGNATURE_TEXT_DIFFERENCE",
+      "disposition": "REGISTERED_NAME_ONLY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "CANDIDATE_KIND",
+      "research_id": "SIGNATURE_TEXT_PATTERN",
+      "production_kind": "CANDIDATE_KIND",
+      "production_id": "SIGNATURE_TEXT_PATTERN",
+      "disposition": "REGISTERED_NAME_ONLY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "CANDIDATE_KIND",
+      "research_id": "SUPPORT_GROUP",
+      "production_kind": "CANDIDATE_KIND",
+      "production_id": "SUPPORT_GROUP",
+      "disposition": "REGISTERED_NAME_ONLY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "CANDIDATE_KIND",
+      "research_id": "TERMINAL_STROKE_DESCRIPTION",
+      "production_kind": "CANDIDATE_KIND",
+      "production_id": "TERMINAL_STROKE_DESCRIPTION",
+      "disposition": "REGISTERED_NAME_ONLY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "CANDIDATE_KIND",
+      "research_id": "THICKNESS_FACT",
+      "production_kind": "CANDIDATE_KIND",
+      "production_id": "THICKNESS_FACT",
+      "disposition": "REGISTERED_NAME_ONLY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "CANDIDATE_KIND",
+      "research_id": "TRADITIONAL_ALTERNATIVE",
+      "production_kind": "CANDIDATE_KIND",
+      "production_id": "TRADITIONAL_ALTERNATIVE",
+      "disposition": "REGISTERED_NAME_ONLY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "CANDIDATE_KIND",
+      "research_id": "TRADITIONAL_CANDIDATE",
+      "production_kind": "CANDIDATE_KIND",
+      "production_id": "TRADITIONAL_CANDIDATE",
+      "disposition": "REGISTERED_NAME_ONLY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "CANDIDATE_KIND",
+      "research_id": "TRADITIONAL_MODIFIER",
+      "production_kind": "CANDIDATE_KIND",
+      "production_id": "TRADITIONAL_MODIFIER",
+      "disposition": "REGISTERED_NAME_ONLY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "CANDIDATE_KIND",
+      "research_id": "VERIFIED_JOINT_OUTLIER",
+      "production_kind": "CANDIDATE_KIND",
+      "production_id": "VERIFIED_JOINT_OUTLIER",
+      "disposition": "REGISTERED_NAME_ONLY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "CANDIDATE_KIND",
+      "research_id": "VERIFIED_OUTLIER",
+      "production_kind": "CANDIDATE_KIND",
+      "production_id": "VERIFIED_OUTLIER",
+      "disposition": "REGISTERED_NAME_ONLY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "CANDIDATE_KIND",
+      "research_id": "WITHHELD_CLAIM",
+      "production_kind": "CANDIDATE_KIND",
+      "production_id": "WITHHELD_CLAIM",
+      "disposition": "REGISTERED_NAME_ONLY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "ANSWER_STATE_POLICY",
+      "research_id": "ANSWER_STATE_V1",
+      "production_kind": "ANSWER_STATE_POLICY",
+      "production_id": "ANSWER_STATE_V1",
+      "disposition": "PROMOTED_AS_DRAFT_POLICY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "SELECTION_CONTRACT",
+      "research_id": "selection_contract",
+      "production_kind": "SELECTION_CONTRACT",
+      "production_id": "selection_contract",
+      "disposition": "PROMOTED_AS_DRAFT_POLICY",
+      "runtime_effect": "NONE"
+    }
+  ]
+}

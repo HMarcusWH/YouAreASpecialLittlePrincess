@@ -1,0 +1,153 @@
+[
+  {
+    "observation_id": "OBS_DIRECTION_SLANT",
+    "source_question_id": "Q_DIRECTION_SLANT",
+    "selector_id": "SEL_DIRECTION_SLANT",
+    "domain_id": "DIRECTION",
+    "scope": "INDIVIDUAL",
+    "descriptor_kind": "DETERMINISTIC_DESCRIPTOR",
+    "assessment_owner": "DETERMINISTIC",
+    "model_call_role": "READ_ONLY_CONTEXT_OR_PRECOMPUTED",
+    "cardinality": "SINGLE",
+    "value_set_id": "SLANT",
+    "required_inputs": [],
+    "answer_state_policy": "ANSWER_STATE_V1",
+    "permitted_evidence_class": "PRECOMPUTED_DESCRIPTION",
+    "source_refs": [
+      {
+        "source_id": "IHAS",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "BIG26",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "CONTIN",
+        "relationship": "domain_or_term_basis"
+      }
+    ],
+    "related_canonical_feature_ids": [
+      "SLANT_ANGLE_MEAN",
+      "SLANT_LEFT_FRACTION",
+      "SLANT_VERTICAL_FRACTION",
+      "SLANT_RIGHT_FRACTION"
+    ],
+    "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "source_status": "DRAFT_NOT_ACTIVATED",
+    "runtime_status": "DRAFT_NOT_ACTIVE"
+  },
+  {
+    "observation_id": "OBS_DIRECTION_SLOPE",
+    "source_question_id": "Q_DIRECTION_SLOPE",
+    "selector_id": "SEL_DIRECTION_SLOPE",
+    "domain_id": "DIRECTION",
+    "scope": "INDIVIDUAL",
+    "descriptor_kind": "DETERMINISTIC_DESCRIPTOR",
+    "assessment_owner": "DETERMINISTIC",
+    "model_call_role": "READ_ONLY_CONTEXT_OR_PRECOMPUTED",
+    "cardinality": "SINGLE",
+    "value_set_id": "BASELINE",
+    "required_inputs": [],
+    "answer_state_policy": "ANSWER_STATE_V1",
+    "permitted_evidence_class": "PRECOMPUTED_DESCRIPTION",
+    "source_refs": [
+      {
+        "source_id": "IHAS",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "BIG26",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "CONTIN",
+        "relationship": "domain_or_term_basis"
+      }
+    ],
+    "related_canonical_feature_ids": [
+      "BASELINE_ANGLE_MEAN",
+      "BASELINE_ANGLE_STD"
+    ],
+    "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "source_status": "DRAFT_NOT_ACTIVATED",
+    "runtime_status": "DRAFT_NOT_ACTIVE"
+  },
+  {
+    "observation_id": "OBS_DIRECTION_SHAPE",
+    "source_question_id": "Q_DIRECTION_SHAPE",
+    "selector_id": "SEL_DIRECTION_SHAPE",
+    "domain_id": "DIRECTION",
+    "scope": "INDIVIDUAL",
+    "descriptor_kind": "VISUAL_DESCRIPTOR",
+    "assessment_owner": "PREMIUM_VISUAL",
+    "model_call_role": "ANSWER",
+    "cardinality": "MULTIPLE",
+    "value_set_id": "BASELINE_SHAPE",
+    "required_inputs": [
+      "AUTHORIZED_IMAGE",
+      "IDENTIFIED_EVIDENCE_REGION"
+    ],
+    "answer_state_policy": "ANSWER_STATE_V1",
+    "permitted_evidence_class": "AI_VISUAL_DESCRIPTION_NOT_CANONICAL_MEASUREMENT",
+    "source_refs": [
+      {
+        "source_id": "IHAS",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "BIG26",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "CONTIN",
+        "relationship": "domain_or_term_basis"
+      }
+    ],
+    "related_canonical_feature_ids": [
+      "BASELINE_WAVINESS",
+      "BASELINE_CURVATURE"
+    ],
+    "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "source_status": "DRAFT_NOT_ACTIVATED",
+    "runtime_status": "DRAFT_NOT_ACTIVE"
+  },
+  {
+    "observation_id": "OBS_DIRECTION_VARIATION",
+    "source_question_id": "Q_DIRECTION_VARIATION",
+    "selector_id": "SEL_DIRECTION_VARIATION",
+    "domain_id": "DIRECTION",
+    "scope": "INDIVIDUAL",
+    "descriptor_kind": "VISUAL_DESCRIPTOR",
+    "assessment_owner": "PREMIUM_VISUAL",
+    "model_call_role": "ANSWER",
+    "cardinality": "SINGLE",
+    "value_set_id": "VARIATION_CHARACTER",
+    "required_inputs": [
+      "AUTHORIZED_IMAGE",
+      "IDENTIFIED_EVIDENCE_REGION"
+    ],
+    "answer_state_policy": "ANSWER_STATE_V1",
+    "permitted_evidence_class": "AI_VISUAL_DESCRIPTION_NOT_CANONICAL_MEASUREMENT",
+    "source_refs": [
+      {
+        "source_id": "IHAS",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "BIG26",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "CONTIN",
+        "relationship": "domain_or_term_basis"
+      }
+    ],
+    "related_canonical_feature_ids": [
+      "SLANT_ANGLE_STD"
+    ],
+    "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "source_status": "DRAFT_NOT_ACTIVATED",
+    "runtime_status": "DRAFT_NOT_ACTIVE"
+  }
+]

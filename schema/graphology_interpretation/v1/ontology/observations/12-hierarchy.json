@@ -1,0 +1,39 @@
+[
+  {
+    "observation_id": "OBS_HIERARCHY_ROLE",
+    "source_question_id": "Q_HIERARCHY_ROLE",
+    "selector_id": "SEL_HIERARCHY_ROLE",
+    "domain_id": "HIERARCHY",
+    "scope": "INDIVIDUAL",
+    "descriptor_kind": "VISUAL_DESCRIPTOR",
+    "assessment_owner": "PREMIUM_VISUAL",
+    "model_call_role": "ANSWER",
+    "cardinality": "SINGLE",
+    "value_set_id": "DOMINANCE",
+    "required_inputs": [
+      "PREIDENTIFIED_GRAPHIC_SIGN",
+      "AUTHORIZED_IMAGE",
+      "IDENTIFIED_EVIDENCE_REGION"
+    ],
+    "answer_state_policy": "ANSWER_STATE_V1",
+    "permitted_evidence_class": "AI_VISUAL_DESCRIPTION_NOT_CANONICAL_MEASUREMENT",
+    "source_refs": [
+      {
+        "source_id": "BIG26",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "CJ1892",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "CARBONARI",
+        "relationship": "domain_or_term_basis"
+      }
+    ],
+    "related_canonical_feature_ids": [],
+    "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "source_status": "DRAFT_NOT_ACTIVATED",
+    "runtime_status": "DRAFT_NOT_ACTIVE"
+  }
+]

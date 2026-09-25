@@ -1,0 +1,35 @@
+[
+  {
+    "mapping_id": "MAP_SEL_SIG_SIZE_SIG_TEXT_SIZE_RATIO",
+    "source_question_id": "Q_SIG_SIZE",
+    "selector_id": "SEL_SIG_SIZE",
+    "observation_id": "OBS_SIG_SIZE",
+    "canonical_feature_id": "SIG_TEXT_SIZE_RATIO",
+    "relationship": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "note": "",
+    "mapping_status": "DRAFT_SUPPORT_ONLY",
+    "runtime_activation": false
+  },
+  {
+    "mapping_id": "MAP_SEL_SIG_SLANT_SIG_TEXT_SLANT_DELTA",
+    "source_question_id": "Q_SIG_SLANT",
+    "selector_id": "SEL_SIG_SLANT",
+    "observation_id": null,
+    "canonical_feature_id": "SIG_TEXT_SLANT_DELTA",
+    "relationship": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "note": "",
+    "mapping_status": "DRAFT_SUPPORT_ONLY",
+    "runtime_activation": false
+  },
+  {
+    "mapping_id": "MAP_SEL_SIG_CONNECTION_SIG_TEXT_CONNECTEDNESS_DELTA",
+    "source_question_id": "Q_SIG_CONNECTION",
+    "selector_id": "SEL_SIG_CONNECTION",
+    "observation_id": null,
+    "canonical_feature_id": "SIG_TEXT_CONNECTEDNESS_DELTA",
+    "relationship": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "note": "",
+    "mapping_status": "DRAFT_SUPPORT_ONLY",
+    "runtime_activation": false
+  }
+]

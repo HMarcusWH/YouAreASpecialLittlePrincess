@@ -143,9 +143,14 @@ def validate(repo: Path) -> list[str]:
         "concept_relationships": len(rels),
         "unresolved_source_terms": 1,
     }
-    if manifest["counts"] != expected_counts:
-        errors.append("manifest counts differ from files")
-    if manifest["runtime_activation"] is not False or manifest["production_scope"] != "ONTOLOGY_AND_PROVENANCE_ONLY":
+    for key, value in expected_counts.items():
+        if manifest["counts"].get(key) != value:
+            errors.append(f"manifest foundation count differs for {key}")
+    allowed_scopes = {
+        "ONTOLOGY_AND_PROVENANCE_ONLY",
+        "ONTOLOGY_PROVENANCE_OBSERVATIONS_SELECTORS_VALUES",
+    }
+    if manifest["runtime_activation"] is not False or manifest["production_scope"] not in allowed_scopes:
         errors.append("manifest scope/runtime activation invalid")
     if scaffold.get("status") != "UNPOPULATED":
         errors.append("compiled Premium scaffold must remain UNPOPULATED in PR1")

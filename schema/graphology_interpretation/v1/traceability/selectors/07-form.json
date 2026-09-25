@@ -1,0 +1,56 @@
+[
+  {
+    "research_kind": "QUESTION",
+    "research_id": "Q_FORM_GEOMETRY",
+    "production_kind": "SELECTOR",
+    "production_id": "SEL_FORM_GEOMETRY",
+    "observation_id": "OBS_FORM_GEOMETRY",
+    "disposition": "PROMOTED_AS_SELECTOR_FOUNDATION",
+    "runtime_effect": "NONE"
+  },
+  {
+    "research_kind": "QUESTION",
+    "research_id": "Q_FORM_SIMPLIFICATION",
+    "production_kind": "SELECTOR",
+    "production_id": "SEL_FORM_SIMPLIFICATION",
+    "observation_id": "OBS_FORM_SIMPLIFICATION",
+    "disposition": "PROMOTED_AS_SELECTOR_FOUNDATION",
+    "runtime_effect": "NONE"
+  },
+  {
+    "research_kind": "QUESTION",
+    "research_id": "Q_FORM_LOOPS",
+    "production_kind": "SELECTOR",
+    "production_id": "SEL_FORM_LOOPS",
+    "observation_id": "OBS_FORM_LOOPS",
+    "disposition": "PROMOTED_AS_SELECTOR_FOUNDATION",
+    "runtime_effect": "NONE"
+  },
+  {
+    "research_kind": "QUESTION",
+    "research_id": "Q_FORM_ORNAMENT",
+    "production_kind": "SELECTOR",
+    "production_id": "SEL_FORM_ORNAMENT",
+    "observation_id": null,
+    "disposition": "PROMOTED_AS_SELECTOR_FOUNDATION",
+    "runtime_effect": "NONE"
+  },
+  {
+    "research_kind": "QUESTION",
+    "research_id": "Q_FORM_INDIVIDUAL",
+    "production_kind": "SELECTOR",
+    "production_id": "SEL_FORM_INDIVIDUAL",
+    "observation_id": null,
+    "disposition": "PROMOTED_AS_SELECTOR_FOUNDATION",
+    "runtime_effect": "NONE"
+  },
+  {
+    "research_kind": "QUESTION",
+    "research_id": "Q_FORM_COPYBOOK",
+    "production_kind": "SELECTOR",
+    "production_id": "SEL_FORM_COPYBOOK",
+    "observation_id": null,
+    "disposition": "PROMOTED_AS_SELECTOR_FOUNDATION",
+    "runtime_effect": "NONE"
+  }
+]

@@ -1,0 +1,38 @@
+[
+  {
+    "research_kind": "QUESTION",
+    "research_id": "Q_REF_ELIGIBLE",
+    "production_kind": "SELECTOR",
+    "production_id": "SEL_REF_ELIGIBLE",
+    "observation_id": null,
+    "disposition": "PROMOTED_AS_SELECTOR_FOUNDATION",
+    "runtime_effect": "NONE"
+  },
+  {
+    "research_kind": "QUESTION",
+    "research_id": "Q_REF_HIGHLIGHT",
+    "production_kind": "SELECTOR",
+    "production_id": "SEL_REF_HIGHLIGHT",
+    "observation_id": null,
+    "disposition": "PROMOTED_AS_SELECTOR_FOUNDATION",
+    "runtime_effect": "NONE"
+  },
+  {
+    "research_kind": "QUESTION",
+    "research_id": "Q_REF_COMBINATION",
+    "production_kind": "SELECTOR",
+    "production_id": "SEL_REF_COMBINATION",
+    "observation_id": null,
+    "disposition": "PROMOTED_AS_SELECTOR_FOUNDATION",
+    "runtime_effect": "NONE"
+  },
+  {
+    "research_kind": "QUESTION",
+    "research_id": "Q_REF_QUALIFICATION",
+    "production_kind": "SELECTOR",
+    "production_id": "SEL_REF_QUALIFICATION",
+    "observation_id": null,
+    "disposition": "PROMOTED_AS_SELECTOR_FOUNDATION",
+    "runtime_effect": "NONE"
+  }
+]

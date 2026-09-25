@@ -1,0 +1,56 @@
+[
+  {
+    "research_kind": "QUESTION",
+    "research_id": "Q_SIG_LOCATION",
+    "production_kind": "SELECTOR",
+    "production_id": "SEL_SIG_LOCATION",
+    "observation_id": "OBS_SIG_LOCATION",
+    "disposition": "PROMOTED_AS_SELECTOR_FOUNDATION",
+    "runtime_effect": "NONE"
+  },
+  {
+    "research_kind": "QUESTION",
+    "research_id": "Q_SIG_SIZE",
+    "production_kind": "SELECTOR",
+    "production_id": "SEL_SIG_SIZE",
+    "observation_id": "OBS_SIG_SIZE",
+    "disposition": "PROMOTED_AS_SELECTOR_FOUNDATION",
+    "runtime_effect": "NONE"
+  },
+  {
+    "research_kind": "QUESTION",
+    "research_id": "Q_SIG_SLANT",
+    "production_kind": "SELECTOR",
+    "production_id": "SEL_SIG_SLANT",
+    "observation_id": null,
+    "disposition": "PROMOTED_AS_SELECTOR_FOUNDATION",
+    "runtime_effect": "NONE"
+  },
+  {
+    "research_kind": "QUESTION",
+    "research_id": "Q_SIG_CONNECTION",
+    "production_kind": "SELECTOR",
+    "production_id": "SEL_SIG_CONNECTION",
+    "observation_id": null,
+    "disposition": "PROMOTED_AS_SELECTOR_FOUNDATION",
+    "runtime_effect": "NONE"
+  },
+  {
+    "research_kind": "QUESTION",
+    "research_id": "Q_SIG_ADDON",
+    "production_kind": "SELECTOR",
+    "production_id": "SEL_SIG_ADDON",
+    "observation_id": "OBS_SIG_ADDON",
+    "disposition": "PROMOTED_AS_SELECTOR_FOUNDATION",
+    "runtime_effect": "NONE"
+  },
+  {
+    "research_kind": "QUESTION",
+    "research_id": "Q_SIG_RELATION",
+    "production_kind": "SELECTOR",
+    "production_id": "SEL_SIG_RELATION",
+    "observation_id": null,
+    "disposition": "PROMOTED_AS_SELECTOR_FOUNDATION",
+    "runtime_effect": "NONE"
+  }
+]

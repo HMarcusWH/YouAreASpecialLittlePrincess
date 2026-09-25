@@ -1,0 +1,38 @@
+[
+  {
+    "research_kind": "QUESTION",
+    "research_id": "Q_DIRECTION_SLANT",
+    "production_kind": "SELECTOR",
+    "production_id": "SEL_DIRECTION_SLANT",
+    "observation_id": "OBS_DIRECTION_SLANT",
+    "disposition": "PROMOTED_AS_SELECTOR_FOUNDATION",
+    "runtime_effect": "NONE"
+  },
+  {
+    "research_kind": "QUESTION",
+    "research_id": "Q_DIRECTION_SLOPE",
+    "production_kind": "SELECTOR",
+    "production_id": "SEL_DIRECTION_SLOPE",
+    "observation_id": "OBS_DIRECTION_SLOPE",
+    "disposition": "PROMOTED_AS_SELECTOR_FOUNDATION",
+    "runtime_effect": "NONE"
+  },
+  {
+    "research_kind": "QUESTION",
+    "research_id": "Q_DIRECTION_SHAPE",
+    "production_kind": "SELECTOR",
+    "production_id": "SEL_DIRECTION_SHAPE",
+    "observation_id": "OBS_DIRECTION_SHAPE",
+    "disposition": "PROMOTED_AS_SELECTOR_FOUNDATION",
+    "runtime_effect": "NONE"
+  },
+  {
+    "research_kind": "QUESTION",
+    "research_id": "Q_DIRECTION_VARIATION",
+    "production_kind": "SELECTOR",
+    "production_id": "SEL_DIRECTION_VARIATION",
+    "observation_id": "OBS_DIRECTION_VARIATION",
+    "disposition": "PROMOTED_AS_SELECTOR_FOUNDATION",
+    "runtime_effect": "NONE"
+  }
+]

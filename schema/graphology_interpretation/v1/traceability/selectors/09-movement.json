@@ -1,0 +1,56 @@
+[
+  {
+    "research_kind": "QUESTION",
+    "research_id": "Q_MOVEMENT_IMPRESSION",
+    "production_kind": "SELECTOR",
+    "production_id": "SEL_MOVEMENT_IMPRESSION",
+    "observation_id": "OBS_MOVEMENT_IMPRESSION",
+    "disposition": "PROMOTED_AS_SELECTOR_FOUNDATION",
+    "runtime_effect": "NONE"
+  },
+  {
+    "research_kind": "QUESTION",
+    "research_id": "Q_MOVEMENT_RHYTHM",
+    "production_kind": "SELECTOR",
+    "production_id": "SEL_MOVEMENT_RHYTHM",
+    "observation_id": "OBS_MOVEMENT_RHYTHM",
+    "disposition": "PROMOTED_AS_SELECTOR_FOUNDATION",
+    "runtime_effect": "NONE"
+  },
+  {
+    "research_kind": "QUESTION",
+    "research_id": "Q_MOVEMENT_VARIATION",
+    "production_kind": "SELECTOR",
+    "production_id": "SEL_MOVEMENT_VARIATION",
+    "observation_id": "OBS_MOVEMENT_VARIATION",
+    "disposition": "PROMOTED_AS_SELECTOR_FOUNDATION",
+    "runtime_effect": "NONE"
+  },
+  {
+    "research_kind": "QUESTION",
+    "research_id": "Q_MOVEMENT_TEMPO",
+    "production_kind": "SELECTOR",
+    "production_id": "SEL_MOVEMENT_TEMPO",
+    "observation_id": "OBS_MOVEMENT_TEMPO",
+    "disposition": "PROMOTED_AS_SELECTOR_FOUNDATION",
+    "runtime_effect": "NONE"
+  },
+  {
+    "research_kind": "QUESTION",
+    "research_id": "Q_MOVEMENT_TENSION",
+    "production_kind": "SELECTOR",
+    "production_id": "SEL_MOVEMENT_TENSION",
+    "observation_id": "OBS_MOVEMENT_TENSION",
+    "disposition": "PROMOTED_AS_SELECTOR_FOUNDATION",
+    "runtime_effect": "NONE"
+  },
+  {
+    "research_kind": "QUESTION",
+    "research_id": "Q_MOVEMENT_TEMPO_LIMIT",
+    "production_kind": "SELECTOR",
+    "production_id": "SEL_MOVEMENT_TEMPO_LIMIT",
+    "observation_id": null,
+    "disposition": "PROMOTED_AS_SELECTOR_FOUNDATION",
+    "runtime_effect": "NONE"
+  }
+]

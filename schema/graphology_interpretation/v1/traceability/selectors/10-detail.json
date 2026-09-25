@@ -1,0 +1,110 @@
+[
+  {
+    "research_kind": "QUESTION",
+    "research_id": "Q_DETAIL_T_HEIGHT",
+    "production_kind": "SELECTOR",
+    "production_id": "SEL_DETAIL_T_HEIGHT",
+    "observation_id": "OBS_DETAIL_T_HEIGHT",
+    "disposition": "PROMOTED_AS_SELECTOR_FOUNDATION",
+    "runtime_effect": "NONE"
+  },
+  {
+    "research_kind": "QUESTION",
+    "research_id": "Q_DETAIL_T_LENGTH",
+    "production_kind": "SELECTOR",
+    "production_id": "SEL_DETAIL_T_LENGTH",
+    "observation_id": "OBS_DETAIL_T_LENGTH",
+    "disposition": "PROMOTED_AS_SELECTOR_FOUNDATION",
+    "runtime_effect": "NONE"
+  },
+  {
+    "research_kind": "QUESTION",
+    "research_id": "Q_DETAIL_T_END",
+    "production_kind": "SELECTOR",
+    "production_id": "SEL_DETAIL_T_END",
+    "observation_id": "OBS_DETAIL_T_END",
+    "disposition": "PROMOTED_AS_SELECTOR_FOUNDATION",
+    "runtime_effect": "NONE"
+  },
+  {
+    "research_kind": "QUESTION",
+    "research_id": "Q_DETAIL_T_BALANCE",
+    "production_kind": "SELECTOR",
+    "production_id": "SEL_DETAIL_T_BALANCE",
+    "observation_id": "OBS_DETAIL_T_BALANCE",
+    "disposition": "PROMOTED_AS_SELECTOR_FOUNDATION",
+    "runtime_effect": "NONE"
+  },
+  {
+    "research_kind": "QUESTION",
+    "research_id": "Q_DETAIL_DOT_FORM",
+    "production_kind": "SELECTOR",
+    "production_id": "SEL_DETAIL_DOT_FORM",
+    "observation_id": "OBS_DETAIL_DOT_FORM",
+    "disposition": "PROMOTED_AS_SELECTOR_FOUNDATION",
+    "runtime_effect": "NONE"
+  },
+  {
+    "research_kind": "QUESTION",
+    "research_id": "Q_DETAIL_DOT_OFFSET",
+    "production_kind": "SELECTOR",
+    "production_id": "SEL_DETAIL_DOT_OFFSET",
+    "observation_id": "OBS_DETAIL_DOT_OFFSET",
+    "disposition": "PROMOTED_AS_SELECTOR_FOUNDATION",
+    "runtime_effect": "NONE"
+  },
+  {
+    "research_kind": "QUESTION",
+    "research_id": "Q_DETAIL_DIACRITIC",
+    "production_kind": "SELECTOR",
+    "production_id": "SEL_DETAIL_DIACRITIC",
+    "observation_id": "OBS_DETAIL_DIACRITIC",
+    "disposition": "PROMOTED_AS_SELECTOR_FOUNDATION",
+    "runtime_effect": "NONE"
+  },
+  {
+    "research_kind": "QUESTION",
+    "research_id": "Q_DETAIL_OVAL",
+    "production_kind": "SELECTOR",
+    "production_id": "SEL_DETAIL_OVAL",
+    "observation_id": "OBS_DETAIL_OVAL",
+    "disposition": "PROMOTED_AS_SELECTOR_FOUNDATION",
+    "runtime_effect": "NONE"
+  },
+  {
+    "research_kind": "QUESTION",
+    "research_id": "Q_DETAIL_OVAL_GAP",
+    "production_kind": "SELECTOR",
+    "production_id": "SEL_DETAIL_OVAL_GAP",
+    "observation_id": "OBS_DETAIL_OVAL_GAP",
+    "disposition": "PROMOTED_AS_SELECTOR_FOUNDATION",
+    "runtime_effect": "NONE"
+  },
+  {
+    "research_kind": "QUESTION",
+    "research_id": "Q_DETAIL_INITIAL",
+    "production_kind": "SELECTOR",
+    "production_id": "SEL_DETAIL_INITIAL",
+    "observation_id": null,
+    "disposition": "PROMOTED_AS_SELECTOR_FOUNDATION",
+    "runtime_effect": "NONE"
+  },
+  {
+    "research_kind": "QUESTION",
+    "research_id": "Q_DETAIL_TERMINAL",
+    "production_kind": "SELECTOR",
+    "production_id": "SEL_DETAIL_TERMINAL",
+    "observation_id": null,
+    "disposition": "PROMOTED_AS_SELECTOR_FOUNDATION",
+    "runtime_effect": "NONE"
+  },
+  {
+    "research_kind": "QUESTION",
+    "research_id": "Q_DETAIL_PPI",
+    "production_kind": "SELECTOR",
+    "production_id": "SEL_DETAIL_PPI",
+    "observation_id": null,
+    "disposition": "PROMOTED_AS_SELECTOR_FOUNDATION",
+    "runtime_effect": "NONE"
+  }
+]

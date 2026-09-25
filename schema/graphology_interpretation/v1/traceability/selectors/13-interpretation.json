@@ -1,0 +1,56 @@
+[
+  {
+    "research_kind": "QUESTION",
+    "research_id": "Q_TRAD_BUNDLE",
+    "production_kind": "SELECTOR",
+    "production_id": "SEL_TRAD_BUNDLE",
+    "observation_id": null,
+    "disposition": "PROMOTED_AS_SELECTOR_FOUNDATION",
+    "runtime_effect": "NONE"
+  },
+  {
+    "research_kind": "QUESTION",
+    "research_id": "Q_TRAD_STATUS",
+    "production_kind": "SELECTOR",
+    "production_id": "SEL_TRAD_STATUS",
+    "observation_id": null,
+    "disposition": "PROMOTED_AS_SELECTOR_FOUNDATION",
+    "runtime_effect": "NONE"
+  },
+  {
+    "research_kind": "QUESTION",
+    "research_id": "Q_TRAD_MODIFIER",
+    "production_kind": "SELECTOR",
+    "production_id": "SEL_TRAD_MODIFIER",
+    "observation_id": null,
+    "disposition": "PROMOTED_AS_SELECTOR_FOUNDATION",
+    "runtime_effect": "NONE"
+  },
+  {
+    "research_kind": "QUESTION",
+    "research_id": "Q_TRAD_ALTERNATIVE",
+    "production_kind": "SELECTOR",
+    "production_id": "SEL_TRAD_ALTERNATIVE",
+    "observation_id": null,
+    "disposition": "PROMOTED_AS_SELECTOR_FOUNDATION",
+    "runtime_effect": "NONE"
+  },
+  {
+    "research_kind": "QUESTION",
+    "research_id": "Q_TRAD_SCHOOL_DIFF",
+    "production_kind": "SELECTOR",
+    "production_id": "SEL_TRAD_SCHOOL_DIFF",
+    "observation_id": null,
+    "disposition": "PROMOTED_AS_SELECTOR_FOUNDATION",
+    "runtime_effect": "NONE"
+  },
+  {
+    "research_kind": "QUESTION",
+    "research_id": "Q_TRAD_WITHHOLD",
+    "production_kind": "SELECTOR",
+    "production_id": "SEL_TRAD_WITHHOLD",
+    "observation_id": null,
+    "disposition": "PROMOTED_AS_SELECTOR_FOUNDATION",
+    "runtime_effect": "NONE"
+  }
+]

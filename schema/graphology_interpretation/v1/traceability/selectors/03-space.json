@@ -1,0 +1,56 @@
+[
+  {
+    "research_kind": "QUESTION",
+    "research_id": "Q_SPACE_BALANCE",
+    "production_kind": "SELECTOR",
+    "production_id": "SEL_SPACE_BALANCE",
+    "observation_id": "OBS_SPACE_BALANCE",
+    "disposition": "PROMOTED_AS_SELECTOR_FOUNDATION",
+    "runtime_effect": "NONE"
+  },
+  {
+    "research_kind": "QUESTION",
+    "research_id": "Q_SPACE_MARGINS",
+    "production_kind": "SELECTOR",
+    "production_id": "SEL_SPACE_MARGINS",
+    "observation_id": null,
+    "disposition": "PROMOTED_AS_SELECTOR_FOUNDATION",
+    "runtime_effect": "NONE"
+  },
+  {
+    "research_kind": "QUESTION",
+    "research_id": "Q_SPACE_MARGIN_TREND",
+    "production_kind": "SELECTOR",
+    "production_id": "SEL_SPACE_MARGIN_TREND",
+    "observation_id": null,
+    "disposition": "PROMOTED_AS_SELECTOR_FOUNDATION",
+    "runtime_effect": "NONE"
+  },
+  {
+    "research_kind": "QUESTION",
+    "research_id": "Q_SPACE_WORD",
+    "production_kind": "SELECTOR",
+    "production_id": "SEL_SPACE_WORD",
+    "observation_id": "OBS_SPACE_WORD",
+    "disposition": "PROMOTED_AS_SELECTOR_FOUNDATION",
+    "runtime_effect": "NONE"
+  },
+  {
+    "research_kind": "QUESTION",
+    "research_id": "Q_SPACE_LINE",
+    "production_kind": "SELECTOR",
+    "production_id": "SEL_SPACE_LINE",
+    "observation_id": "OBS_SPACE_LINE",
+    "disposition": "PROMOTED_AS_SELECTOR_FOUNDATION",
+    "runtime_effect": "NONE"
+  },
+  {
+    "research_kind": "QUESTION",
+    "research_id": "Q_SPACE_LETTER",
+    "production_kind": "SELECTOR",
+    "production_id": "SEL_SPACE_LETTER",
+    "observation_id": "OBS_SPACE_LETTER",
+    "disposition": "PROMOTED_AS_SELECTOR_FOUNDATION",
+    "runtime_effect": "NONE"
+  }
+]

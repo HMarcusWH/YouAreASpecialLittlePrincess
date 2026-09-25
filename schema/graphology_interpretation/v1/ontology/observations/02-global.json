@@ -1,0 +1,122 @@
+[
+  {
+    "observation_id": "OBS_GLOBAL_FORM_MOVEMENT",
+    "source_question_id": "Q_GLOBAL_FORM_MOVEMENT",
+    "selector_id": "SEL_GLOBAL_FORM_MOVEMENT",
+    "domain_id": "GLOBAL",
+    "scope": "INDIVIDUAL",
+    "descriptor_kind": "VISUAL_DESCRIPTOR",
+    "assessment_owner": "PREMIUM_VISUAL",
+    "model_call_role": "ANSWER",
+    "cardinality": "SINGLE",
+    "value_set_id": "GLOBAL_BALANCE",
+    "required_inputs": [
+      "AUTHORIZED_IMAGE",
+      "IDENTIFIED_EVIDENCE_REGION"
+    ],
+    "answer_state_policy": "ANSWER_STATE_V1",
+    "permitted_evidence_class": "AI_VISUAL_DESCRIPTION_NOT_CANONICAL_MEASUREMENT",
+    "source_refs": [
+      {
+        "source_id": "AHAF",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "CNPG_A",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "CNPG_B",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "SGB",
+        "relationship": "domain_or_term_basis"
+      }
+    ],
+    "related_canonical_feature_ids": [],
+    "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "source_status": "DRAFT_NOT_ACTIVATED",
+    "runtime_status": "DRAFT_NOT_ACTIVE"
+  },
+  {
+    "observation_id": "OBS_GLOBAL_COHERENCE",
+    "source_question_id": "Q_GLOBAL_COHERENCE",
+    "selector_id": "SEL_GLOBAL_COHERENCE",
+    "domain_id": "GLOBAL",
+    "scope": "INDIVIDUAL",
+    "descriptor_kind": "VISUAL_DESCRIPTOR",
+    "assessment_owner": "PREMIUM_VISUAL",
+    "model_call_role": "ANSWER",
+    "cardinality": "SINGLE",
+    "value_set_id": "COHERENCE",
+    "required_inputs": [
+      "AUTHORIZED_IMAGE",
+      "IDENTIFIED_EVIDENCE_REGION"
+    ],
+    "answer_state_policy": "ANSWER_STATE_V1",
+    "permitted_evidence_class": "AI_VISUAL_DESCRIPTION_NOT_CANONICAL_MEASUREMENT",
+    "source_refs": [
+      {
+        "source_id": "AHAF",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "CNPG_A",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "CNPG_B",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "SGB",
+        "relationship": "domain_or_term_basis"
+      }
+    ],
+    "related_canonical_feature_ids": [],
+    "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "source_status": "DRAFT_NOT_ACTIVATED",
+    "runtime_status": "DRAFT_NOT_ACTIVE"
+  },
+  {
+    "observation_id": "OBS_GLOBAL_VARIATION",
+    "source_question_id": "Q_GLOBAL_VARIATION",
+    "selector_id": "SEL_GLOBAL_VARIATION",
+    "domain_id": "GLOBAL",
+    "scope": "INDIVIDUAL",
+    "descriptor_kind": "VISUAL_DESCRIPTOR",
+    "assessment_owner": "PREMIUM_VISUAL",
+    "model_call_role": "ANSWER",
+    "cardinality": "SINGLE",
+    "value_set_id": "VARIATION_CHARACTER",
+    "required_inputs": [
+      "AUTHORIZED_IMAGE",
+      "IDENTIFIED_EVIDENCE_REGION"
+    ],
+    "answer_state_policy": "ANSWER_STATE_V1",
+    "permitted_evidence_class": "AI_VISUAL_DESCRIPTION_NOT_CANONICAL_MEASUREMENT",
+    "source_refs": [
+      {
+        "source_id": "AHAF",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "CNPG_A",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "CNPG_B",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "SGB",
+        "relationship": "domain_or_term_basis"
+      }
+    ],
+    "related_canonical_feature_ids": [],
+    "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "source_status": "DRAFT_NOT_ACTIVATED",
+    "runtime_status": "DRAFT_NOT_ACTIVE"
+  }
+]

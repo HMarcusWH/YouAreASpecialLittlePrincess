@@ -1,0 +1,113 @@
+[
+  {
+    "selector_id": "SEL_PAIR_COMPARABLE",
+    "source_question_id": "Q_PAIR_COMPARABLE",
+    "domain_id": "PAIR",
+    "scope": "PAIR",
+    "answer_owner": "DETERMINISTIC",
+    "model_call_role": "READ_ONLY_CONTEXT_OR_PRECOMPUTED",
+    "selection_domain": "FIXED",
+    "cardinality": "SINGLE",
+    "value_set_id": "COMPARABILITY",
+    "candidate_kind": null,
+    "required_inputs": [],
+    "answer_state_policy": "ANSWER_STATE_V1",
+    "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+    "permitted_evidence_class": "PRECOMPUTED_DESCRIPTION",
+    "source_refs": [
+      {
+        "source_id": "CNPG_B",
+        "relationship": "domain_or_term_basis"
+      }
+    ],
+    "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "report_target": "graphology.pair",
+    "source_status": "DRAFT_NOT_ACTIVATED",
+    "runtime_status": "DRAFT_NOT_ACTIVE"
+  },
+  {
+    "selector_id": "SEL_PAIR_SIMILAR",
+    "source_question_id": "Q_PAIR_SIMILAR",
+    "domain_id": "PAIR",
+    "scope": "PAIR",
+    "answer_owner": "PREMIUM_EDITOR",
+    "model_call_role": "ANSWER",
+    "selection_domain": "DYNAMIC",
+    "cardinality": "SINGLE",
+    "value_set_id": null,
+    "candidate_kind": "PAIR_SIMILARITY",
+    "required_inputs": [
+      "CURRENT_REPORT_CANDIDATES"
+    ],
+    "answer_state_policy": "ANSWER_STATE_V1",
+    "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+    "permitted_evidence_class": "SELECTION_OR_SYNTHESIS_OF_SUPPLIED_CANDIDATES",
+    "source_refs": [
+      {
+        "source_id": "CNPG_B",
+        "relationship": "domain_or_term_basis"
+      }
+    ],
+    "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "report_target": "graphology.pair",
+    "source_status": "DRAFT_NOT_ACTIVATED",
+    "runtime_status": "DRAFT_NOT_ACTIVE"
+  },
+  {
+    "selector_id": "SEL_PAIR_DIFFERENT",
+    "source_question_id": "Q_PAIR_DIFFERENT",
+    "domain_id": "PAIR",
+    "scope": "PAIR",
+    "answer_owner": "PREMIUM_EDITOR",
+    "model_call_role": "ANSWER",
+    "selection_domain": "DYNAMIC",
+    "cardinality": "SINGLE",
+    "value_set_id": null,
+    "candidate_kind": "PAIR_DIFFERENCE",
+    "required_inputs": [
+      "CURRENT_REPORT_CANDIDATES"
+    ],
+    "answer_state_policy": "ANSWER_STATE_V1",
+    "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+    "permitted_evidence_class": "SELECTION_OR_SYNTHESIS_OF_SUPPLIED_CANDIDATES",
+    "source_refs": [
+      {
+        "source_id": "CNPG_B",
+        "relationship": "domain_or_term_basis"
+      }
+    ],
+    "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "report_target": "graphology.pair",
+    "source_status": "DRAFT_NOT_ACTIVATED",
+    "runtime_status": "DRAFT_NOT_ACTIVE"
+  },
+  {
+    "selector_id": "SEL_PAIR_TRAD",
+    "source_question_id": "Q_PAIR_TRAD",
+    "domain_id": "PAIR",
+    "scope": "PAIR",
+    "answer_owner": "PREMIUM_EDITOR",
+    "model_call_role": "ANSWER",
+    "selection_domain": "DYNAMIC",
+    "cardinality": "SINGLE",
+    "value_set_id": null,
+    "candidate_kind": "PAIR_TRADITIONAL_CONTRAST",
+    "required_inputs": [
+      "REVIEWED_SCHOOL_RULE_PACK",
+      "CURRENT_REPORT_CANDIDATES"
+    ],
+    "answer_state_policy": "ANSWER_STATE_V1",
+    "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+    "permitted_evidence_class": "SELECTION_OR_SYNTHESIS_OF_SUPPLIED_CANDIDATES",
+    "source_refs": [
+      {
+        "source_id": "CNPG_B",
+        "relationship": "domain_or_term_basis"
+      }
+    ],
+    "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "report_target": "graphology.pair",
+    "source_status": "DRAFT_NOT_ACTIVATED",
+    "runtime_status": "DRAFT_NOT_ACTIVE"
+  }
+]

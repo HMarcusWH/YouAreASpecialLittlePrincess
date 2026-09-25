@@ -1,0 +1,1450 @@
+[
+  {
+    "value_set_id": "WRITING_STYLE",
+    "version": "0.1-draft",
+    "origin": "APPLICATION_OPERATIONALIZATION",
+    "source_ids": [
+      "IHAS"
+    ],
+    "values": [
+      {
+        "value_id": "PRINT",
+        "label_en": "Print forms",
+        "label_key": "graphology.writing_style.print",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "CURSIVE",
+        "label_en": "Cursive forms",
+        "label_key": "graphology.writing_style.cursive",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "HYBRID",
+        "label_en": "Hybrid forms",
+        "label_key": "graphology.writing_style.hybrid",
+        "status": "DRAFT"
+      }
+    ],
+    "production_status": "DRAFT_NOT_ACTIVE",
+    "runtime_activation": false
+  },
+  {
+    "value_set_id": "TASK",
+    "version": "0.1-draft",
+    "origin": "APPLICATION_OPERATIONALIZATION",
+    "source_ids": [],
+    "values": [
+      {
+        "value_id": "COPIED",
+        "label_en": "Copied passage",
+        "label_key": "graphology.task.copied",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "FREE",
+        "label_en": "Free writing",
+        "label_key": "graphology.task.free",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "DICTATED",
+        "label_en": "Dictated text",
+        "label_key": "graphology.task.dictated",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "SIGNATURE",
+        "label_en": "Signature",
+        "label_key": "graphology.task.signature",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "OTHER",
+        "label_en": "Other declared task",
+        "label_key": "graphology.task.other",
+        "status": "DRAFT"
+      }
+    ],
+    "production_status": "DRAFT_NOT_ACTIVE",
+    "runtime_activation": false
+  },
+  {
+    "value_set_id": "SURFACE",
+    "version": "0.1-draft",
+    "origin": "APPLICATION_OPERATIONALIZATION",
+    "source_ids": [],
+    "values": [
+      {
+        "value_id": "BLANK",
+        "label_en": "Blank",
+        "label_key": "graphology.surface.blank",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "RULED",
+        "label_en": "Ruled",
+        "label_key": "graphology.surface.ruled",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "GRID",
+        "label_en": "Grid",
+        "label_key": "graphology.surface.grid",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "FORM",
+        "label_en": "Preprinted form",
+        "label_key": "graphology.surface.form",
+        "status": "DRAFT"
+      }
+    ],
+    "production_status": "DRAFT_NOT_ACTIVE",
+    "runtime_activation": false
+  },
+  {
+    "value_set_id": "CAPTURE_FRAME",
+    "version": "0.1-draft",
+    "origin": "APPLICATION_OPERATIONALIZATION",
+    "source_ids": [],
+    "values": [
+      {
+        "value_id": "WHOLE_PAGE",
+        "label_en": "Whole page visible",
+        "label_key": "graphology.capture_frame.whole_page",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "CROPPED_PAGE",
+        "label_en": "Part of page visible",
+        "label_key": "graphology.capture_frame.cropped_page",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "REGION_ONLY",
+        "label_en": "Writing region only",
+        "label_key": "graphology.capture_frame.region_only",
+        "status": "DRAFT"
+      }
+    ],
+    "production_status": "DRAFT_NOT_ACTIVE",
+    "runtime_activation": false
+  },
+  {
+    "value_set_id": "SCALE",
+    "version": "0.1-draft",
+    "origin": "APPLICATION_OPERATIONALIZATION",
+    "source_ids": [],
+    "values": [
+      {
+        "value_id": "CALIBRATED",
+        "label_en": "Verified scale reference",
+        "label_key": "graphology.scale.calibrated",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "UNCALIBRATED",
+        "label_en": "No verified scale reference",
+        "label_key": "graphology.scale.uncalibrated",
+        "status": "DRAFT"
+      }
+    ],
+    "production_status": "DRAFT_NOT_ACTIVE",
+    "runtime_activation": false
+  },
+  {
+    "value_set_id": "DIRECTION_CONTEXT",
+    "version": "0.1-draft",
+    "origin": "APPLICATION_OPERATIONALIZATION",
+    "source_ids": [],
+    "values": [
+      {
+        "value_id": "LTR",
+        "label_en": "Left to right",
+        "label_key": "graphology.direction_context.ltr",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "RTL",
+        "label_en": "Right to left",
+        "label_key": "graphology.direction_context.rtl",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "VERTICAL",
+        "label_en": "Vertical",
+        "label_key": "graphology.direction_context.vertical",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "MULTIPLE",
+        "label_en": "Multiple directions",
+        "label_key": "graphology.direction_context.multiple",
+        "status": "DRAFT"
+      }
+    ],
+    "production_status": "DRAFT_NOT_ACTIVE",
+    "runtime_activation": false
+  },
+  {
+    "value_set_id": "GLOBAL_BALANCE",
+    "version": "0.1-draft",
+    "origin": "APPLICATION_OPERATIONALIZATION",
+    "source_ids": [
+      "CNPG_B"
+    ],
+    "values": [
+      {
+        "value_id": "FORM_LED",
+        "label_en": "Form-led appearance",
+        "label_key": "graphology.global_balance.form_led",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "MOVEMENT_LED",
+        "label_en": "Movement-led appearance",
+        "label_key": "graphology.global_balance.movement_led",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "NEITHER_DOMINATES",
+        "label_en": "Neither clearly dominates",
+        "label_key": "graphology.global_balance.neither_dominates",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "REGION_DEPENDENT",
+        "label_en": "Different by region",
+        "label_key": "graphology.global_balance.region_dependent",
+        "status": "DRAFT"
+      }
+    ],
+    "production_status": "DRAFT_NOT_ACTIVE",
+    "runtime_activation": false
+  },
+  {
+    "value_set_id": "COHERENCE",
+    "version": "0.1-draft",
+    "origin": "APPLICATION_OPERATIONALIZATION",
+    "source_ids": [
+      "AHAF",
+      "CNPG_B"
+    ],
+    "values": [
+      {
+        "value_id": "COHERENT",
+        "label_en": "Features form a visually consistent whole",
+        "label_key": "graphology.coherence.coherent",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "PARTLY_COHERENT",
+        "label_en": "Some features diverge",
+        "label_key": "graphology.coherence.partly_coherent",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "FRAGMENTED",
+        "label_en": "Markedly different regional patterns",
+        "label_key": "graphology.coherence.fragmented",
+        "status": "DRAFT"
+      }
+    ],
+    "production_status": "DRAFT_NOT_ACTIVE",
+    "runtime_activation": false
+  },
+  {
+    "value_set_id": "VARIATION_CHARACTER",
+    "version": "0.1-draft",
+    "origin": "APPLICATION_OPERATIONALIZATION",
+    "source_ids": [
+      "MORETTI_I",
+      "SGB"
+    ],
+    "values": [
+      {
+        "value_id": "UNIFORM",
+        "label_en": "Closely uniform",
+        "label_key": "graphology.variation_character.uniform",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "PATTERNED_VARIATION",
+        "label_en": "Variation with a recurring pattern",
+        "label_key": "graphology.variation_character.patterned_variation",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "UNPATTERNED_VARIATION",
+        "label_en": "Variation without a clear pattern",
+        "label_key": "graphology.variation_character.unpatterned_variation",
+        "status": "DRAFT"
+      }
+    ],
+    "production_status": "DRAFT_NOT_ACTIVE",
+    "runtime_activation": false
+  },
+  {
+    "value_set_id": "SPACE_BALANCE",
+    "version": "0.1-draft",
+    "origin": "APPLICATION_OPERATIONALIZATION",
+    "source_ids": [
+      "LEPOUTRE"
+    ],
+    "values": [
+      {
+        "value_id": "INK_DOMINANT",
+        "label_en": "Dense use of available space",
+        "label_key": "graphology.space_balance.ink_dominant",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "BALANCED",
+        "label_en": "Neither ink nor whitespace dominates",
+        "label_key": "graphology.space_balance.balanced",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "WHITE_DOMINANT",
+        "label_en": "Open use of available space",
+        "label_key": "graphology.space_balance.white_dominant",
+        "status": "DRAFT"
+      }
+    ],
+    "production_status": "DRAFT_NOT_ACTIVE",
+    "runtime_activation": false
+  },
+  {
+    "value_set_id": "BAND3",
+    "version": "0.1-draft",
+    "origin": "APPLICATION_OPERATIONALIZATION",
+    "source_ids": [],
+    "values": [
+      {
+        "value_id": "LOW",
+        "label_en": "Below the applicable documented band",
+        "label_key": "graphology.band3.low",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "MIDDLE",
+        "label_en": "Within the applicable documented band",
+        "label_key": "graphology.band3.middle",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "HIGH",
+        "label_en": "Above the applicable documented band",
+        "label_key": "graphology.band3.high",
+        "status": "DRAFT"
+      }
+    ],
+    "production_status": "DRAFT_NOT_ACTIVE",
+    "runtime_activation": false
+  },
+  {
+    "value_set_id": "TREND",
+    "version": "0.1-draft",
+    "origin": "APPLICATION_OPERATIONALIZATION",
+    "source_ids": [],
+    "values": [
+      {
+        "value_id": "DECREASING",
+        "label_en": "Decreasing across the defined sequence",
+        "label_key": "graphology.trend.decreasing",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "STABLE",
+        "label_en": "No material trend in the defined sequence",
+        "label_key": "graphology.trend.stable",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "INCREASING",
+        "label_en": "Increasing across the defined sequence",
+        "label_key": "graphology.trend.increasing",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "REVERSING",
+        "label_en": "Direction changes across the sequence",
+        "label_key": "graphology.trend.reversing",
+        "status": "DRAFT"
+      }
+    ],
+    "production_status": "DRAFT_NOT_ACTIVE",
+    "runtime_activation": false
+  },
+  {
+    "value_set_id": "ZONE_RELATION",
+    "version": "0.1-draft",
+    "origin": "APPLICATION_OPERATIONALIZATION",
+    "source_ids": [
+      "IHAS",
+      "BIG26"
+    ],
+    "values": [
+      {
+        "value_id": "UPPER_EMPHASIS",
+        "label_en": "Upper extensions emphasized",
+        "label_key": "graphology.zone_relation.upper_emphasis",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "MIDDLE_EMPHASIS",
+        "label_en": "Middle body emphasized",
+        "label_key": "graphology.zone_relation.middle_emphasis",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "LOWER_EMPHASIS",
+        "label_en": "Lower extensions emphasized",
+        "label_key": "graphology.zone_relation.lower_emphasis",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "NO_CLEAR_EMPHASIS",
+        "label_en": "No clear zone emphasis",
+        "label_key": "graphology.zone_relation.no_clear_emphasis",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "MULTIPLE_EMPHASIS",
+        "label_en": "More than one zone emphasized",
+        "label_key": "graphology.zone_relation.multiple_emphasis",
+        "status": "DRAFT"
+      }
+    ],
+    "production_status": "DRAFT_NOT_ACTIVE",
+    "runtime_activation": false
+  },
+  {
+    "value_set_id": "RELATIVE_SIZE",
+    "version": "0.1-draft",
+    "origin": "APPLICATION_OPERATIONALIZATION",
+    "source_ids": [],
+    "values": [
+      {
+        "value_id": "SMALLER",
+        "label_en": "Smaller under the matched comparison",
+        "label_key": "graphology.relative_size.smaller",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "COMPARABLE",
+        "label_en": "Within the documented comparison tolerance",
+        "label_key": "graphology.relative_size.comparable",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "LARGER",
+        "label_en": "Larger under the matched comparison",
+        "label_key": "graphology.relative_size.larger",
+        "status": "DRAFT"
+      }
+    ],
+    "production_status": "DRAFT_NOT_ACTIVE",
+    "runtime_activation": false
+  },
+  {
+    "value_set_id": "SLANT",
+    "version": "0.1-draft",
+    "origin": "APPLICATION_OPERATIONALIZATION",
+    "source_ids": [
+      "IHAS"
+    ],
+    "values": [
+      {
+        "value_id": "LEFT",
+        "label_en": "Left-inclined relative to baseline",
+        "label_key": "graphology.slant.left",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "UPRIGHT",
+        "label_en": "Near upright relative to baseline",
+        "label_key": "graphology.slant.upright",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "RIGHT",
+        "label_en": "Right-inclined relative to baseline",
+        "label_key": "graphology.slant.right",
+        "status": "DRAFT"
+      }
+    ],
+    "production_status": "DRAFT_NOT_ACTIVE",
+    "runtime_activation": false
+  },
+  {
+    "value_set_id": "BASELINE",
+    "version": "0.1-draft",
+    "origin": "APPLICATION_OPERATIONALIZATION",
+    "source_ids": [
+      "BIG26",
+      "CONTIN"
+    ],
+    "values": [
+      {
+        "value_id": "RISING",
+        "label_en": "Rising in the declared writing direction",
+        "label_key": "graphology.baseline.rising",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "LEVEL",
+        "label_en": "Approximately level",
+        "label_key": "graphology.baseline.level",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "FALLING",
+        "label_en": "Falling in the declared writing direction",
+        "label_key": "graphology.baseline.falling",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "NONMONOTONIC",
+        "label_en": "Non-monotonic",
+        "label_key": "graphology.baseline.nonmonotonic",
+        "status": "DRAFT"
+      }
+    ],
+    "production_status": "DRAFT_NOT_ACTIVE",
+    "runtime_activation": false
+  },
+  {
+    "value_set_id": "BASELINE_SHAPE",
+    "version": "0.1-draft",
+    "origin": "SOURCE_DOMAIN_WITH_PROPOSED_SHAPE_RUBRIC",
+    "source_ids": [
+      "BIG26"
+    ],
+    "values": [
+      {
+        "value_id": "STRAIGHT",
+        "label_en": "Approximately straight",
+        "label_key": "graphology.baseline_shape.straight",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "ARCHED",
+        "label_en": "Arch-shaped",
+        "label_key": "graphology.baseline_shape.arched",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "BOWED",
+        "label_en": "Bowl-shaped",
+        "label_key": "graphology.baseline_shape.bowed",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "UNDULATING",
+        "label_en": "Undulating",
+        "label_key": "graphology.baseline_shape.undulating",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "IRREGULAR",
+        "label_en": "No stable shape",
+        "label_key": "graphology.baseline_shape.irregular",
+        "status": "DRAFT"
+      }
+    ],
+    "production_status": "DRAFT_NOT_ACTIVE",
+    "runtime_activation": false
+  },
+  {
+    "value_set_id": "CONNECTION_DEGREE",
+    "version": "0.1-draft",
+    "origin": "APPLICATION_OPERATIONALIZATION",
+    "source_ids": [
+      "IHAS"
+    ],
+    "values": [
+      {
+        "value_id": "MAINLY_JOINED",
+        "label_en": "Mainly joined",
+        "label_key": "graphology.connection_degree.mainly_joined",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "PARTLY_JOINED",
+        "label_en": "Partly joined",
+        "label_key": "graphology.connection_degree.partly_joined",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "MAINLY_SEPARATE",
+        "label_en": "Mainly separate",
+        "label_key": "graphology.connection_degree.mainly_separate",
+        "status": "DRAFT"
+      }
+    ],
+    "production_status": "DRAFT_NOT_ACTIVE",
+    "runtime_activation": false
+  },
+  {
+    "value_set_id": "CONNECTOR_FORM",
+    "version": "0.1-draft",
+    "origin": "SOURCE_TERMS; multi-selection and local rubric proposed",
+    "source_ids": [
+      "IHAS"
+    ],
+    "values": [
+      {
+        "value_id": "ARCADE",
+        "label_en": "Arcade",
+        "label_key": "graphology.connector_form.arcade",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "GARLAND",
+        "label_en": "Garland",
+        "label_key": "graphology.connector_form.garland",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "ANGULAR",
+        "label_en": "Angular",
+        "label_key": "graphology.connector_form.angular",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "THREAD",
+        "label_en": "Thread",
+        "label_key": "graphology.connector_form.thread",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "WAVY_LINE",
+        "label_en": "Wavy line",
+        "label_key": "graphology.connector_form.wavy_line",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "COPYBOOK",
+        "label_en": "Copybook connector",
+        "label_key": "graphology.connector_form.copybook",
+        "status": "DRAFT"
+      }
+    ],
+    "production_status": "DRAFT_NOT_ACTIVE",
+    "runtime_activation": false
+  },
+  {
+    "value_set_id": "FORM_GEOMETRY",
+    "version": "0.1-draft",
+    "origin": "APPLICATION_OPERATIONALIZATION",
+    "source_ids": [
+      "BIG26",
+      "IHAS"
+    ],
+    "values": [
+      {
+        "value_id": "ROUNDED",
+        "label_en": "Rounded construction",
+        "label_key": "graphology.form_geometry.rounded",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "ANGULAR",
+        "label_en": "Angular construction",
+        "label_key": "graphology.form_geometry.angular",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "SQUARED",
+        "label_en": "Squared construction",
+        "label_key": "graphology.form_geometry.squared",
+        "status": "DRAFT"
+      }
+    ],
+    "production_status": "DRAFT_NOT_ACTIVE",
+    "runtime_activation": false
+  },
+  {
+    "value_set_id": "SIMPLIFICATION",
+    "version": "0.1-draft",
+    "origin": "APPLICATION_OPERATIONALIZATION",
+    "source_ids": [
+      "IHAS"
+    ],
+    "values": [
+      {
+        "value_id": "ELABORATED",
+        "label_en": "Extra form detail retained or added",
+        "label_key": "graphology.simplification.elaborated",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "REFERENCE_LIKE",
+        "label_en": "Near the identified reference form",
+        "label_key": "graphology.simplification.reference_like",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "SIMPLIFIED_LEGIBLE",
+        "label_en": "Reduced strokes, forms still identifiable",
+        "label_key": "graphology.simplification.simplified_legible",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "REDUCED_UNCLEAR",
+        "label_en": "Reduced forms with lost distinction",
+        "label_key": "graphology.simplification.reduced_unclear",
+        "status": "DRAFT"
+      }
+    ],
+    "production_status": "DRAFT_NOT_ACTIVE",
+    "runtime_activation": false
+  },
+  {
+    "value_set_id": "LETTER_WIDTH",
+    "version": "0.1-draft",
+    "origin": "APPLICATION_OPERATIONALIZATION",
+    "source_ids": [
+      "IHAS",
+      "CONTIN"
+    ],
+    "values": [
+      {
+        "value_id": "NARROW",
+        "label_en": "Narrow under the defined body-width measure",
+        "label_key": "graphology.letter_width.narrow",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "MIDRANGE",
+        "label_en": "Midrange under the defined measure",
+        "label_key": "graphology.letter_width.midrange",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "BROAD",
+        "label_en": "Broad under the defined measure",
+        "label_key": "graphology.letter_width.broad",
+        "status": "DRAFT"
+      }
+    ],
+    "production_status": "DRAFT_NOT_ACTIVE",
+    "runtime_activation": false
+  },
+  {
+    "value_set_id": "LOOP_FORM",
+    "version": "0.1-draft",
+    "origin": "APPLICATION_OPERATIONALIZATION",
+    "source_ids": [
+      "IHAS"
+    ],
+    "values": [
+      {
+        "value_id": "RESTRICTED",
+        "label_en": "Restricted loop space",
+        "label_key": "graphology.loop_form.restricted",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "MODERATE",
+        "label_en": "Intermediate loop space",
+        "label_key": "graphology.loop_form.moderate",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "EXPANDED",
+        "label_en": "Expanded loop space",
+        "label_key": "graphology.loop_form.expanded",
+        "status": "DRAFT"
+      }
+    ],
+    "production_status": "DRAFT_NOT_ACTIVE",
+    "runtime_activation": false
+  },
+  {
+    "value_set_id": "STROKE_QUALITY",
+    "version": "0.1-draft",
+    "origin": "APPLICATION_OPERATIONALIZATION",
+    "source_ids": [
+      "IHAS"
+    ],
+    "values": [
+      {
+        "value_id": "SHARP_APPEARANCE",
+        "label_en": "Sharp-looking trace",
+        "label_key": "graphology.stroke_quality.sharp_appearance",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "PASTOSE_APPEARANCE",
+        "label_en": "Pastose-looking trace",
+        "label_key": "graphology.stroke_quality.pastose_appearance",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "HETEROGENEOUS",
+        "label_en": "Different trace appearance by region",
+        "label_key": "graphology.stroke_quality.heterogeneous",
+        "status": "DRAFT"
+      }
+    ],
+    "production_status": "DRAFT_NOT_ACTIVE",
+    "runtime_activation": false
+  },
+  {
+    "value_set_id": "SHADING",
+    "version": "0.1-draft",
+    "origin": "APPLICATION_OPERATIONALIZATION",
+    "source_ids": [
+      "IHAS"
+    ],
+    "values": [
+      {
+        "value_id": "LITTLE_CONTRAST",
+        "label_en": "Little visible directional thickness contrast",
+        "label_key": "graphology.shading.little_contrast",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "VISIBLE_CONTRAST",
+        "label_en": "Visible directional thickness contrast",
+        "label_key": "graphology.shading.visible_contrast",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "VARIABLE_CONTRAST",
+        "label_en": "Contrast varies across eligible regions",
+        "label_key": "graphology.shading.variable_contrast",
+        "status": "DRAFT"
+      }
+    ],
+    "production_status": "DRAFT_NOT_ACTIVE",
+    "runtime_activation": false
+  },
+  {
+    "value_set_id": "MOVEMENT_IMPRESSION",
+    "version": "0.1-draft",
+    "origin": "APPLICATION_OPERATIONALIZATION",
+    "source_ids": [
+      "SGB",
+      "CNPG_B"
+    ],
+    "values": [
+      {
+        "value_id": "FLOWING",
+        "label_en": "Flowing visual impression",
+        "label_key": "graphology.movement_impression.flowing",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "HALTING",
+        "label_en": "Halting visual impression",
+        "label_key": "graphology.movement_impression.halting",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "FORMALIZED",
+        "label_en": "Formally constructed visual impression",
+        "label_key": "graphology.movement_impression.formalized",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "VARIABLE",
+        "label_en": "Varies across the sample",
+        "label_key": "graphology.movement_impression.variable",
+        "status": "DRAFT"
+      }
+    ],
+    "production_status": "DRAFT_NOT_ACTIVE",
+    "runtime_activation": false
+  },
+  {
+    "value_set_id": "TEMPO_IMPRESSION",
+    "version": "0.1-draft",
+    "origin": "SOURCE_DOMAIN; APPARENT_ONLY_APPLICATION_RUBRIC",
+    "source_ids": [
+      "BIG26",
+      "CJ1892"
+    ],
+    "values": [
+      {
+        "value_id": "RAPID_APPEARANCE",
+        "label_en": "Rapid-looking execution",
+        "label_key": "graphology.tempo_impression.rapid_appearance",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "DELIBERATE_APPEARANCE",
+        "label_en": "Deliberate-looking execution",
+        "label_key": "graphology.tempo_impression.deliberate_appearance",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "VARIABLE_APPEARANCE",
+        "label_en": "Different execution appearances by region",
+        "label_key": "graphology.tempo_impression.variable_appearance",
+        "status": "DRAFT"
+      }
+    ],
+    "production_status": "DRAFT_NOT_ACTIVE",
+    "runtime_activation": false
+  },
+  {
+    "value_set_id": "GRAPHICAL_TENSION",
+    "version": "0.1-draft",
+    "origin": "SOURCE_DOMAIN; QUALITATIVE_APPLICATION_RUBRIC",
+    "source_ids": [
+      "BIG26",
+      "CNPG_B"
+    ],
+    "values": [
+      {
+        "value_id": "SUSTAINED_APPEARANCE",
+        "label_en": "Visually sustained construction",
+        "label_key": "graphology.graphical_tension.sustained_appearance",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "SLACK_APPEARANCE",
+        "label_en": "Visually slack construction",
+        "label_key": "graphology.graphical_tension.slack_appearance",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "VARIABLE_APPEARANCE",
+        "label_en": "Variable construction",
+        "label_key": "graphology.graphical_tension.variable_appearance",
+        "status": "DRAFT"
+      }
+    ],
+    "production_status": "DRAFT_NOT_ACTIVE",
+    "runtime_activation": false
+  },
+  {
+    "value_set_id": "RHYTHM",
+    "version": "0.1-draft",
+    "origin": "SOURCE_TERMS; expert visual anchors still required",
+    "source_ids": [
+      "BIG26",
+      "IHAS"
+    ],
+    "values": [
+      {
+        "value_id": "RHYTHMIC",
+        "label_en": "Rhythmic",
+        "label_key": "graphology.rhythm.rhythmic",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "ARRHYTHMIC",
+        "label_en": "Arrhythmic",
+        "label_key": "graphology.rhythm.arrhythmic",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "STILTED",
+        "label_en": "Stilted",
+        "label_key": "graphology.rhythm.stilted",
+        "status": "DRAFT"
+      }
+    ],
+    "production_status": "DRAFT_NOT_ACTIVE",
+    "runtime_activation": false
+  },
+  {
+    "value_set_id": "GAP_DIRECTION",
+    "version": "0.1-draft",
+    "origin": "APPLICATION_OPERATIONALIZATION",
+    "source_ids": [],
+    "values": [
+      {
+        "value_id": "LEFT",
+        "label_en": "Gap to the left",
+        "label_key": "graphology.gap_direction.left",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "TOP",
+        "label_en": "Gap at the top",
+        "label_key": "graphology.gap_direction.top",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "RIGHT",
+        "label_en": "Gap to the right",
+        "label_key": "graphology.gap_direction.right",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "BOTTOM",
+        "label_en": "Gap at the bottom",
+        "label_key": "graphology.gap_direction.bottom",
+        "status": "DRAFT"
+      }
+    ],
+    "production_status": "DRAFT_NOT_ACTIVE",
+    "runtime_activation": false
+  },
+  {
+    "value_set_id": "OVAL_CLOSURE",
+    "version": "0.1-draft",
+    "origin": "APPLICATION_OPERATIONALIZATION",
+    "source_ids": [
+      "BIG26",
+      "CJ1892"
+    ],
+    "values": [
+      {
+        "value_id": "OPEN",
+        "label_en": "Open contour",
+        "label_key": "graphology.oval_closure.open",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "CLOSED",
+        "label_en": "Closed contour",
+        "label_key": "graphology.oval_closure.closed",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "OVERLAPPED",
+        "label_en": "Closure overlaps or retraces",
+        "label_key": "graphology.oval_closure.overlapped",
+        "status": "DRAFT"
+      }
+    ],
+    "production_status": "DRAFT_NOT_ACTIVE",
+    "runtime_activation": false
+  },
+  {
+    "value_set_id": "DOT_FORM",
+    "version": "0.1-draft",
+    "origin": "SOURCE_DOMAIN_WITH_APPLICATION_MARK_FORMS",
+    "source_ids": [
+      "BIG26"
+    ],
+    "values": [
+      {
+        "value_id": "DOT",
+        "label_en": "Dot",
+        "label_key": "graphology.dot_form.dot",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "DASH",
+        "label_en": "Dash",
+        "label_key": "graphology.dot_form.dash",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "CIRCLE",
+        "label_en": "Circle",
+        "label_key": "graphology.dot_form.circle",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "COMPOUND",
+        "label_en": "Compound mark",
+        "label_key": "graphology.dot_form.compound",
+        "status": "DRAFT"
+      }
+    ],
+    "production_status": "DRAFT_NOT_ACTIVE",
+    "runtime_activation": false
+  },
+  {
+    "value_set_id": "DIACRITIC_VARIANT",
+    "version": "0.1-draft",
+    "origin": "APPLICATION_LANGUAGE_EXTENSION; no traditional trait claim",
+    "source_ids": [],
+    "values": [
+      {
+        "value_id": "EXPECTED_FORM",
+        "label_en": "Expected orthographic form",
+        "label_key": "graphology.diacritic_variant.expected_form",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "STROKE_SUBSTITUTE",
+        "label_en": "Stroke used as a substitute",
+        "label_key": "graphology.diacritic_variant.stroke_substitute",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "DOT_STROKE_COMBINATION",
+        "label_en": "Dots and stroke combined",
+        "label_key": "graphology.diacritic_variant.dot_stroke_combination",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "OTHER_OBSERVED_FORM",
+        "label_en": "Other documented form",
+        "label_key": "graphology.diacritic_variant.other_observed_form",
+        "status": "DRAFT"
+      }
+    ],
+    "production_status": "DRAFT_NOT_ACTIVE",
+    "runtime_activation": false
+  },
+  {
+    "value_set_id": "LATERAL_OFFSET",
+    "version": "0.1-draft",
+    "origin": "APPLICATION_OPERATIONALIZATION",
+    "source_ids": [],
+    "values": [
+      {
+        "value_id": "LEFT",
+        "label_en": "Left of the identified anchor",
+        "label_key": "graphology.lateral_offset.left",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "CENTRED",
+        "label_en": "Near the identified anchor",
+        "label_key": "graphology.lateral_offset.centred",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "RIGHT",
+        "label_en": "Right of the identified anchor",
+        "label_key": "graphology.lateral_offset.right",
+        "status": "DRAFT"
+      }
+    ],
+    "production_status": "DRAFT_NOT_ACTIVE",
+    "runtime_activation": false
+  },
+  {
+    "value_set_id": "VERTICAL_POSITION",
+    "version": "0.1-draft",
+    "origin": "APPLICATION_OPERATIONALIZATION",
+    "source_ids": [],
+    "values": [
+      {
+        "value_id": "LOW",
+        "label_en": "Lower region of the identified stem",
+        "label_key": "graphology.vertical_position.low",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "MID",
+        "label_en": "Middle region of the identified stem",
+        "label_key": "graphology.vertical_position.mid",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "HIGH",
+        "label_en": "Upper region of the identified stem",
+        "label_key": "graphology.vertical_position.high",
+        "status": "DRAFT"
+      }
+    ],
+    "production_status": "DRAFT_NOT_ACTIVE",
+    "runtime_activation": false
+  },
+  {
+    "value_set_id": "TERMINAL_FORM",
+    "version": "0.1-draft",
+    "origin": "APPLICATION_OPERATIONALIZATION",
+    "source_ids": [
+      "BIG26",
+      "CJ1892"
+    ],
+    "values": [
+      {
+        "value_id": "POINTED",
+        "label_en": "Pointed ending",
+        "label_key": "graphology.terminal_form.pointed",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "BLUNT",
+        "label_en": "Blunt ending",
+        "label_key": "graphology.terminal_form.blunt",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "HOOKED",
+        "label_en": "Hook-shaped ending",
+        "label_key": "graphology.terminal_form.hooked",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "LOOPED",
+        "label_en": "Looped ending",
+        "label_key": "graphology.terminal_form.looped",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "EXTENDED",
+        "label_en": "Extended ending",
+        "label_key": "graphology.terminal_form.extended",
+        "status": "DRAFT"
+      }
+    ],
+    "production_status": "DRAFT_NOT_ACTIVE",
+    "runtime_activation": false
+  },
+  {
+    "value_set_id": "CAPITAL_CONNECTION",
+    "version": "0.1-draft",
+    "origin": "APPLICATION_OPERATIONALIZATION",
+    "source_ids": [
+      "BIG26"
+    ],
+    "values": [
+      {
+        "value_id": "JOINED",
+        "label_en": "Joined to following text",
+        "label_key": "graphology.capital_connection.joined",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "SEPARATE",
+        "label_en": "Separate from following text",
+        "label_key": "graphology.capital_connection.separate",
+        "status": "DRAFT"
+      }
+    ],
+    "production_status": "DRAFT_NOT_ACTIVE",
+    "runtime_activation": false
+  },
+  {
+    "value_set_id": "SIGNATURE_LOCATION",
+    "version": "0.1-draft",
+    "origin": "APPLICATION_OPERATIONALIZATION",
+    "source_ids": [
+      "CNPG_B"
+    ],
+    "values": [
+      {
+        "value_id": "LEFT",
+        "label_en": "Left-aligned relative to body text",
+        "label_key": "graphology.signature_location.left",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "CENTRE",
+        "label_en": "Central relative to body text",
+        "label_key": "graphology.signature_location.centre",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "RIGHT",
+        "label_en": "Right-aligned relative to body text",
+        "label_key": "graphology.signature_location.right",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "WITHIN",
+        "label_en": "Within the text block",
+        "label_key": "graphology.signature_location.within",
+        "status": "DRAFT"
+      }
+    ],
+    "production_status": "DRAFT_NOT_ACTIVE",
+    "runtime_activation": false
+  },
+  {
+    "value_set_id": "SIGNATURE_ADDON",
+    "version": "0.1-draft",
+    "origin": "APPLICATION_RUBRIC_FOR_SOURCE_DOMAIN",
+    "source_ids": [
+      "IHAS",
+      "CNPG_B"
+    ],
+    "values": [
+      {
+        "value_id": "UNDERLINE",
+        "label_en": "Underline",
+        "label_key": "graphology.signature_addon.underline",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "ENCLOSURE",
+        "label_en": "Enclosure",
+        "label_key": "graphology.signature_addon.enclosure",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "CROSSING",
+        "label_en": "Crossing stroke",
+        "label_key": "graphology.signature_addon.crossing",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "FLOURISH",
+        "label_en": "Additional flourish",
+        "label_key": "graphology.signature_addon.flourish",
+        "status": "DRAFT"
+      }
+    ],
+    "production_status": "DRAFT_NOT_ACTIVE",
+    "runtime_activation": false
+  },
+  {
+    "value_set_id": "DOMINANCE",
+    "version": "0.1-draft",
+    "origin": "SOURCE_TERMS",
+    "source_ids": [
+      "BIG26"
+    ],
+    "values": [
+      {
+        "value_id": "DOMINANT",
+        "label_en": "Dominant",
+        "label_key": "graphology.dominance.dominant",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "SECONDARY",
+        "label_en": "Secondary",
+        "label_key": "graphology.dominance.secondary",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "MISCELLANEOUS",
+        "label_en": "Miscellaneous",
+        "label_key": "graphology.dominance.miscellaneous",
+        "status": "DRAFT"
+      }
+    ],
+    "production_status": "DRAFT_NOT_ACTIVE",
+    "runtime_activation": false
+  },
+  {
+    "value_set_id": "SIGN_RELATION",
+    "version": "0.1-draft",
+    "origin": "APPLICATION_OPERATIONALIZATION",
+    "source_ids": [
+      "CARBONARI",
+      "CJ1892"
+    ],
+    "values": [
+      {
+        "value_id": "SUPPORTS",
+        "label_en": "Supports",
+        "label_key": "graphology.sign_relation.supports",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "OPPOSES",
+        "label_en": "Opposes",
+        "label_key": "graphology.sign_relation.opposes",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "NEUTRAL",
+        "label_en": "No defined effect",
+        "label_key": "graphology.sign_relation.neutral",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "CONTEXT_DEPENDENT",
+        "label_en": "Changes with specified context",
+        "label_key": "graphology.sign_relation.context_dependent",
+        "status": "DRAFT"
+      }
+    ],
+    "production_status": "DRAFT_NOT_ACTIVE",
+    "runtime_activation": false
+  },
+  {
+    "value_set_id": "CONCLUSION_STATE",
+    "version": "0.1-draft",
+    "origin": "APPLICATION_OPERATIONALIZATION",
+    "source_ids": [],
+    "values": [
+      {
+        "value_id": "SUPPORTED_WITHIN_PACK",
+        "label_en": "Supported within this named traditional rule pack",
+        "label_key": "graphology.conclusion_state.supported_within_pack",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "QUALIFIED_WITHIN_PACK",
+        "label_en": "Supported only with stated qualifications",
+        "label_key": "graphology.conclusion_state.qualified_within_pack",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "CONTRADICTED_WITHIN_PACK",
+        "label_en": "Counterevidence defeats this candidate",
+        "label_key": "graphology.conclusion_state.contradicted_within_pack",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "UNRESOLVED",
+        "label_en": "No permitted conclusion",
+        "label_key": "graphology.conclusion_state.unresolved",
+        "status": "DRAFT"
+      }
+    ],
+    "production_status": "DRAFT_NOT_ACTIVE",
+    "runtime_activation": false
+  },
+  {
+    "value_set_id": "COMPARABILITY",
+    "version": "0.1-draft",
+    "origin": "APPLICATION_OPERATIONALIZATION",
+    "source_ids": [],
+    "values": [
+      {
+        "value_id": "MATCHED",
+        "label_en": "Comparable under the declared policy",
+        "label_key": "graphology.comparability.matched",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "LIMITED",
+        "label_en": "Only a restricted common subset is comparable",
+        "label_key": "graphology.comparability.limited",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "INCOMPARABLE",
+        "label_en": "No permitted comparison",
+        "label_key": "graphology.comparability.incomparable",
+        "status": "DRAFT"
+      }
+    ],
+    "production_status": "DRAFT_NOT_ACTIVE",
+    "runtime_activation": false
+  },
+  {
+    "value_set_id": "DISAGREEMENT",
+    "version": "0.1-draft",
+    "origin": "APPLICATION_OPERATIONALIZATION",
+    "source_ids": [],
+    "values": [
+      {
+        "value_id": "ALIGNED",
+        "label_en": "Candidate interpretations are aligned",
+        "label_key": "graphology.disagreement.aligned",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "QUALIFIED",
+        "label_en": "Same theme with different qualifications",
+        "label_key": "graphology.disagreement.qualified",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "CONTRADICTORY",
+        "label_en": "Candidates conflict",
+        "label_key": "graphology.disagreement.contradictory",
+        "status": "DRAFT"
+      },
+      {
+        "value_id": "UNMAPPABLE",
+        "label_en": "School concepts cannot be equated",
+        "label_key": "graphology.disagreement.unmappable",
+        "status": "DRAFT"
+      }
+    ],
+    "production_status": "DRAFT_NOT_ACTIVE",
+    "runtime_activation": false
+  }
+]

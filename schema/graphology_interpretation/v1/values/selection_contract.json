@@ -1,0 +1,14 @@
+{
+  "selection_domain": [
+    "FIXED",
+    "DYNAMIC"
+  ],
+  "cardinality": [
+    "SINGLE",
+    "MULTIPLE"
+  ],
+  "reason": "Candidate origin and number selected are independent axes; do not conflate MULTI_SELECT with enum source.",
+  "version": "graphology-selection-contract/1",
+  "production_status": "DRAFT_NOT_ACTIVE",
+  "runtime_activation": false
+}
