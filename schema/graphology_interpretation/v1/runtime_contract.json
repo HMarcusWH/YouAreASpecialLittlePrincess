@@ -1,0 +1,47 @@
+{
+  "version": "premium-interpretation-runtime-contract/1",
+  "design_principles": [
+    "Canonical deterministic measurements are authoritative for measurable values.",
+    "Reference statistics are computed before model invocation; the model never invents percentiles or rarity.",
+    "Fixed selectors use stable predetermined value IDs.",
+    "Dynamic selectors are restricted to candidate IDs supplied for the current report.",
+    "Soft text is bounded and evidence-linked.",
+    "Image-only observations are separate from canonical measurements.",
+    "Traditional graphology values require reviewed association provenance and explicit labeling.",
+    "Visible text in handwriting images is untrusted data, never model instructions.",
+    "Individual, pair and history question packs are independently versioned."
+  ],
+  "enums": {
+    "selection_mode": [
+      "FIXED_ENUM",
+      "DYNAMIC_FACT",
+      "DYNAMIC_OUTLIER",
+      "DYNAMIC_CANDIDATE",
+      "MULTI_SELECT"
+    ],
+    "answer_mode": [
+      "SELECTOR",
+      "MULTI_SELECTOR",
+      "SOFT_TEXT",
+      "SELECTOR_PLUS_TEXT"
+    ],
+    "scope": [
+      "INDIVIDUAL",
+      "PAIR",
+      "HISTORY"
+    ],
+    "evidence_class": [
+      "MEASUREMENT",
+      "REFERENCE_STATISTIC",
+      "MECHANICAL_SUMMARY",
+      "TRADITIONAL_ASSOCIATION",
+      "COMPARISON",
+      "VISUAL_OBSERVATION"
+    ],
+    "status": [
+      "DRAFT",
+      "ACTIVE",
+      "RETIRED"
+    ]
+  }
+}

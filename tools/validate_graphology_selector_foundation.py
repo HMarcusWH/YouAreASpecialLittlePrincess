@@ -229,11 +229,13 @@ def validate(repo: Path) -> list[str]:
     for key, value in expected_counts.items():
         if manifest["counts"].get(key) != value:
             errors.append(f"manifest PR2 count differs for {key}")
-    if manifest["runtime_activation"] is not False or manifest["t26_status"] != "PLANNED":
+    allowed_t26 = {"PLANNED", "IMPLEMENTED_PENDING_REVIEW"}
+    if manifest["runtime_activation"] is not False or manifest["t26_status"] not in allowed_t26:
         errors.append("manifest activation/T26 status invalid")
     allowed_scopes = {
         "ONTOLOGY_PROVENANCE_OBSERVATIONS_SELECTORS_VALUES",
         "ONTOLOGY_PROVENANCE_OBSERVATIONS_SELECTORS_VALUES_TRADITIONAL_RULE_STRUCTURES",
+        "COMPLETE_DATABASE_PENDING_REVIEW",
     }
     if manifest["production_scope"] not in allowed_scopes:
         errors.append("manifest PR2 scope invalid")
@@ -241,8 +243,8 @@ def validate(repo: Path) -> list[str]:
     if scaffold.get("status") != "UNPOPULATED":
         errors.append("compiled Premium scaffold must remain UNPOPULATED in PR2")
     t26 = next(x for x in tasks["tasks"] if x["id"] == "T26")
-    if t26["status"] != "PLANNED":
-        errors.append("T26 must remain PLANNED in PR2")
+    if t26["status"] not in {"PLANNED", "IMPLEMENTED_PENDING_REVIEW"}:
+        errors.append("T26 status invalid for PR2 compatibility")
     return errors
 
 
