@@ -1,0 +1,38 @@
+{
+  "version": "graphology-traditional-activation-gates/1",
+  "runtime_activation": false,
+  "general_release_gates": [
+    "Review exact morphological definitions and exemplars",
+    "Define signed geometry/scales/thresholds for each applicable selector",
+    "Acquire original Moretti/Klages/Pulver definitions before activating named school scores",
+    "Review all source-derived associations individually",
+    "Validate against real annotated writing and content-confound cases",
+    "Verify missing/counterevidence behavior",
+    "Complete localization and renderer mappings",
+    "Only then promote a bounded pack from DRAFT"
+  ],
+  "association_gates": [
+    {
+      "association_id": "ASSOC_HIST_CJ_ANIMATION",
+      "runtime_eligibility": "BLOCKED_RESEARCH_ONLY",
+      "unresolved_requirements": [
+        "Full qualifying context",
+        "Observable thresholds",
+        "Reviewed modern wording",
+        "Independent sign-detection validation"
+      ],
+      "may_enter_runtime_pack": false
+    },
+    {
+      "association_id": "ASSOC_HIST_CJ_FIRMNESS",
+      "runtime_eligibility": "BLOCKED_RESEARCH_ONLY",
+      "unresolved_requirements": [
+        "Exact morphology and context",
+        "Operational thresholds",
+        "Contextual and language review"
+      ],
+      "may_enter_runtime_pack": false
+    }
+  ],
+  "pack_activation_rule": "A pack remains inactive until every included association has reviewed operational premises, applicability, counterevidence behavior, source provenance, and explicit promotion evidence."
+}

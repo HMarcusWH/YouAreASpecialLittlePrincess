@@ -1,0 +1,32 @@
+{
+  "version": "graphology-school-association-contract/1",
+  "fields": [
+    "association_id",
+    "source_id",
+    "edition",
+    "locator",
+    "school_id",
+    "premise_concepts",
+    "all_of",
+    "any_of",
+    "modifiers",
+    "counter_signs",
+    "exclusions",
+    "applicability",
+    "traditional_interpretation",
+    "raw_source_wording_locator",
+    "paraphrase",
+    "source_fidelity",
+    "empirical_status",
+    "runtime_eligibility"
+  ],
+  "no_shortcuts": [
+    "No arbitrary cross-school averaging",
+    "No formula from a curriculum title alone",
+    "No symptom/intelligence/moral-worth ranking",
+    "No uncited school meaning",
+    "No unsupported psychological meaning for language-specific marks"
+  ],
+  "production_status": "STRUCTURE_ONLY",
+  "runtime_activation": false
+}

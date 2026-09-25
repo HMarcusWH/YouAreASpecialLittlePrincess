@@ -1,0 +1,61 @@
+{
+  "version": "graphology-rule-pack-registry/1",
+  "status": "DRAFT_NOT_ACTIVE",
+  "packs": [
+    {
+      "pack_id": "JAMINIAN_RULE_PACK_V1_DRAFT",
+      "school_id": "JAMINIAN",
+      "association_ids": [
+        "ASSOC_HIST_CJ_ANIMATION",
+        "ASSOC_HIST_CJ_FIRMNESS"
+      ],
+      "runtime_eligible_association_ids": [],
+      "method_policy_ids": [
+        "POLICY_CJ_CONTEXTUAL_SYNTHESIS_V1",
+        "POLICY_CJ_ABSENCE_GUARD_V1"
+      ],
+      "status": "DRAFT_NO_EXECUTABLE_ASSOCIATIONS",
+      "runtime_activation": false
+    },
+    {
+      "pack_id": "BIG_HILLIGER_RULE_PACK_V1_DRAFT",
+      "school_id": "BIG_HILLIGER",
+      "association_ids": [],
+      "runtime_eligible_association_ids": [],
+      "method_policy_ids": [
+        "POLICY_BIG_CORROBORATION_V1"
+      ],
+      "status": "DRAFT_NO_EXECUTABLE_ASSOCIATIONS",
+      "runtime_activation": false
+    },
+    {
+      "pack_id": "MORETTIAN_RULE_PACK_V1_DRAFT",
+      "school_id": "MORETTIAN",
+      "association_ids": [],
+      "runtime_eligible_association_ids": [],
+      "method_policy_ids": [
+        "POLICY_MORETTI_TYPED_RELATIONS_V1"
+      ],
+      "status": "DRAFT_NO_EXECUTABLE_ASSOCIATIONS",
+      "runtime_activation": false
+    },
+    {
+      "pack_id": "GESTALT_AHAF_RULE_PACK_V1_DRAFT",
+      "school_id": "GESTALT_AHAF",
+      "association_ids": [],
+      "runtime_eligible_association_ids": [],
+      "method_policy_ids": [],
+      "status": "DRAFT_NO_EXECUTABLE_ASSOCIATIONS",
+      "runtime_activation": false
+    },
+    {
+      "pack_id": "KLAGES_RECEPTION_RULE_PACK_V1_DRAFT",
+      "school_id": "KLAGES_RECEPTION",
+      "association_ids": [],
+      "runtime_eligible_association_ids": [],
+      "method_policy_ids": [],
+      "status": "DRAFT_NO_EXECUTABLE_ASSOCIATIONS",
+      "runtime_activation": false
+    }
+  ]
+}

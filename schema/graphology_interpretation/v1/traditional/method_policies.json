@@ -1,0 +1,100 @@
+{
+  "version": "graphology-traditional-method-policies/1",
+  "status": "DRAFT_NOT_ACTIVE",
+  "records": [
+    {
+      "policy_id": "POLICY_CJ_CONTEXTUAL_SYNTHESIS_V1",
+      "school_id": "JAMINIAN",
+      "policy_kind": "CONTEXTUAL_SYNTHESIS",
+      "source_assertion_ids": [
+        "METHOD_CJ_CONTEXT"
+      ],
+      "source_refs": [
+        {
+          "source_id": "CJ1892",
+          "locator": "pp.35–53 and pp.89–92"
+        }
+      ],
+      "constraints": {
+        "preserve_alternative_readings": true,
+        "evaluate_modifiers_and_counterevidence": true,
+        "allow_arbitrary_trait_weights": false,
+        "isolated_sign_is_sufficient": false
+      },
+      "empirical_status": "NOT_ESTABLISHED_AS_PERSONALITY_VALIDITY",
+      "runtime_status": "DRAFT_NOT_ACTIVE"
+    },
+    {
+      "policy_id": "POLICY_CJ_ABSENCE_GUARD_V1",
+      "school_id": "JAMINIAN",
+      "policy_kind": "MISSINGNESS_GUARDRAIL",
+      "source_assertion_ids": [
+        "METHOD_CJ_ABSENCE"
+      ],
+      "source_refs": [
+        {
+          "source_id": "CJ1892",
+          "locator": "pp.51–53"
+        }
+      ],
+      "constraints": {
+        "absent_positive_sign_activates_opposite": false,
+        "not_assessable_activates_opposite": false,
+        "not_applicable_activates_opposite": false,
+        "explicit_opposing_evidence_required_for_opposite": true
+      },
+      "empirical_status": "LOGICAL_GUARDRAIL_NOT_VALIDATION",
+      "runtime_status": "DRAFT_NOT_ACTIVE"
+    },
+    {
+      "policy_id": "POLICY_BIG_CORROBORATION_V1",
+      "school_id": "BIG_HILLIGER",
+      "policy_kind": "CORROBORATION",
+      "source_assertion_ids": [
+        "METHOD_BIG_SUPPORT"
+      ],
+      "source_refs": [
+        {
+          "source_id": "BIG26",
+          "locator": "p.3 B.5"
+        }
+      ],
+      "source_requirement": "Corroboration by two other movements before including an interpretation.",
+      "application_adaptation": "At least three genuinely distinct support groups; correlated summaries do not count separately.",
+      "constraints": {
+        "minimum_distinct_support_groups": 3,
+        "correlated_summaries_count_once": true,
+        "repeated_measurements_of_same_graphic_family_count_once": true,
+        "support_count_is_statistical_proof": false
+      },
+      "empirical_status": "SCHOOL_REQUIREMENT_NOT_STATISTICAL_PROOF",
+      "runtime_status": "DRAFT_NOT_ACTIVE"
+    },
+    {
+      "policy_id": "POLICY_MORETTI_TYPED_RELATIONS_V1",
+      "school_id": "MORETTIAN",
+      "policy_kind": "TYPED_SIGN_RELATION",
+      "source_assertion_ids": [
+        "METHOD_MORETTI_RELATIONS"
+      ],
+      "source_refs": [
+        {
+          "source_id": "CARBONARI",
+          "locator": "Quale tecnica, sign relations and laws"
+        }
+      ],
+      "allowed_relation_value_ids": [
+        "SUPPORTS",
+        "OPPOSES",
+        "NEUTRAL"
+      ],
+      "constraints": {
+        "preserve_sign_role_separately_from_within_sample_prominence": true,
+        "enable_decimi_scoring": false,
+        "enable_temperament_classifier": false
+      },
+      "empirical_status": "NOT_ESTABLISHED_AS_PERSONALITY_VALIDITY",
+      "runtime_status": "DRAFT_NOT_ACTIVE"
+    }
+  ]
+}

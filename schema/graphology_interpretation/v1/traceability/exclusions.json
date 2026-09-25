@@ -1,10 +1,11 @@
 {
-  "version": "graphology-interpretation-exclusions/2",
+  "version": "graphology-interpretation-exclusions/3",
   "research_baseline_commit": "f96aa6b54cfaf91f0a8243e7c7e266baa053eedc",
   "exclusions": [],
   "intentionally_not_in_scope": [
     "Production question text and executable question packs",
-    "Executable traditional associations and support-rule evaluation",
+    "Runtime activation of any traditional association or rule pack",
+    "Source-complete association population beyond the two researched blocked Jaminian stubs",
     "Candidate generator implementations",
     "Soft-field activation and tone profiles",
     "Report mappings",

@@ -1,0 +1,79 @@
+[
+  {
+    "association_id": "ASSOC_HIST_CJ_ANIMATION",
+    "source_assertion_id": "HIST_CJ_ANIMATION",
+    "source_id": "CJ1892",
+    "edition": "1892 English translation from the third French edition",
+    "locator": "p.51",
+    "school_id": "JAMINIAN",
+    "premise_concepts": [],
+    "all_of": [],
+    "any_of": [],
+    "source_premise_examples": [
+      "Long t crossbar",
+      "Short t crossbar ending in a point",
+      "Ascending writing"
+    ],
+    "premise_binding_status": "UNOPERATIONALIZED_SOURCE_EXAMPLES",
+    "modifiers": [],
+    "counter_signs": [],
+    "exclusions": [],
+    "applicability": {
+      "status": "UNOPERATIONALIZED",
+      "note": "Full qualifying context and operational morphology remain unresolved."
+    },
+    "traditional_interpretation": {
+      "source_term": "animation",
+      "status": "SOURCE_TERM_ONLY_NO_MODERN_TRAIT_EXPANSION"
+    },
+    "raw_source_wording_locator": "p.51",
+    "paraphrase": "The passage gives several alternative handwriting indicators for animation rather than one mandatory sign.",
+    "source_fidelity": "RESEARCH_ASSERTION_PRESERVED_WITH_RECORDED_GAPS",
+    "empirical_status": "UNVALIDATED_TRADITIONAL_ASSOCIATION",
+    "runtime_eligibility": "BLOCKED_RESEARCH_ONLY",
+    "eligible_for_rule_engine": false,
+    "eligible_for_model_candidate": false,
+    "remaining_gaps": [
+      "Full qualifying context",
+      "Observable thresholds",
+      "Reviewed modern wording",
+      "Independent sign-detection validation"
+    ]
+  },
+  {
+    "association_id": "ASSOC_HIST_CJ_FIRMNESS",
+    "source_assertion_id": "HIST_CJ_FIRMNESS",
+    "source_id": "CJ1892",
+    "edition": "1892 English translation from the third French edition",
+    "locator": "p.51",
+    "school_id": "JAMINIAN",
+    "premise_concepts": [],
+    "all_of": [],
+    "any_of": [],
+    "source_premise_examples": [],
+    "premise_binding_status": "UNOPERATIONALIZED_SOURCE_EXAMPLES",
+    "modifiers": [],
+    "counter_signs": [],
+    "exclusions": [],
+    "applicability": {
+      "status": "UNOPERATIONALIZED",
+      "note": "Full qualifying context and operational morphology remain unresolved."
+    },
+    "traditional_interpretation": {
+      "source_term": "firmness",
+      "status": "SOURCE_TERM_ONLY_NO_MODERN_TRAIT_EXPANSION"
+    },
+    "raw_source_wording_locator": "p.51",
+    "paraphrase": "The passage groups upright, rigid or angular forms among possible indicators of firmness.",
+    "source_fidelity": "RESEARCH_ASSERTION_PRESERVED_WITH_RECORDED_GAPS",
+    "empirical_status": "UNVALIDATED_TRADITIONAL_ASSOCIATION",
+    "runtime_eligibility": "BLOCKED_RESEARCH_ONLY",
+    "eligible_for_rule_engine": false,
+    "eligible_for_model_candidate": false,
+    "remaining_gaps": [
+      "Exact morphology and context",
+      "Operational thresholds",
+      "Contextual and language review"
+    ]
+  }
+]

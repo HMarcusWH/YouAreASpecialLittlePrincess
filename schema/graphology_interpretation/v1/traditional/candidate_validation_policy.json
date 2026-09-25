@@ -1,0 +1,13 @@
+{
+  "version": "graphology-traditional-candidate-validation/1",
+  "states": [
+    "ELIGIBLE_FROM_PRECOMPUTED_FACTS",
+    "PENDING_VISUAL_ASSESSMENT",
+    "INELIGIBLE",
+    "UNASSESSED"
+  ],
+  "rule": "An allowed candidate ID proves only membership in the approved choice space. A candidate dependent on model-produced graphic observations remains provisional until post-validation checks its prerequisites and evidence type. It cannot be labelled preverified. No pending candidate yields a measured numerical claim.",
+  "single_call_limit": "Question order within one multimodal request is not a blinded independent assessment; test salience and content effects.",
+  "production_status": "STRUCTURE_ONLY",
+  "runtime_activation": false
+}
