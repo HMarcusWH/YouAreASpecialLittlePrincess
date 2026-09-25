@@ -7,9 +7,34 @@ TOOLS=Path(__file__).resolve().parent
 if str(TOOLS) not in sys.path: sys.path.insert(0,str(TOOLS))
 from graphology_db_common import load, verify_research_baseline
 
+EXPECTED_PENDING_STAGE={
+    "manifest_status":"POPULATED_PENDING_REVIEW",
+    "production_scope":"COMPLETE_DATABASE_PENDING_REVIEW",
+    "t26_status":"IMPLEMENTED_PENDING_REVIEW",
+    "compiled_runtime_artifact_status":"POPULATED_PENDING_REVIEW",
+    "runtime_activation":False,
+    "artifact_status":"POPULATED_PENDING_REVIEW",
+    "artifact_runtime_activation":False,
+    "required_exclusions":[
+        "Runtime OpenAI adapter and dynamic Structured Output request compilation (T15)",
+        "Candidate generator implementations owned by later engine/reference/comparison tasks",
+        "Runtime activation of traditional associations or school rule packs",
+        "Resolution of source/morphology gaps explicitly recorded as blocked",
+        "Non-English translations beyond stable localization keys and English canonical copy",
+        "Live model evaluation, pricing, payment and deployment",
+    ],
+}
+
 def validate(repo: Path) -> list[str]:
     root=repo/"schema/graphology_interpretation/v1"; errors=list(verify_research_baseline(repo))
-    manifest=load(root/"manifest.json"); stage_doc=load(root/"stage_contract.json"); stage=stage_doc["stages"][stage_doc["current_stage"]]
+    manifest=load(root/"manifest.json"); stage_doc=load(root/"stage_contract.json")
+    if stage_doc.get("version")!="graphology-database-stage-contract/1":
+        errors.append("stage contract version drift")
+    if stage_doc.get("current_stage")!="POPULATED_PENDING_REVIEW":
+        errors.append("stage contract current stage must remain pending review")
+    if stage_doc.get("stages",{}).get("POPULATED_PENDING_REVIEW")!=EXPECTED_PENDING_STAGE:
+        errors.append("pending-review stage contract drift")
+    stage=EXPECTED_PENDING_STAGE
     artifact=load(repo/"schema/premium_interpretation_database_v1.json"); tasks=load(repo/"docs/roadmap/tasks.json")
     sources=load(root/"ontology/sources.json"); schools=load(root/"ontology/schools.json"); domains=load(root/"ontology/domains.json")
     concepts=load(root/"ontology/concepts.json"); claims=load(root/"ontology/source_claims.json")
