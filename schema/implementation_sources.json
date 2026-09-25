@@ -1,0 +1,31 @@
+{
+  "version": "1.0.0",
+  "relationship_to_feature_database": "Deployment provenance, separate from the unchanged research-source records in graphology_feature_database_v1.json.",
+  "sources": {
+    "NitinRamchandani/ocr-preprocessing-tool": {
+      "role": "adapted preprocessing implementation",
+      "paths": ["src/princess_graphology/preprocessing"]
+    },
+    "githubharald/WordDetector": {
+      "role": "adapted scale-space word proposals",
+      "paths": ["src/princess_graphology/segmentation.py"]
+    },
+    "jjshay/handwriting-analysis": {
+      "role": "comparison/statistical design reference only",
+      "production_comparison_code_imported": false
+    },
+    "luizgh/sigver": {
+      "role": "selected optional SigNet architecture implementation",
+      "paths": ["src/princess_graphology/signature/signet.py"],
+      "pretrained_weights_distributed": false,
+      "not_selected_as_implementation": ["luizgh/sigver_wiwd", "EB324/signature_verification"]
+    },
+    "titanh3art/ml-graphology": {
+      "role": "historical threshold provenance; no personality classifier imported"
+    },
+    "scikit-image": {
+      "role": "runtime medial_axis implementation for image thickness proxies",
+      "documentation": "https://scikit-image.org/docs/stable/api/skimage.morphology.html#skimage.morphology.medial_axis"
+    }
+  }
+}
