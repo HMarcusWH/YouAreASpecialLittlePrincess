@@ -1,48 +1,45 @@
-# Graphology interpretation database — v1 foundation
+# Graphology interpretation database — v1
 
-This directory is the production **ontology/provenance foundation** for T26. It is derived from the frozen research snapshot at `research/graphology/foundations-v0.1/` merged in commit `f96aa6b54cfaf91f0a8243e7c7e266baa053eedc`.
+This directory is the modular source database for T26. It is grounded in the immutable research snapshot at `research/graphology/foundations-v0.1/`, pinned to research import commit `f96aa6b54cfaf91f0a8243e7c7e266baa053eedc`.
 
-## Scope of this PR
+## Current state
 
-Included:
-- registered source metadata and access/reuse boundaries;
-- five graphology tradition profiles plus the non-historical APPLICATION namespace;
-- the 16 examination domains;
-- source-backed school concepts;
-- source claims/method constraints;
-- one explicit safe concept non-equivalence already stated by the research;
-- source/method gaps;
-- complete research-to-production traceability for the records promoted in this slice.
+- Database: **POPULATED_PENDING_REVIEW**
+- T26: **IMPLEMENTED_PENDING_REVIEW**
+- Runtime activation: **false**
+- Traditional runtime-eligible associations: **0**
 
-Not included:
-- observations or feature mappings;
-- selector/value/question population;
-- executable traditional associations;
-- prompt packs, soft-text activation, report mappings or localization;
-- any generated runtime interpretation artifact.
+A populated database is not an activated inference system.
 
-The existing `schema/premium_interpretation_database_v1.json` must remain `UNPOPULATED` after this PR. Nothing here authorizes model output or traditional interpretation.
+## Layers
 
-## Files
+1. `ontology/`: sources, schools, domains, concepts, observations, feature mappings and evidence policies.
+2. `values/`: fixed value sets, answer-state policy and independent selection axes.
+3. `candidates/`: candidate kinds, eligibility policy, envelope, generator contracts and selector→generator mappings.
+4. `traditional/`: source-backed method structure and blocked historical association stubs.
+5. `questions/`, `packs/`, `narrative/`, `reports/`, `localization/`: product question/report contracts.
+6. `schema/premium_interpretation_database_v1.json`: deterministic compiled artifact consumed by T15.
 
-- `manifest.json` — scope/version/count contract.
-- `ontology/sources.json` — preserved source records with production provenance status.
-- `ontology/schools.json` — tradition/application namespaces.
-- `ontology/domains.json` — examination-domain registry.
-- `ontology/source_claims.json` — source assertions, including research-only historical examples.
-- `ontology/concepts.json` — named school/descriptive concepts; all ontology-only.
-- `ontology/concept_relationships.json` — explicitly reviewed concept relations only.
-- `traceability/research_to_production.json` — disposition for every promoted foundation record.
-- `traceability/exclusions.json` — explicit scope exclusions for this PR.
-- `traceability/source_gaps.json` — unresolved definitions/methods/reuse review.
+## Core invariants
+
+- Canonical measurements remain authoritative for measurable quantities.
+- Feature mappings are support relationships, never silent graphology equivalence.
+- Observation frequency, intensity, prominence, confidence and population rarity remain separate.
+- Fixed/dynamic candidate origin and single/multiple cardinality are independent axes.
+- Candidate kinds may have interface contracts while their generators remain explicitly unimplemented.
+- Traditional graphology stays school/source-labelled and inactive unless explicitly promoted through its gates.
+- The original handwriting text is untrusted data, not model instructions.
 
 ## Validation
 
-Run:
-
 ```bash
+python tools/validate_graphology_integrity.py
 python tools/validate_graphology_ontology.py
-pytest -q tests/test_graphology_ontology.py
+python tools/validate_graphology_selector_foundation.py
+python tools/validate_graphology_traditional_rules.py
+python tools/validate_graphology_database.py
+python tools/compile_premium_interpretation_db.py --check
+pytest -q
 ```
 
-The validator checks cross-references, counts, traceability coverage, source-gap coverage, non-executable historical claims, and that the compiled Premium scaffold is still unpopulated.
+The validators first verify the frozen research bytes against `traceability/research_baseline_lock.json` and the import manifest SHA-256 records, then validate research→production promotion, lifecycle state, mappings, candidate contracts and the compiled artifact.

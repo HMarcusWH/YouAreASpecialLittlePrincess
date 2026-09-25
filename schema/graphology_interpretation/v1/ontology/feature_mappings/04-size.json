@@ -6,7 +6,8 @@
     "observation_id": "OBS_SIZE_PHYSICAL",
     "canonical_feature_id": "X_HEIGHT_PX",
     "relationship": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
-    "note": "No px threshold becomes a physical-size rule; a derived physical quantity requires an explicit versioned measurement contract, never relabelling X_HEIGHT_PX as millimetres.",
+    "mapping_role": "PRIMARY_VALUE",
+    "operational_guardrail": "No px threshold becomes a physical-size rule; a derived physical quantity requires an explicit versioned measurement contract, never relabelling X_HEIGHT_PX as millimetres.",
     "mapping_status": "DRAFT_SUPPORT_ONLY",
     "runtime_activation": false
   },
@@ -17,7 +18,8 @@
     "observation_id": "OBS_SIZE_ZONES",
     "canonical_feature_id": "UPPER_ZONE_RATIO",
     "relationship": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
-    "note": "",
+    "mapping_role": "AUXILIARY_CONTEXT",
+    "operational_guardrail": "",
     "mapping_status": "DRAFT_SUPPORT_ONLY",
     "runtime_activation": false
   },
@@ -28,7 +30,8 @@
     "observation_id": "OBS_SIZE_ZONES",
     "canonical_feature_id": "LOWER_ZONE_RATIO",
     "relationship": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
-    "note": "",
+    "mapping_role": "AUXILIARY_CONTEXT",
+    "operational_guardrail": "",
     "mapping_status": "DRAFT_SUPPORT_ONLY",
     "runtime_activation": false
   },
@@ -39,7 +42,8 @@
     "observation_id": "OBS_SIZE_CAPITAL",
     "canonical_feature_id": "CAPITAL_HEIGHT_RATIO",
     "relationship": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
-    "note": "",
+    "mapping_role": "PRIMARY_VALUE",
+    "operational_guardrail": "",
     "mapping_status": "DRAFT_SUPPORT_ONLY",
     "runtime_activation": false
   },
@@ -50,7 +54,8 @@
     "observation_id": "OBS_SIZE_WIDTH",
     "canonical_feature_id": "GLYPH_ASPECT_RATIO_MEAN",
     "relationship": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
-    "note": "Generic component aspect ratio is not an exact Moretti Largo di lettere score.",
+    "mapping_role": "PRIMARY_VALUE",
+    "operational_guardrail": "Generic component aspect ratio is not an exact Moretti Largo di lettere score.",
     "mapping_status": "DRAFT_SUPPORT_ONLY",
     "runtime_activation": false
   }

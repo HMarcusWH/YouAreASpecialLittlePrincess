@@ -629,7 +629,23 @@
       "research_kind": "SELECTION_CONTRACT",
       "research_id": "selection_contract",
       "production_kind": "SELECTION_CONTRACT",
-      "production_id": "selection_contract",
+      "production_id": "graphology-selection-contract/1",
+      "disposition": "PROMOTED_AS_DRAFT_POLICY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "OBSERVATION_ENVELOPE",
+      "research_id": "observation_envelope",
+      "production_kind": "OBSERVATION_ENVELOPE",
+      "production_id": "graphology-observation-envelope/1",
+      "disposition": "PROMOTED_AS_DRAFT_POLICY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "CANDIDATE_VALIDATION_POLICY",
+      "research_id": "candidate_validation_policy",
+      "production_kind": "CANDIDATE_VALIDATION_POLICY",
+      "production_id": "CANDIDATE_VALIDATION_V1",
       "disposition": "PROMOTED_AS_DRAFT_POLICY",
       "runtime_effect": "NONE"
     }

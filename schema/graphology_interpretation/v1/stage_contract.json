@@ -1,0 +1,40 @@
+{
+  "version": "graphology-database-stage-contract/1",
+  "current_stage": "POPULATED_PENDING_REVIEW",
+  "stages": {
+    "POPULATED_PENDING_REVIEW": {
+      "manifest_status": "POPULATED_PENDING_REVIEW",
+      "production_scope": "COMPLETE_DATABASE_PENDING_REVIEW",
+      "t26_status": "IMPLEMENTED_PENDING_REVIEW",
+      "compiled_runtime_artifact_status": "POPULATED_PENDING_REVIEW",
+      "runtime_activation": false,
+      "artifact_status": "POPULATED_PENDING_REVIEW",
+      "artifact_runtime_activation": false,
+      "required_exclusions": [
+        "Runtime OpenAI adapter and dynamic Structured Output request compilation (T15)",
+        "Candidate generator implementations owned by later engine/reference/comparison tasks",
+        "Runtime activation of traditional associations or school rule packs",
+        "Resolution of source/morphology gaps explicitly recorded as blocked",
+        "Non-English translations beyond stable localization keys and English canonical copy",
+        "Live model evaluation, pricing, payment and deployment"
+      ]
+    },
+    "REVIEWED_READY_FOR_T15": {
+      "manifest_status": "REVIEWED_READY_FOR_T15",
+      "production_scope": "COMPLETE_DATABASE_REVIEWED",
+      "t26_status": "DONE",
+      "compiled_runtime_artifact_status": "REVIEWED_READY_FOR_T15",
+      "runtime_activation": false,
+      "artifact_status": "REVIEWED_READY_FOR_T15",
+      "artifact_runtime_activation": false,
+      "required_exclusions": [
+        "Runtime OpenAI adapter and dynamic Structured Output request compilation (T15)",
+        "Candidate generator implementations owned by later engine/reference/comparison tasks",
+        "Runtime activation of traditional associations or school rule packs",
+        "Resolution of source/morphology gaps explicitly recorded as blocked",
+        "Non-English translations beyond stable localization keys and English canonical copy",
+        "Live model evaluation, pricing, payment and deployment"
+      ]
+    }
+  }
+}

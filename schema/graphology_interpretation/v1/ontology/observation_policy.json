@@ -1,0 +1,42 @@
+{
+  "version": "graphology-observation-policy/1",
+  "runtime_activation": false,
+  "descriptive_domains": [
+    "CONTEXT",
+    "GLOBAL",
+    "SPACE",
+    "SIZE",
+    "DIRECTION",
+    "CONNECTION",
+    "FORM",
+    "STROKE",
+    "MOVEMENT",
+    "DETAIL",
+    "SIGNATURE",
+    "HIERARCHY"
+  ],
+  "direct_observation_evidence_classes": [
+    "DECLARED_METADATA",
+    "PRECOMPUTED_DESCRIPTION",
+    "AI_VISUAL_DESCRIPTION_NOT_CANONICAL_MEASUREMENT"
+  ],
+  "include_rule": "A question gets an observation record when it is in a descriptive domain and either has a direct observation evidence class or references canonical handwriting features.",
+  "excluded_domains": [
+    "INTERPRETATION",
+    "REFERENCE",
+    "PAIR",
+    "HISTORY"
+  ],
+  "mapping_roles": {
+    "PRIMARY_VALUE": "May directly supply a deterministic selector value when that selector's reviewed rubric exists.",
+    "VARIABILITY_CONTEXT": "Qualifies heterogeneity/dispersion; must not determine a magnitude band.",
+    "DISTRIBUTION_CONTEXT": "Qualifies distribution/composition; must not replace the primary value.",
+    "CANDIDATE_INPUT": "Supplies facts to a dynamic candidate generator; does not directly determine a selector value.",
+    "AUXILIARY_CONTEXT": "Provides contextual evidence only; does not directly determine a selector value."
+  },
+  "safety_rules": [
+    "Fixed versus dynamic selector origin never decides whether an observation exists.",
+    "Only PRIMARY_VALUE may directly determine a deterministic selector band.",
+    "Missing observation evidence never becomes zero or an opposite trait."
+  ]
+}

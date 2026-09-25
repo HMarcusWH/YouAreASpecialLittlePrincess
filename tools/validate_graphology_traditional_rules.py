@@ -1,252 +1,189 @@
 #!/usr/bin/env python3
-"""Validate T26 PR3 traditional graphology rule structures against frozen research."""
+"""Validate that traditional graphology structures remain sourced, constrained and non-executable."""
 from __future__ import annotations
-
-import json
 from pathlib import Path
-import sys
-
-
-def load(path: Path):
-    def pairs(items):
-        out = {}
-        for key, value in items:
-            if key in out:
-                raise ValueError(f"Duplicate key in {path}: {key}")
-            out[key] = value
-        return out
-    def constant(value):
-        raise ValueError(f"Non-finite JSON in {path}: {value}")
-    return json.loads(path.read_text(encoding="utf-8"), object_pairs_hook=pairs, parse_constant=constant)
-
+import json, sys
+TOOLS=Path(__file__).resolve().parent
+if str(TOOLS) not in sys.path: sys.path.insert(0,str(TOOLS))
+from graphology_db_common import load, verify_research_baseline
 
 def validate(repo: Path) -> list[str]:
-    root = repo / "schema/graphology_interpretation/v1"
-    research = load(repo / "research/graphology/foundations-v0.1/blueprint/metadata.json")
-    sources = load(root / "ontology/sources.json")
-    schools = load(root / "ontology/schools.json")
-    claims = load(root / "ontology/source_claims.json")
-    concepts = load(root / "ontology/concepts.json")
-    gaps = load(root / "traceability/source_gaps.json")["gaps"]
-    value_sets = load(root / "values/value_sets.json")
-    contract = load(root / "traditional/association_contract.json")
-    candidate_policy = load(root / "traditional/candidate_validation_policy.json")
-    policies = load(root / "traditional/method_policies.json")["records"]
-    associations = load(root / "traditional/associations/jaminian.json")
-    packs = load(root / "traditional/rule_pack_registry.json")["packs"]
-    gates = load(root / "traditional/activation_gates.json")
-    trace = load(root / "traceability/pr3_traditional.json")["records"]
-    exclusions = load(root / "traceability/exclusions.json")
-    manifest = load(root / "manifest.json")
-    scaffold = load(repo / "schema/premium_interpretation_database_v1.json")
-    tasks = load(repo / "docs/roadmap/tasks.json")
+    root=repo/"schema/graphology_interpretation/v1"; errors=list(verify_research_baseline(repo))
+    research=load(repo/"research/graphology/foundations-v0.1/blueprint/metadata.json")
+    sources={x["source_id"] for x in load(root/"ontology/sources.json")}
+    claims={x["assertion_id"]:x for x in load(root/"ontology/source_claims.json")}
+    schools={x["school_id"] for x in load(root/"ontology/schools.json") if x["school_kind"]=="GRAPHOLOGY_TRADITION_PROFILE"}
+    value_sets={x["value_set_id"]:x for x in load(root/"values/value_sets.json")}
+    policies=load(root/"traditional/method_policies.json")["records"]
+    associations=load(root/"traditional/associations/jaminian.json")
+    packs=load(root/"traditional/rule_pack_registry.json")["packs"]
+    gates=load(root/"traditional/activation_gates.json")
+    canonical=load(root/"candidates/candidate_validation_policy.json")
+    compat=load(root/"traditional/candidate_validation_policy.json")
+    association_contract=load(root/"traditional/association_contract.json")
 
-    errors = []
+    stripped_association_contract={k:v for k,v in association_contract.items() if k not in {"version","production_status","runtime_activation"}}
+    if stripped_association_contract!=research["school_association_contract"]:
+        errors.append("school association contract drift")
+    if association_contract.get("version")!="graphology-school-association-contract/1":
+        errors.append("school association contract version drift")
+    if association_contract.get("production_status")!="STRUCTURE_ONLY" or association_contract.get("runtime_activation") is not False:
+        errors.append("school association contract lifecycle invalid")
 
-    def unique(values, label):
-        values = list(values)
-        if len(values) != len(set(values)):
-            errors.append(f"duplicate {label}")
+    if {k:v for k,v in canonical.items() if k not in {"policy_id","version","production_status","runtime_activation"}}!=research["candidate_validation_policy"]:
+        errors.append("canonical candidate policy drift")
+    if canonical.get("policy_id")!="CANDIDATE_VALIDATION_V1" or canonical.get("version")!="graphology-candidate-validation/1":
+        errors.append("canonical candidate policy identity drift")
+    if canonical.get("production_status")!="DRAFT_NOT_ACTIVE" or canonical.get("runtime_activation") is not False:
+        errors.append("canonical candidate policy lifecycle invalid")
+    if {k:v for k,v in compat.items() if k not in {"version","production_status","runtime_activation"}}!=research["candidate_validation_policy"]:
+        errors.append("traditional candidate policy compatibility copy drift")
+    if compat.get("version")!="graphology-traditional-candidate-validation/1":
+        errors.append("traditional candidate policy compatibility version drift")
+    if compat.get("production_status")!="STRUCTURE_ONLY" or compat.get("runtime_activation") is not False:
+        errors.append("traditional candidate policy compatibility lifecycle invalid")
 
-    source_ids = {x["source_id"] for x in sources}
-    school_ids = {x["school_id"] for x in schools}
-    claim_by_id = {x["assertion_id"]: x for x in claims}
-    concept_ids = {x["concept_id"] for x in concepts}
-    value_by_id = {x["value_set_id"]: x for x in value_sets}
+    if len(policies)!=4 or any(x.get("runtime_status")!="DRAFT_NOT_ACTIVE" for x in policies):
+        errors.append("traditional method policy state invalid")
+    p={x["policy_id"]:x for x in policies}
+    expected_ids={"POLICY_CJ_CONTEXTUAL_SYNTHESIS_V1","POLICY_CJ_ABSENCE_GUARD_V1","POLICY_BIG_CORROBORATION_V1","POLICY_MORETTI_TYPED_RELATIONS_V1"}
+    if set(p)!=expected_ids: errors.append("traditional method policy IDs changed")
 
-    unique((x["policy_id"] for x in policies), "method policy")
-    unique((x["association_id"] for x in associations), "traditional association")
-    unique((x["pack_id"] for x in packs), "rule pack")
+    cj=p.get("POLICY_CJ_CONTEXTUAL_SYNTHESIS_V1",{}).get("constraints",{})
+    if cj.get("preserve_alternative_readings") is not True or cj.get("evaluate_modifiers_and_counterevidence") is not True:
+        errors.append("Jamin contextual synthesis safeguards weakened")
+    if cj.get("allow_arbitrary_trait_weights") is not False or cj.get("isolated_sign_is_sufficient") is not False:
+        errors.append("Jamin contextual synthesis permits unsupported inference")
 
-    stripped_contract = {k: v for k, v in contract.items() if k not in {"version", "production_status", "runtime_activation"}}
-    if stripped_contract != research["school_association_contract"]:
-        errors.append("association contract drifted from frozen research")
-    stripped_candidate = {k: v for k, v in candidate_policy.items() if k not in {"version", "production_status", "runtime_activation"}}
-    if stripped_candidate != research["candidate_validation_policy"]:
-        errors.append("candidate-validation policy drifted from frozen research")
-    if contract["runtime_activation"] is not False or candidate_policy["runtime_activation"] is not False:
-        errors.append("traditional contract/policy became runtime-active")
-
-    if len(policies) != 4:
-        errors.append("expected four source-backed method policies")
-    if any(x["school_id"] not in school_ids for x in policies):
-        errors.append("method policy school does not resolve")
-    if any(set(x["source_assertion_ids"]) - set(claim_by_id) for x in policies):
-        errors.append("method policy source assertion does not resolve")
-    if any({r["source_id"] for r in x["source_refs"]} - source_ids for x in policies):
-        errors.append("method policy source does not resolve")
-    if any(x["runtime_status"] != "DRAFT_NOT_ACTIVE" for x in policies):
-        errors.append("method policy became active")
-
-    by_policy = {x["policy_id"]: x for x in policies}
-    cj_context = by_policy["POLICY_CJ_CONTEXTUAL_SYNTHESIS_V1"]
-    if cj_context["constraints"]["isolated_sign_is_sufficient"] is not False:
-        errors.append("Jamin contextual policy allows isolated-sign sufficiency")
-    if cj_context["constraints"]["allow_arbitrary_trait_weights"] is not False:
-        errors.append("Jamin contextual policy allows arbitrary weights")
-
-    cj_absence = by_policy["POLICY_CJ_ABSENCE_GUARD_V1"]["constraints"]
-    if any(cj_absence[x] is not False for x in [
-        "absent_positive_sign_activates_opposite",
-        "not_assessable_activates_opposite",
-        "not_applicable_activates_opposite",
-    ]):
+    absence=p.get("POLICY_CJ_ABSENCE_GUARD_V1",{}).get("constraints",{})
+    if any(absence.get(k) is not False for k in ["absent_positive_sign_activates_opposite","not_assessable_activates_opposite","not_applicable_activates_opposite"]):
         errors.append("Jamin absence guard permits inverse inference")
+    if absence.get("explicit_opposing_evidence_required_for_opposite") is not True:
+        errors.append("Jamin absence guard no longer requires opposing evidence")
 
-    big = by_policy["POLICY_BIG_CORROBORATION_V1"]
-    big_claim = claim_by_id["METHOD_BIG_SUPPORT"]
-    if big["application_adaptation"] != big_claim["app_adaptation"]:
-        errors.append("BIG application adaptation drifted from frozen source assertion")
-    if big["constraints"]["minimum_distinct_support_groups"] != 3:
-        errors.append("BIG policy must require three distinct support groups under the recorded app adaptation")
-    if big["constraints"]["correlated_summaries_count_once"] is not True:
-        errors.append("BIG policy would double-count correlated summaries")
-    if big["constraints"]["support_count_is_statistical_proof"] is not False:
-        errors.append("BIG support count incorrectly treated as statistical proof")
+    bigp=p.get("POLICY_BIG_CORROBORATION_V1",{})
+    big=bigp.get("constraints",{})
+    if bigp.get("application_adaptation")!=claims["METHOD_BIG_SUPPORT"].get("app_adaptation"):
+        errors.append("BIG application adaptation drift")
+    if big.get("minimum_distinct_support_groups")!=3 or big.get("correlated_summaries_count_once") is not True or big.get("repeated_measurements_of_same_graphic_family_count_once") is not True:
+        errors.append("BIG distinct-support constraints weakened")
+    if big.get("support_count_is_statistical_proof") is not False:
+        errors.append("BIG support count treated as statistical proof")
 
-    moretti = by_policy["POLICY_MORETTI_TYPED_RELATIONS_V1"]
-    sign_relation = {x["value_id"] for x in value_by_id["SIGN_RELATION"]["values"]}
-    if set(moretti["allowed_relation_value_ids"]) != {"SUPPORTS", "OPPOSES", "NEUTRAL"}:
-        errors.append("Moretti relation policy contains unsupported relation values")
-    if set(moretti["allowed_relation_value_ids"]) - sign_relation:
+    moretti=p.get("POLICY_MORETTI_TYPED_RELATIONS_V1",{})
+    relation_ids={x["value_id"] for x in value_sets["SIGN_RELATION"]["values"]}
+    if set(moretti.get("allowed_relation_value_ids",[]))!={"SUPPORTS","OPPOSES","NEUTRAL"}:
+        errors.append("Moretti relation values drifted")
+    if set(moretti.get("allowed_relation_value_ids",[]))-relation_ids:
         errors.append("Moretti relation value does not resolve")
-    if moretti["constraints"]["enable_decimi_scoring"] is not False or moretti["constraints"]["enable_temperament_classifier"] is not False:
-        errors.append("Moretti blocked scoring/classification was enabled")
+    mc=moretti.get("constraints",{})
+    if mc.get("preserve_sign_role_separately_from_within_sample_prominence") is not True:
+        errors.append("Moretti sign-role separation weakened")
+    if mc.get("enable_decimi_scoring") is not False or mc.get("enable_temperament_classifier") is not False:
+        errors.append("Moretti blocked scoring/classifier enabled")
 
-    historical_claims = {
-        x["assertion_id"]: x for x in claims
-        if x["claim_kind"] == "HISTORICAL_INTERPRETIVE_ASSOCIATION"
+    expected_policy_provenance={
+        "POLICY_CJ_CONTEXTUAL_SYNTHESIS_V1":{
+            "school_id":"JAMINIAN","policy_kind":"CONTEXTUAL_SYNTHESIS",
+            "source_assertion_ids":["METHOD_CJ_CONTEXT"],"source_refs":[{"source_id":"CJ1892","locator":"pp.35–53 and pp.89–92"}],
+            "empirical_status":"NOT_ESTABLISHED_AS_PERSONALITY_VALIDITY",
+        },
+        "POLICY_CJ_ABSENCE_GUARD_V1":{
+            "school_id":"JAMINIAN","policy_kind":"MISSINGNESS_GUARDRAIL",
+            "source_assertion_ids":["METHOD_CJ_ABSENCE"],"source_refs":[{"source_id":"CJ1892","locator":"pp.51–53"}],
+            "empirical_status":"LOGICAL_GUARDRAIL_NOT_VALIDATION",
+        },
+        "POLICY_BIG_CORROBORATION_V1":{
+            "school_id":"BIG_HILLIGER","policy_kind":"CORROBORATION",
+            "source_assertion_ids":["METHOD_BIG_SUPPORT"],"source_refs":[{"source_id":"BIG26","locator":"p.3 B.5"}],
+            "empirical_status":"SCHOOL_REQUIREMENT_NOT_STATISTICAL_PROOF",
+        },
+        "POLICY_MORETTI_TYPED_RELATIONS_V1":{
+            "school_id":"MORETTIAN","policy_kind":"TYPED_SIGN_RELATION",
+            "source_assertion_ids":["METHOD_MORETTI_RELATIONS"],"source_refs":[{"source_id":"CARBONARI","locator":"Quale tecnica, sign relations and laws"}],
+            "empirical_status":"NOT_ESTABLISHED_AS_PERSONALITY_VALIDITY",
+        },
     }
-    if len(historical_claims) != 2 or len(associations) != 2:
-        errors.append("expected exactly two researched historical association stubs")
-
-    for a in associations:
-        claim = historical_claims.get(a["source_assertion_id"])
-        if claim is None:
-            errors.append(f"association source assertion is not a researched historical claim: {a['association_id']}")
+    for pol in policies:
+        expected=expected_policy_provenance.get(pol["policy_id"])
+        if not expected:
             continue
-        if a["source_id"] != claim["source_id"] or a["locator"] != claim["locator"]:
-            errors.append(f"association provenance drift: {a['association_id']}")
-        if a["paraphrase"] != claim["paraphrase"]:
-            errors.append(f"association paraphrase drift: {a['association_id']}")
-        if a["source_premise_examples"] != claim.get("premise_examples", []):
-            errors.append(f"association source examples drift: {a['association_id']}")
-        if a["traditional_interpretation"]["source_term"] != claim.get("source_term"):
-            errors.append(f"association source term drift: {a['association_id']}")
-        if a["remaining_gaps"] != claim["remaining_gaps"]:
-            errors.append(f"association gap list drift: {a['association_id']}")
-        if a["school_id"] != "JAMINIAN":
-            errors.append(f"historical Jamin association assigned to wrong school: {a['association_id']}")
-        if a["premise_concepts"] or a["all_of"] or a["any_of"] or a["modifiers"] or a["counter_signs"] or a["exclusions"]:
-            errors.append(f"uninspected executable rule content invented: {a['association_id']}")
-        if a["premise_binding_status"] != "UNOPERATIONALIZED_SOURCE_EXAMPLES":
-            errors.append(f"historical source examples were operationalized: {a['association_id']}")
-        if a["runtime_eligibility"] != "BLOCKED_RESEARCH_ONLY" or a["eligible_for_rule_engine"] or a["eligible_for_model_candidate"]:
-            errors.append(f"historical association became runtime/model eligible: {a['association_id']}")
+        for key,val in expected.items():
+            if pol.get(key)!=val: errors.append(f"traditional method policy provenance drift {key}: {pol['policy_id']}")
+        if any(r["source_id"] not in sources for r in pol.get("source_refs",[])): errors.append(f"policy source does not resolve: {pol['policy_id']}")
+        if any(i not in claims for i in pol.get("source_assertion_ids",[])): errors.append(f"policy assertion does not resolve: {pol['policy_id']}")
 
-    policy_ids = {x["policy_id"] for x in policies}
-    association_ids = {x["association_id"] for x in associations}
-    expected_school_ids = {x["school_id"] for x in schools if x["school_kind"] == "GRAPHOLOGY_TRADITION_PROFILE"}
-    if len(packs) != 5 or {x["school_id"] for x in packs} != expected_school_ids:
-        errors.append("rule-pack shells do not cover exactly the five graphology traditions")
-    if any(set(x["method_policy_ids"]) - policy_ids for x in packs):
-        errors.append("rule pack method policy does not resolve")
-    if any(set(x["association_ids"]) - association_ids for x in packs):
-        errors.append("rule pack association does not resolve")
-    if any(x["runtime_eligible_association_ids"] or x["runtime_activation"] is not False for x in packs):
-        errors.append("rule pack contains runtime-eligible association")
-    non_jamin = [x for x in packs if x["school_id"] != "JAMINIAN"]
-    if any(x["association_ids"] for x in non_jamin):
-        errors.append("association was invented for an unpopulated school pack")
-
-    if gates["general_release_gates"] != research["release_gates"]:
-        errors.append("traditional activation gates drifted from frozen research release gates")
-    if gates["runtime_activation"] is not False:
-        errors.append("traditional activation gates are active")
-    gate_by_id = {x["association_id"]: x for x in gates["association_gates"]}
+    historical={k:v for k,v in claims.items() if v["claim_kind"]=="HISTORICAL_INTERPRETIVE_ASSOCIATION"}
+    if len(associations)!=2 or len(historical)!=2: errors.append("historical association stub count changed")
     for a in associations:
-        gate = gate_by_id.get(a["association_id"])
-        if gate is None or gate["unresolved_requirements"] != a["remaining_gaps"] or gate["may_enter_runtime_pack"] is not False:
-            errors.append(f"association activation gate invalid: {a['association_id']}")
-
-    required_trace = {
-        ("SCHOOL_ASSOCIATION_CONTRACT", "school_association_contract"),
-        ("CANDIDATE_VALIDATION_POLICY", "candidate_validation_policy"),
-        ("RELEASE_GATES", "release_gates"),
-        ("SOURCE_ASSERTION", "METHOD_CJ_CONTEXT"),
-        ("SOURCE_ASSERTION", "METHOD_CJ_ABSENCE"),
-        ("SOURCE_ASSERTION", "METHOD_BIG_SUPPORT"),
-        ("SOURCE_ASSERTION", "METHOD_MORETTI_RELATIONS"),
-        ("SOURCE_ASSERTION", "HIST_CJ_ANIMATION"),
-        ("SOURCE_ASSERTION", "HIST_CJ_FIRMNESS"),
-    }
-    actual_trace = {(x["research_kind"], x["research_id"]) for x in trace}
-    if required_trace != actual_trace:
-        errors.append("PR3 traditional traceability differs from expected research inputs")
-
-    blocked_concepts = {
-        x["object_id"] for x in gaps
-        if x["object_kind"] == "CONCEPT" and x["blocks_runtime_activation"]
-    }
-    if blocked_concepts != concept_ids:
-        errors.append("existing concept activation gaps changed during PR3")
-
-    if manifest["production_scope"] != "COMPLETE_DATABASE_PENDING_REVIEW":
-        required_exclusions = {
-            "Production question text and executable question packs",
-            "Runtime activation of any traditional association or rule pack",
-            "Source-complete association population beyond the two researched blocked Jaminian stubs",
-            "Candidate generator implementations",
-            "Soft-field activation and tone profiles",
-            "Report mappings",
-            "Localization",
-            "Compiled premium_interpretation_database_v1.json",
+        c=historical.get(a["source_assertion_id"])
+        if not c:
+            errors.append(f"association source assertion missing: {a['association_id']}"); continue
+        exact={
+          "source_id":c["source_id"],"locator":c["locator"],"paraphrase":c["paraphrase"],
+          "source_premise_examples":c.get("premise_examples",[]),"remaining_gaps":c["remaining_gaps"],
+          "empirical_status":c["empirical_status"],
         }
-        if set(exclusions["intentionally_not_in_scope"]) != required_exclusions:
-            errors.append("PR3 exclusions differ from reviewed scope")
+        for key,val in exact.items():
+            if a.get(key)!=val: errors.append(f"association provenance drift {key}: {a['association_id']}")
+        if a.get("school_id")!="JAMINIAN": errors.append(f"association school drift: {a['association_id']}")
+        if a.get("traditional_interpretation",{}).get("source_term")!=c.get("source_term"): errors.append(f"association source term drift: {a['association_id']}")
+        if a.get("traditional_interpretation",{}).get("status")!="SOURCE_TERM_ONLY_NO_MODERN_TRAIT_EXPANSION": errors.append(f"association interpretation status drift: {a['association_id']}")
+        if a.get("edition")!="1892 English translation from the third French edition": errors.append(f"association edition drift: {a['association_id']}")
+        if a.get("raw_source_wording_locator")!=c["locator"]: errors.append(f"association raw-source locator drift: {a['association_id']}")
+        if a.get("source_fidelity")!="RESEARCH_ASSERTION_PRESERVED_WITH_RECORDED_GAPS": errors.append(f"association source-fidelity drift: {a['association_id']}")
+        if a.get("premise_binding_status")!="UNOPERATIONALIZED_SOURCE_EXAMPLES": errors.append(f"association source examples operationalized: {a['association_id']}")
+        expected_applicability={"status":"UNOPERATIONALIZED","note":"Full qualifying context and operational morphology remain unresolved."}
+        if a.get("applicability")!=expected_applicability: errors.append(f"association applicability drift: {a['association_id']}")
+        if any(a.get(x) for x in ["premise_concepts","all_of","any_of","modifiers","counter_signs","exclusions"]):
+            errors.append(f"executable rule content invented: {a['association_id']}")
+        if a.get("runtime_eligibility")!="BLOCKED_RESEARCH_ONLY" or a.get("eligible_for_rule_engine") or a.get("eligible_for_model_candidate"):
+            errors.append(f"association activated: {a['association_id']}")
 
-    expected_counts = {
-        "traditional_method_policies": 4,
-        "association_contracts": 1,
-        "candidate_validation_policies": 1,
-        "historical_association_stubs": 2,
-        "runtime_eligible_associations": 0,
-        "rule_pack_shells": 5,
-        "active_rule_packs": 0,
-    }
-    for key, value in expected_counts.items():
-        if manifest["counts"].get(key) != value:
-            errors.append(f"manifest PR3 count differs for {key}")
-    if manifest["runtime_activation"] is not False or manifest["t26_status"] not in {"PLANNED", "IMPLEMENTED_PENDING_REVIEW"}:
-        errors.append("manifest/T26 status invalid")
-    allowed_scopes = {
-        "ONTOLOGY_PROVENANCE_OBSERVATIONS_SELECTORS_VALUES_TRADITIONAL_RULE_STRUCTURES",
-        "COMPLETE_DATABASE_PENDING_REVIEW",
-    }
-    if manifest["production_scope"] not in allowed_scopes:
-        errors.append("manifest PR3 scope invalid")
-    expected_scaffold_status = (
-        "POPULATED_PENDING_REVIEW"
-        if manifest["production_scope"] == "COMPLETE_DATABASE_PENDING_REVIEW"
-        else "UNPOPULATED"
-    )
-    if scaffold.get("status") != expected_scaffold_status:
-        errors.append("compiled Premium scaffold must remain UNPOPULATED in PR3")
-    if next(x for x in tasks["tasks"] if x["id"] == "T26")["status"] not in {"PLANNED", "IMPLEMENTED_PENDING_REVIEW"}:
-        errors.append("T26 status invalid for PR3 compatibility")
+    policy_ids=set(p); association_ids={a["association_id"] for a in associations}
+    if len(packs)!=5 or {x["school_id"] for x in packs}!=schools: errors.append("rule-pack school coverage changed")
+    if any(set(x["method_policy_ids"])-policy_ids for x in packs): errors.append("rule-pack method policy does not resolve")
+    if any(set(x["association_ids"])-association_ids for x in packs): errors.append("rule-pack association does not resolve")
+    if any(x.get("runtime_activation") is not False or x.get("runtime_eligible_association_ids") for x in packs): errors.append("traditional rule pack activated")
+    if any(x["association_ids"] for x in packs if x["school_id"]!="JAMINIAN"): errors.append("association invented for non-Jaminian pack")
 
+    if gates.get("runtime_activation") is not False or gates.get("general_release_gates")!=research["release_gates"]:
+        errors.append("traditional activation gates invalid")
+    gate_rows=gates.get("association_gates",[])
+    gate_ids=[x["association_id"] for x in gate_rows]
+    if len(gate_ids)!=len(set(gate_ids)) or set(gate_ids)!=association_ids:
+        errors.append("association activation gate coverage/uniqueness invalid")
+    gate_by_id={x["association_id"]:x for x in gate_rows}
+    for a in associations:
+        g=gate_by_id.get(a["association_id"])
+        if (
+            not g
+            or g.get("runtime_eligibility")!=a["runtime_eligibility"]
+            or g.get("unresolved_requirements")!=a["remaining_gaps"]
+            or g.get("may_enter_runtime_pack") is not False
+        ):
+            errors.append(f"association activation gate invalid: {a['association_id']}")
+    if gates.get("pack_activation_rule")!="A pack remains inactive until every included association has reviewed operational premises, applicability, counterevidence behavior, source provenance, and explicit promotion evidence.":
+        errors.append("traditional pack activation rule drift")
+
+    pr3_trace=load(root/"traceability/pr3_traditional.json")["records"]
+    expected_pr3={
+        ("SCHOOL_ASSOCIATION_CONTRACT","school_association_contract","ASSOCIATION_CONTRACT","graphology-school-association-contract/1"),
+        ("CANDIDATE_VALIDATION_POLICY","candidate_validation_policy","CANDIDATE_VALIDATION_POLICY","graphology-traditional-candidate-validation/1"),
+        ("RELEASE_GATES","release_gates","ACTIVATION_GATES","graphology-traditional-activation-gates/1"),
+        ("SOURCE_ASSERTION","METHOD_CJ_CONTEXT","METHOD_POLICY","POLICY_CJ_CONTEXTUAL_SYNTHESIS_V1"),
+        ("SOURCE_ASSERTION","METHOD_CJ_ABSENCE","METHOD_POLICY","POLICY_CJ_ABSENCE_GUARD_V1"),
+        ("SOURCE_ASSERTION","METHOD_BIG_SUPPORT","METHOD_POLICY","POLICY_BIG_CORROBORATION_V1"),
+        ("SOURCE_ASSERTION","METHOD_MORETTI_RELATIONS","METHOD_POLICY","POLICY_MORETTI_TYPED_RELATIONS_V1"),
+        ("SOURCE_ASSERTION","HIST_CJ_ANIMATION","TRADITIONAL_ASSOCIATION","ASSOC_HIST_CJ_ANIMATION"),
+        ("SOURCE_ASSERTION","HIST_CJ_FIRMNESS","TRADITIONAL_ASSOCIATION","ASSOC_HIST_CJ_FIRMNESS"),
+    }
+    actual_pr3=[(x["research_kind"],x["research_id"],x["production_kind"],x["production_id"]) for x in pr3_trace]
+    if len(actual_pr3)!=len(set(actual_pr3)) or set(actual_pr3)!=expected_pr3:
+        errors.append("PR3 traditional traceability drift")
     return errors
 
-
-def main() -> int:
-    repo = Path(__file__).resolve().parents[1]
-    errors = validate(repo)
-    if errors:
-        print(json.dumps({"status": "FAIL", "errors": errors}, indent=2))
-        return 1
-    print(json.dumps({"status": "PASS", "scope": "T26_PR3_TRADITIONAL_RULE_STRUCTURES"}, indent=2))
-    return 0
-
-
-if __name__ == "__main__":
-    sys.exit(main())
+def main():
+    repo=Path(__file__).resolve().parents[1]; errors=validate(repo)
+    print(json.dumps({"status":"PASS" if not errors else "FAIL","errors":errors},indent=2)); return 0 if not errors else 1
+if __name__=="__main__": sys.exit(main())

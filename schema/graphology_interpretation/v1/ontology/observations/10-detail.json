@@ -10,6 +10,7 @@
     "model_call_role": "READ_ONLY_CONTEXT_OR_PRECOMPUTED",
     "cardinality": "SINGLE",
     "value_set_id": "VERTICAL_POSITION",
+    "candidate_kind": null,
     "required_inputs": [
       "IDENTIFIED_T_EXAMPLES"
     ],
@@ -33,6 +34,7 @@
       "T_BAR_HEIGHT_RATIO"
     ],
     "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "operational_guardrail": "",
     "source_status": "DRAFT_NOT_ACTIVATED",
     "runtime_status": "DRAFT_NOT_ACTIVE"
   },
@@ -47,6 +49,7 @@
     "model_call_role": "READ_ONLY_CONTEXT_OR_PRECOMPUTED",
     "cardinality": "SINGLE",
     "value_set_id": "BAND3",
+    "candidate_kind": null,
     "required_inputs": [
       "IDENTIFIED_T_EXAMPLES",
       "VALID_MIDDLE_ZONE"
@@ -71,6 +74,7 @@
       "T_BAR_LENGTH_RATIO"
     ],
     "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "operational_guardrail": "",
     "source_status": "DRAFT_NOT_ACTIVATED",
     "runtime_status": "DRAFT_NOT_ACTIVE"
   },
@@ -85,6 +89,7 @@
     "model_call_role": "ANSWER",
     "cardinality": "MULTIPLE",
     "value_set_id": "TERMINAL_FORM",
+    "candidate_kind": null,
     "required_inputs": [
       "IDENTIFIED_T_EXAMPLES",
       "AUTHORIZED_IMAGE",
@@ -108,6 +113,7 @@
     ],
     "related_canonical_feature_ids": [],
     "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "operational_guardrail": "",
     "source_status": "DRAFT_NOT_ACTIVATED",
     "runtime_status": "DRAFT_NOT_ACTIVE"
   },
@@ -122,6 +128,7 @@
     "model_call_role": "READ_ONLY_CONTEXT_OR_PRECOMPUTED",
     "cardinality": "SINGLE",
     "value_set_id": "LATERAL_OFFSET",
+    "candidate_kind": null,
     "required_inputs": [
       "IDENTIFIED_T_EXAMPLES"
     ],
@@ -145,6 +152,7 @@
       "T_BAR_LEFT_RIGHT_BALANCE"
     ],
     "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "operational_guardrail": "",
     "source_status": "DRAFT_NOT_ACTIVATED",
     "runtime_status": "DRAFT_NOT_ACTIVE"
   },
@@ -159,6 +167,7 @@
     "model_call_role": "ANSWER",
     "cardinality": "MULTIPLE",
     "value_set_id": "DOT_FORM",
+    "candidate_kind": null,
     "required_inputs": [
       "IDENTIFIED_I_J_EXAMPLES",
       "AUTHORIZED_IMAGE",
@@ -182,6 +191,7 @@
     ],
     "related_canonical_feature_ids": [],
     "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "operational_guardrail": "Absence of an i/j in the sample is not an absent dot.",
     "source_status": "DRAFT_NOT_ACTIVATED",
     "runtime_status": "DRAFT_NOT_ACTIVE"
   },
@@ -196,6 +206,7 @@
     "model_call_role": "READ_ONLY_CONTEXT_OR_PRECOMPUTED",
     "cardinality": "SINGLE",
     "value_set_id": "LATERAL_OFFSET",
+    "candidate_kind": null,
     "required_inputs": [
       "IDENTIFIED_I_J_EXAMPLES"
     ],
@@ -219,6 +230,7 @@
       "I_DOT_HORIZONTAL_OFFSET"
     ],
     "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "operational_guardrail": "",
     "source_status": "DRAFT_NOT_ACTIVATED",
     "runtime_status": "DRAFT_NOT_ACTIVE"
   },
@@ -233,6 +245,7 @@
     "model_call_role": "ANSWER",
     "cardinality": "MULTIPLE",
     "value_set_id": "DIACRITIC_VARIANT",
+    "candidate_kind": null,
     "required_inputs": [
       "KNOWN_LANGUAGE",
       "IDENTIFIED_DIACRITIC_EXAMPLES",
@@ -244,6 +257,7 @@
     "source_refs": [],
     "related_canonical_feature_ids": [],
     "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "operational_guardrail": "Application extension for e.g. å/ä/ö; no traditional personality meaning is supplied.",
     "source_status": "DRAFT_NOT_ACTIVATED",
     "runtime_status": "DRAFT_NOT_ACTIVE"
   },
@@ -258,6 +272,7 @@
     "model_call_role": "ANSWER",
     "cardinality": "MULTIPLE",
     "value_set_id": "OVAL_CLOSURE",
+    "candidate_kind": null,
     "required_inputs": [
       "IDENTIFIED_OVAL_EXAMPLES",
       "AUTHORIZED_IMAGE",
@@ -284,6 +299,7 @@
       "OVAL_CLOSURE_GAP_RATIO"
     ],
     "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "operational_guardrail": "",
     "source_status": "DRAFT_NOT_ACTIVATED",
     "runtime_status": "DRAFT_NOT_ACTIVE"
   },
@@ -298,6 +314,7 @@
     "model_call_role": "ANSWER",
     "cardinality": "MULTIPLE",
     "value_set_id": "GAP_DIRECTION",
+    "candidate_kind": null,
     "required_inputs": [
       "IDENTIFIED_OVAL_EXAMPLES",
       "AUTHORIZED_IMAGE",
@@ -321,6 +338,85 @@
     ],
     "related_canonical_feature_ids": [],
     "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "operational_guardrail": "Opening direction and existence are separate observations.",
+    "source_status": "DRAFT_NOT_ACTIVATED",
+    "runtime_status": "DRAFT_NOT_ACTIVE"
+  },
+  {
+    "observation_id": "OBS_DETAIL_INITIAL",
+    "source_question_id": "Q_DETAIL_INITIAL",
+    "selector_id": "SEL_DETAIL_INITIAL",
+    "domain_id": "DETAIL",
+    "scope": "INDIVIDUAL",
+    "descriptor_kind": "CANDIDATE_BACKED_DESCRIPTOR",
+    "assessment_owner": "PREMIUM_EDITOR",
+    "model_call_role": "ANSWER",
+    "cardinality": "MULTIPLE",
+    "value_set_id": null,
+    "candidate_kind": "INITIAL_STROKE_DESCRIPTION",
+    "required_inputs": [
+      "CURRENT_REPORT_CANDIDATES"
+    ],
+    "answer_state_policy": "ANSWER_STATE_V1",
+    "permitted_evidence_class": "SELECTION_OR_SYNTHESIS_OF_SUPPLIED_CANDIDATES",
+    "source_refs": [
+      {
+        "source_id": "BIG26",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "LEPOUTRE",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "CJ1892",
+        "relationship": "domain_or_term_basis"
+      }
+    ],
+    "related_canonical_feature_ids": [
+      "INITIAL_STROKE_EXTENSION"
+    ],
+    "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "operational_guardrail": "Conventional beginning of a glyph is not observed temporal stroke order.",
+    "source_status": "DRAFT_NOT_ACTIVATED",
+    "runtime_status": "DRAFT_NOT_ACTIVE"
+  },
+  {
+    "observation_id": "OBS_DETAIL_TERMINAL",
+    "source_question_id": "Q_DETAIL_TERMINAL",
+    "selector_id": "SEL_DETAIL_TERMINAL",
+    "domain_id": "DETAIL",
+    "scope": "INDIVIDUAL",
+    "descriptor_kind": "CANDIDATE_BACKED_DESCRIPTOR",
+    "assessment_owner": "PREMIUM_EDITOR",
+    "model_call_role": "ANSWER",
+    "cardinality": "MULTIPLE",
+    "value_set_id": null,
+    "candidate_kind": "TERMINAL_STROKE_DESCRIPTION",
+    "required_inputs": [
+      "CURRENT_REPORT_CANDIDATES"
+    ],
+    "answer_state_policy": "ANSWER_STATE_V1",
+    "permitted_evidence_class": "SELECTION_OR_SYNTHESIS_OF_SUPPLIED_CANDIDATES",
+    "source_refs": [
+      {
+        "source_id": "BIG26",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "LEPOUTRE",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "CJ1892",
+        "relationship": "domain_or_term_basis"
+      }
+    ],
+    "related_canonical_feature_ids": [
+      "TERMINAL_STROKE_EXTENSION"
+    ],
+    "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "operational_guardrail": "",
     "source_status": "DRAFT_NOT_ACTIVATED",
     "runtime_status": "DRAFT_NOT_ACTIVE"
   }

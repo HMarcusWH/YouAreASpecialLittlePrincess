@@ -1,0 +1,21 @@
+{
+  "version": "graphology-observation-envelope/1",
+  "fields": [
+    "observation_id",
+    "descriptor_id",
+    "region_ids",
+    "observed_value_ids",
+    "answer_state",
+    "observed_frequency",
+    "observed_intensity",
+    "within_script_prominence",
+    "assessment_method",
+    "assessment_version",
+    "confidence_kind",
+    "confidence",
+    "source_claim_ids"
+  ],
+  "note": "Frequency, intensity, prominence, certainty and population rarity remain distinct; every non-observed numeric quantity may be null.",
+  "production_status": "DRAFT_NOT_ACTIVE",
+  "runtime_activation": false
+}

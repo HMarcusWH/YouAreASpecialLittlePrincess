@@ -10,6 +10,7 @@
     "model_call_role": "ANSWER",
     "cardinality": "SINGLE",
     "value_set_id": "DOMINANCE",
+    "candidate_kind": null,
     "required_inputs": [
       "PREIDENTIFIED_GRAPHIC_SIGN",
       "AUTHORIZED_IMAGE",
@@ -33,6 +34,7 @@
     ],
     "related_canonical_feature_ids": [],
     "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "operational_guardrail": "BIG descriptive hierarchy; not interchangeable with Moretti inherent sign-role classes.",
     "source_status": "DRAFT_NOT_ACTIVATED",
     "runtime_status": "DRAFT_NOT_ACTIVE"
   }

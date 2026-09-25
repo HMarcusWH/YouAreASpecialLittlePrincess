@@ -439,7 +439,7 @@
       "research_kind": "UNRESOLVED_SOURCE_TERM",
       "research_id": "currency",
       "production_kind": "SOURCE_GAP",
-      "production_id": "currency",
+      "production_id": "GAP_UNRESOLVED_TERM_1",
       "disposition": "BLOCKED_SOURCE_GAP",
       "runtime_effect": "BLOCKED"
     }

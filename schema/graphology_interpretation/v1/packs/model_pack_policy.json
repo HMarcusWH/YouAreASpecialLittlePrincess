@@ -1,0 +1,7 @@
+{
+  "policy_id": "graphology-model-pack-policy/1",
+  "version": "1.0.0",
+  "research_id": "model_pack_policy",
+  "policy": "The master catalogue is not one enormous prompt. A compiler supplies only applicable questions and read-only facts, with explicit omission reasons. One bounded request may cover the chosen pack; no call per question.",
+  "runtime_activation": false
+}

@@ -1,0 +1,22 @@
+{
+  "envelope_id": "CANDIDATE_ENVELOPE_V1",
+  "version": "1.0.0",
+  "runtime_activation": false,
+  "required_fields": [
+    "candidate_id",
+    "candidate_kind_id",
+    "generator_id",
+    "generator_version",
+    "eligibility_state",
+    "source_fact_ids",
+    "source_observation_ids",
+    "source_association_ids",
+    "display_key",
+    "payload"
+  ],
+  "invariants": [
+    "eligibility_state must be a CANDIDATE_VALIDATION_V1 state.",
+    "PENDING_VISUAL_ASSESSMENT is never described as preverified.",
+    "No candidate payload creates a canonical measurement, percentile, probability or score unless supplied by an authoritative precomputed fact."
+  ]
+}

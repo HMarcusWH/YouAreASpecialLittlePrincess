@@ -10,6 +10,7 @@
     "model_call_role": "ANSWER",
     "cardinality": "SINGLE",
     "value_set_id": "GLOBAL_BALANCE",
+    "candidate_kind": null,
     "required_inputs": [
       "AUTHORIZED_IMAGE",
       "IDENTIFIED_EVIDENCE_REGION"
@@ -36,6 +37,7 @@
     ],
     "related_canonical_feature_ids": [],
     "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "operational_guardrail": "Describes visual impression, not measured speed or psychological control.",
     "source_status": "DRAFT_NOT_ACTIVATED",
     "runtime_status": "DRAFT_NOT_ACTIVE"
   },
@@ -50,6 +52,7 @@
     "model_call_role": "ANSWER",
     "cardinality": "SINGLE",
     "value_set_id": "COHERENCE",
+    "candidate_kind": null,
     "required_inputs": [
       "AUTHORIZED_IMAGE",
       "IDENTIFIED_EVIDENCE_REGION"
@@ -76,6 +79,7 @@
     ],
     "related_canonical_feature_ids": [],
     "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "operational_guardrail": "Requires reviewable visual anchors; no score for human quality.",
     "source_status": "DRAFT_NOT_ACTIVATED",
     "runtime_status": "DRAFT_NOT_ACTIVE"
   },
@@ -90,6 +94,7 @@
     "model_call_role": "ANSWER",
     "cardinality": "SINGLE",
     "value_set_id": "VARIATION_CHARACTER",
+    "candidate_kind": null,
     "required_inputs": [
       "AUTHORIZED_IMAGE",
       "IDENTIFIED_EVIDENCE_REGION"
@@ -116,6 +121,7 @@
     ],
     "related_canonical_feature_ids": [],
     "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "operational_guardrail": "Not equivalent to Moretti Disuguale metodico without the school method.",
     "source_status": "DRAFT_NOT_ACTIVATED",
     "runtime_status": "DRAFT_NOT_ACTIVE"
   }

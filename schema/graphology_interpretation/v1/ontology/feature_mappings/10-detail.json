@@ -6,7 +6,8 @@
     "observation_id": "OBS_DETAIL_T_HEIGHT",
     "canonical_feature_id": "T_BAR_HEIGHT_RATIO",
     "relationship": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
-    "note": "",
+    "mapping_role": "PRIMARY_VALUE",
+    "operational_guardrail": "",
     "mapping_status": "DRAFT_SUPPORT_ONLY",
     "runtime_activation": false
   },
@@ -17,7 +18,8 @@
     "observation_id": "OBS_DETAIL_T_LENGTH",
     "canonical_feature_id": "T_BAR_LENGTH_RATIO",
     "relationship": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
-    "note": "",
+    "mapping_role": "PRIMARY_VALUE",
+    "operational_guardrail": "",
     "mapping_status": "DRAFT_SUPPORT_ONLY",
     "runtime_activation": false
   },
@@ -28,7 +30,8 @@
     "observation_id": "OBS_DETAIL_T_BALANCE",
     "canonical_feature_id": "T_BAR_LEFT_RIGHT_BALANCE",
     "relationship": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
-    "note": "",
+    "mapping_role": "PRIMARY_VALUE",
+    "operational_guardrail": "",
     "mapping_status": "DRAFT_SUPPORT_ONLY",
     "runtime_activation": false
   },
@@ -39,7 +42,8 @@
     "observation_id": "OBS_DETAIL_DOT_OFFSET",
     "canonical_feature_id": "I_DOT_HORIZONTAL_OFFSET",
     "relationship": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
-    "note": "",
+    "mapping_role": "PRIMARY_VALUE",
+    "operational_guardrail": "",
     "mapping_status": "DRAFT_SUPPORT_ONLY",
     "runtime_activation": false
   },
@@ -50,7 +54,8 @@
     "observation_id": "OBS_DETAIL_OVAL",
     "canonical_feature_id": "OPEN_OVAL_RATE",
     "relationship": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
-    "note": "",
+    "mapping_role": "AUXILIARY_CONTEXT",
+    "operational_guardrail": "",
     "mapping_status": "DRAFT_SUPPORT_ONLY",
     "runtime_activation": false
   },
@@ -61,7 +66,8 @@
     "observation_id": "OBS_DETAIL_OVAL",
     "canonical_feature_id": "OVAL_CLOSURE_GAP_RATIO",
     "relationship": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
-    "note": "",
+    "mapping_role": "AUXILIARY_CONTEXT",
+    "operational_guardrail": "",
     "mapping_status": "DRAFT_SUPPORT_ONLY",
     "runtime_activation": false
   },
@@ -69,10 +75,11 @@
     "mapping_id": "MAP_SEL_DETAIL_INITIAL_INITIAL_STROKE_EXTENSION",
     "source_question_id": "Q_DETAIL_INITIAL",
     "selector_id": "SEL_DETAIL_INITIAL",
-    "observation_id": null,
+    "observation_id": "OBS_DETAIL_INITIAL",
     "canonical_feature_id": "INITIAL_STROKE_EXTENSION",
     "relationship": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
-    "note": "Conventional beginning of a glyph is not observed temporal stroke order.",
+    "mapping_role": "CANDIDATE_INPUT",
+    "operational_guardrail": "Conventional beginning of a glyph is not observed temporal stroke order.",
     "mapping_status": "DRAFT_SUPPORT_ONLY",
     "runtime_activation": false
   },
@@ -80,10 +87,11 @@
     "mapping_id": "MAP_SEL_DETAIL_TERMINAL_TERMINAL_STROKE_EXTENSION",
     "source_question_id": "Q_DETAIL_TERMINAL",
     "selector_id": "SEL_DETAIL_TERMINAL",
-    "observation_id": null,
+    "observation_id": "OBS_DETAIL_TERMINAL",
     "canonical_feature_id": "TERMINAL_STROKE_EXTENSION",
     "relationship": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
-    "note": "",
+    "mapping_role": "CANDIDATE_INPUT",
+    "operational_guardrail": "",
     "mapping_status": "DRAFT_SUPPORT_ONLY",
     "runtime_activation": false
   }
