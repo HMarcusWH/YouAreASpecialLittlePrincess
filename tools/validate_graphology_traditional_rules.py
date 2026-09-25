@@ -20,6 +20,13 @@ def validate(repo: Path) -> list[str]:
     gates=load(root/"traditional/activation_gates.json")
     canonical=load(root/"candidates/candidate_validation_policy.json")
     compat=load(root/"traditional/candidate_validation_policy.json")
+    association_contract=load(root/"traditional/association_contract.json")
+
+    stripped_association_contract={k:v for k,v in association_contract.items() if k not in {"version","production_status","runtime_activation"}}
+    if stripped_association_contract!=research["school_association_contract"]:
+        errors.append("school association contract drift")
+    if association_contract.get("production_status")!="STRUCTURE_ONLY" or association_contract.get("runtime_activation") is not False:
+        errors.append("school association contract lifecycle invalid")
 
     if {k:v for k,v in canonical.items() if k not in {"policy_id","version","production_status","runtime_activation"}}!=research["candidate_validation_policy"]:
         errors.append("canonical candidate policy drift")
