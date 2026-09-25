@@ -10,6 +10,7 @@
     "model_call_role": "ANSWER",
     "cardinality": "SINGLE",
     "value_set_id": "STROKE_QUALITY",
+    "candidate_kind": null,
     "required_inputs": [
       "AUTHORIZED_IMAGE",
       "IDENTIFIED_EVIDENCE_REGION"
@@ -30,6 +31,7 @@
       "INK_EDGE_SHARPNESS"
     ],
     "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "operational_guardrail": "Pastose-looking is not a measurement of force; camera/ink/nib can contribute.",
     "source_status": "DRAFT_NOT_ACTIVATED",
     "runtime_status": "DRAFT_NOT_ACTIVE"
   },
@@ -44,6 +46,7 @@
     "model_call_role": "ANSWER",
     "cardinality": "SINGLE",
     "value_set_id": "SHADING",
+    "candidate_kind": null,
     "required_inputs": [
       "IDENTIFIED_DIRECTIONAL_STROKES",
       "AUTHORIZED_IMAGE",
@@ -63,6 +66,112 @@
     ],
     "related_canonical_feature_ids": [],
     "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "operational_guardrail": "Do not infer movement chronology solely from a static trace.",
+    "source_status": "DRAFT_NOT_ACTIVATED",
+    "runtime_status": "DRAFT_NOT_ACTIVE"
+  },
+  {
+    "observation_id": "OBS_STROKE_DARKNESS",
+    "source_question_id": "Q_STROKE_DARKNESS",
+    "selector_id": "SEL_STROKE_DARKNESS",
+    "domain_id": "STROKE",
+    "scope": "INDIVIDUAL",
+    "descriptor_kind": "CANDIDATE_BACKED_DESCRIPTOR",
+    "assessment_owner": "PREMIUM_EDITOR",
+    "model_call_role": "ANSWER",
+    "cardinality": "SINGLE",
+    "value_set_id": null,
+    "candidate_kind": "INK_APPEARANCE_FACT",
+    "required_inputs": [
+      "CURRENT_REPORT_CANDIDATES"
+    ],
+    "answer_state_policy": "ANSWER_STATE_V1",
+    "permitted_evidence_class": "SELECTION_OR_SYNTHESIS_OF_SUPPLIED_CANDIDATES",
+    "source_refs": [
+      {
+        "source_id": "IHAS",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "CONTIN",
+        "relationship": "domain_or_term_basis"
+      }
+    ],
+    "related_canonical_feature_ids": [
+      "INK_DARKNESS_MEAN",
+      "INK_DARKNESS_CV"
+    ],
+    "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "operational_guardrail": "",
+    "source_status": "DRAFT_NOT_ACTIVATED",
+    "runtime_status": "DRAFT_NOT_ACTIVE"
+  },
+  {
+    "observation_id": "OBS_STROKE_WIDTH",
+    "source_question_id": "Q_STROKE_WIDTH",
+    "selector_id": "SEL_STROKE_WIDTH",
+    "domain_id": "STROKE",
+    "scope": "INDIVIDUAL",
+    "descriptor_kind": "CANDIDATE_BACKED_DESCRIPTOR",
+    "assessment_owner": "PREMIUM_EDITOR",
+    "model_call_role": "ANSWER",
+    "cardinality": "SINGLE",
+    "value_set_id": null,
+    "candidate_kind": "THICKNESS_FACT",
+    "required_inputs": [
+      "CURRENT_REPORT_CANDIDATES"
+    ],
+    "answer_state_policy": "ANSWER_STATE_V1",
+    "permitted_evidence_class": "SELECTION_OR_SYNTHESIS_OF_SUPPLIED_CANDIDATES",
+    "source_refs": [
+      {
+        "source_id": "IHAS",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "CONTIN",
+        "relationship": "domain_or_term_basis"
+      }
+    ],
+    "related_canonical_feature_ids": [
+      "STROKE_WIDTH_MEAN",
+      "STROKE_WIDTH_CV"
+    ],
+    "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "operational_guardrail": "",
+    "source_status": "DRAFT_NOT_ACTIVATED",
+    "runtime_status": "DRAFT_NOT_ACTIVE"
+  },
+  {
+    "observation_id": "OBS_STROKE_PRESSURE_LIMIT",
+    "source_question_id": "Q_STROKE_PRESSURE_LIMIT",
+    "selector_id": "SEL_STROKE_PRESSURE_LIMIT",
+    "domain_id": "STROKE",
+    "scope": "INDIVIDUAL",
+    "descriptor_kind": "DETERMINISTIC_DESCRIPTOR",
+    "assessment_owner": "DETERMINISTIC",
+    "model_call_role": "READ_ONLY_CONTEXT_OR_PRECOMPUTED",
+    "cardinality": "SINGLE",
+    "value_set_id": null,
+    "candidate_kind": "ACQUISITION_LIMITATION",
+    "required_inputs": [
+      "ACQUISITION_METADATA"
+    ],
+    "answer_state_policy": "ANSWER_STATE_V1",
+    "permitted_evidence_class": "PRECOMPUTED_DESCRIPTION",
+    "source_refs": [
+      {
+        "source_id": "IHAS",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "CONTIN",
+        "relationship": "domain_or_term_basis"
+      }
+    ],
+    "related_canonical_feature_ids": [],
+    "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "operational_guardrail": "Photo: not measurable as physical force. Original-paper impression and uncalibrated stylus units are not Newtons.",
     "source_status": "DRAFT_NOT_ACTIVATED",
     "runtime_status": "DRAFT_NOT_ACTIVE"
   }

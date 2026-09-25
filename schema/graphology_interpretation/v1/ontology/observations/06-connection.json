@@ -10,6 +10,7 @@
     "model_call_role": "READ_ONLY_CONTEXT_OR_PRECOMPUTED",
     "cardinality": "SINGLE",
     "value_set_id": "CONNECTION_DEGREE",
+    "candidate_kind": null,
     "required_inputs": [
       "VALID_JOINING_METHOD"
     ],
@@ -29,6 +30,7 @@
       "CONNECTEDNESS_RATIO"
     ],
     "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "operational_guardrail": "Connected ink components are a proxy, not guaranteed pen-down strokes.",
     "source_status": "DRAFT_NOT_ACTIVATED",
     "runtime_status": "DRAFT_NOT_ACTIVE"
   },
@@ -43,6 +45,7 @@
     "model_call_role": "ANSWER",
     "cardinality": "MULTIPLE",
     "value_set_id": "CONNECTOR_FORM",
+    "candidate_kind": null,
     "required_inputs": [
       "IDENTIFIED_CONNECTOR_EXAMPLES",
       "AUTHORIZED_IMAGE",
@@ -62,6 +65,7 @@
     ],
     "related_canonical_feature_ids": [],
     "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "operational_guardrail": "A script can contain several forms; retain separate regions rather than force a single type.",
     "source_status": "DRAFT_NOT_ACTIVATED",
     "runtime_status": "DRAFT_NOT_ACTIVE"
   },
@@ -76,6 +80,7 @@
     "model_call_role": "ANSWER",
     "cardinality": "SINGLE",
     "value_set_id": "VARIATION_CHARACTER",
+    "candidate_kind": null,
     "required_inputs": [
       "IDENTIFIED_CONNECTOR_EXAMPLES",
       "AUTHORIZED_IMAGE",
@@ -95,6 +100,7 @@
     ],
     "related_canonical_feature_ids": [],
     "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "operational_guardrail": "",
     "source_status": "DRAFT_NOT_ACTIVATED",
     "runtime_status": "DRAFT_NOT_ACTIVE"
   },
@@ -109,6 +115,7 @@
     "model_call_role": "ANSWER",
     "cardinality": "SINGLE",
     "value_set_id": "CAPITAL_CONNECTION",
+    "candidate_kind": null,
     "required_inputs": [
       "IDENTIFIED_CAPITAL_EXAMPLES",
       "AUTHORIZED_IMAGE",
@@ -128,6 +135,7 @@
     ],
     "related_canonical_feature_ids": [],
     "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "operational_guardrail": "",
     "source_status": "DRAFT_NOT_ACTIVATED",
     "runtime_status": "DRAFT_NOT_ACTIVE"
   }

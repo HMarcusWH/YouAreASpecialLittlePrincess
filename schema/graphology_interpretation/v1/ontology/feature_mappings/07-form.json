@@ -6,7 +6,8 @@
     "observation_id": "OBS_FORM_GEOMETRY",
     "canonical_feature_id": "ANGULARITY_SCORE",
     "relationship": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
-    "note": "Not a claim that roundness determines agreeableness.",
+    "mapping_role": "AUXILIARY_CONTEXT",
+    "operational_guardrail": "Not a claim that roundness determines agreeableness.",
     "mapping_status": "DRAFT_SUPPORT_ONLY",
     "runtime_activation": false
   },
@@ -17,7 +18,8 @@
     "observation_id": "OBS_FORM_GEOMETRY",
     "canonical_feature_id": "ROUNDNESS_SCORE",
     "relationship": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
-    "note": "Not a claim that roundness determines agreeableness.",
+    "mapping_role": "AUXILIARY_CONTEXT",
+    "operational_guardrail": "Not a claim that roundness determines agreeableness.",
     "mapping_status": "DRAFT_SUPPORT_ONLY",
     "runtime_activation": false
   },
@@ -28,7 +30,8 @@
     "observation_id": "OBS_FORM_SIMPLIFICATION",
     "canonical_feature_id": "SIMPLIFICATION_SCORE",
     "relationship": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
-    "note": "Reduced and still identifiable is different from reduced and unclear.",
+    "mapping_role": "AUXILIARY_CONTEXT",
+    "operational_guardrail": "Reduced and still identifiable is different from reduced and unclear.",
     "mapping_status": "DRAFT_SUPPORT_ONLY",
     "runtime_activation": false
   },
@@ -39,7 +42,8 @@
     "observation_id": "OBS_FORM_LOOPS",
     "canonical_feature_id": "LOOP_COUNT",
     "relationship": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
-    "note": "",
+    "mapping_role": "AUXILIARY_CONTEXT",
+    "operational_guardrail": "",
     "mapping_status": "DRAFT_SUPPORT_ONLY",
     "runtime_activation": false
   },
@@ -50,7 +54,8 @@
     "observation_id": "OBS_FORM_LOOPS",
     "canonical_feature_id": "HOLE_AREA_RATIO",
     "relationship": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
-    "note": "",
+    "mapping_role": "AUXILIARY_CONTEXT",
+    "operational_guardrail": "",
     "mapping_status": "DRAFT_SUPPORT_ONLY",
     "runtime_activation": false
   },
@@ -58,10 +63,11 @@
     "mapping_id": "MAP_SEL_FORM_ORNAMENT_FLOURISH_RATE",
     "source_question_id": "Q_FORM_ORNAMENT",
     "selector_id": "SEL_FORM_ORNAMENT",
-    "observation_id": null,
+    "observation_id": "OBS_FORM_ORNAMENT",
     "canonical_feature_id": "FLOURISH_RATE",
     "relationship": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
-    "note": "",
+    "mapping_role": "CANDIDATE_INPUT",
+    "operational_guardrail": "",
     "mapping_status": "DRAFT_SUPPORT_ONLY",
     "runtime_activation": false
   }
