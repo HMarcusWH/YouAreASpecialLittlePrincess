@@ -1939,7 +1939,8 @@
       "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
       "report_target": "graphology.context",
       "source_status": "DRAFT_NOT_ACTIVATED",
-      "runtime_status": "DRAFT_NOT_ACTIVE"
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "operational_guardrail": ""
     },
     {
       "selector_id": "SEL_CTX_SURFACE",
@@ -1969,7 +1970,8 @@
       "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
       "report_target": "graphology.context",
       "source_status": "DRAFT_NOT_ACTIVATED",
-      "runtime_status": "DRAFT_NOT_ACTIVE"
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "operational_guardrail": ""
     },
     {
       "selector_id": "SEL_CTX_STYLE",
@@ -1999,7 +2001,8 @@
       "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
       "report_target": "graphology.context",
       "source_status": "DRAFT_NOT_ACTIVATED",
-      "runtime_status": "DRAFT_NOT_ACTIVE"
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "operational_guardrail": "The model can flag a mismatch; user declaration is not automatically verified."
     },
     {
       "selector_id": "SEL_CTX_FRAME",
@@ -2029,7 +2032,8 @@
       "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
       "report_target": "graphology.context",
       "source_status": "DRAFT_NOT_ACTIVATED",
-      "runtime_status": "DRAFT_NOT_ACTIVE"
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "operational_guardrail": "Do not turn crop margins into paper margins."
     },
     {
       "selector_id": "SEL_CTX_SCALE",
@@ -2059,7 +2063,8 @@
       "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
       "report_target": "graphology.context",
       "source_status": "DRAFT_NOT_ACTIVATED",
-      "runtime_status": "DRAFT_NOT_ACTIVE"
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "operational_guardrail": "Pixel size alone does not establish millimetres."
     },
     {
       "selector_id": "SEL_CTX_DIRECTION",
@@ -2089,7 +2094,8 @@
       "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
       "report_target": "graphology.context",
       "source_status": "DRAFT_NOT_ACTIVATED",
-      "runtime_status": "DRAFT_NOT_ACTIVE"
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "operational_guardrail": ""
     },
     {
       "selector_id": "SEL_GLOBAL_FORM_MOVEMENT",
@@ -2130,7 +2136,8 @@
       "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
       "report_target": "graphology.global",
       "source_status": "DRAFT_NOT_ACTIVATED",
-      "runtime_status": "DRAFT_NOT_ACTIVE"
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "operational_guardrail": "Describes visual impression, not measured speed or psychological control."
     },
     {
       "selector_id": "SEL_GLOBAL_COHERENCE",
@@ -2171,7 +2178,8 @@
       "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
       "report_target": "graphology.global",
       "source_status": "DRAFT_NOT_ACTIVATED",
-      "runtime_status": "DRAFT_NOT_ACTIVE"
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "operational_guardrail": "Requires reviewable visual anchors; no score for human quality."
     },
     {
       "selector_id": "SEL_GLOBAL_VARIATION",
@@ -2212,7 +2220,8 @@
       "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
       "report_target": "graphology.global",
       "source_status": "DRAFT_NOT_ACTIVATED",
-      "runtime_status": "DRAFT_NOT_ACTIVE"
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "operational_guardrail": "Not equivalent to Moretti Disuguale metodico without the school method."
     },
     {
       "selector_id": "SEL_GLOBAL_EVIDENCE_CONFLICT",
@@ -2252,7 +2261,8 @@
       "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
       "report_target": "graphology.global",
       "source_status": "DRAFT_NOT_ACTIVATED",
-      "runtime_status": "DRAFT_NOT_ACTIVE"
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "operational_guardrail": "Model does not override measurements; affected conclusions are withheld."
     },
     {
       "selector_id": "SEL_SPACE_BALANCE",
@@ -2289,7 +2299,8 @@
       "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
       "report_target": "graphology.space",
       "source_status": "DRAFT_NOT_ACTIVATED",
-      "runtime_status": "DRAFT_NOT_ACTIVE"
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "operational_guardrail": ""
     },
     {
       "selector_id": "SEL_SPACE_MARGINS",
@@ -2326,7 +2337,8 @@
       "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
       "report_target": "graphology.space",
       "source_status": "DRAFT_NOT_ACTIVATED",
-      "runtime_status": "DRAFT_NOT_ACTIVE"
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "operational_guardrail": "Use supplied descriptions; no replacement of canonical ratios."
     },
     {
       "selector_id": "SEL_SPACE_MARGIN_TREND",
@@ -2362,7 +2374,8 @@
       "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
       "report_target": "graphology.space",
       "source_status": "DRAFT_NOT_ACTIVATED",
-      "runtime_status": "DRAFT_NOT_ACTIVE"
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "operational_guardrail": ""
     },
     {
       "selector_id": "SEL_SPACE_WORD",
@@ -2396,7 +2409,8 @@
       "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
       "report_target": "graphology.space",
       "source_status": "DRAFT_NOT_ACTIVATED",
-      "runtime_status": "DRAFT_NOT_ACTIVE"
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "operational_guardrail": "A descriptive band and a population percentile are separate facts."
     },
     {
       "selector_id": "SEL_SPACE_LINE",
@@ -2430,7 +2444,8 @@
       "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
       "report_target": "graphology.space",
       "source_status": "DRAFT_NOT_ACTIVATED",
-      "runtime_status": "DRAFT_NOT_ACTIVE"
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "operational_guardrail": ""
     },
     {
       "selector_id": "SEL_SPACE_LETTER",
@@ -2466,7 +2481,8 @@
       "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
       "report_target": "graphology.space",
       "source_status": "DRAFT_NOT_ACTIVATED",
-      "runtime_status": "DRAFT_NOT_ACTIVE"
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "operational_guardrail": "Component spacing is not automatically letter spacing."
     },
     {
       "selector_id": "SEL_SIZE_PHYSICAL",
@@ -2503,7 +2519,8 @@
       "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
       "report_target": "graphology.size",
       "source_status": "DRAFT_NOT_ACTIVATED",
-      "runtime_status": "DRAFT_NOT_ACTIVE"
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "operational_guardrail": "No px threshold becomes a physical-size rule; a derived physical quantity requires an explicit versioned measurement contract, never relabelling X_HEIGHT_PX as millimetres."
     },
     {
       "selector_id": "SEL_SIZE_ZONES",
@@ -2541,7 +2558,8 @@
       "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
       "report_target": "graphology.size",
       "source_status": "DRAFT_NOT_ACTIVATED",
-      "runtime_status": "DRAFT_NOT_ACTIVE"
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "operational_guardrail": ""
     },
     {
       "selector_id": "SEL_SIZE_CAPITAL",
@@ -2578,7 +2596,8 @@
       "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
       "report_target": "graphology.size",
       "source_status": "DRAFT_NOT_ACTIVATED",
-      "runtime_status": "DRAFT_NOT_ACTIVE"
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "operational_guardrail": ""
     },
     {
       "selector_id": "SEL_SIZE_WIDTH",
@@ -2614,7 +2633,8 @@
       "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
       "report_target": "graphology.size",
       "source_status": "DRAFT_NOT_ACTIVATED",
-      "runtime_status": "DRAFT_NOT_ACTIVE"
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "operational_guardrail": "Generic component aspect ratio is not an exact Moretti Largo di lettere score."
     },
     {
       "selector_id": "SEL_SIZE_TREND",
@@ -2652,7 +2672,8 @@
       "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
       "report_target": "graphology.size",
       "source_status": "DRAFT_NOT_ACTIVATED",
-      "runtime_status": "DRAFT_NOT_ACTIVE"
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "operational_guardrail": "Report sequence and regions; cannot infer writing duration."
     },
     {
       "selector_id": "SEL_DIRECTION_SLANT",
@@ -2686,7 +2707,8 @@
       "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
       "report_target": "graphology.direction",
       "source_status": "DRAFT_NOT_ACTIVATED",
-      "runtime_status": "DRAFT_NOT_ACTIVE"
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "operational_guardrail": "Require a method whose baseline-relative convention matches this question; do not reinterpret a canvas-vertical angle silently. Preserve regional mixtures rather than averaging opposite slants into a falsely uniform upright result."
     },
     {
       "selector_id": "SEL_DIRECTION_SLOPE",
@@ -2720,7 +2742,8 @@
       "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
       "report_target": "graphology.direction",
       "source_status": "DRAFT_NOT_ACTIVATED",
-      "runtime_status": "DRAFT_NOT_ACTIVE"
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "operational_guardrail": ""
     },
     {
       "selector_id": "SEL_DIRECTION_SHAPE",
@@ -2757,7 +2780,8 @@
       "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
       "report_target": "graphology.direction",
       "source_status": "DRAFT_NOT_ACTIVATED",
-      "runtime_status": "DRAFT_NOT_ACTIVE"
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "operational_guardrail": "Image classification of shape never replaces stored baseline points."
     },
     {
       "selector_id": "SEL_DIRECTION_VARIATION",
@@ -2794,7 +2818,8 @@
       "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
       "report_target": "graphology.direction",
       "source_status": "DRAFT_NOT_ACTIVATED",
-      "runtime_status": "DRAFT_NOT_ACTIVE"
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "operational_guardrail": "A standard deviation does not establish patterned alternation."
     },
     {
       "selector_id": "SEL_CONNECT_DEGREE",
@@ -2826,7 +2851,8 @@
       "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
       "report_target": "graphology.connection",
       "source_status": "DRAFT_NOT_ACTIVATED",
-      "runtime_status": "DRAFT_NOT_ACTIVE"
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "operational_guardrail": "Connected ink components are a proxy, not guaranteed pen-down strokes."
     },
     {
       "selector_id": "SEL_CONNECT_FORM",
@@ -2860,7 +2886,8 @@
       "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
       "report_target": "graphology.connection",
       "source_status": "DRAFT_NOT_ACTIVATED",
-      "runtime_status": "DRAFT_NOT_ACTIVE"
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "operational_guardrail": "A script can contain several forms; retain separate regions rather than force a single type."
     },
     {
       "selector_id": "SEL_CONNECT_DISTRIBUTION",
@@ -2894,7 +2921,8 @@
       "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
       "report_target": "graphology.connection",
       "source_status": "DRAFT_NOT_ACTIVATED",
-      "runtime_status": "DRAFT_NOT_ACTIVE"
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "operational_guardrail": ""
     },
     {
       "selector_id": "SEL_CONNECT_CAPITAL",
@@ -2928,7 +2956,8 @@
       "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
       "report_target": "graphology.connection",
       "source_status": "DRAFT_NOT_ACTIVATED",
-      "runtime_status": "DRAFT_NOT_ACTIVE"
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "operational_guardrail": ""
     },
     {
       "selector_id": "SEL_FORM_GEOMETRY",
@@ -2965,7 +2994,8 @@
       "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
       "report_target": "graphology.form",
       "source_status": "DRAFT_NOT_ACTIVATED",
-      "runtime_status": "DRAFT_NOT_ACTIVE"
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "operational_guardrail": "Not a claim that roundness determines agreeableness."
     },
     {
       "selector_id": "SEL_FORM_SIMPLIFICATION",
@@ -3003,7 +3033,8 @@
       "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
       "report_target": "graphology.form",
       "source_status": "DRAFT_NOT_ACTIVATED",
-      "runtime_status": "DRAFT_NOT_ACTIVE"
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "operational_guardrail": "Reduced and still identifiable is different from reduced and unclear."
     },
     {
       "selector_id": "SEL_FORM_LOOPS",
@@ -3041,7 +3072,8 @@
       "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
       "report_target": "graphology.form",
       "source_status": "DRAFT_NOT_ACTIVATED",
-      "runtime_status": "DRAFT_NOT_ACTIVE"
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "operational_guardrail": ""
     },
     {
       "selector_id": "SEL_FORM_ORNAMENT",
@@ -3077,7 +3109,8 @@
       "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
       "report_target": "graphology.form",
       "source_status": "DRAFT_NOT_ACTIVATED",
-      "runtime_status": "DRAFT_NOT_ACTIVE"
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "operational_guardrail": ""
     },
     {
       "selector_id": "SEL_FORM_INDIVIDUAL",
@@ -3113,7 +3146,8 @@
       "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
       "report_target": "graphology.form",
       "source_status": "DRAFT_NOT_ACTIVATED",
-      "runtime_status": "DRAFT_NOT_ACTIVE"
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "operational_guardrail": "Individual-looking does not establish statistical rarity or writer identity."
     },
     {
       "selector_id": "SEL_FORM_COPYBOOK",
@@ -3150,7 +3184,8 @@
       "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
       "report_target": "graphology.form",
       "source_status": "DRAFT_NOT_ACTIVATED",
-      "runtime_status": "DRAFT_NOT_ACTIVE"
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "operational_guardrail": "Without a known reference, do not invent a norm for a country or generation."
     },
     {
       "selector_id": "SEL_STROKE_APPEARANCE",
@@ -3183,7 +3218,8 @@
       "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
       "report_target": "graphology.stroke",
       "source_status": "DRAFT_NOT_ACTIVATED",
-      "runtime_status": "DRAFT_NOT_ACTIVE"
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "operational_guardrail": "Pastose-looking is not a measurement of force; camera/ink/nib can contribute."
     },
     {
       "selector_id": "SEL_STROKE_SHADING",
@@ -3217,7 +3253,8 @@
       "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
       "report_target": "graphology.stroke",
       "source_status": "DRAFT_NOT_ACTIVATED",
-      "runtime_status": "DRAFT_NOT_ACTIVE"
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "operational_guardrail": "Do not infer movement chronology solely from a static trace."
     },
     {
       "selector_id": "SEL_STROKE_DARKNESS",
@@ -3249,7 +3286,8 @@
       "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
       "report_target": "graphology.stroke",
       "source_status": "DRAFT_NOT_ACTIVATED",
-      "runtime_status": "DRAFT_NOT_ACTIVE"
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "operational_guardrail": ""
     },
     {
       "selector_id": "SEL_STROKE_WIDTH",
@@ -3281,7 +3319,8 @@
       "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
       "report_target": "graphology.stroke",
       "source_status": "DRAFT_NOT_ACTIVATED",
-      "runtime_status": "DRAFT_NOT_ACTIVE"
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "operational_guardrail": ""
     },
     {
       "selector_id": "SEL_STROKE_PRESSURE_LIMIT",
@@ -3313,7 +3352,8 @@
       "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
       "report_target": "graphology.stroke",
       "source_status": "DRAFT_NOT_ACTIVATED",
-      "runtime_status": "DRAFT_NOT_ACTIVE"
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "operational_guardrail": "Photo: not measurable as physical force. Original-paper impression and uncalibrated stylus units are not Newtons."
     },
     {
       "selector_id": "SEL_MOVEMENT_IMPRESSION",
@@ -3350,7 +3390,8 @@
       "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
       "report_target": "graphology.movement",
       "source_status": "DRAFT_NOT_ACTIVATED",
-      "runtime_status": "DRAFT_NOT_ACTIVE"
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "operational_guardrail": "Apparent only; requires an annotated visual rubric."
     },
     {
       "selector_id": "SEL_MOVEMENT_RHYTHM",
@@ -3387,7 +3428,8 @@
       "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
       "report_target": "graphology.movement",
       "source_status": "DRAFT_NOT_ACTIVATED",
-      "runtime_status": "DRAFT_NOT_ACTIVE"
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "operational_guardrail": "Keep uncertainty; this is not inverse CV and not measured muscular tension."
     },
     {
       "selector_id": "SEL_MOVEMENT_VARIATION",
@@ -3424,7 +3466,8 @@
       "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
       "report_target": "graphology.movement",
       "source_status": "DRAFT_NOT_ACTIVATED",
-      "runtime_status": "DRAFT_NOT_ACTIVE"
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "operational_guardrail": "Separate a general descriptor from a named Moretti sign rating."
     },
     {
       "selector_id": "SEL_MOVEMENT_TEMPO",
@@ -3462,7 +3505,8 @@
       "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
       "report_target": "graphology.movement",
       "source_status": "DRAFT_NOT_ACTIVATED",
-      "runtime_status": "DRAFT_NOT_ACTIVE"
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "operational_guardrail": "Apparent execution only; this may be unassessable and never yields words-per-minute."
     },
     {
       "selector_id": "SEL_MOVEMENT_TENSION",
@@ -3500,7 +3544,8 @@
       "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
       "report_target": "graphology.movement",
       "source_status": "DRAFT_NOT_ACTIVATED",
-      "runtime_status": "DRAFT_NOT_ACTIVE"
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "operational_guardrail": "Not a claim about muscular force, psychological stress or sensor pressure."
     },
     {
       "selector_id": "SEL_MOVEMENT_TEMPO_LIMIT",
@@ -3536,7 +3581,8 @@
       "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
       "report_target": "graphology.movement",
       "source_status": "DRAFT_NOT_ACTIVATED",
-      "runtime_status": "DRAFT_NOT_ACTIVE"
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "operational_guardrail": "No words-per-minute or literal pen lifts from a single photograph."
     },
     {
       "selector_id": "SEL_DETAIL_T_HEIGHT",
@@ -3572,7 +3618,8 @@
       "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
       "report_target": "graphology.detail",
       "source_status": "DRAFT_NOT_ACTIVATED",
-      "runtime_status": "DRAFT_NOT_ACTIVE"
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "operational_guardrail": ""
     },
     {
       "selector_id": "SEL_DETAIL_T_LENGTH",
@@ -3609,7 +3656,8 @@
       "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
       "report_target": "graphology.detail",
       "source_status": "DRAFT_NOT_ACTIVATED",
-      "runtime_status": "DRAFT_NOT_ACTIVE"
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "operational_guardrail": ""
     },
     {
       "selector_id": "SEL_DETAIL_T_END",
@@ -3647,7 +3695,8 @@
       "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
       "report_target": "graphology.detail",
       "source_status": "DRAFT_NOT_ACTIVATED",
-      "runtime_status": "DRAFT_NOT_ACTIVE"
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "operational_guardrail": ""
     },
     {
       "selector_id": "SEL_DETAIL_T_BALANCE",
@@ -3683,7 +3732,8 @@
       "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
       "report_target": "graphology.detail",
       "source_status": "DRAFT_NOT_ACTIVATED",
-      "runtime_status": "DRAFT_NOT_ACTIVE"
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "operational_guardrail": ""
     },
     {
       "selector_id": "SEL_DETAIL_DOT_FORM",
@@ -3721,7 +3771,8 @@
       "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
       "report_target": "graphology.detail",
       "source_status": "DRAFT_NOT_ACTIVATED",
-      "runtime_status": "DRAFT_NOT_ACTIVE"
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "operational_guardrail": "Absence of an i/j in the sample is not an absent dot."
     },
     {
       "selector_id": "SEL_DETAIL_DOT_OFFSET",
@@ -3757,7 +3808,8 @@
       "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
       "report_target": "graphology.detail",
       "source_status": "DRAFT_NOT_ACTIVATED",
-      "runtime_status": "DRAFT_NOT_ACTIVE"
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "operational_guardrail": ""
     },
     {
       "selector_id": "SEL_DETAIL_DIACRITIC",
@@ -3783,7 +3835,8 @@
       "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
       "report_target": "graphology.detail",
       "source_status": "DRAFT_NOT_ACTIVATED",
-      "runtime_status": "DRAFT_NOT_ACTIVE"
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "operational_guardrail": "Application extension for e.g. å/ä/ö; no traditional personality meaning is supplied."
     },
     {
       "selector_id": "SEL_DETAIL_OVAL",
@@ -3821,7 +3874,8 @@
       "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
       "report_target": "graphology.detail",
       "source_status": "DRAFT_NOT_ACTIVATED",
-      "runtime_status": "DRAFT_NOT_ACTIVE"
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "operational_guardrail": ""
     },
     {
       "selector_id": "SEL_DETAIL_OVAL_GAP",
@@ -3859,7 +3913,8 @@
       "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
       "report_target": "graphology.detail",
       "source_status": "DRAFT_NOT_ACTIVATED",
-      "runtime_status": "DRAFT_NOT_ACTIVE"
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "operational_guardrail": "Opening direction and existence are separate observations."
     },
     {
       "selector_id": "SEL_DETAIL_INITIAL",
@@ -3895,7 +3950,8 @@
       "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
       "report_target": "graphology.detail",
       "source_status": "DRAFT_NOT_ACTIVATED",
-      "runtime_status": "DRAFT_NOT_ACTIVE"
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "operational_guardrail": "Conventional beginning of a glyph is not observed temporal stroke order."
     },
     {
       "selector_id": "SEL_DETAIL_TERMINAL",
@@ -3931,7 +3987,8 @@
       "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
       "report_target": "graphology.detail",
       "source_status": "DRAFT_NOT_ACTIVATED",
-      "runtime_status": "DRAFT_NOT_ACTIVE"
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "operational_guardrail": ""
     },
     {
       "selector_id": "SEL_DETAIL_PPI",
@@ -3969,7 +4026,8 @@
       "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
       "report_target": "graphology.detail",
       "source_status": "DRAFT_NOT_ACTIVATED",
-      "runtime_status": "DRAFT_NOT_ACTIVE"
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "operational_guardrail": "Not universal to Swedish or every capital I; no family/parent diagnosis."
     },
     {
       "selector_id": "SEL_SIG_LOCATION",
@@ -4001,7 +4059,8 @@
       "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
       "report_target": "graphology.signature",
       "source_status": "DRAFT_NOT_ACTIVATED",
-      "runtime_status": "DRAFT_NOT_ACTIVE"
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "operational_guardrail": ""
     },
     {
       "selector_id": "SEL_SIG_SIZE",
@@ -4034,7 +4093,8 @@
       "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
       "report_target": "graphology.signature",
       "source_status": "DRAFT_NOT_ACTIVATED",
-      "runtime_status": "DRAFT_NOT_ACTIVE"
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "operational_guardrail": ""
     },
     {
       "selector_id": "SEL_SIG_SLANT",
@@ -4067,7 +4127,8 @@
       "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
       "report_target": "graphology.signature",
       "source_status": "DRAFT_NOT_ACTIVATED",
-      "runtime_status": "DRAFT_NOT_ACTIVE"
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "operational_guardrail": ""
     },
     {
       "selector_id": "SEL_SIG_CONNECTION",
@@ -4100,7 +4161,8 @@
       "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
       "report_target": "graphology.signature",
       "source_status": "DRAFT_NOT_ACTIVATED",
-      "runtime_status": "DRAFT_NOT_ACTIVE"
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "operational_guardrail": ""
     },
     {
       "selector_id": "SEL_SIG_ADDON",
@@ -4134,7 +4196,8 @@
       "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
       "report_target": "graphology.signature",
       "source_status": "DRAFT_NOT_ACTIVATED",
-      "runtime_status": "DRAFT_NOT_ACTIVE"
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "operational_guardrail": ""
     },
     {
       "selector_id": "SEL_SIG_RELATION",
@@ -4167,7 +4230,8 @@
       "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
       "report_target": "graphology.signature",
       "source_status": "DRAFT_NOT_ACTIVATED",
-      "runtime_status": "DRAFT_NOT_ACTIVE"
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "operational_guardrail": "No identity verification or hidden-self assertion without a separately sourced traditional association."
     },
     {
       "selector_id": "SEL_HIERARCHY_MAIN",
@@ -4203,7 +4267,8 @@
       "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
       "report_target": "graphology.hierarchy",
       "source_status": "DRAFT_NOT_ACTIVATED",
-      "runtime_status": "DRAFT_NOT_ACTIVE"
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "operational_guardrail": "Selection is not a population ranking."
     },
     {
       "selector_id": "SEL_HIERARCHY_ROLE",
@@ -4241,7 +4306,8 @@
       "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
       "report_target": "graphology.hierarchy",
       "source_status": "DRAFT_NOT_ACTIVATED",
-      "runtime_status": "DRAFT_NOT_ACTIVE"
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "operational_guardrail": "BIG descriptive hierarchy; not interchangeable with Moretti inherent sign-role classes."
     },
     {
       "selector_id": "SEL_HIERARCHY_SUPPORT",
@@ -4278,7 +4344,8 @@
       "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
       "report_target": "graphology.hierarchy",
       "source_status": "DRAFT_NOT_ACTIVATED",
-      "runtime_status": "DRAFT_NOT_ACTIVE"
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "operational_guardrail": "Repeated summaries of the same slant observations count as one support group."
     },
     {
       "selector_id": "SEL_HIERARCHY_COUNTER",
@@ -4315,7 +4382,8 @@
       "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
       "report_target": "graphology.hierarchy",
       "source_status": "DRAFT_NOT_ACTIVATED",
-      "runtime_status": "DRAFT_NOT_ACTIVE"
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "operational_guardrail": ""
     },
     {
       "selector_id": "SEL_HIERARCHY_RELATION",
@@ -4352,7 +4420,8 @@
       "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
       "report_target": "graphology.hierarchy",
       "source_status": "DRAFT_NOT_ACTIVATED",
-      "runtime_status": "DRAFT_NOT_ACTIVE"
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "operational_guardrail": "The rule pack owns the relation; visual similarity is not psychological corroboration."
     },
     {
       "selector_id": "SEL_HIERARCHY_SCOPE",
@@ -4388,7 +4457,8 @@
       "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
       "report_target": "graphology.hierarchy",
       "source_status": "DRAFT_NOT_ACTIVATED",
-      "runtime_status": "DRAFT_NOT_ACTIVE"
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "operational_guardrail": ""
     },
     {
       "selector_id": "SEL_HIERARCHY_COMBINATION",
@@ -4424,7 +4494,8 @@
       "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
       "report_target": "graphology.hierarchy",
       "source_status": "DRAFT_NOT_ACTIVATED",
-      "runtime_status": "DRAFT_NOT_ACTIVE"
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "operational_guardrail": "A source-backed resultant and an application-authored visual contrast keep distinct provenance."
     },
     {
       "selector_id": "SEL_TRAD_BUNDLE",
@@ -4461,7 +4532,8 @@
       "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
       "report_target": "graphology.interpretation",
       "source_status": "DRAFT_NOT_ACTIVATED",
-      "runtime_status": "DRAFT_NOT_ACTIVE"
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "operational_guardrail": "No eligible bundle -> abstain. This bank alone does not populate inference rules."
     },
     {
       "selector_id": "SEL_TRAD_STATUS",
@@ -4497,7 +4569,8 @@
       "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
       "report_target": "graphology.interpretation",
       "source_status": "DRAFT_NOT_ACTIVATED",
-      "runtime_status": "DRAFT_NOT_ACTIVE"
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "operational_guardrail": ""
     },
     {
       "selector_id": "SEL_TRAD_MODIFIER",
@@ -4534,7 +4607,8 @@
       "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
       "report_target": "graphology.interpretation",
       "source_status": "DRAFT_NOT_ACTIVATED",
-      "runtime_status": "DRAFT_NOT_ACTIVE"
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "operational_guardrail": ""
     },
     {
       "selector_id": "SEL_TRAD_ALTERNATIVE",
@@ -4571,7 +4645,8 @@
       "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
       "report_target": "graphology.interpretation",
       "source_status": "DRAFT_NOT_ACTIVATED",
-      "runtime_status": "DRAFT_NOT_ACTIVE"
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "operational_guardrail": ""
     },
     {
       "selector_id": "SEL_TRAD_SCHOOL_DIFF",
@@ -4607,7 +4682,8 @@
       "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
       "report_target": "graphology.interpretation",
       "source_status": "DRAFT_NOT_ACTIVATED",
-      "runtime_status": "DRAFT_NOT_ACTIVE"
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "operational_guardrail": "Shared ancestry is not independent scientific replication."
     },
     {
       "selector_id": "SEL_TRAD_WITHHOLD",
@@ -4644,7 +4720,8 @@
       "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
       "report_target": "graphology.interpretation",
       "source_status": "DRAFT_NOT_ACTIVATED",
-      "runtime_status": "DRAFT_NOT_ACTIVE"
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "operational_guardrail": ""
     },
     {
       "selector_id": "SEL_REF_ELIGIBLE",
@@ -4665,7 +4742,8 @@
       "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
       "report_target": "graphology.reference",
       "source_status": "DRAFT_NOT_ACTIVATED",
-      "runtime_status": "DRAFT_NOT_ACTIVE"
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "operational_guardrail": ""
     },
     {
       "selector_id": "SEL_REF_HIGHLIGHT",
@@ -4688,7 +4766,8 @@
       "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
       "report_target": "graphology.reference",
       "source_status": "DRAFT_NOT_ACTIVATED",
-      "runtime_status": "DRAFT_NOT_ACTIVE"
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "operational_guardrail": ""
     },
     {
       "selector_id": "SEL_REF_COMBINATION",
@@ -4711,7 +4790,8 @@
       "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
       "report_target": "graphology.reference",
       "source_status": "DRAFT_NOT_ACTIVATED",
-      "runtime_status": "DRAFT_NOT_ACTIVE"
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "operational_guardrail": "No multiplication of marginal rarity estimates."
     },
     {
       "selector_id": "SEL_REF_QUALIFICATION",
@@ -4732,7 +4812,8 @@
       "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
       "report_target": "graphology.reference",
       "source_status": "DRAFT_NOT_ACTIVATED",
-      "runtime_status": "DRAFT_NOT_ACTIVE"
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "operational_guardrail": ""
     },
     {
       "selector_id": "SEL_PAIR_COMPARABLE",
@@ -4758,7 +4839,8 @@
       "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
       "report_target": "graphology.pair",
       "source_status": "DRAFT_NOT_ACTIVATED",
-      "runtime_status": "DRAFT_NOT_ACTIVE"
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "operational_guardrail": ""
     },
     {
       "selector_id": "SEL_PAIR_SIMILAR",
@@ -4786,7 +4868,8 @@
       "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
       "report_target": "graphology.pair",
       "source_status": "DRAFT_NOT_ACTIVATED",
-      "runtime_status": "DRAFT_NOT_ACTIVE"
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "operational_guardrail": ""
     },
     {
       "selector_id": "SEL_PAIR_DIFFERENT",
@@ -4814,7 +4897,8 @@
       "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
       "report_target": "graphology.pair",
       "source_status": "DRAFT_NOT_ACTIVATED",
-      "runtime_status": "DRAFT_NOT_ACTIVE"
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "operational_guardrail": ""
     },
     {
       "selector_id": "SEL_PAIR_TRAD",
@@ -4843,7 +4927,8 @@
       "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
       "report_target": "graphology.pair",
       "source_status": "DRAFT_NOT_ACTIVATED",
-      "runtime_status": "DRAFT_NOT_ACTIVE"
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "operational_guardrail": "No relationship-success, shared identity or moral ranking."
     },
     {
       "selector_id": "SEL_HIST_COMPARABLE",
@@ -4864,7 +4949,8 @@
       "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
       "report_target": "graphology.history",
       "source_status": "DRAFT_NOT_ACTIVATED",
-      "runtime_status": "DRAFT_NOT_ACTIVE"
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "operational_guardrail": ""
     },
     {
       "selector_id": "SEL_HIST_CHANGE",
@@ -4887,7 +4973,8 @@
       "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
       "report_target": "graphology.history",
       "source_status": "DRAFT_NOT_ACTIVATED",
-      "runtime_status": "DRAFT_NOT_ACTIVE"
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "operational_guardrail": ""
     },
     {
       "selector_id": "SEL_HIST_STABLE",
@@ -4910,7 +4997,8 @@
       "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
       "report_target": "graphology.history",
       "source_status": "DRAFT_NOT_ACTIVATED",
-      "runtime_status": "DRAFT_NOT_ACTIVE"
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "operational_guardrail": ""
     },
     {
       "selector_id": "SEL_HIST_LIMIT",
@@ -4931,7 +5019,8 @@
       "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
       "report_target": "graphology.history",
       "source_status": "DRAFT_NOT_ACTIVATED",
-      "runtime_status": "DRAFT_NOT_ACTIVE"
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "operational_guardrail": "No inference of personality change or health improvement."
     }
   ],
   "question_definitions": [
@@ -10876,13 +10965,21 @@
     "school.klages_reception.label",
     "school.morettian.label",
     "soft.soft_alternative.label",
+    "soft.soft_alternative.prompt",
     "soft.soft_combination.label",
+    "soft.soft_combination.prompt",
     "soft.soft_distinctiveness.label",
+    "soft.soft_distinctiveness.prompt",
     "soft.soft_graphic_portrait.label",
+    "soft.soft_graphic_portrait.prompt",
     "soft.soft_history.label",
+    "soft.soft_history.prompt",
     "soft.soft_limitation.label",
+    "soft.soft_limitation.prompt",
     "soft.soft_pair.label",
+    "soft.soft_pair.prompt",
     "soft.soft_traditional_synthesis.label",
+    "soft.soft_traditional_synthesis.prompt",
     "tone.premium_evidence_dossier.label"
   ],
   "localization": {
@@ -11155,13 +11252,21 @@
       "question.q_hist_stable": "Which characteristics are stable under the comparison tolerance?",
       "question.q_hist_limit": "Which confounders prevent a stronger interpretation of change?",
       "soft.soft_graphic_portrait.label": "Describe the overall handwriting pattern without claiming to diagnose its author.",
+      "soft.soft_graphic_portrait.prompt": "Describe the overall handwriting pattern without claiming to diagnose its author.",
       "soft.soft_combination.label": "Explain one evidenced relationship between features, including qualifiers.",
+      "soft.soft_combination.prompt": "Explain one evidenced relationship between features, including qualifiers.",
       "soft.soft_traditional_synthesis.label": "Explain the selected historical/traditional reading as such, naming its school and limits.",
+      "soft.soft_traditional_synthesis.prompt": "Explain the selected historical/traditional reading as such, naming its school and limits.",
       "soft.soft_alternative.label": "Explain why an alternative reading remains unresolved instead of choosing a flattering answer.",
+      "soft.soft_alternative.prompt": "Explain why an alternative reading remains unresolved instead of choosing a flattering answer.",
       "soft.soft_distinctiveness.label": "Explain the supplied unusual feature without adding rarity or superiority claims.",
+      "soft.soft_distinctiveness.prompt": "Explain the supplied unusual feature without adding rarity or superiority claims.",
       "soft.soft_pair.label": "Explain graphical similarities and contrasts while retaining both samples' limitations.",
+      "soft.soft_pair.prompt": "Explain graphical similarities and contrasts while retaining both samples' limitations.",
       "soft.soft_history.label": "Explain comparable graphical change without claiming a change in character or health.",
+      "soft.soft_history.prompt": "Explain comparable graphical change without claiming a change in character or health.",
       "soft.soft_limitation.label": "Summarize important unknowns and withheld claims without speculating.",
+      "soft.soft_limitation.prompt": "Summarize important unknowns and withheld claims without speculating.",
       "tone.premium_evidence_dossier.label": "Evidence-first personal dossier",
       "report.context.label": "Sample context and applicability",
       "report.global.label": "Whole-pattern appraisal",
@@ -11212,19 +11317,6 @@
         "No uncited school meaning",
         "No unsupported psychological meaning for language-specific marks"
       ],
-      "production_status": "STRUCTURE_ONLY",
-      "runtime_activation": false
-    },
-    "candidate_validation_policy": {
-      "version": "graphology-traditional-candidate-validation/1",
-      "states": [
-        "ELIGIBLE_FROM_PRECOMPUTED_FACTS",
-        "PENDING_VISUAL_ASSESSMENT",
-        "INELIGIBLE",
-        "UNASSESSED"
-      ],
-      "rule": "An allowed candidate ID proves only membership in the approved choice space. A candidate dependent on model-produced graphic observations remains provisional until post-validation checks its prerequisites and evidence type. It cannot be labelled preverified. No pending candidate yields a measured numerical claim.",
-      "single_call_limit": "Question order within one multimodal request is not a blinded independent assessment; test salience and content effects.",
       "production_status": "STRUCTURE_ONLY",
       "runtime_activation": false
     },
