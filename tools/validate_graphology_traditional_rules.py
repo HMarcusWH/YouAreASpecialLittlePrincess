@@ -25,15 +25,21 @@ def validate(repo: Path) -> list[str]:
     stripped_association_contract={k:v for k,v in association_contract.items() if k not in {"version","production_status","runtime_activation"}}
     if stripped_association_contract!=research["school_association_contract"]:
         errors.append("school association contract drift")
+    if association_contract.get("version")!="graphology-school-association-contract/1":
+        errors.append("school association contract version drift")
     if association_contract.get("production_status")!="STRUCTURE_ONLY" or association_contract.get("runtime_activation") is not False:
         errors.append("school association contract lifecycle invalid")
 
     if {k:v for k,v in canonical.items() if k not in {"policy_id","version","production_status","runtime_activation"}}!=research["candidate_validation_policy"]:
         errors.append("canonical candidate policy drift")
+    if canonical.get("policy_id")!="CANDIDATE_VALIDATION_V1" or canonical.get("version")!="graphology-candidate-validation/1":
+        errors.append("canonical candidate policy identity drift")
     if canonical.get("production_status")!="DRAFT_NOT_ACTIVE" or canonical.get("runtime_activation") is not False:
         errors.append("canonical candidate policy lifecycle invalid")
     if {k:v for k,v in compat.items() if k not in {"version","production_status","runtime_activation"}}!=research["candidate_validation_policy"]:
         errors.append("traditional candidate policy compatibility copy drift")
+    if compat.get("version")!="graphology-traditional-candidate-validation/1":
+        errors.append("traditional candidate policy compatibility version drift")
     if compat.get("production_status")!="STRUCTURE_ONLY" or compat.get("runtime_activation") is not False:
         errors.append("traditional candidate policy compatibility lifecycle invalid")
 
@@ -76,7 +82,34 @@ def validate(repo: Path) -> list[str]:
     if mc.get("enable_decimi_scoring") is not False or mc.get("enable_temperament_classifier") is not False:
         errors.append("Moretti blocked scoring/classifier enabled")
 
+    expected_policy_provenance={
+        "POLICY_CJ_CONTEXTUAL_SYNTHESIS_V1":{
+            "school_id":"JAMINIAN","policy_kind":"CONTEXTUAL_SYNTHESIS",
+            "source_assertion_ids":["METHOD_CJ_CONTEXT"],"source_refs":[{"source_id":"CJ1892","locator":"pp.35–53 and pp.89–92"}],
+            "empirical_status":"NOT_ESTABLISHED_AS_PERSONALITY_VALIDITY",
+        },
+        "POLICY_CJ_ABSENCE_GUARD_V1":{
+            "school_id":"JAMINIAN","policy_kind":"MISSINGNESS_GUARDRAIL",
+            "source_assertion_ids":["METHOD_CJ_ABSENCE"],"source_refs":[{"source_id":"CJ1892","locator":"pp.51–53"}],
+            "empirical_status":"LOGICAL_GUARDRAIL_NOT_VALIDATION",
+        },
+        "POLICY_BIG_CORROBORATION_V1":{
+            "school_id":"BIG_HILLIGER","policy_kind":"CORROBORATION",
+            "source_assertion_ids":["METHOD_BIG_SUPPORT"],"source_refs":[{"source_id":"BIG26","locator":"p.3 B.5"}],
+            "empirical_status":"SCHOOL_REQUIREMENT_NOT_STATISTICAL_PROOF",
+        },
+        "POLICY_MORETTI_TYPED_RELATIONS_V1":{
+            "school_id":"MORETTIAN","policy_kind":"TYPED_SIGN_RELATION",
+            "source_assertion_ids":["METHOD_MORETTI_RELATIONS"],"source_refs":[{"source_id":"CARBONARI","locator":"Quale tecnica, sign relations and laws"}],
+            "empirical_status":"NOT_ESTABLISHED_AS_PERSONALITY_VALIDITY",
+        },
+    }
     for pol in policies:
+        expected=expected_policy_provenance.get(pol["policy_id"])
+        if not expected:
+            continue
+        for key,val in expected.items():
+            if pol.get(key)!=val: errors.append(f"traditional method policy provenance drift {key}: {pol['policy_id']}")
         if any(r["source_id"] not in sources for r in pol.get("source_refs",[])): errors.append(f"policy source does not resolve: {pol['policy_id']}")
         if any(i not in claims for i in pol.get("source_assertion_ids",[])): errors.append(f"policy assertion does not resolve: {pol['policy_id']}")
 
@@ -96,8 +129,12 @@ def validate(repo: Path) -> list[str]:
         if a.get("school_id")!="JAMINIAN": errors.append(f"association school drift: {a['association_id']}")
         if a.get("traditional_interpretation",{}).get("source_term")!=c.get("source_term"): errors.append(f"association source term drift: {a['association_id']}")
         if a.get("traditional_interpretation",{}).get("status")!="SOURCE_TERM_ONLY_NO_MODERN_TRAIT_EXPANSION": errors.append(f"association interpretation status drift: {a['association_id']}")
+        if a.get("edition")!="1892 English translation from the third French edition": errors.append(f"association edition drift: {a['association_id']}")
+        if a.get("raw_source_wording_locator")!=c["locator"]: errors.append(f"association raw-source locator drift: {a['association_id']}")
+        if a.get("source_fidelity")!="RESEARCH_ASSERTION_PRESERVED_WITH_RECORDED_GAPS": errors.append(f"association source-fidelity drift: {a['association_id']}")
         if a.get("premise_binding_status")!="UNOPERATIONALIZED_SOURCE_EXAMPLES": errors.append(f"association source examples operationalized: {a['association_id']}")
-        if a.get("applicability",{}).get("status")!="UNOPERATIONALIZED": errors.append(f"association applicability operationalized: {a['association_id']}")
+        expected_applicability={"status":"UNOPERATIONALIZED","note":"Full qualifying context and operational morphology remain unresolved."}
+        if a.get("applicability")!=expected_applicability: errors.append(f"association applicability drift: {a['association_id']}")
         if any(a.get(x) for x in ["premise_concepts","all_of","any_of","modifiers","counter_signs","exclusions"]):
             errors.append(f"executable rule content invented: {a['association_id']}")
         if a.get("runtime_eligibility")!="BLOCKED_RESEARCH_ONLY" or a.get("eligible_for_rule_engine") or a.get("eligible_for_model_candidate"):
@@ -112,11 +149,38 @@ def validate(repo: Path) -> list[str]:
 
     if gates.get("runtime_activation") is not False or gates.get("general_release_gates")!=research["release_gates"]:
         errors.append("traditional activation gates invalid")
-    gate_by_id={x["association_id"]:x for x in gates["association_gates"]}
+    gate_rows=gates.get("association_gates",[])
+    gate_ids=[x["association_id"] for x in gate_rows]
+    if len(gate_ids)!=len(set(gate_ids)) or set(gate_ids)!=association_ids:
+        errors.append("association activation gate coverage/uniqueness invalid")
+    gate_by_id={x["association_id"]:x for x in gate_rows}
     for a in associations:
         g=gate_by_id.get(a["association_id"])
-        if not g or g.get("unresolved_requirements")!=a["remaining_gaps"] or g.get("may_enter_runtime_pack") is not False:
+        if (
+            not g
+            or g.get("runtime_eligibility")!=a["runtime_eligibility"]
+            or g.get("unresolved_requirements")!=a["remaining_gaps"]
+            or g.get("may_enter_runtime_pack") is not False
+        ):
             errors.append(f"association activation gate invalid: {a['association_id']}")
+    if gates.get("pack_activation_rule")!="A pack remains inactive until every included association has reviewed operational premises, applicability, counterevidence behavior, source provenance, and explicit promotion evidence.":
+        errors.append("traditional pack activation rule drift")
+
+    pr3_trace=load(root/"traceability/pr3_traditional.json")["records"]
+    expected_pr3={
+        ("SCHOOL_ASSOCIATION_CONTRACT","school_association_contract","ASSOCIATION_CONTRACT","graphology-school-association-contract/1"),
+        ("CANDIDATE_VALIDATION_POLICY","candidate_validation_policy","CANDIDATE_VALIDATION_POLICY","graphology-traditional-candidate-validation/1"),
+        ("RELEASE_GATES","release_gates","ACTIVATION_GATES","graphology-traditional-activation-gates/1"),
+        ("SOURCE_ASSERTION","METHOD_CJ_CONTEXT","METHOD_POLICY","POLICY_CJ_CONTEXTUAL_SYNTHESIS_V1"),
+        ("SOURCE_ASSERTION","METHOD_CJ_ABSENCE","METHOD_POLICY","POLICY_CJ_ABSENCE_GUARD_V1"),
+        ("SOURCE_ASSERTION","METHOD_BIG_SUPPORT","METHOD_POLICY","POLICY_BIG_CORROBORATION_V1"),
+        ("SOURCE_ASSERTION","METHOD_MORETTI_RELATIONS","METHOD_POLICY","POLICY_MORETTI_TYPED_RELATIONS_V1"),
+        ("SOURCE_ASSERTION","HIST_CJ_ANIMATION","TRADITIONAL_ASSOCIATION","ASSOC_HIST_CJ_ANIMATION"),
+        ("SOURCE_ASSERTION","HIST_CJ_FIRMNESS","TRADITIONAL_ASSOCIATION","ASSOC_HIST_CJ_FIRMNESS"),
+    }
+    actual_pr3=[(x["research_kind"],x["research_id"],x["production_kind"],x["production_id"]) for x in pr3_trace]
+    if len(actual_pr3)!=len(set(actual_pr3)) or set(actual_pr3)!=expected_pr3:
+        errors.append("PR3 traditional traceability drift")
     return errors
 
 def main():
