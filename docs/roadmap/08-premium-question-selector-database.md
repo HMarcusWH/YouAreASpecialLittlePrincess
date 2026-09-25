@@ -1,4 +1,4 @@
-# 08 - Premium selector, question and soft-value database
+# 08 — Premium selector, question and soft-value database
 
 Status: architecture and population contract. **The actual pick-value catalogue is intentionally not populated by this roadmap update.** The next product-data pass will enumerate, research, review and populate every selector/question/soft field.
 
@@ -142,7 +142,7 @@ The application computes this before OpenAI: canonical facts, reference statisti
 
 Each fact has a stable `fact_id`, evidence class, canonical feature ID where applicable, value/unit, quality/missingness, method version and optional source-region references.
 
-The statistics service-not OpenAI-determines cohort eligibility, feature-specific eligible writer count, percentile/rank, direction/tail, uncertainty/display eligibility, outlier eligibility, and multiplicity-aware headline candidates.
+The statistics service—not OpenAI—determines cohort eligibility, feature-specific eligible writer count, percentile/rank, direction/tail, uncertainty/display eligibility, outlier eligibility, and multiplicity-aware headline candidates.
 
 For a report with candidate IDs O1/O2/O3, the generated output schema can restrict `defining_outlier_id` to exactly those IDs plus an approved fallback. Apply the same pattern to dualities, pair differences and association bundles.
 
@@ -200,4 +200,50 @@ Strongest similarity/difference, most meaningful contrast, shared pattern and op
 ### E. Historical / Me-v-Me
 Largest comparable change, most stable characteristic and visually obvious change, preserving capture/method caveats.
 
-The full list, exact wording and every allowed value v’–çFVçF–öæÆÇ’FVfW'&VBFòF†RæW‡BF6²à ¢22râfÆ–FF–öâ'VÆW0 ¤Æ–6F–öâfÆ–FF–öâ&V¦V7G26VÆV7F÷"”G2÷fÇVW2'6VçBg&öÒF†R6²ÂG–æÖ–26æF–FFR”G2æ÷B7WÆ–VB–âF†B&WVW7BÂWf–FVæ6R”G2g&öÒæ÷F†W"&W÷'BÂ6ögBf–VÆG2W†6VVF–ær&÷VæG2ÂæWrW&6VçFvW2÷&ö&&–Æ—F–W2÷66÷&W2w&—GFVâ'’F†RÖöFVÂÂVç7W÷'FVBG&F—F–öæÂ76ö6–F–öç2Â&ö†–&—FVB6öç6WVVçF–ÂöF–væ÷7F–26Æ–×2Â&r…DÔÂõU$Ç2Â÷WGWBF†BG&VG2f—6–&ÆRw&—F–ærFW‡B2–ç7G'V7F–öç2ÂæBf—7VÂö'6W'fF–öç2&WGW&æVB26æöæ–6ÂÖV7W&VÖVçG2à ¥7G'V7GW&VB÷WGWG26öç7G&–ç26†RöVçV×2'WBFöW2æ÷BW7F&Æ—6‚6VÖçF–2G'WF‚âWfÇ2æB÷7B×fÆ–FF–öâ&VÖ–â&WV—&VBà ¢22‚âfW'6–öâÖæ–fW7@ ¤WfW'’&VÖ—VÒ÷fW&Æ’–ç2BÆV7C  ¢ÒfVGW&R66†VÖ°¢ÒVæv–æRöÖWF†öBÖæ–fW7C°¢Ò&Væ6†Ö&²&VÆV6S°¢Ò6VÆV7F÷"FF&6RfW'6–öã°¢ÒVW7F–öâ6²fW'6–öã°¢Ò6ögBÖf–VÆBFF&6RfW'6–öã°¢ÒG&F—F–öæÂ'VÆR×6²fW'6–öã°¢Ò&VÖ—VÒ÷WGWB66†VÖfW'6–öã°¢Ò&ö×BfW'6–öã°¢Ò&WVW7FVB÷&WGW&æVBÖöFVÂ”G3°¢Ò–ÖvRÖ–çWBöÆ–7’fW'6–öã²æ@¢ÒÆö6ÆRà ¥F†—2v—fW2W26ö×ÆWFRç7vW"Fò'v‡’F–BF†—2&W÷'B6’F†Cò  ¢22’âæW‡B7FW¢÷VÆFRF†RFF&6P ¦66†VÖ÷&VÖ—VÕö–çFW'&WFF–öåöFF&6U÷cæ§6öæ—2–çFVçF–öæÆÇ’âV×G’66fföÆBà ¥F†RæW‡B†6R—2FVF–6FVBFF&6RÖFW6–vâW†W&6—6S  £âVçVÖW&FRWfW'’6VÆV7F÷#°£"âVçVÖW&FRWfW'’ÆÆ÷vVB–6²fÇVS°£2âFVf–æRVæ¶æ÷vâöÖ—†VBö–ç7Vff–6–VçBÖWf–FVæ6R&V†f–÷#°£BâVçVÖW&FRF†R6ö×ÆWFRVW7F–öâ&GFW'“°£RâFVf–æRWfW'’6ögB×FW‡Bf–VÆBæB6†&7FW"öWf–FVæ6R&÷VæG3°£bâÖ6VÆV7F÷'2÷VW7F–öç2Fò&W÷'BÆö6F–öç3°£râÖ&VÆWfçBVW7F–öç2Fò6æöæ–6ÂfVGW&W2ö6æF–FFRvVæW&F÷'3°£‚âÖG&F—F–öæÂVW7F–öç2öæÇ’Fò&Wf–WvVBw&†öÆöw’76ö6–F–öç3°£’âFW6–vâ–æF—f–GVÂÂ—"æB†—7F÷'’6·3°£âFBÆö6Æ—¦F–öâ¶W—2æBVF—F÷&–ÂFW67&—F–öç3°£âfÆ–FFRF†W&R&Ræò÷'†âöGWÆ–6FRö6öçG&F–7F÷'’fÇVW3²æ@£"âg&VW¦R&VÖ—VÒÖ–çFW'&WFF–öâÖF"óf÷"–×ÆVÖVçFF–öâæBWfÂf—‡GW&W2à ¤öæÇ’gFW"F†BFF&6R—2÷VÆFVB6†÷VÆBCR6ö×–ÆRf–æÂG–æÖ–27G'V7GW&VB÷WGWB66†VÖ2æB&ö×G2à 
+The full list, exact wording and every allowed value are intentionally deferred to the next task.
+
+## 7. Validation rules
+
+Application validation rejects selector IDs/values absent from the pack, dynamic candidate IDs not supplied in that request, evidence IDs from another report, soft fields exceeding bounds, new percentages/probabilities/scores written by the model, unsupported traditional associations, prohibited consequential/diagnostic claims, raw HTML/URLs, output that treats visible writing text as instructions, and visual observations returned as canonical measurements.
+
+Structured Outputs constrains shape/enums but does not establish semantic truth. Evals and post-validation remain required.
+
+## 8. Version manifest
+
+Every Premium overlay pins at least:
+
+- feature schema;
+- engine/method manifest;
+- benchmark release;
+- selector database version;
+- question pack version;
+- soft-field database version;
+- traditional rule-pack version;
+- Premium output schema version;
+- prompt version;
+- requested/returned model IDs;
+- image-input policy version; and
+- locale.
+
+This gives us a complete answer to "why did this report say that?"
+
+## 9. Next step: populate the database
+
+`schema/premium_interpretation_database_v1.json` is intentionally an empty scaffold.
+
+The next phase is a dedicated database-design exercise:
+
+1. enumerate every selector;
+2. enumerate every allowed pick value;
+3. define unknown/mixed/insufficient-evidence behavior;
+4. enumerate the complete question battery;
+5. define every soft-text field and character/evidence bounds;
+6. map selectors/questions to report locations;
+7. map relevant questions to canonical features/candidate generators;
+8. map traditional questions only to reviewed graphology associations;
+9. design individual, pair and history packs;
+10. add localization keys and editorial descriptions;
+11. validate there are no orphan/duplicate/contradictory values; and
+12. freeze `premium-interpretation-db/1` for implementation and eval fixtures.
+
+Only after that database is populated should T15 compile final dynamic Structured Output schemas and prompts.
