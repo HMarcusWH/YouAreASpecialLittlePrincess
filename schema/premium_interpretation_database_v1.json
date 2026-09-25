@@ -1911,8 +1911,488 @@
   ],
   "selector_definitions": [],
   "question_definitions": [],
-  "question_packs": [],
-  "soft_field_definitions": [],
+  "question_packs": [
+    {
+      "pack_id": "PREMIUM_INDIVIDUAL_GRAPHIC_V1",
+      "version": "1.0.0",
+      "research_pack_id": "INDIVIDUAL_GRAPHIC_DRAFT",
+      "scope": "INDIVIDUAL",
+      "output_schema_version": "premium-analysis/1",
+      "question_ids": [
+        "Q_CTX_TASK",
+        "Q_CTX_SURFACE",
+        "Q_CTX_STYLE",
+        "Q_CTX_FRAME",
+        "Q_CTX_SCALE",
+        "Q_CTX_DIRECTION",
+        "Q_GLOBAL_FORM_MOVEMENT",
+        "Q_GLOBAL_COHERENCE",
+        "Q_GLOBAL_VARIATION",
+        "Q_GLOBAL_EVIDENCE_CONFLICT",
+        "Q_SPACE_BALANCE",
+        "Q_SPACE_MARGINS",
+        "Q_SPACE_MARGIN_TREND",
+        "Q_SPACE_WORD",
+        "Q_SPACE_LINE",
+        "Q_SPACE_LETTER",
+        "Q_SIZE_PHYSICAL",
+        "Q_SIZE_ZONES",
+        "Q_SIZE_CAPITAL",
+        "Q_SIZE_WIDTH",
+        "Q_SIZE_TREND",
+        "Q_DIRECTION_SLANT",
+        "Q_DIRECTION_SLOPE",
+        "Q_DIRECTION_SHAPE",
+        "Q_DIRECTION_VARIATION",
+        "Q_CONNECT_DEGREE",
+        "Q_CONNECT_FORM",
+        "Q_CONNECT_DISTRIBUTION",
+        "Q_CONNECT_CAPITAL",
+        "Q_FORM_GEOMETRY",
+        "Q_FORM_SIMPLIFICATION",
+        "Q_FORM_LOOPS",
+        "Q_FORM_ORNAMENT",
+        "Q_FORM_INDIVIDUAL",
+        "Q_FORM_COPYBOOK",
+        "Q_STROKE_APPEARANCE",
+        "Q_STROKE_SHADING",
+        "Q_STROKE_DARKNESS",
+        "Q_STROKE_WIDTH",
+        "Q_STROKE_PRESSURE_LIMIT",
+        "Q_MOVEMENT_IMPRESSION",
+        "Q_MOVEMENT_RHYTHM",
+        "Q_MOVEMENT_VARIATION",
+        "Q_MOVEMENT_TEMPO",
+        "Q_MOVEMENT_TENSION",
+        "Q_MOVEMENT_TEMPO_LIMIT",
+        "Q_DETAIL_T_HEIGHT",
+        "Q_DETAIL_T_LENGTH",
+        "Q_DETAIL_T_END",
+        "Q_DETAIL_T_BALANCE",
+        "Q_DETAIL_DOT_FORM",
+        "Q_DETAIL_DOT_OFFSET",
+        "Q_DETAIL_DIACRITIC",
+        "Q_DETAIL_OVAL",
+        "Q_DETAIL_OVAL_GAP",
+        "Q_DETAIL_INITIAL",
+        "Q_DETAIL_TERMINAL",
+        "Q_DETAIL_PPI",
+        "Q_SIG_LOCATION",
+        "Q_SIG_SIZE",
+        "Q_SIG_SLANT",
+        "Q_SIG_CONNECTION",
+        "Q_SIG_ADDON",
+        "Q_SIG_RELATION",
+        "Q_HIERARCHY_MAIN",
+        "Q_HIERARCHY_ROLE",
+        "Q_HIERARCHY_SUPPORT",
+        "Q_HIERARCHY_COUNTER",
+        "Q_HIERARCHY_RELATION",
+        "Q_HIERARCHY_SCOPE",
+        "Q_HIERARCHY_COMBINATION"
+      ],
+      "soft_field_ids": [
+        "SOFT_GRAPHIC_PORTRAIT",
+        "SOFT_COMBINATION",
+        "SOFT_LIMITATION"
+      ],
+      "preconditions": [
+        "AUTHORIZED_IMAGE",
+        "APPLICABLE_QUESTIONS_COMPILED"
+      ],
+      "model_pack_policy": "The master catalogue is not one enormous prompt. A compiler supplies only applicable questions and read-only facts, with explicit omission reasons. One bounded request may cover the chosen pack; no call per question.",
+      "research_status": "DRAFT",
+      "production_status": "DRAFT_NOT_ACTIVE",
+      "runtime_activation": false
+    },
+    {
+      "pack_id": "PREMIUM_TRADITIONAL_READING_V1",
+      "version": "1.0.0",
+      "research_pack_id": "TRADITIONAL_READING_DRAFT",
+      "scope": "INDIVIDUAL",
+      "output_schema_version": "premium-analysis/1",
+      "question_ids": [
+        "Q_TRAD_BUNDLE",
+        "Q_TRAD_STATUS",
+        "Q_TRAD_MODIFIER",
+        "Q_TRAD_ALTERNATIVE",
+        "Q_TRAD_SCHOOL_DIFF",
+        "Q_TRAD_WITHHOLD"
+      ],
+      "soft_field_ids": [
+        "SOFT_TRADITIONAL_SYNTHESIS",
+        "SOFT_ALTERNATIVE",
+        "SOFT_LIMITATION"
+      ],
+      "preconditions": [
+        "REVIEWED_SCHOOL_RULE_PACK",
+        "RUNTIME_ELIGIBLE_TRADITIONAL_CANDIDATE"
+      ],
+      "model_pack_policy": "The master catalogue is not one enormous prompt. A compiler supplies only applicable questions and read-only facts, with explicit omission reasons. One bounded request may cover the chosen pack; no call per question.",
+      "research_status": "BLOCKED_PENDING_REVIEWED_ASSOCIATION_PACK",
+      "production_status": "BLOCKED_NO_RUNTIME_ELIGIBLE_ASSOCIATIONS",
+      "runtime_activation": false
+    },
+    {
+      "pack_id": "PREMIUM_REFERENCE_V1",
+      "version": "1.0.0",
+      "research_pack_id": "REFERENCE_DRAFT",
+      "scope": "INDIVIDUAL",
+      "output_schema_version": "premium-analysis/1",
+      "question_ids": [
+        "Q_REF_ELIGIBLE",
+        "Q_REF_HIGHLIGHT",
+        "Q_REF_COMBINATION",
+        "Q_REF_QUALIFICATION"
+      ],
+      "soft_field_ids": [
+        "SOFT_DISTINCTIVENESS",
+        "SOFT_LIMITATION"
+      ],
+      "preconditions": [
+        "VALID_REFERENCE_RELEASE",
+        "ELIGIBLE_REFERENCE_CLAIMS"
+      ],
+      "model_pack_policy": "The master catalogue is not one enormous prompt. A compiler supplies only applicable questions and read-only facts, with explicit omission reasons. One bounded request may cover the chosen pack; no call per question.",
+      "research_status": "BLOCKED_UNLESS_VALID_REFERENCE_RELEASE",
+      "production_status": "CONDITIONAL_VALID_REFERENCE_RELEASE",
+      "runtime_activation": false
+    },
+    {
+      "pack_id": "PREMIUM_PAIR_V1",
+      "version": "1.0.0",
+      "research_pack_id": "PAIR_DRAFT",
+      "scope": "PAIR",
+      "output_schema_version": "premium-analysis/1",
+      "question_ids": [
+        "Q_PAIR_COMPARABLE",
+        "Q_PAIR_SIMILAR",
+        "Q_PAIR_DIFFERENT",
+        "Q_PAIR_TRAD"
+      ],
+      "soft_field_ids": [
+        "SOFT_PAIR",
+        "SOFT_LIMITATION"
+      ],
+      "preconditions": [
+        "AUTHORIZED_PAIR_INPUTS",
+        "PAIR_COMPARABLE"
+      ],
+      "model_pack_policy": "The master catalogue is not one enormous prompt. A compiler supplies only applicable questions and read-only facts, with explicit omission reasons. One bounded request may cover the chosen pack; no call per question.",
+      "research_status": "DRAFT",
+      "production_status": "DRAFT_NOT_ACTIVE",
+      "runtime_activation": false
+    },
+    {
+      "pack_id": "PREMIUM_HISTORY_V1",
+      "version": "1.0.0",
+      "research_pack_id": "HISTORY_DRAFT",
+      "scope": "HISTORY",
+      "output_schema_version": "premium-analysis/1",
+      "question_ids": [
+        "Q_HIST_COMPARABLE",
+        "Q_HIST_CHANGE",
+        "Q_HIST_STABLE",
+        "Q_HIST_LIMIT"
+      ],
+      "soft_field_ids": [
+        "SOFT_HISTORY",
+        "SOFT_LIMITATION"
+      ],
+      "preconditions": [
+        "AUTHORIZED_HISTORY_INPUTS",
+        "HISTORY_COMPARABLE"
+      ],
+      "model_pack_policy": "The master catalogue is not one enormous prompt. A compiler supplies only applicable questions and read-only facts, with explicit omission reasons. One bounded request may cover the chosen pack; no call per question.",
+      "research_status": "DRAFT",
+      "production_status": "DRAFT_NOT_ACTIVE",
+      "runtime_activation": false
+    }
+  ],
+  "soft_field_definitions": [
+    {
+      "soft_field_id": "SOFT_GRAPHIC_PORTRAIT",
+      "purpose": "Describe the overall handwriting pattern without claiming to diagnose its author.",
+      "scope": "INDIVIDUAL",
+      "max_characters": 500,
+      "max_sentences": 3,
+      "text_origin": "APPLICATION_AUTHORED_PROMPT",
+      "source_refs": [
+        "AHAF",
+        "CNPG_B"
+      ],
+      "status": "DRAFT_NOT_ACTIVATED",
+      "requirement_origin": "APPLICATION_DESIGN_NOT_SOURCE_PRESCRIPTION",
+      "required_support": [
+        "SUPPLIED_GRAPHIC_SIGNS",
+        "AUTHORIZED_IMAGE"
+      ],
+      "allow_new_numbers": false,
+      "no_source_no_claim": true,
+      "report_target": "graphology.synthesis",
+      "version": "1.0.0",
+      "label_key": "soft.soft_graphic_portrait.label",
+      "prompt_template_key": "soft.soft_graphic_portrait.prompt",
+      "tone_profile_id": "PREMIUM_EVIDENCE_DOSSIER_V1",
+      "prohibited_claim_classes": [
+        "CLINICAL_OR_PSYCHIATRIC_DIAGNOSIS",
+        "INTELLIGENCE_OR_COGNITIVE_ABILITY",
+        "CRIMINALITY_OR_DECEPTION",
+        "EMPLOYMENT_SUITABILITY",
+        "RELATIONSHIP_OUTCOME_OR_COMPATIBILITY",
+        "MORAL_WORTH",
+        "NEW_NUMERIC_MEASUREMENT_PERCENTILE_PROBABILITY_OR_SCORE"
+      ],
+      "support_policy": "REQUIRED_SUPPORT_ONLY",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
+    },
+    {
+      "soft_field_id": "SOFT_COMBINATION",
+      "purpose": "Explain one evidenced relationship between features, including qualifiers.",
+      "scope": "INDIVIDUAL",
+      "max_characters": 350,
+      "max_sentences": 3,
+      "text_origin": "APPLICATION_AUTHORED_PROMPT",
+      "source_refs": [
+        "CJ1892"
+      ],
+      "status": "DRAFT_NOT_ACTIVATED",
+      "requirement_origin": "APPLICATION_DESIGN_NOT_SOURCE_PRESCRIPTION",
+      "required_support": [
+        "GRAPHIC_COMBINATION"
+      ],
+      "allow_new_numbers": false,
+      "no_source_no_claim": true,
+      "report_target": "graphology.synthesis",
+      "version": "1.0.0",
+      "label_key": "soft.soft_combination.label",
+      "prompt_template_key": "soft.soft_combination.prompt",
+      "tone_profile_id": "PREMIUM_EVIDENCE_DOSSIER_V1",
+      "prohibited_claim_classes": [
+        "CLINICAL_OR_PSYCHIATRIC_DIAGNOSIS",
+        "INTELLIGENCE_OR_COGNITIVE_ABILITY",
+        "CRIMINALITY_OR_DECEPTION",
+        "EMPLOYMENT_SUITABILITY",
+        "RELATIONSHIP_OUTCOME_OR_COMPATIBILITY",
+        "MORAL_WORTH",
+        "NEW_NUMERIC_MEASUREMENT_PERCENTILE_PROBABILITY_OR_SCORE"
+      ],
+      "support_policy": "REQUIRED_SUPPORT_ONLY",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
+    },
+    {
+      "soft_field_id": "SOFT_TRADITIONAL_SYNTHESIS",
+      "purpose": "Explain the selected historical/traditional reading as such, naming its school and limits.",
+      "scope": "INDIVIDUAL",
+      "max_characters": 650,
+      "max_sentences": 3,
+      "text_origin": "APPLICATION_AUTHORED_PROMPT",
+      "source_refs": [
+        "CJ1892",
+        "BIG26",
+        "CARBONARI"
+      ],
+      "status": "DRAFT_NOT_ACTIVATED",
+      "requirement_origin": "APPLICATION_DESIGN_NOT_SOURCE_PRESCRIPTION",
+      "required_support": [
+        "REVIEWED_TRADITIONAL_CANDIDATE",
+        "SUPPORT_GROUPS",
+        "COUNTEREVIDENCE_REVIEW"
+      ],
+      "allow_new_numbers": false,
+      "no_source_no_claim": true,
+      "report_target": "graphology.synthesis",
+      "version": "1.0.0",
+      "label_key": "soft.soft_traditional_synthesis.label",
+      "prompt_template_key": "soft.soft_traditional_synthesis.prompt",
+      "tone_profile_id": "PREMIUM_EVIDENCE_DOSSIER_V1",
+      "prohibited_claim_classes": [
+        "CLINICAL_OR_PSYCHIATRIC_DIAGNOSIS",
+        "INTELLIGENCE_OR_COGNITIVE_ABILITY",
+        "CRIMINALITY_OR_DECEPTION",
+        "EMPLOYMENT_SUITABILITY",
+        "RELATIONSHIP_OUTCOME_OR_COMPATIBILITY",
+        "MORAL_WORTH",
+        "NEW_NUMERIC_MEASUREMENT_PERCENTILE_PROBABILITY_OR_SCORE"
+      ],
+      "support_policy": "REQUIRED_SUPPORT_ONLY",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
+    },
+    {
+      "soft_field_id": "SOFT_ALTERNATIVE",
+      "purpose": "Explain why an alternative reading remains unresolved instead of choosing a flattering answer.",
+      "scope": "INDIVIDUAL",
+      "max_characters": 350,
+      "max_sentences": 3,
+      "text_origin": "APPLICATION_AUTHORED_PROMPT",
+      "source_refs": [
+        "CJ1892"
+      ],
+      "status": "DRAFT_NOT_ACTIVATED",
+      "requirement_origin": "APPLICATION_DESIGN_NOT_SOURCE_PRESCRIPTION",
+      "required_support": [
+        "TRADITIONAL_ALTERNATIVE"
+      ],
+      "allow_new_numbers": false,
+      "no_source_no_claim": true,
+      "report_target": "graphology.synthesis",
+      "version": "1.0.0",
+      "label_key": "soft.soft_alternative.label",
+      "prompt_template_key": "soft.soft_alternative.prompt",
+      "tone_profile_id": "PREMIUM_EVIDENCE_DOSSIER_V1",
+      "prohibited_claim_classes": [
+        "CLINICAL_OR_PSYCHIATRIC_DIAGNOSIS",
+        "INTELLIGENCE_OR_COGNITIVE_ABILITY",
+        "CRIMINALITY_OR_DECEPTION",
+        "EMPLOYMENT_SUITABILITY",
+        "RELATIONSHIP_OUTCOME_OR_COMPATIBILITY",
+        "MORAL_WORTH",
+        "NEW_NUMERIC_MEASUREMENT_PERCENTILE_PROBABILITY_OR_SCORE"
+      ],
+      "support_policy": "REQUIRED_SUPPORT_ONLY",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
+    },
+    {
+      "soft_field_id": "SOFT_DISTINCTIVENESS",
+      "purpose": "Explain the supplied unusual feature without adding rarity or superiority claims.",
+      "scope": "INDIVIDUAL",
+      "max_characters": 350,
+      "max_sentences": 3,
+      "text_origin": "APPLICATION_AUTHORED_PROMPT",
+      "source_refs": [],
+      "status": "DRAFT_NOT_ACTIVATED",
+      "requirement_origin": "APPLICATION_DESIGN_NOT_SOURCE_PRESCRIPTION",
+      "required_support": [
+        "VERIFIED_OUTLIER",
+        "REFERENCE_CAVEATS"
+      ],
+      "allow_new_numbers": false,
+      "no_source_no_claim": true,
+      "report_target": "graphology.synthesis",
+      "version": "1.0.0",
+      "label_key": "soft.soft_distinctiveness.label",
+      "prompt_template_key": "soft.soft_distinctiveness.prompt",
+      "tone_profile_id": "PREMIUM_EVIDENCE_DOSSIER_V1",
+      "prohibited_claim_classes": [
+        "CLINICAL_OR_PSYCHIATRIC_DIAGNOSIS",
+        "INTELLIGENCE_OR_COGNITIVE_ABILITY",
+        "CRIMINALITY_OR_DECEPTION",
+        "EMPLOYMENT_SUITABILITY",
+        "RELATIONSHIP_OUTCOME_OR_COMPATIBILITY",
+        "MORAL_WORTH",
+        "NEW_NUMERIC_MEASUREMENT_PERCENTILE_PROBABILITY_OR_SCORE"
+      ],
+      "support_policy": "REQUIRED_SUPPORT_ONLY",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
+    },
+    {
+      "soft_field_id": "SOFT_PAIR",
+      "purpose": "Explain graphical similarities and contrasts while retaining both samples' limitations.",
+      "scope": "PAIR",
+      "max_characters": 600,
+      "max_sentences": 3,
+      "text_origin": "APPLICATION_AUTHORED_PROMPT",
+      "source_refs": [],
+      "status": "DRAFT_NOT_ACTIVATED",
+      "requirement_origin": "APPLICATION_DESIGN_NOT_SOURCE_PRESCRIPTION",
+      "required_support": [
+        "PAIR_SIMILARITY",
+        "PAIR_DIFFERENCE",
+        "COMPARABILITY"
+      ],
+      "allow_new_numbers": false,
+      "no_source_no_claim": true,
+      "report_target": "graphology.synthesis",
+      "version": "1.0.0",
+      "label_key": "soft.soft_pair.label",
+      "prompt_template_key": "soft.soft_pair.prompt",
+      "tone_profile_id": "PREMIUM_EVIDENCE_DOSSIER_V1",
+      "prohibited_claim_classes": [
+        "CLINICAL_OR_PSYCHIATRIC_DIAGNOSIS",
+        "INTELLIGENCE_OR_COGNITIVE_ABILITY",
+        "CRIMINALITY_OR_DECEPTION",
+        "EMPLOYMENT_SUITABILITY",
+        "RELATIONSHIP_OUTCOME_OR_COMPATIBILITY",
+        "MORAL_WORTH",
+        "NEW_NUMERIC_MEASUREMENT_PERCENTILE_PROBABILITY_OR_SCORE"
+      ],
+      "support_policy": "REQUIRED_SUPPORT_ONLY",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
+    },
+    {
+      "soft_field_id": "SOFT_HISTORY",
+      "purpose": "Explain comparable graphical change without claiming a change in character or health.",
+      "scope": "HISTORY",
+      "max_characters": 500,
+      "max_sentences": 3,
+      "text_origin": "APPLICATION_AUTHORED_PROMPT",
+      "source_refs": [],
+      "status": "DRAFT_NOT_ACTIVATED",
+      "requirement_origin": "APPLICATION_DESIGN_NOT_SOURCE_PRESCRIPTION",
+      "required_support": [
+        "HISTORY_CHANGE",
+        "HISTORY_CAVEAT"
+      ],
+      "allow_new_numbers": false,
+      "no_source_no_claim": true,
+      "report_target": "graphology.synthesis",
+      "version": "1.0.0",
+      "label_key": "soft.soft_history.label",
+      "prompt_template_key": "soft.soft_history.prompt",
+      "tone_profile_id": "PREMIUM_EVIDENCE_DOSSIER_V1",
+      "prohibited_claim_classes": [
+        "CLINICAL_OR_PSYCHIATRIC_DIAGNOSIS",
+        "INTELLIGENCE_OR_COGNITIVE_ABILITY",
+        "CRIMINALITY_OR_DECEPTION",
+        "EMPLOYMENT_SUITABILITY",
+        "RELATIONSHIP_OUTCOME_OR_COMPATIBILITY",
+        "MORAL_WORTH",
+        "NEW_NUMERIC_MEASUREMENT_PERCENTILE_PROBABILITY_OR_SCORE"
+      ],
+      "support_policy": "REQUIRED_SUPPORT_ONLY",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
+    },
+    {
+      "soft_field_id": "SOFT_LIMITATION",
+      "purpose": "Summarize important unknowns and withheld claims without speculating.",
+      "scope": "ALL",
+      "max_characters": 350,
+      "max_sentences": 3,
+      "text_origin": "APPLICATION_AUTHORED_PROMPT",
+      "source_refs": [],
+      "status": "DRAFT_NOT_ACTIVATED",
+      "requirement_origin": "APPLICATION_DESIGN_NOT_SOURCE_PRESCRIPTION",
+      "required_support": [
+        "SUPPLIED_LIMITATIONS"
+      ],
+      "allow_new_numbers": false,
+      "no_source_no_claim": true,
+      "report_target": "graphology.synthesis",
+      "version": "1.0.0",
+      "label_key": "soft.soft_limitation.label",
+      "prompt_template_key": "soft.soft_limitation.prompt",
+      "tone_profile_id": "PREMIUM_EVIDENCE_DOSSIER_V1",
+      "prohibited_claim_classes": [
+        "CLINICAL_OR_PSYCHIATRIC_DIAGNOSIS",
+        "INTELLIGENCE_OR_COGNITIVE_ABILITY",
+        "CRIMINALITY_OR_DECEPTION",
+        "EMPLOYMENT_SUITABILITY",
+        "RELATIONSHIP_OUTCOME_OR_COMPATIBILITY",
+        "MORAL_WORTH",
+        "NEW_NUMERIC_MEASUREMENT_PERCENTILE_PROBABILITY_OR_SCORE"
+      ],
+      "support_policy": "REQUIRED_SUPPORT_ONLY",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
+    }
+  ],
   "candidate_definitions": [
     {
       "candidate_kind_id": "ACQUISITION_LIMITATION",
@@ -2113,22 +2593,547 @@
       "generator_status": "NOT_IMPLEMENTED_IN_T26_PR2"
     }
   ],
-  "tone_profiles": [],
-  "report_slots": [],
+  "tone_profiles": [
+    {
+      "tone_profile_id": "PREMIUM_EVIDENCE_DOSSIER_V1",
+      "version": "1.0.0",
+      "origin": "APPLICATION_AUTHORED",
+      "label_key": "tone.premium_evidence_dossier.label",
+      "label_en": "Evidence-first personal dossier",
+      "style_traits": [
+        "CONCISE",
+        "POLISHED",
+        "CURIOUS",
+        "NON_CLINICAL",
+        "LIGHTLY_PLAYFUL_WHERE_APPROPRIATE"
+      ],
+      "rules": [
+        "State measured/reference facts as supplied; do not rewrite or upgrade them.",
+        "Separate visual observations from canonical measurements.",
+        "Label historical/traditional graphology as traditional interpretation.",
+        "Prefer specific evidence-linked language over flattering generalities.",
+        "Say when evidence is mixed, unavailable, blocked, or insufficient.",
+        "Do not introduce new numerical claims."
+      ],
+      "prohibited_claim_classes": [
+        "CLINICAL_OR_PSYCHIATRIC_DIAGNOSIS",
+        "INTELLIGENCE_OR_COGNITIVE_ABILITY",
+        "CRIMINALITY_OR_DECEPTION",
+        "EMPLOYMENT_SUITABILITY",
+        "RELATIONSHIP_OUTCOME_OR_COMPATIBILITY",
+        "MORAL_WORTH",
+        "NEW_NUMERIC_MEASUREMENT_PERCENTILE_PROBABILITY_OR_SCORE"
+      ],
+      "runtime_status": "DRAFT_NOT_ACTIVE"
+    }
+  ],
+  "report_slots": [
+    {
+      "report_slot_id": "SLOT_CONTEXT",
+      "report_target": "graphology.context",
+      "scope": "INDIVIDUAL",
+      "order": 1,
+      "label_key": "report.context.label",
+      "label_en": "Sample context and applicability",
+      "content_origin": "APPLICATION_REPORT_ARCHITECTURE",
+      "runtime_status": "DRAFT_NOT_ACTIVE"
+    },
+    {
+      "report_slot_id": "SLOT_GLOBAL",
+      "report_target": "graphology.global",
+      "scope": "INDIVIDUAL",
+      "order": 2,
+      "label_key": "report.global.label",
+      "label_en": "Whole-pattern appraisal",
+      "content_origin": "APPLICATION_REPORT_ARCHITECTURE",
+      "runtime_status": "DRAFT_NOT_ACTIVE"
+    },
+    {
+      "report_slot_id": "SLOT_SPACE",
+      "report_target": "graphology.space",
+      "scope": "INDIVIDUAL",
+      "order": 3,
+      "label_key": "report.space.label",
+      "label_en": "Page organization and spacing",
+      "content_origin": "APPLICATION_REPORT_ARCHITECTURE",
+      "runtime_status": "DRAFT_NOT_ACTIVE"
+    },
+    {
+      "report_slot_id": "SLOT_SIZE",
+      "report_target": "graphology.size",
+      "scope": "INDIVIDUAL",
+      "order": 4,
+      "label_key": "report.size.label",
+      "label_en": "Size, proportion and zones",
+      "content_origin": "APPLICATION_REPORT_ARCHITECTURE",
+      "runtime_status": "DRAFT_NOT_ACTIVE"
+    },
+    {
+      "report_slot_id": "SLOT_DIRECTION",
+      "report_target": "graphology.direction",
+      "scope": "INDIVIDUAL",
+      "order": 5,
+      "label_key": "report.direction.label",
+      "label_en": "Slant, baseline and directional tendencies",
+      "content_origin": "APPLICATION_REPORT_ARCHITECTURE",
+      "runtime_status": "DRAFT_NOT_ACTIVE"
+    },
+    {
+      "report_slot_id": "SLOT_CONNECTION",
+      "report_target": "graphology.connection",
+      "scope": "INDIVIDUAL",
+      "order": 6,
+      "label_key": "report.connection.label",
+      "label_en": "Degree and form of joining",
+      "content_origin": "APPLICATION_REPORT_ARCHITECTURE",
+      "runtime_status": "DRAFT_NOT_ACTIVE"
+    },
+    {
+      "report_slot_id": "SLOT_FORM",
+      "report_target": "graphology.form",
+      "scope": "INDIVIDUAL",
+      "order": 7,
+      "label_key": "report.form.label",
+      "label_en": "Letterform and simplification",
+      "content_origin": "APPLICATION_REPORT_ARCHITECTURE",
+      "runtime_status": "DRAFT_NOT_ACTIVE"
+    },
+    {
+      "report_slot_id": "SLOT_STROKE",
+      "report_target": "graphology.stroke",
+      "scope": "INDIVIDUAL",
+      "order": 8,
+      "label_key": "report.stroke.label",
+      "label_en": "Stroke appearance and pressure boundary",
+      "content_origin": "APPLICATION_REPORT_ARCHITECTURE",
+      "runtime_status": "DRAFT_NOT_ACTIVE"
+    },
+    {
+      "report_slot_id": "SLOT_MOVEMENT",
+      "report_target": "graphology.movement",
+      "scope": "INDIVIDUAL",
+      "order": 9,
+      "label_key": "report.movement.label",
+      "label_en": "Apparent movement, rhythm and variation",
+      "content_origin": "APPLICATION_REPORT_ARCHITECTURE",
+      "runtime_status": "DRAFT_NOT_ACTIVE"
+    },
+    {
+      "report_slot_id": "SLOT_DETAIL",
+      "report_target": "graphology.detail",
+      "scope": "INDIVIDUAL",
+      "order": 10,
+      "label_key": "report.detail.label",
+      "label_en": "Local gestures, diacritics and letter detail",
+      "content_origin": "APPLICATION_REPORT_ARCHITECTURE",
+      "runtime_status": "DRAFT_NOT_ACTIVE"
+    },
+    {
+      "report_slot_id": "SLOT_SIGNATURE",
+      "report_target": "graphology.signature",
+      "scope": "INDIVIDUAL",
+      "order": 11,
+      "label_key": "report.signature.label",
+      "label_en": "Signature and body-text relationship",
+      "content_origin": "APPLICATION_REPORT_ARCHITECTURE",
+      "runtime_status": "DRAFT_NOT_ACTIVE"
+    },
+    {
+      "report_slot_id": "SLOT_HIERARCHY",
+      "report_target": "graphology.hierarchy",
+      "scope": "INDIVIDUAL",
+      "order": 12,
+      "label_key": "report.hierarchy.label",
+      "label_en": "Dominants, modifiers and whole-sample coherence",
+      "content_origin": "APPLICATION_REPORT_ARCHITECTURE",
+      "runtime_status": "DRAFT_NOT_ACTIVE"
+    },
+    {
+      "report_slot_id": "SLOT_INTERPRETATION",
+      "report_target": "graphology.interpretation",
+      "scope": "INDIVIDUAL",
+      "order": 13,
+      "label_key": "report.interpretation.label",
+      "label_en": "School-specific interpretation and synthesis",
+      "content_origin": "APPLICATION_REPORT_ARCHITECTURE",
+      "runtime_status": "DRAFT_NOT_ACTIVE"
+    },
+    {
+      "report_slot_id": "SLOT_REFERENCE",
+      "report_target": "graphology.reference",
+      "scope": "INDIVIDUAL",
+      "order": 14,
+      "label_key": "report.reference.label",
+      "label_en": "Database-relative distinctiveness",
+      "content_origin": "APPLICATION_REPORT_ARCHITECTURE",
+      "runtime_status": "DRAFT_NOT_ACTIVE"
+    },
+    {
+      "report_slot_id": "SLOT_PAIR",
+      "report_target": "graphology.pair",
+      "scope": "PAIR",
+      "order": 15,
+      "label_key": "report.pair.label",
+      "label_en": "Two-sample comparison",
+      "content_origin": "APPLICATION_REPORT_ARCHITECTURE",
+      "runtime_status": "DRAFT_NOT_ACTIVE"
+    },
+    {
+      "report_slot_id": "SLOT_HISTORY",
+      "report_target": "graphology.history",
+      "scope": "HISTORY",
+      "order": 16,
+      "label_key": "report.history.label",
+      "label_en": "Within-writer comparison over time",
+      "content_origin": "APPLICATION_REPORT_ARCHITECTURE",
+      "runtime_status": "DRAFT_NOT_ACTIVE"
+    },
+    {
+      "report_slot_id": "SLOT_SYNTHESIS",
+      "report_target": "graphology.synthesis",
+      "scope": "ALL",
+      "order": 17,
+      "label_key": "report.synthesis.label",
+      "label_en": "Synthesis",
+      "content_origin": "APPLICATION_REPORT_ARCHITECTURE",
+      "runtime_status": "DRAFT_NOT_ACTIVE"
+    }
+  ],
   "report_mappings": [],
-  "localization_policy": {},
+  "localization_policy": {
+    "version": "graphology-localization-policy/1",
+    "canonical_locale": "en",
+    "supported_locales": [
+      "en"
+    ],
+    "planned_locales": [
+      "sv"
+    ],
+    "source_text_policy": "English question text and value labels are preserved from the frozen research/application draft. Localization keys are stable IDs; adding a translation must not change IDs or semantics.",
+    "compiler_output": "The compiler emits a complete English localization catalogue and a sorted localization-key registry.",
+    "runtime_status": "DRAFT_NOT_ACTIVE"
+  },
   "localization_keys": [],
   "localization": {
     "en": {}
   },
   "traditional": {
-    "association_contract": {},
-    "candidate_validation_policy": {},
-    "method_policies": [],
-    "associations": {
-      "jaminian": []
+    "association_contract": {
+      "version": "graphology-school-association-contract/1",
+      "fields": [
+        "association_id",
+        "source_id",
+        "edition",
+        "locator",
+        "school_id",
+        "premise_concepts",
+        "all_of",
+        "any_of",
+        "modifiers",
+        "counter_signs",
+        "exclusions",
+        "applicability",
+        "traditional_interpretation",
+        "raw_source_wording_locator",
+        "paraphrase",
+        "source_fidelity",
+        "empirical_status",
+        "runtime_eligibility"
+      ],
+      "no_shortcuts": [
+        "No arbitrary cross-school averaging",
+        "No formula from a curriculum title alone",
+        "No symptom/intelligence/moral-worth ranking",
+        "No uncited school meaning",
+        "No unsupported psychological meaning for language-specific marks"
+      ],
+      "production_status": "STRUCTURE_ONLY",
+      "runtime_activation": false
     },
-    "rule_pack_registry": [],
-    "activation_gates": {}
+    "candidate_validation_policy": {
+      "version": "graphology-traditional-candidate-validation/1",
+      "states": [
+        "ELIGIBLE_FROM_PRECOMPUTED_FACTS",
+        "PENDING_VISUAL_ASSESSMENT",
+        "INELIGIBLE",
+        "UNASSESSED"
+      ],
+      "rule": "An allowed candidate ID proves only membership in the approved choice space. A candidate dependent on model-produced graphic observations remains provisional until post-validation checks its prerequisites and evidence type. It cannot be labelled preverified. No pending candidate yields a measured numerical claim.",
+      "single_call_limit": "Question order within one multimodal request is not a blinded independent assessment; test salience and content effects.",
+      "production_status": "STRUCTURE_ONLY",
+      "runtime_activation": false
+    },
+    "method_policies": [
+      {
+        "policy_id": "POLICY_CJ_CONTEXTUAL_SYNTHESIS_V1",
+        "school_id": "JAMINIAN",
+        "policy_kind": "CONTEXTUAL_SYNTHESIS",
+        "source_assertion_ids": [
+          "METHOD_CJ_CONTEXT"
+        ],
+        "source_refs": [
+          {
+            "source_id": "CJ1892",
+            "locator": "pp.35–53 and pp.89–92"
+          }
+        ],
+        "constraints": {
+          "preserve_alternative_readings": true,
+          "evaluate_modifiers_and_counterevidence": true,
+          "allow_arbitrary_trait_weights": false,
+          "isolated_sign_is_sufficient": false
+        },
+        "empirical_status": "NOT_ESTABLISHED_AS_PERSONALITY_VALIDITY",
+        "runtime_status": "DRAFT_NOT_ACTIVE"
+      },
+      {
+        "policy_id": "POLICY_CJ_ABSENCE_GUARD_V1",
+        "school_id": "JAMINIAN",
+        "policy_kind": "MISSINGNESS_GUARDRAIL",
+        "source_assertion_ids": [
+          "METHOD_CJ_ABSENCE"
+        ],
+        "source_refs": [
+          {
+            "source_id": "CJ1892",
+            "locator": "pp.51–53"
+          }
+        ],
+        "constraints": {
+          "absent_positive_sign_activates_opposite": false,
+          "not_assessable_activates_opposite": false,
+          "not_applicable_activates_opposite": false,
+          "explicit_opposing_evidence_required_for_opposite": true
+        },
+        "empirical_status": "LOGICAL_GUARDRAIL_NOT_VALIDATION",
+        "runtime_status": "DRAFT_NOT_ACTIVE"
+      },
+      {
+        "policy_id": "POLICY_BIG_CORROBORATION_V1",
+        "school_id": "BIG_HILLIGER",
+        "policy_kind": "CORROBORATION",
+        "source_assertion_ids": [
+          "METHOD_BIG_SUPPORT"
+        ],
+        "source_refs": [
+          {
+            "source_id": "BIG26",
+            "locator": "p.3 B.5"
+          }
+        ],
+        "source_requirement": "Corroboration by two other movements before including an interpretation.",
+        "application_adaptation": "At least three genuinely distinct support groups; correlated summaries do not count separately.",
+        "constraints": {
+          "minimum_distinct_support_groups": 3,
+          "correlated_summaries_count_once": true,
+          "repeated_measurements_of_same_graphic_family_count_once": true,
+          "support_count_is_statistical_proof": false
+        },
+        "empirical_status": "SCHOOL_REQUIREMENT_NOT_STATISTICAL_PROOF",
+        "runtime_status": "DRAFT_NOT_ACTIVE"
+      },
+      {
+        "policy_id": "POLICY_MORETTI_TYPED_RELATIONS_V1",
+        "school_id": "MORETTIAN",
+        "policy_kind": "TYPED_SIGN_RELATION",
+        "source_assertion_ids": [
+          "METHOD_MORETTI_RELATIONS"
+        ],
+        "source_refs": [
+          {
+            "source_id": "CARBONARI",
+            "locator": "Quale tecnica, sign relations and laws"
+          }
+        ],
+        "allowed_relation_value_ids": [
+          "SUPPORTS",
+          "OPPOSES",
+          "NEUTRAL"
+        ],
+        "constraints": {
+          "preserve_sign_role_separately_from_within_sample_prominence": true,
+          "enable_decimi_scoring": false,
+          "enable_temperament_classifier": false
+        },
+        "empirical_status": "NOT_ESTABLISHED_AS_PERSONALITY_VALIDITY",
+        "runtime_status": "DRAFT_NOT_ACTIVE"
+      }
+    ],
+    "associations": {
+      "jaminian": [
+        {
+          "association_id": "ASSOC_HIST_CJ_ANIMATION",
+          "source_assertion_id": "HIST_CJ_ANIMATION",
+          "source_id": "CJ1892",
+          "edition": "1892 English translation from the third French edition",
+          "locator": "p.51",
+          "school_id": "JAMINIAN",
+          "premise_concepts": [],
+          "all_of": [],
+          "any_of": [],
+          "source_premise_examples": [
+            "Long t crossbar",
+            "Short t crossbar ending in a point",
+            "Ascending writing"
+          ],
+          "premise_binding_status": "UNOPERATIONALIZED_SOURCE_EXAMPLES",
+          "modifiers": [],
+          "counter_signs": [],
+          "exclusions": [],
+          "applicability": {
+            "status": "UNOPERATIONALIZED",
+            "note": "Full qualifying context and operational morphology remain unresolved."
+          },
+          "traditional_interpretation": {
+            "source_term": "animation",
+            "status": "SOURCE_TERM_ONLY_NO_MODERN_TRAIT_EXPANSION"
+          },
+          "raw_source_wording_locator": "p.51",
+          "paraphrase": "The passage gives several alternative handwriting indicators for animation rather than one mandatory sign.",
+          "source_fidelity": "RESEARCH_ASSERTION_PRESERVED_WITH_RECORDED_GAPS",
+          "empirical_status": "UNVALIDATED_TRADITIONAL_ASSOCIATION",
+          "runtime_eligibility": "BLOCKED_RESEARCH_ONLY",
+          "eligible_for_rule_engine": false,
+          "eligible_for_model_candidate": false,
+          "remaining_gaps": [
+            "Full qualifying context",
+            "Observable thresholds",
+            "Reviewed modern wording",
+            "Independent sign-detection validation"
+          ]
+        },
+        {
+          "association_id": "ASSOC_HIST_CJ_FIRMNESS",
+          "source_assertion_id": "HIST_CJ_FIRMNESS",
+          "source_id": "CJ1892",
+          "edition": "1892 English translation from the third French edition",
+          "locator": "p.51",
+          "school_id": "JAMINIAN",
+          "premise_concepts": [],
+          "all_of": [],
+          "any_of": [],
+          "source_premise_examples": [],
+          "premise_binding_status": "UNOPERATIONALIZED_SOURCE_EXAMPLES",
+          "modifiers": [],
+          "counter_signs": [],
+          "exclusions": [],
+          "applicability": {
+            "status": "UNOPERATIONALIZED",
+            "note": "Full qualifying context and operational morphology remain unresolved."
+          },
+          "traditional_interpretation": {
+            "source_term": "firmness",
+            "status": "SOURCE_TERM_ONLY_NO_MODERN_TRAIT_EXPANSION"
+          },
+          "raw_source_wording_locator": "p.51",
+          "paraphrase": "The passage groups upright, rigid or angular forms among possible indicators of firmness.",
+          "source_fidelity": "RESEARCH_ASSERTION_PRESERVED_WITH_RECORDED_GAPS",
+          "empirical_status": "UNVALIDATED_TRADITIONAL_ASSOCIATION",
+          "runtime_eligibility": "BLOCKED_RESEARCH_ONLY",
+          "eligible_for_rule_engine": false,
+          "eligible_for_model_candidate": false,
+          "remaining_gaps": [
+            "Exact morphology and context",
+            "Operational thresholds",
+            "Contextual and language review"
+          ]
+        }
+      ]
+    },
+    "rule_pack_registry": [
+      {
+        "pack_id": "JAMINIAN_RULE_PACK_V1_DRAFT",
+        "school_id": "JAMINIAN",
+        "association_ids": [
+          "ASSOC_HIST_CJ_ANIMATION",
+          "ASSOC_HIST_CJ_FIRMNESS"
+        ],
+        "runtime_eligible_association_ids": [],
+        "method_policy_ids": [
+          "POLICY_CJ_CONTEXTUAL_SYNTHESIS_V1",
+          "POLICY_CJ_ABSENCE_GUARD_V1"
+        ],
+        "status": "DRAFT_NO_EXECUTABLE_ASSOCIATIONS",
+        "runtime_activation": false
+      },
+      {
+        "pack_id": "BIG_HILLIGER_RULE_PACK_V1_DRAFT",
+        "school_id": "BIG_HILLIGER",
+        "association_ids": [],
+        "runtime_eligible_association_ids": [],
+        "method_policy_ids": [
+          "POLICY_BIG_CORROBORATION_V1"
+        ],
+        "status": "DRAFT_NO_EXECUTABLE_ASSOCIATIONS",
+        "runtime_activation": false
+      },
+      {
+        "pack_id": "MORETTIAN_RULE_PACK_V1_DRAFT",
+        "school_id": "MORETTIAN",
+        "association_ids": [],
+        "runtime_eligible_association_ids": [],
+        "method_policy_ids": [
+          "POLICY_MORETTI_TYPED_RELATIONS_V1"
+        ],
+        "status": "DRAFT_NO_EXECUTABLE_ASSOCIATIONS",
+        "runtime_activation": false
+      },
+      {
+        "pack_id": "GESTALT_AHAF_RULE_PACK_V1_DRAFT",
+        "school_id": "GESTALT_AHAF",
+        "association_ids": [],
+        "runtime_eligible_association_ids": [],
+        "method_policy_ids": [],
+        "status": "DRAFT_NO_EXECUTABLE_ASSOCIATIONS",
+        "runtime_activation": false
+      },
+      {
+        "pack_id": "KLAGES_RECEPTION_RULE_PACK_V1_DRAFT",
+        "school_id": "KLAGES_RECEPTION",
+        "association_ids": [],
+        "runtime_eligible_association_ids": [],
+        "method_policy_ids": [],
+        "status": "DRAFT_NO_EXECUTABLE_ASSOCIATIONS",
+        "runtime_activation": false
+      }
+    ],
+    "activation_gates": {
+      "version": "graphology-traditional-activation-gates/1",
+      "runtime_activation": false,
+      "general_release_gates": [
+        "Review exact morphological definitions and exemplars",
+        "Define signed geometry/scales/thresholds for each applicable selector",
+        "Acquire original Moretti/Klages/Pulver definitions before activating named school scores",
+        "Review all source-derived associations individually",
+        "Validate against real annotated writing and content-confound cases",
+        "Verify missing/counterevidence behavior",
+        "Complete localization and renderer mappings",
+        "Only then promote a bounded pack from DRAFT"
+      ],
+      "association_gates": [
+        {
+          "association_id": "ASSOC_HIST_CJ_ANIMATION",
+          "runtime_eligibility": "BLOCKED_RESEARCH_ONLY",
+          "unresolved_requirements": [
+            "Full qualifying context",
+            "Observable thresholds",
+            "Reviewed modern wording",
+            "Independent sign-detection validation"
+          ],
+          "may_enter_runtime_pack": false
+        },
+        {
+          "association_id": "ASSOC_HIST_CJ_FIRMNESS",
+          "runtime_eligibility": "BLOCKED_RESEARCH_ONLY",
+          "unresolved_requirements": [
+            "Exact morphology and context",
+            "Operational thresholds",
+            "Contextual and language review"
+          ],
+          "may_enter_runtime_pack": false
+        }
+      ],
+      "pack_activation_rule": "A pack remains inactive until every included association has reviewed operational premises, applicability, counterevidence behavior, source provenance, and explicit promotion evidence."
+    }
   }
 }
