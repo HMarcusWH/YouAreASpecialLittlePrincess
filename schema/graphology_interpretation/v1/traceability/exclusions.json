@@ -1,0 +1,17 @@
+{
+  "version": "graphology-interpretation-exclusions/1",
+  "research_baseline_commit": "f96aa6b54cfaf91f0a8243e7c7e266baa053eedc",
+  "exclusions": [],
+  "intentionally_not_in_scope": [
+    "Observation definitions",
+    "Feature mappings",
+    "Selector/value population",
+    "Question packs",
+    "Executable traditional associations",
+    "Candidate generators",
+    "Soft-field activation",
+    "Report mappings",
+    "Localization",
+    "Compiled premium_interpretation_database_v1.json"
+  ]
+}

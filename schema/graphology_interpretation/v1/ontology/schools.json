@@ -1,0 +1,68 @@
+[
+  {
+    "school_id": "BIG_HILLIGER",
+    "label": "BIG / Hilliger teaching protocol",
+    "source_ids": [
+      "BIGCOURSE",
+      "BIG26"
+    ],
+    "role": "Primary operational checklist; not a universal or validated theory",
+    "school_kind": "GRAPHOLOGY_TRADITION_PROFILE",
+    "runtime_status": "ONTOLOGY_ONLY"
+  },
+  {
+    "school_id": "JAMINIAN",
+    "label": "Crépieux-Jamin and contemporary French teaching",
+    "source_ids": [
+      "CJ1892",
+      "CNPG_A",
+      "CNPG_B",
+      "LEPOUTRE"
+    ],
+    "role": "Contextual sign description and resultants; preserve editions",
+    "school_kind": "GRAPHOLOGY_TRADITION_PROFILE",
+    "runtime_status": "ONTOLOGY_ONLY"
+  },
+  {
+    "school_id": "GESTALT_AHAF",
+    "label": "AHAF-supported gestalt approach",
+    "source_ids": [
+      "AHAF"
+    ],
+    "role": "Whole-pattern context; do not reduce to isolated trait-stroke rules",
+    "school_kind": "GRAPHOLOGY_TRADITION_PROFILE",
+    "runtime_status": "ONTOLOGY_ONLY"
+  },
+  {
+    "school_id": "KLAGES_RECEPTION",
+    "label": "Klages-related teaching as currently documented",
+    "source_ids": [
+      "SGB",
+      "CNPG_B"
+    ],
+    "role": "Measured versus assessed forms; founder definitions pending",
+    "school_kind": "GRAPHOLOGY_TRADITION_PROFILE",
+    "runtime_status": "ONTOLOGY_ONLY"
+  },
+  {
+    "school_id": "MORETTIAN",
+    "label": "Moretti tradition, with source-depth distinctions",
+    "source_ids": [
+      "MORETTI_I",
+      "CARBONARI",
+      "CONTIN",
+      "DEBIASI"
+    ],
+    "role": "Named signs and their relationships; no unverified decimi conversion",
+    "school_kind": "GRAPHOLOGY_TRADITION_PROFILE",
+    "runtime_status": "ONTOLOGY_ONLY"
+  },
+  {
+    "school_id": "APPLICATION",
+    "label": "Application adaptation, not a historical school",
+    "source_ids": [],
+    "role": "Acquisition checks, statistics, software states, UX and brand labels",
+    "school_kind": "APPLICATION_NAMESPACE",
+    "runtime_status": "ONTOLOGY_ONLY"
+  }
+]
