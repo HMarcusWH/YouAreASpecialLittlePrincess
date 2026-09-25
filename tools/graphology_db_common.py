@@ -41,6 +41,17 @@ def verify_research_baseline(repo: Path) -> list[str]:
     tree_lock = load(tree_lock_path)
     manifest = load(repo / lock["import_manifest_path"])
 
+    expected_lock_paths={
+        "research_snapshot":"research/graphology/foundations-v0.1",
+        "import_manifest_path":"research/graphology/foundations-v0.1/provenance/import_manifest.json",
+        "snapshot_tree_lock_path":"schema/graphology_interpretation/v1/traceability/research_snapshot_tree_lock.json",
+    }
+    for key, expected in expected_lock_paths.items():
+        if lock.get(key)!=expected:
+            errors.append(f"research baseline lock path drift: {key}")
+    if tree_lock.get("research_snapshot")!="research/graphology/foundations-v0.1":
+        errors.append("snapshot tree lock research path drift")
+
     if lock["research_baseline_commit"] != EXPECTED_BASELINE_COMMIT:
         errors.append("research baseline commit differs from pinned immutable baseline")
     if tree_lock["research_baseline_commit"] != EXPECTED_BASELINE_COMMIT:
