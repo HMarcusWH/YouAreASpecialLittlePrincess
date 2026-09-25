@@ -36,6 +36,7 @@ def validate(repo: Path) -> list[str]:
     tones_doc=load(root/"narrative/tone_profiles.json"); tones=tones_doc["records"]
     slots_doc=load(root/"reports/report_slots.json"); slots=slots_doc["records"]
     localization_policy=load(root/"localization/policy.json")
+    model_pack_policy=load(root/"packs/model_pack_policy.json")
     artifact=load(repo/"schema/premium_interpretation_database_v1.json")
     manifest=load(root/"manifest.json"); stage_doc=load(root/"stage_contract.json"); stage=stage_doc["stages"][stage_doc["current_stage"]]
     compiler=load_compiler(repo)
@@ -63,6 +64,12 @@ def validate(repo: Path) -> list[str]:
             errors.append(f"unreviewed support threshold/fallback invented: {q['question_id']}")
 
     pack_map={"INDIVIDUAL_GRAPHIC_DRAFT":"PREMIUM_INDIVIDUAL_GRAPHIC_V1","TRADITIONAL_READING_DRAFT":"PREMIUM_TRADITIONAL_READING_V1","REFERENCE_DRAFT":"PREMIUM_REFERENCE_V1","PAIR_DRAFT":"PREMIUM_PAIR_V1","HISTORY_DRAFT":"PREMIUM_HISTORY_V1"}
+    expected_model_pack_policy={
+        "policy_id":"graphology-model-pack-policy/1","version":"1.0.0","research_id":"model_pack_policy",
+        "policy":research_meta["model_pack_policy"],"runtime_activation":False,
+    }
+    if model_pack_policy!=expected_model_pack_policy:
+        errors.append("model-pack policy contract drift")
     if packs_doc.get("version")!="graphology-question-packs/1" or packs_doc.get("runtime_activation") is not False:
         errors.append("question-pack registry metadata/lifecycle drift")
     if len(packs)!=5 or len({x["pack_id"] for x in packs})!=5 or len({x["research_pack_id"] for x in packs})!=5:

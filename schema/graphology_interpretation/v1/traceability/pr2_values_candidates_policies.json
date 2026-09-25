@@ -629,7 +629,7 @@
       "research_kind": "SELECTION_CONTRACT",
       "research_id": "selection_contract",
       "production_kind": "SELECTION_CONTRACT",
-      "production_id": "selection_contract",
+      "production_id": "graphology-selection-contract/1",
       "disposition": "PROMOTED_AS_DRAFT_POLICY",
       "runtime_effect": "NONE"
     },

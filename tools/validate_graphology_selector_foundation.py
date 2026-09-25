@@ -206,7 +206,7 @@ def validate(repo: Path) -> list[str]:
         *{("VALUE_SET",x["value_set_id"],"VALUE_SET",x["value_set_id"]) for x in research_values},
         *{("CANDIDATE_KIND",x,"CANDIDATE_KIND",x) for x in rm["candidate_kinds"]},
         ("ANSWER_STATE_POLICY",rm["answer_state_policy"]["policy_id"],"ANSWER_STATE_POLICY",rm["answer_state_policy"]["policy_id"]),
-        ("SELECTION_CONTRACT","selection_contract","SELECTION_CONTRACT","selection_contract"),
+        ("SELECTION_CONTRACT","selection_contract","SELECTION_CONTRACT","graphology-selection-contract/1"),
         ("OBSERVATION_ENVELOPE","observation_envelope","OBSERVATION_ENVELOPE","graphology-observation-envelope/1"),
         ("CANDIDATE_VALIDATION_POLICY","candidate_validation_policy","CANDIDATE_VALIDATION_POLICY","CANDIDATE_VALIDATION_V1"),
     }
