@@ -12902,6 +12902,644 @@
       "operational_guardrail": "Report sequence and regions; cannot infer writing duration.",
       "source_status": "DRAFT_NOT_ACTIVATED",
       "runtime_status": "DRAFT_NOT_ACTIVE"
+    },
+    {
+      "observation_id": "OBS_DIRECTION_SLANT",
+      "source_question_id": "Q_DIRECTION_SLANT",
+      "selector_id": "SEL_DIRECTION_SLANT",
+      "domain_id": "DIRECTION",
+      "scope": "INDIVIDUAL",
+      "descriptor_kind": "DETERMINISTIC_DESCRIPTOR",
+      "assessment_owner": "DETERMINISTIC",
+      "model_call_role": "READ_ONLY_CONTEXT_OR_PRECOMPUTED",
+      "cardinality": "SINGLE",
+      "value_set_id": "SLANT",
+      "candidate_kind": null,
+      "required_inputs": [],
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "permitted_evidence_class": "PRECOMPUTED_DESCRIPTION",
+      "source_refs": [
+        {
+          "source_id": "IHAS",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "BIG26",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "CONTIN",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "related_canonical_feature_ids": [
+        "SLANT_ANGLE_MEAN",
+        "SLANT_LEFT_FRACTION",
+        "SLANT_VERTICAL_FRACTION",
+        "SLANT_RIGHT_FRACTION"
+      ],
+      "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+      "operational_guardrail": "Require a method whose baseline-relative convention matches this question; do not reinterpret a canvas-vertical angle silently. Preserve regional mixtures rather than averaging opposite slants into a falsely uniform upright result.",
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE"
+    },
+    {
+      "observation_id": "OBS_DIRECTION_SLOPE",
+      "source_question_id": "Q_DIRECTION_SLOPE",
+      "selector_id": "SEL_DIRECTION_SLOPE",
+      "domain_id": "DIRECTION",
+      "scope": "INDIVIDUAL",
+      "descriptor_kind": "DETERMINISTIC_DESCRIPTOR",
+      "assessment_owner": "DETERMINISTIC",
+      "model_call_role": "READ_ONLY_CONTEXT_OR_PRECOMPUTED",
+      "cardinality": "SINGLE",
+      "value_set_id": "BASELINE",
+      "candidate_kind": null,
+      "required_inputs": [],
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "permitted_evidence_class": "PRECOMPUTED_DESCRIPTION",
+      "source_refs": [
+        {
+          "source_id": "IHAS",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "BIG26",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "CONTIN",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "related_canonical_feature_ids": [
+        "BASELINE_ANGLE_MEAN",
+        "BASELINE_ANGLE_STD"
+      ],
+      "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+      "operational_guardrail": "",
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE"
+    },
+    {
+      "observation_id": "OBS_DIRECTION_SHAPE",
+      "source_question_id": "Q_DIRECTION_SHAPE",
+      "selector_id": "SEL_DIRECTION_SHAPE",
+      "domain_id": "DIRECTION",
+      "scope": "INDIVIDUAL",
+      "descriptor_kind": "VISUAL_DESCRIPTOR",
+      "assessment_owner": "PREMIUM_VISUAL",
+      "model_call_role": "ANSWER",
+      "cardinality": "MULTIPLE",
+      "value_set_id": "BASELINE_SHAPE",
+      "candidate_kind": null,
+      "required_inputs": [
+        "AUTHORIZED_IMAGE",
+        "IDENTIFIED_EVIDENCE_REGION"
+      ],
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "permitted_evidence_class": "AI_VISUAL_DESCRIPTION_NOT_CANONICAL_MEASUREMENT",
+      "source_refs": [
+        {
+          "source_id": "IHAS",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "BIG26",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "CONTIN",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "related_canonical_feature_ids": [
+        "BASELINE_WAVINESS",
+        "BASELINE_CURVATURE"
+      ],
+      "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+      "operational_guardrail": "Image classification of shape never replaces stored baseline points.",
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE"
+    },
+    {
+      "observation_id": "OBS_DIRECTION_VARIATION",
+      "source_question_id": "Q_DIRECTION_VARIATION",
+      "selector_id": "SEL_DIRECTION_VARIATION",
+      "domain_id": "DIRECTION",
+      "scope": "INDIVIDUAL",
+      "descriptor_kind": "VISUAL_DESCRIPTOR",
+      "assessment_owner": "PREMIUM_VISUAL",
+      "model_call_role": "ANSWER",
+      "cardinality": "SINGLE",
+      "value_set_id": "VARIATION_CHARACTER",
+      "candidate_kind": null,
+      "required_inputs": [
+        "AUTHORIZED_IMAGE",
+        "IDENTIFIED_EVIDENCE_REGION"
+      ],
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "permitted_evidence_class": "AI_VISUAL_DESCRIPTION_NOT_CANONICAL_MEASUREMENT",
+      "source_refs": [
+        {
+          "source_id": "IHAS",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "BIG26",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "CONTIN",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "related_canonical_feature_ids": [
+        "SLANT_ANGLE_STD"
+      ],
+      "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+      "operational_guardrail": "A standard deviation does not establish patterned alternation.",
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE"
+    },
+    {
+      "observation_id": "OBS_CONNECT_DEGREE",
+      "source_question_id": "Q_CONNECT_DEGREE",
+      "selector_id": "SEL_CONNECT_DEGREE",
+      "domain_id": "CONNECTION",
+      "scope": "INDIVIDUAL",
+      "descriptor_kind": "DETERMINISTIC_DESCRIPTOR",
+      "assessment_owner": "DETERMINISTIC",
+      "model_call_role": "READ_ONLY_CONTEXT_OR_PRECOMPUTED",
+      "cardinality": "SINGLE",
+      "value_set_id": "CONNECTION_DEGREE",
+      "candidate_kind": null,
+      "required_inputs": [
+        "VALID_JOINING_METHOD"
+      ],
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "permitted_evidence_class": "PRECOMPUTED_DESCRIPTION",
+      "source_refs": [
+        {
+          "source_id": "IHAS",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "BIG26",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "related_canonical_feature_ids": [
+        "CONNECTEDNESS_RATIO"
+      ],
+      "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+      "operational_guardrail": "Connected ink components are a proxy, not guaranteed pen-down strokes.",
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE"
+    },
+    {
+      "observation_id": "OBS_CONNECT_FORM",
+      "source_question_id": "Q_CONNECT_FORM",
+      "selector_id": "SEL_CONNECT_FORM",
+      "domain_id": "CONNECTION",
+      "scope": "INDIVIDUAL",
+      "descriptor_kind": "VISUAL_DESCRIPTOR",
+      "assessment_owner": "PREMIUM_VISUAL",
+      "model_call_role": "ANSWER",
+      "cardinality": "MULTIPLE",
+      "value_set_id": "CONNECTOR_FORM",
+      "candidate_kind": null,
+      "required_inputs": [
+        "IDENTIFIED_CONNECTOR_EXAMPLES",
+        "AUTHORIZED_IMAGE",
+        "IDENTIFIED_EVIDENCE_REGION"
+      ],
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "permitted_evidence_class": "AI_VISUAL_DESCRIPTION_NOT_CANONICAL_MEASUREMENT",
+      "source_refs": [
+        {
+          "source_id": "IHAS",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "BIG26",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "related_canonical_feature_ids": [],
+      "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+      "operational_guardrail": "A script can contain several forms; retain separate regions rather than force a single type.",
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE"
+    },
+    {
+      "observation_id": "OBS_CONNECT_DISTRIBUTION",
+      "source_question_id": "Q_CONNECT_DISTRIBUTION",
+      "selector_id": "SEL_CONNECT_DISTRIBUTION",
+      "domain_id": "CONNECTION",
+      "scope": "INDIVIDUAL",
+      "descriptor_kind": "VISUAL_DESCRIPTOR",
+      "assessment_owner": "PREMIUM_VISUAL",
+      "model_call_role": "ANSWER",
+      "cardinality": "SINGLE",
+      "value_set_id": "VARIATION_CHARACTER",
+      "candidate_kind": null,
+      "required_inputs": [
+        "IDENTIFIED_CONNECTOR_EXAMPLES",
+        "AUTHORIZED_IMAGE",
+        "IDENTIFIED_EVIDENCE_REGION"
+      ],
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "permitted_evidence_class": "AI_VISUAL_DESCRIPTION_NOT_CANONICAL_MEASUREMENT",
+      "source_refs": [
+        {
+          "source_id": "IHAS",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "BIG26",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "related_canonical_feature_ids": [],
+      "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+      "operational_guardrail": "",
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE"
+    },
+    {
+      "observation_id": "OBS_CONNECT_CAPITAL",
+      "source_question_id": "Q_CONNECT_CAPITAL",
+      "selector_id": "SEL_CONNECT_CAPITAL",
+      "domain_id": "CONNECTION",
+      "scope": "INDIVIDUAL",
+      "descriptor_kind": "VISUAL_DESCRIPTOR",
+      "assessment_owner": "PREMIUM_VISUAL",
+      "model_call_role": "ANSWER",
+      "cardinality": "SINGLE",
+      "value_set_id": "CAPITAL_CONNECTION",
+      "candidate_kind": null,
+      "required_inputs": [
+        "IDENTIFIED_CAPITAL_EXAMPLES",
+        "AUTHORIZED_IMAGE",
+        "IDENTIFIED_EVIDENCE_REGION"
+      ],
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "permitted_evidence_class": "AI_VISUAL_DESCRIPTION_NOT_CANONICAL_MEASUREMENT",
+      "source_refs": [
+        {
+          "source_id": "IHAS",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "BIG26",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "related_canonical_feature_ids": [],
+      "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+      "operational_guardrail": "",
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE"
+    },
+    {
+      "observation_id": "OBS_FORM_GEOMETRY",
+      "source_question_id": "Q_FORM_GEOMETRY",
+      "selector_id": "SEL_FORM_GEOMETRY",
+      "domain_id": "FORM",
+      "scope": "INDIVIDUAL",
+      "descriptor_kind": "VISUAL_DESCRIPTOR",
+      "assessment_owner": "PREMIUM_VISUAL",
+      "model_call_role": "ANSWER",
+      "cardinality": "MULTIPLE",
+      "value_set_id": "FORM_GEOMETRY",
+      "candidate_kind": null,
+      "required_inputs": [
+        "AUTHORIZED_IMAGE",
+        "IDENTIFIED_EVIDENCE_REGION"
+      ],
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "permitted_evidence_class": "AI_VISUAL_DESCRIPTION_NOT_CANONICAL_MEASUREMENT",
+      "source_refs": [
+        {
+          "source_id": "IHAS",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "CNPG_A",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "LEPOUTRE",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "related_canonical_feature_ids": [
+        "ANGULARITY_SCORE",
+        "ROUNDNESS_SCORE"
+      ],
+      "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+      "operational_guardrail": "Not a claim that roundness determines agreeableness.",
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE"
+    },
+    {
+      "observation_id": "OBS_FORM_SIMPLIFICATION",
+      "source_question_id": "Q_FORM_SIMPLIFICATION",
+      "selector_id": "SEL_FORM_SIMPLIFICATION",
+      "domain_id": "FORM",
+      "scope": "INDIVIDUAL",
+      "descriptor_kind": "VISUAL_DESCRIPTOR",
+      "assessment_owner": "PREMIUM_VISUAL",
+      "model_call_role": "ANSWER",
+      "cardinality": "SINGLE",
+      "value_set_id": "SIMPLIFICATION",
+      "candidate_kind": null,
+      "required_inputs": [
+        "IDENTIFIED_COPYBOOK_OR_LETTER_REFERENCE",
+        "AUTHORIZED_IMAGE",
+        "IDENTIFIED_EVIDENCE_REGION"
+      ],
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "permitted_evidence_class": "AI_VISUAL_DESCRIPTION_NOT_CANONICAL_MEASUREMENT",
+      "source_refs": [
+        {
+          "source_id": "IHAS",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "CNPG_A",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "LEPOUTRE",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "related_canonical_feature_ids": [
+        "SIMPLIFICATION_SCORE"
+      ],
+      "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+      "operational_guardrail": "Reduced and still identifiable is different from reduced and unclear.",
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE"
+    },
+    {
+      "observation_id": "OBS_FORM_LOOPS",
+      "source_question_id": "Q_FORM_LOOPS",
+      "selector_id": "SEL_FORM_LOOPS",
+      "domain_id": "FORM",
+      "scope": "INDIVIDUAL",
+      "descriptor_kind": "VISUAL_DESCRIPTOR",
+      "assessment_owner": "PREMIUM_VISUAL",
+      "model_call_role": "ANSWER",
+      "cardinality": "SINGLE",
+      "value_set_id": "LOOP_FORM",
+      "candidate_kind": null,
+      "required_inputs": [
+        "IDENTIFIED_LOOP_EXAMPLES",
+        "AUTHORIZED_IMAGE",
+        "IDENTIFIED_EVIDENCE_REGION"
+      ],
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "permitted_evidence_class": "AI_VISUAL_DESCRIPTION_NOT_CANONICAL_MEASUREMENT",
+      "source_refs": [
+        {
+          "source_id": "IHAS",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "CNPG_A",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "LEPOUTRE",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "related_canonical_feature_ids": [
+        "LOOP_COUNT",
+        "HOLE_AREA_RATIO"
+      ],
+      "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+      "operational_guardrail": "",
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE"
+    },
+    {
+      "observation_id": "OBS_FORM_ORNAMENT",
+      "source_question_id": "Q_FORM_ORNAMENT",
+      "selector_id": "SEL_FORM_ORNAMENT",
+      "domain_id": "FORM",
+      "scope": "INDIVIDUAL",
+      "descriptor_kind": "CANDIDATE_BACKED_DESCRIPTOR",
+      "assessment_owner": "PREMIUM_EDITOR",
+      "model_call_role": "ANSWER",
+      "cardinality": "MULTIPLE",
+      "value_set_id": null,
+      "candidate_kind": "ORNAMENT_DESCRIPTION",
+      "required_inputs": [
+        "CURRENT_REPORT_CANDIDATES"
+      ],
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "permitted_evidence_class": "SELECTION_OR_SYNTHESIS_OF_SUPPLIED_CANDIDATES",
+      "source_refs": [
+        {
+          "source_id": "IHAS",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "CNPG_A",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "LEPOUTRE",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "related_canonical_feature_ids": [
+        "FLOURISH_RATE"
+      ],
+      "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+      "operational_guardrail": "",
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE"
+    },
+    {
+      "observation_id": "OBS_STROKE_APPEARANCE",
+      "source_question_id": "Q_STROKE_APPEARANCE",
+      "selector_id": "SEL_STROKE_APPEARANCE",
+      "domain_id": "STROKE",
+      "scope": "INDIVIDUAL",
+      "descriptor_kind": "VISUAL_DESCRIPTOR",
+      "assessment_owner": "PREMIUM_VISUAL",
+      "model_call_role": "ANSWER",
+      "cardinality": "SINGLE",
+      "value_set_id": "STROKE_QUALITY",
+      "candidate_kind": null,
+      "required_inputs": [
+        "AUTHORIZED_IMAGE",
+        "IDENTIFIED_EVIDENCE_REGION"
+      ],
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "permitted_evidence_class": "AI_VISUAL_DESCRIPTION_NOT_CANONICAL_MEASUREMENT",
+      "source_refs": [
+        {
+          "source_id": "IHAS",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "CONTIN",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "related_canonical_feature_ids": [
+        "INK_EDGE_SHARPNESS"
+      ],
+      "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+      "operational_guardrail": "Pastose-looking is not a measurement of force; camera/ink/nib can contribute.",
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE"
+    },
+    {
+      "observation_id": "OBS_STROKE_SHADING",
+      "source_question_id": "Q_STROKE_SHADING",
+      "selector_id": "SEL_STROKE_SHADING",
+      "domain_id": "STROKE",
+      "scope": "INDIVIDUAL",
+      "descriptor_kind": "VISUAL_DESCRIPTOR",
+      "assessment_owner": "PREMIUM_VISUAL",
+      "model_call_role": "ANSWER",
+      "cardinality": "SINGLE",
+      "value_set_id": "SHADING",
+      "candidate_kind": null,
+      "required_inputs": [
+        "IDENTIFIED_DIRECTIONAL_STROKES",
+        "AUTHORIZED_IMAGE",
+        "IDENTIFIED_EVIDENCE_REGION"
+      ],
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "permitted_evidence_class": "AI_VISUAL_DESCRIPTION_NOT_CANONICAL_MEASUREMENT",
+      "source_refs": [
+        {
+          "source_id": "IHAS",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "CONTIN",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "related_canonical_feature_ids": [],
+      "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+      "operational_guardrail": "Do not infer movement chronology solely from a static trace.",
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE"
+    },
+    {
+      "observation_id": "OBS_STROKE_DARKNESS",
+      "source_question_id": "Q_STROKE_DARKNESS",
+      "selector_id": "SEL_STROKE_DARKNESS",
+      "domain_id": "STROKE",
+      "scope": "INDIVIDUAL",
+      "descriptor_kind": "CANDIDATE_BACKED_DESCRIPTOR",
+      "assessment_owner": "PREMIUM_EDITOR",
+      "model_call_role": "ANSWER",
+      "cardinality": "SINGLE",
+      "value_set_id": null,
+      "candidate_kind": "INK_APPEARANCE_FACT",
+      "required_inputs": [
+        "CURRENT_REPORT_CANDIDATES"
+      ],
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "permitted_evidence_class": "SELECTION_OR_SYNTHESIS_OF_SUPPLIED_CANDIDATES",
+      "source_refs": [
+        {
+          "source_id": "IHAS",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "CONTIN",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "related_canonical_feature_ids": [
+        "INK_DARKNESS_MEAN",
+        "INK_DARKNESS_CV"
+      ],
+      "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+      "operational_guardrail": "",
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE"
+    },
+    {
+      "observation_id": "OBS_STROKE_WIDTH",
+      "source_question_id": "Q_STROKE_WIDTH",
+      "selector_id": "SEL_STROKE_WIDTH",
+      "domain_id": "STROKE",
+      "scope": "INDIVIDUAL",
+      "descriptor_kind": "CANDIDATE_BACKED_DESCRIPTOR",
+      "assessment_owner": "PREMIUM_EDITOR",
+      "model_call_role": "ANSWER",
+      "cardinality": "SINGLE",
+      "value_set_id": null,
+      "candidate_kind": "THICKNESS_FACT",
+      "required_inputs": [
+        "CURRENT_REPORT_CANDIDATES"
+      ],
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "permitted_evidence_class": "SELECTION_OR_SYNTHESIS_OF_SUPPLIED_CANDIDATES",
+      "source_refs": [
+        {
+          "source_id": "IHAS",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "CONTIN",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "related_canonical_feature_ids": [
+        "STROKE_WIDTH_MEAN",
+        "STROKE_WIDTH_CV"
+      ],
+      "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+      "operational_guardrail": "",
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE"
+    },
+    {
+      "observation_id": "OBS_STROKE_PRESSURE_LIMIT",
+      "source_question_id": "Q_STROKE_PRESSURE_LIMIT",
+      "selector_id": "SEL_STROKE_PRESSURE_LIMIT",
+      "domain_id": "STROKE",
+      "scope": "INDIVIDUAL",
+      "descriptor_kind": "DETERMINISTIC_DESCRIPTOR",
+      "assessment_owner": "DETERMINISTIC",
+      "model_call_role": "READ_ONLY_CONTEXT_OR_PRECOMPUTED",
+      "cardinality": "SINGLE",
+      "value_set_id": null,
+      "candidate_kind": "ACQUISITION_LIMITATION",
+      "required_inputs": [
+        "ACQUISITION_METADATA"
+      ],
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "permitted_evidence_class": "PRECOMPUTED_DESCRIPTION",
+      "source_refs": [
+        {
+          "source_id": "IHAS",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "CONTIN",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "related_canonical_feature_ids": [],
+      "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+      "operational_guardrail": "Photo: not measurable as physical force. Original-paper impression and uncalibrated stylus units are not Newtons.",
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE"
     }
   ],
   "feature_mappings": [
@@ -13118,6 +13756,258 @@
       "relationship": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
       "mapping_role": "PRIMARY_VALUE",
       "operational_guardrail": "Generic component aspect ratio is not an exact Moretti Largo di lettere score.",
+      "mapping_status": "DRAFT_SUPPORT_ONLY",
+      "runtime_activation": false
+    },
+    {
+      "mapping_id": "MAP_SEL_DIRECTION_SLANT_SLANT_ANGLE_MEAN",
+      "source_question_id": "Q_DIRECTION_SLANT",
+      "selector_id": "SEL_DIRECTION_SLANT",
+      "observation_id": "OBS_DIRECTION_SLANT",
+      "canonical_feature_id": "SLANT_ANGLE_MEAN",
+      "relationship": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+      "mapping_role": "PRIMARY_VALUE",
+      "operational_guardrail": "Require a method whose baseline-relative convention matches this question; do not reinterpret a canvas-vertical angle silently. Preserve regional mixtures rather than averaging opposite slants into a falsely uniform upright result.",
+      "mapping_status": "DRAFT_SUPPORT_ONLY",
+      "runtime_activation": false
+    },
+    {
+      "mapping_id": "MAP_SEL_DIRECTION_SLANT_SLANT_LEFT_FRACTION",
+      "source_question_id": "Q_DIRECTION_SLANT",
+      "selector_id": "SEL_DIRECTION_SLANT",
+      "observation_id": "OBS_DIRECTION_SLANT",
+      "canonical_feature_id": "SLANT_LEFT_FRACTION",
+      "relationship": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+      "mapping_role": "DISTRIBUTION_CONTEXT",
+      "operational_guardrail": "Require a method whose baseline-relative convention matches this question; do not reinterpret a canvas-vertical angle silently. Preserve regional mixtures rather than averaging opposite slants into a falsely uniform upright result.",
+      "mapping_status": "DRAFT_SUPPORT_ONLY",
+      "runtime_activation": false
+    },
+    {
+      "mapping_id": "MAP_SEL_DIRECTION_SLANT_SLANT_VERTICAL_FRACTION",
+      "source_question_id": "Q_DIRECTION_SLANT",
+      "selector_id": "SEL_DIRECTION_SLANT",
+      "observation_id": "OBS_DIRECTION_SLANT",
+      "canonical_feature_id": "SLANT_VERTICAL_FRACTION",
+      "relationship": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+      "mapping_role": "DISTRIBUTION_CONTEXT",
+      "operational_guardrail": "Require a method whose baseline-relative convention matches this question; do not reinterpret a canvas-vertical angle silently. Preserve regional mixtures rather than averaging opposite slants into a falsely uniform upright result.",
+      "mapping_status": "DRAFT_SUPPORT_ONLY",
+      "runtime_activation": false
+    },
+    {
+      "mapping_id": "MAP_SEL_DIRECTION_SLANT_SLANT_RIGHT_FRACTION",
+      "source_question_id": "Q_DIRECTION_SLANT",
+      "selector_id": "SEL_DIRECTION_SLANT",
+      "observation_id": "OBS_DIRECTION_SLANT",
+      "canonical_feature_id": "SLANT_RIGHT_FRACTION",
+      "relationship": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+      "mapping_role": "DISTRIBUTION_CONTEXT",
+      "operational_guardrail": "Require a method whose baseline-relative convention matches this question; do not reinterpret a canvas-vertical angle silently. Preserve regional mixtures rather than averaging opposite slants into a falsely uniform upright result.",
+      "mapping_status": "DRAFT_SUPPORT_ONLY",
+      "runtime_activation": false
+    },
+    {
+      "mapping_id": "MAP_SEL_DIRECTION_SLOPE_BASELINE_ANGLE_MEAN",
+      "source_question_id": "Q_DIRECTION_SLOPE",
+      "selector_id": "SEL_DIRECTION_SLOPE",
+      "observation_id": "OBS_DIRECTION_SLOPE",
+      "canonical_feature_id": "BASELINE_ANGLE_MEAN",
+      "relationship": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+      "mapping_role": "PRIMARY_VALUE",
+      "operational_guardrail": "",
+      "mapping_status": "DRAFT_SUPPORT_ONLY",
+      "runtime_activation": false
+    },
+    {
+      "mapping_id": "MAP_SEL_DIRECTION_SLOPE_BASELINE_ANGLE_STD",
+      "source_question_id": "Q_DIRECTION_SLOPE",
+      "selector_id": "SEL_DIRECTION_SLOPE",
+      "observation_id": "OBS_DIRECTION_SLOPE",
+      "canonical_feature_id": "BASELINE_ANGLE_STD",
+      "relationship": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+      "mapping_role": "VARIABILITY_CONTEXT",
+      "operational_guardrail": "",
+      "mapping_status": "DRAFT_SUPPORT_ONLY",
+      "runtime_activation": false
+    },
+    {
+      "mapping_id": "MAP_SEL_DIRECTION_SHAPE_BASELINE_WAVINESS",
+      "source_question_id": "Q_DIRECTION_SHAPE",
+      "selector_id": "SEL_DIRECTION_SHAPE",
+      "observation_id": "OBS_DIRECTION_SHAPE",
+      "canonical_feature_id": "BASELINE_WAVINESS",
+      "relationship": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+      "mapping_role": "AUXILIARY_CONTEXT",
+      "operational_guardrail": "Image classification of shape never replaces stored baseline points.",
+      "mapping_status": "DRAFT_SUPPORT_ONLY",
+      "runtime_activation": false
+    },
+    {
+      "mapping_id": "MAP_SEL_DIRECTION_SHAPE_BASELINE_CURVATURE",
+      "source_question_id": "Q_DIRECTION_SHAPE",
+      "selector_id": "SEL_DIRECTION_SHAPE",
+      "observation_id": "OBS_DIRECTION_SHAPE",
+      "canonical_feature_id": "BASELINE_CURVATURE",
+      "relationship": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+      "mapping_role": "AUXILIARY_CONTEXT",
+      "operational_guardrail": "Image classification of shape never replaces stored baseline points.",
+      "mapping_status": "DRAFT_SUPPORT_ONLY",
+      "runtime_activation": false
+    },
+    {
+      "mapping_id": "MAP_SEL_DIRECTION_VARIATION_SLANT_ANGLE_STD",
+      "source_question_id": "Q_DIRECTION_VARIATION",
+      "selector_id": "SEL_DIRECTION_VARIATION",
+      "observation_id": "OBS_DIRECTION_VARIATION",
+      "canonical_feature_id": "SLANT_ANGLE_STD",
+      "relationship": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+      "mapping_role": "AUXILIARY_CONTEXT",
+      "operational_guardrail": "A standard deviation does not establish patterned alternation.",
+      "mapping_status": "DRAFT_SUPPORT_ONLY",
+      "runtime_activation": false
+    },
+    {
+      "mapping_id": "MAP_SEL_CONNECT_DEGREE_CONNECTEDNESS_RATIO",
+      "source_question_id": "Q_CONNECT_DEGREE",
+      "selector_id": "SEL_CONNECT_DEGREE",
+      "observation_id": "OBS_CONNECT_DEGREE",
+      "canonical_feature_id": "CONNECTEDNESS_RATIO",
+      "relationship": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+      "mapping_role": "PRIMARY_VALUE",
+      "operational_guardrail": "Connected ink components are a proxy, not guaranteed pen-down strokes.",
+      "mapping_status": "DRAFT_SUPPORT_ONLY",
+      "runtime_activation": false
+    },
+    {
+      "mapping_id": "MAP_SEL_FORM_GEOMETRY_ANGULARITY_SCORE",
+      "source_question_id": "Q_FORM_GEOMETRY",
+      "selector_id": "SEL_FORM_GEOMETRY",
+      "observation_id": "OBS_FORM_GEOMETRY",
+      "canonical_feature_id": "ANGULARITY_SCORE",
+      "relationship": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+      "mapping_role": "AUXILIARY_CONTEXT",
+      "operational_guardrail": "Not a claim that roundness determines agreeableness.",
+      "mapping_status": "DRAFT_SUPPORT_ONLY",
+      "runtime_activation": false
+    },
+    {
+      "mapping_id": "MAP_SEL_FORM_GEOMETRY_ROUNDNESS_SCORE",
+      "source_question_id": "Q_FORM_GEOMETRY",
+      "selector_id": "SEL_FORM_GEOMETRY",
+      "observation_id": "OBS_FORM_GEOMETRY",
+      "canonical_feature_id": "ROUNDNESS_SCORE",
+      "relationship": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+      "mapping_role": "AUXILIARY_CONTEXT",
+      "operational_guardrail": "Not a claim that roundness determines agreeableness.",
+      "mapping_status": "DRAFT_SUPPORT_ONLY",
+      "runtime_activation": false
+    },
+    {
+      "mapping_id": "MAP_SEL_FORM_SIMPLIFICATION_SIMPLIFICATION_SCORE",
+      "source_question_id": "Q_FORM_SIMPLIFICATION",
+      "selector_id": "SEL_FORM_SIMPLIFICATION",
+      "observation_id": "OBS_FORM_SIMPLIFICATION",
+      "canonical_feature_id": "SIMPLIFICATION_SCORE",
+      "relationship": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+      "mapping_role": "AUXILIARY_CONTEXT",
+      "operational_guardrail": "Reduced and still identifiable is different from reduced and unclear.",
+      "mapping_status": "DRAFT_SUPPORT_ONLY",
+      "runtime_activation": false
+    },
+    {
+      "mapping_id": "MAP_SEL_FORM_LOOPS_LOOP_COUNT",
+      "source_question_id": "Q_FORM_LOOPS",
+      "selector_id": "SEL_FORM_LOOPS",
+      "observation_id": "OBS_FORM_LOOPS",
+      "canonical_feature_id": "LOOP_COUNT",
+      "relationship": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+      "mapping_role": "AUXILIARY_CONTEXT",
+      "operational_guardrail": "",
+      "mapping_status": "DRAFT_SUPPORT_ONLY",
+      "runtime_activation": false
+    },
+    {
+      "mapping_id": "MAP_SEL_FORM_LOOPS_HOLE_AREA_RATIO",
+      "source_question_id": "Q_FORM_LOOPS",
+      "selector_id": "SEL_FORM_LOOPS",
+      "observation_id": "OBS_FORM_LOOPS",
+      "canonical_feature_id": "HOLE_AREA_RATIO",
+      "relationship": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+      "mapping_role": "AUXILIARY_CONTEXT",
+      "operational_guardrail": "",
+      "mapping_status": "DRAFT_SUPPORT_ONLY",
+      "runtime_activation": false
+    },
+    {
+      "mapping_id": "MAP_SEL_FORM_ORNAMENT_FLOURISH_RATE",
+      "source_question_id": "Q_FORM_ORNAMENT",
+      "selector_id": "SEL_FORM_ORNAMENT",
+      "observation_id": "OBS_FORM_ORNAMENT",
+      "canonical_feature_id": "FLOURISH_RATE",
+      "relationship": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+      "mapping_role": "CANDIDATE_INPUT",
+      "operational_guardrail": "",
+      "mapping_status": "DRAFT_SUPPORT_ONLY",
+      "runtime_activation": false
+    },
+    {
+      "mapping_id": "MAP_SEL_STROKE_APPEARANCE_INK_EDGE_SHARPNESS",
+      "source_question_id": "Q_STROKE_APPEARANCE",
+      "selector_id": "SEL_STROKE_APPEARANCE",
+      "observation_id": "OBS_STROKE_APPEARANCE",
+      "canonical_feature_id": "INK_EDGE_SHARPNESS",
+      "relationship": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+      "mapping_role": "AUXILIARY_CONTEXT",
+      "operational_guardrail": "Pastose-looking is not a measurement of force; camera/ink/nib can contribute.",
+      "mapping_status": "DRAFT_SUPPORT_ONLY",
+      "runtime_activation": false
+    },
+    {
+      "mapping_id": "MAP_SEL_STROKE_DARKNESS_INK_DARKNESS_MEAN",
+      "source_question_id": "Q_STROKE_DARKNESS",
+      "selector_id": "SEL_STROKE_DARKNESS",
+      "observation_id": "OBS_STROKE_DARKNESS",
+      "canonical_feature_id": "INK_DARKNESS_MEAN",
+      "relationship": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+      "mapping_role": "CANDIDATE_INPUT",
+      "operational_guardrail": "",
+      "mapping_status": "DRAFT_SUPPORT_ONLY",
+      "runtime_activation": false
+    },
+    {
+      "mapping_id": "MAP_SEL_STROKE_DARKNESS_INK_DARKNESS_CV",
+      "source_question_id": "Q_STROKE_DARKNESS",
+      "selector_id": "SEL_STROKE_DARKNESS",
+      "observation_id": "OBS_STROKE_DARKNESS",
+      "canonical_feature_id": "INK_DARKNESS_CV",
+      "relationship": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+      "mapping_role": "CANDIDATE_INPUT",
+      "operational_guardrail": "",
+      "mapping_status": "DRAFT_SUPPORT_ONLY",
+      "runtime_activation": false
+    },
+    {
+      "mapping_id": "MAP_SEL_STROKE_WIDTH_STROKE_WIDTH_MEAN",
+      "source_question_id": "Q_STROKE_WIDTH",
+      "selector_id": "SEL_STROKE_WIDTH",
+      "observation_id": "OBS_STROKE_WIDTH",
+      "canonical_feature_id": "STROKE_WIDTH_MEAN",
+      "relationship": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+      "mapping_role": "CANDIDATE_INPUT",
+      "operational_guardrail": "",
+      "mapping_status": "DRAFT_SUPPORT_ONLY",
+      "runtime_activation": false
+    },
+    {
+      "mapping_id": "MAP_SEL_STROKE_WIDTH_STROKE_WIDTH_CV",
+      "source_question_id": "Q_STROKE_WIDTH",
+      "selector_id": "SEL_STROKE_WIDTH",
+      "observation_id": "OBS_STROKE_WIDTH",
+      "canonical_feature_id": "STROKE_WIDTH_CV",
+      "relationship": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+      "mapping_role": "CANDIDATE_INPUT",
+      "operational_guardrail": "",
       "mapping_status": "DRAFT_SUPPORT_ONLY",
       "runtime_activation": false
     }
