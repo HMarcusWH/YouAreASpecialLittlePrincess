@@ -36,6 +36,7 @@ Do not use 272 nullable columns as the universal data model. Do not make an unva
 | `benchmark_feature_summary` | Statistics for one feature/cohort/release | N writers, missingness, quantiles/CDF artifact, domain and uncertainty metadata. |
 | `reference_vector` | A private deterministic comparison vector | Feature-set/version/mask, source run, cohort/release, family normalization; not an LLM text embedding. |
 | `content_source`, `rule_pack`, `rule`, `rule_hit` | Reviewed editorial provenance and evaluated rules | Condition tree, canonical feature IDs, source location, evidence class, applicability, unknown/conflict outcomes. |
+| `selector_value_set`, `selector_definition`, `question_definition`, `question_pack`, `soft_field_definition`, `candidate_definition` | One versioned Premium interpretation control record | Stable IDs, allowed pick values, dynamic candidate source, evidence requirements, text bounds, fallbacks, report mappings and localization keys. |
 | `report`, `report_revision` | A user report and immutable content snapshot | Kind, owner/grants, analysis/reference/rule versions, locale, approved fact set, Premium overlay reference. |
 | `comparison`, `comparison_input` | A pair/history request and ordered sources | Both authorized inputs, comparison method/version, common feature mask, visibility agreement. |
 | `premium_job`, `provider_attempt` | A business job and each actual provider request | Idempotency key, prompt/model, evidence digest, token usage, request ID, budget reservation, validated output or failure. |
@@ -82,6 +83,8 @@ Cache numerical work by input hash + transform/configuration + engine/schema/met
 ## 6. Content and rule database
 
 The schema reserves 16 traditional interpretation targets, but that does not populate the actual associations or justify example weights. [P03]
+
+Create the Premium interpretation database described in [08](08-premium-question-selector-database.md) before compiling production prompts. Fixed semantic choices, question wording, dynamic candidate sources and soft-text bounds belong in versioned content data rather than hard-coded prompt strings.
 
 Create a small reviewed content pack before promising traditional readings. Each rule requires: paraphrased association, original school/source, exact page or section, reuse permission as needed, feature conditions, valid input context, quality prerequisites, explicit unsupported-personality evidence label, conflicting-source notes and localized authored text. Use three-valued evaluation: true, false, unknown. Missing data never counts as a negative trait.
 

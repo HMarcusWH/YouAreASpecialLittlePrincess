@@ -1,6 +1,6 @@
 # Product roadmap: from canonical measurements to a finished app
 
-**Version:** 1.0 proposed build baseline  
+**Version:** 1.1 proposed build baseline  
 **Research cut-off:** 2026-09-25  
 **Repository baseline:** `8f2ec7b07f23f7b3613ccc71576714f3c245e7a0`  
 **Scope of this change:** documentation and build plan, not implementation, dataset acquisition, or a claim of validated handwriting/personality accuracy.
@@ -18,6 +18,7 @@ Read in this order:
 5. [API, security, payments, operations, and release gates](docs/roadmap/05-release-operations.md).
 6. [Agent backlog and dependencies](docs/roadmap/06-agent-backlog.md), also available as [machine-readable tasks](docs/roadmap/tasks.json).
 7. [Evidence register and corrections to earlier research](docs/roadmap/07-evidence-register.md).
+8. [Premium selector, question and soft-value database](docs/roadmap/08-premium-question-selector-database.md).
 
 `R`, `P`, and `S` references throughout this package resolve in the evidence register. `R` means observed repository state, `P` means supplied project research, and `S` means externally verified source. An architectural choice or proposed test threshold is a **design decision**, not an empirical finding.
 
@@ -33,7 +34,7 @@ The existing database's `free_compute=true` means no paid generative call; it is
 
 ### Premium adds interpretation, not new truth
 
-Premium begins from the same approved deterministic analysis and reference statistics. OpenAI generates a bounded, evidence-linked explanation and optional, explicitly labelled traditional graphology reading. It cannot change measurements, assign unsupported percentile ranks, fabricate source material, or turn a traditional association into a validated personality assessment.
+Premium begins from the same approved deterministic analysis and reference statistics, then sends **the authorized handwriting image + deterministic facts + verified database outliers + constrained selector candidates + a frozen question battery** in one vision-capable OpenAI call. OpenAI chooses among predetermined values and fills bounded evidence-linked soft-text fields. It cannot change measurements, calculate its own rarity, assign unsupported percentile ranks, fabricate source material, or turn a traditional association into a validated personality assessment.
 
 A paid analysis is saved once and reopened without another model call. Expanding a panel, changing the visual theme, sharing a card, and exporting PDF must not trigger fresh inference. Paid follow-up chat and visual enrichment are post-v1 capabilities with separate budgets and consent.
 
@@ -87,13 +88,17 @@ image -> safe intake -> deterministic AnalysisRun -> immutable measurements
                                       |
                   eligible reference snapshot + approved rule pack
                                       |
+                  verified outliers + selector/question database
+                                      |
                               ReportDocument v1
                                       |
                    +------------------+------------------+
                    |                                     |
-            Free content                         Premium evidence pack
+            Free content                    PremiumRequestPacket
+                   |                  image + facts + outliers +
+                   |                  selectors + question battery
                    |                                     |
-                   |                         OpenAI -> validation -> save
+                   |                           OpenAI -> validate -> save
                    +------------------+------------------+
                                       |
                           entitlement-filtered views
@@ -110,7 +115,7 @@ Continuous corpus ingestion is a separate pipeline. An ordinary upload is not au
 | Foundation | Reproducible core and published contracts | T00–T03. Hosted CI diagnosis, runtime isolation, schema/version rules. |
 | Free alpha | Upload, quality feedback, interactive mechanical report, save/delete, basic exports | T04–T10, T17, T21. A small reliable subset is sufficient; unavailable metrics are explicit. |
 | Reference beta | Qualified comparison against a named corpus, individual and Me-v-Me comparison | T11–T14, T18. Real consented samples and calibration; no fabricated cold-start percentiles. |
-| Premium beta | Payment, explicit API disclosure, one evidence-bound generation, report reuse | T15–T16, T19–T22. Account access, budget, legal and evaluation gates. |
+| Premium beta | Payment, explicit API disclosure, one multimodal evidence-bound generation, report reuse | T15–T16, T19–T22, T26. Interpretation database, account access, budget, legal and evaluation gates. |
 | Public web v1 | Free, Premium, pair comparison, sharing, PDF parity, support and recovery | T23–T25. Security/privacy tests and real-device QA passed. |
 | Post-v1 | Native apps, learned visual assist, signature specialization, online capture, groups/Wrapped | Separate scope/rights/evaluation decisions; not blockers for web v1. |
 
@@ -120,7 +125,7 @@ Claude Design starts against report contracts and fixtures **in parallel**, not 
 
 Free offers safe image upload, user-correctable crop/orientation, explicit image suitability, verified mechanical metrics, visual evidence, descriptive axes where supported, deterministic captions and optional playful style labels, eligible cohort ranks, basic pair/Me-v-Me comparison, share cards, and PDF export. Saved history requires an explicit retention choice.
 
-Premium adds a deeper synthesis of the same evidence, cross-feature explanation, source-labelled traditional interpretations when an approved rule pack exists, and an optional paid pair narrative. It does not hide better deterministic measurements or real percentile calculations behind an API call. Premium UI shows pending, failure, refund/retry, and successful saved states distinctly.
+Premium adds a multimodal interpretation of the same evidence: constrained visual/style selectors, verified-outlier selection, cross-feature explanation, bounded soft values, source-labelled traditional interpretations when an approved rule pack exists, and an optional paid pair narrative. It does not hide better deterministic measurements or real percentile calculations behind an API call. Premium UI shows pending, failure, refund/retry, and successful saved states distinctly.
 
 A minimum successful launch does not require OCR, handwriting identification, 'handwriting twins', a public social graph, native applications, all ten radar axes, or all 272 definitions. It does require clear evidence and reliable failure behavior.
 

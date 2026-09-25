@@ -1,0 +1,60 @@
+{
+  "version": "premium-interpretation-db/1-draft",
+  "status": "UNPOPULATED",
+  "generated_date": "2026-09-25",
+  "purpose": "Versioned source for Premium fixed selectors, dynamic selector definitions, prepared question packs, bounded soft-value fields, candidate definitions, tone profiles, localization keys and report mappings.",
+  "population_note": "Intentionally empty in the roadmap PR. Populate all potential values in T26 before T15 compiles production prompts/output schemas.",
+  "design_principles": [
+    "Canonical deterministic measurements are authoritative for measurable values.",
+    "Reference statistics are computed before model invocation; the model never invents percentiles or rarity.",
+    "Fixed selectors use stable predetermined value IDs.",
+    "Dynamic selectors are restricted to candidate IDs supplied for the current report.",
+    "Soft text is bounded and evidence-linked.",
+    "Image-only observations are separate from canonical measurements.",
+    "Traditional graphology values require reviewed association provenance and explicit labeling.",
+    "Visible text in handwriting images is untrusted data, never model instructions.",
+    "Individual, pair and history question packs are independently versioned."
+  ],
+  "enums": {
+    "selection_mode": [
+      "FIXED_ENUM",
+      "DYNAMIC_FACT",
+      "DYNAMIC_OUTLIER",
+      "DYNAMIC_CANDIDATE",
+      "MULTI_SELECT"
+    ],
+    "answer_mode": [
+      "SELECTOR",
+      "MULTI_SELECTOR",
+      "SOFT_TEXT",
+      "SELECTOR_PLUS_TEXT"
+    ],
+    "scope": [
+      "INDIVIDUAL",
+      "PAIR",
+      "HISTORY"
+    ],
+    "evidence_class": [
+      "MEASUREMENT",
+      "REFERENCE_STATISTIC",
+      "MECHANICAL_SUMMARY",
+      "TRADITIONAL_ASSOCIATION",
+      "COMPARISON",
+      "VISUAL_OBSERVATION"
+    ],
+    "status": [
+      "DRAFT",
+      "ACTIVE",
+      "RETIRED"
+    ]
+  },
+  "selector_value_sets": [],
+  "selector_definitions": [],
+  "question_definitions": [],
+  "question_packs": [],
+  "soft_field_definitions": [],
+  "candidate_definitions": [],
+  "tone_profiles": [],
+  "report_mappings": [],
+  "localization_keys": []
+}

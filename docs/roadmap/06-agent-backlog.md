@@ -126,15 +126,21 @@ Acceptance: A/B symmetry, self-distance, directional labels, unit equivalence, z
 
 ## Premium, sharing and commerce
 
+### T26 — Populate the Premium selector/question database
+
+Owner: product/content + contract steward. Populate `schema/premium_interpretation_database_v1.json` from the contract in [08](08-premium-question-selector-database.md): every fixed selector, every allowed pick value, dynamic selector source, candidate definition, prepared question, soft-text field, fallback/unknown state, report mapping, tone profile and localization key for individual, pair and history modes.
+
+Acceptance: stable unique IDs; exhaustive allowed values; explicit UNKNOWN/MIXED/INSUFFICIENT_EVIDENCE behavior where applicable; no orphan selectors/questions/values; no duplicate/contradictory semantics; every dynamic selector maps to a deterministic candidate generator; every traditional selector maps only to reviewed associations; every soft field has hard character/evidence/numerical-introduction bounds; question packs freeze exact ordered versions; JSON validation and positive/negative fixtures. This task defines the complete choice space but does not claim the model selects it correctly—that is T16.
+
 ### T15 — Evidence-bound OpenAI adapter
 
-Owner: Premium/backend. Implement EvidencePacket assembly, strict output schema, versioned prompts, server-only OpenAI adapter, output checks and mocked refusal/error fixtures. Follow [03](03-premium-openai.md).
+Owner: Premium/backend. Implement PremiumRequestPacket assembly, image-input policy, dynamic selector-schema compilation, frozen question-pack execution, strict PremiumAnalysis output, versioned prompts, server-only OpenAI adapter, output checks and mocked refusal/error fixtures. Follow [03](03-premium-openai.md) and [08](08-premium-question-selector-database.md).
 
-Acceptance: no image/transcript by default; no arbitrary tools; unknown IDs/extra properties/prohibited outputs rejected; store/retention configuration explicit; provider credential never needed by Free; bounded token/call policy. Live calls require owner-approved account and spend.
+Acceptance: authorized image/analysis derivative + deterministic evidence + verified outliers + selector candidates + question pack are sent in one bounded request; visible writing text is explicitly treated as untrusted data; no arbitrary tools/OCR transcript by default; unknown IDs, impossible dynamic choices, extra properties and prohibited outputs rejected; image-only observations cannot mutate canonical measurements; store/retention/image-processing disclosure explicit; provider credential never needed by Free; bounded token/image/call policy. Live calls require owner-approved account and spend.
 
 ### T16 — Model evaluation and generation policy
 
-Owner: evaluation/content. Assemble varied fact packets/adversarial cases, compare approved candidate models on factuality and usefulness, and record real costs/latencies and Swedish/English review. Include no-reference and conflicting-rule cases.
+Owner: evaluation/content. Assemble varied multimodal packets/adversarial cases, compare approved candidate models on selector accuracy, factuality, visual usefulness and bounded soft-text quality, and record real image/token costs/latencies and Swedish/English review. Include no-reference, conflicting-rule, image/statistic disagreement and handwriting-image prompt-injection cases.
 
 Acceptance: rubric/tolerances fixed before model selection; critical invented-fact/privacy failures block enablement; repeated-case stability assessed; actual account capability tested; no invented snapshot IDs; failure/fallback policy documented. Neither API access nor successful empirical evaluation is assumed by the roadmap.
 
@@ -178,7 +184,7 @@ Acceptance: explicit sign-off and release notes with supported inputs, feature c
 
 ## Parallel work and merge rules
 
-T00 (CI diagnosis) and T03 (rights/collection planning) can begin immediately. After T01, T02, T05, T10 and schema/fixture-based Premium preparation can proceed without waiting for all 272 features. Real recruitment/annotation can run alongside rendering/client work once safe intake and participant approvals exist.
+T00 (CI diagnosis), T03 (rights/collection planning), and **T26 (complete selector/question/pick-value population)** can begin immediately. After T01, T02, T05, T10 and schema/fixture-based Premium integration can proceed without waiting for all 272 features. Real recruitment/annotation can run alongside rendering/client work once safe intake and participant approvals exist.
 
 Coordinate edits to `models.py`, canonical schema, contract generation and shared report components through one steward. Do not create competing ad-hoc metric registries. Pin dependent PRs to an agreed contract version and integrate small slices frequently.
 
