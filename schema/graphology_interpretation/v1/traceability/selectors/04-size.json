@@ -1,0 +1,47 @@
+[
+  {
+    "research_kind": "QUESTION",
+    "research_id": "Q_SIZE_PHYSICAL",
+    "production_kind": "SELECTOR",
+    "production_id": "SEL_SIZE_PHYSICAL",
+    "observation_id": "OBS_SIZE_PHYSICAL",
+    "disposition": "PROMOTED_AS_SELECTOR_FOUNDATION",
+    "runtime_effect": "NONE"
+  },
+  {
+    "research_kind": "QUESTION",
+    "research_id": "Q_SIZE_ZONES",
+    "production_kind": "SELECTOR",
+    "production_id": "SEL_SIZE_ZONES",
+    "observation_id": "OBS_SIZE_ZONES",
+    "disposition": "PROMOTED_AS_SELECTOR_FOUNDATION",
+    "runtime_effect": "NONE"
+  },
+  {
+    "research_kind": "QUESTION",
+    "research_id": "Q_SIZE_CAPITAL",
+    "production_kind": "SELECTOR",
+    "production_id": "SEL_SIZE_CAPITAL",
+    "observation_id": "OBS_SIZE_CAPITAL",
+    "disposition": "PROMOTED_AS_SELECTOR_FOUNDATION",
+    "runtime_effect": "NONE"
+  },
+  {
+    "research_kind": "QUESTION",
+    "research_id": "Q_SIZE_WIDTH",
+    "production_kind": "SELECTOR",
+    "production_id": "SEL_SIZE_WIDTH",
+    "observation_id": "OBS_SIZE_WIDTH",
+    "disposition": "PROMOTED_AS_SELECTOR_FOUNDATION",
+    "runtime_effect": "NONE"
+  },
+  {
+    "research_kind": "QUESTION",
+    "research_id": "Q_SIZE_TREND",
+    "production_kind": "SELECTOR",
+    "production_id": "SEL_SIZE_TREND",
+    "observation_id": "OBS_SIZE_TREND",
+    "disposition": "PROMOTED_AS_SELECTOR_FOUNDATION",
+    "runtime_effect": "NONE"
+  }
+]

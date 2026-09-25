@@ -1,0 +1,134 @@
+[
+  {
+    "observation_id": "OBS_CONNECT_DEGREE",
+    "source_question_id": "Q_CONNECT_DEGREE",
+    "selector_id": "SEL_CONNECT_DEGREE",
+    "domain_id": "CONNECTION",
+    "scope": "INDIVIDUAL",
+    "descriptor_kind": "DETERMINISTIC_DESCRIPTOR",
+    "assessment_owner": "DETERMINISTIC",
+    "model_call_role": "READ_ONLY_CONTEXT_OR_PRECOMPUTED",
+    "cardinality": "SINGLE",
+    "value_set_id": "CONNECTION_DEGREE",
+    "required_inputs": [
+      "VALID_JOINING_METHOD"
+    ],
+    "answer_state_policy": "ANSWER_STATE_V1",
+    "permitted_evidence_class": "PRECOMPUTED_DESCRIPTION",
+    "source_refs": [
+      {
+        "source_id": "IHAS",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "BIG26",
+        "relationship": "domain_or_term_basis"
+      }
+    ],
+    "related_canonical_feature_ids": [
+      "CONNECTEDNESS_RATIO"
+    ],
+    "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "source_status": "DRAFT_NOT_ACTIVATED",
+    "runtime_status": "DRAFT_NOT_ACTIVE"
+  },
+  {
+    "observation_id": "OBS_CONNECT_FORM",
+    "source_question_id": "Q_CONNECT_FORM",
+    "selector_id": "SEL_CONNECT_FORM",
+    "domain_id": "CONNECTION",
+    "scope": "INDIVIDUAL",
+    "descriptor_kind": "VISUAL_DESCRIPTOR",
+    "assessment_owner": "PREMIUM_VISUAL",
+    "model_call_role": "ANSWER",
+    "cardinality": "MULTIPLE",
+    "value_set_id": "CONNECTOR_FORM",
+    "required_inputs": [
+      "IDENTIFIED_CONNECTOR_EXAMPLES",
+      "AUTHORIZED_IMAGE",
+      "IDENTIFIED_EVIDENCE_REGION"
+    ],
+    "answer_state_policy": "ANSWER_STATE_V1",
+    "permitted_evidence_class": "AI_VISUAL_DESCRIPTION_NOT_CANONICAL_MEASUREMENT",
+    "source_refs": [
+      {
+        "source_id": "IHAS",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "BIG26",
+        "relationship": "domain_or_term_basis"
+      }
+    ],
+    "related_canonical_feature_ids": [],
+    "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "source_status": "DRAFT_NOT_ACTIVATED",
+    "runtime_status": "DRAFT_NOT_ACTIVE"
+  },
+  {
+    "observation_id": "OBS_CONNECT_DISTRIBUTION",
+    "source_question_id": "Q_CONNECT_DISTRIBUTION",
+    "selector_id": "SEL_CONNECT_DISTRIBUTION",
+    "domain_id": "CONNECTION",
+    "scope": "INDIVIDUAL",
+    "descriptor_kind": "VISUAL_DESCRIPTOR",
+    "assessment_owner": "PREMIUM_VISUAL",
+    "model_call_role": "ANSWER",
+    "cardinality": "SINGLE",
+    "value_set_id": "VARIATION_CHARACTER",
+    "required_inputs": [
+      "IDENTIFIED_CONNECTOR_EXAMPLES",
+      "AUTHORIZED_IMAGE",
+      "IDENTIFIED_EVIDENCE_REGION"
+    ],
+    "answer_state_policy": "ANSWER_STATE_V1",
+    "permitted_evidence_class": "AI_VISUAL_DESCRIPTION_NOT_CANONICAL_MEASUREMENT",
+    "source_refs": [
+      {
+        "source_id": "IHAS",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "BIG26",
+        "relationship": "domain_or_term_basis"
+      }
+    ],
+    "related_canonical_feature_ids": [],
+    "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "source_status": "DRAFT_NOT_ACTIVATED",
+    "runtime_status": "DRAFT_NOT_ACTIVE"
+  },
+  {
+    "observation_id": "OBS_CONNECT_CAPITAL",
+    "source_question_id": "Q_CONNECT_CAPITAL",
+    "selector_id": "SEL_CONNECT_CAPITAL",
+    "domain_id": "CONNECTION",
+    "scope": "INDIVIDUAL",
+    "descriptor_kind": "VISUAL_DESCRIPTOR",
+    "assessment_owner": "PREMIUM_VISUAL",
+    "model_call_role": "ANSWER",
+    "cardinality": "SINGLE",
+    "value_set_id": "CAPITAL_CONNECTION",
+    "required_inputs": [
+      "IDENTIFIED_CAPITAL_EXAMPLES",
+      "AUTHORIZED_IMAGE",
+      "IDENTIFIED_EVIDENCE_REGION"
+    ],
+    "answer_state_policy": "ANSWER_STATE_V1",
+    "permitted_evidence_class": "AI_VISUAL_DESCRIPTION_NOT_CANONICAL_MEASUREMENT",
+    "source_refs": [
+      {
+        "source_id": "IHAS",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "BIG26",
+        "relationship": "domain_or_term_basis"
+      }
+    ],
+    "related_canonical_feature_ids": [],
+    "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "source_status": "DRAFT_NOT_ACTIVATED",
+    "runtime_status": "DRAFT_NOT_ACTIVE"
+  }
+]

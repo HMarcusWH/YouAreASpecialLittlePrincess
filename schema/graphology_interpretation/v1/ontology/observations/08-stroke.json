@@ -1,0 +1,69 @@
+[
+  {
+    "observation_id": "OBS_STROKE_APPEARANCE",
+    "source_question_id": "Q_STROKE_APPEARANCE",
+    "selector_id": "SEL_STROKE_APPEARANCE",
+    "domain_id": "STROKE",
+    "scope": "INDIVIDUAL",
+    "descriptor_kind": "VISUAL_DESCRIPTOR",
+    "assessment_owner": "PREMIUM_VISUAL",
+    "model_call_role": "ANSWER",
+    "cardinality": "SINGLE",
+    "value_set_id": "STROKE_QUALITY",
+    "required_inputs": [
+      "AUTHORIZED_IMAGE",
+      "IDENTIFIED_EVIDENCE_REGION"
+    ],
+    "answer_state_policy": "ANSWER_STATE_V1",
+    "permitted_evidence_class": "AI_VISUAL_DESCRIPTION_NOT_CANONICAL_MEASUREMENT",
+    "source_refs": [
+      {
+        "source_id": "IHAS",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "CONTIN",
+        "relationship": "domain_or_term_basis"
+      }
+    ],
+    "related_canonical_feature_ids": [
+      "INK_EDGE_SHARPNESS"
+    ],
+    "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "source_status": "DRAFT_NOT_ACTIVATED",
+    "runtime_status": "DRAFT_NOT_ACTIVE"
+  },
+  {
+    "observation_id": "OBS_STROKE_SHADING",
+    "source_question_id": "Q_STROKE_SHADING",
+    "selector_id": "SEL_STROKE_SHADING",
+    "domain_id": "STROKE",
+    "scope": "INDIVIDUAL",
+    "descriptor_kind": "VISUAL_DESCRIPTOR",
+    "assessment_owner": "PREMIUM_VISUAL",
+    "model_call_role": "ANSWER",
+    "cardinality": "SINGLE",
+    "value_set_id": "SHADING",
+    "required_inputs": [
+      "IDENTIFIED_DIRECTIONAL_STROKES",
+      "AUTHORIZED_IMAGE",
+      "IDENTIFIED_EVIDENCE_REGION"
+    ],
+    "answer_state_policy": "ANSWER_STATE_V1",
+    "permitted_evidence_class": "AI_VISUAL_DESCRIPTION_NOT_CANONICAL_MEASUREMENT",
+    "source_refs": [
+      {
+        "source_id": "IHAS",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "CONTIN",
+        "relationship": "domain_or_term_basis"
+      }
+    ],
+    "related_canonical_feature_ids": [],
+    "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "source_status": "DRAFT_NOT_ACTIVATED",
+    "runtime_status": "DRAFT_NOT_ACTIVE"
+  }
+]

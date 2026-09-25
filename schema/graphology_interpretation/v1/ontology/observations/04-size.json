@@ -1,0 +1,192 @@
+[
+  {
+    "observation_id": "OBS_SIZE_PHYSICAL",
+    "source_question_id": "Q_SIZE_PHYSICAL",
+    "selector_id": "SEL_SIZE_PHYSICAL",
+    "domain_id": "SIZE",
+    "scope": "INDIVIDUAL",
+    "descriptor_kind": "DETERMINISTIC_DESCRIPTOR",
+    "assessment_owner": "DETERMINISTIC",
+    "model_call_role": "READ_ONLY_CONTEXT_OR_PRECOMPUTED",
+    "cardinality": "SINGLE",
+    "value_set_id": "BAND3",
+    "required_inputs": [
+      "VERIFIED_SCALE",
+      "VALID_MIDDLE_ZONE"
+    ],
+    "answer_state_policy": "ANSWER_STATE_V1",
+    "permitted_evidence_class": "PRECOMPUTED_DESCRIPTION",
+    "source_refs": [
+      {
+        "source_id": "IHAS",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "BIG26",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "CONTIN",
+        "relationship": "domain_or_term_basis"
+      }
+    ],
+    "related_canonical_feature_ids": [
+      "X_HEIGHT_PX"
+    ],
+    "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "source_status": "DRAFT_NOT_ACTIVATED",
+    "runtime_status": "DRAFT_NOT_ACTIVE"
+  },
+  {
+    "observation_id": "OBS_SIZE_ZONES",
+    "source_question_id": "Q_SIZE_ZONES",
+    "selector_id": "SEL_SIZE_ZONES",
+    "domain_id": "SIZE",
+    "scope": "INDIVIDUAL",
+    "descriptor_kind": "VISUAL_DESCRIPTOR",
+    "assessment_owner": "PREMIUM_VISUAL",
+    "model_call_role": "ANSWER",
+    "cardinality": "SINGLE",
+    "value_set_id": "ZONE_RELATION",
+    "required_inputs": [
+      "IDENTIFIED_ZONE_EXAMPLES",
+      "AUTHORIZED_IMAGE",
+      "IDENTIFIED_EVIDENCE_REGION"
+    ],
+    "answer_state_policy": "ANSWER_STATE_V1",
+    "permitted_evidence_class": "AI_VISUAL_DESCRIPTION_NOT_CANONICAL_MEASUREMENT",
+    "source_refs": [
+      {
+        "source_id": "IHAS",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "BIG26",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "CONTIN",
+        "relationship": "domain_or_term_basis"
+      }
+    ],
+    "related_canonical_feature_ids": [
+      "UPPER_ZONE_RATIO",
+      "LOWER_ZONE_RATIO"
+    ],
+    "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "source_status": "DRAFT_NOT_ACTIVATED",
+    "runtime_status": "DRAFT_NOT_ACTIVE"
+  },
+  {
+    "observation_id": "OBS_SIZE_CAPITAL",
+    "source_question_id": "Q_SIZE_CAPITAL",
+    "selector_id": "SEL_SIZE_CAPITAL",
+    "domain_id": "SIZE",
+    "scope": "INDIVIDUAL",
+    "descriptor_kind": "DETERMINISTIC_DESCRIPTOR",
+    "assessment_owner": "DETERMINISTIC",
+    "model_call_role": "READ_ONLY_CONTEXT_OR_PRECOMPUTED",
+    "cardinality": "SINGLE",
+    "value_set_id": "RELATIVE_SIZE",
+    "required_inputs": [
+      "IDENTIFIED_CAPITALS",
+      "VALID_MIDDLE_ZONE"
+    ],
+    "answer_state_policy": "ANSWER_STATE_V1",
+    "permitted_evidence_class": "PRECOMPUTED_DESCRIPTION",
+    "source_refs": [
+      {
+        "source_id": "IHAS",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "BIG26",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "CONTIN",
+        "relationship": "domain_or_term_basis"
+      }
+    ],
+    "related_canonical_feature_ids": [
+      "CAPITAL_HEIGHT_RATIO"
+    ],
+    "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "source_status": "DRAFT_NOT_ACTIVATED",
+    "runtime_status": "DRAFT_NOT_ACTIVE"
+  },
+  {
+    "observation_id": "OBS_SIZE_WIDTH",
+    "source_question_id": "Q_SIZE_WIDTH",
+    "selector_id": "SEL_SIZE_WIDTH",
+    "domain_id": "SIZE",
+    "scope": "INDIVIDUAL",
+    "descriptor_kind": "DETERMINISTIC_DESCRIPTOR",
+    "assessment_owner": "DETERMINISTIC",
+    "model_call_role": "READ_ONLY_CONTEXT_OR_PRECOMPUTED",
+    "cardinality": "SINGLE",
+    "value_set_id": "LETTER_WIDTH",
+    "required_inputs": [
+      "IDENTIFIED_LETTER_BODIES"
+    ],
+    "answer_state_policy": "ANSWER_STATE_V1",
+    "permitted_evidence_class": "PRECOMPUTED_DESCRIPTION",
+    "source_refs": [
+      {
+        "source_id": "IHAS",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "BIG26",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "CONTIN",
+        "relationship": "domain_or_term_basis"
+      }
+    ],
+    "related_canonical_feature_ids": [
+      "GLYPH_ASPECT_RATIO_MEAN"
+    ],
+    "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "source_status": "DRAFT_NOT_ACTIVATED",
+    "runtime_status": "DRAFT_NOT_ACTIVE"
+  },
+  {
+    "observation_id": "OBS_SIZE_TREND",
+    "source_question_id": "Q_SIZE_TREND",
+    "selector_id": "SEL_SIZE_TREND",
+    "domain_id": "SIZE",
+    "scope": "INDIVIDUAL",
+    "descriptor_kind": "VISUAL_DESCRIPTOR",
+    "assessment_owner": "PREMIUM_VISUAL",
+    "model_call_role": "ANSWER",
+    "cardinality": "SINGLE",
+    "value_set_id": "TREND",
+    "required_inputs": [
+      "ORDERED_WORD_OR_LINE_REGIONS",
+      "AUTHORIZED_IMAGE",
+      "IDENTIFIED_EVIDENCE_REGION"
+    ],
+    "answer_state_policy": "ANSWER_STATE_V1",
+    "permitted_evidence_class": "AI_VISUAL_DESCRIPTION_NOT_CANONICAL_MEASUREMENT",
+    "source_refs": [
+      {
+        "source_id": "IHAS",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "BIG26",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "CONTIN",
+        "relationship": "domain_or_term_basis"
+      }
+    ],
+    "related_canonical_feature_ids": [],
+    "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "source_status": "DRAFT_NOT_ACTIVATED",
+    "runtime_status": "DRAFT_NOT_ACTIVE"
+  }
+]

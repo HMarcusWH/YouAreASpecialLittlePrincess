@@ -1,0 +1,176 @@
+[
+  {
+    "observation_id": "OBS_CTX_TASK",
+    "source_question_id": "Q_CTX_TASK",
+    "selector_id": "SEL_CTX_TASK",
+    "domain_id": "CONTEXT",
+    "scope": "INDIVIDUAL",
+    "descriptor_kind": "DECLARED_CONTEXT",
+    "assessment_owner": "USER_OR_REVIEWER",
+    "model_call_role": "READ_ONLY_CONTEXT_OR_PRECOMPUTED",
+    "cardinality": "SINGLE",
+    "value_set_id": "TASK",
+    "required_inputs": [],
+    "answer_state_policy": "ANSWER_STATE_V1",
+    "permitted_evidence_class": "DECLARED_METADATA",
+    "source_refs": [
+      {
+        "source_id": "BIG26",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "AHAF",
+        "relationship": "domain_or_term_basis"
+      }
+    ],
+    "related_canonical_feature_ids": [],
+    "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "source_status": "DRAFT_NOT_ACTIVATED",
+    "runtime_status": "DRAFT_NOT_ACTIVE"
+  },
+  {
+    "observation_id": "OBS_CTX_SURFACE",
+    "source_question_id": "Q_CTX_SURFACE",
+    "selector_id": "SEL_CTX_SURFACE",
+    "domain_id": "CONTEXT",
+    "scope": "INDIVIDUAL",
+    "descriptor_kind": "DECLARED_CONTEXT",
+    "assessment_owner": "USER_OR_REVIEWER",
+    "model_call_role": "READ_ONLY_CONTEXT_OR_PRECOMPUTED",
+    "cardinality": "SINGLE",
+    "value_set_id": "SURFACE",
+    "required_inputs": [],
+    "answer_state_policy": "ANSWER_STATE_V1",
+    "permitted_evidence_class": "DECLARED_METADATA",
+    "source_refs": [
+      {
+        "source_id": "BIG26",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "AHAF",
+        "relationship": "domain_or_term_basis"
+      }
+    ],
+    "related_canonical_feature_ids": [],
+    "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "source_status": "DRAFT_NOT_ACTIVATED",
+    "runtime_status": "DRAFT_NOT_ACTIVE"
+  },
+  {
+    "observation_id": "OBS_CTX_STYLE",
+    "source_question_id": "Q_CTX_STYLE",
+    "selector_id": "SEL_CTX_STYLE",
+    "domain_id": "CONTEXT",
+    "scope": "INDIVIDUAL",
+    "descriptor_kind": "DECLARED_CONTEXT",
+    "assessment_owner": "USER_OR_REVIEWER",
+    "model_call_role": "READ_ONLY_CONTEXT_OR_PRECOMPUTED",
+    "cardinality": "SINGLE",
+    "value_set_id": "WRITING_STYLE",
+    "required_inputs": [],
+    "answer_state_policy": "ANSWER_STATE_V1",
+    "permitted_evidence_class": "DECLARED_METADATA",
+    "source_refs": [
+      {
+        "source_id": "BIG26",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "AHAF",
+        "relationship": "domain_or_term_basis"
+      }
+    ],
+    "related_canonical_feature_ids": [],
+    "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "source_status": "DRAFT_NOT_ACTIVATED",
+    "runtime_status": "DRAFT_NOT_ACTIVE"
+  },
+  {
+    "observation_id": "OBS_CTX_FRAME",
+    "source_question_id": "Q_CTX_FRAME",
+    "selector_id": "SEL_CTX_FRAME",
+    "domain_id": "CONTEXT",
+    "scope": "INDIVIDUAL",
+    "descriptor_kind": "DETERMINISTIC_DESCRIPTOR",
+    "assessment_owner": "DETERMINISTIC",
+    "model_call_role": "READ_ONLY_CONTEXT_OR_PRECOMPUTED",
+    "cardinality": "SINGLE",
+    "value_set_id": "CAPTURE_FRAME",
+    "required_inputs": [],
+    "answer_state_policy": "ANSWER_STATE_V1",
+    "permitted_evidence_class": "PRECOMPUTED_DESCRIPTION",
+    "source_refs": [
+      {
+        "source_id": "BIG26",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "AHAF",
+        "relationship": "domain_or_term_basis"
+      }
+    ],
+    "related_canonical_feature_ids": [],
+    "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "source_status": "DRAFT_NOT_ACTIVATED",
+    "runtime_status": "DRAFT_NOT_ACTIVE"
+  },
+  {
+    "observation_id": "OBS_CTX_SCALE",
+    "source_question_id": "Q_CTX_SCALE",
+    "selector_id": "SEL_CTX_SCALE",
+    "domain_id": "CONTEXT",
+    "scope": "INDIVIDUAL",
+    "descriptor_kind": "DETERMINISTIC_DESCRIPTOR",
+    "assessment_owner": "DETERMINISTIC",
+    "model_call_role": "READ_ONLY_CONTEXT_OR_PRECOMPUTED",
+    "cardinality": "SINGLE",
+    "value_set_id": "SCALE",
+    "required_inputs": [],
+    "answer_state_policy": "ANSWER_STATE_V1",
+    "permitted_evidence_class": "PRECOMPUTED_DESCRIPTION",
+    "source_refs": [
+      {
+        "source_id": "BIG26",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "AHAF",
+        "relationship": "domain_or_term_basis"
+      }
+    ],
+    "related_canonical_feature_ids": [],
+    "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "source_status": "DRAFT_NOT_ACTIVATED",
+    "runtime_status": "DRAFT_NOT_ACTIVE"
+  },
+  {
+    "observation_id": "OBS_CTX_DIRECTION",
+    "source_question_id": "Q_CTX_DIRECTION",
+    "selector_id": "SEL_CTX_DIRECTION",
+    "domain_id": "CONTEXT",
+    "scope": "INDIVIDUAL",
+    "descriptor_kind": "DECLARED_CONTEXT",
+    "assessment_owner": "USER_OR_REVIEWER",
+    "model_call_role": "READ_ONLY_CONTEXT_OR_PRECOMPUTED",
+    "cardinality": "SINGLE",
+    "value_set_id": "DIRECTION_CONTEXT",
+    "required_inputs": [],
+    "answer_state_policy": "ANSWER_STATE_V1",
+    "permitted_evidence_class": "DECLARED_METADATA",
+    "source_refs": [
+      {
+        "source_id": "BIG26",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "AHAF",
+        "relationship": "domain_or_term_basis"
+      }
+    ],
+    "related_canonical_feature_ids": [],
+    "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "source_status": "DRAFT_NOT_ACTIVATED",
+    "runtime_status": "DRAFT_NOT_ACTIVE"
+  }
+]

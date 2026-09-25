@@ -1,0 +1,38 @@
+[
+  {
+    "research_kind": "QUESTION",
+    "research_id": "Q_CONNECT_DEGREE",
+    "production_kind": "SELECTOR",
+    "production_id": "SEL_CONNECT_DEGREE",
+    "observation_id": "OBS_CONNECT_DEGREE",
+    "disposition": "PROMOTED_AS_SELECTOR_FOUNDATION",
+    "runtime_effect": "NONE"
+  },
+  {
+    "research_kind": "QUESTION",
+    "research_id": "Q_CONNECT_FORM",
+    "production_kind": "SELECTOR",
+    "production_id": "SEL_CONNECT_FORM",
+    "observation_id": "OBS_CONNECT_FORM",
+    "disposition": "PROMOTED_AS_SELECTOR_FOUNDATION",
+    "runtime_effect": "NONE"
+  },
+  {
+    "research_kind": "QUESTION",
+    "research_id": "Q_CONNECT_DISTRIBUTION",
+    "production_kind": "SELECTOR",
+    "production_id": "SEL_CONNECT_DISTRIBUTION",
+    "observation_id": "OBS_CONNECT_DISTRIBUTION",
+    "disposition": "PROMOTED_AS_SELECTOR_FOUNDATION",
+    "runtime_effect": "NONE"
+  },
+  {
+    "research_kind": "QUESTION",
+    "research_id": "Q_CONNECT_CAPITAL",
+    "production_kind": "SELECTOR",
+    "production_id": "SEL_CONNECT_CAPITAL",
+    "observation_id": "OBS_CONNECT_CAPITAL",
+    "disposition": "PROMOTED_AS_SELECTOR_FOUNDATION",
+    "runtime_effect": "NONE"
+  }
+]

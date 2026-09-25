@@ -1,0 +1,38 @@
+[
+  {
+    "research_kind": "QUESTION",
+    "research_id": "Q_GLOBAL_FORM_MOVEMENT",
+    "production_kind": "SELECTOR",
+    "production_id": "SEL_GLOBAL_FORM_MOVEMENT",
+    "observation_id": "OBS_GLOBAL_FORM_MOVEMENT",
+    "disposition": "PROMOTED_AS_SELECTOR_FOUNDATION",
+    "runtime_effect": "NONE"
+  },
+  {
+    "research_kind": "QUESTION",
+    "research_id": "Q_GLOBAL_COHERENCE",
+    "production_kind": "SELECTOR",
+    "production_id": "SEL_GLOBAL_COHERENCE",
+    "observation_id": "OBS_GLOBAL_COHERENCE",
+    "disposition": "PROMOTED_AS_SELECTOR_FOUNDATION",
+    "runtime_effect": "NONE"
+  },
+  {
+    "research_kind": "QUESTION",
+    "research_id": "Q_GLOBAL_VARIATION",
+    "production_kind": "SELECTOR",
+    "production_id": "SEL_GLOBAL_VARIATION",
+    "observation_id": "OBS_GLOBAL_VARIATION",
+    "disposition": "PROMOTED_AS_SELECTOR_FOUNDATION",
+    "runtime_effect": "NONE"
+  },
+  {
+    "research_kind": "QUESTION",
+    "research_id": "Q_GLOBAL_EVIDENCE_CONFLICT",
+    "production_kind": "SELECTOR",
+    "production_id": "SEL_GLOBAL_EVIDENCE_CONFLICT",
+    "observation_id": null,
+    "disposition": "PROMOTED_AS_SELECTOR_FOUNDATION",
+    "runtime_effect": "NONE"
+  }
+]

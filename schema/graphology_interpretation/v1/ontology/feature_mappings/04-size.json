@@ -1,0 +1,57 @@
+[
+  {
+    "mapping_id": "MAP_SEL_SIZE_PHYSICAL_X_HEIGHT_PX",
+    "source_question_id": "Q_SIZE_PHYSICAL",
+    "selector_id": "SEL_SIZE_PHYSICAL",
+    "observation_id": "OBS_SIZE_PHYSICAL",
+    "canonical_feature_id": "X_HEIGHT_PX",
+    "relationship": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "note": "No px threshold becomes a physical-size rule; a derived physical quantity requires an explicit versioned measurement contract, never relabelling X_HEIGHT_PX as millimetres.",
+    "mapping_status": "DRAFT_SUPPORT_ONLY",
+    "runtime_activation": false
+  },
+  {
+    "mapping_id": "MAP_SEL_SIZE_ZONES_UPPER_ZONE_RATIO",
+    "source_question_id": "Q_SIZE_ZONES",
+    "selector_id": "SEL_SIZE_ZONES",
+    "observation_id": "OBS_SIZE_ZONES",
+    "canonical_feature_id": "UPPER_ZONE_RATIO",
+    "relationship": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "note": "",
+    "mapping_status": "DRAFT_SUPPORT_ONLY",
+    "runtime_activation": false
+  },
+  {
+    "mapping_id": "MAP_SEL_SIZE_ZONES_LOWER_ZONE_RATIO",
+    "source_question_id": "Q_SIZE_ZONES",
+    "selector_id": "SEL_SIZE_ZONES",
+    "observation_id": "OBS_SIZE_ZONES",
+    "canonical_feature_id": "LOWER_ZONE_RATIO",
+    "relationship": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "note": "",
+    "mapping_status": "DRAFT_SUPPORT_ONLY",
+    "runtime_activation": false
+  },
+  {
+    "mapping_id": "MAP_SEL_SIZE_CAPITAL_CAPITAL_HEIGHT_RATIO",
+    "source_question_id": "Q_SIZE_CAPITAL",
+    "selector_id": "SEL_SIZE_CAPITAL",
+    "observation_id": "OBS_SIZE_CAPITAL",
+    "canonical_feature_id": "CAPITAL_HEIGHT_RATIO",
+    "relationship": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "note": "",
+    "mapping_status": "DRAFT_SUPPORT_ONLY",
+    "runtime_activation": false
+  },
+  {
+    "mapping_id": "MAP_SEL_SIZE_WIDTH_GLYPH_ASPECT_RATIO_MEAN",
+    "source_question_id": "Q_SIZE_WIDTH",
+    "selector_id": "SEL_SIZE_WIDTH",
+    "observation_id": "OBS_SIZE_WIDTH",
+    "canonical_feature_id": "GLYPH_ASPECT_RATIO_MEAN",
+    "relationship": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "note": "Generic component aspect ratio is not an exact Moretti Largo di lettere score.",
+    "mapping_status": "DRAFT_SUPPORT_ONLY",
+    "runtime_activation": false
+  }
+]

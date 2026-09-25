@@ -1,0 +1,56 @@
+[
+  {
+    "research_kind": "QUESTION",
+    "research_id": "Q_CTX_TASK",
+    "production_kind": "SELECTOR",
+    "production_id": "SEL_CTX_TASK",
+    "observation_id": "OBS_CTX_TASK",
+    "disposition": "PROMOTED_AS_SELECTOR_FOUNDATION",
+    "runtime_effect": "NONE"
+  },
+  {
+    "research_kind": "QUESTION",
+    "research_id": "Q_CTX_SURFACE",
+    "production_kind": "SELECTOR",
+    "production_id": "SEL_CTX_SURFACE",
+    "observation_id": "OBS_CTX_SURFACE",
+    "disposition": "PROMOTED_AS_SELECTOR_FOUNDATION",
+    "runtime_effect": "NONE"
+  },
+  {
+    "research_kind": "QUESTION",
+    "research_id": "Q_CTX_STYLE",
+    "production_kind": "SELECTOR",
+    "production_id": "SEL_CTX_STYLE",
+    "observation_id": "OBS_CTX_STYLE",
+    "disposition": "PROMOTED_AS_SELECTOR_FOUNDATION",
+    "runtime_effect": "NONE"
+  },
+  {
+    "research_kind": "QUESTION",
+    "research_id": "Q_CTX_FRAME",
+    "production_kind": "SELECTOR",
+    "production_id": "SEL_CTX_FRAME",
+    "observation_id": "OBS_CTX_FRAME",
+    "disposition": "PROMOTED_AS_SELECTOR_FOUNDATION",
+    "runtime_effect": "NONE"
+  },
+  {
+    "research_kind": "QUESTION",
+    "research_id": "Q_CTX_SCALE",
+    "production_kind": "SELECTOR",
+    "production_id": "SEL_CTX_SCALE",
+    "observation_id": "OBS_CTX_SCALE",
+    "disposition": "PROMOTED_AS_SELECTOR_FOUNDATION",
+    "runtime_effect": "NONE"
+  },
+  {
+    "research_kind": "QUESTION",
+    "research_id": "Q_CTX_DIRECTION",
+    "production_kind": "SELECTOR",
+    "production_id": "SEL_CTX_DIRECTION",
+    "observation_id": "OBS_CTX_DIRECTION",
+    "disposition": "PROMOTED_AS_SELECTOR_FOUNDATION",
+    "runtime_effect": "NONE"
+  }
+]
