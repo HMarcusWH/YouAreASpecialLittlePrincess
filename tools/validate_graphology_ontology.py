@@ -32,6 +32,8 @@ def validate(repo: Path) -> list[str]:
     trace = load(root / "traceability/research_to_production.json")
     gaps = load(root / "traceability/source_gaps.json")
     scaffold = load(repo / "schema/premium_interpretation_database_v1.json")
+    research_sources = load(repo / "research/graphology/foundations-v0.1/sources.json")
+    research_meta = load(repo / "research/graphology/foundations-v0.1/blueprint/metadata.json")
 
     errors = []
     def unique(values, label):
@@ -61,6 +63,38 @@ def validate(repo: Path) -> list[str]:
     if any(x["source_id"] not in source_ids for x in claims):
         errors.append("source claim reference does not resolve")
 
+    # Production ontology must be a faithful promotion of the frozen research fields in PR1.
+    stripped_sources = [
+        {k: v for k, v in x.items() if k not in {"production_status", "runtime_role"}}
+        for x in sources
+    ]
+    if stripped_sources != research_sources:
+        errors.append("production source registry drifted from frozen research")
+    stripped_schools = [
+        {k: v for k, v in x.items() if k not in {"school_kind", "runtime_status"}}
+        for x in schools
+    ]
+    if stripped_schools != research_meta["schools"]:
+        errors.append("production school registry drifted from frozen research")
+    stripped_domains = [
+        {k: v for k, v in x.items() if k != "runtime_status"}
+        for x in domains
+    ]
+    if stripped_domains != research_meta["domains"]:
+        errors.append("production domain registry drifted from frozen research")
+    stripped_concepts = [
+        {k: v for k, v in x.items() if k != "runtime_status"}
+        for x in concepts
+    ]
+    if stripped_concepts != research_meta["school_concepts"]:
+        errors.append("production concept registry drifted from frozen research")
+    stripped_claims = [
+        {k: v for k, v in x.items() if k != "production_status"}
+        for x in claims
+    ]
+    if stripped_claims != research_meta["source_assertions"]:
+        errors.append("production source claims drifted from frozen research")
+
     rels = relations_doc["relationships"]
     if any(x["relationship_type"] not in relations_doc["allowed_relationship_types"] for x in rels):
         errors.append("unknown concept relationship type")
@@ -70,16 +104,18 @@ def validate(repo: Path) -> list[str]:
         errors.append("concept relationship source does not resolve")
 
     expected = {
-        ("SOURCE", x["source_id"]) for x in sources
+        ("SOURCE", x["source_id"]) for x in research_sources
     } | {
-        ("SCHOOL", x["school_id"]) for x in schools
+        ("SCHOOL", x["school_id"]) for x in research_meta["schools"]
     } | {
-        ("DOMAIN", x["domain_id"]) for x in domains
+        ("DOMAIN", x["domain_id"]) for x in research_meta["domains"]
     } | {
-        ("CONCEPT", x["concept_id"]) for x in concepts
+        ("CONCEPT", x["concept_id"]) for x in research_meta["school_concepts"]
     } | {
-        ("SOURCE_ASSERTION", x["assertion_id"]) for x in claims
-    } | {("UNRESOLVED_SOURCE_TERM", "currency")}
+        ("SOURCE_ASSERTION", x["assertion_id"]) for x in research_meta["source_assertions"]
+    } | {
+        ("UNRESOLVED_SOURCE_TERM", x["term"]) for x in research_meta["unresolved_source_terms"]
+    }
     actual = {(x["research_kind"], x["research_id"]) for x in trace["records"]}
     if actual != expected:
         errors.append("research-to-production traceability coverage differs from foundation records")
