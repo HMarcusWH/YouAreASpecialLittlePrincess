@@ -10,6 +10,16 @@ from validate_graphology_ontology import validate as validate_ontology
 from validate_graphology_selector_foundation import validate as validate_selectors
 from validate_graphology_traditional_rules import validate as validate_traditional
 
+EXPECTED_PROHIBITED_CLAIMS={
+    "CLINICAL_OR_PSYCHIATRIC_DIAGNOSIS",
+    "INTELLIGENCE_OR_COGNITIVE_ABILITY",
+    "CRIMINALITY_OR_DECEPTION",
+    "EMPLOYMENT_SUITABILITY",
+    "RELATIONSHIP_OUTCOME_OR_COMPATIBILITY",
+    "MORAL_WORTH",
+    "NEW_NUMERIC_MEASUREMENT_PERCENTILE_PROBABILITY_OR_SCORE",
+}
+
 def load_compiler(repo: Path):
     path=repo/"tools/compile_premium_interpretation_db.py"
     spec=importlib.util.spec_from_file_location("premium_interpretation_compiler",path)
@@ -72,13 +82,14 @@ def validate(repo: Path) -> list[str]:
             errors.append(f"soft field copy provenance drift: {f['soft_field_id']}")
         if f.get("allow_new_numbers") is not False or f.get("no_source_no_claim") is not True:
             errors.append(f"soft field numerical/source guard weakened: {f['soft_field_id']}")
-        if "NEW_NUMERIC_MEASUREMENT_PERCENTILE_PROBABILITY_OR_SCORE" not in f.get("prohibited_claim_classes",[]):
-            errors.append(f"soft field numeric-claim prohibition missing: {f['soft_field_id']}")
+        if set(f.get("prohibited_claim_classes",[]))!=EXPECTED_PROHIBITED_CLAIMS:
+            errors.append(f"soft field prohibited-claim set drift: {f['soft_field_id']}")
         if f.get("runtime_status")!="DRAFT_NOT_ACTIVE" or f.get("enabled") is not False:
             errors.append(f"soft field activated: {f['soft_field_id']}")
 
     if len(tones)!=1 or tones[0].get("tone_profile_id")!="PREMIUM_EVIDENCE_DOSSIER_V1": errors.append("tone profile registry changed")
-    if "NEW_NUMERIC_MEASUREMENT_PERCENTILE_PROBABILITY_OR_SCORE" not in tones[0].get("prohibited_claim_classes",[]): errors.append("tone profile permits new numeric claims")
+    if set(tones[0].get("prohibited_claim_classes",[]))!=EXPECTED_PROHIBITED_CLAIMS:
+        errors.append("tone profile prohibited-claim set drift")
     if tones[0].get("runtime_status")!="DRAFT_NOT_ACTIVE": errors.append("tone profile activated")
     if len(slots)!=17 or len({x["report_target"] for x in slots})!=17 or any(x.get("runtime_status")!="DRAFT_NOT_ACTIVE" for x in slots):
         errors.append("report-slot registry invalid or activated")
