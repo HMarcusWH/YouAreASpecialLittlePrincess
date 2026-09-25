@@ -632,6 +632,14 @@
       "production_id": "selection_contract",
       "disposition": "PROMOTED_AS_DRAFT_POLICY",
       "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "OBSERVATION_ENVELOPE",
+      "research_id": "observation_envelope",
+      "production_kind": "OBSERVATION_ENVELOPE",
+      "production_id": "graphology-observation-envelope/1",
+      "disposition": "PROMOTED_AS_DRAFT_POLICY",
+      "runtime_effect": "NONE"
     }
   ]
 }
