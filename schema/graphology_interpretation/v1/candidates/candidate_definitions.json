@@ -1,0 +1,204 @@
+{
+  "version": "graphology-candidate-kinds/1",
+  "status": "REGISTERED_NAMES_ONLY",
+  "records": [
+    {
+      "candidate_kind_id": "ACQUISITION_LIMITATION",
+      "definition_status": "REGISTERED_NAME_FROM_FROZEN_RESEARCH",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "generator_status": "NOT_IMPLEMENTED_IN_T26_PR2"
+    },
+    {
+      "candidate_kind_id": "COPYBOOK_DIFFERENCE",
+      "definition_status": "REGISTERED_NAME_FROM_FROZEN_RESEARCH",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "generator_status": "NOT_IMPLEMENTED_IN_T26_PR2"
+    },
+    {
+      "candidate_kind_id": "COUNTEREVIDENCE_GROUP",
+      "definition_status": "REGISTERED_NAME_FROM_FROZEN_RESEARCH",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "generator_status": "NOT_IMPLEMENTED_IN_T26_PR2"
+    },
+    {
+      "candidate_kind_id": "ELIGIBLE_REFERENCE_CLAIM",
+      "definition_status": "REGISTERED_NAME_FROM_FROZEN_RESEARCH",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "generator_status": "NOT_IMPLEMENTED_IN_T26_PR2"
+    },
+    {
+      "candidate_kind_id": "GRAPHIC_COMBINATION",
+      "definition_status": "REGISTERED_NAME_FROM_FROZEN_RESEARCH",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "generator_status": "NOT_IMPLEMENTED_IN_T26_PR2"
+    },
+    {
+      "candidate_kind_id": "GRAPHIC_SIGN",
+      "definition_status": "REGISTERED_NAME_FROM_FROZEN_RESEARCH",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "generator_status": "NOT_IMPLEMENTED_IN_T26_PR2"
+    },
+    {
+      "candidate_kind_id": "HISTORY_CAVEAT",
+      "definition_status": "REGISTERED_NAME_FROM_FROZEN_RESEARCH",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "generator_status": "NOT_IMPLEMENTED_IN_T26_PR2"
+    },
+    {
+      "candidate_kind_id": "HISTORY_CHANGE",
+      "definition_status": "REGISTERED_NAME_FROM_FROZEN_RESEARCH",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "generator_status": "NOT_IMPLEMENTED_IN_T26_PR2"
+    },
+    {
+      "candidate_kind_id": "HISTORY_STABLE_PATTERN",
+      "definition_status": "REGISTERED_NAME_FROM_FROZEN_RESEARCH",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "generator_status": "NOT_IMPLEMENTED_IN_T26_PR2"
+    },
+    {
+      "candidate_kind_id": "INITIAL_STROKE_DESCRIPTION",
+      "definition_status": "REGISTERED_NAME_FROM_FROZEN_RESEARCH",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "generator_status": "NOT_IMPLEMENTED_IN_T26_PR2"
+    },
+    {
+      "candidate_kind_id": "INK_APPEARANCE_FACT",
+      "definition_status": "REGISTERED_NAME_FROM_FROZEN_RESEARCH",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "generator_status": "NOT_IMPLEMENTED_IN_T26_PR2"
+    },
+    {
+      "candidate_kind_id": "LINE_EDGE_TREND",
+      "definition_status": "REGISTERED_NAME_FROM_FROZEN_RESEARCH",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "generator_status": "NOT_IMPLEMENTED_IN_T26_PR2"
+    },
+    {
+      "candidate_kind_id": "LOCAL_ONLY_SIGN",
+      "definition_status": "REGISTERED_NAME_FROM_FROZEN_RESEARCH",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "generator_status": "NOT_IMPLEMENTED_IN_T26_PR2"
+    },
+    {
+      "candidate_kind_id": "MARGIN_DESCRIPTION",
+      "definition_status": "REGISTERED_NAME_FROM_FROZEN_RESEARCH",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "generator_status": "NOT_IMPLEMENTED_IN_T26_PR2"
+    },
+    {
+      "candidate_kind_id": "MEASUREMENT_CONFLICT_CANDIDATE",
+      "definition_status": "REGISTERED_NAME_FROM_FROZEN_RESEARCH",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "generator_status": "NOT_IMPLEMENTED_IN_T26_PR2"
+    },
+    {
+      "candidate_kind_id": "ORNAMENT_DESCRIPTION",
+      "definition_status": "REGISTERED_NAME_FROM_FROZEN_RESEARCH",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "generator_status": "NOT_IMPLEMENTED_IN_T26_PR2"
+    },
+    {
+      "candidate_kind_id": "PAIR_DIFFERENCE",
+      "definition_status": "REGISTERED_NAME_FROM_FROZEN_RESEARCH",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "generator_status": "NOT_IMPLEMENTED_IN_T26_PR2"
+    },
+    {
+      "candidate_kind_id": "PAIR_SIMILARITY",
+      "definition_status": "REGISTERED_NAME_FROM_FROZEN_RESEARCH",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "generator_status": "NOT_IMPLEMENTED_IN_T26_PR2"
+    },
+    {
+      "candidate_kind_id": "PAIR_TRADITIONAL_CONTRAST",
+      "definition_status": "REGISTERED_NAME_FROM_FROZEN_RESEARCH",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "generator_status": "NOT_IMPLEMENTED_IN_T26_PR2"
+    },
+    {
+      "candidate_kind_id": "PPI_FORM_DESCRIPTION",
+      "definition_status": "REGISTERED_NAME_FROM_FROZEN_RESEARCH",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "generator_status": "NOT_IMPLEMENTED_IN_T26_PR2"
+    },
+    {
+      "candidate_kind_id": "REFERENCE_CAVEAT",
+      "definition_status": "REGISTERED_NAME_FROM_FROZEN_RESEARCH",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "generator_status": "NOT_IMPLEMENTED_IN_T26_PR2"
+    },
+    {
+      "candidate_kind_id": "REPEATED_FORM_DESCRIPTION",
+      "definition_status": "REGISTERED_NAME_FROM_FROZEN_RESEARCH",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "generator_status": "NOT_IMPLEMENTED_IN_T26_PR2"
+    },
+    {
+      "candidate_kind_id": "SIGNATURE_TEXT_DIFFERENCE",
+      "definition_status": "REGISTERED_NAME_FROM_FROZEN_RESEARCH",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "generator_status": "NOT_IMPLEMENTED_IN_T26_PR2"
+    },
+    {
+      "candidate_kind_id": "SIGNATURE_TEXT_PATTERN",
+      "definition_status": "REGISTERED_NAME_FROM_FROZEN_RESEARCH",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "generator_status": "NOT_IMPLEMENTED_IN_T26_PR2"
+    },
+    {
+      "candidate_kind_id": "SUPPORT_GROUP",
+      "definition_status": "REGISTERED_NAME_FROM_FROZEN_RESEARCH",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "generator_status": "NOT_IMPLEMENTED_IN_T26_PR2"
+    },
+    {
+      "candidate_kind_id": "TERMINAL_STROKE_DESCRIPTION",
+      "definition_status": "REGISTERED_NAME_FROM_FROZEN_RESEARCH",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "generator_status": "NOT_IMPLEMENTED_IN_T26_PR2"
+    },
+    {
+      "candidate_kind_id": "THICKNESS_FACT",
+      "definition_status": "REGISTERED_NAME_FROM_FROZEN_RESEARCH",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "generator_status": "NOT_IMPLEMENTED_IN_T26_PR2"
+    },
+    {
+      "candidate_kind_id": "TRADITIONAL_ALTERNATIVE",
+      "definition_status": "REGISTERED_NAME_FROM_FROZEN_RESEARCH",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "generator_status": "NOT_IMPLEMENTED_IN_T26_PR2"
+    },
+    {
+      "candidate_kind_id": "TRADITIONAL_CANDIDATE",
+      "definition_status": "REGISTERED_NAME_FROM_FROZEN_RESEARCH",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "generator_status": "NOT_IMPLEMENTED_IN_T26_PR2"
+    },
+    {
+      "candidate_kind_id": "TRADITIONAL_MODIFIER",
+      "definition_status": "REGISTERED_NAME_FROM_FROZEN_RESEARCH",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "generator_status": "NOT_IMPLEMENTED_IN_T26_PR2"
+    },
+    {
+      "candidate_kind_id": "VERIFIED_JOINT_OUTLIER",
+      "definition_status": "REGISTERED_NAME_FROM_FROZEN_RESEARCH",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "generator_status": "NOT_IMPLEMENTED_IN_T26_PR2"
+    },
+    {
+      "candidate_kind_id": "VERIFIED_OUTLIER",
+      "definition_status": "REGISTERED_NAME_FROM_FROZEN_RESEARCH",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "generator_status": "NOT_IMPLEMENTED_IN_T26_PR2"
+    },
+    {
+      "candidate_kind_id": "WITHHELD_CLAIM",
+      "definition_status": "REGISTERED_NAME_FROM_FROZEN_RESEARCH",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "generator_status": "NOT_IMPLEMENTED_IN_T26_PR2"
+    }
+  ]
+}

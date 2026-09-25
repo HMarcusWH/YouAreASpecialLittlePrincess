@@ -1,0 +1,22 @@
+{
+  "policy_id": "ANSWER_STATE_V1",
+  "states": {
+    "ANSWERED": "An eligible, evidenced answer exists.",
+    "OBSERVED_ABSENT": "The required object/opportunity is present but the specified sign is absent.",
+    "NOT_ASSESSABLE": "Available input cannot establish the sign.",
+    "NOT_APPLICABLE": "This question does not apply to this sample/context.",
+    "CONFLICTING_EVIDENCE": "Evidence disagrees in a way that prevents the proposed answer.",
+    "NO_ELIGIBLE_CANDIDATE": "No allowed dynamic candidate passed its checks."
+  },
+  "rules": [
+    "Unanswered -> selected values empty and text null, with reason.",
+    "Mixed is genuine regional heterogeneity and must reference its components; it is not a synonym for unknown.",
+    "No applicable t is not an absent t-bar.",
+    "Source sign absence never automatically activates opposite personality claims.",
+    "Confidence is separate, uncalibrated by default.",
+    "School intensity scores are never inference confidence or population percentile."
+  ],
+  "version": "graphology-answer-states/1",
+  "production_status": "DRAFT_NOT_ACTIVE",
+  "runtime_activation": false
+}
