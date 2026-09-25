@@ -74,10 +74,27 @@ def validate(repo: Path) -> list[str]:
         errors.append("observation envelope drift")
     if envelope.get("production_status")!="DRAFT_NOT_ACTIVE" or envelope.get("runtime_activation") is not False:
         errors.append("observation-envelope lifecycle state invalid")
-    if policy.get("runtime_activation") is not False:
-        errors.append("observation policy became active")
-    if set(policy.get("mapping_roles",{}))!={"PRIMARY_VALUE","VARIABILITY_CONTEXT","DISTRIBUTION_CONTEXT","CANDIDATE_INPUT","AUXILIARY_CONTEXT"}:
-        errors.append("observation mapping-role contract drift")
+    expected_observation_policy={
+        "version":"graphology-observation-policy/1","runtime_activation":False,
+        "descriptive_domains":["CONTEXT","GLOBAL","SPACE","SIZE","DIRECTION","CONNECTION","FORM","STROKE","MOVEMENT","DETAIL","SIGNATURE","HIERARCHY"],
+        "direct_observation_evidence_classes":["DECLARED_METADATA","PRECOMPUTED_DESCRIPTION","AI_VISUAL_DESCRIPTION_NOT_CANONICAL_MEASUREMENT"],
+        "include_rule":"A question gets an observation record when it is in a descriptive domain and either has a direct observation evidence class or references canonical handwriting features.",
+        "excluded_domains":["INTERPRETATION","REFERENCE","PAIR","HISTORY"],
+        "mapping_roles":{
+            "PRIMARY_VALUE":"May directly supply a deterministic selector value when that selector's reviewed rubric exists.",
+            "VARIABILITY_CONTEXT":"Qualifies heterogeneity/dispersion; must not determine a magnitude band.",
+            "DISTRIBUTION_CONTEXT":"Qualifies distribution/composition; must not replace the primary value.",
+            "CANDIDATE_INPUT":"Supplies facts to a dynamic candidate generator; does not directly determine a selector value.",
+            "AUXILIARY_CONTEXT":"Provides contextual evidence only; does not directly determine a selector value.",
+        },
+        "safety_rules":[
+            "Fixed versus dynamic selector origin never decides whether an observation exists.",
+            "Only PRIMARY_VALUE may directly determine a deterministic selector band.",
+            "Missing observation evidence never becomes zero or an opposite trait.",
+        ],
+    }
+    if policy!=expected_observation_policy:
+        errors.append("observation policy contract drift")
 
     if {k:v for k,v in cand_policy.items() if k not in {"policy_id","version","production_status","runtime_activation"}}!=rm["candidate_validation_policy"]:
         errors.append("candidate validation policy drift")
@@ -93,8 +110,23 @@ def validate(repo: Path) -> list[str]:
     obs_by_q={o["source_question_id"]:o for o in obs}
     for qid in expected_obs:
         q=next(x for x in rq if x["question_id"]==qid); o=obs_by_q[qid]
-        if o.get("operational_guardrail","")!=(q.get("note") or ""): errors.append(f"observation guardrail drift: {qid}")
-        if o.get("runtime_status")!="DRAFT_NOT_ACTIVE": errors.append(f"observation activated: {qid}")
+        descriptor_kind=(
+            "DECLARED_CONTEXT" if q["answer_owner"]=="USER_OR_REVIEWER"
+            else "DETERMINISTIC_DESCRIPTOR" if q["answer_owner"]=="DETERMINISTIC"
+            else "VISUAL_DESCRIPTOR" if q["answer_owner"]=="PREMIUM_VISUAL"
+            else "CANDIDATE_BACKED_DESCRIPTOR"
+        )
+        expected_record={
+            "observation_id":f"OBS_{q['selector_id'].removeprefix('SEL_')}","source_question_id":q["question_id"],
+            "selector_id":q["selector_id"],"domain_id":q["domain_id"],"scope":q["scope"],"descriptor_kind":descriptor_kind,
+            "assessment_owner":q["answer_owner"],"model_call_role":q["model_call_role"],"cardinality":q["cardinality"],
+            "value_set_id":q["value_set_id"],"candidate_kind":q["candidate_kind"],"required_inputs":q["required_inputs"],
+            "answer_state_policy":q["answer_state_policy"],"permitted_evidence_class":q["permitted_evidence_class"],
+            "source_refs":q["source_refs"],"related_canonical_feature_ids":q["related_canonical_feature_ids"],
+            "feature_mapping_relation":q["feature_mapping_relation"],"operational_guardrail":q.get("note") or "",
+            "source_status":q["status"],"runtime_status":"DRAFT_NOT_ACTIVE",
+        }
+        if o!=expected_record: errors.append(f"observation record drift: {qid}")
 
     expected_map={(q["selector_id"],fid):mapping_role(q,fid) for q in rq for fid in q["related_canonical_feature_ids"]}
     if not unique((m["mapping_id"] for m in maps)): errors.append("duplicate feature mapping ID")
@@ -106,6 +138,8 @@ def validate(repo: Path) -> list[str]:
         if not m: continue
         q=q_by_sel[key[0]]
         if m["canonical_feature_id"] not in feature_ids: errors.append(f"unknown canonical feature: {m['canonical_feature_id']}")
+        if m.get("mapping_id")!=f"MAP_{q['selector_id']}_{m['canonical_feature_id']}" or m.get("source_question_id")!=q["question_id"]:
+            errors.append(f"feature mapping identity drift: {m['mapping_id']}")
         if m.get("relationship")!="SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE": errors.append(f"unsafe semantic mapping: {m['mapping_id']}")
         if m.get("mapping_role")!=role: errors.append(f"feature role mismatch: {m['mapping_id']}")
         expected_obs_id=obs_by_q[q["question_id"]]["observation_id"] if q["question_id"] in obs_by_q else None
@@ -125,8 +159,8 @@ def validate(repo: Path) -> list[str]:
     if any(x.get("generator_status")!="CONTRACT_ONLY_NOT_IMPLEMENTED" or x.get("runtime_status")!="DRAFT_NOT_ACTIVE" for x in cand_defs):
         errors.append("candidate definition implementation/activation state invalid")
 
-    if gens_doc.get("runtime_activation") is not False:
-        errors.append("candidate generator registry became active")
+    if gens_doc.get("version")!="graphology-candidate-generator-contracts/1" or gens_doc.get("runtime_activation") is not False:
+        errors.append("candidate generator registry metadata/lifecycle drift")
     gen_kind_ids=[g["candidate_kind_id"] for g in gens]; gen_ids=[g["generator_id"] for g in gens]
     if not unique(gen_kind_ids): errors.append("duplicate candidate generator kind contract")
     if not unique(gen_ids): errors.append("duplicate candidate generator ID")
@@ -135,8 +169,8 @@ def validate(repo: Path) -> list[str]:
     gen_by_kind={g["candidate_kind_id"]:g for g in gens}
 
     dyn=[x for x in selectors if x["selection_domain"]=="DYNAMIC"]
-    if genmap_doc.get("runtime_activation") is not False:
-        errors.append("selector-generator registry became active")
+    if genmap_doc.get("version")!="graphology-selector-generator-map/1" or genmap_doc.get("runtime_activation") is not False:
+        errors.append("selector-generator registry metadata/lifecycle drift")
     if any(x.get("runtime_activation") is not False for x in genmap):
         errors.append("selector-generator mapping became active")
     mapped_selectors=[x["selector_id"] for x in genmap]
@@ -163,19 +197,32 @@ def validate(repo: Path) -> list[str]:
             errors.append(f"candidate definition generator contract status invalid: {d['candidate_kind_id']}")
     if any(g.get("output_envelope_id")!="CANDIDATE_ENVELOPE_V1" or g.get("eligibility_policy_id")!="CANDIDATE_VALIDATION_V1" for g in gens):
         errors.append("candidate generator contract linkage invalid")
+    def expected_source_mode(owners):
+        owners=set(owners)
+        if owners and owners=={"DETERMINISTIC"}: return "PRECOMPUTED_APPLICATION"
+        if owners and owners=={"RULE_ENGINE"}: return "RULE_ENGINE"
+        if "PREMIUM_VISUAL" in owners: return "VISUAL_ASSESSMENT_DEPENDENT"
+        if "PREMIUM_EDITOR" in owners: return "EDITORIAL_SELECTION_DEPENDENT"
+        return "MIXED_DEFERRED"
     for kind,g in gen_by_kind.items():
         linked=[x for x in selectors if x["candidate_kind"]==kind]
+        owners={x["answer_owner"] for x in linked}
         if g.get("generator_version")!="1.0.0":
             errors.append(f"candidate generator version drift: {kind}")
         if g.get("selector_ids")!=[x["selector_id"] for x in linked]:
             errors.append(f"candidate generator selector coverage drift: {kind}")
         if set(g.get("scopes",[]))!={x["scope"] for x in linked}:
             errors.append(f"candidate generator scope drift: {kind}")
-        if set(g.get("answer_owners",[]))!={x["answer_owner"] for x in linked}:
+        if set(g.get("answer_owners",[]))!=owners:
             errors.append(f"candidate generator owner drift: {kind}")
+        if g.get("source_mode")!=expected_source_mode(owners):
+            errors.append(f"candidate generator source-mode drift: {kind}")
         required_from_selectors=set().union(*(set(x.get("required_inputs",[])) for x in linked)) if linked else set()
-        if not required_from_selectors <= set(g.get("required_inputs",[])):
-            errors.append(f"candidate generator lost selector-required input: {kind}")
+        expected_required=set(required_from_selectors)
+        if kind=="ELIGIBLE_REFERENCE_CLAIM":
+            expected_required|={"VALID_REFERENCE_RELEASE","REFERENCE_SERVICE_ELIGIBILITY_RESULTS"}
+        if set(g.get("required_inputs",[]))!=expected_required:
+            errors.append(f"candidate generator required-input drift: {kind}")
 
     ref_gen=gen_by_kind.get("ELIGIBLE_REFERENCE_CLAIM")
     required_ref_inputs={"VALID_REFERENCE_RELEASE","REFERENCE_SERVICE_ELIGIBILITY_RESULTS"}
