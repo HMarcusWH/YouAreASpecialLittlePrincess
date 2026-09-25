@@ -1,0 +1,281 @@
+{
+  "status": "PASS",
+  "scope": "IMPORT_INTEGRITY_AND_DRAFT_STRUCTURE_ONLY",
+  "counts": {
+    "sources": 15,
+    "schools": 6,
+    "domains": 16,
+    "questions": 89,
+    "selectors": 89,
+    "fixed_value_sets": 44,
+    "fixed_value_entries": 156,
+    "dynamic_candidate_kinds": 33,
+    "soft_fields": 8,
+    "questions_by_owner": {
+      "USER_OR_REVIEWER": 4,
+      "DETERMINISTIC": 24,
+      "PREMIUM_VISUAL": 28,
+      "PREMIUM_EDITOR": 30,
+      "RULE_ENGINE": 3
+    }
+  },
+  "checks": [
+    {
+      "check": "Integrity: blueprint/metadata.json",
+      "result": "PASS"
+    },
+    {
+      "check": "Integrity: blueprint/questions/01-context.json",
+      "result": "PASS"
+    },
+    {
+      "check": "Integrity: blueprint/questions/02-global.json",
+      "result": "PASS"
+    },
+    {
+      "check": "Integrity: blueprint/questions/03-space.json",
+      "result": "PASS"
+    },
+    {
+      "check": "Integrity: blueprint/questions/04-size.json",
+      "result": "PASS"
+    },
+    {
+      "check": "Integrity: blueprint/questions/05-direction.json",
+      "result": "PASS"
+    },
+    {
+      "check": "Integrity: blueprint/questions/06-connection.json",
+      "result": "PASS"
+    },
+    {
+      "check": "Integrity: blueprint/questions/07-form.json",
+      "result": "PASS"
+    },
+    {
+      "check": "Integrity: blueprint/questions/08-stroke.json",
+      "result": "PASS"
+    },
+    {
+      "check": "Integrity: blueprint/questions/09-movement.json",
+      "result": "PASS"
+    },
+    {
+      "check": "Integrity: blueprint/questions/10-detail.json",
+      "result": "PASS"
+    },
+    {
+      "check": "Integrity: blueprint/questions/11-signature.json",
+      "result": "PASS"
+    },
+    {
+      "check": "Integrity: blueprint/questions/12-hierarchy.json",
+      "result": "PASS"
+    },
+    {
+      "check": "Integrity: blueprint/questions/13-interpretation.json",
+      "result": "PASS"
+    },
+    {
+      "check": "Integrity: blueprint/questions/14-reference.json",
+      "result": "PASS"
+    },
+    {
+      "check": "Integrity: blueprint/questions/15-pair.json",
+      "result": "PASS"
+    },
+    {
+      "check": "Integrity: blueprint/questions/16-history.json",
+      "result": "PASS"
+    },
+    {
+      "check": "Integrity: blueprint/value_sets.json",
+      "result": "PASS"
+    },
+    {
+      "check": "Integrity: graphology_foundations.md",
+      "result": "PASS"
+    },
+    {
+      "check": "Integrity: provenance/catalogue_preamble.md",
+      "result": "PASS"
+    },
+    {
+      "check": "Integrity: provenance/original_README.md",
+      "result": "PASS"
+    },
+    {
+      "check": "Integrity: provenance/original_SHA256SUMS.json",
+      "result": "PASS"
+    },
+    {
+      "check": "Integrity: provenance/original_validation_report.json",
+      "result": "PASS"
+    },
+    {
+      "check": "Integrity: sources.json",
+      "result": "PASS"
+    },
+    {
+      "check": "Original artifact SHA-256: README.md",
+      "result": "PASS"
+    },
+    {
+      "check": "Original artifact SHA-256: graphology_foundations.md",
+      "result": "PASS"
+    },
+    {
+      "check": "Original artifact SHA-256: question_catalogue.md",
+      "result": "PASS"
+    },
+    {
+      "check": "Original artifact SHA-256: sources.json",
+      "result": "PASS"
+    },
+    {
+      "check": "Original artifact SHA-256: graphology_question_selector_blueprint.json",
+      "result": "PASS"
+    },
+    {
+      "check": "Original artifact SHA-256: validation_report.json",
+      "result": "PASS"
+    },
+    {
+      "check": "No production scaffold replacement",
+      "result": "PASS"
+    },
+    {
+      "check": "Research-only snapshot",
+      "result": "PASS"
+    },
+    {
+      "check": "Canonical feature schema matches original validation baseline",
+      "result": "PASS"
+    },
+    {
+      "check": "Source IDs unique",
+      "result": "PASS"
+    },
+    {
+      "check": "Question IDs unique",
+      "result": "PASS"
+    },
+    {
+      "check": "Selector IDs unique",
+      "result": "PASS"
+    },
+    {
+      "check": "Value set IDs unique",
+      "result": "PASS"
+    },
+    {
+      "check": "Canonical feature references resolve",
+      "result": "PASS"
+    },
+    {
+      "check": "Question source references resolve",
+      "result": "PASS"
+    },
+    {
+      "check": "Question domains resolve",
+      "result": "PASS"
+    },
+    {
+      "check": "One answer domain per question",
+      "result": "PASS"
+    },
+    {
+      "check": "Fixed value sets resolve",
+      "result": "PASS"
+    },
+    {
+      "check": "Dynamic candidate kinds resolve",
+      "result": "PASS"
+    },
+    {
+      "check": "Value IDs unique per set",
+      "result": "PASS"
+    },
+    {
+      "check": "No orphan value sets",
+      "result": "PASS"
+    },
+    {
+      "check": "All questions draft",
+      "result": "PASS"
+    },
+    {
+      "check": "All value entries draft",
+      "result": "PASS"
+    },
+    {
+      "check": "Historical examples research-only",
+      "result": "PASS"
+    },
+    {
+      "check": "Non-model questions read-only",
+      "result": "PASS"
+    },
+    {
+      "check": "Soft fields forbid new numbers",
+      "result": "PASS"
+    },
+    {
+      "check": "Pack references resolve",
+      "result": "PASS"
+    },
+    {
+      "check": "No unreferenced question",
+      "result": "PASS"
+    },
+    {
+      "check": "All source IDs in metadata resolve",
+      "result": "PASS"
+    },
+    {
+      "check": "Soft-field source references resolve",
+      "result": "PASS"
+    },
+    {
+      "check": "Assertion sources resolve",
+      "result": "PASS"
+    },
+    {
+      "check": "No forbidden control characters",
+      "result": "PASS"
+    },
+    {
+      "check": "Strict JSON serialization roundtrip",
+      "result": "PASS"
+    }
+  ],
+  "not_tested": [
+    "Graphological validity",
+    "Source completeness or reproduction rights",
+    "Engine accuracy",
+    "OpenAI calls",
+    "Production integration"
+  ],
+  "date": "2026-09-25",
+  "python_version": "3.13.5",
+  "execution_context": "Local staging directory; explicit --feature-schema supplied the byte-matching canonical schema. No hosted CI or production engine suite claimed.",
+  "regression_tests": {
+    "command": "GRAPHOLOGY_FEATURE_SCHEMA=<canonical-schema-path> python tools/test_graphology_research.py",
+    "tests_run": 11,
+    "result": "PASS"
+  },
+  "compile_check": {
+    "command": "python -m compileall -q tools",
+    "result": "PASS"
+  },
+  "lint": "NOT_RUN; Ruff unavailable locally",
+  "script_sha256": {
+    "test_graphology_research.py": "a4eb51f43877bfd34d1d5ae7d31a86cdf05d8aa48c1be3de393ec4c4644540de",
+    "check_graphology_research.py": "a98c97feb71fd7820e003269e8ac2326059b46307560410b06667f2ff3ca28a9"
+  },
+  "reproduction": [
+    "python tools/check_graphology_research.py",
+    "python tools/test_graphology_research.py",
+    "python tools/check_graphology_research.py --assemble-dir <new-directory>"
+  ]
+}

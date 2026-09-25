@@ -32,3 +32,13 @@ New product tests described in the roadmap do not exist until their tasks add th
 Before completion, check authorization and tenant boundaries, missing/partial results, zero denominators, method/version mismatch, export parity, retry/duplicate behavior, consent withdrawal, and rollback. Add negative tests, not just a happy-path screenshot.
 
 Owner gates include corpus recruitment/rights, source-rule review, API account/region/spend, production payments, and public release. Implement mocks and disabled capabilities while those gates remain open; never fabricate their approval.
+
+## Graphology research and T26 sequencing
+
+Before question/selector or traditional-rule work, read [the research index](research/graphology/README.md) and [database handoff](research/graphology/DATABASE_HANDOFF.md).
+
+The `research/graphology/foundations-v0.1/` snapshot is supporting material, not an active rule pack. The owner requires this supporting-materials PR to be merged before T26 database construction starts in a separate PR. Do not mark T26 complete or populate the production scaffold as part of the research import.
+
+Preserve source access limits and draft IDs. Source fidelity, empirical support, observation feasibility, within-sample importance and reference rarity remain separate. Any correction or production promotion needs explicit provenance and review rather than a silent edit to the frozen snapshot.
+
+Run `python tools/check_graphology_research.py` and `python tools/test_graphology_research.py` for this supporting-materials import. They are offline integrity/structure tests, not model or personality-validity tests.
