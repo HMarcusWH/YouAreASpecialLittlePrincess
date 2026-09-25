@@ -1,0 +1,447 @@
+{
+  "version": "graphology-research-to-production-traceability/1",
+  "research_snapshot": "research/graphology/foundations-v0.1",
+  "research_baseline_commit": "f96aa6b54cfaf91f0a8243e7c7e266baa053eedc",
+  "records": [
+    {
+      "research_kind": "SOURCE",
+      "research_id": "BIG26",
+      "production_kind": "SOURCE",
+      "production_id": "BIG26",
+      "disposition": "PROMOTED_AS_PROVENANCE",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "SOURCE",
+      "research_id": "BIGCOURSE",
+      "production_kind": "SOURCE",
+      "production_id": "BIGCOURSE",
+      "disposition": "PROMOTED_AS_PROVENANCE",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "SOURCE",
+      "research_id": "AHAF",
+      "production_kind": "SOURCE",
+      "production_id": "AHAF",
+      "disposition": "PROMOTED_AS_PROVENANCE",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "SOURCE",
+      "research_id": "IHAS",
+      "production_kind": "SOURCE",
+      "production_id": "IHAS",
+      "disposition": "PROMOTED_AS_PROVENANCE",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "SOURCE",
+      "research_id": "CNPG_A",
+      "production_kind": "SOURCE",
+      "production_id": "CNPG_A",
+      "disposition": "PROMOTED_AS_PROVENANCE",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "SOURCE",
+      "research_id": "CNPG_B",
+      "production_kind": "SOURCE",
+      "production_id": "CNPG_B",
+      "disposition": "PROMOTED_AS_PROVENANCE",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "SOURCE",
+      "research_id": "SGB",
+      "production_kind": "SOURCE",
+      "production_id": "SGB",
+      "disposition": "PROMOTED_AS_PROVENANCE",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "SOURCE",
+      "research_id": "CJ1892",
+      "production_kind": "SOURCE",
+      "production_id": "CJ1892",
+      "disposition": "PROMOTED_AS_PROVENANCE",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "SOURCE",
+      "research_id": "MORETTI_I",
+      "production_kind": "SOURCE",
+      "production_id": "MORETTI_I",
+      "disposition": "PROMOTED_AS_PROVENANCE",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "SOURCE",
+      "research_id": "CARBONARI",
+      "production_kind": "SOURCE",
+      "production_id": "CARBONARI",
+      "disposition": "PROMOTED_AS_PROVENANCE",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "SOURCE",
+      "research_id": "CONTIN",
+      "production_kind": "SOURCE",
+      "production_id": "CONTIN",
+      "disposition": "PROMOTED_AS_PROVENANCE",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "SOURCE",
+      "research_id": "DEBIASI",
+      "production_kind": "SOURCE",
+      "production_id": "DEBIASI",
+      "disposition": "PROMOTED_AS_PROVENANCE",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "SOURCE",
+      "research_id": "LEPOUTRE",
+      "production_kind": "SOURCE",
+      "production_id": "LEPOUTRE",
+      "disposition": "PROMOTED_AS_PROVENANCE",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "SOURCE",
+      "research_id": "DAZZI2009",
+      "production_kind": "SOURCE",
+      "production_id": "DAZZI2009",
+      "disposition": "PROMOTED_AS_PROVENANCE",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "SOURCE",
+      "research_id": "NETER1989",
+      "production_kind": "SOURCE",
+      "production_id": "NETER1989",
+      "disposition": "PROMOTED_AS_PROVENANCE",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "SCHOOL",
+      "research_id": "BIG_HILLIGER",
+      "production_kind": "SCHOOL",
+      "production_id": "BIG_HILLIGER",
+      "disposition": "PROMOTED_AS_ONTOLOGY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "SCHOOL",
+      "research_id": "JAMINIAN",
+      "production_kind": "SCHOOL",
+      "production_id": "JAMINIAN",
+      "disposition": "PROMOTED_AS_ONTOLOGY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "SCHOOL",
+      "research_id": "GESTALT_AHAF",
+      "production_kind": "SCHOOL",
+      "production_id": "GESTALT_AHAF",
+      "disposition": "PROMOTED_AS_ONTOLOGY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "SCHOOL",
+      "research_id": "KLAGES_RECEPTION",
+      "production_kind": "SCHOOL",
+      "production_id": "KLAGES_RECEPTION",
+      "disposition": "PROMOTED_AS_ONTOLOGY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "SCHOOL",
+      "research_id": "MORETTIAN",
+      "production_kind": "SCHOOL",
+      "production_id": "MORETTIAN",
+      "disposition": "PROMOTED_AS_ONTOLOGY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "SCHOOL",
+      "research_id": "APPLICATION",
+      "production_kind": "SCHOOL",
+      "production_id": "APPLICATION",
+      "disposition": "PROMOTED_AS_ONTOLOGY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "DOMAIN",
+      "research_id": "CONTEXT",
+      "production_kind": "DOMAIN",
+      "production_id": "CONTEXT",
+      "disposition": "PROMOTED_AS_ONTOLOGY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "DOMAIN",
+      "research_id": "GLOBAL",
+      "production_kind": "DOMAIN",
+      "production_id": "GLOBAL",
+      "disposition": "PROMOTED_AS_ONTOLOGY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "DOMAIN",
+      "research_id": "SPACE",
+      "production_kind": "DOMAIN",
+      "production_id": "SPACE",
+      "disposition": "PROMOTED_AS_ONTOLOGY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "DOMAIN",
+      "research_id": "SIZE",
+      "production_kind": "DOMAIN",
+      "production_id": "SIZE",
+      "disposition": "PROMOTED_AS_ONTOLOGY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "DOMAIN",
+      "research_id": "DIRECTION",
+      "production_kind": "DOMAIN",
+      "production_id": "DIRECTION",
+      "disposition": "PROMOTED_AS_ONTOLOGY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "DOMAIN",
+      "research_id": "CONNECTION",
+      "production_kind": "DOMAIN",
+      "production_id": "CONNECTION",
+      "disposition": "PROMOTED_AS_ONTOLOGY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "DOMAIN",
+      "research_id": "FORM",
+      "production_kind": "DOMAIN",
+      "production_id": "FORM",
+      "disposition": "PROMOTED_AS_ONTOLOGY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "DOMAIN",
+      "research_id": "STROKE",
+      "production_kind": "DOMAIN",
+      "production_id": "STROKE",
+      "disposition": "PROMOTED_AS_ONTOLOGY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "DOMAIN",
+      "research_id": "MOVEMENT",
+      "production_kind": "DOMAIN",
+      "production_id": "MOVEMENT",
+      "disposition": "PROMOTED_AS_ONTOLOGY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "DOMAIN",
+      "research_id": "DETAIL",
+      "production_kind": "DOMAIN",
+      "production_id": "DETAIL",
+      "disposition": "PROMOTED_AS_ONTOLOGY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "DOMAIN",
+      "research_id": "SIGNATURE",
+      "production_kind": "DOMAIN",
+      "production_id": "SIGNATURE",
+      "disposition": "PROMOTED_AS_ONTOLOGY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "DOMAIN",
+      "research_id": "HIERARCHY",
+      "production_kind": "DOMAIN",
+      "production_id": "HIERARCHY",
+      "disposition": "PROMOTED_AS_ONTOLOGY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "DOMAIN",
+      "research_id": "INTERPRETATION",
+      "production_kind": "DOMAIN",
+      "production_id": "INTERPRETATION",
+      "disposition": "PROMOTED_AS_ONTOLOGY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "DOMAIN",
+      "research_id": "REFERENCE",
+      "production_kind": "DOMAIN",
+      "production_id": "REFERENCE",
+      "disposition": "PROMOTED_AS_ONTOLOGY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "DOMAIN",
+      "research_id": "PAIR",
+      "production_kind": "DOMAIN",
+      "production_id": "PAIR",
+      "disposition": "PROMOTED_AS_ONTOLOGY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "DOMAIN",
+      "research_id": "HISTORY",
+      "production_kind": "DOMAIN",
+      "production_id": "HISTORY",
+      "disposition": "PROMOTED_AS_ONTOLOGY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "CONCEPT",
+      "research_id": "JAMIN_RESULTANT",
+      "production_kind": "CONCEPT",
+      "production_id": "JAMIN_RESULTANT",
+      "disposition": "PROMOTED_AS_ONTOLOGY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "CONCEPT",
+      "research_id": "BIG_DOMINANCE",
+      "production_kind": "CONCEPT",
+      "production_id": "BIG_DOMINANCE",
+      "disposition": "PROMOTED_AS_ONTOLOGY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "CONCEPT",
+      "research_id": "KLAGES_FORMNIVEAU",
+      "production_kind": "CONCEPT",
+      "production_id": "KLAGES_FORMNIVEAU",
+      "disposition": "PROMOTED_AS_ONTOLOGY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "CONCEPT",
+      "research_id": "MORETTI_TRIPLE_WIDTH",
+      "production_kind": "CONCEPT",
+      "production_id": "MORETTI_TRIPLE_WIDTH",
+      "disposition": "PROMOTED_AS_ONTOLOGY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "CONCEPT",
+      "research_id": "MORETTI_METHODICAL_VARIATION",
+      "production_kind": "CONCEPT",
+      "production_id": "MORETTI_METHODICAL_VARIATION",
+      "disposition": "PROMOTED_AS_ONTOLOGY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "CONCEPT",
+      "research_id": "MORETTI_SIGN_ROLES",
+      "production_kind": "CONCEPT",
+      "production_id": "MORETTI_SIGN_ROLES",
+      "disposition": "PROMOTED_AS_ONTOLOGY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "CONCEPT",
+      "research_id": "MORETTI_DECIMI",
+      "production_kind": "CONCEPT",
+      "production_id": "MORETTI_DECIMI",
+      "disposition": "PROMOTED_AS_ONTOLOGY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "CONCEPT",
+      "research_id": "MORETTI_TEMPERAMENTS",
+      "production_kind": "CONCEPT",
+      "production_id": "MORETTI_TEMPERAMENTS",
+      "disposition": "PROMOTED_AS_ONTOLOGY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "CONCEPT",
+      "research_id": "PULVER_SPACE",
+      "production_kind": "CONCEPT",
+      "production_id": "PULVER_SPACE",
+      "disposition": "PROMOTED_AS_ONTOLOGY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "CONCEPT",
+      "research_id": "IHAS_THREAD",
+      "production_kind": "CONCEPT",
+      "production_id": "IHAS_THREAD",
+      "disposition": "PROMOTED_AS_ONTOLOGY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "CONCEPT",
+      "research_id": "MORETTI_FILIFORME",
+      "production_kind": "CONCEPT",
+      "production_id": "MORETTI_FILIFORME",
+      "disposition": "PROMOTED_AS_ONTOLOGY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "SOURCE_ASSERTION",
+      "research_id": "METHOD_CJ_CONTEXT",
+      "production_kind": "SOURCE_CLAIM",
+      "production_id": "METHOD_CJ_CONTEXT",
+      "disposition": "PROMOTED_AS_PROVENANCE",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "SOURCE_ASSERTION",
+      "research_id": "METHOD_CJ_ABSENCE",
+      "production_kind": "SOURCE_CLAIM",
+      "production_id": "METHOD_CJ_ABSENCE",
+      "disposition": "PROMOTED_AS_PROVENANCE",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "SOURCE_ASSERTION",
+      "research_id": "METHOD_BIG_SUPPORT",
+      "production_kind": "SOURCE_CLAIM",
+      "production_id": "METHOD_BIG_SUPPORT",
+      "disposition": "PROMOTED_AS_PROVENANCE",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "SOURCE_ASSERTION",
+      "research_id": "METHOD_MORETTI_RELATIONS",
+      "production_kind": "SOURCE_CLAIM",
+      "production_id": "METHOD_MORETTI_RELATIONS",
+      "disposition": "PROMOTED_AS_PROVENANCE",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "SOURCE_ASSERTION",
+      "research_id": "HIST_CJ_ANIMATION",
+      "production_kind": "SOURCE_CLAIM",
+      "production_id": "HIST_CJ_ANIMATION",
+      "disposition": "PROMOTED_AS_RESEARCH_ONLY_PROVENANCE",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "SOURCE_ASSERTION",
+      "research_id": "HIST_CJ_FIRMNESS",
+      "production_kind": "SOURCE_CLAIM",
+      "production_id": "HIST_CJ_FIRMNESS",
+      "disposition": "PROMOTED_AS_RESEARCH_ONLY_PROVENANCE",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "UNRESOLVED_SOURCE_TERM",
+      "research_id": "currency",
+      "production_kind": "SOURCE_GAP",
+      "production_id": "currency",
+      "disposition": "BLOCKED_SOURCE_GAP",
+      "runtime_effect": "BLOCKED"
+    }
+  ]
+}

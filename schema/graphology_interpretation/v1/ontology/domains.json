@@ -1,0 +1,165 @@
+[
+  {
+    "domain_id": "CONTEXT",
+    "label": "Sample context and applicability",
+    "source_ids": [
+      "BIG26",
+      "AHAF"
+    ],
+    "design_note": "Acquisition and applicability checks; application adaptation",
+    "runtime_status": "ONTOLOGY_ONLY"
+  },
+  {
+    "domain_id": "GLOBAL",
+    "label": "Whole-pattern appraisal",
+    "source_ids": [
+      "AHAF",
+      "CNPG_A",
+      "CNPG_B",
+      "SGB"
+    ],
+    "design_note": "Preserve global relationships without converting them into human worth",
+    "runtime_status": "ONTOLOGY_ONLY"
+  },
+  {
+    "domain_id": "SPACE",
+    "label": "Page organization and spacing",
+    "source_ids": [
+      "CNPG_A",
+      "IHAS",
+      "LEPOUTRE"
+    ],
+    "design_note": "Separate page geometry from graphical use of space",
+    "runtime_status": "ONTOLOGY_ONLY"
+  },
+  {
+    "domain_id": "SIZE",
+    "label": "Size, proportion and zones",
+    "source_ids": [
+      "IHAS",
+      "BIG26",
+      "CONTIN"
+    ],
+    "design_note": "Known-scale physical size and relative dimensions are different",
+    "runtime_status": "ONTOLOGY_ONLY"
+  },
+  {
+    "domain_id": "DIRECTION",
+    "label": "Slant, baseline and directional tendencies",
+    "source_ids": [
+      "IHAS",
+      "BIG26",
+      "CONTIN"
+    ],
+    "design_note": "Baseline direction is not letter slant",
+    "runtime_status": "ONTOLOGY_ONLY"
+  },
+  {
+    "domain_id": "CONNECTION",
+    "label": "Degree and form of joining",
+    "source_ids": [
+      "IHAS",
+      "BIG26"
+    ],
+    "design_note": "Extent of joining and connector morphology require separate answers",
+    "runtime_status": "ONTOLOGY_ONLY"
+  },
+  {
+    "domain_id": "FORM",
+    "label": "Letterform and simplification",
+    "source_ids": [
+      "IHAS",
+      "CNPG_A",
+      "LEPOUTRE"
+    ],
+    "design_note": "Observational forms, not invented personality archetypes",
+    "runtime_status": "ONTOLOGY_ONLY"
+  },
+  {
+    "domain_id": "STROKE",
+    "label": "Stroke appearance and pressure boundary",
+    "source_ids": [
+      "IHAS",
+      "CONTIN"
+    ],
+    "design_note": "Photo appearance cannot supply calibrated force",
+    "runtime_status": "ONTOLOGY_ONLY"
+  },
+  {
+    "domain_id": "MOVEMENT",
+    "label": "Apparent movement, rhythm and variation",
+    "source_ids": [
+      "IHAS",
+      "SGB",
+      "MORETTI_I"
+    ],
+    "design_note": "Visual impression is not measured writing time",
+    "runtime_status": "ONTOLOGY_ONLY"
+  },
+  {
+    "domain_id": "DETAIL",
+    "label": "Local gestures, diacritics and letter detail",
+    "source_ids": [
+      "BIG26",
+      "LEPOUTRE",
+      "CJ1892"
+    ],
+    "design_note": "Identify eligible letters first; no character means not applicable",
+    "runtime_status": "ONTOLOGY_ONLY"
+  },
+  {
+    "domain_id": "SIGNATURE",
+    "label": "Signature and body-text relationship",
+    "source_ids": [
+      "CNPG_B",
+      "IHAS"
+    ],
+    "design_note": "Separate style comparison from identity authentication",
+    "runtime_status": "ONTOLOGY_ONLY"
+  },
+  {
+    "domain_id": "HIERARCHY",
+    "label": "Dominants, modifiers and whole-sample coherence",
+    "source_ids": [
+      "BIG26",
+      "CJ1892",
+      "CARBONARI"
+    ],
+    "design_note": "Hierarchical importance is not population rarity",
+    "runtime_status": "ONTOLOGY_ONLY"
+  },
+  {
+    "domain_id": "INTERPRETATION",
+    "label": "School-specific interpretation and synthesis",
+    "source_ids": [
+      "CJ1892",
+      "BIG26",
+      "CARBONARI"
+    ],
+    "design_note": "Only reviewed association bundles; preserve contradictions",
+    "runtime_status": "ONTOLOGY_ONLY"
+  },
+  {
+    "domain_id": "REFERENCE",
+    "label": "Database-relative distinctiveness",
+    "source_ids": [],
+    "design_note": "Application statistics, not traditional graphology terminology",
+    "runtime_status": "ONTOLOGY_ONLY"
+  },
+  {
+    "domain_id": "PAIR",
+    "label": "Two-sample comparison",
+    "source_ids": [
+      "CNPG_B"
+    ],
+    "design_note": "Application comparative extension; no romantic or forensic probability",
+    "runtime_status": "ONTOLOGY_ONLY"
+  },
+  {
+    "domain_id": "HISTORY",
+    "label": "Within-writer comparison over time",
+    "source_ids": [],
+    "design_note": "Application extension; no personality or health improvement inference",
+    "runtime_status": "ONTOLOGY_ONLY"
+  }
+]

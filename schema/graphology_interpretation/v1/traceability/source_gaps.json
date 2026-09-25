@@ -1,0 +1,224 @@
+{
+  "version": "graphology-interpretation-source-gaps/1",
+  "research_baseline_commit": "f96aa6b54cfaf91f0a8243e7c7e266baa053eedc",
+  "gaps": [
+    {
+      "gap_id": "GAP_JAMIN_RESULTANT",
+      "object_kind": "CONCEPT",
+      "object_id": "JAMIN_RESULTANT",
+      "implementation_state": "STRUCTURE_DRAFT; individual rule content not populated",
+      "blocks_runtime_activation": true,
+      "resolution_requirement": "Populate and review individual association content before runtime use."
+    },
+    {
+      "gap_id": "GAP_BIG_DOMINANCE",
+      "object_kind": "CONCEPT",
+      "object_id": "BIG_DOMINANCE",
+      "implementation_state": "NEEDS_REVIEWED_ASSIGNMENT_RUBRIC",
+      "blocks_runtime_activation": true,
+      "resolution_requirement": "Define and review the within-script assignment rubric."
+    },
+    {
+      "gap_id": "GAP_KLAGES_FORMNIVEAU",
+      "object_kind": "CONCEPT",
+      "object_id": "KLAGES_FORMNIVEAU",
+      "implementation_state": "TERM_VERIFIED_EXACT_METHOD_PENDING; not neatness or personal worth",
+      "blocks_runtime_activation": true,
+      "resolution_requirement": "Inspect and encode the exact source method; do not substitute neatness or personal-worth scores."
+    },
+    {
+      "gap_id": "GAP_MORETTI_TRIPLE_WIDTH",
+      "object_kind": "CONCEPT",
+      "object_id": "MORETTI_TRIPLE_WIDTH",
+      "implementation_state": "NO_AUTOMATIC_GLYPH_RATIO_EQUIVALENCE",
+      "blocks_runtime_activation": true,
+      "resolution_requirement": "Inspect exact school scoring and keep body width, letter gaps, and word gaps distinct."
+    },
+    {
+      "gap_id": "GAP_MORETTI_METHODICAL_VARIATION",
+      "object_kind": "CONCEPT",
+      "object_id": "MORETTI_METHODICAL_VARIATION",
+      "implementation_state": "Do not substitute CV or simple irregularity",
+      "blocks_runtime_activation": true,
+      "resolution_requirement": "Inspect the sign-specific method; do not substitute generic CV/irregularity."
+    },
+    {
+      "gap_id": "GAP_MORETTI_SIGN_ROLES",
+      "object_kind": "CONCEPT",
+      "object_id": "MORETTI_SIGN_ROLES",
+      "implementation_state": "ATTRIBUTION_VERIFIED_VIA_EXPOSITION_NOT_ORIGINAL",
+      "blocks_runtime_activation": true,
+      "resolution_requirement": "Review founder-level source material before activating role classification."
+    },
+    {
+      "gap_id": "GAP_MORETTI_DECIMI",
+      "object_kind": "CONCEPT",
+      "object_id": "MORETTI_DECIMI",
+      "implementation_state": "NO_AUTOMATED_SCORING_WITHOUT_SIGN_SPECIFIC_METHOD",
+      "blocks_runtime_activation": true,
+      "resolution_requirement": "Acquire sign-specific scoring methods; never reinterpret decimi as probability or percentile."
+    },
+    {
+      "gap_id": "GAP_MORETTI_TEMPERAMENTS",
+      "object_kind": "CONCEPT",
+      "object_id": "MORETTI_TEMPERAMENTS",
+      "implementation_state": "TERMS_RECORDED_NOT_RUNTIME_CLASSIFIER",
+      "blocks_runtime_activation": true,
+      "resolution_requirement": "Review primary definitions and conditions before any classifier exists."
+    },
+    {
+      "gap_id": "GAP_PULVER_SPACE",
+      "object_kind": "CONCEPT",
+      "object_id": "PULVER_SPACE",
+      "implementation_state": "CURRICULAR_PRESENCE_VERIFIED; exact claims/conditions pending",
+      "blocks_runtime_activation": true,
+      "resolution_requirement": "Inspect exact claims and applicability conditions before encoding interpretations."
+    },
+    {
+      "gap_id": "GAP_IHAS_THREAD",
+      "object_kind": "CONCEPT",
+      "object_id": "IHAS_THREAD",
+      "implementation_state": "DRAFT_OBSERVATION_RUBRIC",
+      "blocks_runtime_activation": true,
+      "resolution_requirement": "Define and validate an observation rubric before runtime assessment."
+    },
+    {
+      "gap_id": "GAP_MORETTI_FILIFORME",
+      "object_kind": "CONCEPT",
+      "object_id": "MORETTI_FILIFORME",
+      "implementation_state": "Do not equate with connector thread by translation alone",
+      "blocks_runtime_activation": true,
+      "resolution_requirement": "Inspect exact Moretti definition and keep it distinct from connector thread."
+    },
+    {
+      "gap_id": "GAP_UNRESOLVED_TERM_1",
+      "object_kind": "UNRESOLVED_SOURCE_TERM",
+      "object_id": "currency",
+      "source_id": "BIG26",
+      "locator": "Printed p.2 A.g",
+      "source_status": "TERM_PRESENT_DEFINITION_AND_RUBRIC_PENDING",
+      "blocks_runtime_activation": true,
+      "resolution_requirement": "Inspect a source definition and operational rubric before creating any runtime selector."
+    },
+    {
+      "gap_id": "GAP_REUSE_BIG26",
+      "object_kind": "SOURCE",
+      "object_id": "BIG26",
+      "gap_kind": "REUSE_CLEARANCE_NOT_ASSESSED",
+      "blocks_runtime_activation": false,
+      "resolution_requirement": "Assess reuse/licensing before reproducing source text or protected exemplars; links and original paraphrases remain the current boundary."
+    },
+    {
+      "gap_id": "GAP_REUSE_BIGCOURSE",
+      "object_kind": "SOURCE",
+      "object_id": "BIGCOURSE",
+      "gap_kind": "REUSE_CLEARANCE_NOT_ASSESSED",
+      "blocks_runtime_activation": false,
+      "resolution_requirement": "Assess reuse/licensing before reproducing source text or protected exemplars; links and original paraphrases remain the current boundary."
+    },
+    {
+      "gap_id": "GAP_REUSE_AHAF",
+      "object_kind": "SOURCE",
+      "object_id": "AHAF",
+      "gap_kind": "REUSE_CLEARANCE_NOT_ASSESSED",
+      "blocks_runtime_activation": false,
+      "resolution_requirement": "Assess reuse/licensing before reproducing source text or protected exemplars; links and original paraphrases remain the current boundary."
+    },
+    {
+      "gap_id": "GAP_REUSE_IHAS",
+      "object_kind": "SOURCE",
+      "object_id": "IHAS",
+      "gap_kind": "REUSE_CLEARANCE_NOT_ASSESSED",
+      "blocks_runtime_activation": false,
+      "resolution_requirement": "Assess reuse/licensing before reproducing source text or protected exemplars; links and original paraphrases remain the current boundary."
+    },
+    {
+      "gap_id": "GAP_REUSE_CNPG_A",
+      "object_kind": "SOURCE",
+      "object_id": "CNPG_A",
+      "gap_kind": "REUSE_CLEARANCE_NOT_ASSESSED",
+      "blocks_runtime_activation": false,
+      "resolution_requirement": "Assess reuse/licensing before reproducing source text or protected exemplars; links and original paraphrases remain the current boundary."
+    },
+    {
+      "gap_id": "GAP_REUSE_CNPG_B",
+      "object_kind": "SOURCE",
+      "object_id": "CNPG_B",
+      "gap_kind": "REUSE_CLEARANCE_NOT_ASSESSED",
+      "blocks_runtime_activation": false,
+      "resolution_requirement": "Assess reuse/licensing before reproducing source text or protected exemplars; links and original paraphrases remain the current boundary."
+    },
+    {
+      "gap_id": "GAP_REUSE_SGB",
+      "object_kind": "SOURCE",
+      "object_id": "SGB",
+      "gap_kind": "REUSE_CLEARANCE_NOT_ASSESSED",
+      "blocks_runtime_activation": false,
+      "resolution_requirement": "Assess reuse/licensing before reproducing source text or protected exemplars; links and original paraphrases remain the current boundary."
+    },
+    {
+      "gap_id": "GAP_REUSE_CJ1892",
+      "object_kind": "SOURCE",
+      "object_id": "CJ1892",
+      "gap_kind": "REUSE_CLEARANCE_NOT_ASSESSED",
+      "blocks_runtime_activation": false,
+      "resolution_requirement": "Assess reuse/licensing before reproducing source text or protected exemplars; links and original paraphrases remain the current boundary."
+    },
+    {
+      "gap_id": "GAP_REUSE_MORETTI_I",
+      "object_kind": "SOURCE",
+      "object_id": "MORETTI_I",
+      "gap_kind": "REUSE_CLEARANCE_NOT_ASSESSED",
+      "blocks_runtime_activation": false,
+      "resolution_requirement": "Assess reuse/licensing before reproducing source text or protected exemplars; links and original paraphrases remain the current boundary."
+    },
+    {
+      "gap_id": "GAP_REUSE_CARBONARI",
+      "object_kind": "SOURCE",
+      "object_id": "CARBONARI",
+      "gap_kind": "REUSE_CLEARANCE_NOT_ASSESSED",
+      "blocks_runtime_activation": false,
+      "resolution_requirement": "Assess reuse/licensing before reproducing source text or protected exemplars; links and original paraphrases remain the current boundary."
+    },
+    {
+      "gap_id": "GAP_REUSE_CONTIN",
+      "object_kind": "SOURCE",
+      "object_id": "CONTIN",
+      "gap_kind": "REUSE_CLEARANCE_NOT_ASSESSED",
+      "blocks_runtime_activation": false,
+      "resolution_requirement": "Assess reuse/licensing before reproducing source text or protected exemplars; links and original paraphrases remain the current boundary."
+    },
+    {
+      "gap_id": "GAP_REUSE_DEBIASI",
+      "object_kind": "SOURCE",
+      "object_id": "DEBIASI",
+      "gap_kind": "REUSE_CLEARANCE_NOT_ASSESSED",
+      "blocks_runtime_activation": false,
+      "resolution_requirement": "Assess reuse/licensing before reproducing source text or protected exemplars; links and original paraphrases remain the current boundary."
+    },
+    {
+      "gap_id": "GAP_REUSE_LEPOUTRE",
+      "object_kind": "SOURCE",
+      "object_id": "LEPOUTRE",
+      "gap_kind": "REUSE_CLEARANCE_NOT_ASSESSED",
+      "blocks_runtime_activation": false,
+      "resolution_requirement": "Assess reuse/licensing before reproducing source text or protected exemplars; links and original paraphrases remain the current boundary."
+    },
+    {
+      "gap_id": "GAP_REUSE_DAZZI2009",
+      "object_kind": "SOURCE",
+      "object_id": "DAZZI2009",
+      "gap_kind": "REUSE_CLEARANCE_NOT_ASSESSED",
+      "blocks_runtime_activation": false,
+      "resolution_requirement": "Assess reuse/licensing before reproducing source text or protected exemplars; links and original paraphrases remain the current boundary."
+    },
+    {
+      "gap_id": "GAP_REUSE_NETER1989",
+      "object_kind": "SOURCE",
+      "object_id": "NETER1989",
+      "gap_kind": "REUSE_CLEARANCE_NOT_ASSESSED",
+      "blocks_runtime_activation": false,
+      "resolution_requirement": "Assess reuse/licensing before reproducing source text or protected exemplars; links and original paraphrases remain the current boundary."
+    }
+  ]
+}

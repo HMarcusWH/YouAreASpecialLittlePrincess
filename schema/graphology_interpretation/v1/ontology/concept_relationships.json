@@ -1,0 +1,34 @@
+{
+  "version": "graphology-concept-relationships/1",
+  "allowed_relationship_types": [
+    "EXACT_EQUIVALENT",
+    "BROADER_THAN",
+    "NARROWER_THAN",
+    "RELATED_TO",
+    "COMPONENT_OF",
+    "QUALIFIES",
+    "OPPOSES",
+    "NOT_EQUIVALENT",
+    "UNMAPPED"
+  ],
+  "relationships": [
+    {
+      "relationship_id": "REL_IHAS_THREAD_MORETTI_FILIFORME_NOT_EQUIVALENT",
+      "left_concept_id": "IHAS_THREAD",
+      "right_concept_id": "MORETTI_FILIFORME",
+      "relationship_type": "NOT_EQUIVALENT",
+      "source_refs": [
+        {
+          "source_id": "IHAS",
+          "locator": "Thread / Wavy line entries"
+        },
+        {
+          "source_id": "CONTIN",
+          "locator": "La pressione"
+        }
+      ],
+      "rationale": "The frozen research explicitly warns that connector 'thread' and Moretti 'Filiforme' must not be equated by translation alone.",
+      "runtime_status": "ONTOLOGY_ONLY"
+    }
+  ]
+}

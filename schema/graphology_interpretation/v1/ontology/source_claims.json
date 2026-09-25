@@ -1,0 +1,83 @@
+[
+  {
+    "assertion_id": "METHOD_CJ_CONTEXT",
+    "source_id": "CJ1892",
+    "locator": "pp.35–53 and pp.89–92",
+    "claim_kind": "HISTORICAL_METHOD_PRINCIPLE",
+    "paraphrase": "A sign can have more than one interpretation and other signs change the synthesis.",
+    "runtime_role": "DESIGN_PRINCIPLE_CANDIDATE",
+    "empirical_status": "NOT_ESTABLISHED_AS_PERSONALITY_VALIDITY",
+    "production_status": "REGISTERED_PROVENANCE_ONLY"
+  },
+  {
+    "assertion_id": "METHOD_CJ_ABSENCE",
+    "source_id": "CJ1892",
+    "locator": "pp.51–53",
+    "claim_kind": "HISTORICAL_METHOD_PRINCIPLE",
+    "paraphrase": "Missing a particular positive indicator does not, on its own, establish the opposite personal quality.",
+    "runtime_role": "MISSINGNESS_GUARDRAIL",
+    "empirical_status": "LOGICAL_GUARDRAIL_NOT_VALIDATION",
+    "production_status": "REGISTERED_PROVENANCE_ONLY"
+  },
+  {
+    "assertion_id": "METHOD_BIG_SUPPORT",
+    "source_id": "BIG26",
+    "locator": "p.3 B.5",
+    "claim_kind": "SCHOOL_METHOD_REQUIREMENT",
+    "paraphrase": "The curriculum requires corroboration by two other movements before including an interpretation.",
+    "runtime_role": "SCHOOL_PROFILE_CONSTRAINT",
+    "app_adaptation": "At least three genuinely distinct support groups; correlated summaries do not count separately.",
+    "empirical_status": "SCHOOL_REQUIREMENT_NOT_STATISTICAL_PROOF",
+    "production_status": "REGISTERED_PROVENANCE_ONLY"
+  },
+  {
+    "assertion_id": "METHOD_MORETTI_RELATIONS",
+    "source_id": "CARBONARI",
+    "locator": "Quale tecnica, sign relations and laws",
+    "claim_kind": "PRACTITIONER_ACCOUNT_OF_SCHOOL_METHOD",
+    "paraphrase": "The exposition distinguishes sign roles, rated degree, and supportive or opposing interactions.",
+    "runtime_role": "PRESERVE_TYPED_RELATIONSHIPS",
+    "empirical_status": "NOT_ESTABLISHED_AS_PERSONALITY_VALIDITY",
+    "production_status": "REGISTERED_PROVENANCE_ONLY"
+  },
+  {
+    "assertion_id": "HIST_CJ_ANIMATION",
+    "source_id": "CJ1892",
+    "locator": "p.51",
+    "claim_kind": "HISTORICAL_INTERPRETIVE_ASSOCIATION",
+    "source_term": "animation",
+    "paraphrase": "The passage gives several alternative handwriting indicators for animation rather than one mandatory sign.",
+    "premise_examples": [
+      "Long t crossbar",
+      "Short t crossbar ending in a point",
+      "Ascending writing"
+    ],
+    "combination_logic": "ALTERNATIVES_IN_SOURCE_NOT_ALL_REQUIRED",
+    "runtime_role": "RESEARCH_ONLY_DO_NOT_EXECUTE",
+    "remaining_gaps": [
+      "Full qualifying context",
+      "Observable thresholds",
+      "Reviewed modern wording",
+      "Independent sign-detection validation"
+    ],
+    "empirical_status": "UNVALIDATED_TRADITIONAL_ASSOCIATION",
+    "production_status": "REGISTERED_RESEARCH_ONLY"
+  },
+  {
+    "assertion_id": "HIST_CJ_FIRMNESS",
+    "source_id": "CJ1892",
+    "locator": "p.51",
+    "claim_kind": "HISTORICAL_INTERPRETIVE_ASSOCIATION",
+    "source_term": "firmness",
+    "paraphrase": "The passage groups upright, rigid or angular forms among possible indicators of firmness.",
+    "combination_logic": "ALTERNATIVES_IN_SOURCE_NOT_UNIVERSAL_ONE_TO_ONE_RULE",
+    "runtime_role": "RESEARCH_ONLY_DO_NOT_EXECUTE",
+    "remaining_gaps": [
+      "Exact morphology and context",
+      "Operational thresholds",
+      "Contextual and language review"
+    ],
+    "empirical_status": "UNVALIDATED_TRADITIONAL_ASSOCIATION",
+    "production_status": "REGISTERED_RESEARCH_ONLY"
+  }
+]

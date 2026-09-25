@@ -1,0 +1,179 @@
+[
+  {
+    "concept_id": "JAMIN_RESULTANT",
+    "school_id": "JAMINIAN",
+    "term_original": "résultante",
+    "kind": "INTERPRETATION_RELATION",
+    "source_refs": [
+      {
+        "source_id": "CJ1892",
+        "locator": "pp.89–92"
+      }
+    ],
+    "app_mapping": "Context-dependent bundle, not a sum of arbitrary trait weights",
+    "implementation_state": "STRUCTURE_DRAFT; individual rule content not populated",
+    "runtime_status": "ONTOLOGY_ONLY"
+  },
+  {
+    "concept_id": "BIG_DOMINANCE",
+    "school_id": "BIG_HILLIGER",
+    "term_original": "dominant / secondary / miscellaneous",
+    "kind": "WITHIN_SCRIPT_HIERARCHY",
+    "source_refs": [
+      {
+        "source_id": "BIG26",
+        "locator": "p.3, B.2"
+      }
+    ],
+    "app_mapping": "Importance of observed signs within this sample",
+    "implementation_state": "NEEDS_REVIEWED_ASSIGNMENT_RUBRIC",
+    "runtime_status": "ONTOLOGY_ONLY"
+  },
+  {
+    "concept_id": "KLAGES_FORMNIVEAU",
+    "school_id": "KLAGES_RECEPTION",
+    "term_original": "Formniveau",
+    "kind": "GLOBAL_SCHOOL_CONSTRUCT",
+    "source_refs": [
+      {
+        "source_id": "SGB",
+        "locator": "Semester 1"
+      },
+      {
+        "source_id": "CNPG_B",
+        "locator": "Programme 2.3"
+      }
+    ],
+    "app_mapping": null,
+    "implementation_state": "TERM_VERIFIED_EXACT_METHOD_PENDING; not neatness or personal worth",
+    "runtime_status": "ONTOLOGY_ONLY"
+  },
+  {
+    "concept_id": "MORETTI_TRIPLE_WIDTH",
+    "school_id": "MORETTIAN",
+    "term_original": "Triplice larghezza",
+    "kind": "COMPOSITE_SCHOOL_CONSTRUCT",
+    "source_refs": [
+      {
+        "source_id": "MORETTI_I",
+        "locator": "Roggero abstract"
+      },
+      {
+        "source_id": "CONTIN",
+        "locator": "Sign-family list"
+      }
+    ],
+    "app_mapping": "Keep body width, letter gaps and word gaps distinct; exact school scoring pending",
+    "implementation_state": "NO_AUTOMATIC_GLYPH_RATIO_EQUIVALENCE",
+    "runtime_status": "ONTOLOGY_ONLY"
+  },
+  {
+    "concept_id": "MORETTI_METHODICAL_VARIATION",
+    "school_id": "MORETTIAN",
+    "term_original": "Disuguale metodico",
+    "kind": "SCHOOL_SPECIFIC_VARIATION",
+    "source_refs": [
+      {
+        "source_id": "MORETTI_I",
+        "locator": "Roggero abstract"
+      }
+    ],
+    "app_mapping": null,
+    "implementation_state": "Do not substitute CV or simple irregularity",
+    "runtime_status": "ONTOLOGY_ONLY"
+  },
+  {
+    "concept_id": "MORETTI_SIGN_ROLES",
+    "school_id": "MORETTIAN",
+    "term_original": "sostanziali / modificanti / accidentali",
+    "kind": "SCHOOL_ROLE_CLASSIFICATION",
+    "source_refs": [
+      {
+        "source_id": "CARBONARI",
+        "locator": "Quale tecnica; cites Moretti 1985 pp.31–32"
+      }
+    ],
+    "app_mapping": "Preserve source role separately from within-sample prominence",
+    "implementation_state": "ATTRIBUTION_VERIFIED_VIA_EXPOSITION_NOT_ORIGINAL",
+    "runtime_status": "ONTOLOGY_ONLY"
+  },
+  {
+    "concept_id": "MORETTI_DECIMI",
+    "school_id": "MORETTIAN",
+    "term_original": "decimi",
+    "kind": "SCHOOL_RATING_SCALE",
+    "source_refs": [
+      {
+        "source_id": "CARBONARI",
+        "locator": "Quale tecnica; scale and laws"
+      }
+    ],
+    "app_mapping": "Source intensity scale; never probability or percentile",
+    "implementation_state": "NO_AUTOMATED_SCORING_WITHOUT_SIGN_SPECIFIC_METHOD",
+    "runtime_status": "ONTOLOGY_ONLY"
+  },
+  {
+    "concept_id": "MORETTI_TEMPERAMENTS",
+    "school_id": "MORETTIAN",
+    "term_original": "assalto / resistenza / cessione / attesa",
+    "kind": "SCHOOL_INTERPRETIVE_TYPOLOGY",
+    "source_refs": [
+      {
+        "source_id": "DEBIASI",
+        "locator": "Temperamento paragraph"
+      }
+    ],
+    "app_mapping": null,
+    "implementation_state": "TERMS_RECORDED_NOT_RUNTIME_CLASSIFIER",
+    "runtime_status": "ONTOLOGY_ONLY"
+  },
+  {
+    "concept_id": "PULVER_SPACE",
+    "school_id": "KLAGES_RECEPTION",
+    "term_original": "Symbolism of writing space",
+    "kind": "TRADITIONAL_SYMBOLIC_FRAMEWORK",
+    "source_refs": [
+      {
+        "source_id": "LEPOUTRE",
+        "locator": "Série 1"
+      },
+      {
+        "source_id": "SGB",
+        "locator": "Semester 2"
+      }
+    ],
+    "app_mapping": null,
+    "implementation_state": "CURRICULAR_PRESENCE_VERIFIED; exact claims/conditions pending",
+    "runtime_status": "ONTOLOGY_ONLY"
+  },
+  {
+    "concept_id": "IHAS_THREAD",
+    "school_id": null,
+    "term_original": "thread",
+    "kind": "CONNECTOR_MORPHOLOGY",
+    "source_refs": [
+      {
+        "source_id": "IHAS",
+        "locator": "Thread / Wavy line entries"
+      }
+    ],
+    "app_mapping": "Cross-school descriptive glossary term; no school ownership asserted",
+    "implementation_state": "DRAFT_OBSERVATION_RUBRIC",
+    "runtime_status": "ONTOLOGY_ONLY"
+  },
+  {
+    "concept_id": "MORETTI_FILIFORME",
+    "school_id": "MORETTIAN",
+    "term_original": "Filiforme",
+    "kind": "TRACE_PRESSURE_TRADITION_TERM",
+    "source_refs": [
+      {
+        "source_id": "CONTIN",
+        "locator": "La pressione"
+      }
+    ],
+    "app_mapping": null,
+    "implementation_state": "Do not equate with connector thread by translation alone",
+    "runtime_status": "ONTOLOGY_ONLY"
+  }
+]
