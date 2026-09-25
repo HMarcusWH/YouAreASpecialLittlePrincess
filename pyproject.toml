@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "special-little-princess-graphology"
+version = "0.1.0"
+description = "Hybrid deterministic handwriting measurement engine for YouAreASpecialLittlePrincess"
+requires-python = ">=3.10"
+dependencies = [
+  "numpy>=1.24",
+  "opencv-python-headless>=4.8",
+  "scipy>=1.10",
+  "scikit-learn>=1.3",
+  "scikit-image>=0.22",
+]
+
+[project.optional-dependencies]
+signature = ["torch>=2.0"]
+dev = ["pytest>=7.4"]
+
+[project.scripts]
+princess-graphology = "princess_graphology.cli:main"
+
+[tool.setuptools.packages.find]
+where=["src"]
+
+[tool.pytest.ini_options]
+pythonpath=["src"]
+testpaths=["tests"]
