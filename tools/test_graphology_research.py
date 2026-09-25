@@ -84,6 +84,23 @@ class ResearchImportTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             checker.reconstruct(self.root, checker.load(self.root / "provenance/import_manifest.json"))
 
+
+    def test_cli_rejects_canonical_snapshot_when_root_overridden(self):
+        """A staging --root must not weaken protection of the canonical frozen snapshot."""
+        output = ROOT / "__forbidden_reassembled_test__"
+        if output.exists():
+            shutil.rmtree(output)
+        cmd = [sys.executable, str(REPO / "tools/check_graphology_research.py"),
+               "--root", str(self.root), "--feature-schema", str(FEATURES),
+               "--assemble-dir", str(output)]
+        try:
+            result = subprocess.run(cmd, capture_output=True, text=True, check=False)
+            self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
+            self.assertFalse(output.exists())
+        finally:
+            if output.exists():
+                shutil.rmtree(output)
+
     def test_cli_export_and_no_overwrite(self):
         output = Path(self.tmp.name) / "export"
         cmd = [sys.executable, str(REPO / "tools/check_graphology_research.py"),

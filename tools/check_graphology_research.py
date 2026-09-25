@@ -186,6 +186,7 @@ def validate(root: Path, feature_schema: Path) -> tuple[dict, dict[str, bytes]]:
 
 def main() -> int:
     repo = Path(__file__).resolve().parents[1]
+    canonical_research_root = (repo / "research/graphology/foundations-v0.1").resolve()
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--root", type=Path, default=repo / "research/graphology/foundations-v0.1")
     parser.add_argument("--feature-schema", type=Path, default=repo / "schema/graphology_feature_database_v1.json")
@@ -195,7 +196,13 @@ def main() -> int:
         report, originals = validate(args.root.resolve(), args.feature_schema.resolve())
         if report["status"] == "PASS" and args.assemble_dir:
             output = args.assemble_dir.resolve()
-            if output.is_relative_to(repo / "schema") or output.is_relative_to(repo / "src") or output.is_relative_to(args.root.resolve()):
+            protected_roots = (
+                (repo / "schema").resolve(),
+                (repo / "src").resolve(),
+                canonical_research_root,
+                args.root.resolve(),
+            )
+            if any(output.is_relative_to(root) for root in protected_roots):
                 raise ValueError("Output cannot be a production or frozen research directory")
             output.mkdir(parents=True, exist_ok=False)
             for name, data in originals.items():
