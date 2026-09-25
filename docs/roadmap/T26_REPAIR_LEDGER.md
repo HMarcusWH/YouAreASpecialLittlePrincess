@@ -30,3 +30,15 @@ This repair round addresses every unresolved Codex review finding from PRs #4, #
 - Source and source-claim registries are compiled so provenance references close inside the artifact.
 
 No new graphological interpretation claims or runtime activation are introduced by this repair.
+
+## PR #8 follow-up review
+- Regenerated the compiled artifact in the exact key/order serialization produced by the committed compiler and added byte-equality regression coverage.
+- Added an external 28-file recursive Git-blob tree lock for the complete frozen research snapshot, including README/catalogue/import-validation files omitted by the original package manifest.
+- Restored explicit pending-review lifecycle assertions for all promoted selector/value/observation/candidate contracts.
+- Added authoritative reference-service inputs and fail-closed `NO_CANDIDATE` behavior to `GEN_ELIGIBLE_REFERENCE_CLAIM_V1`.
+- Restored the earlier Jamin/BIG/Moretti safety assertions while retaining the newer provenance and inactivity checks.
+- Restored full frozen soft-field safety comparison and numeric/source/support/length constraints.
+- Restored full historical-association provenance validation.
+- Restored field-by-field validation of all 89 production question definitions and their inactive/read-only states.
+- Added pre-dictionary uniqueness checks for candidate generator kinds/IDs and selector-generator mappings.
+- Restored exact frozen-research foundation trace coverage, not only endpoint validity.
