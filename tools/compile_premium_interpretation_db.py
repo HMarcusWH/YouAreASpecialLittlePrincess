@@ -66,7 +66,7 @@ def build_database(repo: Path) -> dict:
     for slot in slots: en[slot["label_key"]]=slot["label_en"]
 
     return {
-      "version":"premium-interpretation-db/1","status":"POPULATED_PENDING_REVIEW","runtime_activation":False,
+      "version":"premium-interpretation-db/1","status":manifest["compiled_runtime_artifact_status"],"runtime_activation":manifest["runtime_activation"],
       "source_database_version":manifest["version"],"research_baseline_commit":manifest["research_baseline_commit"],
       "design_principles":contract["design_principles"],"enums":contract["enums"],
       "sources":sources,"source_claims":source_claims,"source_gaps":source_gaps,

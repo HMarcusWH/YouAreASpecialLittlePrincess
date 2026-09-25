@@ -1,6 +1,6 @@
 {
   "version": "premium-interpretation-db/1",
-  "status": "POPULATED_PENDING_REVIEW",
+  "status": "REVIEWED_READY_FOR_T15",
   "runtime_activation": false,
   "source_database_version": "1.0.0-rc.1",
   "research_baseline_commit": "f96aa6b54cfaf91f0a8243e7c7e266baa053eedc",

@@ -48,15 +48,15 @@ def validate(repo: Path) -> list[str]:
     manifest=load(root/"manifest.json"); stage_doc=load(root/"stage_contract.json")
     if stage_doc.get("version")!="graphology-database-stage-contract/1":
         errors.append("stage contract version drift")
-    if stage_doc.get("current_stage")!="POPULATED_PENDING_REVIEW":
-        errors.append("stage contract current stage must remain pending review")
+    if stage_doc.get("current_stage")!="REVIEWED_READY_FOR_T15":
+        errors.append("stage contract current stage must remain reviewed ready for T15")
     if stage_doc.get("stages",{}).get("POPULATED_PENDING_REVIEW")!=EXPECTED_PENDING_STAGE:
         errors.append("pending-review stage contract drift")
     if stage_doc.get("stages",{}).get("REVIEWED_READY_FOR_T15")!=EXPECTED_REVIEWED_STAGE:
         errors.append("reviewed-ready stage contract drift")
     if set(stage_doc.get("stages",{}))!={"POPULATED_PENDING_REVIEW","REVIEWED_READY_FOR_T15"}:
         errors.append("unexpected stage contract entry")
-    stage=EXPECTED_PENDING_STAGE
+    stage=EXPECTED_REVIEWED_STAGE
     artifact=load(repo/"schema/premium_interpretation_database_v1.json"); tasks=load(repo/"docs/roadmap/tasks.json")
     sources=load(root/"ontology/sources.json"); schools=load(root/"ontology/schools.json"); domains=load(root/"ontology/domains.json")
     concepts=load(root/"ontology/concepts.json"); claims=load(root/"ontology/source_claims.json")
@@ -75,7 +75,7 @@ def validate(repo: Path) -> list[str]:
         "research_snapshot":"research/graphology/foundations-v0.1",
         "canonical_feature_database":"schema/graphology_feature_database_v1.json",
         "compiled_runtime_artifact":"schema/premium_interpretation_database_v1.json",
-        "next_pr":"T15 — OpenAI adapter after T26 review/finalization",
+        "next_pr":"T15 — downstream consumer after T00/T01/T05/T09 prerequisites",
     }
     for key,val in expected_manifest_identity.items():
         if manifest.get(key)!=val: errors.append(f"manifest identity/path drift: {key}")

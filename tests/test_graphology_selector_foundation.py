@@ -20,7 +20,7 @@ def test_dynamic_mapped_descriptors_have_observations():
 def test_all_dynamic_selectors_have_generator_contracts():
     sels=concat("schema/graphology_interpretation/v1/selectors"); dyn={x["selector_id"] for x in sels if x["selection_domain"]=="DYNAMIC"}
     mp=load("schema/graphology_interpretation/v1/candidates/selector_generator_map.json")["records"]; assert {x["selector_id"] for x in mp}==dyn
-def test_database_stays_pending_review_and_inactive():
+def test_database_is_reviewed_ready_and_inactive():
     db=load("schema/premium_interpretation_database_v1.json"); tasks=load("docs/roadmap/tasks.json")
-    assert db["status"]=="POPULATED_PENDING_REVIEW" and db["runtime_activation"] is False
-    assert next(x for x in tasks["tasks"] if x["id"]=="T26")["status"]=="IMPLEMENTED_PENDING_REVIEW"
+    assert db["status"]=="REVIEWED_READY_FOR_T15" and db["runtime_activation"] is False
+    assert next(x for x in tasks["tasks"] if x["id"]=="T26")["status"]=="DONE"
