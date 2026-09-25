@@ -1,0 +1,23 @@
+{
+  "version": "graphology-selectors-index/1",
+  "total_records": 89,
+  "files": [
+    "01-context.json",
+    "02-global.json",
+    "03-space.json",
+    "04-size.json",
+    "05-direction.json",
+    "06-connection.json",
+    "07-form.json",
+    "08-stroke.json",
+    "09-movement.json",
+    "10-detail.json",
+    "11-signature.json",
+    "12-hierarchy.json",
+    "13-interpretation.json",
+    "14-reference.json",
+    "15-pair.json",
+    "16-history.json"
+  ],
+  "runtime_activation": false
+}
