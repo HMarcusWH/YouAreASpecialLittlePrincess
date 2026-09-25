@@ -66,3 +66,19 @@ def test_traceability_covers_foundation_records_exactly():
     trace = load("schema/graphology_interpretation/v1/traceability/research_to_production.json")["records"]
     assert len(trace) == 15 + 6 + 16 + 11 + 6 + 1
     assert len({(x["research_kind"], x["research_id"]) for x in trace}) == len(trace)
+
+
+def test_production_foundation_is_lossless_promotion_of_research():
+    research_sources = load("research/graphology/foundations-v0.1/sources.json")
+    research_meta = load("research/graphology/foundations-v0.1/blueprint/metadata.json")
+    sources = load("schema/graphology_interpretation/v1/ontology/sources.json")
+    schools = load("schema/graphology_interpretation/v1/ontology/schools.json")
+    domains = load("schema/graphology_interpretation/v1/ontology/domains.json")
+    concepts = load("schema/graphology_interpretation/v1/ontology/concepts.json")
+    claims = load("schema/graphology_interpretation/v1/ontology/source_claims.json")
+
+    assert [{k: v for k, v in x.items() if k not in {"production_status", "runtime_role"}} for x in sources] == research_sources
+    assert [{k: v for k, v in x.items() if k not in {"school_kind", "runtime_status"}} for x in schools] == research_meta["schools"]
+    assert [{k: v for k, v in x.items() if k != "runtime_status"} for x in domains] == research_meta["domains"]
+    assert [{k: v for k, v in x.items() if k != "runtime_status"} for x in concepts] == research_meta["school_concepts"]
+    assert [{k: v for k, v in x.items() if k != "production_status"} for x in claims] == research_meta["source_assertions"]
