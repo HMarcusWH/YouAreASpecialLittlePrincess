@@ -85,11 +85,16 @@
         "DETERMINISTIC"
       ],
       "source_mode": "PRECOMPUTED_APPLICATION",
-      "required_inputs": [],
+      "required_inputs": [
+        "VALID_REFERENCE_RELEASE",
+        "REFERENCE_SERVICE_ELIGIBILITY_RESULTS"
+      ],
       "output_envelope_id": "CANDIDATE_ENVELOPE_V1",
       "eligibility_policy_id": "CANDIDATE_VALIDATION_V1",
       "implementation_status": "CONTRACT_ONLY_NOT_IMPLEMENTED",
-      "runtime_activation": false
+      "runtime_activation": false,
+      "missing_input_behavior": "NO_CANDIDATE",
+      "authoritative_fact_linkage": "source_fact_ids"
     },
     {
       "generator_id": "GEN_GRAPHIC_COMBINATION_V1",

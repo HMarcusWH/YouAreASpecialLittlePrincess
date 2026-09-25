@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""Validate graphology database provenance, lifecycle, source gaps and foundation traceability."""
+"""Validate graphology database provenance, lifecycle, source gaps and complete foundation traceability."""
 from __future__ import annotations
 from pathlib import Path
 import json, sys
 TOOLS=Path(__file__).resolve().parent
 if str(TOOLS) not in sys.path: sys.path.insert(0,str(TOOLS))
-from graphology_db_common import DOMAINS, load, concat, verify_research_baseline
+from graphology_db_common import load, verify_research_baseline
 
 def validate(repo: Path) -> list[str]:
     root=repo/"schema/graphology_interpretation/v1"; errors=list(verify_research_baseline(repo))
@@ -15,6 +15,9 @@ def validate(repo: Path) -> list[str]:
     concepts=load(root/"ontology/concepts.json"); claims=load(root/"ontology/source_claims.json")
     rels=load(root/"ontology/concept_relationships.json")["relationships"]; gaps=load(root/"traceability/source_gaps.json")["gaps"]
     exclusions=load(root/"traceability/exclusions.json"); trace=load(root/"traceability/research_to_production.json")["records"]
+    research_sources=load(repo/"research/graphology/foundations-v0.1/sources.json")
+    research_meta=load(repo/"research/graphology/foundations-v0.1/blueprint/metadata.json")
+
     for key,expected in {
       "status":stage["manifest_status"],"production_scope":stage["production_scope"],"t26_status":stage["t26_status"],
       "compiled_runtime_artifact_status":stage["compiled_runtime_artifact_status"],"runtime_activation":stage["runtime_activation"],
@@ -52,6 +55,21 @@ def validate(repo: Path) -> list[str]:
     if set(vals)!=set(stage["required_exclusions"]): errors.append("current exclusions differ from stage contract")
     if exclusions.get("research_baseline_commit")!="f96aa6b54cfaf91f0a8243e7c7e266baa053eedc": errors.append("exclusions baseline mismatch")
 
+    expected={
+      *{("SOURCE",x["source_id"]) for x in research_sources},
+      *{("SCHOOL",x["school_id"]) for x in research_meta["schools"]},
+      *{("DOMAIN",x["domain_id"]) for x in research_meta["domains"]},
+      *{("CONCEPT",x["concept_id"]) for x in research_meta["school_concepts"]},
+      *{("SOURCE_ASSERTION",x["assertion_id"]) for x in research_meta["source_assertions"]},
+      *{("UNRESOLVED_SOURCE_TERM",x["term"]) for x in research_meta["unresolved_source_terms"]},
+    }
+    actual_list=[(x["research_kind"],x["research_id"]) for x in trace]
+    if len(actual_list)!=len(set(actual_list)): errors.append("duplicate foundation trace research endpoint")
+    if set(actual_list)!=expected:
+        missing=sorted(expected-set(actual_list)); extra=sorted(set(actual_list)-expected)
+        if missing: errors.append("foundation trace missing: "+repr(missing))
+        if extra: errors.append("foundation trace has unexpected records: "+repr(extra))
+
     registry={
       "SOURCE":{x["source_id"] for x in sources},"SCHOOL":{x["school_id"] for x in schools},"DOMAIN":{x["domain_id"] for x in domains},
       "CONCEPT":{x["concept_id"] for x in concepts},"SOURCE_CLAIM":{x["assertion_id"] for x in claims},"SOURCE_GAP":{x["gap_id"] for x in gaps},
@@ -62,6 +80,7 @@ def validate(repo: Path) -> list[str]:
         if pk not in registry or pid not in registry[pk]: errors.append(f"trace endpoint missing: {pk}:{pid}")
         if r["research_kind"] in kind_map and pk!=kind_map[r["research_kind"]]: errors.append(f"trace kind mismatch: {r['research_kind']}:{r['research_id']}")
     return errors
+
 def main():
     repo=Path(__file__).resolve().parents[1]; errors=validate(repo)
     print(json.dumps({"status":"PASS" if not errors else "FAIL","errors":errors},indent=2)); return 0 if not errors else 1
