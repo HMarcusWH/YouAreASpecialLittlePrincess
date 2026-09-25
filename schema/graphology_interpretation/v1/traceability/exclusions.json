@@ -1,15 +1,13 @@
 {
-  "version": "graphology-interpretation-exclusions/3",
+  "version": "graphology-interpretation-exclusions/4",
   "research_baseline_commit": "f96aa6b54cfaf91f0a8243e7c7e266baa053eedc",
   "exclusions": [],
   "intentionally_not_in_scope": [
-    "Production question text and executable question packs",
-    "Runtime activation of any traditional association or rule pack",
-    "Source-complete association population beyond the two researched blocked Jaminian stubs",
-    "Candidate generator implementations",
-    "Soft-field activation and tone profiles",
-    "Report mappings",
-    "Localization",
-    "Compiled premium_interpretation_database_v1.json"
+    "Runtime OpenAI adapter and dynamic Structured Output request compilation (T15)",
+    "Candidate generator implementations owned by later engine/reference/comparison tasks",
+    "Runtime activation of traditional associations or school rule packs",
+    "Resolution of source/morphology gaps explicitly recorded as blocked",
+    "Non-English translations beyond stable localization keys and English canonical copy",
+    "Live model evaluation, pricing, payment and deployment"
   ]
 }

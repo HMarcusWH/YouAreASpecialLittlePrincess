@@ -1,0 +1,829 @@
+{
+  "version": "graphology-pr4-content-traceability/1",
+  "records": [
+    {
+      "research_kind": "QUESTION_PACK",
+      "research_id": "INDIVIDUAL_GRAPHIC_DRAFT",
+      "production_kind": "QUESTION_PACK",
+      "production_id": "PREMIUM_INDIVIDUAL_GRAPHIC_V1",
+      "disposition": "PROMOTED_WITH_VERSIONED_ID_AND_APPLICATION_PRECONDITIONS",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "QUESTION_PACK",
+      "research_id": "TRADITIONAL_READING_DRAFT",
+      "production_kind": "QUESTION_PACK",
+      "production_id": "PREMIUM_TRADITIONAL_READING_V1",
+      "disposition": "PROMOTED_WITH_VERSIONED_ID_AND_APPLICATION_PRECONDITIONS",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "QUESTION_PACK",
+      "research_id": "REFERENCE_DRAFT",
+      "production_kind": "QUESTION_PACK",
+      "production_id": "PREMIUM_REFERENCE_V1",
+      "disposition": "PROMOTED_WITH_VERSIONED_ID_AND_APPLICATION_PRECONDITIONS",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "QUESTION_PACK",
+      "research_id": "PAIR_DRAFT",
+      "production_kind": "QUESTION_PACK",
+      "production_id": "PREMIUM_PAIR_V1",
+      "disposition": "PROMOTED_WITH_VERSIONED_ID_AND_APPLICATION_PRECONDITIONS",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "QUESTION_PACK",
+      "research_id": "HISTORY_DRAFT",
+      "production_kind": "QUESTION_PACK",
+      "production_id": "PREMIUM_HISTORY_V1",
+      "disposition": "PROMOTED_WITH_VERSIONED_ID_AND_APPLICATION_PRECONDITIONS",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "SOFT_FIELD",
+      "research_id": "SOFT_GRAPHIC_PORTRAIT",
+      "production_kind": "SOFT_FIELD",
+      "production_id": "SOFT_GRAPHIC_PORTRAIT",
+      "disposition": "PROMOTED_WITH_TONE_AND_SAFETY_METADATA",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "SOFT_FIELD",
+      "research_id": "SOFT_COMBINATION",
+      "production_kind": "SOFT_FIELD",
+      "production_id": "SOFT_COMBINATION",
+      "disposition": "PROMOTED_WITH_TONE_AND_SAFETY_METADATA",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "SOFT_FIELD",
+      "research_id": "SOFT_TRADITIONAL_SYNTHESIS",
+      "production_kind": "SOFT_FIELD",
+      "production_id": "SOFT_TRADITIONAL_SYNTHESIS",
+      "disposition": "PROMOTED_WITH_TONE_AND_SAFETY_METADATA",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "SOFT_FIELD",
+      "research_id": "SOFT_ALTERNATIVE",
+      "production_kind": "SOFT_FIELD",
+      "production_id": "SOFT_ALTERNATIVE",
+      "disposition": "PROMOTED_WITH_TONE_AND_SAFETY_METADATA",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "SOFT_FIELD",
+      "research_id": "SOFT_DISTINCTIVENESS",
+      "production_kind": "SOFT_FIELD",
+      "production_id": "SOFT_DISTINCTIVENESS",
+      "disposition": "PROMOTED_WITH_TONE_AND_SAFETY_METADATA",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "SOFT_FIELD",
+      "research_id": "SOFT_PAIR",
+      "production_kind": "SOFT_FIELD",
+      "production_id": "SOFT_PAIR",
+      "disposition": "PROMOTED_WITH_TONE_AND_SAFETY_METADATA",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "SOFT_FIELD",
+      "research_id": "SOFT_HISTORY",
+      "production_kind": "SOFT_FIELD",
+      "production_id": "SOFT_HISTORY",
+      "disposition": "PROMOTED_WITH_TONE_AND_SAFETY_METADATA",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "SOFT_FIELD",
+      "research_id": "SOFT_LIMITATION",
+      "production_kind": "SOFT_FIELD",
+      "production_id": "SOFT_LIMITATION",
+      "disposition": "PROMOTED_WITH_TONE_AND_SAFETY_METADATA",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "MODEL_PACK_POLICY",
+      "research_id": "model_pack_policy",
+      "production_kind": "QUESTION_PACK_POLICY",
+      "production_id": "graphology-model-pack-policy/1",
+      "disposition": "PROMOTED_INTO_EACH_PACK",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "QUESTION",
+      "research_id": "Q_CTX_TASK",
+      "production_kind": "QUESTION_DEFINITION",
+      "production_id": "Q_CTX_TASK",
+      "disposition": "PROMOTED_WITH_VERSION_AND_PROMPT_LOCALIZATION_KEY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "QUESTION",
+      "research_id": "Q_CTX_SURFACE",
+      "production_kind": "QUESTION_DEFINITION",
+      "production_id": "Q_CTX_SURFACE",
+      "disposition": "PROMOTED_WITH_VERSION_AND_PROMPT_LOCALIZATION_KEY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "QUESTION",
+      "research_id": "Q_CTX_STYLE",
+      "production_kind": "QUESTION_DEFINITION",
+      "production_id": "Q_CTX_STYLE",
+      "disposition": "PROMOTED_WITH_VERSION_AND_PROMPT_LOCALIZATION_KEY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "QUESTION",
+      "research_id": "Q_CTX_FRAME",
+      "production_kind": "QUESTION_DEFINITION",
+      "production_id": "Q_CTX_FRAME",
+      "disposition": "PROMOTED_WITH_VERSION_AND_PROMPT_LOCALIZATION_KEY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "QUESTION",
+      "research_id": "Q_CTX_SCALE",
+      "production_kind": "QUESTION_DEFINITION",
+      "production_id": "Q_CTX_SCALE",
+      "disposition": "PROMOTED_WITH_VERSION_AND_PROMPT_LOCALIZATION_KEY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "QUESTION",
+      "research_id": "Q_CTX_DIRECTION",
+      "production_kind": "QUESTION_DEFINITION",
+      "production_id": "Q_CTX_DIRECTION",
+      "disposition": "PROMOTED_WITH_VERSION_AND_PROMPT_LOCALIZATION_KEY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "QUESTION",
+      "research_id": "Q_GLOBAL_FORM_MOVEMENT",
+      "production_kind": "QUESTION_DEFINITION",
+      "production_id": "Q_GLOBAL_FORM_MOVEMENT",
+      "disposition": "PROMOTED_WITH_VERSION_AND_PROMPT_LOCALIZATION_KEY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "QUESTION",
+      "research_id": "Q_GLOBAL_COHERENCE",
+      "production_kind": "QUESTION_DEFINITION",
+      "production_id": "Q_GLOBAL_COHERENCE",
+      "disposition": "PROMOTED_WITH_VERSION_AND_PROMPT_LOCALIZATION_KEY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "QUESTION",
+      "research_id": "Q_GLOBAL_VARIATION",
+      "production_kind": "QUESTION_DEFINITION",
+      "production_id": "Q_GLOBAL_VARIATION",
+      "disposition": "PROMOTED_WITH_VERSION_AND_PROMPT_LOCALIZATION_KEY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "QUESTION",
+      "research_id": "Q_GLOBAL_EVIDENCE_CONFLICT",
+      "production_kind": "QUESTION_DEFINITION",
+      "production_id": "Q_GLOBAL_EVIDENCE_CONFLICT",
+      "disposition": "PROMOTED_WITH_VERSION_AND_PROMPT_LOCALIZATION_KEY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "QUESTION",
+      "research_id": "Q_SPACE_BALANCE",
+      "production_kind": "QUESTION_DEFINITION",
+      "production_id": "Q_SPACE_BALANCE",
+      "disposition": "PROMOTED_WITH_VERSION_AND_PROMPT_LOCALIZATION_KEY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "QUESTION",
+      "research_id": "Q_SPACE_MARGINS",
+      "production_kind": "QUESTION_DEFINITION",
+      "production_id": "Q_SPACE_MARGINS",
+      "disposition": "PROMOTED_WITH_VERSION_AND_PROMPT_LOCALIZATION_KEY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "QUESTION",
+      "research_id": "Q_SPACE_MARGIN_TREND",
+      "production_kind": "QUESTION_DEFINITION",
+      "production_id": "Q_SPACE_MARGIN_TREND",
+      "disposition": "PROMOTED_WITH_VERSION_AND_PROMPT_LOCALIZATION_KEY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "QUESTION",
+      "research_id": "Q_SPACE_WORD",
+      "production_kind": "QUESTION_DEFINITION",
+      "production_id": "Q_SPACE_WORD",
+      "disposition": "PROMOTED_WITH_VERSION_AND_PROMPT_LOCALIZATION_KEY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "QUESTION",
+      "research_id": "Q_SPACE_LINE",
+      "production_kind": "QUESTION_DEFINITION",
+      "production_id": "Q_SPACE_LINE",
+      "disposition": "PROMOTED_WITH_VERSION_AND_PROMPT_LOCALIZATION_KEY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "QUESTION",
+      "research_id": "Q_SPACE_LETTER",
+      "production_kind": "QUESTION_DEFINITION",
+      "production_id": "Q_SPACE_LETTER",
+      "disposition": "PROMOTED_WITH_VERSION_AND_PROMPT_LOCALIZATION_KEY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "QUESTION",
+      "research_id": "Q_SIZE_PHYSICAL",
+      "production_kind": "QUESTION_DEFINITION",
+      "production_id": "Q_SIZE_PHYSICAL",
+      "disposition": "PROMOTED_WITH_VERSION_AND_PROMPT_LOCALIZATION_KEY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "QUESTION",
+      "research_id": "Q_SIZE_ZONES",
+      "production_kind": "QUESTION_DEFINITION",
+      "production_id": "Q_SIZE_ZONES",
+      "disposition": "PROMOTED_WITH_VERSION_AND_PROMPT_LOCALIZATION_KEY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "QUESTION",
+      "research_id": "Q_SIZE_CAPITAL",
+      "production_kind": "QUESTION_DEFINITION",
+      "production_id": "Q_SIZE_CAPITAL",
+      "disposition": "PROMOTED_WITH_VERSION_AND_PROMPT_LOCALIZATION_KEY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "QUESTION",
+      "research_id": "Q_SIZE_WIDTH",
+      "production_kind": "QUESTION_DEFINITION",
+      "production_id": "Q_SIZE_WIDTH",
+      "disposition": "PROMOTED_WITH_VERSION_AND_PROMPT_LOCALIZATION_KEY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "QUESTION",
+      "research_id": "Q_SIZE_TREND",
+      "production_kind": "QUESTION_DEFINITION",
+      "production_id": "Q_SIZE_TREND",
+      "disposition": "PROMOTED_WITH_VERSION_AND_PROMPT_LOCALIZATION_KEY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "QUESTION",
+      "research_id": "Q_DIRECTION_SLANT",
+      "production_kind": "QUESTION_DEFINITION",
+      "production_id": "Q_DIRECTION_SLANT",
+      "disposition": "PROMOTED_WITH_VERSION_AND_PROMPT_LOCALIZATION_KEY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "QUESTION",
+      "research_id": "Q_DIRECTION_SLOPE",
+      "production_kind": "QUESTION_DEFINITION",
+      "production_id": "Q_DIRECTION_SLOPE",
+      "disposition": "PROMOTED_WITH_VERSION_AND_PROMPT_LOCALIZATION_KEY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "QUESTION",
+      "research_id": "Q_DIRECTION_SHAPE",
+      "production_kind": "QUESTION_DEFINITION",
+      "production_id": "Q_DIRECTION_SHAPE",
+      "disposition": "PROMOTED_WITH_VERSION_AND_PROMPT_LOCALIZATION_KEY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "QUESTION",
+      "research_id": "Q_DIRECTION_VARIATION",
+      "production_kind": "QUESTION_DEFINITION",
+      "production_id": "Q_DIRECTION_VARIATION",
+      "disposition": "PROMOTED_WITH_VERSION_AND_PROMPT_LOCALIZATION_KEY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "QUESTION",
+      "research_id": "Q_CONNECT_DEGREE",
+      "production_kind": "QUESTION_DEFINITION",
+      "production_id": "Q_CONNECT_DEGREE",
+      "disposition": "PROMOTED_WITH_VERSION_AND_PROMPT_LOCALIZATION_KEY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "QUESTION",
+      "research_id": "Q_CONNECT_FORM",
+      "production_kind": "QUESTION_DEFINITION",
+      "production_id": "Q_CONNECT_FORM",
+      "disposition": "PROMOTED_WITH_VERSION_AND_PROMPT_LOCALIZATION_KEY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "QUESTION",
+      "research_id": "Q_CONNECT_DISTRIBUTION",
+      "production_kind": "QUESTION_DEFINITION",
+      "production_id": "Q_CONNECT_DISTRIBUTION",
+      "disposition": "PROMOTED_WITH_VERSION_AND_PROMPT_LOCALIZATION_KEY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "QUESTION",
+      "research_id": "Q_CONNECT_CAPITAL",
+      "production_kind": "QUESTION_DEFINITION",
+      "production_id": "Q_CONNECT_CAPITAL",
+      "disposition": "PROMOTED_WITH_VERSION_AND_PROMPT_LOCALIZATION_KEY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "QUESTION",
+      "research_id": "Q_FORM_GEOMETRY",
+      "production_kind": "QUESTION_DEFINITION",
+      "production_id": "Q_FORM_GEOMETRY",
+      "disposition": "PROMOTED_WITH_VERSION_AND_PROMPT_LOCALIZATION_KEY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "QUESTION",
+      "research_id": "Q_FORM_SIMPLIFICATION",
+      "production_kind": "QUESTION_DEFINITION",
+      "production_id": "Q_FORM_SIMPLIFICATION",
+      "disposition": "PROMOTED_WITH_VERSION_AND_PROMPT_LOCALIZATION_KEY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "QUESTION",
+      "research_id": "Q_FORM_LOOPS",
+      "production_kind": "QUESTION_DEFINITION",
+      "production_id": "Q_FORM_LOOPS",
+      "disposition": "PROMOTED_WITH_VERSION_AND_PROMPT_LOCALIZATION_KEY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "QUESTION",
+      "research_id": "Q_FORM_ORNAMENT",
+      "production_kind": "QUESTION_DEFINITION",
+      "production_id": "Q_FORM_ORNAMENT",
+      "disposition": "PROMOTED_WITH_VERSION_AND_PROMPT_LOCALIZATION_KEY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "QUESTION",
+      "research_id": "Q_FORM_INDIVIDUAL",
+      "production_kind": "QUESTION_DEFINITION",
+      "production_id": "Q_FORM_INDIVIDUAL",
+      "disposition": "PROMOTED_WITH_VERSION_AND_PROMPT_LOCALIZATION_KEY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "QUESTION",
+      "research_id": "Q_FORM_COPYBOOK",
+      "production_kind": "QUESTION_DEFINITION",
+      "production_id": "Q_FORM_COPYBOOK",
+      "disposition": "PROMOTED_WITH_VERSION_AND_PROMPT_LOCALIZATION_KEY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "QUESTION",
+      "research_id": "Q_STROKE_APPEARANCE",
+      "production_kind": "QUESTION_DEFINITION",
+      "production_id": "Q_STROKE_APPEARANCE",
+      "disposition": "PROMOTED_WITH_VERSION_AND_PROMPT_LOCALIZATION_KEY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "QUESTION",
+      "research_id": "Q_STROKE_SHADING",
+      "production_kind": "QUESTION_DEFINITION",
+      "production_id": "Q_STROKE_SHADING",
+      "disposition": "PROMOTED_WITH_VERSION_AND_PROMPT_LOCALIZATION_KEY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "QUESTION",
+      "research_id": "Q_STROKE_DARKNESS",
+      "production_kind": "QUESTION_DEFINITION",
+      "production_id": "Q_STROKE_DARKNESS",
+      "disposition": "PROMOTED_WITH_VERSION_AND_PROMPT_LOCALIZATION_KEY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "QUESTION",
+      "research_id": "Q_STROKE_WIDTH",
+      "production_kind": "QUESTION_DEFINITION",
+      "production_id": "Q_STROKE_WIDTH",
+      "disposition": "PROMOTED_WITH_VERSION_AND_PROMPT_LOCALIZATION_KEY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "QUESTION",
+      "research_id": "Q_STROKE_PRESSURE_LIMIT",
+      "production_kind": "QUESTION_DEFINITION",
+      "production_id": "Q_STROKE_PRESSURE_LIMIT",
+      "disposition": "PROMOTED_WITH_VERSION_AND_PROMPT_LOCALIZATION_KEY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "QUESTION",
+      "research_id": "Q_MOVEMENT_IMPRESSION",
+      "production_kind": "QUESTION_DEFINITION",
+      "production_id": "Q_MOVEMENT_IMPRESSION",
+      "disposition": "PROMOTED_WITH_VERSION_AND_PROMPT_LOCALIZATION_KEY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "QUESTION",
+      "research_id": "Q_MOVEMENT_RHYTHM",
+      "production_kind": "QUESTION_DEFINITION",
+      "production_id": "Q_MOVEMENT_RHYTHM",
+      "disposition": "PROMOTED_WITH_VERSION_AND_PROMPT_LOCALIZATION_KEY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "QUESTION",
+      "research_id": "Q_MOVEMENT_VARIATION",
+      "production_kind": "QUESTION_DEFINITION",
+      "production_id": "Q_MOVEMENT_VARIATION",
+      "disposition": "PROMOTED_WITH_VERSION_AND_PROMPT_LOCALIZATION_KEY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "QUESTION",
+      "research_id": "Q_MOVEMENT_TEMPO",
+      "production_kind": "QUESTION_DEFINITION",
+      "production_id": "Q_MOVEMENT_TEMPO",
+      "disposition": "PROMOTED_WITH_VERSION_AND_PROMPT_LOCALIZATION_KEY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "QUESTION",
+      "research_id": "Q_MOVEMENT_TENSION",
+      "production_kind": "QUESTION_DEFINITION",
+      "production_id": "Q_MOVEMENT_TENSION",
+      "disposition": "PROMOTED_WITH_VERSION_AND_PROMPT_LOCALIZATION_KEY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "QUESTION",
+      "research_id": "Q_MOVEMENT_TEMPO_LIMIT",
+      "production_kind": "QUESTION_DEFINITION",
+      "production_id": "Q_MOVEMENT_TEMPO_LIMIT",
+      "disposition": "PROMOTED_WITH_VERSION_AND_PROMPT_LOCALIZATION_KEY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "QUESTION",
+      "research_id": "Q_DETAIL_T_HEIGHT",
+      "production_kind": "QUESTION_DEFINITION",
+      "production_id": "Q_DETAIL_T_HEIGHT",
+      "disposition": "PROMOTED_WITH_VERSION_AND_PROMPT_LOCALIZATION_KEY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "QUESTION",
+      "research_id": "Q_DETAIL_T_LENGTH",
+      "production_kind": "QUESTION_DEFINITION",
+      "production_id": "Q_DETAIL_T_LENGTH",
+      "disposition": "PROMOTED_WITH_VERSION_AND_PROMPT_LOCALIZATION_KEY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "QUESTION",
+      "research_id": "Q_DETAIL_T_END",
+      "production_kind": "QUESTION_DEFINITION",
+      "production_id": "Q_DETAIL_T_END",
+      "disposition": "PROMOTED_WITH_VERSION_AND_PROMPT_LOCALIZATION_KEY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "QUESTION",
+      "research_id": "Q_DETAIL_T_BALANCE",
+      "production_kind": "QUESTION_DEFINITION",
+      "production_id": "Q_DETAIL_T_BALANCE",
+      "disposition": "PROMOTED_WITH_VERSION_AND_PROMPT_LOCALIZATION_KEY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "QUESTION",
+      "research_id": "Q_DETAIL_DOT_FORM",
+      "production_kind": "QUESTION_DEFINITION",
+      "production_id": "Q_DETAIL_DOT_FORM",
+      "disposition": "PROMOTED_WITH_VERSION_AND_PROMPT_LOCALIZATION_KEY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "QUESTION",
+      "research_id": "Q_DETAIL_DOT_OFFSET",
+      "production_kind": "QUESTION_DEFINITION",
+      "production_id": "Q_DETAIL_DOT_OFFSET",
+      "disposition": "PROMOTED_WITH_VERSION_AND_PROMPT_LOCALIZATION_KEY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "QUESTION",
+      "research_id": "Q_DETAIL_DIACRITIC",
+      "production_kind": "QUESTION_DEFINITION",
+      "production_id": "Q_DETAIL_DIACRITIC",
+      "disposition": "PROMOTED_WITH_VERSION_AND_PROMPT_LOCALIZATION_KEY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "QUESTION",
+      "research_id": "Q_DETAIL_OVAL",
+      "production_kind": "QUESTION_DEFINITION",
+      "production_id": "Q_DETAIL_OVAL",
+      "disposition": "PROMOTED_WITH_VERSION_AND_PROMPT_LOCALIZATION_KEY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "QUESTION",
+      "research_id": "Q_DETAIL_OVAL_GAP",
+      "production_kind": "QUESTION_DEFINITION",
+      "production_id": "Q_DETAIL_OVAL_GAP",
+      "disposition": "PROMOTED_WITH_VERSION_AND_PROMPT_LOCALIZATION_KEY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "QUESTION",
+      "research_id": "Q_DETAIL_INITIAL",
+      "production_kind": "QUESTION_DEFINITION",
+      "production_id": "Q_DETAIL_INITIAL",
+      "disposition": "PROMOTED_WITH_VERSION_AND_PROMPT_LOCALIZATION_KEY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "QUESTION",
+      "research_id": "Q_DETAIL_TERMINAL",
+      "production_kind": "QUESTION_DEFINITION",
+      "production_id": "Q_DETAIL_TERMINAL",
+      "disposition": "PROMOTED_WITH_VERSION_AND_PROMPT_LOCALIZATION_KEY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "QUESTION",
+      "research_id": "Q_DETAIL_PPI",
+      "production_kind": "QUESTION_DEFINITION",
+      "production_id": "Q_DETAIL_PPI",
+      "disposition": "PROMOTED_WITH_VERSION_AND_PROMPT_LOCALIZATION_KEY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "QUESTION",
+      "research_id": "Q_SIG_LOCATION",
+      "production_kind": "QUESTION_DEFINITION",
+      "production_id": "Q_SIG_LOCATION",
+      "disposition": "PROMOTED_WITH_VERSION_AND_PROMPT_LOCALIZATION_KEY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "QUESTION",
+      "research_id": "Q_SIG_SIZE",
+      "production_kind": "QUESTION_DEFINITION",
+      "production_id": "Q_SIG_SIZE",
+      "disposition": "PROMOTED_WITH_VERSION_AND_PROMPT_LOCALIZATION_KEY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "QUESTION",
+      "research_id": "Q_SIG_SLANT",
+      "production_kind": "QUESTION_DEFINITION",
+      "production_id": "Q_SIG_SLANT",
+      "disposition": "PROMOTED_WITH_VERSION_AND_PROMPT_LOCALIZATION_KEY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "QUESTION",
+      "research_id": "Q_SIG_CONNECTION",
+      "production_kind": "QUESTION_DEFINITION",
+      "production_id": "Q_SIG_CONNECTION",
+      "disposition": "PROMOTED_WITH_VERSION_AND_PROMPT_LOCALIZATION_KEY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "QUESTION",
+      "research_id": "Q_SIG_ADDON",
+      "production_kind": "QUESTION_DEFINITION",
+      "production_id": "Q_SIG_ADDON",
+      "disposition": "PROMOTED_WITH_VERSION_AND_PROMPT_LOCALIZATION_KEY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "QUESTION",
+      "research_id": "Q_SIG_RELATION",
+      "production_kind": "QUESTION_DEFINITION",
+      "production_id": "Q_SIG_RELATION",
+      "disposition": "PROMOTED_WITH_VERSION_AND_PROMPT_LOCALIZATION_KEY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "QUESTION",
+      "research_id": "Q_HIERARCHY_MAIN",
+      "production_kind": "QUESTION_DEFINITION",
+      "production_id": "Q_HIERARCHY_MAIN",
+      "disposition": "PROMOTED_WITH_VERSION_AND_PROMPT_LOCALIZATION_KEY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "QUESTION",
+      "research_id": "Q_HIERARCHY_ROLE",
+      "production_kind": "QUESTION_DEFINITION",
+      "production_id": "Q_HIERARCHY_ROLE",
+      "disposition": "PROMOTED_WITH_VERSION_AND_PROMPT_LOCALIZATION_KEY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "QUESTION",
+      "research_id": "Q_HIERARCHY_SUPPORT",
+      "production_kind": "QUESTION_DEFINITION",
+      "production_id": "Q_HIERARCHY_SUPPORT",
+      "disposition": "PROMOTED_WITH_VERSION_AND_PROMPT_LOCALIZATION_KEY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "QUESTION",
+      "research_id": "Q_HIERARCHY_COUNTER",
+      "production_kind": "QUESTION_DEFINITION",
+      "production_id": "Q_HIERARCHY_COUNTER",
+      "disposition": "PROMOTED_WITH_VERSION_AND_PROMPT_LOCALIZATION_KEY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "QUESTION",
+      "research_id": "Q_HIERARCHY_RELATION",
+      "production_kind": "QUESTION_DEFINITION",
+      "production_id": "Q_HIERARCHY_RELATION",
+      "disposition": "PROMOTED_WITH_VERSION_AND_PROMPT_LOCALIZATION_KEY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "QUESTION",
+      "research_id": "Q_HIERARCHY_SCOPE",
+      "production_kind": "QUESTION_DEFINITION",
+      "production_id": "Q_HIERARCHY_SCOPE",
+      "disposition": "PROMOTED_WITH_VERSION_AND_PROMPT_LOCALIZATION_KEY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "QUESTION",
+      "research_id": "Q_HIERARCHY_COMBINATION",
+      "production_kind": "QUESTION_DEFINITION",
+      "production_id": "Q_HIERARCHY_COMBINATION",
+      "disposition": "PROMOTED_WITH_VERSION_AND_PROMPT_LOCALIZATION_KEY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "QUESTION",
+      "research_id": "Q_TRAD_BUNDLE",
+      "production_kind": "QUESTION_DEFINITION",
+      "production_id": "Q_TRAD_BUNDLE",
+      "disposition": "PROMOTED_WITH_VERSION_AND_PROMPT_LOCALIZATION_KEY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "QUESTION",
+      "research_id": "Q_TRAD_STATUS",
+      "production_kind": "QUESTION_DEFINITION",
+      "production_id": "Q_TRAD_STATUS",
+      "disposition": "PROMOTED_WITH_VERSION_AND_PROMPT_LOCALIZATION_KEY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "QUESTION",
+      "research_id": "Q_TRAD_MODIFIER",
+      "production_kind": "QUESTION_DEFINITION",
+      "production_id": "Q_TRAD_MODIFIER",
+      "disposition": "PROMOTED_WITH_VERSION_AND_PROMPT_LOCALIZATION_KEY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "QUESTION",
+      "research_id": "Q_TRAD_ALTERNATIVE",
+      "production_kind": "QUESTION_DEFINITION",
+      "production_id": "Q_TRAD_ALTERNATIVE",
+      "disposition": "PROMOTED_WITH_VERSION_AND_PROMPT_LOCALIZATION_KEY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "QUESTION",
+      "research_id": "Q_TRAD_SCHOOL_DIFF",
+      "production_kind": "QUESTION_DEFINITION",
+      "production_id": "Q_TRAD_SCHOOL_DIFF",
+      "disposition": "PROMOTED_WITH_VERSION_AND_PROMPT_LOCALIZATION_KEY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "QUESTION",
+      "research_id": "Q_TRAD_WITHHOLD",
+      "production_kind": "QUESTION_DEFINITION",
+      "production_id": "Q_TRAD_WITHHOLD",
+      "disposition": "PROMOTED_WITH_VERSION_AND_PROMPT_LOCALIZATION_KEY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "QUESTION",
+      "research_id": "Q_REF_ELIGIBLE",
+      "production_kind": "QUESTION_DEFINITION",
+      "production_id": "Q_REF_ELIGIBLE",
+      "disposition": "PROMOTED_WITH_VERSION_AND_PROMPT_LOCALIZATION_KEY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "QUESTION",
+      "research_id": "Q_REF_HIGHLIGHT",
+      "production_kind": "QUESTION_DEFINITION",
+      "production_id": "Q_REF_HIGHLIGHT",
+      "disposition": "PROMOTED_WITH_VERSION_AND_PROMPT_LOCALIZATION_KEY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "QUESTION",
+      "research_id": "Q_REF_COMBINATION",
+      "production_kind": "QUESTION_DEFINITION",
+      "production_id": "Q_REF_COMBINATION",
+      "disposition": "PROMOTED_WITH_VERSION_AND_PROMPT_LOCALIZATION_KEY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "QUESTION",
+      "research_id": "Q_REF_QUALIFICATION",
+      "production_kind": "QUESTION_DEFINITION",
+      "production_id": "Q_REF_QUALIFICATION",
+      "disposition": "PROMOTED_WITH_VERSION_AND_PROMPT_LOCALIZATION_KEY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "QUESTION",
+      "research_id": "Q_PAIR_COMPARABLE",
+      "production_kind": "QUESTION_DEFINITION",
+      "production_id": "Q_PAIR_COMPARABLE",
+      "disposition": "PROMOTED_WITH_VERSION_AND_PROMPT_LOCALIZATION_KEY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "QUESTION",
+      "research_id": "Q_PAIR_SIMILAR",
+      "production_kind": "QUESTION_DEFINITION",
+      "production_id": "Q_PAIR_SIMILAR",
+      "disposition": "PROMOTED_WITH_VERSION_AND_PROMPT_LOCALIZATION_KEY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "QUESTION",
+      "research_id": "Q_PAIR_DIFFERENT",
+      "production_kind": "QUESTION_DEFINITION",
+      "production_id": "Q_PAIR_DIFFERENT",
+      "disposition": "PROMOTED_WITH_VERSION_AND_PROMPT_LOCALIZATION_KEY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "QUESTION",
+      "research_id": "Q_PAIR_TRAD",
+      "production_kind": "QUESTION_DEFINITION",
+      "production_id": "Q_PAIR_TRAD",
+      "disposition": "PROMOTED_WITH_VERSION_AND_PROMPT_LOCALIZATION_KEY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "QUESTION",
+      "research_id": "Q_HIST_COMPARABLE",
+      "production_kind": "QUESTION_DEFINITION",
+      "production_id": "Q_HIST_COMPARABLE",
+      "disposition": "PROMOTED_WITH_VERSION_AND_PROMPT_LOCALIZATION_KEY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "QUESTION",
+      "research_id": "Q_HIST_CHANGE",
+      "production_kind": "QUESTION_DEFINITION",
+      "production_id": "Q_HIST_CHANGE",
+      "disposition": "PROMOTED_WITH_VERSION_AND_PROMPT_LOCALIZATION_KEY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "QUESTION",
+      "research_id": "Q_HIST_STABLE",
+      "production_kind": "QUESTION_DEFINITION",
+      "production_id": "Q_HIST_STABLE",
+      "disposition": "PROMOTED_WITH_VERSION_AND_PROMPT_LOCALIZATION_KEY",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "QUESTION",
+      "research_id": "Q_HIST_LIMIT",
+      "production_kind": "QUESTION_DEFINITION",
+      "production_id": "Q_HIST_LIMIT",
+      "disposition": "PROMOTED_WITH_VERSION_AND_PROMPT_LOCALIZATION_KEY",
+      "runtime_effect": "NONE"
+    }
+  ]
+}

@@ -1,0 +1,207 @@
+[
+  {
+    "question_id": "Q_GLOBAL_FORM_MOVEMENT",
+    "version": "1.0.0",
+    "selector_id": "SEL_GLOBAL_FORM_MOVEMENT",
+    "domain_id": "GLOBAL",
+    "scope": "INDIVIDUAL",
+    "prompt_template_key": "question.q_global_form_movement",
+    "prompt_text_en": "Does the whole sample appear form-led, movement-led, or neither?",
+    "text_origin": "APPLICATION_AUTHORED",
+    "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+    "source_refs": [
+      {
+        "source_id": "AHAF",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "CNPG_A",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "CNPG_B",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "SGB",
+        "relationship": "domain_or_term_basis"
+      }
+    ],
+    "answer_mode": "SELECTOR",
+    "answer_owner": "PREMIUM_VISUAL",
+    "model_call_role": "ANSWER",
+    "required_inputs": [
+      "AUTHORIZED_IMAGE",
+      "IDENTIFIED_EVIDENCE_REGION"
+    ],
+    "required_fact_classes": [
+      "AI_VISUAL_DESCRIPTION_NOT_CANONICAL_MEASUREMENT"
+    ],
+    "required_candidate_kinds": [],
+    "minimum_supporting_fact_count": null,
+    "minimum_supporting_association_count": null,
+    "fallback_value_id": null,
+    "answer_state_policy": "ANSWER_STATE_V1",
+    "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+    "report_target": "graphology.global",
+    "note": "Describes visual impression, not measured speed or psychological control.",
+    "order_in_domain": 1,
+    "source_status": "DRAFT_NOT_ACTIVATED",
+    "runtime_status": "DRAFT_NOT_ACTIVE",
+    "enabled": false
+  },
+  {
+    "question_id": "Q_GLOBAL_COHERENCE",
+    "version": "1.0.0",
+    "selector_id": "SEL_GLOBAL_COHERENCE",
+    "domain_id": "GLOBAL",
+    "scope": "INDIVIDUAL",
+    "prompt_template_key": "question.q_global_coherence",
+    "prompt_text_en": "How coherently do space, form and apparent movement work together?",
+    "text_origin": "APPLICATION_AUTHORED",
+    "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+    "source_refs": [
+      {
+        "source_id": "AHAF",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "CNPG_A",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "CNPG_B",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "SGB",
+        "relationship": "domain_or_term_basis"
+      }
+    ],
+    "answer_mode": "SELECTOR",
+    "answer_owner": "PREMIUM_VISUAL",
+    "model_call_role": "ANSWER",
+    "required_inputs": [
+      "AUTHORIZED_IMAGE",
+      "IDENTIFIED_EVIDENCE_REGION"
+    ],
+    "required_fact_classes": [
+      "AI_VISUAL_DESCRIPTION_NOT_CANONICAL_MEASUREMENT"
+    ],
+    "required_candidate_kinds": [],
+    "minimum_supporting_fact_count": null,
+    "minimum_supporting_association_count": null,
+    "fallback_value_id": null,
+    "answer_state_policy": "ANSWER_STATE_V1",
+    "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+    "report_target": "graphology.global",
+    "note": "Requires reviewable visual anchors; no score for human quality.",
+    "order_in_domain": 2,
+    "source_status": "DRAFT_NOT_ACTIVATED",
+    "runtime_status": "DRAFT_NOT_ACTIVE",
+    "enabled": false
+  },
+  {
+    "question_id": "Q_GLOBAL_VARIATION",
+    "version": "1.0.0",
+    "selector_id": "SEL_GLOBAL_VARIATION",
+    "domain_id": "GLOBAL",
+    "scope": "INDIVIDUAL",
+    "prompt_template_key": "question.q_global_variation",
+    "prompt_text_en": "Is visible variation uniform, patterned, or apparently unpatterned?",
+    "text_origin": "APPLICATION_AUTHORED",
+    "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+    "source_refs": [
+      {
+        "source_id": "AHAF",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "CNPG_A",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "CNPG_B",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "SGB",
+        "relationship": "domain_or_term_basis"
+      }
+    ],
+    "answer_mode": "SELECTOR",
+    "answer_owner": "PREMIUM_VISUAL",
+    "model_call_role": "ANSWER",
+    "required_inputs": [
+      "AUTHORIZED_IMAGE",
+      "IDENTIFIED_EVIDENCE_REGION"
+    ],
+    "required_fact_classes": [
+      "AI_VISUAL_DESCRIPTION_NOT_CANONICAL_MEASUREMENT"
+    ],
+    "required_candidate_kinds": [],
+    "minimum_supporting_fact_count": null,
+    "minimum_supporting_association_count": null,
+    "fallback_value_id": null,
+    "answer_state_policy": "ANSWER_STATE_V1",
+    "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+    "report_target": "graphology.global",
+    "note": "Not equivalent to Moretti Disuguale metodico without the school method.",
+    "order_in_domain": 3,
+    "source_status": "DRAFT_NOT_ACTIVATED",
+    "runtime_status": "DRAFT_NOT_ACTIVE",
+    "enabled": false
+  },
+  {
+    "question_id": "Q_GLOBAL_EVIDENCE_CONFLICT",
+    "version": "1.0.0",
+    "selector_id": "SEL_GLOBAL_EVIDENCE_CONFLICT",
+    "domain_id": "GLOBAL",
+    "scope": "INDIVIDUAL",
+    "prompt_template_key": "question.q_global_evidence_conflict",
+    "prompt_text_en": "Which supplied measurement-image discrepancies require review?",
+    "text_origin": "APPLICATION_AUTHORED",
+    "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+    "source_refs": [
+      {
+        "source_id": "AHAF",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "CNPG_A",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "CNPG_B",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "SGB",
+        "relationship": "domain_or_term_basis"
+      }
+    ],
+    "answer_mode": "MULTI_SELECTOR",
+    "answer_owner": "PREMIUM_EDITOR",
+    "model_call_role": "ANSWER",
+    "required_inputs": [
+      "CURRENT_REPORT_CANDIDATES"
+    ],
+    "required_fact_classes": [
+      "SELECTION_OR_SYNTHESIS_OF_SUPPLIED_CANDIDATES"
+    ],
+    "required_candidate_kinds": [
+      "MEASUREMENT_CONFLICT_CANDIDATE"
+    ],
+    "minimum_supporting_fact_count": null,
+    "minimum_supporting_association_count": null,
+    "fallback_value_id": null,
+    "answer_state_policy": "ANSWER_STATE_V1",
+    "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+    "report_target": "graphology.global",
+    "note": "Model does not override measurements; affected conclusions are withheld.",
+    "order_in_domain": 4,
+    "source_status": "DRAFT_NOT_ACTIVATED",
+    "runtime_status": "DRAFT_NOT_ACTIVE",
+    "enabled": false
+  }
+]

@@ -367,7 +367,7 @@
       "production_gates": [
         "interpretation_database_review"
       ],
-      "status": "PLANNED"
+      "status": "IMPLEMENTED_PENDING_REVIEW"
     }
   ]
 }

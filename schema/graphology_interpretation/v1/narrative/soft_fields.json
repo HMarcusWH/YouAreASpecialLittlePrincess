@@ -1,0 +1,288 @@
+{
+  "version": "graphology-soft-fields/1",
+  "runtime_activation": false,
+  "records": [
+    {
+      "soft_field_id": "SOFT_GRAPHIC_PORTRAIT",
+      "purpose": "Describe the overall handwriting pattern without claiming to diagnose its author.",
+      "scope": "INDIVIDUAL",
+      "max_characters": 500,
+      "max_sentences": 3,
+      "text_origin": "APPLICATION_AUTHORED_PROMPT",
+      "source_refs": [
+        "AHAF",
+        "CNPG_B"
+      ],
+      "status": "DRAFT_NOT_ACTIVATED",
+      "requirement_origin": "APPLICATION_DESIGN_NOT_SOURCE_PRESCRIPTION",
+      "required_support": [
+        "SUPPLIED_GRAPHIC_SIGNS",
+        "AUTHORIZED_IMAGE"
+      ],
+      "allow_new_numbers": false,
+      "no_source_no_claim": true,
+      "report_target": "graphology.synthesis",
+      "version": "1.0.0",
+      "label_key": "soft.soft_graphic_portrait.label",
+      "prompt_template_key": "soft.soft_graphic_portrait.prompt",
+      "tone_profile_id": "PREMIUM_EVIDENCE_DOSSIER_V1",
+      "prohibited_claim_classes": [
+        "CLINICAL_OR_PSYCHIATRIC_DIAGNOSIS",
+        "INTELLIGENCE_OR_COGNITIVE_ABILITY",
+        "CRIMINALITY_OR_DECEPTION",
+        "EMPLOYMENT_SUITABILITY",
+        "RELATIONSHIP_OUTCOME_OR_COMPATIBILITY",
+        "MORAL_WORTH",
+        "NEW_NUMERIC_MEASUREMENT_PERCENTILE_PROBABILITY_OR_SCORE"
+      ],
+      "support_policy": "REQUIRED_SUPPORT_ONLY",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
+    },
+    {
+      "soft_field_id": "SOFT_COMBINATION",
+      "purpose": "Explain one evidenced relationship between features, including qualifiers.",
+      "scope": "INDIVIDUAL",
+      "max_characters": 350,
+      "max_sentences": 3,
+      "text_origin": "APPLICATION_AUTHORED_PROMPT",
+      "source_refs": [
+        "CJ1892"
+      ],
+      "status": "DRAFT_NOT_ACTIVATED",
+      "requirement_origin": "APPLICATION_DESIGN_NOT_SOURCE_PRESCRIPTION",
+      "required_support": [
+        "GRAPHIC_COMBINATION"
+      ],
+      "allow_new_numbers": false,
+      "no_source_no_claim": true,
+      "report_target": "graphology.synthesis",
+      "version": "1.0.0",
+      "label_key": "soft.soft_combination.label",
+      "prompt_template_key": "soft.soft_combination.prompt",
+      "tone_profile_id": "PREMIUM_EVIDENCE_DOSSIER_V1",
+      "prohibited_claim_classes": [
+        "CLINICAL_OR_PSYCHIATRIC_DIAGNOSIS",
+        "INTELLIGENCE_OR_COGNITIVE_ABILITY",
+        "CRIMINALITY_OR_DECEPTION",
+        "EMPLOYMENT_SUITABILITY",
+        "RELATIONSHIP_OUTCOME_OR_COMPATIBILITY",
+        "MORAL_WORTH",
+        "NEW_NUMERIC_MEASUREMENT_PERCENTILE_PROBABILITY_OR_SCORE"
+      ],
+      "support_policy": "REQUIRED_SUPPORT_ONLY",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
+    },
+    {
+      "soft_field_id": "SOFT_TRADITIONAL_SYNTHESIS",
+      "purpose": "Explain the selected historical/traditional reading as such, naming its school and limits.",
+      "scope": "INDIVIDUAL",
+      "max_characters": 650,
+      "max_sentences": 3,
+      "text_origin": "APPLICATION_AUTHORED_PROMPT",
+      "source_refs": [
+        "CJ1892",
+        "BIG26",
+        "CARBONARI"
+      ],
+      "status": "DRAFT_NOT_ACTIVATED",
+      "requirement_origin": "APPLICATION_DESIGN_NOT_SOURCE_PRESCRIPTION",
+      "required_support": [
+        "REVIEWED_TRADITIONAL_CANDIDATE",
+        "SUPPORT_GROUPS",
+        "COUNTEREVIDENCE_REVIEW"
+      ],
+      "allow_new_numbers": false,
+      "no_source_no_claim": true,
+      "report_target": "graphology.synthesis",
+      "version": "1.0.0",
+      "label_key": "soft.soft_traditional_synthesis.label",
+      "prompt_template_key": "soft.soft_traditional_synthesis.prompt",
+      "tone_profile_id": "PREMIUM_EVIDENCE_DOSSIER_V1",
+      "prohibited_claim_classes": [
+        "CLINICAL_OR_PSYCHIATRIC_DIAGNOSIS",
+        "INTELLIGENCE_OR_COGNITIVE_ABILITY",
+        "CRIMINALITY_OR_DECEPTION",
+        "EMPLOYMENT_SUITABILITY",
+        "RELATIONSHIP_OUTCOME_OR_COMPATIBILITY",
+        "MORAL_WORTH",
+        "NEW_NUMERIC_MEASUREMENT_PERCENTILE_PROBABILITY_OR_SCORE"
+      ],
+      "support_policy": "REQUIRED_SUPPORT_ONLY",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
+    },
+    {
+      "soft_field_id": "SOFT_ALTERNATIVE",
+      "purpose": "Explain why an alternative reading remains unresolved instead of choosing a flattering answer.",
+      "scope": "INDIVIDUAL",
+      "max_characters": 350,
+      "max_sentences": 3,
+      "text_origin": "APPLICATION_AUTHORED_PROMPT",
+      "source_refs": [
+        "CJ1892"
+      ],
+      "status": "DRAFT_NOT_ACTIVATED",
+      "requirement_origin": "APPLICATION_DESIGN_NOT_SOURCE_PRESCRIPTION",
+      "required_support": [
+        "TRADITIONAL_ALTERNATIVE"
+      ],
+      "allow_new_numbers": false,
+      "no_source_no_claim": true,
+      "report_target": "graphology.synthesis",
+      "version": "1.0.0",
+      "label_key": "soft.soft_alternative.label",
+      "prompt_template_key": "soft.soft_alternative.prompt",
+      "tone_profile_id": "PREMIUM_EVIDENCE_DOSSIER_V1",
+      "prohibited_claim_classes": [
+        "CLINICAL_OR_PSYCHIATRIC_DIAGNOSIS",
+        "INTELLIGENCE_OR_COGNITIVE_ABILITY",
+        "CRIMINALITY_OR_DECEPTION",
+        "EMPLOYMENT_SUITABILITY",
+        "RELATIONSHIP_OUTCOME_OR_COMPATIBILITY",
+        "MORAL_WORTH",
+        "NEW_NUMERIC_MEASUREMENT_PERCENTILE_PROBABILITY_OR_SCORE"
+      ],
+      "support_policy": "REQUIRED_SUPPORT_ONLY",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
+    },
+    {
+      "soft_field_id": "SOFT_DISTINCTIVENESS",
+      "purpose": "Explain the supplied unusual feature without adding rarity or superiority claims.",
+      "scope": "INDIVIDUAL",
+      "max_characters": 350,
+      "max_sentences": 3,
+      "text_origin": "APPLICATION_AUTHORED_PROMPT",
+      "source_refs": [],
+      "status": "DRAFT_NOT_ACTIVATED",
+      "requirement_origin": "APPLICATION_DESIGN_NOT_SOURCE_PRESCRIPTION",
+      "required_support": [
+        "VERIFIED_OUTLIER",
+        "REFERENCE_CAVEATS"
+      ],
+      "allow_new_numbers": false,
+      "no_source_no_claim": true,
+      "report_target": "graphology.synthesis",
+      "version": "1.0.0",
+      "label_key": "soft.soft_distinctiveness.label",
+      "prompt_template_key": "soft.soft_distinctiveness.prompt",
+      "tone_profile_id": "PREMIUM_EVIDENCE_DOSSIER_V1",
+      "prohibited_claim_classes": [
+        "CLINICAL_OR_PSYCHIATRIC_DIAGNOSIS",
+        "INTELLIGENCE_OR_COGNITIVE_ABILITY",
+        "CRIMINALITY_OR_DECEPTION",
+        "EMPLOYMENT_SUITABILITY",
+        "RELATIONSHIP_OUTCOME_OR_COMPATIBILITY",
+        "MORAL_WORTH",
+        "NEW_NUMERIC_MEASUREMENT_PERCENTILE_PROBABILITY_OR_SCORE"
+      ],
+      "support_policy": "REQUIRED_SUPPORT_ONLY",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
+    },
+    {
+      "soft_field_id": "SOFT_PAIR",
+      "purpose": "Explain graphical similarities and contrasts while retaining both samples' limitations.",
+      "scope": "PAIR",
+      "max_characters": 600,
+      "max_sentences": 3,
+      "text_origin": "APPLICATION_AUTHORED_PROMPT",
+      "source_refs": [],
+      "status": "DRAFT_NOT_ACTIVATED",
+      "requirement_origin": "APPLICATION_DESIGN_NOT_SOURCE_PRESCRIPTION",
+      "required_support": [
+        "PAIR_SIMILARITY",
+        "PAIR_DIFFERENCE",
+        "COMPARABILITY"
+      ],
+      "allow_new_numbers": false,
+      "no_source_no_claim": true,
+      "report_target": "graphology.synthesis",
+      "version": "1.0.0",
+      "label_key": "soft.soft_pair.label",
+      "prompt_template_key": "soft.soft_pair.prompt",
+      "tone_profile_id": "PREMIUM_EVIDENCE_DOSSIER_V1",
+      "prohibited_claim_classes": [
+        "CLINICAL_OR_PSYCHIATRIC_DIAGNOSIS",
+        "INTELLIGENCE_OR_COGNITIVE_ABILITY",
+        "CRIMINALITY_OR_DECEPTION",
+        "EMPLOYMENT_SUITABILITY",
+        "RELATIONSHIP_OUTCOME_OR_COMPATIBILITY",
+        "MORAL_WORTH",
+        "NEW_NUMERIC_MEASUREMENT_PERCENTILE_PROBABILITY_OR_SCORE"
+      ],
+      "support_policy": "REQUIRED_SUPPORT_ONLY",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
+    },
+    {
+      "soft_field_id": "SOFT_HISTORY",
+      "purpose": "Explain comparable graphical change without claiming a change in character or health.",
+      "scope": "HISTORY",
+      "max_characters": 500,
+      "max_sentences": 3,
+      "text_origin": "APPLICATION_AUTHORED_PROMPT",
+      "source_refs": [],
+      "status": "DRAFT_NOT_ACTIVATED",
+      "requirement_origin": "APPLICATION_DESIGN_NOT_SOURCE_PRESCRIPTION",
+      "required_support": [
+        "HISTORY_CHANGE",
+        "HISTORY_CAVEAT"
+      ],
+      "allow_new_numbers": false,
+      "no_source_no_claim": true,
+      "report_target": "graphology.synthesis",
+      "version": "1.0.0",
+      "label_key": "soft.soft_history.label",
+      "prompt_template_key": "soft.soft_history.prompt",
+      "tone_profile_id": "PREMIUM_EVIDENCE_DOSSIER_V1",
+      "prohibited_claim_classes": [
+        "CLINICAL_OR_PSYCHIATRIC_DIAGNOSIS",
+        "INTELLIGENCE_OR_COGNITIVE_ABILITY",
+        "CRIMINALITY_OR_DECEPTION",
+        "EMPLOYMENT_SUITABILITY",
+        "RELATIONSHIP_OUTCOME_OR_COMPATIBILITY",
+        "MORAL_WORTH",
+        "NEW_NUMERIC_MEASUREMENT_PERCENTILE_PROBABILITY_OR_SCORE"
+      ],
+      "support_policy": "REQUIRED_SUPPORT_ONLY",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
+    },
+    {
+      "soft_field_id": "SOFT_LIMITATION",
+      "purpose": "Summarize important unknowns and withheld claims without speculating.",
+      "scope": "ALL",
+      "max_characters": 350,
+      "max_sentences": 3,
+      "text_origin": "APPLICATION_AUTHORED_PROMPT",
+      "source_refs": [],
+      "status": "DRAFT_NOT_ACTIVATED",
+      "requirement_origin": "APPLICATION_DESIGN_NOT_SOURCE_PRESCRIPTION",
+      "required_support": [
+        "SUPPLIED_LIMITATIONS"
+      ],
+      "allow_new_numbers": false,
+      "no_source_no_claim": true,
+      "report_target": "graphology.synthesis",
+      "version": "1.0.0",
+      "label_key": "soft.soft_limitation.label",
+      "prompt_template_key": "soft.soft_limitation.prompt",
+      "tone_profile_id": "PREMIUM_EVIDENCE_DOSSIER_V1",
+      "prohibited_claim_classes": [
+        "CLINICAL_OR_PSYCHIATRIC_DIAGNOSIS",
+        "INTELLIGENCE_OR_COGNITIVE_ABILITY",
+        "CRIMINALITY_OR_DECEPTION",
+        "EMPLOYMENT_SUITABILITY",
+        "RELATIONSHIP_OUTCOME_OR_COMPATIBILITY",
+        "MORAL_WORTH",
+        "NEW_NUMERIC_MEASUREMENT_PERCENTILE_PROBABILITY_OR_SCORE"
+      ],
+      "support_policy": "REQUIRED_SUPPORT_ONLY",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
+    }
+  ]
+}

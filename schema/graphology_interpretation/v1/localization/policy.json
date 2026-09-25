@@ -1,0 +1,13 @@
+{
+  "version": "graphology-localization-policy/1",
+  "canonical_locale": "en",
+  "supported_locales": [
+    "en"
+  ],
+  "planned_locales": [
+    "sv"
+  ],
+  "source_text_policy": "English question text and value labels are preserved from the frozen research/application draft. Localization keys are stable IDs; adding a translation must not change IDs or semantics.",
+  "compiler_output": "The compiler emits a complete English localization catalogue and a sorted localization-key registry.",
+  "runtime_status": "DRAFT_NOT_ACTIVE"
+}

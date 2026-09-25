@@ -191,18 +191,19 @@ def validate(repo: Path) -> list[str]:
     if blocked_concepts != concept_ids:
         errors.append("existing concept activation gaps changed during PR3")
 
-    required_exclusions = {
-        "Production question text and executable question packs",
-        "Runtime activation of any traditional association or rule pack",
-        "Source-complete association population beyond the two researched blocked Jaminian stubs",
-        "Candidate generator implementations",
-        "Soft-field activation and tone profiles",
-        "Report mappings",
-        "Localization",
-        "Compiled premium_interpretation_database_v1.json",
-    }
-    if set(exclusions["intentionally_not_in_scope"]) != required_exclusions:
-        errors.append("PR3 exclusions differ from reviewed scope")
+    if manifest["production_scope"] != "COMPLETE_DATABASE_PENDING_REVIEW":
+        required_exclusions = {
+            "Production question text and executable question packs",
+            "Runtime activation of any traditional association or rule pack",
+            "Source-complete association population beyond the two researched blocked Jaminian stubs",
+            "Candidate generator implementations",
+            "Soft-field activation and tone profiles",
+            "Report mappings",
+            "Localization",
+            "Compiled premium_interpretation_database_v1.json",
+        }
+        if set(exclusions["intentionally_not_in_scope"]) != required_exclusions:
+            errors.append("PR3 exclusions differ from reviewed scope")
 
     expected_counts = {
         "traditional_method_policies": 4,
@@ -216,14 +217,23 @@ def validate(repo: Path) -> list[str]:
     for key, value in expected_counts.items():
         if manifest["counts"].get(key) != value:
             errors.append(f"manifest PR3 count differs for {key}")
-    if manifest["runtime_activation"] is not False or manifest["t26_status"] != "PLANNED":
-        errors.append("manifest/T26 unexpectedly activated")
-    if manifest["production_scope"] != "ONTOLOGY_PROVENANCE_OBSERVATIONS_SELECTORS_VALUES_TRADITIONAL_RULE_STRUCTURES":
+    if manifest["runtime_activation"] is not False or manifest["t26_status"] not in {"PLANNED", "IMPLEMENTED_PENDING_REVIEW"}:
+        errors.append("manifest/T26 status invalid")
+    allowed_scopes = {
+        "ONTOLOGY_PROVENANCE_OBSERVATIONS_SELECTORS_VALUES_TRADITIONAL_RULE_STRUCTURES",
+        "COMPLETE_DATABASE_PENDING_REVIEW",
+    }
+    if manifest["production_scope"] not in allowed_scopes:
         errors.append("manifest PR3 scope invalid")
-    if scaffold.get("status") != "UNPOPULATED":
+    expected_scaffold_status = (
+        "POPULATED_PENDING_REVIEW"
+        if manifest["production_scope"] == "COMPLETE_DATABASE_PENDING_REVIEW"
+        else "UNPOPULATED"
+    )
+    if scaffold.get("status") != expected_scaffold_status:
         errors.append("compiled Premium scaffold must remain UNPOPULATED in PR3")
-    if next(x for x in tasks["tasks"] if x["id"] == "T26")["status"] != "PLANNED":
-        errors.append("T26 must remain PLANNED in PR3")
+    if next(x for x in tasks["tasks"] if x["id"] == "T26")["status"] not in {"PLANNED", "IMPLEMENTED_PENDING_REVIEW"}:
+        errors.append("T26 status invalid for PR3 compatibility")
 
     return errors
 

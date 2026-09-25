@@ -22,8 +22,10 @@ def test_foundation_validator_passes():
     assert validator.validate(REPO) == []
 
 
-def test_production_scaffold_stays_unpopulated():
-    assert load("schema/premium_interpretation_database_v1.json")["status"] == "UNPOPULATED"
+def test_production_scaffold_remains_non_active_across_stages():
+    db = load("schema/premium_interpretation_database_v1.json")
+    assert db["status"] in {"UNPOPULATED", "POPULATED_PENDING_REVIEW"}
+    assert db.get("runtime_activation", False) is False
 
 
 def test_five_traditions_plus_application_namespace():

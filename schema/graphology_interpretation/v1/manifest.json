@@ -1,15 +1,15 @@
 {
   "database_id": "graphology-interpretation",
-  "version": "1.0.0-foundation.3",
-  "status": "TRADITIONAL_RULE_STRUCTURE_DRAFT",
-  "production_scope": "ONTOLOGY_PROVENANCE_OBSERVATIONS_SELECTORS_VALUES_TRADITIONAL_RULE_STRUCTURES",
+  "version": "1.0.0-rc.1",
+  "status": "POPULATED_PENDING_REVIEW",
+  "production_scope": "COMPLETE_DATABASE_PENDING_REVIEW",
   "runtime_activation": false,
-  "t26_status": "PLANNED",
+  "t26_status": "IMPLEMENTED_PENDING_REVIEW",
   "research_snapshot": "research/graphology/foundations-v0.1",
-  "research_baseline_commit": "8d6003c24473a6cefb2ac13211c778701748d0d3",
+  "research_baseline_commit": "48897ff35949710d870d0b16096ada5d63c3626d",
   "canonical_feature_database": "schema/graphology_feature_database_v1.json",
   "compiled_runtime_artifact": "schema/premium_interpretation_database_v1.json",
-  "compiled_runtime_artifact_status": "UNCHANGED_UNPOPULATED",
+  "compiled_runtime_artifact_status": "POPULATED_PENDING_REVIEW",
   "counts": {
     "sources": 15,
     "schools": 6,
@@ -36,7 +36,13 @@
     "historical_association_stubs": 2,
     "runtime_eligible_associations": 0,
     "rule_pack_shells": 5,
-    "active_rule_packs": 0
+    "active_rule_packs": 0,
+    "question_definitions": 89,
+    "question_packs": 5,
+    "soft_fields": 8,
+    "tone_profiles": 1,
+    "report_slots": 17,
+    "report_mappings": 97
   },
-  "next_pr": "T26 PR 4 — production question packs, soft fields, report mappings and localization"
+  "next_pr": "T26 PR 5 — Codex review repairs and finalization"
 }

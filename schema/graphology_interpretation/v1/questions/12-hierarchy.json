@@ -1,0 +1,339 @@
+[
+  {
+    "question_id": "Q_HIERARCHY_MAIN",
+    "version": "1.0.0",
+    "selector_id": "SEL_HIERARCHY_MAIN",
+    "domain_id": "HIERARCHY",
+    "scope": "INDIVIDUAL",
+    "prompt_template_key": "question.q_hierarchy_main",
+    "prompt_text_en": "Which eligible graphic characteristics dominate the overall sample, whether rare or common?",
+    "text_origin": "APPLICATION_AUTHORED",
+    "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+    "source_refs": [
+      {
+        "source_id": "BIG26",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "CJ1892",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "CARBONARI",
+        "relationship": "domain_or_term_basis"
+      }
+    ],
+    "answer_mode": "MULTI_SELECTOR",
+    "answer_owner": "PREMIUM_EDITOR",
+    "model_call_role": "ANSWER",
+    "required_inputs": [
+      "CURRENT_REPORT_CANDIDATES"
+    ],
+    "required_fact_classes": [
+      "SELECTION_OR_SYNTHESIS_OF_SUPPLIED_CANDIDATES"
+    ],
+    "required_candidate_kinds": [
+      "GRAPHIC_SIGN"
+    ],
+    "minimum_supporting_fact_count": null,
+    "minimum_supporting_association_count": null,
+    "fallback_value_id": null,
+    "answer_state_policy": "ANSWER_STATE_V1",
+    "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+    "report_target": "graphology.hierarchy",
+    "note": "Selection is not a population ranking.",
+    "order_in_domain": 1,
+    "source_status": "DRAFT_NOT_ACTIVATED",
+    "runtime_status": "DRAFT_NOT_ACTIVE",
+    "enabled": false
+  },
+  {
+    "question_id": "Q_HIERARCHY_ROLE",
+    "version": "1.0.0",
+    "selector_id": "SEL_HIERARCHY_ROLE",
+    "domain_id": "HIERARCHY",
+    "scope": "INDIVIDUAL",
+    "prompt_template_key": "question.q_hierarchy_role",
+    "prompt_text_en": "What descriptive importance does each supplied sign have in this sample?",
+    "text_origin": "APPLICATION_AUTHORED",
+    "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+    "source_refs": [
+      {
+        "source_id": "BIG26",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "CJ1892",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "CARBONARI",
+        "relationship": "domain_or_term_basis"
+      }
+    ],
+    "answer_mode": "SELECTOR",
+    "answer_owner": "PREMIUM_VISUAL",
+    "model_call_role": "ANSWER",
+    "required_inputs": [
+      "PREIDENTIFIED_GRAPHIC_SIGN",
+      "AUTHORIZED_IMAGE",
+      "IDENTIFIED_EVIDENCE_REGION"
+    ],
+    "required_fact_classes": [
+      "AI_VISUAL_DESCRIPTION_NOT_CANONICAL_MEASUREMENT"
+    ],
+    "required_candidate_kinds": [],
+    "minimum_supporting_fact_count": null,
+    "minimum_supporting_association_count": null,
+    "fallback_value_id": null,
+    "answer_state_policy": "ANSWER_STATE_V1",
+    "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+    "report_target": "graphology.hierarchy",
+    "note": "BIG descriptive hierarchy; not interchangeable with Moretti inherent sign-role classes.",
+    "order_in_domain": 2,
+    "source_status": "DRAFT_NOT_ACTIVATED",
+    "runtime_status": "DRAFT_NOT_ACTIVE",
+    "enabled": false
+  },
+  {
+    "question_id": "Q_HIERARCHY_SUPPORT",
+    "version": "1.0.0",
+    "selector_id": "SEL_HIERARCHY_SUPPORT",
+    "domain_id": "HIERARCHY",
+    "scope": "INDIVIDUAL",
+    "prompt_template_key": "question.q_hierarchy_support",
+    "prompt_text_en": "Which independent graphic families support the supplied traditional candidate?",
+    "text_origin": "APPLICATION_AUTHORED",
+    "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+    "source_refs": [
+      {
+        "source_id": "BIG26",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "CJ1892",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "CARBONARI",
+        "relationship": "domain_or_term_basis"
+      }
+    ],
+    "answer_mode": "MULTI_SELECTOR",
+    "answer_owner": "PREMIUM_EDITOR",
+    "model_call_role": "ANSWER",
+    "required_inputs": [
+      "TRADITIONAL_CANDIDATE",
+      "CURRENT_REPORT_CANDIDATES"
+    ],
+    "required_fact_classes": [
+      "SELECTION_OR_SYNTHESIS_OF_SUPPLIED_CANDIDATES"
+    ],
+    "required_candidate_kinds": [
+      "SUPPORT_GROUP"
+    ],
+    "minimum_supporting_fact_count": null,
+    "minimum_supporting_association_count": null,
+    "fallback_value_id": null,
+    "answer_state_policy": "ANSWER_STATE_V1",
+    "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+    "report_target": "graphology.hierarchy",
+    "note": "Repeated summaries of the same slant observations count as one support group.",
+    "order_in_domain": 3,
+    "source_status": "DRAFT_NOT_ACTIVATED",
+    "runtime_status": "DRAFT_NOT_ACTIVE",
+    "enabled": false
+  },
+  {
+    "question_id": "Q_HIERARCHY_COUNTER",
+    "version": "1.0.0",
+    "selector_id": "SEL_HIERARCHY_COUNTER",
+    "domain_id": "HIERARCHY",
+    "scope": "INDIVIDUAL",
+    "prompt_template_key": "question.q_hierarchy_counter",
+    "prompt_text_en": "Which supplied observations qualify or oppose the proposed reading?",
+    "text_origin": "APPLICATION_AUTHORED",
+    "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+    "source_refs": [
+      {
+        "source_id": "BIG26",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "CJ1892",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "CARBONARI",
+        "relationship": "domain_or_term_basis"
+      }
+    ],
+    "answer_mode": "MULTI_SELECTOR",
+    "answer_owner": "PREMIUM_EDITOR",
+    "model_call_role": "ANSWER",
+    "required_inputs": [
+      "TRADITIONAL_CANDIDATE",
+      "CURRENT_REPORT_CANDIDATES"
+    ],
+    "required_fact_classes": [
+      "SELECTION_OR_SYNTHESIS_OF_SUPPLIED_CANDIDATES"
+    ],
+    "required_candidate_kinds": [
+      "COUNTEREVIDENCE_GROUP"
+    ],
+    "minimum_supporting_fact_count": null,
+    "minimum_supporting_association_count": null,
+    "fallback_value_id": null,
+    "answer_state_policy": "ANSWER_STATE_V1",
+    "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+    "report_target": "graphology.hierarchy",
+    "note": "",
+    "order_in_domain": 4,
+    "source_status": "DRAFT_NOT_ACTIVATED",
+    "runtime_status": "DRAFT_NOT_ACTIVE",
+    "enabled": false
+  },
+  {
+    "question_id": "Q_HIERARCHY_RELATION",
+    "version": "1.0.0",
+    "selector_id": "SEL_HIERARCHY_RELATION",
+    "domain_id": "HIERARCHY",
+    "scope": "INDIVIDUAL",
+    "prompt_template_key": "question.q_hierarchy_relation",
+    "prompt_text_en": "What supportive, opposing or neutral relation is defined for this sign pair within the selected school?",
+    "text_origin": "APPLICATION_AUTHORED",
+    "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+    "source_refs": [
+      {
+        "source_id": "BIG26",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "CJ1892",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "CARBONARI",
+        "relationship": "domain_or_term_basis"
+      }
+    ],
+    "answer_mode": "SELECTOR",
+    "answer_owner": "RULE_ENGINE",
+    "model_call_role": "READ_ONLY_CONTEXT_OR_PRECOMPUTED",
+    "required_inputs": [
+      "PREIDENTIFIED_SIGN_PAIR",
+      "REVIEWED_SCHOOL_RULE_PACK"
+    ],
+    "required_fact_classes": [
+      "PRECOMPUTED_TRADITIONAL_RULE_RESULT_NOT_PSYCHOMETRIC_SCORE"
+    ],
+    "required_candidate_kinds": [],
+    "minimum_supporting_fact_count": null,
+    "minimum_supporting_association_count": null,
+    "fallback_value_id": null,
+    "answer_state_policy": "ANSWER_STATE_V1",
+    "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+    "report_target": "graphology.hierarchy",
+    "note": "The rule pack owns the relation; visual similarity is not psychological corroboration.",
+    "order_in_domain": 5,
+    "source_status": "DRAFT_NOT_ACTIVATED",
+    "runtime_status": "DRAFT_NOT_ACTIVE",
+    "enabled": false
+  },
+  {
+    "question_id": "Q_HIERARCHY_SCOPE",
+    "version": "1.0.0",
+    "selector_id": "SEL_HIERARCHY_SCOPE",
+    "domain_id": "HIERARCHY",
+    "scope": "INDIVIDUAL",
+    "prompt_template_key": "question.q_hierarchy_scope",
+    "prompt_text_en": "Which local details are too limited to characterize the entire sample?",
+    "text_origin": "APPLICATION_AUTHORED",
+    "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+    "source_refs": [
+      {
+        "source_id": "BIG26",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "CJ1892",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "CARBONARI",
+        "relationship": "domain_or_term_basis"
+      }
+    ],
+    "answer_mode": "MULTI_SELECTOR",
+    "answer_owner": "PREMIUM_EDITOR",
+    "model_call_role": "ANSWER",
+    "required_inputs": [
+      "CURRENT_REPORT_CANDIDATES"
+    ],
+    "required_fact_classes": [
+      "SELECTION_OR_SYNTHESIS_OF_SUPPLIED_CANDIDATES"
+    ],
+    "required_candidate_kinds": [
+      "LOCAL_ONLY_SIGN"
+    ],
+    "minimum_supporting_fact_count": null,
+    "minimum_supporting_association_count": null,
+    "fallback_value_id": null,
+    "answer_state_policy": "ANSWER_STATE_V1",
+    "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+    "report_target": "graphology.hierarchy",
+    "note": "",
+    "order_in_domain": 6,
+    "source_status": "DRAFT_NOT_ACTIVATED",
+    "runtime_status": "DRAFT_NOT_ACTIVE",
+    "enabled": false
+  },
+  {
+    "question_id": "Q_HIERARCHY_COMBINATION",
+    "version": "1.0.0",
+    "selector_id": "SEL_HIERARCHY_COMBINATION",
+    "domain_id": "HIERARCHY",
+    "scope": "INDIVIDUAL",
+    "prompt_template_key": "question.q_hierarchy_combination",
+    "prompt_text_en": "Which permitted combination best describes how the observed features interact?",
+    "text_origin": "APPLICATION_AUTHORED",
+    "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+    "source_refs": [
+      {
+        "source_id": "BIG26",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "CJ1892",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "CARBONARI",
+        "relationship": "domain_or_term_basis"
+      }
+    ],
+    "answer_mode": "SELECTOR",
+    "answer_owner": "PREMIUM_EDITOR",
+    "model_call_role": "ANSWER",
+    "required_inputs": [
+      "CURRENT_REPORT_CANDIDATES"
+    ],
+    "required_fact_classes": [
+      "SELECTION_OR_SYNTHESIS_OF_SUPPLIED_CANDIDATES"
+    ],
+    "required_candidate_kinds": [
+      "GRAPHIC_COMBINATION"
+    ],
+    "minimum_supporting_fact_count": null,
+    "minimum_supporting_association_count": null,
+    "fallback_value_id": null,
+    "answer_state_policy": "ANSWER_STATE_V1",
+    "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+    "report_target": "graphology.hierarchy",
+    "note": "A source-backed resultant and an application-authored visual contrast keep distinct provenance.",
+    "order_in_domain": 7,
+    "source_status": "DRAFT_NOT_ACTIVATED",
+    "runtime_status": "DRAFT_NOT_ACTIVE",
+    "enabled": false
+  }
+]
