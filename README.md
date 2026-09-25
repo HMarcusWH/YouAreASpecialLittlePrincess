@@ -1,60 +1,111 @@
-# YouAreASpecialLittlePrincess — Graphology Engine Bootstrap
+# YouAreASpecialLittlePrincess — Canonical Measurement Engine
 
-Hybrid deterministic handwriting-analysis engine built from the strongest parts of the five selected upstream projects.
+Deterministic handwriting-image descriptors with a schema-enforced interface.
+**272 defined features ≠ 272 implemented or validated features.** The core currently
+registers **64 features**; 208 remain definition-only. Unavailable implemented
+features return explicit missing records, not invented numbers.
 
 ## Architecture
 
 ```text
-image
-  -> geometry / deskew
-  -> binarization / denoise
-  -> hybrid line + word segmentation
-  -> deterministic measurements
-  -> normalized feature record
-       |-> free mechanics dashboard
-       |-> comparison engine
-       |-> traditional graphology rules
-       `-> optional signature embedding
+image → preprocessing → line/word/component segmentation
+      → shared MeasurementContext (including experimental x-height)
+      → quality / segmentation / size / layout / baseline / spacing / slant / ink
+      → AnalysisResult → runtime schema + region validation → canonical JSON
 ```
 
-## v0.1 scope
+`GraphologyEngine` orchestrates the pipeline; extractors share immutable image
+arrays and segmentation primitives. Duplicate IDs, unknown IDs, wrong units,
+invalid types/ranges, non-finite values and broken region references fail loudly.
+The 272-feature database is authoritative; a generated, packaged 29 KB projection
+provides the runtime contract. CI checks that it has not drifted.
 
-- preprocessing, deskew, binarization and denoise
-- line/word segmentation
-- margins, ink coverage and region extraction
-- baseline angle/variance/waviness proxy
-- word/line spacing
-- slant measurements
-- ink-darkness and stroke-width proxies
-- real z-score, cosine, Euclidean and Mahalanobis comparison math
-- project feature schema target
-- optional SigNet architecture; no pretrained weights
-
-### Source decisions
-
-- **NitinRamchandani/ocr-preprocessing-tool (MIT):** preprocessing foundation.
-- **githubharald/WordDetector (MIT):** scale-space word proposals, modernized for NumPy 2.
-- **titanh3art/ml-graphology (MIT):** traditional threshold provenance only; no SVM personality classifier.
-- **jjshay/handwriting-analysis (MIT):** comparison concepts reviewed, but statistical/authenticity code is not imported.
-- **luizgh/sigver (BSD-3-Clause):** optional SigNet architecture only. No pretrained weights are distributed.
-
-## Install
+## Install and run
 
 ```bash
 python -m venv .venv
 source .venv/bin/activate
-pip install -e ".[dev]"
+pip install -e '.[dev]'
+python tools/generate_feature_contract.py --check
+ruff check src tests tools
 pytest -q
-```
-
-Run:
-
-```bash
 princess-graphology path/to/handwriting.png --pretty
 ```
 
-## Scientific boundary
+```python
+from princess_graphology import GraphologyEngine
 
-Mechanical image measurements are computational outputs. Traditional graphology personality interpretations are not scientifically validated psychological assessment and remain a separate explicitly-labelled layer. Static images do not provide physical pen pressure; darkness and stroke width are proxies only.
+result = GraphologyEngine().analyze_file('handwriting.png')
+print(result.to_json())  # Validated again; strict JSON, no NaN/Infinity.
+```
 
-See `THIRD_PARTY_NOTICES.md` and `provenance/SOURCES.md`.
+The CLI accepts grayscale, BGR and BGRA uint8 images; alpha is composited on white.
+Original image dimensions are separate from analysis-canvas dimensions. Result
+metadata supplies both affine coordinate maps and method/frame caveats.
+
+## A real fixture result
+
+The following is an excerpt from the committed synthetic text fixture, not an
+invented confidence example. Run `tools/example_result.py` to regenerate it.
+
+```json
+{
+  "X_HEIGHT_PX": {
+    "raw_value": 17.0,
+    "unit": "px",
+    "confidence": null,
+    "n_observations": 48,
+    "method_version": "component_height_mode_v1",
+    "quality_flag": "EXPERIMENTAL"
+  },
+  "WORD_SPACING_REL": {
+    "raw_value": 1.1470588235294117,
+    "unit": "xheight_ratio",
+    "confidence": null,
+    "n_observations": 4,
+    "method_version": "accepted_box_gap_rel_v1",
+    "quality_flag": "EXPERIMENTAL"
+  }
+}
+```
+
+`confidence: null` means **uncalibrated**, not zero confidence. Missing observations
+have `raw_value: null`, `quality_flag: MISSING`, and a reason. Only decoded-input
+metadata calculations currently have exact conditional confidence. No detector
+confidence is manufactured from a sample count or aesthetic regularity.
+
+## Implementation and evidence status
+
+| Status | Meaning |
+|---|---|
+| DEFINED | Database feature exists, but no method is registered. |
+| IMPLEMENTED | Executable method is registered; contract/numerical tests exist. |
+| EXPERIMENTAL | Implemented estimate/index still lacks real-data accuracy calibration. |
+| VALIDATED | Reserved for documented empirical validation; synthetic tests are insufficient. |
+
+The four input-size metadata features are exact conditional on the decoded array.
+Other core estimates are experimental; none are claimed empirically validated.
+See [measurement methods](docs/measurement_methods.md) for formulas, denominators,
+coordinate frames, minimum observations, sign conventions and known limitations.
+
+No OCR, UI, personality interpretation, topology expansion or pretrained signature
+weights are added here. The optional SigNet architecture and independently
+implemented z-score/cosine/Euclidean/Mahalanobis utilities remain separate.
+
+## Source decisions and scientific boundary
+
+Preprocessing adapts NitinRamchandani/ocr-preprocessing-tool; word proposals adapt
+githubharald/WordDetector. Titan's legacy thresholds are historical references,
+not a trained personality classifier. JJ Shay is a comparison/statistical design
+reference, not the source of production comparison mathematics. The selected
+optional signature architecture is **luizgh/sigver**, without pretrained weights.
+See [deployment provenance](schema/implementation_sources.json),
+[source notes](provenance/SOURCES.md) and `THIRD_PARTY_NOTICES.md`.
+
+Static darkness/thickness are image proxies, **not physical pen pressure**.
+Traditional graphology interpretation remains separate and must not be represented
+as validated psychological assessment. Passing a schema test proves interface
+consistency, not handwriting-estimation accuracy or personality validity.
+
+Breaking bootstrap change: do not rename old JSON fields and reuse their values.
+Re-analyze source images; margins, CVs, thickness sampling and frames changed.
