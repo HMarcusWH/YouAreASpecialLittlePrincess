@@ -5,6 +5,7 @@ from pathlib import Path
 
 EXPECTED_BASELINE_COMMIT = "f96aa6b54cfaf91f0a8243e7c7e266baa053eedc"
 EXPECTED_IMPORT_MANIFEST_BLOB = "00c2fe4d0ba6ca4d95fb5fd9441de066937b2f2c"
+EXPECTED_SNAPSHOT_TREE_LOCK_BLOB = "110d88f33094c38c05367adc34fea39319dae500"
 
 DOMAINS = [
     "01-context","02-global","03-space","04-size","05-direction","06-connection",
@@ -33,7 +34,11 @@ def sha256(data: bytes) -> str:
 def verify_research_baseline(repo: Path) -> list[str]:
     errors = []
     lock = load(repo / "schema/graphology_interpretation/v1/traceability/research_baseline_lock.json")
-    tree_lock = load(repo / lock["snapshot_tree_lock_path"])
+    tree_lock_path = repo / lock["snapshot_tree_lock_path"]
+    tree_lock_raw = tree_lock_path.read_bytes()
+    if git_blob_sha(tree_lock_raw) != EXPECTED_SNAPSHOT_TREE_LOCK_BLOB:
+        errors.append("research snapshot tree lock bytes differ from pinned reviewed lock")
+    tree_lock = load(tree_lock_path)
     manifest = load(repo / lock["import_manifest_path"])
 
     if lock["research_baseline_commit"] != EXPECTED_BASELINE_COMMIT:
