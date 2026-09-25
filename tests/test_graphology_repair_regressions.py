@@ -117,3 +117,69 @@ def test_question_model_role_drift_is_rejected(tmp_path):
     repo=copy_validation_repo(tmp_path); path=repo/"schema/graphology_interpretation/v1/questions/01-context.json"
     rewrite(path,lambda d:d[0].__setitem__("model_call_role","ANSWER"))
     assert any("production question drift model_call_role" in e for e in database.validate(repo))
+
+
+def test_paired_snapshot_and_tree_lock_edit_is_rejected(tmp_path):
+    repo=copy_validation_repo(tmp_path)
+    snap=repo/"research/graphology/foundations-v0.1/README.md"
+    snap.write_text(snap.read_text()+"\nMUTATED\n")
+    lock=repo/"schema/graphology_interpretation/v1/traceability/research_snapshot_tree_lock.json"
+    data=json.loads(lock.read_text())
+    rec=next(x for x in data["files"] if x["path"]=="README.md")
+    raw=snap.read_bytes()
+    rec["size"]=len(raw)
+    rec["git_blob_sha"]=common.git_blob_sha(raw)
+    lock.write_text(json.dumps(data,indent=2)+"\n")
+    assert any("tree lock bytes differ" in e for e in common.verify_research_baseline(repo))
+
+def test_activated_selector_generator_mapping_is_rejected(tmp_path):
+    repo=copy_validation_repo(tmp_path)
+    path=repo/"schema/graphology_interpretation/v1/candidates/selector_generator_map.json"
+    rewrite(path,lambda d:d["records"][0].__setitem__("runtime_activation",True))
+    assert any("selector-generator mapping became active" in e for e in selector.validate(repo))
+
+def test_trace_reassignment_to_wrong_valid_object_is_rejected(tmp_path):
+    repo=copy_validation_repo(tmp_path)
+    path=repo/"schema/graphology_interpretation/v1/traceability/research_to_production.json"
+    def mutate(d):
+        row=next(x for x in d["records"] if x["research_kind"]=="SOURCE" and x["research_id"]=="IHAS")
+        row["production_id"]="BIG26"
+    rewrite(path,mutate)
+    assert any("trace mapping" in e for e in integrity.validate(repo))
+
+def test_duplicate_selector_definition_is_rejected(tmp_path):
+    repo=copy_validation_repo(tmp_path)
+    path=repo/"schema/graphology_interpretation/v1/selectors/01-context.json"
+    rewrite(path,lambda d:d.append(dict(d[0])))
+    assert any("selector definition count/uniqueness invalid" in e for e in selector.validate(repo))
+
+def test_activated_or_weakened_association_contract_is_rejected(tmp_path):
+    repo=copy_validation_repo(tmp_path)
+    path=repo/"schema/graphology_interpretation/v1/traditional/association_contract.json"
+    def mutate(d):
+        d["runtime_activation"]=True
+        d["no_shortcuts"]=[]
+    rewrite(path,mutate)
+    errs=traditional.validate(repo)
+    assert any("association contract" in e for e in errs)
+
+def test_soft_field_full_prohibition_set_is_required(tmp_path):
+    repo=copy_validation_repo(tmp_path)
+    path=repo/"schema/graphology_interpretation/v1/narrative/soft_fields.json"
+    rewrite(path,lambda d:d["records"][0].__setitem__("prohibited_claim_classes",["NEW_NUMERIC_MEASUREMENT_PERCENTILE_PROBABILITY_OR_SCORE"]))
+    assert any("prohibited-claim set drift" in e for e in database.validate(repo))
+
+def test_candidate_envelope_evidence_fields_and_invariants_are_pinned(tmp_path):
+    repo=copy_validation_repo(tmp_path)
+    path=repo/"schema/graphology_interpretation/v1/candidates/candidate_envelope.json"
+    def mutate(d):
+        d["required_fields"].remove("source_fact_ids")
+        d["invariants"]=[]
+    rewrite(path,mutate)
+    assert any("candidate envelope invalid" in e for e in selector.validate(repo))
+
+def test_candidate_definition_generator_link_is_cross_checked(tmp_path):
+    repo=copy_validation_repo(tmp_path)
+    path=repo/"schema/graphology_interpretation/v1/candidates/candidate_definitions.json"
+    rewrite(path,lambda d:d["records"][0].__setitem__("generator_id","GEN_COPYBOOK_DIFFERENCE_V1"))
+    assert any("candidate definition generator mismatch" in e for e in selector.validate(repo))
