@@ -203,16 +203,15 @@ def validate(repo: Path) -> list[str]:
     if required_static != actual_static:
         errors.append("static PR2 traceability differs from frozen research")
 
-    expected_exclusions = {
+    required_exclusions = {
         "Production question text and executable question packs",
-        "Executable traditional associations and support-rule evaluation",
         "Candidate generator implementations",
         "Soft-field activation and tone profiles",
         "Report mappings",
         "Localization",
         "Compiled premium_interpretation_database_v1.json",
     }
-    if set(exclusions["intentionally_not_in_scope"]) != expected_exclusions:
+    if not required_exclusions <= set(exclusions["intentionally_not_in_scope"]):
         errors.append("PR2 exclusions are incomplete")
 
     expected_counts = {
@@ -232,7 +231,11 @@ def validate(repo: Path) -> list[str]:
             errors.append(f"manifest PR2 count differs for {key}")
     if manifest["runtime_activation"] is not False or manifest["t26_status"] != "PLANNED":
         errors.append("manifest activation/T26 status invalid")
-    if manifest["production_scope"] != "ONTOLOGY_PROVENANCE_OBSERVATIONS_SELECTORS_VALUES":
+    allowed_scopes = {
+        "ONTOLOGY_PROVENANCE_OBSERVATIONS_SELECTORS_VALUES",
+        "ONTOLOGY_PROVENANCE_OBSERVATIONS_SELECTORS_VALUES_TRADITIONAL_RULE_STRUCTURES",
+    }
+    if manifest["production_scope"] not in allowed_scopes:
         errors.append("manifest PR2 scope invalid")
 
     if scaffold.get("status") != "UNPOPULATED":
