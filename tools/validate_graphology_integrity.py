@@ -55,20 +55,20 @@ def validate(repo: Path) -> list[str]:
     if set(vals)!=set(stage["required_exclusions"]): errors.append("current exclusions differ from stage contract")
     if exclusions.get("research_baseline_commit")!="f96aa6b54cfaf91f0a8243e7c7e266baa053eedc": errors.append("exclusions baseline mismatch")
 
-    expected={
-      *{("SOURCE",x["source_id"]) for x in research_sources},
-      *{("SCHOOL",x["school_id"]) for x in research_meta["schools"]},
-      *{("DOMAIN",x["domain_id"]) for x in research_meta["domains"]},
-      *{("CONCEPT",x["concept_id"]) for x in research_meta["school_concepts"]},
-      *{("SOURCE_ASSERTION",x["assertion_id"]) for x in research_meta["source_assertions"]},
-      *{("UNRESOLVED_SOURCE_TERM",x["term"]) for x in research_meta["unresolved_source_terms"]},
+    expected_pairs={
+      *{("SOURCE",x["source_id"],"SOURCE",x["source_id"]) for x in research_sources},
+      *{("SCHOOL",x["school_id"],"SCHOOL",x["school_id"]) for x in research_meta["schools"]},
+      *{("DOMAIN",x["domain_id"],"DOMAIN",x["domain_id"]) for x in research_meta["domains"]},
+      *{("CONCEPT",x["concept_id"],"CONCEPT",x["concept_id"]) for x in research_meta["school_concepts"]},
+      *{("SOURCE_ASSERTION",x["assertion_id"],"SOURCE_CLAIM",x["assertion_id"]) for x in research_meta["source_assertions"]},
+      *{("UNRESOLVED_SOURCE_TERM",x["term"],"SOURCE_GAP","GAP_UNRESOLVED_TERM_1") for x in research_meta["unresolved_source_terms"]},
     }
-    actual_list=[(x["research_kind"],x["research_id"]) for x in trace]
-    if len(actual_list)!=len(set(actual_list)): errors.append("duplicate foundation trace research endpoint")
-    if set(actual_list)!=expected:
-        missing=sorted(expected-set(actual_list)); extra=sorted(set(actual_list)-expected)
-        if missing: errors.append("foundation trace missing: "+repr(missing))
-        if extra: errors.append("foundation trace has unexpected records: "+repr(extra))
+    actual_pairs=[(x["research_kind"],x["research_id"],x["production_kind"],x["production_id"]) for x in trace]
+    if len(actual_pairs)!=len(set(actual_pairs)): errors.append("duplicate foundation trace mapping")
+    if set(actual_pairs)!=expected_pairs:
+        missing=sorted(expected_pairs-set(actual_pairs)); extra=sorted(set(actual_pairs)-expected_pairs)
+        if missing: errors.append("foundation trace mapping missing: "+repr(missing))
+        if extra: errors.append("foundation trace mapping unexpected: "+repr(extra))
 
     registry={
       "SOURCE":{x["source_id"] for x in sources},"SCHOOL":{x["school_id"] for x in schools},"DOMAIN":{x["domain_id"] for x in domains},
