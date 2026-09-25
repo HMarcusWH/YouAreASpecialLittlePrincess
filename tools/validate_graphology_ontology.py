@@ -149,6 +149,7 @@ def validate(repo: Path) -> list[str]:
     allowed_scopes = {
         "ONTOLOGY_AND_PROVENANCE_ONLY",
         "ONTOLOGY_PROVENANCE_OBSERVATIONS_SELECTORS_VALUES",
+        "ONTOLOGY_PROVENANCE_OBSERVATIONS_SELECTORS_VALUES_TRADITIONAL_RULE_STRUCTURES",
     }
     if manifest["runtime_activation"] is not False or manifest["production_scope"] not in allowed_scopes:
         errors.append("manifest scope/runtime activation invalid")

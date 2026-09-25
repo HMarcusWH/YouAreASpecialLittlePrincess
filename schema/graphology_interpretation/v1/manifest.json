@@ -1,12 +1,12 @@
 {
   "database_id": "graphology-interpretation",
-  "version": "1.0.0-foundation.2",
-  "status": "SELECTOR_FOUNDATION_DRAFT",
-  "production_scope": "ONTOLOGY_PROVENANCE_OBSERVATIONS_SELECTORS_VALUES",
+  "version": "1.0.0-foundation.3",
+  "status": "TRADITIONAL_RULE_STRUCTURE_DRAFT",
+  "production_scope": "ONTOLOGY_PROVENANCE_OBSERVATIONS_SELECTORS_VALUES_TRADITIONAL_RULE_STRUCTURES",
   "runtime_activation": false,
   "t26_status": "PLANNED",
   "research_snapshot": "research/graphology/foundations-v0.1",
-  "research_baseline_commit": "ee2a92c7388bcf5b9aec225a093aef315e300987",
+  "research_baseline_commit": "8d6003c24473a6cefb2ac13211c778701748d0d3",
   "canonical_feature_database": "schema/graphology_feature_database_v1.json",
   "compiled_runtime_artifact": "schema/premium_interpretation_database_v1.json",
   "compiled_runtime_artifact_status": "UNCHANGED_UNPOPULATED",
@@ -29,7 +29,14 @@
     "fixed_selectors": 54,
     "dynamic_selectors": 35,
     "candidate_kinds": 33,
-    "answer_states": 6
+    "answer_states": 6,
+    "traditional_method_policies": 4,
+    "association_contracts": 1,
+    "candidate_validation_policies": 1,
+    "historical_association_stubs": 2,
+    "runtime_eligible_associations": 0,
+    "rule_pack_shells": 5,
+    "active_rule_packs": 0
   },
-  "next_pr": "T26 PR 3 — reviewed traditional association/rule structures"
+  "next_pr": "T26 PR 4 — production question packs, soft fields, report mappings and localization"
 }
