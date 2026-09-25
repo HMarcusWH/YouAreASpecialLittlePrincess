@@ -37,7 +37,10 @@
       ],
       "support_policy": "REQUIRED_SUPPORT_ONLY",
       "runtime_status": "DRAFT_NOT_ACTIVE",
-      "enabled": false
+      "enabled": false,
+      "label_en": "Describe the overall handwriting pattern without claiming to diagnose its author.",
+      "prompt_text_en": "Describe the overall handwriting pattern without claiming to diagnose its author.",
+      "prompt_text_origin": "APPLICATION_DERIVED_FROM_FROZEN_RESEARCH_PURPOSE"
     },
     {
       "soft_field_id": "SOFT_COMBINATION",
@@ -72,7 +75,10 @@
       ],
       "support_policy": "REQUIRED_SUPPORT_ONLY",
       "runtime_status": "DRAFT_NOT_ACTIVE",
-      "enabled": false
+      "enabled": false,
+      "label_en": "Explain one evidenced relationship between features, including qualifiers.",
+      "prompt_text_en": "Explain one evidenced relationship between features, including qualifiers.",
+      "prompt_text_origin": "APPLICATION_DERIVED_FROM_FROZEN_RESEARCH_PURPOSE"
     },
     {
       "soft_field_id": "SOFT_TRADITIONAL_SYNTHESIS",
@@ -111,7 +117,10 @@
       ],
       "support_policy": "REQUIRED_SUPPORT_ONLY",
       "runtime_status": "DRAFT_NOT_ACTIVE",
-      "enabled": false
+      "enabled": false,
+      "label_en": "Explain the selected historical/traditional reading as such, naming its school and limits.",
+      "prompt_text_en": "Explain the selected historical/traditional reading as such, naming its school and limits.",
+      "prompt_text_origin": "APPLICATION_DERIVED_FROM_FROZEN_RESEARCH_PURPOSE"
     },
     {
       "soft_field_id": "SOFT_ALTERNATIVE",
@@ -146,7 +155,10 @@
       ],
       "support_policy": "REQUIRED_SUPPORT_ONLY",
       "runtime_status": "DRAFT_NOT_ACTIVE",
-      "enabled": false
+      "enabled": false,
+      "label_en": "Explain why an alternative reading remains unresolved instead of choosing a flattering answer.",
+      "prompt_text_en": "Explain why an alternative reading remains unresolved instead of choosing a flattering answer.",
+      "prompt_text_origin": "APPLICATION_DERIVED_FROM_FROZEN_RESEARCH_PURPOSE"
     },
     {
       "soft_field_id": "SOFT_DISTINCTIVENESS",
@@ -180,7 +192,10 @@
       ],
       "support_policy": "REQUIRED_SUPPORT_ONLY",
       "runtime_status": "DRAFT_NOT_ACTIVE",
-      "enabled": false
+      "enabled": false,
+      "label_en": "Explain the supplied unusual feature without adding rarity or superiority claims.",
+      "prompt_text_en": "Explain the supplied unusual feature without adding rarity or superiority claims.",
+      "prompt_text_origin": "APPLICATION_DERIVED_FROM_FROZEN_RESEARCH_PURPOSE"
     },
     {
       "soft_field_id": "SOFT_PAIR",
@@ -215,7 +230,10 @@
       ],
       "support_policy": "REQUIRED_SUPPORT_ONLY",
       "runtime_status": "DRAFT_NOT_ACTIVE",
-      "enabled": false
+      "enabled": false,
+      "label_en": "Explain graphical similarities and contrasts while retaining both samples' limitations.",
+      "prompt_text_en": "Explain graphical similarities and contrasts while retaining both samples' limitations.",
+      "prompt_text_origin": "APPLICATION_DERIVED_FROM_FROZEN_RESEARCH_PURPOSE"
     },
     {
       "soft_field_id": "SOFT_HISTORY",
@@ -249,7 +267,10 @@
       ],
       "support_policy": "REQUIRED_SUPPORT_ONLY",
       "runtime_status": "DRAFT_NOT_ACTIVE",
-      "enabled": false
+      "enabled": false,
+      "label_en": "Explain comparable graphical change without claiming a change in character or health.",
+      "prompt_text_en": "Explain comparable graphical change without claiming a change in character or health.",
+      "prompt_text_origin": "APPLICATION_DERIVED_FROM_FROZEN_RESEARCH_PURPOSE"
     },
     {
       "soft_field_id": "SOFT_LIMITATION",
@@ -282,7 +303,10 @@
       ],
       "support_policy": "REQUIRED_SUPPORT_ONLY",
       "runtime_status": "DRAFT_NOT_ACTIVE",
-      "enabled": false
+      "enabled": false,
+      "label_en": "Summarize important unknowns and withheld claims without speculating.",
+      "prompt_text_en": "Summarize important unknowns and withheld claims without speculating.",
+      "prompt_text_origin": "APPLICATION_DERIVED_FROM_FROZEN_RESEARCH_PURPOSE"
     }
   ]
 }

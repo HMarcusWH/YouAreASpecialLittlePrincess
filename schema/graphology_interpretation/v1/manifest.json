@@ -42,7 +42,12 @@
     "soft_fields": 8,
     "tone_profiles": 1,
     "report_slots": 17,
-    "report_mappings": 97
+    "report_mappings": 97,
+    "candidate_generator_contracts": 33,
+    "selector_generator_mappings": 35,
+    "compiled_feature_mappings": 50,
+    "compiled_source_records": 15,
+    "compiled_source_claims": 6
   },
   "next_pr": "T26 PR 5 — Codex review repairs and finalization",
   "construction_lineage": {

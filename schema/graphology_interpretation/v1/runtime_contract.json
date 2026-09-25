@@ -12,13 +12,6 @@
     "Individual, pair and history question packs are independently versioned."
   ],
   "enums": {
-    "selection_mode": [
-      "FIXED_ENUM",
-      "DYNAMIC_FACT",
-      "DYNAMIC_OUTLIER",
-      "DYNAMIC_CANDIDATE",
-      "MULTI_SELECT"
-    ],
     "answer_mode": [
       "SELECTOR",
       "MULTI_SELECTOR",
@@ -42,6 +35,15 @@
       "DRAFT",
       "ACTIVE",
       "RETIRED"
+    ],
+    "selection_domain": [
+      "FIXED",
+      "DYNAMIC"
+    ],
+    "cardinality": [
+      "SINGLE",
+      "MULTIPLE"
     ]
-  }
+  },
+  "selection_contract_id": "SELECTION_CONTRACT_V1"
 }
