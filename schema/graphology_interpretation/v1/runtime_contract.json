@@ -45,5 +45,5 @@
       "MULTIPLE"
     ]
   },
-  "selection_contract_id": "SELECTION_CONTRACT_V1"
+  "selection_contract_version": "graphology-selection-contract/1"
 }
