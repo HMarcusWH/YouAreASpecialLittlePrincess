@@ -1,9 +1,8 @@
 {
-  "version": "premium-interpretation-db/1-draft",
-  "status": "UNPOPULATED",
-  "generated_date": "2026-09-25",
-  "purpose": "Versioned source for Premium fixed selectors, dynamic selector definitions, prepared question packs, bounded soft-value fields, candidate definitions, tone profiles, localization keys and report mappings.",
-  "population_note": "Intentionally empty in the roadmap PR. Populate all potential values in T26 before T15 compiles production prompts/output schemas.",
+  "version": "premium-interpretation-db/1",
+  "status": "POPULATED_PENDING_REVIEW",
+  "runtime_activation": false,
+  "source_database_version": "1.0.0-rc.1",
   "design_principles": [
     "Canonical deterministic measurements are authoritative for measurable values.",
     "Reference statistics are computed before model invocation; the model never invents percentiles or rarity.",
@@ -48,6 +47,9 @@
       "RETIRED"
     ]
   },
+  "schools": [],
+  "domains": [],
+  "concepts": [],
   "selector_value_sets": [],
   "selector_definitions": [],
   "question_definitions": [],
@@ -55,6 +57,21 @@
   "soft_field_definitions": [],
   "candidate_definitions": [],
   "tone_profiles": [],
+  "report_slots": [],
   "report_mappings": [],
-  "localization_keys": []
+  "localization_policy": {},
+  "localization_keys": [],
+  "localization": {
+    "en": {}
+  },
+  "traditional": {
+    "association_contract": {},
+    "candidate_validation_policy": {},
+    "method_policies": [],
+    "associations": {
+      "jaminian": []
+    },
+    "rule_pack_registry": [],
+    "activation_gates": {}
+  }
 }
