@@ -4933,7 +4933,1830 @@
       "runtime_status": "DRAFT_NOT_ACTIVE"
     }
   ],
-  "question_definitions": [],
+  "question_definitions": [
+    {
+      "question_id": "Q_CTX_TASK",
+      "version": "1.0.0",
+      "selector_id": "SEL_CTX_TASK",
+      "domain_id": "CONTEXT",
+      "scope": "INDIVIDUAL",
+      "prompt_template_key": "question.q_ctx_task",
+      "prompt_text_en": "Which collection task produced this specimen?",
+      "text_origin": "APPLICATION_AUTHORED",
+      "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+      "source_refs": [
+        {
+          "source_id": "BIG26",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "AHAF",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "answer_mode": "SELECTOR",
+      "answer_owner": "USER_OR_REVIEWER",
+      "model_call_role": "READ_ONLY_CONTEXT_OR_PRECOMPUTED",
+      "required_inputs": [],
+      "required_fact_classes": [
+        "DECLARED_METADATA"
+      ],
+      "required_candidate_kinds": [],
+      "minimum_supporting_fact_count": null,
+      "minimum_supporting_association_count": null,
+      "fallback_value_id": null,
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+      "report_target": "graphology.context",
+      "note": "",
+      "order_in_domain": 1,
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
+    },
+    {
+      "question_id": "Q_CTX_SURFACE",
+      "version": "1.0.0",
+      "selector_id": "SEL_CTX_SURFACE",
+      "domain_id": "CONTEXT",
+      "scope": "INDIVIDUAL",
+      "prompt_template_key": "question.q_ctx_surface",
+      "prompt_text_en": "Which writing surface was used?",
+      "text_origin": "APPLICATION_AUTHORED",
+      "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+      "source_refs": [
+        {
+          "source_id": "BIG26",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "AHAF",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "answer_mode": "SELECTOR",
+      "answer_owner": "USER_OR_REVIEWER",
+      "model_call_role": "READ_ONLY_CONTEXT_OR_PRECOMPUTED",
+      "required_inputs": [],
+      "required_fact_classes": [
+        "DECLARED_METADATA"
+      ],
+      "required_candidate_kinds": [],
+      "minimum_supporting_fact_count": null,
+      "minimum_supporting_association_count": null,
+      "fallback_value_id": null,
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+      "report_target": "graphology.context",
+      "note": "",
+      "order_in_domain": 2,
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
+    },
+    {
+      "question_id": "Q_CTX_STYLE",
+      "version": "1.0.0",
+      "selector_id": "SEL_CTX_STYLE",
+      "domain_id": "CONTEXT",
+      "scope": "INDIVIDUAL",
+      "prompt_template_key": "question.q_ctx_style",
+      "prompt_text_en": "Which writing style applies to the selected region?",
+      "text_origin": "APPLICATION_AUTHORED",
+      "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+      "source_refs": [
+        {
+          "source_id": "BIG26",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "AHAF",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "answer_mode": "SELECTOR",
+      "answer_owner": "USER_OR_REVIEWER",
+      "model_call_role": "READ_ONLY_CONTEXT_OR_PRECOMPUTED",
+      "required_inputs": [],
+      "required_fact_classes": [
+        "DECLARED_METADATA"
+      ],
+      "required_candidate_kinds": [],
+      "minimum_supporting_fact_count": null,
+      "minimum_supporting_association_count": null,
+      "fallback_value_id": null,
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+      "report_target": "graphology.context",
+      "note": "The model can flag a mismatch; user declaration is not automatically verified.",
+      "order_in_domain": 3,
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
+    },
+    {
+      "question_id": "Q_CTX_FRAME",
+      "version": "1.0.0",
+      "selector_id": "SEL_CTX_FRAME",
+      "domain_id": "CONTEXT",
+      "scope": "INDIVIDUAL",
+      "prompt_template_key": "question.q_ctx_frame",
+      "prompt_text_en": "Are the page boundaries actually present in the supplied image?",
+      "text_origin": "APPLICATION_AUTHORED",
+      "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+      "source_refs": [
+        {
+          "source_id": "BIG26",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "AHAF",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "answer_mode": "SELECTOR",
+      "answer_owner": "DETERMINISTIC",
+      "model_call_role": "READ_ONLY_CONTEXT_OR_PRECOMPUTED",
+      "required_inputs": [],
+      "required_fact_classes": [
+        "PRECOMPUTED_DESCRIPTION"
+      ],
+      "required_candidate_kinds": [],
+      "minimum_supporting_fact_count": null,
+      "minimum_supporting_association_count": null,
+      "fallback_value_id": null,
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+      "report_target": "graphology.context",
+      "note": "Do not turn crop margins into paper margins.",
+      "order_in_domain": 4,
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
+    },
+    {
+      "question_id": "Q_CTX_SCALE",
+      "version": "1.0.0",
+      "selector_id": "SEL_CTX_SCALE",
+      "domain_id": "CONTEXT",
+      "scope": "INDIVIDUAL",
+      "prompt_template_key": "question.q_ctx_scale",
+      "prompt_text_en": "Is a verified physical scale available?",
+      "text_origin": "APPLICATION_AUTHORED",
+      "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+      "source_refs": [
+        {
+          "source_id": "BIG26",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "AHAF",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "answer_mode": "SELECTOR",
+      "answer_owner": "DETERMINISTIC",
+      "model_call_role": "READ_ONLY_CONTEXT_OR_PRECOMPUTED",
+      "required_inputs": [],
+      "required_fact_classes": [
+        "PRECOMPUTED_DESCRIPTION"
+      ],
+      "required_candidate_kinds": [],
+      "minimum_supporting_fact_count": null,
+      "minimum_supporting_association_count": null,
+      "fallback_value_id": null,
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+      "report_target": "graphology.context",
+      "note": "Pixel size alone does not establish millimetres.",
+      "order_in_domain": 5,
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
+    },
+    {
+      "question_id": "Q_CTX_DIRECTION",
+      "version": "1.0.0",
+      "selector_id": "SEL_CTX_DIRECTION",
+      "domain_id": "CONTEXT",
+      "scope": "INDIVIDUAL",
+      "prompt_template_key": "question.q_ctx_direction",
+      "prompt_text_en": "Which writing direction applies to this region?",
+      "text_origin": "APPLICATION_AUTHORED",
+      "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+      "source_refs": [
+        {
+          "source_id": "BIG26",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "AHAF",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "answer_mode": "SELECTOR",
+      "answer_owner": "USER_OR_REVIEWER",
+      "model_call_role": "READ_ONLY_CONTEXT_OR_PRECOMPUTED",
+      "required_inputs": [],
+      "required_fact_classes": [
+        "DECLARED_METADATA"
+      ],
+      "required_candidate_kinds": [],
+      "minimum_supporting_fact_count": null,
+      "minimum_supporting_association_count": null,
+      "fallback_value_id": null,
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+      "report_target": "graphology.context",
+      "note": "",
+      "order_in_domain": 6,
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
+    },
+    {
+      "question_id": "Q_GLOBAL_FORM_MOVEMENT",
+      "version": "1.0.0",
+      "selector_id": "SEL_GLOBAL_FORM_MOVEMENT",
+      "domain_id": "GLOBAL",
+      "scope": "INDIVIDUAL",
+      "prompt_template_key": "question.q_global_form_movement",
+      "prompt_text_en": "Does the whole sample appear form-led, movement-led, or neither?",
+      "text_origin": "APPLICATION_AUTHORED",
+      "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+      "source_refs": [
+        {
+          "source_id": "AHAF",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "CNPG_A",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "CNPG_B",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "SGB",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "answer_mode": "SELECTOR",
+      "answer_owner": "PREMIUM_VISUAL",
+      "model_call_role": "ANSWER",
+      "required_inputs": [
+        "AUTHORIZED_IMAGE",
+        "IDENTIFIED_EVIDENCE_REGION"
+      ],
+      "required_fact_classes": [
+        "AI_VISUAL_DESCRIPTION_NOT_CANONICAL_MEASUREMENT"
+      ],
+      "required_candidate_kinds": [],
+      "minimum_supporting_fact_count": null,
+      "minimum_supporting_association_count": null,
+      "fallback_value_id": null,
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+      "report_target": "graphology.global",
+      "note": "Describes visual impression, not measured speed or psychological control.",
+      "order_in_domain": 1,
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
+    },
+    {
+      "question_id": "Q_GLOBAL_COHERENCE",
+      "version": "1.0.0",
+      "selector_id": "SEL_GLOBAL_COHERENCE",
+      "domain_id": "GLOBAL",
+      "scope": "INDIVIDUAL",
+      "prompt_template_key": "question.q_global_coherence",
+      "prompt_text_en": "How coherently do space, form and apparent movement work together?",
+      "text_origin": "APPLICATION_AUTHORED",
+      "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+      "source_refs": [
+        {
+          "source_id": "AHAF",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "CNPG_A",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "CNPG_B",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "SGB",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "answer_mode": "SELECTOR",
+      "answer_owner": "PREMIUM_VISUAL",
+      "model_call_role": "ANSWER",
+      "required_inputs": [
+        "AUTHORIZED_IMAGE",
+        "IDENTIFIED_EVIDENCE_REGION"
+      ],
+      "required_fact_classes": [
+        "AI_VISUAL_DESCRIPTION_NOT_CANONICAL_MEASUREMENT"
+      ],
+      "required_candidate_kinds": [],
+      "minimum_supporting_fact_count": null,
+      "minimum_supporting_association_count": null,
+      "fallback_value_id": null,
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+      "report_target": "graphology.global",
+      "note": "Requires reviewable visual anchors; no score for human quality.",
+      "order_in_domain": 2,
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
+    },
+    {
+      "question_id": "Q_GLOBAL_VARIATION",
+      "version": "1.0.0",
+      "selector_id": "SEL_GLOBAL_VARIATION",
+      "domain_id": "GLOBAL",
+      "scope": "INDIVIDUAL",
+      "prompt_template_key": "question.q_global_variation",
+      "prompt_text_en": "Is visible variation uniform, patterned, or apparently unpatterned?",
+      "text_origin": "APPLICATION_AUTHORED",
+      "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+      "source_refs": [
+        {
+          "source_id": "AHAF",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "CNPG_A",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "CNPG_B",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "SGB",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "answer_mode": "SELECTOR",
+      "answer_owner": "PREMIUM_VISUAL",
+      "model_call_role": "ANSWER",
+      "required_inputs": [
+        "AUTHORIZED_IMAGE",
+        "IDENTIFIED_EVIDENCE_REGION"
+      ],
+      "required_fact_classes": [
+        "AI_VISUAL_DESCRIPTION_NOT_CANONICAL_MEASUREMENT"
+      ],
+      "required_candidate_kinds": [],
+      "minimum_supporting_fact_count": null,
+      "minimum_supporting_association_count": null,
+      "fallback_value_id": null,
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+      "report_target": "graphology.global",
+      "note": "Not equivalent to Moretti Disuguale metodico without the school method.",
+      "order_in_domain": 3,
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
+    },
+    {
+      "question_id": "Q_GLOBAL_EVIDENCE_CONFLICT",
+      "version": "1.0.0",
+      "selector_id": "SEL_GLOBAL_EVIDENCE_CONFLICT",
+      "domain_id": "GLOBAL",
+      "scope": "INDIVIDUAL",
+      "prompt_template_key": "question.q_global_evidence_conflict",
+      "prompt_text_en": "Which supplied measurement-image discrepancies require review?",
+      "text_origin": "APPLICATION_AUTHORED",
+      "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+      "source_refs": [
+        {
+          "source_id": "AHAF",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "CNPG_A",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "CNPG_B",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "SGB",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "answer_mode": "MULTI_SELECTOR",
+      "answer_owner": "PREMIUM_EDITOR",
+      "model_call_role": "ANSWER",
+      "required_inputs": [
+        "CURRENT_REPORT_CANDIDATES"
+      ],
+      "required_fact_classes": [
+        "SELECTION_OR_SYNTHESIS_OF_SUPPLIED_CANDIDATES"
+      ],
+      "required_candidate_kinds": [
+        "MEASUREMENT_CONFLICT_CANDIDATE"
+      ],
+      "minimum_supporting_fact_count": null,
+      "minimum_supporting_association_count": null,
+      "fallback_value_id": null,
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+      "report_target": "graphology.global",
+      "note": "Model does not override measurements; affected conclusions are withheld.",
+      "order_in_domain": 4,
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
+    },
+    {
+      "question_id": "Q_SPACE_BALANCE",
+      "version": "1.0.0",
+      "selector_id": "SEL_SPACE_BALANCE",
+      "domain_id": "SPACE",
+      "scope": "INDIVIDUAL",
+      "prompt_template_key": "question.q_space_balance",
+      "prompt_text_en": "How are written and unwritten areas distributed in the selected frame?",
+      "text_origin": "APPLICATION_AUTHORED",
+      "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+      "source_refs": [
+        {
+          "source_id": "CNPG_A",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "IHAS",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "LEPOUTRE",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "answer_mode": "SELECTOR",
+      "answer_owner": "PREMIUM_VISUAL",
+      "model_call_role": "ANSWER",
+      "required_inputs": [
+        "AUTHORIZED_IMAGE",
+        "IDENTIFIED_EVIDENCE_REGION"
+      ],
+      "required_fact_classes": [
+        "AI_VISUAL_DESCRIPTION_NOT_CANONICAL_MEASUREMENT"
+      ],
+      "required_candidate_kinds": [],
+      "minimum_supporting_fact_count": null,
+      "minimum_supporting_association_count": null,
+      "fallback_value_id": null,
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+      "report_target": "graphology.space",
+      "note": "",
+      "order_in_domain": 1,
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
+    },
+    {
+      "question_id": "Q_SPACE_MARGINS",
+      "version": "1.0.0",
+      "selector_id": "SEL_SPACE_MARGINS",
+      "domain_id": "SPACE",
+      "scope": "INDIVIDUAL",
+      "prompt_template_key": "question.q_space_margins",
+      "prompt_text_en": "Which verified margin characteristics are relevant to the page description?",
+      "text_origin": "APPLICATION_AUTHORED",
+      "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+      "source_refs": [
+        {
+          "source_id": "CNPG_A",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "IHAS",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "LEPOUTRE",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "answer_mode": "MULTI_SELECTOR",
+      "answer_owner": "PREMIUM_EDITOR",
+      "model_call_role": "ANSWER",
+      "required_inputs": [
+        "VERIFIED_PAGE_BOUNDARIES",
+        "CURRENT_REPORT_CANDIDATES"
+      ],
+      "required_fact_classes": [
+        "SELECTION_OR_SYNTHESIS_OF_SUPPLIED_CANDIDATES"
+      ],
+      "required_candidate_kinds": [
+        "MARGIN_DESCRIPTION"
+      ],
+      "minimum_supporting_fact_count": null,
+      "minimum_supporting_association_count": null,
+      "fallback_value_id": null,
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+      "report_target": "graphology.space",
+      "note": "Use supplied descriptions; no replacement of canonical ratios.",
+      "order_in_domain": 2,
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
+    },
+    {
+      "question_id": "Q_SPACE_MARGIN_TREND",
+      "version": "1.0.0",
+      "selector_id": "SEL_SPACE_MARGIN_TREND",
+      "domain_id": "SPACE",
+      "scope": "INDIVIDUAL",
+      "prompt_template_key": "question.q_space_margin_trend",
+      "prompt_text_en": "Which observed line-start or line-end trends characterize the sample?",
+      "text_origin": "APPLICATION_AUTHORED",
+      "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+      "source_refs": [
+        {
+          "source_id": "CNPG_A",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "IHAS",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "LEPOUTRE",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "answer_mode": "MULTI_SELECTOR",
+      "answer_owner": "PREMIUM_EDITOR",
+      "model_call_role": "ANSWER",
+      "required_inputs": [
+        "CURRENT_REPORT_CANDIDATES"
+      ],
+      "required_fact_classes": [
+        "SELECTION_OR_SYNTHESIS_OF_SUPPLIED_CANDIDATES"
+      ],
+      "required_candidate_kinds": [
+        "LINE_EDGE_TREND"
+      ],
+      "minimum_supporting_fact_count": null,
+      "minimum_supporting_association_count": null,
+      "fallback_value_id": null,
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+      "report_target": "graphology.space",
+      "note": "",
+      "order_in_domain": 3,
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
+    },
+    {
+      "question_id": "Q_SPACE_WORD",
+      "version": "1.0.0",
+      "selector_id": "SEL_SPACE_WORD",
+      "domain_id": "SPACE",
+      "scope": "INDIVIDUAL",
+      "prompt_template_key": "question.q_space_word",
+      "prompt_text_en": "How does word separation fall within the documented descriptive bands?",
+      "text_origin": "APPLICATION_AUTHORED",
+      "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+      "source_refs": [
+        {
+          "source_id": "CNPG_A",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "IHAS",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "LEPOUTRE",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "answer_mode": "SELECTOR",
+      "answer_owner": "DETERMINISTIC",
+      "model_call_role": "READ_ONLY_CONTEXT_OR_PRECOMPUTED",
+      "required_inputs": [],
+      "required_fact_classes": [
+        "PRECOMPUTED_DESCRIPTION"
+      ],
+      "required_candidate_kinds": [],
+      "minimum_supporting_fact_count": null,
+      "minimum_supporting_association_count": null,
+      "fallback_value_id": null,
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+      "report_target": "graphology.space",
+      "note": "A descriptive band and a population percentile are separate facts.",
+      "order_in_domain": 4,
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
+    },
+    {
+      "question_id": "Q_SPACE_LINE",
+      "version": "1.0.0",
+      "selector_id": "SEL_SPACE_LINE",
+      "domain_id": "SPACE",
+      "scope": "INDIVIDUAL",
+      "prompt_template_key": "question.q_space_line",
+      "prompt_text_en": "How does interline whitespace fall within the documented descriptive bands?",
+      "text_origin": "APPLICATION_AUTHORED",
+      "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+      "source_refs": [
+        {
+          "source_id": "CNPG_A",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "IHAS",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "LEPOUTRE",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "answer_mode": "SELECTOR",
+      "answer_owner": "DETERMINISTIC",
+      "model_call_role": "READ_ONLY_CONTEXT_OR_PRECOMPUTED",
+      "required_inputs": [],
+      "required_fact_classes": [
+        "PRECOMPUTED_DESCRIPTION"
+      ],
+      "required_candidate_kinds": [],
+      "minimum_supporting_fact_count": null,
+      "minimum_supporting_association_count": null,
+      "fallback_value_id": null,
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+      "report_target": "graphology.space",
+      "note": "",
+      "order_in_domain": 5,
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
+    },
+    {
+      "question_id": "Q_SPACE_LETTER",
+      "version": "1.0.0",
+      "selector_id": "SEL_SPACE_LETTER",
+      "domain_id": "SPACE",
+      "scope": "INDIVIDUAL",
+      "prompt_template_key": "question.q_space_letter",
+      "prompt_text_en": "What spacing between identified letters can actually be described?",
+      "text_origin": "APPLICATION_AUTHORED",
+      "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+      "source_refs": [
+        {
+          "source_id": "CNPG_A",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "IHAS",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "LEPOUTRE",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "answer_mode": "SELECTOR",
+      "answer_owner": "DETERMINISTIC",
+      "model_call_role": "READ_ONLY_CONTEXT_OR_PRECOMPUTED",
+      "required_inputs": [
+        "IDENTIFIED_LETTERS"
+      ],
+      "required_fact_classes": [
+        "PRECOMPUTED_DESCRIPTION"
+      ],
+      "required_candidate_kinds": [],
+      "minimum_supporting_fact_count": null,
+      "minimum_supporting_association_count": null,
+      "fallback_value_id": null,
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+      "report_target": "graphology.space",
+      "note": "Component spacing is not automatically letter spacing.",
+      "order_in_domain": 6,
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
+    },
+    {
+      "question_id": "Q_SIZE_PHYSICAL",
+      "version": "1.0.0",
+      "selector_id": "SEL_SIZE_PHYSICAL",
+      "domain_id": "SIZE",
+      "scope": "INDIVIDUAL",
+      "prompt_template_key": "question.q_size_physical",
+      "prompt_text_en": "How is actual middle-zone size classified under a documented physical-scale rubric?",
+      "text_origin": "APPLICATION_AUTHORED",
+      "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+      "source_refs": [
+        {
+          "source_id": "IHAS",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "BIG26",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "CONTIN",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "answer_mode": "SELECTOR",
+      "answer_owner": "DETERMINISTIC",
+      "model_call_role": "READ_ONLY_CONTEXT_OR_PRECOMPUTED",
+      "required_inputs": [
+        "VERIFIED_SCALE",
+        "VALID_MIDDLE_ZONE"
+      ],
+      "required_fact_classes": [
+        "PRECOMPUTED_DESCRIPTION"
+      ],
+      "required_candidate_kinds": [],
+      "minimum_supporting_fact_count": null,
+      "minimum_supporting_association_count": null,
+      "fallback_value_id": null,
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+      "report_target": "graphology.size",
+      "note": "No px threshold becomes a physical-size rule; a derived physical quantity requires an explicit versioned measurement contract, never relabelling X_HEIGHT_PX as millimetres.",
+      "order_in_domain": 1,
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
+    },
+    {
+      "question_id": "Q_SIZE_ZONES",
+      "version": "1.0.0",
+      "selector_id": "SEL_SIZE_ZONES",
+      "domain_id": "SIZE",
+      "scope": "INDIVIDUAL",
+      "prompt_template_key": "question.q_size_zones",
+      "prompt_text_en": "Which letter zones receive relative visual emphasis?",
+      "text_origin": "APPLICATION_AUTHORED",
+      "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+      "source_refs": [
+        {
+          "source_id": "IHAS",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "BIG26",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "CONTIN",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "answer_mode": "SELECTOR",
+      "answer_owner": "PREMIUM_VISUAL",
+      "model_call_role": "ANSWER",
+      "required_inputs": [
+        "IDENTIFIED_ZONE_EXAMPLES",
+        "AUTHORIZED_IMAGE",
+        "IDENTIFIED_EVIDENCE_REGION"
+      ],
+      "required_fact_classes": [
+        "AI_VISUAL_DESCRIPTION_NOT_CANONICAL_MEASUREMENT"
+      ],
+      "required_candidate_kinds": [],
+      "minimum_supporting_fact_count": null,
+      "minimum_supporting_association_count": null,
+      "fallback_value_id": null,
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+      "report_target": "graphology.size",
+      "note": "",
+      "order_in_domain": 2,
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
+    },
+    {
+      "question_id": "Q_SIZE_CAPITAL",
+      "version": "1.0.0",
+      "selector_id": "SEL_SIZE_CAPITAL",
+      "domain_id": "SIZE",
+      "scope": "INDIVIDUAL",
+      "prompt_template_key": "question.q_size_capital",
+      "prompt_text_en": "How do capital heights compare with the text middle zone?",
+      "text_origin": "APPLICATION_AUTHORED",
+      "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+      "source_refs": [
+        {
+          "source_id": "IHAS",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "BIG26",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "CONTIN",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "answer_mode": "SELECTOR",
+      "answer_owner": "DETERMINISTIC",
+      "model_call_role": "READ_ONLY_CONTEXT_OR_PRECOMPUTED",
+      "required_inputs": [
+        "IDENTIFIED_CAPITALS",
+        "VALID_MIDDLE_ZONE"
+      ],
+      "required_fact_classes": [
+        "PRECOMPUTED_DESCRIPTION"
+      ],
+      "required_candidate_kinds": [],
+      "minimum_supporting_fact_count": null,
+      "minimum_supporting_association_count": null,
+      "fallback_value_id": null,
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+      "report_target": "graphology.size",
+      "note": "",
+      "order_in_domain": 3,
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
+    },
+    {
+      "question_id": "Q_SIZE_WIDTH",
+      "version": "1.0.0",
+      "selector_id": "SEL_SIZE_WIDTH",
+      "domain_id": "SIZE",
+      "scope": "INDIVIDUAL",
+      "prompt_template_key": "question.q_size_width",
+      "prompt_text_en": "Are identified letter bodies narrow, broad, or intermediate under the stated measure?",
+      "text_origin": "APPLICATION_AUTHORED",
+      "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+      "source_refs": [
+        {
+          "source_id": "IHAS",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "BIG26",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "CONTIN",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "answer_mode": "SELECTOR",
+      "answer_owner": "DETERMINISTIC",
+      "model_call_role": "READ_ONLY_CONTEXT_OR_PRECOMPUTED",
+      "required_inputs": [
+        "IDENTIFIED_LETTER_BODIES"
+      ],
+      "required_fact_classes": [
+        "PRECOMPUTED_DESCRIPTION"
+      ],
+      "required_candidate_kinds": [],
+      "minimum_supporting_fact_count": null,
+      "minimum_supporting_association_count": null,
+      "fallback_value_id": null,
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+      "report_target": "graphology.size",
+      "note": "Generic component aspect ratio is not an exact Moretti Largo di lettere score.",
+      "order_in_domain": 4,
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
+    },
+    {
+      "question_id": "Q_SIZE_TREND",
+      "version": "1.0.0",
+      "selector_id": "SEL_SIZE_TREND",
+      "domain_id": "SIZE",
+      "scope": "INDIVIDUAL",
+      "prompt_template_key": "question.q_size_trend",
+      "prompt_text_en": "What pattern of enlargement or reduction occurs through the defined sequence?",
+      "text_origin": "APPLICATION_AUTHORED",
+      "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+      "source_refs": [
+        {
+          "source_id": "IHAS",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "BIG26",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "CONTIN",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "answer_mode": "SELECTOR",
+      "answer_owner": "PREMIUM_VISUAL",
+      "model_call_role": "ANSWER",
+      "required_inputs": [
+        "ORDERED_WORD_OR_LINE_REGIONS",
+        "AUTHORIZED_IMAGE",
+        "IDENTIFIED_EVIDENCE_REGION"
+      ],
+      "required_fact_classes": [
+        "AI_VISUAL_DESCRIPTION_NOT_CANONICAL_MEASUREMENT"
+      ],
+      "required_candidate_kinds": [],
+      "minimum_supporting_fact_count": null,
+      "minimum_supporting_association_count": null,
+      "fallback_value_id": null,
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+      "report_target": "graphology.size",
+      "note": "Report sequence and regions; cannot infer writing duration.",
+      "order_in_domain": 5,
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
+    },
+    {
+      "question_id": "Q_DIRECTION_SLANT",
+      "version": "1.0.0",
+      "selector_id": "SEL_DIRECTION_SLANT",
+      "domain_id": "DIRECTION",
+      "scope": "INDIVIDUAL",
+      "prompt_template_key": "question.q_direction_slant",
+      "prompt_text_en": "Which downstroke orientation relative to the local baseline is supported?",
+      "text_origin": "APPLICATION_AUTHORED",
+      "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+      "source_refs": [
+        {
+          "source_id": "IHAS",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "BIG26",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "CONTIN",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "answer_mode": "SELECTOR",
+      "answer_owner": "DETERMINISTIC",
+      "model_call_role": "READ_ONLY_CONTEXT_OR_PRECOMPUTED",
+      "required_inputs": [],
+      "required_fact_classes": [
+        "PRECOMPUTED_DESCRIPTION"
+      ],
+      "required_candidate_kinds": [],
+      "minimum_supporting_fact_count": null,
+      "minimum_supporting_association_count": null,
+      "fallback_value_id": null,
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+      "report_target": "graphology.direction",
+      "note": "Require a method whose baseline-relative convention matches this question; do not reinterpret a canvas-vertical angle silently. Preserve regional mixtures rather than averaging opposite slants into a falsely uniform upright result.",
+      "order_in_domain": 1,
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
+    },
+    {
+      "question_id": "Q_DIRECTION_SLOPE",
+      "version": "1.0.0",
+      "selector_id": "SEL_DIRECTION_SLOPE",
+      "domain_id": "DIRECTION",
+      "scope": "INDIVIDUAL",
+      "prompt_template_key": "question.q_direction_slope",
+      "prompt_text_en": "Which baseline direction is measured in the declared writing direction?",
+      "text_origin": "APPLICATION_AUTHORED",
+      "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+      "source_refs": [
+        {
+          "source_id": "IHAS",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "BIG26",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "CONTIN",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "answer_mode": "SELECTOR",
+      "answer_owner": "DETERMINISTIC",
+      "model_call_role": "READ_ONLY_CONTEXT_OR_PRECOMPUTED",
+      "required_inputs": [],
+      "required_fact_classes": [
+        "PRECOMPUTED_DESCRIPTION"
+      ],
+      "required_candidate_kinds": [],
+      "minimum_supporting_fact_count": null,
+      "minimum_supporting_association_count": null,
+      "fallback_value_id": null,
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+      "report_target": "graphology.direction",
+      "note": "",
+      "order_in_domain": 2,
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
+    },
+    {
+      "question_id": "Q_DIRECTION_SHAPE",
+      "version": "1.0.0",
+      "selector_id": "SEL_DIRECTION_SHAPE",
+      "domain_id": "DIRECTION",
+      "scope": "INDIVIDUAL",
+      "prompt_template_key": "question.q_direction_shape",
+      "prompt_text_en": "Which baseline shapes appear in the supported line regions?",
+      "text_origin": "APPLICATION_AUTHORED",
+      "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+      "source_refs": [
+        {
+          "source_id": "IHAS",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "BIG26",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "CONTIN",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "answer_mode": "MULTI_SELECTOR",
+      "answer_owner": "PREMIUM_VISUAL",
+      "model_call_role": "ANSWER",
+      "required_inputs": [
+        "AUTHORIZED_IMAGE",
+        "IDENTIFIED_EVIDENCE_REGION"
+      ],
+      "required_fact_classes": [
+        "AI_VISUAL_DESCRIPTION_NOT_CANONICAL_MEASUREMENT"
+      ],
+      "required_candidate_kinds": [],
+      "minimum_supporting_fact_count": null,
+      "minimum_supporting_association_count": null,
+      "fallback_value_id": null,
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+      "report_target": "graphology.direction",
+      "note": "Image classification of shape never replaces stored baseline points.",
+      "order_in_domain": 3,
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
+    },
+    {
+      "question_id": "Q_DIRECTION_VARIATION",
+      "version": "1.0.0",
+      "selector_id": "SEL_DIRECTION_VARIATION",
+      "domain_id": "DIRECTION",
+      "scope": "INDIVIDUAL",
+      "prompt_template_key": "question.q_direction_variation",
+      "prompt_text_en": "What regional pattern of slant variation is visible?",
+      "text_origin": "APPLICATION_AUTHORED",
+      "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+      "source_refs": [
+        {
+          "source_id": "IHAS",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "BIG26",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "CONTIN",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "answer_mode": "SELECTOR",
+      "answer_owner": "PREMIUM_VISUAL",
+      "model_call_role": "ANSWER",
+      "required_inputs": [
+        "AUTHORIZED_IMAGE",
+        "IDENTIFIED_EVIDENCE_REGION"
+      ],
+      "required_fact_classes": [
+        "AI_VISUAL_DESCRIPTION_NOT_CANONICAL_MEASUREMENT"
+      ],
+      "required_candidate_kinds": [],
+      "minimum_supporting_fact_count": null,
+      "minimum_supporting_association_count": null,
+      "fallback_value_id": null,
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+      "report_target": "graphology.direction",
+      "note": "A standard deviation does not establish patterned alternation.",
+      "order_in_domain": 4,
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
+    },
+    {
+      "question_id": "Q_CONNECT_DEGREE",
+      "version": "1.0.0",
+      "selector_id": "SEL_CONNECT_DEGREE",
+      "domain_id": "CONNECTION",
+      "scope": "INDIVIDUAL",
+      "prompt_template_key": "question.q_connect_degree",
+      "prompt_text_en": "What degree of letter joining is supported by the current method?",
+      "text_origin": "APPLICATION_AUTHORED",
+      "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+      "source_refs": [
+        {
+          "source_id": "IHAS",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "BIG26",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "answer_mode": "SELECTOR",
+      "answer_owner": "DETERMINISTIC",
+      "model_call_role": "READ_ONLY_CONTEXT_OR_PRECOMPUTED",
+      "required_inputs": [
+        "VALID_JOINING_METHOD"
+      ],
+      "required_fact_classes": [
+        "PRECOMPUTED_DESCRIPTION"
+      ],
+      "required_candidate_kinds": [],
+      "minimum_supporting_fact_count": null,
+      "minimum_supporting_association_count": null,
+      "fallback_value_id": null,
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+      "report_target": "graphology.connection",
+      "note": "Connected ink components are a proxy, not guaranteed pen-down strokes.",
+      "order_in_domain": 1,
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
+    },
+    {
+      "question_id": "Q_CONNECT_FORM",
+      "version": "1.0.0",
+      "selector_id": "SEL_CONNECT_FORM",
+      "domain_id": "CONNECTION",
+      "scope": "INDIVIDUAL",
+      "prompt_template_key": "question.q_connect_form",
+      "prompt_text_en": "Which connector forms occur in the identified letter connections?",
+      "text_origin": "APPLICATION_AUTHORED",
+      "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+      "source_refs": [
+        {
+          "source_id": "IHAS",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "BIG26",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "answer_mode": "MULTI_SELECTOR",
+      "answer_owner": "PREMIUM_VISUAL",
+      "model_call_role": "ANSWER",
+      "required_inputs": [
+        "IDENTIFIED_CONNECTOR_EXAMPLES",
+        "AUTHORIZED_IMAGE",
+        "IDENTIFIED_EVIDENCE_REGION"
+      ],
+      "required_fact_classes": [
+        "AI_VISUAL_DESCRIPTION_NOT_CANONICAL_MEASUREMENT"
+      ],
+      "required_candidate_kinds": [],
+      "minimum_supporting_fact_count": null,
+      "minimum_supporting_association_count": null,
+      "fallback_value_id": null,
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+      "report_target": "graphology.connection",
+      "note": "A script can contain several forms; retain separate regions rather than force a single type.",
+      "order_in_domain": 2,
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
+    },
+    {
+      "question_id": "Q_CONNECT_DISTRIBUTION",
+      "version": "1.0.0",
+      "selector_id": "SEL_CONNECT_DISTRIBUTION",
+      "domain_id": "CONNECTION",
+      "scope": "INDIVIDUAL",
+      "prompt_template_key": "question.q_connect_distribution",
+      "prompt_text_en": "How consistently are connector forms distributed across eligible words?",
+      "text_origin": "APPLICATION_AUTHORED",
+      "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+      "source_refs": [
+        {
+          "source_id": "IHAS",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "BIG26",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "answer_mode": "SELECTOR",
+      "answer_owner": "PREMIUM_VISUAL",
+      "model_call_role": "ANSWER",
+      "required_inputs": [
+        "IDENTIFIED_CONNECTOR_EXAMPLES",
+        "AUTHORIZED_IMAGE",
+        "IDENTIFIED_EVIDENCE_REGION"
+      ],
+      "required_fact_classes": [
+        "AI_VISUAL_DESCRIPTION_NOT_CANONICAL_MEASUREMENT"
+      ],
+      "required_candidate_kinds": [],
+      "minimum_supporting_fact_count": null,
+      "minimum_supporting_association_count": null,
+      "fallback_value_id": null,
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+      "report_target": "graphology.connection",
+      "note": "",
+      "order_in_domain": 3,
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
+    },
+    {
+      "question_id": "Q_CONNECT_CAPITAL",
+      "version": "1.0.0",
+      "selector_id": "SEL_CONNECT_CAPITAL",
+      "domain_id": "CONNECTION",
+      "scope": "INDIVIDUAL",
+      "prompt_template_key": "question.q_connect_capital",
+      "prompt_text_en": "Are the identified capitals joined to the following text?",
+      "text_origin": "APPLICATION_AUTHORED",
+      "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+      "source_refs": [
+        {
+          "source_id": "IHAS",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "BIG26",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "answer_mode": "SELECTOR",
+      "answer_owner": "PREMIUM_VISUAL",
+      "model_call_role": "ANSWER",
+      "required_inputs": [
+        "IDENTIFIED_CAPITAL_EXAMPLES",
+        "AUTHORIZED_IMAGE",
+        "IDENTIFIED_EVIDENCE_REGION"
+      ],
+      "required_fact_classes": [
+        "AI_VISUAL_DESCRIPTION_NOT_CANONICAL_MEASUREMENT"
+      ],
+      "required_candidate_kinds": [],
+      "minimum_supporting_fact_count": null,
+      "minimum_supporting_association_count": null,
+      "fallback_value_id": null,
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+      "report_target": "graphology.connection",
+      "note": "",
+      "order_in_domain": 4,
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
+    },
+    {
+      "question_id": "Q_FORM_GEOMETRY",
+      "version": "1.0.0",
+      "selector_id": "SEL_FORM_GEOMETRY",
+      "domain_id": "FORM",
+      "scope": "INDIVIDUAL",
+      "prompt_template_key": "question.q_form_geometry",
+      "prompt_text_en": "Which geometric constructions characterize the identifiable letters?",
+      "text_origin": "APPLICATION_AUTHORED",
+      "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+      "source_refs": [
+        {
+          "source_id": "IHAS",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "CNPG_A",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "LEPOUTRE",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "answer_mode": "MULTI_SELECTOR",
+      "answer_owner": "PREMIUM_VISUAL",
+      "model_call_role": "ANSWER",
+      "required_inputs": [
+        "AUTHORIZED_IMAGE",
+        "IDENTIFIED_EVIDENCE_REGION"
+      ],
+      "required_fact_classes": [
+        "AI_VISUAL_DESCRIPTION_NOT_CANONICAL_MEASUREMENT"
+      ],
+      "required_candidate_kinds": [],
+      "minimum_supporting_fact_count": null,
+      "minimum_supporting_association_count": null,
+      "fallback_value_id": null,
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+      "report_target": "graphology.form",
+      "note": "Not a claim that roundness determines agreeableness.",
+      "order_in_domain": 1,
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
+    },
+    {
+      "question_id": "Q_FORM_SIMPLIFICATION",
+      "version": "1.0.0",
+      "selector_id": "SEL_FORM_SIMPLIFICATION",
+      "domain_id": "FORM",
+      "scope": "INDIVIDUAL",
+      "prompt_template_key": "question.q_form_simplification",
+      "prompt_text_en": "How are forms reduced or elaborated relative to an identified writing model?",
+      "text_origin": "APPLICATION_AUTHORED",
+      "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+      "source_refs": [
+        {
+          "source_id": "IHAS",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "CNPG_A",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "LEPOUTRE",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "answer_mode": "SELECTOR",
+      "answer_owner": "PREMIUM_VISUAL",
+      "model_call_role": "ANSWER",
+      "required_inputs": [
+        "IDENTIFIED_COPYBOOK_OR_LETTER_REFERENCE",
+        "AUTHORIZED_IMAGE",
+        "IDENTIFIED_EVIDENCE_REGION"
+      ],
+      "required_fact_classes": [
+        "AI_VISUAL_DESCRIPTION_NOT_CANONICAL_MEASUREMENT"
+      ],
+      "required_candidate_kinds": [],
+      "minimum_supporting_fact_count": null,
+      "minimum_supporting_association_count": null,
+      "fallback_value_id": null,
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+      "report_target": "graphology.form",
+      "note": "Reduced and still identifiable is different from reduced and unclear.",
+      "order_in_domain": 2,
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
+    },
+    {
+      "question_id": "Q_FORM_LOOPS",
+      "version": "1.0.0",
+      "selector_id": "SEL_FORM_LOOPS",
+      "domain_id": "FORM",
+      "scope": "INDIVIDUAL",
+      "prompt_template_key": "question.q_form_loops",
+      "prompt_text_en": "How much space is enclosed by the identified loops?",
+      "text_origin": "APPLICATION_AUTHORED",
+      "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+      "source_refs": [
+        {
+          "source_id": "IHAS",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "CNPG_A",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "LEPOUTRE",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "answer_mode": "SELECTOR",
+      "answer_owner": "PREMIUM_VISUAL",
+      "model_call_role": "ANSWER",
+      "required_inputs": [
+        "IDENTIFIED_LOOP_EXAMPLES",
+        "AUTHORIZED_IMAGE",
+        "IDENTIFIED_EVIDENCE_REGION"
+      ],
+      "required_fact_classes": [
+        "AI_VISUAL_DESCRIPTION_NOT_CANONICAL_MEASUREMENT"
+      ],
+      "required_candidate_kinds": [],
+      "minimum_supporting_fact_count": null,
+      "minimum_supporting_association_count": null,
+      "fallback_value_id": null,
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+      "report_target": "graphology.form",
+      "note": "",
+      "order_in_domain": 3,
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
+    },
+    {
+      "question_id": "Q_FORM_ORNAMENT",
+      "version": "1.0.0",
+      "selector_id": "SEL_FORM_ORNAMENT",
+      "domain_id": "FORM",
+      "scope": "INDIVIDUAL",
+      "prompt_template_key": "question.q_form_ornament",
+      "prompt_text_en": "Which nonessential elaborations are evidenced in the selected forms?",
+      "text_origin": "APPLICATION_AUTHORED",
+      "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+      "source_refs": [
+        {
+          "source_id": "IHAS",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "CNPG_A",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "LEPOUTRE",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "answer_mode": "MULTI_SELECTOR",
+      "answer_owner": "PREMIUM_EDITOR",
+      "model_call_role": "ANSWER",
+      "required_inputs": [
+        "CURRENT_REPORT_CANDIDATES"
+      ],
+      "required_fact_classes": [
+        "SELECTION_OR_SYNTHESIS_OF_SUPPLIED_CANDIDATES"
+      ],
+      "required_candidate_kinds": [
+        "ORNAMENT_DESCRIPTION"
+      ],
+      "minimum_supporting_fact_count": null,
+      "minimum_supporting_association_count": null,
+      "fallback_value_id": null,
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+      "report_target": "graphology.form",
+      "note": "",
+      "order_in_domain": 4,
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
+    },
+    {
+      "question_id": "Q_FORM_INDIVIDUAL",
+      "version": "1.0.0",
+      "selector_id": "SEL_FORM_INDIVIDUAL",
+      "domain_id": "FORM",
+      "scope": "INDIVIDUAL",
+      "prompt_template_key": "question.q_form_individual",
+      "prompt_text_en": "Which repeated distinctive letter constructions are supported by supplied examples?",
+      "text_origin": "APPLICATION_AUTHORED",
+      "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+      "source_refs": [
+        {
+          "source_id": "IHAS",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "CNPG_A",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "LEPOUTRE",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "answer_mode": "MULTI_SELECTOR",
+      "answer_owner": "PREMIUM_EDITOR",
+      "model_call_role": "ANSWER",
+      "required_inputs": [
+        "CURRENT_REPORT_CANDIDATES"
+      ],
+      "required_fact_classes": [
+        "SELECTION_OR_SYNTHESIS_OF_SUPPLIED_CANDIDATES"
+      ],
+      "required_candidate_kinds": [
+        "REPEATED_FORM_DESCRIPTION"
+      ],
+      "minimum_supporting_fact_count": null,
+      "minimum_supporting_association_count": null,
+      "fallback_value_id": null,
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+      "report_target": "graphology.form",
+      "note": "Individual-looking does not establish statistical rarity or writer identity.",
+      "order_in_domain": 5,
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
+    },
+    {
+      "question_id": "Q_FORM_COPYBOOK",
+      "version": "1.0.0",
+      "selector_id": "SEL_FORM_COPYBOOK",
+      "domain_id": "FORM",
+      "scope": "INDIVIDUAL",
+      "prompt_template_key": "question.q_form_copybook",
+      "prompt_text_en": "Which deviations from the documented writing model deserve a description?",
+      "text_origin": "APPLICATION_AUTHORED",
+      "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+      "source_refs": [
+        {
+          "source_id": "IHAS",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "CNPG_A",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "LEPOUTRE",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "answer_mode": "MULTI_SELECTOR",
+      "answer_owner": "PREMIUM_EDITOR",
+      "model_call_role": "ANSWER",
+      "required_inputs": [
+        "KNOWN_COPYBOOK_CONTEXT",
+        "CURRENT_REPORT_CANDIDATES"
+      ],
+      "required_fact_classes": [
+        "SELECTION_OR_SYNTHESIS_OF_SUPPLIED_CANDIDATES"
+      ],
+      "required_candidate_kinds": [
+        "COPYBOOK_DIFFERENCE"
+      ],
+      "minimum_supporting_fact_count": null,
+      "minimum_supporting_association_count": null,
+      "fallback_value_id": null,
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+      "report_target": "graphology.form",
+      "note": "Without a known reference, do not invent a norm for a country or generation.",
+      "order_in_domain": 6,
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
+    },
+    {
+      "question_id": "Q_STROKE_APPEARANCE",
+      "version": "1.0.0",
+      "selector_id": "SEL_STROKE_APPEARANCE",
+      "domain_id": "STROKE",
+      "scope": "INDIVIDUAL",
+      "prompt_template_key": "question.q_stroke_appearance",
+      "prompt_text_en": "Which trace appearances can be judged from the image?",
+      "text_origin": "APPLICATION_AUTHORED",
+      "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+      "source_refs": [
+        {
+          "source_id": "IHAS",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "CONTIN",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "answer_mode": "SELECTOR",
+      "answer_owner": "PREMIUM_VISUAL",
+      "model_call_role": "ANSWER",
+      "required_inputs": [
+        "AUTHORIZED_IMAGE",
+        "IDENTIFIED_EVIDENCE_REGION"
+      ],
+      "required_fact_classes": [
+        "AI_VISUAL_DESCRIPTION_NOT_CANONICAL_MEASUREMENT"
+      ],
+      "required_candidate_kinds": [],
+      "minimum_supporting_fact_count": null,
+      "minimum_supporting_association_count": null,
+      "fallback_value_id": null,
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+      "report_target": "graphology.stroke",
+      "note": "Pastose-looking is not a measurement of force; camera/ink/nib can contribute.",
+      "order_in_domain": 1,
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
+    },
+    {
+      "question_id": "Q_STROKE_SHADING",
+      "version": "1.0.0",
+      "selector_id": "SEL_STROKE_SHADING",
+      "domain_id": "STROKE",
+      "scope": "INDIVIDUAL",
+      "prompt_template_key": "question.q_stroke_shading",
+      "prompt_text_en": "What visible downstroke/upstroke thickness contrast occurs?",
+      "text_origin": "APPLICATION_AUTHORED",
+      "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+      "source_refs": [
+        {
+          "source_id": "IHAS",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "CONTIN",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "answer_mode": "SELECTOR",
+      "answer_owner": "PREMIUM_VISUAL",
+      "model_call_role": "ANSWER",
+      "required_inputs": [
+        "IDENTIFIED_DIRECTIONAL_STROKES",
+        "AUTHORIZED_IMAGE",
+        "IDENTIFIED_EVIDENCE_REGION"
+      ],
+      "required_fact_classes": [
+        "AI_VISUAL_DESCRIPTION_NOT_CANONICAL_MEASUREMENT"
+      ],
+      "required_candidate_kinds": [],
+      "minimum_supporting_fact_count": null,
+      "minimum_supporting_association_count": null,
+      "fallback_value_id": null,
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+      "report_target": "graphology.stroke",
+      "note": "Do not infer movement chronology solely from a static trace.",
+      "order_in_domain": 2,
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
+    },
+    {
+      "question_id": "Q_STROKE_DARKNESS",
+      "version": "1.0.0",
+      "selector_id": "SEL_STROKE_DARKNESS",
+      "domain_id": "STROKE",
+      "scope": "INDIVIDUAL",
+      "prompt_template_key": "question.q_stroke_darkness",
+      "prompt_text_en": "Which verified ink-darkness variation is relevant?",
+      "text_origin": "APPLICATION_AUTHORED",
+      "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+      "source_refs": [
+        {
+          "source_id": "IHAS",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "CONTIN",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "answer_mode": "SELECTOR",
+      "answer_owner": "PREMIUM_EDITOR",
+      "model_call_role": "ANSWER",
+      "required_inputs": [
+        "CURRENT_REPORT_CANDIDATES"
+      ],
+      "required_fact_classes": [
+        "SELECTION_OR_SYNTHESIS_OF_SUPPLIED_CANDIDATES"
+      ],
+      "required_candidate_kinds": [
+        "INK_APPEARANCE_FACT"
+      ],
+      "minimum_supporting_fact_count": null,
+      "minimum_supporting_association_count": null,
+      "fallback_value_id": null,
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+      "report_target": "graphology.stroke",
+      "note": "",
+      "order_in_domain": 3,
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
+    },
+    {
+      "question_id": "Q_STROKE_WIDTH",
+      "version": "1.0.0",
+      "selector_id": "SEL_STROKE_WIDTH",
+      "domain_id": "STROKE",
+      "scope": "INDIVIDUAL",
+      "prompt_template_key": "question.q_stroke_width",
+      "prompt_text_en": "Which measured thickness characteristics are reliable enough to explain?",
+      "text_origin": "APPLICATION_AUTHORED",
+      "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+      "source_refs": [
+        {
+          "source_id": "IHAS",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "CONTIN",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "answer_mode": "SELECTOR",
+      "answer_owner": "PREMIUM_EDITOR",
+      "model_call_role": "ANSWER",
+      "required_inputs": [
+        "CURRENT_REPORT_CANDIDATES"
+      ],
+      "required_fact_classes": [
+        "SELECTION_OR_SYNTHESIS_OF_SUPPLIED_CANDIDATES"
+      ],
+      "required_candidate_kinds": [
+        "THICKNESS_FACT"
+      ],
+      "minimum_supporting_fact_count": null,
+      "minimum_supporting_association_count": null,
+      "fallback_value_id": null,
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+      "report_target": "graphology.stroke",
+      "note": "",
+      "order_in_domain": 4,
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
+    },
+    {
+      "question_id": "Q_STROKE_PRESSURE_LIMIT",
+      "version": "1.0.0",
+      "selector_id": "SEL_STROKE_PRESSURE_LIMIT",
+      "domain_id": "STROKE",
+      "scope": "INDIVIDUAL",
+      "prompt_template_key": "question.q_stroke_pressure_limit",
+      "prompt_text_en": "What can be said about pressure with the available acquisition mode?",
+      "text_origin": "APPLICATION_AUTHORED",
+      "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+      "source_refs": [
+        {
+          "source_id": "IHAS",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "CONTIN",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "answer_mode": "SELECTOR",
+      "answer_owner": "DETERMINISTIC",
+      "model_call_role": "READ_ONLY_CONTEXT_OR_PRECOMPUTED",
+      "required_inputs": [
+        "ACQUISITION_METADATA"
+      ],
+      "required_fact_classes": [
+        "PRECOMPUTED_DESCRIPTION"
+      ],
+      "required_candidate_kinds": [
+        "ACQUISITION_LIMITATION"
+      ],
+      "minimum_supporting_fact_count": null,
+      "minimum_supporting_association_count": null,
+      "fallback_value_id": null,
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+      "report_target": "graphology.stroke",
+      "note": "Photo: not measurable as physical force. Original-paper impression and uncalibrated stylus units are not Newtons.",
+      "order_in_domain": 5,
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
+    }
+  ],
   "question_packs": [
     {
       "pack_id": "PREMIUM_INDIVIDUAL_GRAPHIC_V1",
