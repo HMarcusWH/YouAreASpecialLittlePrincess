@@ -1,0 +1,10 @@
+{
+  "version": "graphology-research-baseline-lock/1",
+  "research_baseline_commit": "f96aa6b54cfaf91f0a8243e7c7e266baa053eedc",
+  "research_snapshot": "research/graphology/foundations-v0.1",
+  "import_manifest_path": "research/graphology/foundations-v0.1/provenance/import_manifest.json",
+  "import_manifest_git_blob_sha": "00c2fe4d0ba6ca4d95fb5fd9441de066937b2f2c",
+  "source_archive_sha256": "421a5fe5bc1b4a31b18887cbafc23db0e33571a07401bde9199b98ef1b13ef8a",
+  "source_blueprint_sha256": "8ccc877e1de35e2808696d47ce5412a07ebef356cbee5e6697d90e3d4db4ade4",
+  "policy": "The research snapshot is immutable. Production validators verify the pinned import-manifest Git blob and every imported file SHA-256 before comparing research to production."
+}

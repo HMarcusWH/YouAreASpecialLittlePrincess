@@ -6,7 +6,7 @@
   "runtime_activation": false,
   "t26_status": "IMPLEMENTED_PENDING_REVIEW",
   "research_snapshot": "research/graphology/foundations-v0.1",
-  "research_baseline_commit": "48897ff35949710d870d0b16096ada5d63c3626d",
+  "research_baseline_commit": "f96aa6b54cfaf91f0a8243e7c7e266baa053eedc",
   "canonical_feature_database": "schema/graphology_feature_database_v1.json",
   "compiled_runtime_artifact": "schema/premium_interpretation_database_v1.json",
   "compiled_runtime_artifact_status": "POPULATED_PENDING_REVIEW",
@@ -44,5 +44,12 @@
     "report_slots": 17,
     "report_mappings": 97
   },
-  "next_pr": "T26 PR 5 — Codex review repairs and finalization"
+  "next_pr": "T26 PR 5 — Codex review repairs and finalization",
+  "construction_lineage": {
+    "research_import_merge": "f96aa6b54cfaf91f0a8243e7c7e266baa053eedc",
+    "ontology_foundation_merge": "ee2a92c7388bcf5b9aec225a093aef315e300987",
+    "selector_foundation_merge": "8d6003c24473a6cefb2ac13211c778701748d0d3",
+    "traditional_structure_merge": "48897ff35949710d870d0b16096ada5d63c3626d",
+    "database_completion_merge": "c6561b0e7748545751d0107c284810de788c03d5"
+  }
 }
