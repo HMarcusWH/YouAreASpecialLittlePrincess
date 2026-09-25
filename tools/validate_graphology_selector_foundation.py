@@ -84,7 +84,11 @@ def validate(repo: Path) -> list[str]:
     if cand_policy.get("production_status")!="DRAFT_NOT_ACTIVE" or cand_policy.get("runtime_activation") is not False:
         errors.append("candidate-policy lifecycle state invalid")
 
-    expected_obs={q["question_id"] for q in rq if observation_question(q)}; actual_obs={o["source_question_id"] for o in obs}
+    expected_obs={q["question_id"] for q in rq if observation_question(q)}
+    observation_ids=[o["observation_id"] for o in obs]; observation_questions=[o["source_question_id"] for o in obs]
+    if len(obs)!=len(expected_obs) or not unique(observation_ids) or not unique(observation_questions):
+        errors.append("observation definition count/uniqueness invalid")
+    actual_obs=set(observation_questions)
     if actual_obs!=expected_obs: errors.append("observation boundary differs from evidence policy")
     obs_by_q={o["source_question_id"]:o for o in obs}
     for qid in expected_obs:
@@ -112,6 +116,9 @@ def validate(repo: Path) -> list[str]:
     if any(m["mapping_role"]=="PRIMARY_VALUE" and q_by_sel[m["selector_id"]]["answer_owner"]!="DETERMINISTIC" for m in maps):
         errors.append("non-deterministic mapping marked PRIMARY_VALUE")
 
+    cand_doc=load(root/"candidates/candidate_definitions.json")
+    if cand_doc.get("version")!="graphology-candidate-kinds/1" or cand_doc.get("status")!="REGISTERED_NAMES_ONLY":
+        errors.append("candidate definition registry metadata drift")
     kind_ids=[x["candidate_kind_id"] for x in cand_defs]
     if len(cand_defs)!=33 or not unique(kind_ids) or set(kind_ids)!=set(rm["candidate_kinds"]):
         errors.append("candidate kind registry drift or duplication")
@@ -156,6 +163,19 @@ def validate(repo: Path) -> list[str]:
             errors.append(f"candidate definition generator contract status invalid: {d['candidate_kind_id']}")
     if any(g.get("output_envelope_id")!="CANDIDATE_ENVELOPE_V1" or g.get("eligibility_policy_id")!="CANDIDATE_VALIDATION_V1" for g in gens):
         errors.append("candidate generator contract linkage invalid")
+    for kind,g in gen_by_kind.items():
+        linked=[x for x in selectors if x["candidate_kind"]==kind]
+        if g.get("generator_version")!="1.0.0":
+            errors.append(f"candidate generator version drift: {kind}")
+        if g.get("selector_ids")!=[x["selector_id"] for x in linked]:
+            errors.append(f"candidate generator selector coverage drift: {kind}")
+        if set(g.get("scopes",[]))!={x["scope"] for x in linked}:
+            errors.append(f"candidate generator scope drift: {kind}")
+        if set(g.get("answer_owners",[]))!={x["answer_owner"] for x in linked}:
+            errors.append(f"candidate generator owner drift: {kind}")
+        required_from_selectors=set().union(*(set(x.get("required_inputs",[])) for x in linked)) if linked else set()
+        if not required_from_selectors <= set(g.get("required_inputs",[])):
+            errors.append(f"candidate generator lost selector-required input: {kind}")
 
     ref_gen=gen_by_kind.get("ELIGIBLE_REFERENCE_CLAIM")
     required_ref_inputs={"VALID_REFERENCE_RELEASE","REFERENCE_SERVICE_ELIGIBILITY_RESULTS"}
@@ -181,6 +201,25 @@ def validate(repo: Path) -> list[str]:
         or cand_env.get("invariants")!=expected_candidate_invariants
     ):
         errors.append("candidate envelope invalid")
+    pr2_trace=load(root/"traceability/pr2_values_candidates_policies.json")["records"]
+    expected_pr2={
+        *{("VALUE_SET",x["value_set_id"],"VALUE_SET",x["value_set_id"]) for x in research_values},
+        *{("CANDIDATE_KIND",x,"CANDIDATE_KIND",x) for x in rm["candidate_kinds"]},
+        ("ANSWER_STATE_POLICY",rm["answer_state_policy"]["policy_id"],"ANSWER_STATE_POLICY",rm["answer_state_policy"]["policy_id"]),
+        ("SELECTION_CONTRACT","selection_contract","SELECTION_CONTRACT","selection_contract"),
+        ("OBSERVATION_ENVELOPE","observation_envelope","OBSERVATION_ENVELOPE","graphology-observation-envelope/1"),
+        ("CANDIDATE_VALIDATION_POLICY","candidate_validation_policy","CANDIDATE_VALIDATION_POLICY","CANDIDATE_VALIDATION_V1"),
+    }
+    actual_pr2=[(x["research_kind"],x["research_id"],x["production_kind"],x["production_id"]) for x in pr2_trace]
+    if len(actual_pr2)!=len(set(actual_pr2)) or set(actual_pr2)!=expected_pr2:
+        errors.append("PR2 static traceability drift")
+
+    selector_trace=concat(root,"traceability/selectors")
+    expected_selector_trace={("QUESTION",q["question_id"],"SELECTOR",q["selector_id"]) for q in rq}
+    actual_selector_trace=[(x["research_kind"],x["research_id"],x["production_kind"],x["production_id"]) for x in selector_trace]
+    if len(actual_selector_trace)!=len(set(actual_selector_trace)) or set(actual_selector_trace)!=expected_selector_trace:
+        errors.append("question-to-selector traceability drift")
+
     manifest=load(root/"manifest.json")
     if manifest["counts"].get("observations")!=len(obs): errors.append("manifest observation count mismatch")
     return errors
