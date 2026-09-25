@@ -34,11 +34,17 @@ def validate(repo: Path) -> list[str]:
     cand_defs=load(root/"candidates/candidate_definitions.json")["records"]
     cand_policy=load(root/"candidates/candidate_validation_policy.json")
     cand_env=load(root/"candidates/candidate_envelope.json")
-    gens=load(root/"candidates/generator_contracts.json")["records"]
-    genmap=load(root/"candidates/selector_generator_map.json")["records"]
+    gens_doc=load(root/"candidates/generator_contracts.json"); gens=gens_doc["records"]
+    genmap_doc=load(root/"candidates/selector_generator_map.json"); genmap=genmap_doc["records"]
     feature_ids={x["id"] for x in load(repo/"schema/graphology_feature_database_v1.json")["features"]}
 
-    q_by_sel={q["selector_id"]:q for q in rq}; sel_by_id={s["selector_id"]:s for s in selectors}
+    research_selector_ids=[q["selector_id"] for q in rq]
+    selector_ids=[x["selector_id"] for x in selectors]
+    if len(selectors)!=89 or not unique(selector_ids):
+        errors.append("selector definition count/uniqueness invalid")
+    if not unique(research_selector_ids):
+        errors.append("frozen research contains duplicate selector IDs")
+    q_by_sel={q["selector_id"]:q for q in rq}; sel_by_id={x["selector_id"]:x for x in selectors}
     if set(q_by_sel)!=set(sel_by_id): errors.append("selector IDs differ from frozen research")
     core=["source_question_id","domain_id","scope","answer_owner","model_call_role","selection_domain","cardinality","value_set_id","candidate_kind","required_inputs","answer_state_policy","numeric_threshold_policy","permitted_evidence_class","source_refs","feature_mapping_relation","report_target","source_status"]
     for sid,s in sel_by_id.items():
@@ -112,6 +118,8 @@ def validate(repo: Path) -> list[str]:
     if any(x.get("generator_status")!="CONTRACT_ONLY_NOT_IMPLEMENTED" or x.get("runtime_status")!="DRAFT_NOT_ACTIVE" for x in cand_defs):
         errors.append("candidate definition implementation/activation state invalid")
 
+    if gens_doc.get("runtime_activation") is not False:
+        errors.append("candidate generator registry became active")
     gen_kind_ids=[g["candidate_kind_id"] for g in gens]; gen_ids=[g["generator_id"] for g in gens]
     if not unique(gen_kind_ids): errors.append("duplicate candidate generator kind contract")
     if not unique(gen_ids): errors.append("duplicate candidate generator ID")
@@ -119,7 +127,11 @@ def validate(repo: Path) -> list[str]:
         errors.append("candidate generator contract coverage incomplete")
     gen_by_kind={g["candidate_kind_id"]:g for g in gens}
 
-    dyn=[s for s in selectors if s["selection_domain"]=="DYNAMIC"]
+    dyn=[x for x in selectors if x["selection_domain"]=="DYNAMIC"]
+    if genmap_doc.get("runtime_activation") is not False:
+        errors.append("selector-generator registry became active")
+    if any(x.get("runtime_activation") is not False for x in genmap):
+        errors.append("selector-generator mapping became active")
     mapped_selectors=[x["selector_id"] for x in genmap]
     if not unique(mapped_selectors): errors.append("duplicate selector-generator mapping")
     if len(genmap)!=35 or set(mapped_selectors)!={s["selector_id"] for s in dyn}:
@@ -133,6 +145,15 @@ def validate(repo: Path) -> list[str]:
             errors.append(f"generator mapping mismatch: {s['selector_id']}")
     if any(g.get("implementation_status")!="CONTRACT_ONLY_NOT_IMPLEMENTED" or g.get("runtime_activation") is not False for g in gens):
         errors.append("candidate generator falsely implemented/active")
+    for d in cand_defs:
+        g=gen_by_kind.get(d["candidate_kind_id"])
+        if not g:
+            errors.append(f"candidate definition generator missing: {d['candidate_kind_id']}")
+            continue
+        if d.get("generator_id")!=g.get("generator_id"):
+            errors.append(f"candidate definition generator mismatch: {d['candidate_kind_id']}")
+        if d.get("generator_contract_status")!="CONTRACT_ONLY_NOT_IMPLEMENTED":
+            errors.append(f"candidate definition generator contract status invalid: {d['candidate_kind_id']}")
     if any(g.get("output_envelope_id")!="CANDIDATE_ENVELOPE_V1" or g.get("eligibility_policy_id")!="CANDIDATE_VALIDATION_V1" for g in gens):
         errors.append("candidate generator contract linkage invalid")
 
@@ -143,7 +164,22 @@ def validate(repo: Path) -> list[str]:
     elif ref_gen.get("missing_input_behavior")!="NO_CANDIDATE" or ref_gen.get("authoritative_fact_linkage")!="source_fact_ids":
         errors.append("eligible reference claim generator missing-input/fact-linkage contract invalid")
 
-    if cand_env.get("envelope_id")!="CANDIDATE_ENVELOPE_V1" or cand_env.get("runtime_activation") is not False:
+    expected_candidate_fields=[
+        "candidate_id","candidate_kind_id","generator_id","generator_version","eligibility_state",
+        "source_fact_ids","source_observation_ids","source_association_ids","display_key","payload",
+    ]
+    expected_candidate_invariants=[
+        "eligibility_state must be a CANDIDATE_VALIDATION_V1 state.",
+        "PENDING_VISUAL_ASSESSMENT is never described as preverified.",
+        "No candidate payload creates a canonical measurement, percentile, probability or score unless supplied by an authoritative precomputed fact.",
+    ]
+    if (
+        cand_env.get("envelope_id")!="CANDIDATE_ENVELOPE_V1"
+        or cand_env.get("version")!="1.0.0"
+        or cand_env.get("runtime_activation") is not False
+        or cand_env.get("required_fields")!=expected_candidate_fields
+        or cand_env.get("invariants")!=expected_candidate_invariants
+    ):
         errors.append("candidate envelope invalid")
     manifest=load(root/"manifest.json")
     if manifest["counts"].get("observations")!=len(obs): errors.append("manifest observation count mismatch")
