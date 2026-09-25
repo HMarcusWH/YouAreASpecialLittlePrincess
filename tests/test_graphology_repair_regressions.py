@@ -183,3 +183,78 @@ def test_candidate_definition_generator_link_is_cross_checked(tmp_path):
     path=repo/"schema/graphology_interpretation/v1/candidates/candidate_definitions.json"
     rewrite(path,lambda d:d["records"][0].__setitem__("generator_id","GEN_COPYBOOK_DIFFERENCE_V1"))
     assert any("candidate definition generator mismatch" in e for e in selector.validate(repo))
+
+
+def test_stage_contract_cannot_self_promote(tmp_path):
+    repo=copy_validation_repo(tmp_path)
+    path=repo/"schema/graphology_interpretation/v1/stage_contract.json"
+    def mutate(d):
+        d["current_stage"]="REVIEWED_READY_FOR_T15"
+    rewrite(path,mutate)
+    assert any("current stage must remain pending review" in e for e in integrity.validate(repo))
+
+def test_manifest_lineage_drift_is_rejected(tmp_path):
+    repo=copy_validation_repo(tmp_path)
+    path=repo/"schema/graphology_interpretation/v1/manifest.json"
+    def mutate(d):
+        d["construction_lineage"]["database_completion_merge"]="WRONG"
+    rewrite(path,mutate)
+    assert any("construction lineage drift" in e for e in integrity.validate(repo))
+
+def test_duplicate_observation_definition_is_rejected(tmp_path):
+    repo=copy_validation_repo(tmp_path)
+    path=repo/"schema/graphology_interpretation/v1/ontology/observations/01-context.json"
+    rewrite(path,lambda d:d.append(dict(d[0])))
+    assert any("observation definition count/uniqueness invalid" in e for e in selector.validate(repo))
+
+def test_generator_source_mode_drift_is_rejected(tmp_path):
+    repo=copy_validation_repo(tmp_path)
+    path=repo/"schema/graphology_interpretation/v1/candidates/generator_contracts.json"
+    rewrite(path,lambda d:d["records"][0].__setitem__("source_mode","EDITORIAL_SELECTION_DEPENDENT"))
+    assert any("candidate generator source-mode drift" in e for e in selector.validate(repo))
+
+def test_pr2_trace_loss_is_rejected(tmp_path):
+    repo=copy_validation_repo(tmp_path)
+    path=repo/"schema/graphology_interpretation/v1/traceability/pr2_values_candidates_policies.json"
+    rewrite(path,lambda d:d["records"].pop())
+    assert any("PR2 static traceability drift" in e for e in selector.validate(repo))
+
+def test_pr3_trace_loss_is_rejected(tmp_path):
+    repo=copy_validation_repo(tmp_path)
+    path=repo/"schema/graphology_interpretation/v1/traceability/pr3_traditional.json"
+    rewrite(path,lambda d:d["records"].pop())
+    assert any("PR3 traditional traceability drift" in e for e in traditional.validate(repo))
+
+def test_pr4_trace_loss_is_rejected(tmp_path):
+    repo=copy_validation_repo(tmp_path)
+    path=repo/"schema/graphology_interpretation/v1/traceability/pr4_content.json"
+    rewrite(path,lambda d:d["records"].pop())
+    assert any("PR4 content traceability drift" in e for e in database.validate(repo))
+
+def test_question_pack_wiring_drift_is_rejected(tmp_path):
+    repo=copy_validation_repo(tmp_path)
+    path=repo/"schema/graphology_interpretation/v1/packs/question_packs.json"
+    def mutate(d):
+        d["packs"][0]["soft_field_ids"]=[]
+    rewrite(path,mutate)
+    assert any("question-pack application wiring drift" in e for e in database.validate(repo))
+
+def test_report_slot_order_drift_is_rejected(tmp_path):
+    repo=copy_validation_repo(tmp_path)
+    path=repo/"schema/graphology_interpretation/v1/reports/report_slots.json"
+    def mutate(d):
+        d["records"][0]["order"]=99
+    rewrite(path,mutate)
+    assert any("report-slot identity/scope/order drift" in e for e in database.validate(repo))
+
+def test_localization_policy_drift_is_rejected(tmp_path):
+    repo=copy_validation_repo(tmp_path)
+    path=repo/"schema/graphology_interpretation/v1/localization/policy.json"
+    rewrite(path,lambda d:d.__setitem__("canonical_locale","sv"))
+    assert any("localization policy drift" in e for e in database.validate(repo))
+
+def test_model_pack_policy_drift_is_rejected(tmp_path):
+    repo=copy_validation_repo(tmp_path)
+    path=repo/"schema/graphology_interpretation/v1/packs/model_pack_policy.json"
+    rewrite(path,lambda d:d.__setitem__("policy","WEAKENED"))
+    assert any("model-pack policy contract drift" in e for e in database.validate(repo))
