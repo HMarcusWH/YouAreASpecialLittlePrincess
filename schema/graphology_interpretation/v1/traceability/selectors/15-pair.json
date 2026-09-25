@@ -1,0 +1,38 @@
+[
+  {
+    "research_kind": "QUESTION",
+    "research_id": "Q_PAIR_COMPARABLE",
+    "production_kind": "SELECTOR",
+    "production_id": "SEL_PAIR_COMPARABLE",
+    "observation_id": null,
+    "disposition": "PROMOTED_AS_SELECTOR_FOUNDATION",
+    "runtime_effect": "NONE"
+  },
+  {
+    "research_kind": "QUESTION",
+    "research_id": "Q_PAIR_SIMILAR",
+    "production_kind": "SELECTOR",
+    "production_id": "SEL_PAIR_SIMILAR",
+    "observation_id": null,
+    "disposition": "PROMOTED_AS_SELECTOR_FOUNDATION",
+    "runtime_effect": "NONE"
+  },
+  {
+    "research_kind": "QUESTION",
+    "research_id": "Q_PAIR_DIFFERENT",
+    "production_kind": "SELECTOR",
+    "production_id": "SEL_PAIR_DIFFERENT",
+    "observation_id": null,
+    "disposition": "PROMOTED_AS_SELECTOR_FOUNDATION",
+    "runtime_effect": "NONE"
+  },
+  {
+    "research_kind": "QUESTION",
+    "research_id": "Q_PAIR_TRAD",
+    "production_kind": "SELECTOR",
+    "production_id": "SEL_PAIR_TRAD",
+    "observation_id": null,
+    "disposition": "PROMOTED_AS_SELECTOR_FOUNDATION",
+    "runtime_effect": "NONE"
+  }
+]

@@ -1,0 +1,65 @@
+[
+  {
+    "research_kind": "QUESTION",
+    "research_id": "Q_HIERARCHY_MAIN",
+    "production_kind": "SELECTOR",
+    "production_id": "SEL_HIERARCHY_MAIN",
+    "observation_id": null,
+    "disposition": "PROMOTED_AS_SELECTOR_FOUNDATION",
+    "runtime_effect": "NONE"
+  },
+  {
+    "research_kind": "QUESTION",
+    "research_id": "Q_HIERARCHY_ROLE",
+    "production_kind": "SELECTOR",
+    "production_id": "SEL_HIERARCHY_ROLE",
+    "observation_id": "OBS_HIERARCHY_ROLE",
+    "disposition": "PROMOTED_AS_SELECTOR_FOUNDATION",
+    "runtime_effect": "NONE"
+  },
+  {
+    "research_kind": "QUESTION",
+    "research_id": "Q_HIERARCHY_SUPPORT",
+    "production_kind": "SELECTOR",
+    "production_id": "SEL_HIERARCHY_SUPPORT",
+    "observation_id": null,
+    "disposition": "PROMOTED_AS_SELECTOR_FOUNDATION",
+    "runtime_effect": "NONE"
+  },
+  {
+    "research_kind": "QUESTION",
+    "research_id": "Q_HIERARCHY_COUNTER",
+    "production_kind": "SELECTOR",
+    "production_id": "SEL_HIERARCHY_COUNTER",
+    "observation_id": null,
+    "disposition": "PROMOTED_AS_SELECTOR_FOUNDATION",
+    "runtime_effect": "NONE"
+  },
+  {
+    "research_kind": "QUESTION",
+    "research_id": "Q_HIERARCHY_RELATION",
+    "production_kind": "SELECTOR",
+    "production_id": "SEL_HIERARCHY_RELATION",
+    "observation_id": null,
+    "disposition": "PROMOTED_AS_SELECTOR_FOUNDATION",
+    "runtime_effect": "NONE"
+  },
+  {
+    "research_kind": "QUESTION",
+    "research_id": "Q_HIERARCHY_SCOPE",
+    "production_kind": "SELECTOR",
+    "production_id": "SEL_HIERARCHY_SCOPE",
+    "observation_id": null,
+    "disposition": "PROMOTED_AS_SELECTOR_FOUNDATION",
+    "runtime_effect": "NONE"
+  },
+  {
+    "research_kind": "QUESTION",
+    "research_id": "Q_HIERARCHY_COMBINATION",
+    "production_kind": "SELECTOR",
+    "production_id": "SEL_HIERARCHY_COMBINATION",
+    "observation_id": null,
+    "disposition": "PROMOTED_AS_SELECTOR_FOUNDATION",
+    "runtime_effect": "NONE"
+  }
+]

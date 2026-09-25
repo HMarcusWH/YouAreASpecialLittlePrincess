@@ -1,0 +1,100 @@
+[
+  {
+    "observation_id": "OBS_SIG_LOCATION",
+    "source_question_id": "Q_SIG_LOCATION",
+    "selector_id": "SEL_SIG_LOCATION",
+    "domain_id": "SIGNATURE",
+    "scope": "INDIVIDUAL",
+    "descriptor_kind": "DETERMINISTIC_DESCRIPTOR",
+    "assessment_owner": "DETERMINISTIC",
+    "model_call_role": "READ_ONLY_CONTEXT_OR_PRECOMPUTED",
+    "cardinality": "SINGLE",
+    "value_set_id": "SIGNATURE_LOCATION",
+    "required_inputs": [
+      "SIGNATURE_AND_BODY_REGIONS"
+    ],
+    "answer_state_policy": "ANSWER_STATE_V1",
+    "permitted_evidence_class": "PRECOMPUTED_DESCRIPTION",
+    "source_refs": [
+      {
+        "source_id": "CNPG_B",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "IHAS",
+        "relationship": "domain_or_term_basis"
+      }
+    ],
+    "related_canonical_feature_ids": [],
+    "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "source_status": "DRAFT_NOT_ACTIVATED",
+    "runtime_status": "DRAFT_NOT_ACTIVE"
+  },
+  {
+    "observation_id": "OBS_SIG_SIZE",
+    "source_question_id": "Q_SIG_SIZE",
+    "selector_id": "SEL_SIG_SIZE",
+    "domain_id": "SIGNATURE",
+    "scope": "INDIVIDUAL",
+    "descriptor_kind": "DETERMINISTIC_DESCRIPTOR",
+    "assessment_owner": "DETERMINISTIC",
+    "model_call_role": "READ_ONLY_CONTEXT_OR_PRECOMPUTED",
+    "cardinality": "SINGLE",
+    "value_set_id": "RELATIVE_SIZE",
+    "required_inputs": [
+      "SIGNATURE_AND_BODY_REGIONS",
+      "VALID_MIDDLE_ZONE"
+    ],
+    "answer_state_policy": "ANSWER_STATE_V1",
+    "permitted_evidence_class": "PRECOMPUTED_DESCRIPTION",
+    "source_refs": [
+      {
+        "source_id": "CNPG_B",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "IHAS",
+        "relationship": "domain_or_term_basis"
+      }
+    ],
+    "related_canonical_feature_ids": [
+      "SIG_TEXT_SIZE_RATIO"
+    ],
+    "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "source_status": "DRAFT_NOT_ACTIVATED",
+    "runtime_status": "DRAFT_NOT_ACTIVE"
+  },
+  {
+    "observation_id": "OBS_SIG_ADDON",
+    "source_question_id": "Q_SIG_ADDON",
+    "selector_id": "SEL_SIG_ADDON",
+    "domain_id": "SIGNATURE",
+    "scope": "INDIVIDUAL",
+    "descriptor_kind": "VISUAL_DESCRIPTOR",
+    "assessment_owner": "PREMIUM_VISUAL",
+    "model_call_role": "ANSWER",
+    "cardinality": "MULTIPLE",
+    "value_set_id": "SIGNATURE_ADDON",
+    "required_inputs": [
+      "IDENTIFIED_SIGNATURE",
+      "AUTHORIZED_IMAGE",
+      "IDENTIFIED_EVIDENCE_REGION"
+    ],
+    "answer_state_policy": "ANSWER_STATE_V1",
+    "permitted_evidence_class": "AI_VISUAL_DESCRIPTION_NOT_CANONICAL_MEASUREMENT",
+    "source_refs": [
+      {
+        "source_id": "CNPG_B",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "IHAS",
+        "relationship": "domain_or_term_basis"
+      }
+    ],
+    "related_canonical_feature_ids": [],
+    "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "source_status": "DRAFT_NOT_ACTIVATED",
+    "runtime_status": "DRAFT_NOT_ACTIVE"
+  }
+]
