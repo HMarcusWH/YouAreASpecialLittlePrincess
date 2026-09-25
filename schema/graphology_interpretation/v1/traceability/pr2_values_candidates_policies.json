@@ -640,6 +640,14 @@
       "production_id": "graphology-observation-envelope/1",
       "disposition": "PROMOTED_AS_DRAFT_POLICY",
       "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "CANDIDATE_VALIDATION_POLICY",
+      "research_id": "candidate_validation_policy",
+      "production_kind": "CANDIDATE_VALIDATION_POLICY",
+      "production_id": "CANDIDATE_VALIDATION_V1",
+      "disposition": "PROMOTED_AS_DRAFT_POLICY",
+      "runtime_effect": "NONE"
     }
   ]
 }

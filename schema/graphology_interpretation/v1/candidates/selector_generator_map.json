@@ -1,0 +1,216 @@
+{
+  "version": "graphology-selector-generator-map/1",
+  "runtime_activation": false,
+  "records": [
+    {
+      "selector_id": "SEL_STROKE_PRESSURE_LIMIT",
+      "candidate_kind_id": "ACQUISITION_LIMITATION",
+      "generator_id": "GEN_ACQUISITION_LIMITATION_V1",
+      "runtime_activation": false
+    },
+    {
+      "selector_id": "SEL_MOVEMENT_TEMPO_LIMIT",
+      "candidate_kind_id": "ACQUISITION_LIMITATION",
+      "generator_id": "GEN_ACQUISITION_LIMITATION_V1",
+      "runtime_activation": false
+    },
+    {
+      "selector_id": "SEL_FORM_COPYBOOK",
+      "candidate_kind_id": "COPYBOOK_DIFFERENCE",
+      "generator_id": "GEN_COPYBOOK_DIFFERENCE_V1",
+      "runtime_activation": false
+    },
+    {
+      "selector_id": "SEL_HIERARCHY_COUNTER",
+      "candidate_kind_id": "COUNTEREVIDENCE_GROUP",
+      "generator_id": "GEN_COUNTEREVIDENCE_GROUP_V1",
+      "runtime_activation": false
+    },
+    {
+      "selector_id": "SEL_REF_ELIGIBLE",
+      "candidate_kind_id": "ELIGIBLE_REFERENCE_CLAIM",
+      "generator_id": "GEN_ELIGIBLE_REFERENCE_CLAIM_V1",
+      "runtime_activation": false
+    },
+    {
+      "selector_id": "SEL_HIERARCHY_COMBINATION",
+      "candidate_kind_id": "GRAPHIC_COMBINATION",
+      "generator_id": "GEN_GRAPHIC_COMBINATION_V1",
+      "runtime_activation": false
+    },
+    {
+      "selector_id": "SEL_HIERARCHY_MAIN",
+      "candidate_kind_id": "GRAPHIC_SIGN",
+      "generator_id": "GEN_GRAPHIC_SIGN_V1",
+      "runtime_activation": false
+    },
+    {
+      "selector_id": "SEL_HIST_LIMIT",
+      "candidate_kind_id": "HISTORY_CAVEAT",
+      "generator_id": "GEN_HISTORY_CAVEAT_V1",
+      "runtime_activation": false
+    },
+    {
+      "selector_id": "SEL_HIST_CHANGE",
+      "candidate_kind_id": "HISTORY_CHANGE",
+      "generator_id": "GEN_HISTORY_CHANGE_V1",
+      "runtime_activation": false
+    },
+    {
+      "selector_id": "SEL_HIST_STABLE",
+      "candidate_kind_id": "HISTORY_STABLE_PATTERN",
+      "generator_id": "GEN_HISTORY_STABLE_PATTERN_V1",
+      "runtime_activation": false
+    },
+    {
+      "selector_id": "SEL_DETAIL_INITIAL",
+      "candidate_kind_id": "INITIAL_STROKE_DESCRIPTION",
+      "generator_id": "GEN_INITIAL_STROKE_DESCRIPTION_V1",
+      "runtime_activation": false
+    },
+    {
+      "selector_id": "SEL_STROKE_DARKNESS",
+      "candidate_kind_id": "INK_APPEARANCE_FACT",
+      "generator_id": "GEN_INK_APPEARANCE_FACT_V1",
+      "runtime_activation": false
+    },
+    {
+      "selector_id": "SEL_SPACE_MARGIN_TREND",
+      "candidate_kind_id": "LINE_EDGE_TREND",
+      "generator_id": "GEN_LINE_EDGE_TREND_V1",
+      "runtime_activation": false
+    },
+    {
+      "selector_id": "SEL_HIERARCHY_SCOPE",
+      "candidate_kind_id": "LOCAL_ONLY_SIGN",
+      "generator_id": "GEN_LOCAL_ONLY_SIGN_V1",
+      "runtime_activation": false
+    },
+    {
+      "selector_id": "SEL_SPACE_MARGINS",
+      "candidate_kind_id": "MARGIN_DESCRIPTION",
+      "generator_id": "GEN_MARGIN_DESCRIPTION_V1",
+      "runtime_activation": false
+    },
+    {
+      "selector_id": "SEL_GLOBAL_EVIDENCE_CONFLICT",
+      "candidate_kind_id": "MEASUREMENT_CONFLICT_CANDIDATE",
+      "generator_id": "GEN_MEASUREMENT_CONFLICT_CANDIDATE_V1",
+      "runtime_activation": false
+    },
+    {
+      "selector_id": "SEL_FORM_ORNAMENT",
+      "candidate_kind_id": "ORNAMENT_DESCRIPTION",
+      "generator_id": "GEN_ORNAMENT_DESCRIPTION_V1",
+      "runtime_activation": false
+    },
+    {
+      "selector_id": "SEL_PAIR_DIFFERENT",
+      "candidate_kind_id": "PAIR_DIFFERENCE",
+      "generator_id": "GEN_PAIR_DIFFERENCE_V1",
+      "runtime_activation": false
+    },
+    {
+      "selector_id": "SEL_PAIR_SIMILAR",
+      "candidate_kind_id": "PAIR_SIMILARITY",
+      "generator_id": "GEN_PAIR_SIMILARITY_V1",
+      "runtime_activation": false
+    },
+    {
+      "selector_id": "SEL_PAIR_TRAD",
+      "candidate_kind_id": "PAIR_TRADITIONAL_CONTRAST",
+      "generator_id": "GEN_PAIR_TRADITIONAL_CONTRAST_V1",
+      "runtime_activation": false
+    },
+    {
+      "selector_id": "SEL_DETAIL_PPI",
+      "candidate_kind_id": "PPI_FORM_DESCRIPTION",
+      "generator_id": "GEN_PPI_FORM_DESCRIPTION_V1",
+      "runtime_activation": false
+    },
+    {
+      "selector_id": "SEL_REF_QUALIFICATION",
+      "candidate_kind_id": "REFERENCE_CAVEAT",
+      "generator_id": "GEN_REFERENCE_CAVEAT_V1",
+      "runtime_activation": false
+    },
+    {
+      "selector_id": "SEL_FORM_INDIVIDUAL",
+      "candidate_kind_id": "REPEATED_FORM_DESCRIPTION",
+      "generator_id": "GEN_REPEATED_FORM_DESCRIPTION_V1",
+      "runtime_activation": false
+    },
+    {
+      "selector_id": "SEL_SIG_SLANT",
+      "candidate_kind_id": "SIGNATURE_TEXT_DIFFERENCE",
+      "generator_id": "GEN_SIGNATURE_TEXT_DIFFERENCE_V1",
+      "runtime_activation": false
+    },
+    {
+      "selector_id": "SEL_SIG_CONNECTION",
+      "candidate_kind_id": "SIGNATURE_TEXT_DIFFERENCE",
+      "generator_id": "GEN_SIGNATURE_TEXT_DIFFERENCE_V1",
+      "runtime_activation": false
+    },
+    {
+      "selector_id": "SEL_SIG_RELATION",
+      "candidate_kind_id": "SIGNATURE_TEXT_PATTERN",
+      "generator_id": "GEN_SIGNATURE_TEXT_PATTERN_V1",
+      "runtime_activation": false
+    },
+    {
+      "selector_id": "SEL_HIERARCHY_SUPPORT",
+      "candidate_kind_id": "SUPPORT_GROUP",
+      "generator_id": "GEN_SUPPORT_GROUP_V1",
+      "runtime_activation": false
+    },
+    {
+      "selector_id": "SEL_DETAIL_TERMINAL",
+      "candidate_kind_id": "TERMINAL_STROKE_DESCRIPTION",
+      "generator_id": "GEN_TERMINAL_STROKE_DESCRIPTION_V1",
+      "runtime_activation": false
+    },
+    {
+      "selector_id": "SEL_STROKE_WIDTH",
+      "candidate_kind_id": "THICKNESS_FACT",
+      "generator_id": "GEN_THICKNESS_FACT_V1",
+      "runtime_activation": false
+    },
+    {
+      "selector_id": "SEL_TRAD_ALTERNATIVE",
+      "candidate_kind_id": "TRADITIONAL_ALTERNATIVE",
+      "generator_id": "GEN_TRADITIONAL_ALTERNATIVE_V1",
+      "runtime_activation": false
+    },
+    {
+      "selector_id": "SEL_TRAD_BUNDLE",
+      "candidate_kind_id": "TRADITIONAL_CANDIDATE",
+      "generator_id": "GEN_TRADITIONAL_CANDIDATE_V1",
+      "runtime_activation": false
+    },
+    {
+      "selector_id": "SEL_TRAD_MODIFIER",
+      "candidate_kind_id": "TRADITIONAL_MODIFIER",
+      "generator_id": "GEN_TRADITIONAL_MODIFIER_V1",
+      "runtime_activation": false
+    },
+    {
+      "selector_id": "SEL_REF_COMBINATION",
+      "candidate_kind_id": "VERIFIED_JOINT_OUTLIER",
+      "generator_id": "GEN_VERIFIED_JOINT_OUTLIER_V1",
+      "runtime_activation": false
+    },
+    {
+      "selector_id": "SEL_REF_HIGHLIGHT",
+      "candidate_kind_id": "VERIFIED_OUTLIER",
+      "generator_id": "GEN_VERIFIED_OUTLIER_V1",
+      "runtime_activation": false
+    },
+    {
+      "selector_id": "SEL_TRAD_WITHHOLD",
+      "candidate_kind_id": "WITHHELD_CLAIM",
+      "generator_id": "GEN_WITHHELD_CLAIM_V1",
+      "runtime_activation": false
+    }
+  ]
+}

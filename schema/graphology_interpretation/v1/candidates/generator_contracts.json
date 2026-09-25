@@ -1,0 +1,741 @@
+{
+  "version": "graphology-candidate-generator-contracts/1",
+  "runtime_activation": false,
+  "records": [
+    {
+      "generator_id": "GEN_ACQUISITION_LIMITATION_V1",
+      "generator_version": "1.0.0",
+      "candidate_kind_id": "ACQUISITION_LIMITATION",
+      "selector_ids": [
+        "SEL_STROKE_PRESSURE_LIMIT",
+        "SEL_MOVEMENT_TEMPO_LIMIT"
+      ],
+      "scopes": [
+        "INDIVIDUAL"
+      ],
+      "answer_owners": [
+        "DETERMINISTIC"
+      ],
+      "source_mode": "PRECOMPUTED_APPLICATION",
+      "required_inputs": [
+        "ACQUISITION_METADATA"
+      ],
+      "output_envelope_id": "CANDIDATE_ENVELOPE_V1",
+      "eligibility_policy_id": "CANDIDATE_VALIDATION_V1",
+      "implementation_status": "CONTRACT_ONLY_NOT_IMPLEMENTED",
+      "runtime_activation": false
+    },
+    {
+      "generator_id": "GEN_COPYBOOK_DIFFERENCE_V1",
+      "generator_version": "1.0.0",
+      "candidate_kind_id": "COPYBOOK_DIFFERENCE",
+      "selector_ids": [
+        "SEL_FORM_COPYBOOK"
+      ],
+      "scopes": [
+        "INDIVIDUAL"
+      ],
+      "answer_owners": [
+        "PREMIUM_EDITOR"
+      ],
+      "source_mode": "EDITORIAL_SELECTION_DEPENDENT",
+      "required_inputs": [
+        "CURRENT_REPORT_CANDIDATES",
+        "KNOWN_COPYBOOK_CONTEXT"
+      ],
+      "output_envelope_id": "CANDIDATE_ENVELOPE_V1",
+      "eligibility_policy_id": "CANDIDATE_VALIDATION_V1",
+      "implementation_status": "CONTRACT_ONLY_NOT_IMPLEMENTED",
+      "runtime_activation": false
+    },
+    {
+      "generator_id": "GEN_COUNTEREVIDENCE_GROUP_V1",
+      "generator_version": "1.0.0",
+      "candidate_kind_id": "COUNTEREVIDENCE_GROUP",
+      "selector_ids": [
+        "SEL_HIERARCHY_COUNTER"
+      ],
+      "scopes": [
+        "INDIVIDUAL"
+      ],
+      "answer_owners": [
+        "PREMIUM_EDITOR"
+      ],
+      "source_mode": "EDITORIAL_SELECTION_DEPENDENT",
+      "required_inputs": [
+        "CURRENT_REPORT_CANDIDATES",
+        "TRADITIONAL_CANDIDATE"
+      ],
+      "output_envelope_id": "CANDIDATE_ENVELOPE_V1",
+      "eligibility_policy_id": "CANDIDATE_VALIDATION_V1",
+      "implementation_status": "CONTRACT_ONLY_NOT_IMPLEMENTED",
+      "runtime_activation": false
+    },
+    {
+      "generator_id": "GEN_ELIGIBLE_REFERENCE_CLAIM_V1",
+      "generator_version": "1.0.0",
+      "candidate_kind_id": "ELIGIBLE_REFERENCE_CLAIM",
+      "selector_ids": [
+        "SEL_REF_ELIGIBLE"
+      ],
+      "scopes": [
+        "INDIVIDUAL"
+      ],
+      "answer_owners": [
+        "DETERMINISTIC"
+      ],
+      "source_mode": "PRECOMPUTED_APPLICATION",
+      "required_inputs": [],
+      "output_envelope_id": "CANDIDATE_ENVELOPE_V1",
+      "eligibility_policy_id": "CANDIDATE_VALIDATION_V1",
+      "implementation_status": "CONTRACT_ONLY_NOT_IMPLEMENTED",
+      "runtime_activation": false
+    },
+    {
+      "generator_id": "GEN_GRAPHIC_COMBINATION_V1",
+      "generator_version": "1.0.0",
+      "candidate_kind_id": "GRAPHIC_COMBINATION",
+      "selector_ids": [
+        "SEL_HIERARCHY_COMBINATION"
+      ],
+      "scopes": [
+        "INDIVIDUAL"
+      ],
+      "answer_owners": [
+        "PREMIUM_EDITOR"
+      ],
+      "source_mode": "EDITORIAL_SELECTION_DEPENDENT",
+      "required_inputs": [
+        "CURRENT_REPORT_CANDIDATES"
+      ],
+      "output_envelope_id": "CANDIDATE_ENVELOPE_V1",
+      "eligibility_policy_id": "CANDIDATE_VALIDATION_V1",
+      "implementation_status": "CONTRACT_ONLY_NOT_IMPLEMENTED",
+      "runtime_activation": false
+    },
+    {
+      "generator_id": "GEN_GRAPHIC_SIGN_V1",
+      "generator_version": "1.0.0",
+      "candidate_kind_id": "GRAPHIC_SIGN",
+      "selector_ids": [
+        "SEL_HIERARCHY_MAIN"
+      ],
+      "scopes": [
+        "INDIVIDUAL"
+      ],
+      "answer_owners": [
+        "PREMIUM_EDITOR"
+      ],
+      "source_mode": "EDITORIAL_SELECTION_DEPENDENT",
+      "required_inputs": [
+        "CURRENT_REPORT_CANDIDATES"
+      ],
+      "output_envelope_id": "CANDIDATE_ENVELOPE_V1",
+      "eligibility_policy_id": "CANDIDATE_VALIDATION_V1",
+      "implementation_status": "CONTRACT_ONLY_NOT_IMPLEMENTED",
+      "runtime_activation": false
+    },
+    {
+      "generator_id": "GEN_HISTORY_CAVEAT_V1",
+      "generator_version": "1.0.0",
+      "candidate_kind_id": "HISTORY_CAVEAT",
+      "selector_ids": [
+        "SEL_HIST_LIMIT"
+      ],
+      "scopes": [
+        "HISTORY"
+      ],
+      "answer_owners": [
+        "DETERMINISTIC"
+      ],
+      "source_mode": "PRECOMPUTED_APPLICATION",
+      "required_inputs": [],
+      "output_envelope_id": "CANDIDATE_ENVELOPE_V1",
+      "eligibility_policy_id": "CANDIDATE_VALIDATION_V1",
+      "implementation_status": "CONTRACT_ONLY_NOT_IMPLEMENTED",
+      "runtime_activation": false
+    },
+    {
+      "generator_id": "GEN_HISTORY_CHANGE_V1",
+      "generator_version": "1.0.0",
+      "candidate_kind_id": "HISTORY_CHANGE",
+      "selector_ids": [
+        "SEL_HIST_CHANGE"
+      ],
+      "scopes": [
+        "HISTORY"
+      ],
+      "answer_owners": [
+        "PREMIUM_EDITOR"
+      ],
+      "source_mode": "EDITORIAL_SELECTION_DEPENDENT",
+      "required_inputs": [
+        "CURRENT_REPORT_CANDIDATES"
+      ],
+      "output_envelope_id": "CANDIDATE_ENVELOPE_V1",
+      "eligibility_policy_id": "CANDIDATE_VALIDATION_V1",
+      "implementation_status": "CONTRACT_ONLY_NOT_IMPLEMENTED",
+      "runtime_activation": false
+    },
+    {
+      "generator_id": "GEN_HISTORY_STABLE_PATTERN_V1",
+      "generator_version": "1.0.0",
+      "candidate_kind_id": "HISTORY_STABLE_PATTERN",
+      "selector_ids": [
+        "SEL_HIST_STABLE"
+      ],
+      "scopes": [
+        "HISTORY"
+      ],
+      "answer_owners": [
+        "PREMIUM_EDITOR"
+      ],
+      "source_mode": "EDITORIAL_SELECTION_DEPENDENT",
+      "required_inputs": [
+        "CURRENT_REPORT_CANDIDATES"
+      ],
+      "output_envelope_id": "CANDIDATE_ENVELOPE_V1",
+      "eligibility_policy_id": "CANDIDATE_VALIDATION_V1",
+      "implementation_status": "CONTRACT_ONLY_NOT_IMPLEMENTED",
+      "runtime_activation": false
+    },
+    {
+      "generator_id": "GEN_INITIAL_STROKE_DESCRIPTION_V1",
+      "generator_version": "1.0.0",
+      "candidate_kind_id": "INITIAL_STROKE_DESCRIPTION",
+      "selector_ids": [
+        "SEL_DETAIL_INITIAL"
+      ],
+      "scopes": [
+        "INDIVIDUAL"
+      ],
+      "answer_owners": [
+        "PREMIUM_EDITOR"
+      ],
+      "source_mode": "EDITORIAL_SELECTION_DEPENDENT",
+      "required_inputs": [
+        "CURRENT_REPORT_CANDIDATES"
+      ],
+      "output_envelope_id": "CANDIDATE_ENVELOPE_V1",
+      "eligibility_policy_id": "CANDIDATE_VALIDATION_V1",
+      "implementation_status": "CONTRACT_ONLY_NOT_IMPLEMENTED",
+      "runtime_activation": false
+    },
+    {
+      "generator_id": "GEN_INK_APPEARANCE_FACT_V1",
+      "generator_version": "1.0.0",
+      "candidate_kind_id": "INK_APPEARANCE_FACT",
+      "selector_ids": [
+        "SEL_STROKE_DARKNESS"
+      ],
+      "scopes": [
+        "INDIVIDUAL"
+      ],
+      "answer_owners": [
+        "PREMIUM_EDITOR"
+      ],
+      "source_mode": "EDITORIAL_SELECTION_DEPENDENT",
+      "required_inputs": [
+        "CURRENT_REPORT_CANDIDATES"
+      ],
+      "output_envelope_id": "CANDIDATE_ENVELOPE_V1",
+      "eligibility_policy_id": "CANDIDATE_VALIDATION_V1",
+      "implementation_status": "CONTRACT_ONLY_NOT_IMPLEMENTED",
+      "runtime_activation": false
+    },
+    {
+      "generator_id": "GEN_LINE_EDGE_TREND_V1",
+      "generator_version": "1.0.0",
+      "candidate_kind_id": "LINE_EDGE_TREND",
+      "selector_ids": [
+        "SEL_SPACE_MARGIN_TREND"
+      ],
+      "scopes": [
+        "INDIVIDUAL"
+      ],
+      "answer_owners": [
+        "PREMIUM_EDITOR"
+      ],
+      "source_mode": "EDITORIAL_SELECTION_DEPENDENT",
+      "required_inputs": [
+        "CURRENT_REPORT_CANDIDATES"
+      ],
+      "output_envelope_id": "CANDIDATE_ENVELOPE_V1",
+      "eligibility_policy_id": "CANDIDATE_VALIDATION_V1",
+      "implementation_status": "CONTRACT_ONLY_NOT_IMPLEMENTED",
+      "runtime_activation": false
+    },
+    {
+      "generator_id": "GEN_LOCAL_ONLY_SIGN_V1",
+      "generator_version": "1.0.0",
+      "candidate_kind_id": "LOCAL_ONLY_SIGN",
+      "selector_ids": [
+        "SEL_HIERARCHY_SCOPE"
+      ],
+      "scopes": [
+        "INDIVIDUAL"
+      ],
+      "answer_owners": [
+        "PREMIUM_EDITOR"
+      ],
+      "source_mode": "EDITORIAL_SELECTION_DEPENDENT",
+      "required_inputs": [
+        "CURRENT_REPORT_CANDIDATES"
+      ],
+      "output_envelope_id": "CANDIDATE_ENVELOPE_V1",
+      "eligibility_policy_id": "CANDIDATE_VALIDATION_V1",
+      "implementation_status": "CONTRACT_ONLY_NOT_IMPLEMENTED",
+      "runtime_activation": false
+    },
+    {
+      "generator_id": "GEN_MARGIN_DESCRIPTION_V1",
+      "generator_version": "1.0.0",
+      "candidate_kind_id": "MARGIN_DESCRIPTION",
+      "selector_ids": [
+        "SEL_SPACE_MARGINS"
+      ],
+      "scopes": [
+        "INDIVIDUAL"
+      ],
+      "answer_owners": [
+        "PREMIUM_EDITOR"
+      ],
+      "source_mode": "EDITORIAL_SELECTION_DEPENDENT",
+      "required_inputs": [
+        "CURRENT_REPORT_CANDIDATES",
+        "VERIFIED_PAGE_BOUNDARIES"
+      ],
+      "output_envelope_id": "CANDIDATE_ENVELOPE_V1",
+      "eligibility_policy_id": "CANDIDATE_VALIDATION_V1",
+      "implementation_status": "CONTRACT_ONLY_NOT_IMPLEMENTED",
+      "runtime_activation": false
+    },
+    {
+      "generator_id": "GEN_MEASUREMENT_CONFLICT_CANDIDATE_V1",
+      "generator_version": "1.0.0",
+      "candidate_kind_id": "MEASUREMENT_CONFLICT_CANDIDATE",
+      "selector_ids": [
+        "SEL_GLOBAL_EVIDENCE_CONFLICT"
+      ],
+      "scopes": [
+        "INDIVIDUAL"
+      ],
+      "answer_owners": [
+        "PREMIUM_EDITOR"
+      ],
+      "source_mode": "EDITORIAL_SELECTION_DEPENDENT",
+      "required_inputs": [
+        "CURRENT_REPORT_CANDIDATES"
+      ],
+      "output_envelope_id": "CANDIDATE_ENVELOPE_V1",
+      "eligibility_policy_id": "CANDIDATE_VALIDATION_V1",
+      "implementation_status": "CONTRACT_ONLY_NOT_IMPLEMENTED",
+      "runtime_activation": false
+    },
+    {
+      "generator_id": "GEN_ORNAMENT_DESCRIPTION_V1",
+      "generator_version": "1.0.0",
+      "candidate_kind_id": "ORNAMENT_DESCRIPTION",
+      "selector_ids": [
+        "SEL_FORM_ORNAMENT"
+      ],
+      "scopes": [
+        "INDIVIDUAL"
+      ],
+      "answer_owners": [
+        "PREMIUM_EDITOR"
+      ],
+      "source_mode": "EDITORIAL_SELECTION_DEPENDENT",
+      "required_inputs": [
+        "CURRENT_REPORT_CANDIDATES"
+      ],
+      "output_envelope_id": "CANDIDATE_ENVELOPE_V1",
+      "eligibility_policy_id": "CANDIDATE_VALIDATION_V1",
+      "implementation_status": "CONTRACT_ONLY_NOT_IMPLEMENTED",
+      "runtime_activation": false
+    },
+    {
+      "generator_id": "GEN_PAIR_DIFFERENCE_V1",
+      "generator_version": "1.0.0",
+      "candidate_kind_id": "PAIR_DIFFERENCE",
+      "selector_ids": [
+        "SEL_PAIR_DIFFERENT"
+      ],
+      "scopes": [
+        "PAIR"
+      ],
+      "answer_owners": [
+        "PREMIUM_EDITOR"
+      ],
+      "source_mode": "EDITORIAL_SELECTION_DEPENDENT",
+      "required_inputs": [
+        "CURRENT_REPORT_CANDIDATES"
+      ],
+      "output_envelope_id": "CANDIDATE_ENVELOPE_V1",
+      "eligibility_policy_id": "CANDIDATE_VALIDATION_V1",
+      "implementation_status": "CONTRACT_ONLY_NOT_IMPLEMENTED",
+      "runtime_activation": false
+    },
+    {
+      "generator_id": "GEN_PAIR_SIMILARITY_V1",
+      "generator_version": "1.0.0",
+      "candidate_kind_id": "PAIR_SIMILARITY",
+      "selector_ids": [
+        "SEL_PAIR_SIMILAR"
+      ],
+      "scopes": [
+        "PAIR"
+      ],
+      "answer_owners": [
+        "PREMIUM_EDITOR"
+      ],
+      "source_mode": "EDITORIAL_SELECTION_DEPENDENT",
+      "required_inputs": [
+        "CURRENT_REPORT_CANDIDATES"
+      ],
+      "output_envelope_id": "CANDIDATE_ENVELOPE_V1",
+      "eligibility_policy_id": "CANDIDATE_VALIDATION_V1",
+      "implementation_status": "CONTRACT_ONLY_NOT_IMPLEMENTED",
+      "runtime_activation": false
+    },
+    {
+      "generator_id": "GEN_PAIR_TRADITIONAL_CONTRAST_V1",
+      "generator_version": "1.0.0",
+      "candidate_kind_id": "PAIR_TRADITIONAL_CONTRAST",
+      "selector_ids": [
+        "SEL_PAIR_TRAD"
+      ],
+      "scopes": [
+        "PAIR"
+      ],
+      "answer_owners": [
+        "PREMIUM_EDITOR"
+      ],
+      "source_mode": "EDITORIAL_SELECTION_DEPENDENT",
+      "required_inputs": [
+        "CURRENT_REPORT_CANDIDATES",
+        "REVIEWED_SCHOOL_RULE_PACK"
+      ],
+      "output_envelope_id": "CANDIDATE_ENVELOPE_V1",
+      "eligibility_policy_id": "CANDIDATE_VALIDATION_V1",
+      "implementation_status": "CONTRACT_ONLY_NOT_IMPLEMENTED",
+      "runtime_activation": false
+    },
+    {
+      "generator_id": "GEN_PPI_FORM_DESCRIPTION_V1",
+      "generator_version": "1.0.0",
+      "candidate_kind_id": "PPI_FORM_DESCRIPTION",
+      "selector_ids": [
+        "SEL_DETAIL_PPI"
+      ],
+      "scopes": [
+        "INDIVIDUAL"
+      ],
+      "answer_owners": [
+        "PREMIUM_EDITOR"
+      ],
+      "source_mode": "EDITORIAL_SELECTION_DEPENDENT",
+      "required_inputs": [
+        "CURRENT_REPORT_CANDIDATES",
+        "ENGLISH_TEXT_CONTEXT",
+        "IDENTIFIED_PPI_EXAMPLES"
+      ],
+      "output_envelope_id": "CANDIDATE_ENVELOPE_V1",
+      "eligibility_policy_id": "CANDIDATE_VALIDATION_V1",
+      "implementation_status": "CONTRACT_ONLY_NOT_IMPLEMENTED",
+      "runtime_activation": false
+    },
+    {
+      "generator_id": "GEN_REFERENCE_CAVEAT_V1",
+      "generator_version": "1.0.0",
+      "candidate_kind_id": "REFERENCE_CAVEAT",
+      "selector_ids": [
+        "SEL_REF_QUALIFICATION"
+      ],
+      "scopes": [
+        "INDIVIDUAL"
+      ],
+      "answer_owners": [
+        "DETERMINISTIC"
+      ],
+      "source_mode": "PRECOMPUTED_APPLICATION",
+      "required_inputs": [],
+      "output_envelope_id": "CANDIDATE_ENVELOPE_V1",
+      "eligibility_policy_id": "CANDIDATE_VALIDATION_V1",
+      "implementation_status": "CONTRACT_ONLY_NOT_IMPLEMENTED",
+      "runtime_activation": false
+    },
+    {
+      "generator_id": "GEN_REPEATED_FORM_DESCRIPTION_V1",
+      "generator_version": "1.0.0",
+      "candidate_kind_id": "REPEATED_FORM_DESCRIPTION",
+      "selector_ids": [
+        "SEL_FORM_INDIVIDUAL"
+      ],
+      "scopes": [
+        "INDIVIDUAL"
+      ],
+      "answer_owners": [
+        "PREMIUM_EDITOR"
+      ],
+      "source_mode": "EDITORIAL_SELECTION_DEPENDENT",
+      "required_inputs": [
+        "CURRENT_REPORT_CANDIDATES"
+      ],
+      "output_envelope_id": "CANDIDATE_ENVELOPE_V1",
+      "eligibility_policy_id": "CANDIDATE_VALIDATION_V1",
+      "implementation_status": "CONTRACT_ONLY_NOT_IMPLEMENTED",
+      "runtime_activation": false
+    },
+    {
+      "generator_id": "GEN_SIGNATURE_TEXT_DIFFERENCE_V1",
+      "generator_version": "1.0.0",
+      "candidate_kind_id": "SIGNATURE_TEXT_DIFFERENCE",
+      "selector_ids": [
+        "SEL_SIG_SLANT",
+        "SEL_SIG_CONNECTION"
+      ],
+      "scopes": [
+        "INDIVIDUAL"
+      ],
+      "answer_owners": [
+        "PREMIUM_EDITOR"
+      ],
+      "source_mode": "EDITORIAL_SELECTION_DEPENDENT",
+      "required_inputs": [
+        "CURRENT_REPORT_CANDIDATES",
+        "SIGNATURE_AND_BODY_REGIONS"
+      ],
+      "output_envelope_id": "CANDIDATE_ENVELOPE_V1",
+      "eligibility_policy_id": "CANDIDATE_VALIDATION_V1",
+      "implementation_status": "CONTRACT_ONLY_NOT_IMPLEMENTED",
+      "runtime_activation": false
+    },
+    {
+      "generator_id": "GEN_SIGNATURE_TEXT_PATTERN_V1",
+      "generator_version": "1.0.0",
+      "candidate_kind_id": "SIGNATURE_TEXT_PATTERN",
+      "selector_ids": [
+        "SEL_SIG_RELATION"
+      ],
+      "scopes": [
+        "INDIVIDUAL"
+      ],
+      "answer_owners": [
+        "PREMIUM_EDITOR"
+      ],
+      "source_mode": "EDITORIAL_SELECTION_DEPENDENT",
+      "required_inputs": [
+        "CURRENT_REPORT_CANDIDATES",
+        "SIGNATURE_AND_BODY_REGIONS"
+      ],
+      "output_envelope_id": "CANDIDATE_ENVELOPE_V1",
+      "eligibility_policy_id": "CANDIDATE_VALIDATION_V1",
+      "implementation_status": "CONTRACT_ONLY_NOT_IMPLEMENTED",
+      "runtime_activation": false
+    },
+    {
+      "generator_id": "GEN_SUPPORT_GROUP_V1",
+      "generator_version": "1.0.0",
+      "candidate_kind_id": "SUPPORT_GROUP",
+      "selector_ids": [
+        "SEL_HIERARCHY_SUPPORT"
+      ],
+      "scopes": [
+        "INDIVIDUAL"
+      ],
+      "answer_owners": [
+        "PREMIUM_EDITOR"
+      ],
+      "source_mode": "EDITORIAL_SELECTION_DEPENDENT",
+      "required_inputs": [
+        "CURRENT_REPORT_CANDIDATES",
+        "TRADITIONAL_CANDIDATE"
+      ],
+      "output_envelope_id": "CANDIDATE_ENVELOPE_V1",
+      "eligibility_policy_id": "CANDIDATE_VALIDATION_V1",
+      "implementation_status": "CONTRACT_ONLY_NOT_IMPLEMENTED",
+      "runtime_activation": false
+    },
+    {
+      "generator_id": "GEN_TERMINAL_STROKE_DESCRIPTION_V1",
+      "generator_version": "1.0.0",
+      "candidate_kind_id": "TERMINAL_STROKE_DESCRIPTION",
+      "selector_ids": [
+        "SEL_DETAIL_TERMINAL"
+      ],
+      "scopes": [
+        "INDIVIDUAL"
+      ],
+      "answer_owners": [
+        "PREMIUM_EDITOR"
+      ],
+      "source_mode": "EDITORIAL_SELECTION_DEPENDENT",
+      "required_inputs": [
+        "CURRENT_REPORT_CANDIDATES"
+      ],
+      "output_envelope_id": "CANDIDATE_ENVELOPE_V1",
+      "eligibility_policy_id": "CANDIDATE_VALIDATION_V1",
+      "implementation_status": "CONTRACT_ONLY_NOT_IMPLEMENTED",
+      "runtime_activation": false
+    },
+    {
+      "generator_id": "GEN_THICKNESS_FACT_V1",
+      "generator_version": "1.0.0",
+      "candidate_kind_id": "THICKNESS_FACT",
+      "selector_ids": [
+        "SEL_STROKE_WIDTH"
+      ],
+      "scopes": [
+        "INDIVIDUAL"
+      ],
+      "answer_owners": [
+        "PREMIUM_EDITOR"
+      ],
+      "source_mode": "EDITORIAL_SELECTION_DEPENDENT",
+      "required_inputs": [
+        "CURRENT_REPORT_CANDIDATES"
+      ],
+      "output_envelope_id": "CANDIDATE_ENVELOPE_V1",
+      "eligibility_policy_id": "CANDIDATE_VALIDATION_V1",
+      "implementation_status": "CONTRACT_ONLY_NOT_IMPLEMENTED",
+      "runtime_activation": false
+    },
+    {
+      "generator_id": "GEN_TRADITIONAL_ALTERNATIVE_V1",
+      "generator_version": "1.0.0",
+      "candidate_kind_id": "TRADITIONAL_ALTERNATIVE",
+      "selector_ids": [
+        "SEL_TRAD_ALTERNATIVE"
+      ],
+      "scopes": [
+        "INDIVIDUAL"
+      ],
+      "answer_owners": [
+        "PREMIUM_EDITOR"
+      ],
+      "source_mode": "EDITORIAL_SELECTION_DEPENDENT",
+      "required_inputs": [
+        "CURRENT_REPORT_CANDIDATES",
+        "REVIEWED_SCHOOL_RULE_PACK"
+      ],
+      "output_envelope_id": "CANDIDATE_ENVELOPE_V1",
+      "eligibility_policy_id": "CANDIDATE_VALIDATION_V1",
+      "implementation_status": "CONTRACT_ONLY_NOT_IMPLEMENTED",
+      "runtime_activation": false
+    },
+    {
+      "generator_id": "GEN_TRADITIONAL_CANDIDATE_V1",
+      "generator_version": "1.0.0",
+      "candidate_kind_id": "TRADITIONAL_CANDIDATE",
+      "selector_ids": [
+        "SEL_TRAD_BUNDLE"
+      ],
+      "scopes": [
+        "INDIVIDUAL"
+      ],
+      "answer_owners": [
+        "PREMIUM_EDITOR"
+      ],
+      "source_mode": "EDITORIAL_SELECTION_DEPENDENT",
+      "required_inputs": [
+        "CURRENT_REPORT_CANDIDATES",
+        "REVIEWED_SCHOOL_RULE_PACK"
+      ],
+      "output_envelope_id": "CANDIDATE_ENVELOPE_V1",
+      "eligibility_policy_id": "CANDIDATE_VALIDATION_V1",
+      "implementation_status": "CONTRACT_ONLY_NOT_IMPLEMENTED",
+      "runtime_activation": false
+    },
+    {
+      "generator_id": "GEN_TRADITIONAL_MODIFIER_V1",
+      "generator_version": "1.0.0",
+      "candidate_kind_id": "TRADITIONAL_MODIFIER",
+      "selector_ids": [
+        "SEL_TRAD_MODIFIER"
+      ],
+      "scopes": [
+        "INDIVIDUAL"
+      ],
+      "answer_owners": [
+        "PREMIUM_EDITOR"
+      ],
+      "source_mode": "EDITORIAL_SELECTION_DEPENDENT",
+      "required_inputs": [
+        "CURRENT_REPORT_CANDIDATES",
+        "REVIEWED_SCHOOL_RULE_PACK"
+      ],
+      "output_envelope_id": "CANDIDATE_ENVELOPE_V1",
+      "eligibility_policy_id": "CANDIDATE_VALIDATION_V1",
+      "implementation_status": "CONTRACT_ONLY_NOT_IMPLEMENTED",
+      "runtime_activation": false
+    },
+    {
+      "generator_id": "GEN_VERIFIED_JOINT_OUTLIER_V1",
+      "generator_version": "1.0.0",
+      "candidate_kind_id": "VERIFIED_JOINT_OUTLIER",
+      "selector_ids": [
+        "SEL_REF_COMBINATION"
+      ],
+      "scopes": [
+        "INDIVIDUAL"
+      ],
+      "answer_owners": [
+        "PREMIUM_EDITOR"
+      ],
+      "source_mode": "EDITORIAL_SELECTION_DEPENDENT",
+      "required_inputs": [
+        "CURRENT_REPORT_CANDIDATES"
+      ],
+      "output_envelope_id": "CANDIDATE_ENVELOPE_V1",
+      "eligibility_policy_id": "CANDIDATE_VALIDATION_V1",
+      "implementation_status": "CONTRACT_ONLY_NOT_IMPLEMENTED",
+      "runtime_activation": false
+    },
+    {
+      "generator_id": "GEN_VERIFIED_OUTLIER_V1",
+      "generator_version": "1.0.0",
+      "candidate_kind_id": "VERIFIED_OUTLIER",
+      "selector_ids": [
+        "SEL_REF_HIGHLIGHT"
+      ],
+      "scopes": [
+        "INDIVIDUAL"
+      ],
+      "answer_owners": [
+        "PREMIUM_EDITOR"
+      ],
+      "source_mode": "EDITORIAL_SELECTION_DEPENDENT",
+      "required_inputs": [
+        "CURRENT_REPORT_CANDIDATES"
+      ],
+      "output_envelope_id": "CANDIDATE_ENVELOPE_V1",
+      "eligibility_policy_id": "CANDIDATE_VALIDATION_V1",
+      "implementation_status": "CONTRACT_ONLY_NOT_IMPLEMENTED",
+      "runtime_activation": false
+    },
+    {
+      "generator_id": "GEN_WITHHELD_CLAIM_V1",
+      "generator_version": "1.0.0",
+      "candidate_kind_id": "WITHHELD_CLAIM",
+      "selector_ids": [
+        "SEL_TRAD_WITHHOLD"
+      ],
+      "scopes": [
+        "INDIVIDUAL"
+      ],
+      "answer_owners": [
+        "PREMIUM_EDITOR"
+      ],
+      "source_mode": "EDITORIAL_SELECTION_DEPENDENT",
+      "required_inputs": [
+        "CURRENT_REPORT_CANDIDATES",
+        "REVIEWED_SCHOOL_RULE_PACK"
+      ],
+      "output_envelope_id": "CANDIDATE_ENVELOPE_V1",
+      "eligibility_policy_id": "CANDIDATE_VALIDATION_V1",
+      "implementation_status": "CONTRACT_ONLY_NOT_IMPLEMENTED",
+      "runtime_activation": false
+    }
+  ]
+}
