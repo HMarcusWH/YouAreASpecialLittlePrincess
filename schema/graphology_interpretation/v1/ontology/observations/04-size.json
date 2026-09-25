@@ -10,6 +10,7 @@
     "model_call_role": "READ_ONLY_CONTEXT_OR_PRECOMPUTED",
     "cardinality": "SINGLE",
     "value_set_id": "BAND3",
+    "candidate_kind": null,
     "required_inputs": [
       "VERIFIED_SCALE",
       "VALID_MIDDLE_ZONE"
@@ -34,6 +35,7 @@
       "X_HEIGHT_PX"
     ],
     "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "operational_guardrail": "No px threshold becomes a physical-size rule; a derived physical quantity requires an explicit versioned measurement contract, never relabelling X_HEIGHT_PX as millimetres.",
     "source_status": "DRAFT_NOT_ACTIVATED",
     "runtime_status": "DRAFT_NOT_ACTIVE"
   },
@@ -48,6 +50,7 @@
     "model_call_role": "ANSWER",
     "cardinality": "SINGLE",
     "value_set_id": "ZONE_RELATION",
+    "candidate_kind": null,
     "required_inputs": [
       "IDENTIFIED_ZONE_EXAMPLES",
       "AUTHORIZED_IMAGE",
@@ -74,6 +77,7 @@
       "LOWER_ZONE_RATIO"
     ],
     "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "operational_guardrail": "",
     "source_status": "DRAFT_NOT_ACTIVATED",
     "runtime_status": "DRAFT_NOT_ACTIVE"
   },
@@ -88,6 +92,7 @@
     "model_call_role": "READ_ONLY_CONTEXT_OR_PRECOMPUTED",
     "cardinality": "SINGLE",
     "value_set_id": "RELATIVE_SIZE",
+    "candidate_kind": null,
     "required_inputs": [
       "IDENTIFIED_CAPITALS",
       "VALID_MIDDLE_ZONE"
@@ -112,6 +117,7 @@
       "CAPITAL_HEIGHT_RATIO"
     ],
     "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "operational_guardrail": "",
     "source_status": "DRAFT_NOT_ACTIVATED",
     "runtime_status": "DRAFT_NOT_ACTIVE"
   },
@@ -126,6 +132,7 @@
     "model_call_role": "READ_ONLY_CONTEXT_OR_PRECOMPUTED",
     "cardinality": "SINGLE",
     "value_set_id": "LETTER_WIDTH",
+    "candidate_kind": null,
     "required_inputs": [
       "IDENTIFIED_LETTER_BODIES"
     ],
@@ -149,6 +156,7 @@
       "GLYPH_ASPECT_RATIO_MEAN"
     ],
     "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "operational_guardrail": "Generic component aspect ratio is not an exact Moretti Largo di lettere score.",
     "source_status": "DRAFT_NOT_ACTIVATED",
     "runtime_status": "DRAFT_NOT_ACTIVE"
   },
@@ -163,6 +171,7 @@
     "model_call_role": "ANSWER",
     "cardinality": "SINGLE",
     "value_set_id": "TREND",
+    "candidate_kind": null,
     "required_inputs": [
       "ORDERED_WORD_OR_LINE_REGIONS",
       "AUTHORIZED_IMAGE",
@@ -186,6 +195,7 @@
     ],
     "related_canonical_feature_ids": [],
     "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "operational_guardrail": "Report sequence and regions; cannot infer writing duration.",
     "source_status": "DRAFT_NOT_ACTIVATED",
     "runtime_status": "DRAFT_NOT_ACTIVE"
   }

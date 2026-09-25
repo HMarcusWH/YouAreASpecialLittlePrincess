@@ -10,6 +10,7 @@
     "model_call_role": "ANSWER",
     "cardinality": "SINGLE",
     "value_set_id": "SPACE_BALANCE",
+    "candidate_kind": null,
     "required_inputs": [
       "AUTHORIZED_IMAGE",
       "IDENTIFIED_EVIDENCE_REGION"
@@ -35,6 +36,90 @@
       "PAGE_TEXT_AREA_RATIO"
     ],
     "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "operational_guardrail": "",
+    "source_status": "DRAFT_NOT_ACTIVATED",
+    "runtime_status": "DRAFT_NOT_ACTIVE"
+  },
+  {
+    "observation_id": "OBS_SPACE_MARGINS",
+    "source_question_id": "Q_SPACE_MARGINS",
+    "selector_id": "SEL_SPACE_MARGINS",
+    "domain_id": "SPACE",
+    "scope": "INDIVIDUAL",
+    "descriptor_kind": "CANDIDATE_BACKED_DESCRIPTOR",
+    "assessment_owner": "PREMIUM_EDITOR",
+    "model_call_role": "ANSWER",
+    "cardinality": "MULTIPLE",
+    "value_set_id": null,
+    "candidate_kind": "MARGIN_DESCRIPTION",
+    "required_inputs": [
+      "VERIFIED_PAGE_BOUNDARIES",
+      "CURRENT_REPORT_CANDIDATES"
+    ],
+    "answer_state_policy": "ANSWER_STATE_V1",
+    "permitted_evidence_class": "SELECTION_OR_SYNTHESIS_OF_SUPPLIED_CANDIDATES",
+    "source_refs": [
+      {
+        "source_id": "CNPG_A",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "IHAS",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "LEPOUTRE",
+        "relationship": "domain_or_term_basis"
+      }
+    ],
+    "related_canonical_feature_ids": [
+      "MARGIN_TOP_REL",
+      "MARGIN_BOTTOM_REL",
+      "MARGIN_LEFT_REL",
+      "MARGIN_RIGHT_REL"
+    ],
+    "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "operational_guardrail": "Use supplied descriptions; no replacement of canonical ratios.",
+    "source_status": "DRAFT_NOT_ACTIVATED",
+    "runtime_status": "DRAFT_NOT_ACTIVE"
+  },
+  {
+    "observation_id": "OBS_SPACE_MARGIN_TREND",
+    "source_question_id": "Q_SPACE_MARGIN_TREND",
+    "selector_id": "SEL_SPACE_MARGIN_TREND",
+    "domain_id": "SPACE",
+    "scope": "INDIVIDUAL",
+    "descriptor_kind": "CANDIDATE_BACKED_DESCRIPTOR",
+    "assessment_owner": "PREMIUM_EDITOR",
+    "model_call_role": "ANSWER",
+    "cardinality": "MULTIPLE",
+    "value_set_id": null,
+    "candidate_kind": "LINE_EDGE_TREND",
+    "required_inputs": [
+      "CURRENT_REPORT_CANDIDATES"
+    ],
+    "answer_state_policy": "ANSWER_STATE_V1",
+    "permitted_evidence_class": "SELECTION_OR_SYNTHESIS_OF_SUPPLIED_CANDIDATES",
+    "source_refs": [
+      {
+        "source_id": "CNPG_A",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "IHAS",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "LEPOUTRE",
+        "relationship": "domain_or_term_basis"
+      }
+    ],
+    "related_canonical_feature_ids": [
+      "LINE_START_DRIFT",
+      "LINE_END_DRIFT"
+    ],
+    "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "operational_guardrail": "",
     "source_status": "DRAFT_NOT_ACTIVATED",
     "runtime_status": "DRAFT_NOT_ACTIVE"
   },
@@ -49,6 +134,7 @@
     "model_call_role": "READ_ONLY_CONTEXT_OR_PRECOMPUTED",
     "cardinality": "SINGLE",
     "value_set_id": "BAND3",
+    "candidate_kind": null,
     "required_inputs": [],
     "answer_state_policy": "ANSWER_STATE_V1",
     "permitted_evidence_class": "PRECOMPUTED_DESCRIPTION",
@@ -71,6 +157,7 @@
       "WORD_SPACING_CV"
     ],
     "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "operational_guardrail": "A descriptive band and a population percentile are separate facts.",
     "source_status": "DRAFT_NOT_ACTIVATED",
     "runtime_status": "DRAFT_NOT_ACTIVE"
   },
@@ -85,6 +172,7 @@
     "model_call_role": "READ_ONLY_CONTEXT_OR_PRECOMPUTED",
     "cardinality": "SINGLE",
     "value_set_id": "BAND3",
+    "candidate_kind": null,
     "required_inputs": [],
     "answer_state_policy": "ANSWER_STATE_V1",
     "permitted_evidence_class": "PRECOMPUTED_DESCRIPTION",
@@ -107,6 +195,7 @@
       "LINE_SPACING_CV"
     ],
     "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "operational_guardrail": "",
     "source_status": "DRAFT_NOT_ACTIVATED",
     "runtime_status": "DRAFT_NOT_ACTIVE"
   },
@@ -121,6 +210,7 @@
     "model_call_role": "READ_ONLY_CONTEXT_OR_PRECOMPUTED",
     "cardinality": "SINGLE",
     "value_set_id": "BAND3",
+    "candidate_kind": null,
     "required_inputs": [
       "IDENTIFIED_LETTERS"
     ],
@@ -144,6 +234,7 @@
       "LETTER_SPACING_REL"
     ],
     "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "operational_guardrail": "Component spacing is not automatically letter spacing.",
     "source_status": "DRAFT_NOT_ACTIVATED",
     "runtime_status": "DRAFT_NOT_ACTIVE"
   }

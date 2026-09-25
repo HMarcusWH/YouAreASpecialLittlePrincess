@@ -34,7 +34,8 @@
     "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
     "report_target": "graphology.space",
     "source_status": "DRAFT_NOT_ACTIVATED",
-    "runtime_status": "DRAFT_NOT_ACTIVE"
+    "runtime_status": "DRAFT_NOT_ACTIVE",
+    "operational_guardrail": ""
   },
   {
     "selector_id": "SEL_SPACE_MARGINS",
@@ -71,7 +72,8 @@
     "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
     "report_target": "graphology.space",
     "source_status": "DRAFT_NOT_ACTIVATED",
-    "runtime_status": "DRAFT_NOT_ACTIVE"
+    "runtime_status": "DRAFT_NOT_ACTIVE",
+    "operational_guardrail": "Use supplied descriptions; no replacement of canonical ratios."
   },
   {
     "selector_id": "SEL_SPACE_MARGIN_TREND",
@@ -107,7 +109,8 @@
     "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
     "report_target": "graphology.space",
     "source_status": "DRAFT_NOT_ACTIVATED",
-    "runtime_status": "DRAFT_NOT_ACTIVE"
+    "runtime_status": "DRAFT_NOT_ACTIVE",
+    "operational_guardrail": ""
   },
   {
     "selector_id": "SEL_SPACE_WORD",
@@ -141,7 +144,8 @@
     "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
     "report_target": "graphology.space",
     "source_status": "DRAFT_NOT_ACTIVATED",
-    "runtime_status": "DRAFT_NOT_ACTIVE"
+    "runtime_status": "DRAFT_NOT_ACTIVE",
+    "operational_guardrail": "A descriptive band and a population percentile are separate facts."
   },
   {
     "selector_id": "SEL_SPACE_LINE",
@@ -175,7 +179,8 @@
     "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
     "report_target": "graphology.space",
     "source_status": "DRAFT_NOT_ACTIVATED",
-    "runtime_status": "DRAFT_NOT_ACTIVE"
+    "runtime_status": "DRAFT_NOT_ACTIVE",
+    "operational_guardrail": ""
   },
   {
     "selector_id": "SEL_SPACE_LETTER",
@@ -211,6 +216,7 @@
     "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
     "report_target": "graphology.space",
     "source_status": "DRAFT_NOT_ACTIVATED",
-    "runtime_status": "DRAFT_NOT_ACTIVE"
+    "runtime_status": "DRAFT_NOT_ACTIVE",
+    "operational_guardrail": "Component spacing is not automatically letter spacing."
   }
 ]

@@ -27,7 +27,8 @@
     "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
     "report_target": "graphology.context",
     "source_status": "DRAFT_NOT_ACTIVATED",
-    "runtime_status": "DRAFT_NOT_ACTIVE"
+    "runtime_status": "DRAFT_NOT_ACTIVE",
+    "operational_guardrail": ""
   },
   {
     "selector_id": "SEL_CTX_SURFACE",
@@ -57,7 +58,8 @@
     "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
     "report_target": "graphology.context",
     "source_status": "DRAFT_NOT_ACTIVATED",
-    "runtime_status": "DRAFT_NOT_ACTIVE"
+    "runtime_status": "DRAFT_NOT_ACTIVE",
+    "operational_guardrail": ""
   },
   {
     "selector_id": "SEL_CTX_STYLE",
@@ -87,7 +89,8 @@
     "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
     "report_target": "graphology.context",
     "source_status": "DRAFT_NOT_ACTIVATED",
-    "runtime_status": "DRAFT_NOT_ACTIVE"
+    "runtime_status": "DRAFT_NOT_ACTIVE",
+    "operational_guardrail": "The model can flag a mismatch; user declaration is not automatically verified."
   },
   {
     "selector_id": "SEL_CTX_FRAME",
@@ -117,7 +120,8 @@
     "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
     "report_target": "graphology.context",
     "source_status": "DRAFT_NOT_ACTIVATED",
-    "runtime_status": "DRAFT_NOT_ACTIVE"
+    "runtime_status": "DRAFT_NOT_ACTIVE",
+    "operational_guardrail": "Do not turn crop margins into paper margins."
   },
   {
     "selector_id": "SEL_CTX_SCALE",
@@ -147,7 +151,8 @@
     "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
     "report_target": "graphology.context",
     "source_status": "DRAFT_NOT_ACTIVATED",
-    "runtime_status": "DRAFT_NOT_ACTIVE"
+    "runtime_status": "DRAFT_NOT_ACTIVE",
+    "operational_guardrail": "Pixel size alone does not establish millimetres."
   },
   {
     "selector_id": "SEL_CTX_DIRECTION",
@@ -177,6 +182,7 @@
     "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
     "report_target": "graphology.context",
     "source_status": "DRAFT_NOT_ACTIVATED",
-    "runtime_status": "DRAFT_NOT_ACTIVE"
+    "runtime_status": "DRAFT_NOT_ACTIVE",
+    "operational_guardrail": ""
   }
 ]

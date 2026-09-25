@@ -34,7 +34,8 @@
     "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
     "report_target": "graphology.size",
     "source_status": "DRAFT_NOT_ACTIVATED",
-    "runtime_status": "DRAFT_NOT_ACTIVE"
+    "runtime_status": "DRAFT_NOT_ACTIVE",
+    "operational_guardrail": "No px threshold becomes a physical-size rule; a derived physical quantity requires an explicit versioned measurement contract, never relabelling X_HEIGHT_PX as millimetres."
   },
   {
     "selector_id": "SEL_SIZE_ZONES",
@@ -72,7 +73,8 @@
     "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
     "report_target": "graphology.size",
     "source_status": "DRAFT_NOT_ACTIVATED",
-    "runtime_status": "DRAFT_NOT_ACTIVE"
+    "runtime_status": "DRAFT_NOT_ACTIVE",
+    "operational_guardrail": ""
   },
   {
     "selector_id": "SEL_SIZE_CAPITAL",
@@ -109,7 +111,8 @@
     "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
     "report_target": "graphology.size",
     "source_status": "DRAFT_NOT_ACTIVATED",
-    "runtime_status": "DRAFT_NOT_ACTIVE"
+    "runtime_status": "DRAFT_NOT_ACTIVE",
+    "operational_guardrail": ""
   },
   {
     "selector_id": "SEL_SIZE_WIDTH",
@@ -145,7 +148,8 @@
     "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
     "report_target": "graphology.size",
     "source_status": "DRAFT_NOT_ACTIVATED",
-    "runtime_status": "DRAFT_NOT_ACTIVE"
+    "runtime_status": "DRAFT_NOT_ACTIVE",
+    "operational_guardrail": "Generic component aspect ratio is not an exact Moretti Largo di lettere score."
   },
   {
     "selector_id": "SEL_SIZE_TREND",
@@ -183,6 +187,7 @@
     "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
     "report_target": "graphology.size",
     "source_status": "DRAFT_NOT_ACTIVATED",
-    "runtime_status": "DRAFT_NOT_ACTIVE"
+    "runtime_status": "DRAFT_NOT_ACTIVE",
+    "operational_guardrail": "Report sequence and regions; cannot infer writing duration."
   }
 ]

@@ -10,6 +10,7 @@
     "model_call_role": "READ_ONLY_CONTEXT_OR_PRECOMPUTED",
     "cardinality": "SINGLE",
     "value_set_id": "TASK",
+    "candidate_kind": null,
     "required_inputs": [],
     "answer_state_policy": "ANSWER_STATE_V1",
     "permitted_evidence_class": "DECLARED_METADATA",
@@ -25,6 +26,7 @@
     ],
     "related_canonical_feature_ids": [],
     "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "operational_guardrail": "",
     "source_status": "DRAFT_NOT_ACTIVATED",
     "runtime_status": "DRAFT_NOT_ACTIVE"
   },
@@ -39,6 +41,7 @@
     "model_call_role": "READ_ONLY_CONTEXT_OR_PRECOMPUTED",
     "cardinality": "SINGLE",
     "value_set_id": "SURFACE",
+    "candidate_kind": null,
     "required_inputs": [],
     "answer_state_policy": "ANSWER_STATE_V1",
     "permitted_evidence_class": "DECLARED_METADATA",
@@ -54,6 +57,7 @@
     ],
     "related_canonical_feature_ids": [],
     "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "operational_guardrail": "",
     "source_status": "DRAFT_NOT_ACTIVATED",
     "runtime_status": "DRAFT_NOT_ACTIVE"
   },
@@ -68,6 +72,7 @@
     "model_call_role": "READ_ONLY_CONTEXT_OR_PRECOMPUTED",
     "cardinality": "SINGLE",
     "value_set_id": "WRITING_STYLE",
+    "candidate_kind": null,
     "required_inputs": [],
     "answer_state_policy": "ANSWER_STATE_V1",
     "permitted_evidence_class": "DECLARED_METADATA",
@@ -83,6 +88,7 @@
     ],
     "related_canonical_feature_ids": [],
     "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "operational_guardrail": "The model can flag a mismatch; user declaration is not automatically verified.",
     "source_status": "DRAFT_NOT_ACTIVATED",
     "runtime_status": "DRAFT_NOT_ACTIVE"
   },
@@ -97,6 +103,7 @@
     "model_call_role": "READ_ONLY_CONTEXT_OR_PRECOMPUTED",
     "cardinality": "SINGLE",
     "value_set_id": "CAPTURE_FRAME",
+    "candidate_kind": null,
     "required_inputs": [],
     "answer_state_policy": "ANSWER_STATE_V1",
     "permitted_evidence_class": "PRECOMPUTED_DESCRIPTION",
@@ -112,6 +119,7 @@
     ],
     "related_canonical_feature_ids": [],
     "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "operational_guardrail": "Do not turn crop margins into paper margins.",
     "source_status": "DRAFT_NOT_ACTIVATED",
     "runtime_status": "DRAFT_NOT_ACTIVE"
   },
@@ -126,6 +134,7 @@
     "model_call_role": "READ_ONLY_CONTEXT_OR_PRECOMPUTED",
     "cardinality": "SINGLE",
     "value_set_id": "SCALE",
+    "candidate_kind": null,
     "required_inputs": [],
     "answer_state_policy": "ANSWER_STATE_V1",
     "permitted_evidence_class": "PRECOMPUTED_DESCRIPTION",
@@ -141,6 +150,7 @@
     ],
     "related_canonical_feature_ids": [],
     "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "operational_guardrail": "Pixel size alone does not establish millimetres.",
     "source_status": "DRAFT_NOT_ACTIVATED",
     "runtime_status": "DRAFT_NOT_ACTIVE"
   },
@@ -155,6 +165,7 @@
     "model_call_role": "READ_ONLY_CONTEXT_OR_PRECOMPUTED",
     "cardinality": "SINGLE",
     "value_set_id": "DIRECTION_CONTEXT",
+    "candidate_kind": null,
     "required_inputs": [],
     "answer_state_policy": "ANSWER_STATE_V1",
     "permitted_evidence_class": "DECLARED_METADATA",
@@ -170,6 +181,7 @@
     ],
     "related_canonical_feature_ids": [],
     "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "operational_guardrail": "",
     "source_status": "DRAFT_NOT_ACTIVATED",
     "runtime_status": "DRAFT_NOT_ACTIVE"
   }
