@@ -6755,6 +6755,2166 @@
       "source_status": "DRAFT_NOT_ACTIVATED",
       "runtime_status": "DRAFT_NOT_ACTIVE",
       "enabled": false
+    },
+    {
+      "question_id": "Q_MOVEMENT_IMPRESSION",
+      "version": "1.0.0",
+      "selector_id": "SEL_MOVEMENT_IMPRESSION",
+      "domain_id": "MOVEMENT",
+      "scope": "INDIVIDUAL",
+      "prompt_template_key": "question.q_movement_impression",
+      "prompt_text_en": "What visual movement impression is supported across the sample?",
+      "text_origin": "APPLICATION_AUTHORED",
+      "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+      "source_refs": [
+        {
+          "source_id": "IHAS",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "SGB",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "MORETTI_I",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "answer_mode": "SELECTOR",
+      "answer_owner": "PREMIUM_VISUAL",
+      "model_call_role": "ANSWER",
+      "required_inputs": [
+        "AUTHORIZED_IMAGE",
+        "IDENTIFIED_EVIDENCE_REGION"
+      ],
+      "required_fact_classes": [
+        "AI_VISUAL_DESCRIPTION_NOT_CANONICAL_MEASUREMENT"
+      ],
+      "required_candidate_kinds": [],
+      "minimum_supporting_fact_count": null,
+      "minimum_supporting_association_count": null,
+      "fallback_value_id": null,
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+      "report_target": "graphology.movement",
+      "note": "Apparent only; requires an annotated visual rubric.",
+      "order_in_domain": 1,
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
+    },
+    {
+      "question_id": "Q_MOVEMENT_RHYTHM",
+      "version": "1.0.0",
+      "selector_id": "SEL_MOVEMENT_RHYTHM",
+      "domain_id": "MOVEMENT",
+      "scope": "INDIVIDUAL",
+      "prompt_template_key": "question.q_movement_rhythm",
+      "prompt_text_en": "Which rhythm descriptions are supported by the whole-pattern examples?",
+      "text_origin": "APPLICATION_AUTHORED",
+      "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+      "source_refs": [
+        {
+          "source_id": "IHAS",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "SGB",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "MORETTI_I",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "answer_mode": "MULTI_SELECTOR",
+      "answer_owner": "PREMIUM_VISUAL",
+      "model_call_role": "ANSWER",
+      "required_inputs": [
+        "AUTHORIZED_IMAGE",
+        "IDENTIFIED_EVIDENCE_REGION"
+      ],
+      "required_fact_classes": [
+        "AI_VISUAL_DESCRIPTION_NOT_CANONICAL_MEASUREMENT"
+      ],
+      "required_candidate_kinds": [],
+      "minimum_supporting_fact_count": null,
+      "minimum_supporting_association_count": null,
+      "fallback_value_id": null,
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+      "report_target": "graphology.movement",
+      "note": "Keep uncertainty; this is not inverse CV and not measured muscular tension.",
+      "order_in_domain": 2,
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
+    },
+    {
+      "question_id": "Q_MOVEMENT_VARIATION",
+      "version": "1.0.0",
+      "selector_id": "SEL_MOVEMENT_VARIATION",
+      "domain_id": "MOVEMENT",
+      "scope": "INDIVIDUAL",
+      "prompt_template_key": "question.q_movement_variation",
+      "prompt_text_en": "How is graphical variation organized rather than merely how large is it?",
+      "text_origin": "APPLICATION_AUTHORED",
+      "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+      "source_refs": [
+        {
+          "source_id": "IHAS",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "SGB",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "MORETTI_I",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "answer_mode": "SELECTOR",
+      "answer_owner": "PREMIUM_VISUAL",
+      "model_call_role": "ANSWER",
+      "required_inputs": [
+        "AUTHORIZED_IMAGE",
+        "IDENTIFIED_EVIDENCE_REGION"
+      ],
+      "required_fact_classes": [
+        "AI_VISUAL_DESCRIPTION_NOT_CANONICAL_MEASUREMENT"
+      ],
+      "required_candidate_kinds": [],
+      "minimum_supporting_fact_count": null,
+      "minimum_supporting_association_count": null,
+      "fallback_value_id": null,
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+      "report_target": "graphology.movement",
+      "note": "Separate a general descriptor from a named Moretti sign rating.",
+      "order_in_domain": 3,
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
+    },
+    {
+      "question_id": "Q_MOVEMENT_TEMPO",
+      "version": "1.0.0",
+      "selector_id": "SEL_MOVEMENT_TEMPO",
+      "domain_id": "MOVEMENT",
+      "scope": "INDIVIDUAL",
+      "prompt_template_key": "question.q_movement_tempo",
+      "prompt_text_en": "What apparent tempo can be described under the selected graphical rubric, without claiming measured time?",
+      "text_origin": "APPLICATION_AUTHORED",
+      "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+      "source_refs": [
+        {
+          "source_id": "IHAS",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "SGB",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "MORETTI_I",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "answer_mode": "SELECTOR",
+      "answer_owner": "PREMIUM_VISUAL",
+      "model_call_role": "ANSWER",
+      "required_inputs": [
+        "APPROVED_TEMPO_VISUAL_RUBRIC",
+        "AUTHORIZED_IMAGE",
+        "IDENTIFIED_EVIDENCE_REGION"
+      ],
+      "required_fact_classes": [
+        "AI_VISUAL_DESCRIPTION_NOT_CANONICAL_MEASUREMENT"
+      ],
+      "required_candidate_kinds": [],
+      "minimum_supporting_fact_count": null,
+      "minimum_supporting_association_count": null,
+      "fallback_value_id": null,
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+      "report_target": "graphology.movement",
+      "note": "Apparent execution only; this may be unassessable and never yields words-per-minute.",
+      "order_in_domain": 4,
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
+    },
+    {
+      "question_id": "Q_MOVEMENT_TENSION",
+      "version": "1.0.0",
+      "selector_id": "SEL_MOVEMENT_TENSION",
+      "domain_id": "MOVEMENT",
+      "scope": "INDIVIDUAL",
+      "prompt_template_key": "question.q_movement_tension",
+      "prompt_text_en": "What graphical tension impression is supported by the visible construction?",
+      "text_origin": "APPLICATION_AUTHORED",
+      "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+      "source_refs": [
+        {
+          "source_id": "IHAS",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "SGB",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "MORETTI_I",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "answer_mode": "SELECTOR",
+      "answer_owner": "PREMIUM_VISUAL",
+      "model_call_role": "ANSWER",
+      "required_inputs": [
+        "APPROVED_TENSION_VISUAL_RUBRIC",
+        "AUTHORIZED_IMAGE",
+        "IDENTIFIED_EVIDENCE_REGION"
+      ],
+      "required_fact_classes": [
+        "AI_VISUAL_DESCRIPTION_NOT_CANONICAL_MEASUREMENT"
+      ],
+      "required_candidate_kinds": [],
+      "minimum_supporting_fact_count": null,
+      "minimum_supporting_association_count": null,
+      "fallback_value_id": null,
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+      "report_target": "graphology.movement",
+      "note": "Not a claim about muscular force, psychological stress or sensor pressure.",
+      "order_in_domain": 5,
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
+    },
+    {
+      "question_id": "Q_MOVEMENT_TEMPO_LIMIT",
+      "version": "1.0.0",
+      "selector_id": "SEL_MOVEMENT_TEMPO_LIMIT",
+      "domain_id": "MOVEMENT",
+      "scope": "INDIVIDUAL",
+      "prompt_template_key": "question.q_movement_tempo_limit",
+      "prompt_text_en": "Is actual timing available for a writing-tempo statement?",
+      "text_origin": "APPLICATION_AUTHORED",
+      "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+      "source_refs": [
+        {
+          "source_id": "IHAS",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "SGB",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "MORETTI_I",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "answer_mode": "SELECTOR",
+      "answer_owner": "DETERMINISTIC",
+      "model_call_role": "READ_ONLY_CONTEXT_OR_PRECOMPUTED",
+      "required_inputs": [
+        "ACQUISITION_METADATA"
+      ],
+      "required_fact_classes": [
+        "PRECOMPUTED_DESCRIPTION"
+      ],
+      "required_candidate_kinds": [
+        "ACQUISITION_LIMITATION"
+      ],
+      "minimum_supporting_fact_count": null,
+      "minimum_supporting_association_count": null,
+      "fallback_value_id": null,
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+      "report_target": "graphology.movement",
+      "note": "No words-per-minute or literal pen lifts from a single photograph.",
+      "order_in_domain": 6,
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
+    },
+    {
+      "question_id": "Q_DETAIL_T_HEIGHT",
+      "version": "1.0.0",
+      "selector_id": "SEL_DETAIL_T_HEIGHT",
+      "domain_id": "DETAIL",
+      "scope": "INDIVIDUAL",
+      "prompt_template_key": "question.q_detail_t_height",
+      "prompt_text_en": "Where is the crossbar placed on identified t stems?",
+      "text_origin": "APPLICATION_AUTHORED",
+      "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+      "source_refs": [
+        {
+          "source_id": "BIG26",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "LEPOUTRE",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "CJ1892",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "answer_mode": "SELECTOR",
+      "answer_owner": "DETERMINISTIC",
+      "model_call_role": "READ_ONLY_CONTEXT_OR_PRECOMPUTED",
+      "required_inputs": [
+        "IDENTIFIED_T_EXAMPLES"
+      ],
+      "required_fact_classes": [
+        "PRECOMPUTED_DESCRIPTION"
+      ],
+      "required_candidate_kinds": [],
+      "minimum_supporting_fact_count": null,
+      "minimum_supporting_association_count": null,
+      "fallback_value_id": null,
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+      "report_target": "graphology.detail",
+      "note": "",
+      "order_in_domain": 1,
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
+    },
+    {
+      "question_id": "Q_DETAIL_T_LENGTH",
+      "version": "1.0.0",
+      "selector_id": "SEL_DETAIL_T_LENGTH",
+      "domain_id": "DETAIL",
+      "scope": "INDIVIDUAL",
+      "prompt_template_key": "question.q_detail_t_length",
+      "prompt_text_en": "How does crossbar length compare under its documented geometric rubric?",
+      "text_origin": "APPLICATION_AUTHORED",
+      "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+      "source_refs": [
+        {
+          "source_id": "BIG26",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "LEPOUTRE",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "CJ1892",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "answer_mode": "SELECTOR",
+      "answer_owner": "DETERMINISTIC",
+      "model_call_role": "READ_ONLY_CONTEXT_OR_PRECOMPUTED",
+      "required_inputs": [
+        "IDENTIFIED_T_EXAMPLES",
+        "VALID_MIDDLE_ZONE"
+      ],
+      "required_fact_classes": [
+        "PRECOMPUTED_DESCRIPTION"
+      ],
+      "required_candidate_kinds": [],
+      "minimum_supporting_fact_count": null,
+      "minimum_supporting_association_count": null,
+      "fallback_value_id": null,
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+      "report_target": "graphology.detail",
+      "note": "",
+      "order_in_domain": 2,
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
+    },
+    {
+      "question_id": "Q_DETAIL_T_END",
+      "version": "1.0.0",
+      "selector_id": "SEL_DETAIL_T_END",
+      "domain_id": "DETAIL",
+      "scope": "INDIVIDUAL",
+      "prompt_template_key": "question.q_detail_t_end",
+      "prompt_text_en": "Which crossbar ending forms occur in identified examples?",
+      "text_origin": "APPLICATION_AUTHORED",
+      "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+      "source_refs": [
+        {
+          "source_id": "BIG26",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "LEPOUTRE",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "CJ1892",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "answer_mode": "MULTI_SELECTOR",
+      "answer_owner": "PREMIUM_VISUAL",
+      "model_call_role": "ANSWER",
+      "required_inputs": [
+        "IDENTIFIED_T_EXAMPLES",
+        "AUTHORIZED_IMAGE",
+        "IDENTIFIED_EVIDENCE_REGION"
+      ],
+      "required_fact_classes": [
+        "AI_VISUAL_DESCRIPTION_NOT_CANONICAL_MEASUREMENT"
+      ],
+      "required_candidate_kinds": [],
+      "minimum_supporting_fact_count": null,
+      "minimum_supporting_association_count": null,
+      "fallback_value_id": null,
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+      "report_target": "graphology.detail",
+      "note": "",
+      "order_in_domain": 3,
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
+    },
+    {
+      "question_id": "Q_DETAIL_T_BALANCE",
+      "version": "1.0.0",
+      "selector_id": "SEL_DETAIL_T_BALANCE",
+      "domain_id": "DETAIL",
+      "scope": "INDIVIDUAL",
+      "prompt_template_key": "question.q_detail_t_balance",
+      "prompt_text_en": "Which side of the t stem carries greater crossbar extension?",
+      "text_origin": "APPLICATION_AUTHORED",
+      "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+      "source_refs": [
+        {
+          "source_id": "BIG26",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "LEPOUTRE",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "CJ1892",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "answer_mode": "SELECTOR",
+      "answer_owner": "DETERMINISTIC",
+      "model_call_role": "READ_ONLY_CONTEXT_OR_PRECOMPUTED",
+      "required_inputs": [
+        "IDENTIFIED_T_EXAMPLES"
+      ],
+      "required_fact_classes": [
+        "PRECOMPUTED_DESCRIPTION"
+      ],
+      "required_candidate_kinds": [],
+      "minimum_supporting_fact_count": null,
+      "minimum_supporting_association_count": null,
+      "fallback_value_id": null,
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+      "report_target": "graphology.detail",
+      "note": "",
+      "order_in_domain": 4,
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
+    },
+    {
+      "question_id": "Q_DETAIL_DOT_FORM",
+      "version": "1.0.0",
+      "selector_id": "SEL_DETAIL_DOT_FORM",
+      "domain_id": "DETAIL",
+      "scope": "INDIVIDUAL",
+      "prompt_template_key": "question.q_detail_dot_form",
+      "prompt_text_en": "Which forms are used for marks on identified dotted letters?",
+      "text_origin": "APPLICATION_AUTHORED",
+      "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+      "source_refs": [
+        {
+          "source_id": "BIG26",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "LEPOUTRE",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "CJ1892",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "answer_mode": "MULTI_SELECTOR",
+      "answer_owner": "PREMIUM_VISUAL",
+      "model_call_role": "ANSWER",
+      "required_inputs": [
+        "IDENTIFIED_I_J_EXAMPLES",
+        "AUTHORIZED_IMAGE",
+        "IDENTIFIED_EVIDENCE_REGION"
+      ],
+      "required_fact_classes": [
+        "AI_VISUAL_DESCRIPTION_NOT_CANONICAL_MEASUREMENT"
+      ],
+      "required_candidate_kinds": [],
+      "minimum_supporting_fact_count": null,
+      "minimum_supporting_association_count": null,
+      "fallback_value_id": null,
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+      "report_target": "graphology.detail",
+      "note": "Absence of an i/j in the sample is not an absent dot.",
+      "order_in_domain": 5,
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
+    },
+    {
+      "question_id": "Q_DETAIL_DOT_OFFSET",
+      "version": "1.0.0",
+      "selector_id": "SEL_DETAIL_DOT_OFFSET",
+      "domain_id": "DETAIL",
+      "scope": "INDIVIDUAL",
+      "prompt_template_key": "question.q_detail_dot_offset",
+      "prompt_text_en": "Where do the marks lie relative to their identified letter anchors?",
+      "text_origin": "APPLICATION_AUTHORED",
+      "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+      "source_refs": [
+        {
+          "source_id": "BIG26",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "LEPOUTRE",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "CJ1892",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "answer_mode": "SELECTOR",
+      "answer_owner": "DETERMINISTIC",
+      "model_call_role": "READ_ONLY_CONTEXT_OR_PRECOMPUTED",
+      "required_inputs": [
+        "IDENTIFIED_I_J_EXAMPLES"
+      ],
+      "required_fact_classes": [
+        "PRECOMPUTED_DESCRIPTION"
+      ],
+      "required_candidate_kinds": [],
+      "minimum_supporting_fact_count": null,
+      "minimum_supporting_association_count": null,
+      "fallback_value_id": null,
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+      "report_target": "graphology.detail",
+      "note": "",
+      "order_in_domain": 6,
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
+    },
+    {
+      "question_id": "Q_DETAIL_DIACRITIC",
+      "version": "1.0.0",
+      "selector_id": "SEL_DETAIL_DIACRITIC",
+      "domain_id": "DETAIL",
+      "scope": "INDIVIDUAL",
+      "prompt_template_key": "question.q_detail_diacritic",
+      "prompt_text_en": "What shape variants occur in language-specific diacritics?",
+      "text_origin": "APPLICATION_AUTHORED",
+      "source_support": "APPLICATION_EXTENSION",
+      "source_refs": [],
+      "answer_mode": "MULTI_SELECTOR",
+      "answer_owner": "PREMIUM_VISUAL",
+      "model_call_role": "ANSWER",
+      "required_inputs": [
+        "KNOWN_LANGUAGE",
+        "IDENTIFIED_DIACRITIC_EXAMPLES",
+        "AUTHORIZED_IMAGE",
+        "IDENTIFIED_EVIDENCE_REGION"
+      ],
+      "required_fact_classes": [
+        "AI_VISUAL_DESCRIPTION_NOT_CANONICAL_MEASUREMENT"
+      ],
+      "required_candidate_kinds": [],
+      "minimum_supporting_fact_count": null,
+      "minimum_supporting_association_count": null,
+      "fallback_value_id": null,
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+      "report_target": "graphology.detail",
+      "note": "Application extension for e.g. å/ä/ö; no traditional personality meaning is supplied.",
+      "order_in_domain": 7,
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
+    },
+    {
+      "question_id": "Q_DETAIL_OVAL",
+      "version": "1.0.0",
+      "selector_id": "SEL_DETAIL_OVAL",
+      "domain_id": "DETAIL",
+      "scope": "INDIVIDUAL",
+      "prompt_template_key": "question.q_detail_oval",
+      "prompt_text_en": "How are the identified oval bodies closed?",
+      "text_origin": "APPLICATION_AUTHORED",
+      "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+      "source_refs": [
+        {
+          "source_id": "BIG26",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "LEPOUTRE",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "CJ1892",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "answer_mode": "MULTI_SELECTOR",
+      "answer_owner": "PREMIUM_VISUAL",
+      "model_call_role": "ANSWER",
+      "required_inputs": [
+        "IDENTIFIED_OVAL_EXAMPLES",
+        "AUTHORIZED_IMAGE",
+        "IDENTIFIED_EVIDENCE_REGION"
+      ],
+      "required_fact_classes": [
+        "AI_VISUAL_DESCRIPTION_NOT_CANONICAL_MEASUREMENT"
+      ],
+      "required_candidate_kinds": [],
+      "minimum_supporting_fact_count": null,
+      "minimum_supporting_association_count": null,
+      "fallback_value_id": null,
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+      "report_target": "graphology.detail",
+      "note": "",
+      "order_in_domain": 8,
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
+    },
+    {
+      "question_id": "Q_DETAIL_OVAL_GAP",
+      "version": "1.0.0",
+      "selector_id": "SEL_DETAIL_OVAL_GAP",
+      "domain_id": "DETAIL",
+      "scope": "INDIVIDUAL",
+      "prompt_template_key": "question.q_detail_oval_gap",
+      "prompt_text_en": "Where are visible openings located on identified ovals?",
+      "text_origin": "APPLICATION_AUTHORED",
+      "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+      "source_refs": [
+        {
+          "source_id": "BIG26",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "LEPOUTRE",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "CJ1892",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "answer_mode": "MULTI_SELECTOR",
+      "answer_owner": "PREMIUM_VISUAL",
+      "model_call_role": "ANSWER",
+      "required_inputs": [
+        "IDENTIFIED_OVAL_EXAMPLES",
+        "AUTHORIZED_IMAGE",
+        "IDENTIFIED_EVIDENCE_REGION"
+      ],
+      "required_fact_classes": [
+        "AI_VISUAL_DESCRIPTION_NOT_CANONICAL_MEASUREMENT"
+      ],
+      "required_candidate_kinds": [],
+      "minimum_supporting_fact_count": null,
+      "minimum_supporting_association_count": null,
+      "fallback_value_id": null,
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+      "report_target": "graphology.detail",
+      "note": "Opening direction and existence are separate observations.",
+      "order_in_domain": 9,
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
+    },
+    {
+      "question_id": "Q_DETAIL_INITIAL",
+      "version": "1.0.0",
+      "selector_id": "SEL_DETAIL_INITIAL",
+      "domain_id": "DETAIL",
+      "scope": "INDIVIDUAL",
+      "prompt_template_key": "question.q_detail_initial",
+      "prompt_text_en": "Which beginning-stroke characteristics have usable evidence?",
+      "text_origin": "APPLICATION_AUTHORED",
+      "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+      "source_refs": [
+        {
+          "source_id": "BIG26",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "LEPOUTRE",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "CJ1892",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "answer_mode": "MULTI_SELECTOR",
+      "answer_owner": "PREMIUM_EDITOR",
+      "model_call_role": "ANSWER",
+      "required_inputs": [
+        "CURRENT_REPORT_CANDIDATES"
+      ],
+      "required_fact_classes": [
+        "SELECTION_OR_SYNTHESIS_OF_SUPPLIED_CANDIDATES"
+      ],
+      "required_candidate_kinds": [
+        "INITIAL_STROKE_DESCRIPTION"
+      ],
+      "minimum_supporting_fact_count": null,
+      "minimum_supporting_association_count": null,
+      "fallback_value_id": null,
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+      "report_target": "graphology.detail",
+      "note": "Conventional beginning of a glyph is not observed temporal stroke order.",
+      "order_in_domain": 10,
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
+    },
+    {
+      "question_id": "Q_DETAIL_TERMINAL",
+      "version": "1.0.0",
+      "selector_id": "SEL_DETAIL_TERMINAL",
+      "domain_id": "DETAIL",
+      "scope": "INDIVIDUAL",
+      "prompt_template_key": "question.q_detail_terminal",
+      "prompt_text_en": "Which ending-stroke characteristics have usable evidence?",
+      "text_origin": "APPLICATION_AUTHORED",
+      "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+      "source_refs": [
+        {
+          "source_id": "BIG26",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "LEPOUTRE",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "CJ1892",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "answer_mode": "MULTI_SELECTOR",
+      "answer_owner": "PREMIUM_EDITOR",
+      "model_call_role": "ANSWER",
+      "required_inputs": [
+        "CURRENT_REPORT_CANDIDATES"
+      ],
+      "required_fact_classes": [
+        "SELECTION_OR_SYNTHESIS_OF_SUPPLIED_CANDIDATES"
+      ],
+      "required_candidate_kinds": [
+        "TERMINAL_STROKE_DESCRIPTION"
+      ],
+      "minimum_supporting_fact_count": null,
+      "minimum_supporting_association_count": null,
+      "fallback_value_id": null,
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+      "report_target": "graphology.detail",
+      "note": "",
+      "order_in_domain": 11,
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
+    },
+    {
+      "question_id": "Q_DETAIL_PPI",
+      "version": "1.0.0",
+      "selector_id": "SEL_DETAIL_PPI",
+      "domain_id": "DETAIL",
+      "scope": "INDIVIDUAL",
+      "prompt_template_key": "question.q_detail_ppi",
+      "prompt_text_en": "Which supplied examples concern the English personal pronoun I rather than other vertical forms?",
+      "text_origin": "APPLICATION_AUTHORED",
+      "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+      "source_refs": [
+        {
+          "source_id": "BIG26",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "LEPOUTRE",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "CJ1892",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "answer_mode": "SELECTOR",
+      "answer_owner": "PREMIUM_EDITOR",
+      "model_call_role": "ANSWER",
+      "required_inputs": [
+        "ENGLISH_TEXT_CONTEXT",
+        "IDENTIFIED_PPI_EXAMPLES",
+        "CURRENT_REPORT_CANDIDATES"
+      ],
+      "required_fact_classes": [
+        "SELECTION_OR_SYNTHESIS_OF_SUPPLIED_CANDIDATES"
+      ],
+      "required_candidate_kinds": [
+        "PPI_FORM_DESCRIPTION"
+      ],
+      "minimum_supporting_fact_count": null,
+      "minimum_supporting_association_count": null,
+      "fallback_value_id": null,
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+      "report_target": "graphology.detail",
+      "note": "Not universal to Swedish or every capital I; no family/parent diagnosis.",
+      "order_in_domain": 12,
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
+    },
+    {
+      "question_id": "Q_SIG_LOCATION",
+      "version": "1.0.0",
+      "selector_id": "SEL_SIG_LOCATION",
+      "domain_id": "SIGNATURE",
+      "scope": "INDIVIDUAL",
+      "prompt_template_key": "question.q_sig_location",
+      "prompt_text_en": "Where does the identified signature sit relative to the body text?",
+      "text_origin": "APPLICATION_AUTHORED",
+      "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+      "source_refs": [
+        {
+          "source_id": "CNPG_B",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "IHAS",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "answer_mode": "SELECTOR",
+      "answer_owner": "DETERMINISTIC",
+      "model_call_role": "READ_ONLY_CONTEXT_OR_PRECOMPUTED",
+      "required_inputs": [
+        "SIGNATURE_AND_BODY_REGIONS"
+      ],
+      "required_fact_classes": [
+        "PRECOMPUTED_DESCRIPTION"
+      ],
+      "required_candidate_kinds": [],
+      "minimum_supporting_fact_count": null,
+      "minimum_supporting_association_count": null,
+      "fallback_value_id": null,
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+      "report_target": "graphology.signature",
+      "note": "",
+      "order_in_domain": 1,
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
+    },
+    {
+      "question_id": "Q_SIG_SIZE",
+      "version": "1.0.0",
+      "selector_id": "SEL_SIG_SIZE",
+      "domain_id": "SIGNATURE",
+      "scope": "INDIVIDUAL",
+      "prompt_template_key": "question.q_sig_size",
+      "prompt_text_en": "How does signature size compare with body text under a matched method?",
+      "text_origin": "APPLICATION_AUTHORED",
+      "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+      "source_refs": [
+        {
+          "source_id": "CNPG_B",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "IHAS",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "answer_mode": "SELECTOR",
+      "answer_owner": "DETERMINISTIC",
+      "model_call_role": "READ_ONLY_CONTEXT_OR_PRECOMPUTED",
+      "required_inputs": [
+        "SIGNATURE_AND_BODY_REGIONS",
+        "VALID_MIDDLE_ZONE"
+      ],
+      "required_fact_classes": [
+        "PRECOMPUTED_DESCRIPTION"
+      ],
+      "required_candidate_kinds": [],
+      "minimum_supporting_fact_count": null,
+      "minimum_supporting_association_count": null,
+      "fallback_value_id": null,
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+      "report_target": "graphology.signature",
+      "note": "",
+      "order_in_domain": 2,
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
+    },
+    {
+      "question_id": "Q_SIG_SLANT",
+      "version": "1.0.0",
+      "selector_id": "SEL_SIG_SLANT",
+      "domain_id": "SIGNATURE",
+      "scope": "INDIVIDUAL",
+      "prompt_template_key": "question.q_sig_slant",
+      "prompt_text_en": "Which verified orientation difference between signature and text deserves explanation?",
+      "text_origin": "APPLICATION_AUTHORED",
+      "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+      "source_refs": [
+        {
+          "source_id": "CNPG_B",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "IHAS",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "answer_mode": "SELECTOR",
+      "answer_owner": "PREMIUM_EDITOR",
+      "model_call_role": "ANSWER",
+      "required_inputs": [
+        "SIGNATURE_AND_BODY_REGIONS",
+        "CURRENT_REPORT_CANDIDATES"
+      ],
+      "required_fact_classes": [
+        "SELECTION_OR_SYNTHESIS_OF_SUPPLIED_CANDIDATES"
+      ],
+      "required_candidate_kinds": [
+        "SIGNATURE_TEXT_DIFFERENCE"
+      ],
+      "minimum_supporting_fact_count": null,
+      "minimum_supporting_association_count": null,
+      "fallback_value_id": null,
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+      "report_target": "graphology.signature",
+      "note": "",
+      "order_in_domain": 3,
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
+    },
+    {
+      "question_id": "Q_SIG_CONNECTION",
+      "version": "1.0.0",
+      "selector_id": "SEL_SIG_CONNECTION",
+      "domain_id": "SIGNATURE",
+      "scope": "INDIVIDUAL",
+      "prompt_template_key": "question.q_sig_connection",
+      "prompt_text_en": "Which joining differences between signature and body text are supported?",
+      "text_origin": "APPLICATION_AUTHORED",
+      "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+      "source_refs": [
+        {
+          "source_id": "CNPG_B",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "IHAS",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "answer_mode": "SELECTOR",
+      "answer_owner": "PREMIUM_EDITOR",
+      "model_call_role": "ANSWER",
+      "required_inputs": [
+        "SIGNATURE_AND_BODY_REGIONS",
+        "CURRENT_REPORT_CANDIDATES"
+      ],
+      "required_fact_classes": [
+        "SELECTION_OR_SYNTHESIS_OF_SUPPLIED_CANDIDATES"
+      ],
+      "required_candidate_kinds": [
+        "SIGNATURE_TEXT_DIFFERENCE"
+      ],
+      "minimum_supporting_fact_count": null,
+      "minimum_supporting_association_count": null,
+      "fallback_value_id": null,
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+      "report_target": "graphology.signature",
+      "note": "",
+      "order_in_domain": 4,
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
+    },
+    {
+      "question_id": "Q_SIG_ADDON",
+      "version": "1.0.0",
+      "selector_id": "SEL_SIG_ADDON",
+      "domain_id": "SIGNATURE",
+      "scope": "INDIVIDUAL",
+      "prompt_template_key": "question.q_sig_addon",
+      "prompt_text_en": "Which additional graphic elements occur around the identified signature?",
+      "text_origin": "APPLICATION_AUTHORED",
+      "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+      "source_refs": [
+        {
+          "source_id": "CNPG_B",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "IHAS",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "answer_mode": "MULTI_SELECTOR",
+      "answer_owner": "PREMIUM_VISUAL",
+      "model_call_role": "ANSWER",
+      "required_inputs": [
+        "IDENTIFIED_SIGNATURE",
+        "AUTHORIZED_IMAGE",
+        "IDENTIFIED_EVIDENCE_REGION"
+      ],
+      "required_fact_classes": [
+        "AI_VISUAL_DESCRIPTION_NOT_CANONICAL_MEASUREMENT"
+      ],
+      "required_candidate_kinds": [],
+      "minimum_supporting_fact_count": null,
+      "minimum_supporting_association_count": null,
+      "fallback_value_id": null,
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+      "report_target": "graphology.signature",
+      "note": "",
+      "order_in_domain": 5,
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
+    },
+    {
+      "question_id": "Q_SIG_RELATION",
+      "version": "1.0.0",
+      "selector_id": "SEL_SIG_RELATION",
+      "domain_id": "SIGNATURE",
+      "scope": "INDIVIDUAL",
+      "prompt_template_key": "question.q_sig_relation",
+      "prompt_text_en": "Which whole-pattern similarities and differences between signature and body text are meaningful to describe?",
+      "text_origin": "APPLICATION_AUTHORED",
+      "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+      "source_refs": [
+        {
+          "source_id": "CNPG_B",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "IHAS",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "answer_mode": "MULTI_SELECTOR",
+      "answer_owner": "PREMIUM_EDITOR",
+      "model_call_role": "ANSWER",
+      "required_inputs": [
+        "SIGNATURE_AND_BODY_REGIONS",
+        "CURRENT_REPORT_CANDIDATES"
+      ],
+      "required_fact_classes": [
+        "SELECTION_OR_SYNTHESIS_OF_SUPPLIED_CANDIDATES"
+      ],
+      "required_candidate_kinds": [
+        "SIGNATURE_TEXT_PATTERN"
+      ],
+      "minimum_supporting_fact_count": null,
+      "minimum_supporting_association_count": null,
+      "fallback_value_id": null,
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+      "report_target": "graphology.signature",
+      "note": "No identity verification or hidden-self assertion without a separately sourced traditional association.",
+      "order_in_domain": 6,
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
+    },
+    {
+      "question_id": "Q_HIERARCHY_MAIN",
+      "version": "1.0.0",
+      "selector_id": "SEL_HIERARCHY_MAIN",
+      "domain_id": "HIERARCHY",
+      "scope": "INDIVIDUAL",
+      "prompt_template_key": "question.q_hierarchy_main",
+      "prompt_text_en": "Which eligible graphic characteristics dominate the overall sample, whether rare or common?",
+      "text_origin": "APPLICATION_AUTHORED",
+      "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+      "source_refs": [
+        {
+          "source_id": "BIG26",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "CJ1892",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "CARBONARI",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "answer_mode": "MULTI_SELECTOR",
+      "answer_owner": "PREMIUM_EDITOR",
+      "model_call_role": "ANSWER",
+      "required_inputs": [
+        "CURRENT_REPORT_CANDIDATES"
+      ],
+      "required_fact_classes": [
+        "SELECTION_OR_SYNTHESIS_OF_SUPPLIED_CANDIDATES"
+      ],
+      "required_candidate_kinds": [
+        "GRAPHIC_SIGN"
+      ],
+      "minimum_supporting_fact_count": null,
+      "minimum_supporting_association_count": null,
+      "fallback_value_id": null,
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+      "report_target": "graphology.hierarchy",
+      "note": "Selection is not a population ranking.",
+      "order_in_domain": 1,
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
+    },
+    {
+      "question_id": "Q_HIERARCHY_ROLE",
+      "version": "1.0.0",
+      "selector_id": "SEL_HIERARCHY_ROLE",
+      "domain_id": "HIERARCHY",
+      "scope": "INDIVIDUAL",
+      "prompt_template_key": "question.q_hierarchy_role",
+      "prompt_text_en": "What descriptive importance does each supplied sign have in this sample?",
+      "text_origin": "APPLICATION_AUTHORED",
+      "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+      "source_refs": [
+        {
+          "source_id": "BIG26",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "CJ1892",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "CARBONARI",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "answer_mode": "SELECTOR",
+      "answer_owner": "PREMIUM_VISUAL",
+      "model_call_role": "ANSWER",
+      "required_inputs": [
+        "PREIDENTIFIED_GRAPHIC_SIGN",
+        "AUTHORIZED_IMAGE",
+        "IDENTIFIED_EVIDENCE_REGION"
+      ],
+      "required_fact_classes": [
+        "AI_VISUAL_DESCRIPTION_NOT_CANONICAL_MEASUREMENT"
+      ],
+      "required_candidate_kinds": [],
+      "minimum_supporting_fact_count": null,
+      "minimum_supporting_association_count": null,
+      "fallback_value_id": null,
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+      "report_target": "graphology.hierarchy",
+      "note": "BIG descriptive hierarchy; not interchangeable with Moretti inherent sign-role classes.",
+      "order_in_domain": 2,
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
+    },
+    {
+      "question_id": "Q_HIERARCHY_SUPPORT",
+      "version": "1.0.0",
+      "selector_id": "SEL_HIERARCHY_SUPPORT",
+      "domain_id": "HIERARCHY",
+      "scope": "INDIVIDUAL",
+      "prompt_template_key": "question.q_hierarchy_support",
+      "prompt_text_en": "Which independent graphic families support the supplied traditional candidate?",
+      "text_origin": "APPLICATION_AUTHORED",
+      "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+      "source_refs": [
+        {
+          "source_id": "BIG26",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "CJ1892",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "CARBONARI",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "answer_mode": "MULTI_SELECTOR",
+      "answer_owner": "PREMIUM_EDITOR",
+      "model_call_role": "ANSWER",
+      "required_inputs": [
+        "TRADITIONAL_CANDIDATE",
+        "CURRENT_REPORT_CANDIDATES"
+      ],
+      "required_fact_classes": [
+        "SELECTION_OR_SYNTHESIS_OF_SUPPLIED_CANDIDATES"
+      ],
+      "required_candidate_kinds": [
+        "SUPPORT_GROUP"
+      ],
+      "minimum_supporting_fact_count": null,
+      "minimum_supporting_association_count": null,
+      "fallback_value_id": null,
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+      "report_target": "graphology.hierarchy",
+      "note": "Repeated summaries of the same slant observations count as one support group.",
+      "order_in_domain": 3,
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
+    },
+    {
+      "question_id": "Q_HIERARCHY_COUNTER",
+      "version": "1.0.0",
+      "selector_id": "SEL_HIERARCHY_COUNTER",
+      "domain_id": "HIERARCHY",
+      "scope": "INDIVIDUAL",
+      "prompt_template_key": "question.q_hierarchy_counter",
+      "prompt_text_en": "Which supplied observations qualify or oppose the proposed reading?",
+      "text_origin": "APPLICATION_AUTHORED",
+      "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+      "source_refs": [
+        {
+          "source_id": "BIG26",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "CJ1892",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "CARBONARI",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "answer_mode": "MULTI_SELECTOR",
+      "answer_owner": "PREMIUM_EDITOR",
+      "model_call_role": "ANSWER",
+      "required_inputs": [
+        "TRADITIONAL_CANDIDATE",
+        "CURRENT_REPORT_CANDIDATES"
+      ],
+      "required_fact_classes": [
+        "SELECTION_OR_SYNTHESIS_OF_SUPPLIED_CANDIDATES"
+      ],
+      "required_candidate_kinds": [
+        "COUNTEREVIDENCE_GROUP"
+      ],
+      "minimum_supporting_fact_count": null,
+      "minimum_supporting_association_count": null,
+      "fallback_value_id": null,
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+      "report_target": "graphology.hierarchy",
+      "note": "",
+      "order_in_domain": 4,
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
+    },
+    {
+      "question_id": "Q_HIERARCHY_RELATION",
+      "version": "1.0.0",
+      "selector_id": "SEL_HIERARCHY_RELATION",
+      "domain_id": "HIERARCHY",
+      "scope": "INDIVIDUAL",
+      "prompt_template_key": "question.q_hierarchy_relation",
+      "prompt_text_en": "What supportive, opposing or neutral relation is defined for this sign pair within the selected school?",
+      "text_origin": "APPLICATION_AUTHORED",
+      "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+      "source_refs": [
+        {
+          "source_id": "BIG26",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "CJ1892",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "CARBONARI",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "answer_mode": "SELECTOR",
+      "answer_owner": "RULE_ENGINE",
+      "model_call_role": "READ_ONLY_CONTEXT_OR_PRECOMPUTED",
+      "required_inputs": [
+        "PREIDENTIFIED_SIGN_PAIR",
+        "REVIEWED_SCHOOL_RULE_PACK"
+      ],
+      "required_fact_classes": [
+        "PRECOMPUTED_TRADITIONAL_RULE_RESULT_NOT_PSYCHOMETRIC_SCORE"
+      ],
+      "required_candidate_kinds": [],
+      "minimum_supporting_fact_count": null,
+      "minimum_supporting_association_count": null,
+      "fallback_value_id": null,
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+      "report_target": "graphology.hierarchy",
+      "note": "The rule pack owns the relation; visual similarity is not psychological corroboration.",
+      "order_in_domain": 5,
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
+    },
+    {
+      "question_id": "Q_HIERARCHY_SCOPE",
+      "version": "1.0.0",
+      "selector_id": "SEL_HIERARCHY_SCOPE",
+      "domain_id": "HIERARCHY",
+      "scope": "INDIVIDUAL",
+      "prompt_template_key": "question.q_hierarchy_scope",
+      "prompt_text_en": "Which local details are too limited to characterize the entire sample?",
+      "text_origin": "APPLICATION_AUTHORED",
+      "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+      "source_refs": [
+        {
+          "source_id": "BIG26",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "CJ1892",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "CARBONARI",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "answer_mode": "MULTI_SELECTOR",
+      "answer_owner": "PREMIUM_EDITOR",
+      "model_call_role": "ANSWER",
+      "required_inputs": [
+        "CURRENT_REPORT_CANDIDATES"
+      ],
+      "required_fact_classes": [
+        "SELECTION_OR_SYNTHESIS_OF_SUPPLIED_CANDIDATES"
+      ],
+      "required_candidate_kinds": [
+        "LOCAL_ONLY_SIGN"
+      ],
+      "minimum_supporting_fact_count": null,
+      "minimum_supporting_association_count": null,
+      "fallback_value_id": null,
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+      "report_target": "graphology.hierarchy",
+      "note": "",
+      "order_in_domain": 6,
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
+    },
+    {
+      "question_id": "Q_HIERARCHY_COMBINATION",
+      "version": "1.0.0",
+      "selector_id": "SEL_HIERARCHY_COMBINATION",
+      "domain_id": "HIERARCHY",
+      "scope": "INDIVIDUAL",
+      "prompt_template_key": "question.q_hierarchy_combination",
+      "prompt_text_en": "Which permitted combination best describes how the observed features interact?",
+      "text_origin": "APPLICATION_AUTHORED",
+      "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+      "source_refs": [
+        {
+          "source_id": "BIG26",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "CJ1892",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "CARBONARI",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "answer_mode": "SELECTOR",
+      "answer_owner": "PREMIUM_EDITOR",
+      "model_call_role": "ANSWER",
+      "required_inputs": [
+        "CURRENT_REPORT_CANDIDATES"
+      ],
+      "required_fact_classes": [
+        "SELECTION_OR_SYNTHESIS_OF_SUPPLIED_CANDIDATES"
+      ],
+      "required_candidate_kinds": [
+        "GRAPHIC_COMBINATION"
+      ],
+      "minimum_supporting_fact_count": null,
+      "minimum_supporting_association_count": null,
+      "fallback_value_id": null,
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+      "report_target": "graphology.hierarchy",
+      "note": "A source-backed resultant and an application-authored visual contrast keep distinct provenance.",
+      "order_in_domain": 7,
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
+    },
+    {
+      "question_id": "Q_TRAD_BUNDLE",
+      "version": "1.0.0",
+      "selector_id": "SEL_TRAD_BUNDLE",
+      "domain_id": "INTERPRETATION",
+      "scope": "INDIVIDUAL",
+      "prompt_template_key": "question.q_trad_bundle",
+      "prompt_text_en": "Which source-linked interpretation bundle is eligible within the selected school?",
+      "text_origin": "APPLICATION_AUTHORED",
+      "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+      "source_refs": [
+        {
+          "source_id": "CJ1892",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "BIG26",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "CARBONARI",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "answer_mode": "SELECTOR",
+      "answer_owner": "PREMIUM_EDITOR",
+      "model_call_role": "ANSWER",
+      "required_inputs": [
+        "REVIEWED_SCHOOL_RULE_PACK",
+        "CURRENT_REPORT_CANDIDATES"
+      ],
+      "required_fact_classes": [
+        "SELECTION_OR_SYNTHESIS_OF_SUPPLIED_CANDIDATES"
+      ],
+      "required_candidate_kinds": [
+        "TRADITIONAL_CANDIDATE"
+      ],
+      "minimum_supporting_fact_count": null,
+      "minimum_supporting_association_count": null,
+      "fallback_value_id": null,
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+      "report_target": "graphology.interpretation",
+      "note": "No eligible bundle -> abstain. This bank alone does not populate inference rules.",
+      "order_in_domain": 1,
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
+    },
+    {
+      "question_id": "Q_TRAD_STATUS",
+      "version": "1.0.0",
+      "selector_id": "SEL_TRAD_STATUS",
+      "domain_id": "INTERPRETATION",
+      "scope": "INDIVIDUAL",
+      "prompt_template_key": "question.q_trad_status",
+      "prompt_text_en": "What is the precomputed support state of the selected traditional candidate?",
+      "text_origin": "APPLICATION_AUTHORED",
+      "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+      "source_refs": [
+        {
+          "source_id": "CJ1892",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "BIG26",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "CARBONARI",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "answer_mode": "SELECTOR",
+      "answer_owner": "RULE_ENGINE",
+      "model_call_role": "READ_ONLY_CONTEXT_OR_PRECOMPUTED",
+      "required_inputs": [
+        "REVIEWED_SCHOOL_RULE_PACK"
+      ],
+      "required_fact_classes": [
+        "PRECOMPUTED_TRADITIONAL_RULE_RESULT_NOT_PSYCHOMETRIC_SCORE"
+      ],
+      "required_candidate_kinds": [],
+      "minimum_supporting_fact_count": null,
+      "minimum_supporting_association_count": null,
+      "fallback_value_id": null,
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+      "report_target": "graphology.interpretation",
+      "note": "",
+      "order_in_domain": 2,
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
+    },
+    {
+      "question_id": "Q_TRAD_MODIFIER",
+      "version": "1.0.0",
+      "selector_id": "SEL_TRAD_MODIFIER",
+      "domain_id": "INTERPRETATION",
+      "scope": "INDIVIDUAL",
+      "prompt_template_key": "question.q_trad_modifier",
+      "prompt_text_en": "Which school-defined modifiers change the interpretation?",
+      "text_origin": "APPLICATION_AUTHORED",
+      "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+      "source_refs": [
+        {
+          "source_id": "CJ1892",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "BIG26",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "CARBONARI",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "answer_mode": "MULTI_SELECTOR",
+      "answer_owner": "PREMIUM_EDITOR",
+      "model_call_role": "ANSWER",
+      "required_inputs": [
+        "REVIEWED_SCHOOL_RULE_PACK",
+        "CURRENT_REPORT_CANDIDATES"
+      ],
+      "required_fact_classes": [
+        "SELECTION_OR_SYNTHESIS_OF_SUPPLIED_CANDIDATES"
+      ],
+      "required_candidate_kinds": [
+        "TRADITIONAL_MODIFIER"
+      ],
+      "minimum_supporting_fact_count": null,
+      "minimum_supporting_association_count": null,
+      "fallback_value_id": null,
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+      "report_target": "graphology.interpretation",
+      "note": "",
+      "order_in_domain": 3,
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
+    },
+    {
+      "question_id": "Q_TRAD_ALTERNATIVE",
+      "version": "1.0.0",
+      "selector_id": "SEL_TRAD_ALTERNATIVE",
+      "domain_id": "INTERPRETATION",
+      "scope": "INDIVIDUAL",
+      "prompt_template_key": "question.q_trad_alternative",
+      "prompt_text_en": "Which permitted alternative readings remain unresolved?",
+      "text_origin": "APPLICATION_AUTHORED",
+      "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+      "source_refs": [
+        {
+          "source_id": "CJ1892",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "BIG26",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "CARBONARI",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "answer_mode": "MULTI_SELECTOR",
+      "answer_owner": "PREMIUM_EDITOR",
+      "model_call_role": "ANSWER",
+      "required_inputs": [
+        "REVIEWED_SCHOOL_RULE_PACK",
+        "CURRENT_REPORT_CANDIDATES"
+      ],
+      "required_fact_classes": [
+        "SELECTION_OR_SYNTHESIS_OF_SUPPLIED_CANDIDATES"
+      ],
+      "required_candidate_kinds": [
+        "TRADITIONAL_ALTERNATIVE"
+      ],
+      "minimum_supporting_fact_count": null,
+      "minimum_supporting_association_count": null,
+      "fallback_value_id": null,
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+      "report_target": "graphology.interpretation",
+      "note": "",
+      "order_in_domain": 4,
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
+    },
+    {
+      "question_id": "Q_TRAD_SCHOOL_DIFF",
+      "version": "1.0.0",
+      "selector_id": "SEL_TRAD_SCHOOL_DIFF",
+      "domain_id": "INTERPRETATION",
+      "scope": "INDIVIDUAL",
+      "prompt_template_key": "question.q_trad_school_diff",
+      "prompt_text_en": "How do the supplied school-specific candidates relate without collapsing distinct concepts?",
+      "text_origin": "APPLICATION_AUTHORED",
+      "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+      "source_refs": [
+        {
+          "source_id": "CJ1892",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "BIG26",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "CARBONARI",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "answer_mode": "SELECTOR",
+      "answer_owner": "RULE_ENGINE",
+      "model_call_role": "READ_ONLY_CONTEXT_OR_PRECOMPUTED",
+      "required_inputs": [
+        "REVIEWED_SCHOOL_RULE_PACK"
+      ],
+      "required_fact_classes": [
+        "PRECOMPUTED_TRADITIONAL_RULE_RESULT_NOT_PSYCHOMETRIC_SCORE"
+      ],
+      "required_candidate_kinds": [],
+      "minimum_supporting_fact_count": null,
+      "minimum_supporting_association_count": null,
+      "fallback_value_id": null,
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+      "report_target": "graphology.interpretation",
+      "note": "Shared ancestry is not independent scientific replication.",
+      "order_in_domain": 5,
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
+    },
+    {
+      "question_id": "Q_TRAD_WITHHOLD",
+      "version": "1.0.0",
+      "selector_id": "SEL_TRAD_WITHHOLD",
+      "domain_id": "INTERPRETATION",
+      "scope": "INDIVIDUAL",
+      "prompt_template_key": "question.q_trad_withhold",
+      "prompt_text_en": "Which proposed traditional statements lack sufficient support to publish?",
+      "text_origin": "APPLICATION_AUTHORED",
+      "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+      "source_refs": [
+        {
+          "source_id": "CJ1892",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "BIG26",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "CARBONARI",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "answer_mode": "MULTI_SELECTOR",
+      "answer_owner": "PREMIUM_EDITOR",
+      "model_call_role": "ANSWER",
+      "required_inputs": [
+        "REVIEWED_SCHOOL_RULE_PACK",
+        "CURRENT_REPORT_CANDIDATES"
+      ],
+      "required_fact_classes": [
+        "SELECTION_OR_SYNTHESIS_OF_SUPPLIED_CANDIDATES"
+      ],
+      "required_candidate_kinds": [
+        "WITHHELD_CLAIM"
+      ],
+      "minimum_supporting_fact_count": null,
+      "minimum_supporting_association_count": null,
+      "fallback_value_id": null,
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+      "report_target": "graphology.interpretation",
+      "note": "",
+      "order_in_domain": 6,
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
+    },
+    {
+      "question_id": "Q_REF_ELIGIBLE",
+      "version": "1.0.0",
+      "selector_id": "SEL_REF_ELIGIBLE",
+      "domain_id": "REFERENCE",
+      "scope": "INDIVIDUAL",
+      "prompt_template_key": "question.q_ref_eligible",
+      "prompt_text_en": "Which cohort-relative claims have passed the reference service checks?",
+      "text_origin": "APPLICATION_AUTHORED",
+      "source_support": "APPLICATION_EXTENSION",
+      "source_refs": [],
+      "answer_mode": "MULTI_SELECTOR",
+      "answer_owner": "DETERMINISTIC",
+      "model_call_role": "READ_ONLY_CONTEXT_OR_PRECOMPUTED",
+      "required_inputs": [],
+      "required_fact_classes": [
+        "PRECOMPUTED_DESCRIPTION"
+      ],
+      "required_candidate_kinds": [
+        "ELIGIBLE_REFERENCE_CLAIM"
+      ],
+      "minimum_supporting_fact_count": null,
+      "minimum_supporting_association_count": null,
+      "fallback_value_id": null,
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+      "report_target": "graphology.reference",
+      "note": "",
+      "order_in_domain": 1,
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
+    },
+    {
+      "question_id": "Q_REF_HIGHLIGHT",
+      "version": "1.0.0",
+      "selector_id": "SEL_REF_HIGHLIGHT",
+      "domain_id": "REFERENCE",
+      "scope": "INDIVIDUAL",
+      "prompt_template_key": "question.q_ref_highlight",
+      "prompt_text_en": "Which verified outlier is most useful to explain alongside the full graphic description?",
+      "text_origin": "APPLICATION_AUTHORED",
+      "source_support": "APPLICATION_EXTENSION",
+      "source_refs": [],
+      "answer_mode": "SELECTOR",
+      "answer_owner": "PREMIUM_EDITOR",
+      "model_call_role": "ANSWER",
+      "required_inputs": [
+        "CURRENT_REPORT_CANDIDATES"
+      ],
+      "required_fact_classes": [
+        "SELECTION_OR_SYNTHESIS_OF_SUPPLIED_CANDIDATES"
+      ],
+      "required_candidate_kinds": [
+        "VERIFIED_OUTLIER"
+      ],
+      "minimum_supporting_fact_count": null,
+      "minimum_supporting_association_count": null,
+      "fallback_value_id": null,
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+      "report_target": "graphology.reference",
+      "note": "",
+      "order_in_domain": 2,
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
+    },
+    {
+      "question_id": "Q_REF_COMBINATION",
+      "version": "1.0.0",
+      "selector_id": "SEL_REF_COMBINATION",
+      "domain_id": "REFERENCE",
+      "scope": "INDIVIDUAL",
+      "prompt_template_key": "question.q_ref_combination",
+      "prompt_text_en": "Which precomputed joint distinctive pattern is eligible to display?",
+      "text_origin": "APPLICATION_AUTHORED",
+      "source_support": "APPLICATION_EXTENSION",
+      "source_refs": [],
+      "answer_mode": "SELECTOR",
+      "answer_owner": "PREMIUM_EDITOR",
+      "model_call_role": "ANSWER",
+      "required_inputs": [
+        "CURRENT_REPORT_CANDIDATES"
+      ],
+      "required_fact_classes": [
+        "SELECTION_OR_SYNTHESIS_OF_SUPPLIED_CANDIDATES"
+      ],
+      "required_candidate_kinds": [
+        "VERIFIED_JOINT_OUTLIER"
+      ],
+      "minimum_supporting_fact_count": null,
+      "minimum_supporting_association_count": null,
+      "fallback_value_id": null,
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+      "report_target": "graphology.reference",
+      "note": "No multiplication of marginal rarity estimates.",
+      "order_in_domain": 3,
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
+    },
+    {
+      "question_id": "Q_REF_QUALIFICATION",
+      "version": "1.0.0",
+      "selector_id": "SEL_REF_QUALIFICATION",
+      "domain_id": "REFERENCE",
+      "scope": "INDIVIDUAL",
+      "prompt_template_key": "question.q_ref_qualification",
+      "prompt_text_en": "Which reference qualifications must accompany the selected highlight?",
+      "text_origin": "APPLICATION_AUTHORED",
+      "source_support": "APPLICATION_EXTENSION",
+      "source_refs": [],
+      "answer_mode": "MULTI_SELECTOR",
+      "answer_owner": "DETERMINISTIC",
+      "model_call_role": "READ_ONLY_CONTEXT_OR_PRECOMPUTED",
+      "required_inputs": [],
+      "required_fact_classes": [
+        "PRECOMPUTED_DESCRIPTION"
+      ],
+      "required_candidate_kinds": [
+        "REFERENCE_CAVEAT"
+      ],
+      "minimum_supporting_fact_count": null,
+      "minimum_supporting_association_count": null,
+      "fallback_value_id": null,
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+      "report_target": "graphology.reference",
+      "note": "",
+      "order_in_domain": 4,
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
+    },
+    {
+      "question_id": "Q_PAIR_COMPARABLE",
+      "version": "1.0.0",
+      "selector_id": "SEL_PAIR_COMPARABLE",
+      "domain_id": "PAIR",
+      "scope": "PAIR",
+      "prompt_template_key": "question.q_pair_comparable",
+      "prompt_text_en": "What common descriptor subset is comparable under the declared policy?",
+      "text_origin": "APPLICATION_AUTHORED",
+      "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+      "source_refs": [
+        {
+          "source_id": "CNPG_B",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "answer_mode": "SELECTOR",
+      "answer_owner": "DETERMINISTIC",
+      "model_call_role": "READ_ONLY_CONTEXT_OR_PRECOMPUTED",
+      "required_inputs": [],
+      "required_fact_classes": [
+        "PRECOMPUTED_DESCRIPTION"
+      ],
+      "required_candidate_kinds": [],
+      "minimum_supporting_fact_count": null,
+      "minimum_supporting_association_count": null,
+      "fallback_value_id": null,
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+      "report_target": "graphology.pair",
+      "note": "",
+      "order_in_domain": 1,
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
+    },
+    {
+      "question_id": "Q_PAIR_SIMILAR",
+      "version": "1.0.0",
+      "selector_id": "SEL_PAIR_SIMILAR",
+      "domain_id": "PAIR",
+      "scope": "PAIR",
+      "prompt_template_key": "question.q_pair_similar",
+      "prompt_text_en": "Which supplied graphical similarity best characterizes the pair?",
+      "text_origin": "APPLICATION_AUTHORED",
+      "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+      "source_refs": [
+        {
+          "source_id": "CNPG_B",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "answer_mode": "SELECTOR",
+      "answer_owner": "PREMIUM_EDITOR",
+      "model_call_role": "ANSWER",
+      "required_inputs": [
+        "CURRENT_REPORT_CANDIDATES"
+      ],
+      "required_fact_classes": [
+        "SELECTION_OR_SYNTHESIS_OF_SUPPLIED_CANDIDATES"
+      ],
+      "required_candidate_kinds": [
+        "PAIR_SIMILARITY"
+      ],
+      "minimum_supporting_fact_count": null,
+      "minimum_supporting_association_count": null,
+      "fallback_value_id": null,
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+      "report_target": "graphology.pair",
+      "note": "",
+      "order_in_domain": 2,
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
+    },
+    {
+      "question_id": "Q_PAIR_DIFFERENT",
+      "version": "1.0.0",
+      "selector_id": "SEL_PAIR_DIFFERENT",
+      "domain_id": "PAIR",
+      "scope": "PAIR",
+      "prompt_template_key": "question.q_pair_different",
+      "prompt_text_en": "Which supplied graphical difference is most informative?",
+      "text_origin": "APPLICATION_AUTHORED",
+      "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+      "source_refs": [
+        {
+          "source_id": "CNPG_B",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "answer_mode": "SELECTOR",
+      "answer_owner": "PREMIUM_EDITOR",
+      "model_call_role": "ANSWER",
+      "required_inputs": [
+        "CURRENT_REPORT_CANDIDATES"
+      ],
+      "required_fact_classes": [
+        "SELECTION_OR_SYNTHESIS_OF_SUPPLIED_CANDIDATES"
+      ],
+      "required_candidate_kinds": [
+        "PAIR_DIFFERENCE"
+      ],
+      "minimum_supporting_fact_count": null,
+      "minimum_supporting_association_count": null,
+      "fallback_value_id": null,
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+      "report_target": "graphology.pair",
+      "note": "",
+      "order_in_domain": 3,
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
+    },
+    {
+      "question_id": "Q_PAIR_TRAD",
+      "version": "1.0.0",
+      "selector_id": "SEL_PAIR_TRAD",
+      "domain_id": "PAIR",
+      "scope": "PAIR",
+      "prompt_template_key": "question.q_pair_trad",
+      "prompt_text_en": "Which reviewed traditional contrast may be described for this pair?",
+      "text_origin": "APPLICATION_AUTHORED",
+      "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+      "source_refs": [
+        {
+          "source_id": "CNPG_B",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "answer_mode": "SELECTOR",
+      "answer_owner": "PREMIUM_EDITOR",
+      "model_call_role": "ANSWER",
+      "required_inputs": [
+        "REVIEWED_SCHOOL_RULE_PACK",
+        "CURRENT_REPORT_CANDIDATES"
+      ],
+      "required_fact_classes": [
+        "SELECTION_OR_SYNTHESIS_OF_SUPPLIED_CANDIDATES"
+      ],
+      "required_candidate_kinds": [
+        "PAIR_TRADITIONAL_CONTRAST"
+      ],
+      "minimum_supporting_fact_count": null,
+      "minimum_supporting_association_count": null,
+      "fallback_value_id": null,
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+      "report_target": "graphology.pair",
+      "note": "No relationship-success, shared identity or moral ranking.",
+      "order_in_domain": 4,
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
+    },
+    {
+      "question_id": "Q_HIST_COMPARABLE",
+      "version": "1.0.0",
+      "selector_id": "SEL_HIST_COMPARABLE",
+      "domain_id": "HISTORY",
+      "scope": "HISTORY",
+      "prompt_template_key": "question.q_hist_comparable",
+      "prompt_text_en": "Are task, scale, capture and method versions comparable?",
+      "text_origin": "APPLICATION_AUTHORED",
+      "source_support": "APPLICATION_EXTENSION",
+      "source_refs": [],
+      "answer_mode": "SELECTOR",
+      "answer_owner": "DETERMINISTIC",
+      "model_call_role": "READ_ONLY_CONTEXT_OR_PRECOMPUTED",
+      "required_inputs": [],
+      "required_fact_classes": [
+        "PRECOMPUTED_DESCRIPTION"
+      ],
+      "required_candidate_kinds": [],
+      "minimum_supporting_fact_count": null,
+      "minimum_supporting_association_count": null,
+      "fallback_value_id": null,
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+      "report_target": "graphology.history",
+      "note": "",
+      "order_in_domain": 1,
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
+    },
+    {
+      "question_id": "Q_HIST_CHANGE",
+      "version": "1.0.0",
+      "selector_id": "SEL_HIST_CHANGE",
+      "domain_id": "HISTORY",
+      "scope": "HISTORY",
+      "prompt_template_key": "question.q_hist_change",
+      "prompt_text_en": "Which verified graphical change should be highlighted?",
+      "text_origin": "APPLICATION_AUTHORED",
+      "source_support": "APPLICATION_EXTENSION",
+      "source_refs": [],
+      "answer_mode": "SELECTOR",
+      "answer_owner": "PREMIUM_EDITOR",
+      "model_call_role": "ANSWER",
+      "required_inputs": [
+        "CURRENT_REPORT_CANDIDATES"
+      ],
+      "required_fact_classes": [
+        "SELECTION_OR_SYNTHESIS_OF_SUPPLIED_CANDIDATES"
+      ],
+      "required_candidate_kinds": [
+        "HISTORY_CHANGE"
+      ],
+      "minimum_supporting_fact_count": null,
+      "minimum_supporting_association_count": null,
+      "fallback_value_id": null,
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+      "report_target": "graphology.history",
+      "note": "",
+      "order_in_domain": 2,
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
+    },
+    {
+      "question_id": "Q_HIST_STABLE",
+      "version": "1.0.0",
+      "selector_id": "SEL_HIST_STABLE",
+      "domain_id": "HISTORY",
+      "scope": "HISTORY",
+      "prompt_template_key": "question.q_hist_stable",
+      "prompt_text_en": "Which characteristics are stable under the comparison tolerance?",
+      "text_origin": "APPLICATION_AUTHORED",
+      "source_support": "APPLICATION_EXTENSION",
+      "source_refs": [],
+      "answer_mode": "SELECTOR",
+      "answer_owner": "PREMIUM_EDITOR",
+      "model_call_role": "ANSWER",
+      "required_inputs": [
+        "CURRENT_REPORT_CANDIDATES"
+      ],
+      "required_fact_classes": [
+        "SELECTION_OR_SYNTHESIS_OF_SUPPLIED_CANDIDATES"
+      ],
+      "required_candidate_kinds": [
+        "HISTORY_STABLE_PATTERN"
+      ],
+      "minimum_supporting_fact_count": null,
+      "minimum_supporting_association_count": null,
+      "fallback_value_id": null,
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+      "report_target": "graphology.history",
+      "note": "",
+      "order_in_domain": 3,
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
+    },
+    {
+      "question_id": "Q_HIST_LIMIT",
+      "version": "1.0.0",
+      "selector_id": "SEL_HIST_LIMIT",
+      "domain_id": "HISTORY",
+      "scope": "HISTORY",
+      "prompt_template_key": "question.q_hist_limit",
+      "prompt_text_en": "Which confounders prevent a stronger interpretation of change?",
+      "text_origin": "APPLICATION_AUTHORED",
+      "source_support": "APPLICATION_EXTENSION",
+      "source_refs": [],
+      "answer_mode": "MULTI_SELECTOR",
+      "answer_owner": "DETERMINISTIC",
+      "model_call_role": "READ_ONLY_CONTEXT_OR_PRECOMPUTED",
+      "required_inputs": [],
+      "required_fact_classes": [
+        "PRECOMPUTED_DESCRIPTION"
+      ],
+      "required_candidate_kinds": [
+        "HISTORY_CAVEAT"
+      ],
+      "minimum_supporting_fact_count": null,
+      "minimum_supporting_association_count": null,
+      "fallback_value_id": null,
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+      "report_target": "graphology.history",
+      "note": "No inference of personality change or health improvement.",
+      "order_in_domain": 4,
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE",
+      "enabled": false
     }
   ],
   "question_packs": [
@@ -7645,7 +9805,687 @@
       "runtime_status": "DRAFT_NOT_ACTIVE"
     }
   ],
-  "report_mappings": [],
+  "report_mappings": [
+    {
+      "content_kind": "QUESTION",
+      "content_id": "Q_CTX_TASK",
+      "selector_id": "SEL_CTX_TASK",
+      "report_target": "graphology.context",
+      "report_slot_id": "SLOT_CONTEXT"
+    },
+    {
+      "content_kind": "QUESTION",
+      "content_id": "Q_CTX_SURFACE",
+      "selector_id": "SEL_CTX_SURFACE",
+      "report_target": "graphology.context",
+      "report_slot_id": "SLOT_CONTEXT"
+    },
+    {
+      "content_kind": "QUESTION",
+      "content_id": "Q_CTX_STYLE",
+      "selector_id": "SEL_CTX_STYLE",
+      "report_target": "graphology.context",
+      "report_slot_id": "SLOT_CONTEXT"
+    },
+    {
+      "content_kind": "QUESTION",
+      "content_id": "Q_CTX_FRAME",
+      "selector_id": "SEL_CTX_FRAME",
+      "report_target": "graphology.context",
+      "report_slot_id": "SLOT_CONTEXT"
+    },
+    {
+      "content_kind": "QUESTION",
+      "content_id": "Q_CTX_SCALE",
+      "selector_id": "SEL_CTX_SCALE",
+      "report_target": "graphology.context",
+      "report_slot_id": "SLOT_CONTEXT"
+    },
+    {
+      "content_kind": "QUESTION",
+      "content_id": "Q_CTX_DIRECTION",
+      "selector_id": "SEL_CTX_DIRECTION",
+      "report_target": "graphology.context",
+      "report_slot_id": "SLOT_CONTEXT"
+    },
+    {
+      "content_kind": "QUESTION",
+      "content_id": "Q_GLOBAL_FORM_MOVEMENT",
+      "selector_id": "SEL_GLOBAL_FORM_MOVEMENT",
+      "report_target": "graphology.global",
+      "report_slot_id": "SLOT_GLOBAL"
+    },
+    {
+      "content_kind": "QUESTION",
+      "content_id": "Q_GLOBAL_COHERENCE",
+      "selector_id": "SEL_GLOBAL_COHERENCE",
+      "report_target": "graphology.global",
+      "report_slot_id": "SLOT_GLOBAL"
+    },
+    {
+      "content_kind": "QUESTION",
+      "content_id": "Q_GLOBAL_VARIATION",
+      "selector_id": "SEL_GLOBAL_VARIATION",
+      "report_target": "graphology.global",
+      "report_slot_id": "SLOT_GLOBAL"
+    },
+    {
+      "content_kind": "QUESTION",
+      "content_id": "Q_GLOBAL_EVIDENCE_CONFLICT",
+      "selector_id": "SEL_GLOBAL_EVIDENCE_CONFLICT",
+      "report_target": "graphology.global",
+      "report_slot_id": "SLOT_GLOBAL"
+    },
+    {
+      "content_kind": "QUESTION",
+      "content_id": "Q_SPACE_BALANCE",
+      "selector_id": "SEL_SPACE_BALANCE",
+      "report_target": "graphology.space",
+      "report_slot_id": "SLOT_SPACE"
+    },
+    {
+      "content_kind": "QUESTION",
+      "content_id": "Q_SPACE_MARGINS",
+      "selector_id": "SEL_SPACE_MARGINS",
+      "report_target": "graphology.space",
+      "report_slot_id": "SLOT_SPACE"
+    },
+    {
+      "content_kind": "QUESTION",
+      "content_id": "Q_SPACE_MARGIN_TREND",
+      "selector_id": "SEL_SPACE_MARGIN_TREND",
+      "report_target": "graphology.space",
+      "report_slot_id": "SLOT_SPACE"
+    },
+    {
+      "content_kind": "QUESTION",
+      "content_id": "Q_SPACE_WORD",
+      "selector_id": "SEL_SPACE_WORD",
+      "report_target": "graphology.space",
+      "report_slot_id": "SLOT_SPACE"
+    },
+    {
+      "content_kind": "QUESTION",
+      "content_id": "Q_SPACE_LINE",
+      "selector_id": "SEL_SPACE_LINE",
+      "report_target": "graphology.space",
+      "report_slot_id": "SLOT_SPACE"
+    },
+    {
+      "content_kind": "QUESTION",
+      "content_id": "Q_SPACE_LETTER",
+      "selector_id": "SEL_SPACE_LETTER",
+      "report_target": "graphology.space",
+      "report_slot_id": "SLOT_SPACE"
+    },
+    {
+      "content_kind": "QUESTION",
+      "content_id": "Q_SIZE_PHYSICAL",
+      "selector_id": "SEL_SIZE_PHYSICAL",
+      "report_target": "graphology.size",
+      "report_slot_id": "SLOT_SIZE"
+    },
+    {
+      "content_kind": "QUESTION",
+      "content_id": "Q_SIZE_ZONES",
+      "selector_id": "SEL_SIZE_ZONES",
+      "report_target": "graphology.size",
+      "report_slot_id": "SLOT_SIZE"
+    },
+    {
+      "content_kind": "QUESTION",
+      "content_id": "Q_SIZE_CAPITAL",
+      "selector_id": "SEL_SIZE_CAPITAL",
+      "report_target": "graphology.size",
+      "report_slot_id": "SLOT_SIZE"
+    },
+    {
+      "content_kind": "QUESTION",
+      "content_id": "Q_SIZE_WIDTH",
+      "selector_id": "SEL_SIZE_WIDTH",
+      "report_target": "graphology.size",
+      "report_slot_id": "SLOT_SIZE"
+    },
+    {
+      "content_kind": "QUESTION",
+      "content_id": "Q_SIZE_TREND",
+      "selector_id": "SEL_SIZE_TREND",
+      "report_target": "graphology.size",
+      "report_slot_id": "SLOT_SIZE"
+    },
+    {
+      "content_kind": "QUESTION",
+      "content_id": "Q_DIRECTION_SLANT",
+      "selector_id": "SEL_DIRECTION_SLANT",
+      "report_target": "graphology.direction",
+      "report_slot_id": "SLOT_DIRECTION"
+    },
+    {
+      "content_kind": "QUESTION",
+      "content_id": "Q_DIRECTION_SLOPE",
+      "selector_id": "SEL_DIRECTION_SLOPE",
+      "report_target": "graphology.direction",
+      "report_slot_id": "SLOT_DIRECTION"
+    },
+    {
+      "content_kind": "QUESTION",
+      "content_id": "Q_DIRECTION_SHAPE",
+      "selector_id": "SEL_DIRECTION_SHAPE",
+      "report_target": "graphology.direction",
+      "report_slot_id": "SLOT_DIRECTION"
+    },
+    {
+      "content_kind": "QUESTION",
+      "content_id": "Q_DIRECTION_VARIATION",
+      "selector_id": "SEL_DIRECTION_VARIATION",
+      "report_target": "graphology.direction",
+      "report_slot_id": "SLOT_DIRECTION"
+    },
+    {
+      "content_kind": "QUESTION",
+      "content_id": "Q_CONNECT_DEGREE",
+      "selector_id": "SEL_CONNECT_DEGREE",
+      "report_target": "graphology.connection",
+      "report_slot_id": "SLOT_CONNECTION"
+    },
+    {
+      "content_kind": "QUESTION",
+      "content_id": "Q_CONNECT_FORM",
+      "selector_id": "SEL_CONNECT_FORM",
+      "report_target": "graphology.connection",
+      "report_slot_id": "SLOT_CONNECTION"
+    },
+    {
+      "content_kind": "QUESTION",
+      "content_id": "Q_CONNECT_DISTRIBUTION",
+      "selector_id": "SEL_CONNECT_DISTRIBUTION",
+      "report_target": "graphology.connection",
+      "report_slot_id": "SLOT_CONNECTION"
+    },
+    {
+      "content_kind": "QUESTION",
+      "content_id": "Q_CONNECT_CAPITAL",
+      "selector_id": "SEL_CONNECT_CAPITAL",
+      "report_target": "graphology.connection",
+      "report_slot_id": "SLOT_CONNECTION"
+    },
+    {
+      "content_kind": "QUESTION",
+      "content_id": "Q_FORM_GEOMETRY",
+      "selector_id": "SEL_FORM_GEOMETRY",
+      "report_target": "graphology.form",
+      "report_slot_id": "SLOT_FORM"
+    },
+    {
+      "content_kind": "QUESTION",
+      "content_id": "Q_FORM_SIMPLIFICATION",
+      "selector_id": "SEL_FORM_SIMPLIFICATION",
+      "report_target": "graphology.form",
+      "report_slot_id": "SLOT_FORM"
+    },
+    {
+      "content_kind": "QUESTION",
+      "content_id": "Q_FORM_LOOPS",
+      "selector_id": "SEL_FORM_LOOPS",
+      "report_target": "graphology.form",
+      "report_slot_id": "SLOT_FORM"
+    },
+    {
+      "content_kind": "QUESTION",
+      "content_id": "Q_FORM_ORNAMENT",
+      "selector_id": "SEL_FORM_ORNAMENT",
+      "report_target": "graphology.form",
+      "report_slot_id": "SLOT_FORM"
+    },
+    {
+      "content_kind": "QUESTION",
+      "content_id": "Q_FORM_INDIVIDUAL",
+      "selector_id": "SEL_FORM_INDIVIDUAL",
+      "report_target": "graphology.form",
+      "report_slot_id": "SLOT_FORM"
+    },
+    {
+      "content_kind": "QUESTION",
+      "content_id": "Q_FORM_COPYBOOK",
+      "selector_id": "SEL_FORM_COPYBOOK",
+      "report_target": "graphology.form",
+      "report_slot_id": "SLOT_FORM"
+    },
+    {
+      "content_kind": "QUESTION",
+      "content_id": "Q_STROKE_APPEARANCE",
+      "selector_id": "SEL_STROKE_APPEARANCE",
+      "report_target": "graphology.stroke",
+      "report_slot_id": "SLOT_STROKE"
+    },
+    {
+      "content_kind": "QUESTION",
+      "content_id": "Q_STROKE_SHADING",
+      "selector_id": "SEL_STROKE_SHADING",
+      "report_target": "graphology.stroke",
+      "report_slot_id": "SLOT_STROKE"
+    },
+    {
+      "content_kind": "QUESTION",
+      "content_id": "Q_STROKE_DARKNESS",
+      "selector_id": "SEL_STROKE_DARKNESS",
+      "report_target": "graphology.stroke",
+      "report_slot_id": "SLOT_STROKE"
+    },
+    {
+      "content_kind": "QUESTION",
+      "content_id": "Q_STROKE_WIDTH",
+      "selector_id": "SEL_STROKE_WIDTH",
+      "report_target": "graphology.stroke",
+      "report_slot_id": "SLOT_STROKE"
+    },
+    {
+      "content_kind": "QUESTION",
+      "content_id": "Q_STROKE_PRESSURE_LIMIT",
+      "selector_id": "SEL_STROKE_PRESSURE_LIMIT",
+      "report_target": "graphology.stroke",
+      "report_slot_id": "SLOT_STROKE"
+    },
+    {
+      "content_kind": "QUESTION",
+      "content_id": "Q_MOVEMENT_IMPRESSION",
+      "selector_id": "SEL_MOVEMENT_IMPRESSION",
+      "report_target": "graphology.movement",
+      "report_slot_id": "SLOT_MOVEMENT"
+    },
+    {
+      "content_kind": "QUESTION",
+      "content_id": "Q_MOVEMENT_RHYTHM",
+      "selector_id": "SEL_MOVEMENT_RHYTHM",
+      "report_target": "graphology.movement",
+      "report_slot_id": "SLOT_MOVEMENT"
+    },
+    {
+      "content_kind": "QUESTION",
+      "content_id": "Q_MOVEMENT_VARIATION",
+      "selector_id": "SEL_MOVEMENT_VARIATION",
+      "report_target": "graphology.movement",
+      "report_slot_id": "SLOT_MOVEMENT"
+    },
+    {
+      "content_kind": "QUESTION",
+      "content_id": "Q_MOVEMENT_TEMPO",
+      "selector_id": "SEL_MOVEMENT_TEMPO",
+      "report_target": "graphology.movement",
+      "report_slot_id": "SLOT_MOVEMENT"
+    },
+    {
+      "content_kind": "QUESTION",
+      "content_id": "Q_MOVEMENT_TENSION",
+      "selector_id": "SEL_MOVEMENT_TENSION",
+      "report_target": "graphology.movement",
+      "report_slot_id": "SLOT_MOVEMENT"
+    },
+    {
+      "content_kind": "QUESTION",
+      "content_id": "Q_MOVEMENT_TEMPO_LIMIT",
+      "selector_id": "SEL_MOVEMENT_TEMPO_LIMIT",
+      "report_target": "graphology.movement",
+      "report_slot_id": "SLOT_MOVEMENT"
+    },
+    {
+      "content_kind": "QUESTION",
+      "content_id": "Q_DETAIL_T_HEIGHT",
+      "selector_id": "SEL_DETAIL_T_HEIGHT",
+      "report_target": "graphology.detail",
+      "report_slot_id": "SLOT_DETAIL"
+    },
+    {
+      "content_kind": "QUESTION",
+      "content_id": "Q_DETAIL_T_LENGTH",
+      "selector_id": "SEL_DETAIL_T_LENGTH",
+      "report_target": "graphology.detail",
+      "report_slot_id": "SLOT_DETAIL"
+    },
+    {
+      "content_kind": "QUESTION",
+      "content_id": "Q_DETAIL_T_END",
+      "selector_id": "SEL_DETAIL_T_END",
+      "report_target": "graphology.detail",
+      "report_slot_id": "SLOT_DETAIL"
+    },
+    {
+      "content_kind": "QUESTION",
+      "content_id": "Q_DETAIL_T_BALANCE",
+      "selector_id": "SEL_DETAIL_T_BALANCE",
+      "report_target": "graphology.detail",
+      "report_slot_id": "SLOT_DETAIL"
+    },
+    {
+      "content_kind": "QUESTION",
+      "content_id": "Q_DETAIL_DOT_FORM",
+      "selector_id": "SEL_DETAIL_DOT_FORM",
+      "report_target": "graphology.detail",
+      "report_slot_id": "SLOT_DETAIL"
+    },
+    {
+      "content_kind": "QUESTION",
+      "content_id": "Q_DETAIL_DOT_OFFSET",
+      "selector_id": "SEL_DETAIL_DOT_OFFSET",
+      "report_target": "graphology.detail",
+      "report_slot_id": "SLOT_DETAIL"
+    },
+    {
+      "content_kind": "QUESTION",
+      "content_id": "Q_DETAIL_DIACRITIC",
+      "selector_id": "SEL_DETAIL_DIACRITIC",
+      "report_target": "graphology.detail",
+      "report_slot_id": "SLOT_DETAIL"
+    },
+    {
+      "content_kind": "QUESTION",
+      "content_id": "Q_DETAIL_OVAL",
+      "selector_id": "SEL_DETAIL_OVAL",
+      "report_target": "graphology.detail",
+      "report_slot_id": "SLOT_DETAIL"
+    },
+    {
+      "content_kind": "QUESTION",
+      "content_id": "Q_DETAIL_OVAL_GAP",
+      "selector_id": "SEL_DETAIL_OVAL_GAP",
+      "report_target": "graphology.detail",
+      "report_slot_id": "SLOT_DETAIL"
+    },
+    {
+      "content_kind": "QUESTION",
+      "content_id": "Q_DETAIL_INITIAL",
+      "selector_id": "SEL_DETAIL_INITIAL",
+      "report_target": "graphology.detail",
+      "report_slot_id": "SLOT_DETAIL"
+    },
+    {
+      "content_kind": "QUESTION",
+      "content_id": "Q_DETAIL_TERMINAL",
+      "selector_id": "SEL_DETAIL_TERMINAL",
+      "report_target": "graphology.detail",
+      "report_slot_id": "SLOT_DETAIL"
+    },
+    {
+      "content_kind": "QUESTION",
+      "content_id": "Q_DETAIL_PPI",
+      "selector_id": "SEL_DETAIL_PPI",
+      "report_target": "graphology.detail",
+      "report_slot_id": "SLOT_DETAIL"
+    },
+    {
+      "content_kind": "QUESTION",
+      "content_id": "Q_SIG_LOCATION",
+      "selector_id": "SEL_SIG_LOCATION",
+      "report_target": "graphology.signature",
+      "report_slot_id": "SLOT_SIGNATURE"
+    },
+    {
+      "content_kind": "QUESTION",
+      "content_id": "Q_SIG_SIZE",
+      "selector_id": "SEL_SIG_SIZE",
+      "report_target": "graphology.signature",
+      "report_slot_id": "SLOT_SIGNATURE"
+    },
+    {
+      "content_kind": "QUESTION",
+      "content_id": "Q_SIG_SLANT",
+      "selector_id": "SEL_SIG_SLANT",
+      "report_target": "graphology.signature",
+      "report_slot_id": "SLOT_SIGNATURE"
+    },
+    {
+      "content_kind": "QUESTION",
+      "content_id": "Q_SIG_CONNECTION",
+      "selector_id": "SEL_SIG_CONNECTION",
+      "report_target": "graphology.signature",
+      "report_slot_id": "SLOT_SIGNATURE"
+    },
+    {
+      "content_kind": "QUESTION",
+      "content_id": "Q_SIG_ADDON",
+      "selector_id": "SEL_SIG_ADDON",
+      "report_target": "graphology.signature",
+      "report_slot_id": "SLOT_SIGNATURE"
+    },
+    {
+      "content_kind": "QUESTION",
+      "content_id": "Q_SIG_RELATION",
+      "selector_id": "SEL_SIG_RELATION",
+      "report_target": "graphology.signature",
+      "report_slot_id": "SLOT_SIGNATURE"
+    },
+    {
+      "content_kind": "QUESTION",
+      "content_id": "Q_HIERARCHY_MAIN",
+      "selector_id": "SEL_HIERARCHY_MAIN",
+      "report_target": "graphology.hierarchy",
+      "report_slot_id": "SLOT_HIERARCHY"
+    },
+    {
+      "content_kind": "QUESTION",
+      "content_id": "Q_HIERARCHY_ROLE",
+      "selector_id": "SEL_HIERARCHY_ROLE",
+      "report_target": "graphology.hierarchy",
+      "report_slot_id": "SLOT_HIERARCHY"
+    },
+    {
+      "content_kind": "QUESTION",
+      "content_id": "Q_HIERARCHY_SUPPORT",
+      "selector_id": "SEL_HIERARCHY_SUPPORT",
+      "report_target": "graphology.hierarchy",
+      "report_slot_id": "SLOT_HIERARCHY"
+    },
+    {
+      "content_kind": "QUESTION",
+      "content_id": "Q_HIERARCHY_COUNTER",
+      "selector_id": "SEL_HIERARCHY_COUNTER",
+      "report_target": "graphology.hierarchy",
+      "report_slot_id": "SLOT_HIERARCHY"
+    },
+    {
+      "content_kind": "QUESTION",
+      "content_id": "Q_HIERARCHY_RELATION",
+      "selector_id": "SEL_HIERARCHY_RELATION",
+      "report_target": "graphology.hierarchy",
+      "report_slot_id": "SLOT_HIERARCHY"
+    },
+    {
+      "content_kind": "QUESTION",
+      "content_id": "Q_HIERARCHY_SCOPE",
+      "selector_id": "SEL_HIERARCHY_SCOPE",
+      "report_target": "graphology.hierarchy",
+      "report_slot_id": "SLOT_HIERARCHY"
+    },
+    {
+      "content_kind": "QUESTION",
+      "content_id": "Q_HIERARCHY_COMBINATION",
+      "selector_id": "SEL_HIERARCHY_COMBINATION",
+      "report_target": "graphology.hierarchy",
+      "report_slot_id": "SLOT_HIERARCHY"
+    },
+    {
+      "content_kind": "QUESTION",
+      "content_id": "Q_TRAD_BUNDLE",
+      "selector_id": "SEL_TRAD_BUNDLE",
+      "report_target": "graphology.interpretation",
+      "report_slot_id": "SLOT_INTERPRETATION"
+    },
+    {
+      "content_kind": "QUESTION",
+      "content_id": "Q_TRAD_STATUS",
+      "selector_id": "SEL_TRAD_STATUS",
+      "report_target": "graphology.interpretation",
+      "report_slot_id": "SLOT_INTERPRETATION"
+    },
+    {
+      "content_kind": "QUESTION",
+      "content_id": "Q_TRAD_MODIFIER",
+      "selector_id": "SEL_TRAD_MODIFIER",
+      "report_target": "graphology.interpretation",
+      "report_slot_id": "SLOT_INTERPRETATION"
+    },
+    {
+      "content_kind": "QUESTION",
+      "content_id": "Q_TRAD_ALTERNATIVE",
+      "selector_id": "SEL_TRAD_ALTERNATIVE",
+      "report_target": "graphology.interpretation",
+      "report_slot_id": "SLOT_INTERPRETATION"
+    },
+    {
+      "content_kind": "QUESTION",
+      "content_id": "Q_TRAD_SCHOOL_DIFF",
+      "selector_id": "SEL_TRAD_SCHOOL_DIFF",
+      "report_target": "graphology.interpretation",
+      "report_slot_id": "SLOT_INTERPRETATION"
+    },
+    {
+      "content_kind": "QUESTION",
+      "content_id": "Q_TRAD_WITHHOLD",
+      "selector_id": "SEL_TRAD_WITHHOLD",
+      "report_target": "graphology.interpretation",
+      "report_slot_id": "SLOT_INTERPRETATION"
+    },
+    {
+      "content_kind": "QUESTION",
+      "content_id": "Q_REF_ELIGIBLE",
+      "selector_id": "SEL_REF_ELIGIBLE",
+      "report_target": "graphology.reference",
+      "report_slot_id": "SLOT_REFERENCE"
+    },
+    {
+      "content_kind": "QUESTION",
+      "content_id": "Q_REF_HIGHLIGHT",
+      "selector_id": "SEL_REF_HIGHLIGHT",
+      "report_target": "graphology.reference",
+      "report_slot_id": "SLOT_REFERENCE"
+    },
+    {
+      "content_kind": "QUESTION",
+      "content_id": "Q_REF_COMBINATION",
+      "selector_id": "SEL_REF_COMBINATION",
+      "report_target": "graphology.reference",
+      "report_slot_id": "SLOT_REFERENCE"
+    },
+    {
+      "content_kind": "QUESTION",
+      "content_id": "Q_REF_QUALIFICATION",
+      "selector_id": "SEL_REF_QUALIFICATION",
+      "report_target": "graphology.reference",
+      "report_slot_id": "SLOT_REFERENCE"
+    },
+    {
+      "content_kind": "QUESTION",
+      "content_id": "Q_PAIR_COMPARABLE",
+      "selector_id": "SEL_PAIR_COMPARABLE",
+      "report_target": "graphology.pair",
+      "report_slot_id": "SLOT_PAIR"
+    },
+    {
+      "content_kind": "QUESTION",
+      "content_id": "Q_PAIR_SIMILAR",
+      "selector_id": "SEL_PAIR_SIMILAR",
+      "report_target": "graphology.pair",
+      "report_slot_id": "SLOT_PAIR"
+    },
+    {
+      "content_kind": "QUESTION",
+      "content_id": "Q_PAIR_DIFFERENT",
+      "selector_id": "SEL_PAIR_DIFFERENT",
+      "report_target": "graphology.pair",
+      "report_slot_id": "SLOT_PAIR"
+    },
+    {
+      "content_kind": "QUESTION",
+      "content_id": "Q_PAIR_TRAD",
+      "selector_id": "SEL_PAIR_TRAD",
+      "report_target": "graphology.pair",
+      "report_slot_id": "SLOT_PAIR"
+    },
+    {
+      "content_kind": "QUESTION",
+      "content_id": "Q_HIST_COMPARABLE",
+      "selector_id": "SEL_HIST_COMPARABLE",
+      "report_target": "graphology.history",
+      "report_slot_id": "SLOT_HISTORY"
+    },
+    {
+      "content_kind": "QUESTION",
+      "content_id": "Q_HIST_CHANGE",
+      "selector_id": "SEL_HIST_CHANGE",
+      "report_target": "graphology.history",
+      "report_slot_id": "SLOT_HISTORY"
+    },
+    {
+      "content_kind": "QUESTION",
+      "content_id": "Q_HIST_STABLE",
+      "selector_id": "SEL_HIST_STABLE",
+      "report_target": "graphology.history",
+      "report_slot_id": "SLOT_HISTORY"
+    },
+    {
+      "content_kind": "QUESTION",
+      "content_id": "Q_HIST_LIMIT",
+      "selector_id": "SEL_HIST_LIMIT",
+      "report_target": "graphology.history",
+      "report_slot_id": "SLOT_HISTORY"
+    },
+    {
+      "content_kind": "SOFT_FIELD",
+      "content_id": "SOFT_GRAPHIC_PORTRAIT",
+      "selector_id": null,
+      "report_target": "graphology.synthesis",
+      "report_slot_id": "SLOT_SYNTHESIS"
+    },
+    {
+      "content_kind": "SOFT_FIELD",
+      "content_id": "SOFT_COMBINATION",
+      "selector_id": null,
+      "report_target": "graphology.synthesis",
+      "report_slot_id": "SLOT_SYNTHESIS"
+    },
+    {
+      "content_kind": "SOFT_FIELD",
+      "content_id": "SOFT_TRADITIONAL_SYNTHESIS",
+      "selector_id": null,
+      "report_target": "graphology.synthesis",
+      "report_slot_id": "SLOT_SYNTHESIS"
+    },
+    {
+      "content_kind": "SOFT_FIELD",
+      "content_id": "SOFT_ALTERNATIVE",
+      "selector_id": null,
+      "report_target": "graphology.synthesis",
+      "report_slot_id": "SLOT_SYNTHESIS"
+    },
+    {
+      "content_kind": "SOFT_FIELD",
+      "content_id": "SOFT_DISTINCTIVENESS",
+      "selector_id": null,
+      "report_target": "graphology.synthesis",
+      "report_slot_id": "SLOT_SYNTHESIS"
+    },
+    {
+      "content_kind": "SOFT_FIELD",
+      "content_id": "SOFT_PAIR",
+      "selector_id": null,
+      "report_target": "graphology.synthesis",
+      "report_slot_id": "SLOT_SYNTHESIS"
+    },
+    {
+      "content_kind": "SOFT_FIELD",
+      "content_id": "SOFT_HISTORY",
+      "selector_id": null,
+      "report_target": "graphology.synthesis",
+      "report_slot_id": "SLOT_SYNTHESIS"
+    },
+    {
+      "content_kind": "SOFT_FIELD",
+      "content_id": "SOFT_LIMITATION",
+      "selector_id": null,
+      "report_target": "graphology.synthesis",
+      "report_slot_id": "SLOT_SYNTHESIS"
+    }
+  ],
   "localization_policy": {
     "version": "graphology-localization-policy/1",
     "canonical_locale": "en",
@@ -7659,9 +10499,597 @@
     "compiler_output": "The compiler emits a complete English localization catalogue and a sorted localization-key registry.",
     "runtime_status": "DRAFT_NOT_ACTIVE"
   },
-  "localization_keys": [],
+  "localization_keys": [
+    "domain.connection.label",
+    "domain.context.label",
+    "domain.detail.label",
+    "domain.direction.label",
+    "domain.form.label",
+    "domain.global.label",
+    "domain.hierarchy.label",
+    "domain.history.label",
+    "domain.interpretation.label",
+    "domain.movement.label",
+    "domain.pair.label",
+    "domain.reference.label",
+    "domain.signature.label",
+    "domain.size.label",
+    "domain.space.label",
+    "domain.stroke.label",
+    "graphology.band3.high",
+    "graphology.band3.low",
+    "graphology.band3.middle",
+    "graphology.baseline.falling",
+    "graphology.baseline.level",
+    "graphology.baseline.nonmonotonic",
+    "graphology.baseline.rising",
+    "graphology.baseline_shape.arched",
+    "graphology.baseline_shape.bowed",
+    "graphology.baseline_shape.irregular",
+    "graphology.baseline_shape.straight",
+    "graphology.baseline_shape.undulating",
+    "graphology.capital_connection.joined",
+    "graphology.capital_connection.separate",
+    "graphology.capture_frame.cropped_page",
+    "graphology.capture_frame.region_only",
+    "graphology.capture_frame.whole_page",
+    "graphology.coherence.coherent",
+    "graphology.coherence.fragmented",
+    "graphology.coherence.partly_coherent",
+    "graphology.comparability.incomparable",
+    "graphology.comparability.limited",
+    "graphology.comparability.matched",
+    "graphology.conclusion_state.contradicted_within_pack",
+    "graphology.conclusion_state.qualified_within_pack",
+    "graphology.conclusion_state.supported_within_pack",
+    "graphology.conclusion_state.unresolved",
+    "graphology.connection_degree.mainly_joined",
+    "graphology.connection_degree.mainly_separate",
+    "graphology.connection_degree.partly_joined",
+    "graphology.connector_form.angular",
+    "graphology.connector_form.arcade",
+    "graphology.connector_form.copybook",
+    "graphology.connector_form.garland",
+    "graphology.connector_form.thread",
+    "graphology.connector_form.wavy_line",
+    "graphology.diacritic_variant.dot_stroke_combination",
+    "graphology.diacritic_variant.expected_form",
+    "graphology.diacritic_variant.other_observed_form",
+    "graphology.diacritic_variant.stroke_substitute",
+    "graphology.direction_context.ltr",
+    "graphology.direction_context.multiple",
+    "graphology.direction_context.rtl",
+    "graphology.direction_context.vertical",
+    "graphology.disagreement.aligned",
+    "graphology.disagreement.contradictory",
+    "graphology.disagreement.qualified",
+    "graphology.disagreement.unmappable",
+    "graphology.dominance.dominant",
+    "graphology.dominance.miscellaneous",
+    "graphology.dominance.secondary",
+    "graphology.dot_form.circle",
+    "graphology.dot_form.compound",
+    "graphology.dot_form.dash",
+    "graphology.dot_form.dot",
+    "graphology.form_geometry.angular",
+    "graphology.form_geometry.rounded",
+    "graphology.form_geometry.squared",
+    "graphology.gap_direction.bottom",
+    "graphology.gap_direction.left",
+    "graphology.gap_direction.right",
+    "graphology.gap_direction.top",
+    "graphology.global_balance.form_led",
+    "graphology.global_balance.movement_led",
+    "graphology.global_balance.neither_dominates",
+    "graphology.global_balance.region_dependent",
+    "graphology.graphical_tension.slack_appearance",
+    "graphology.graphical_tension.sustained_appearance",
+    "graphology.graphical_tension.variable_appearance",
+    "graphology.lateral_offset.centred",
+    "graphology.lateral_offset.left",
+    "graphology.lateral_offset.right",
+    "graphology.letter_width.broad",
+    "graphology.letter_width.midrange",
+    "graphology.letter_width.narrow",
+    "graphology.loop_form.expanded",
+    "graphology.loop_form.moderate",
+    "graphology.loop_form.restricted",
+    "graphology.movement_impression.flowing",
+    "graphology.movement_impression.formalized",
+    "graphology.movement_impression.halting",
+    "graphology.movement_impression.variable",
+    "graphology.oval_closure.closed",
+    "graphology.oval_closure.open",
+    "graphology.oval_closure.overlapped",
+    "graphology.relative_size.comparable",
+    "graphology.relative_size.larger",
+    "graphology.relative_size.smaller",
+    "graphology.rhythm.arrhythmic",
+    "graphology.rhythm.rhythmic",
+    "graphology.rhythm.stilted",
+    "graphology.scale.calibrated",
+    "graphology.scale.uncalibrated",
+    "graphology.shading.little_contrast",
+    "graphology.shading.variable_contrast",
+    "graphology.shading.visible_contrast",
+    "graphology.sign_relation.context_dependent",
+    "graphology.sign_relation.neutral",
+    "graphology.sign_relation.opposes",
+    "graphology.sign_relation.supports",
+    "graphology.signature_addon.crossing",
+    "graphology.signature_addon.enclosure",
+    "graphology.signature_addon.flourish",
+    "graphology.signature_addon.underline",
+    "graphology.signature_location.centre",
+    "graphology.signature_location.left",
+    "graphology.signature_location.right",
+    "graphology.signature_location.within",
+    "graphology.simplification.elaborated",
+    "graphology.simplification.reduced_unclear",
+    "graphology.simplification.reference_like",
+    "graphology.simplification.simplified_legible",
+    "graphology.slant.left",
+    "graphology.slant.right",
+    "graphology.slant.upright",
+    "graphology.space_balance.balanced",
+    "graphology.space_balance.ink_dominant",
+    "graphology.space_balance.white_dominant",
+    "graphology.stroke_quality.heterogeneous",
+    "graphology.stroke_quality.pastose_appearance",
+    "graphology.stroke_quality.sharp_appearance",
+    "graphology.surface.blank",
+    "graphology.surface.form",
+    "graphology.surface.grid",
+    "graphology.surface.ruled",
+    "graphology.task.copied",
+    "graphology.task.dictated",
+    "graphology.task.free",
+    "graphology.task.other",
+    "graphology.task.signature",
+    "graphology.tempo_impression.deliberate_appearance",
+    "graphology.tempo_impression.rapid_appearance",
+    "graphology.tempo_impression.variable_appearance",
+    "graphology.terminal_form.blunt",
+    "graphology.terminal_form.extended",
+    "graphology.terminal_form.hooked",
+    "graphology.terminal_form.looped",
+    "graphology.terminal_form.pointed",
+    "graphology.trend.decreasing",
+    "graphology.trend.increasing",
+    "graphology.trend.reversing",
+    "graphology.trend.stable",
+    "graphology.variation_character.patterned_variation",
+    "graphology.variation_character.uniform",
+    "graphology.variation_character.unpatterned_variation",
+    "graphology.vertical_position.high",
+    "graphology.vertical_position.low",
+    "graphology.vertical_position.mid",
+    "graphology.writing_style.cursive",
+    "graphology.writing_style.hybrid",
+    "graphology.writing_style.print",
+    "graphology.zone_relation.lower_emphasis",
+    "graphology.zone_relation.middle_emphasis",
+    "graphology.zone_relation.multiple_emphasis",
+    "graphology.zone_relation.no_clear_emphasis",
+    "graphology.zone_relation.upper_emphasis",
+    "question.q_connect_capital",
+    "question.q_connect_degree",
+    "question.q_connect_distribution",
+    "question.q_connect_form",
+    "question.q_ctx_direction",
+    "question.q_ctx_frame",
+    "question.q_ctx_scale",
+    "question.q_ctx_style",
+    "question.q_ctx_surface",
+    "question.q_ctx_task",
+    "question.q_detail_diacritic",
+    "question.q_detail_dot_form",
+    "question.q_detail_dot_offset",
+    "question.q_detail_initial",
+    "question.q_detail_oval",
+    "question.q_detail_oval_gap",
+    "question.q_detail_ppi",
+    "question.q_detail_t_balance",
+    "question.q_detail_t_end",
+    "question.q_detail_t_height",
+    "question.q_detail_t_length",
+    "question.q_detail_terminal",
+    "question.q_direction_shape",
+    "question.q_direction_slant",
+    "question.q_direction_slope",
+    "question.q_direction_variation",
+    "question.q_form_copybook",
+    "question.q_form_geometry",
+    "question.q_form_individual",
+    "question.q_form_loops",
+    "question.q_form_ornament",
+    "question.q_form_simplification",
+    "question.q_global_coherence",
+    "question.q_global_evidence_conflict",
+    "question.q_global_form_movement",
+    "question.q_global_variation",
+    "question.q_hierarchy_combination",
+    "question.q_hierarchy_counter",
+    "question.q_hierarchy_main",
+    "question.q_hierarchy_relation",
+    "question.q_hierarchy_role",
+    "question.q_hierarchy_scope",
+    "question.q_hierarchy_support",
+    "question.q_hist_change",
+    "question.q_hist_comparable",
+    "question.q_hist_limit",
+    "question.q_hist_stable",
+    "question.q_movement_impression",
+    "question.q_movement_rhythm",
+    "question.q_movement_tempo",
+    "question.q_movement_tempo_limit",
+    "question.q_movement_tension",
+    "question.q_movement_variation",
+    "question.q_pair_comparable",
+    "question.q_pair_different",
+    "question.q_pair_similar",
+    "question.q_pair_trad",
+    "question.q_ref_combination",
+    "question.q_ref_eligible",
+    "question.q_ref_highlight",
+    "question.q_ref_qualification",
+    "question.q_sig_addon",
+    "question.q_sig_connection",
+    "question.q_sig_location",
+    "question.q_sig_relation",
+    "question.q_sig_size",
+    "question.q_sig_slant",
+    "question.q_size_capital",
+    "question.q_size_physical",
+    "question.q_size_trend",
+    "question.q_size_width",
+    "question.q_size_zones",
+    "question.q_space_balance",
+    "question.q_space_letter",
+    "question.q_space_line",
+    "question.q_space_margin_trend",
+    "question.q_space_margins",
+    "question.q_space_word",
+    "question.q_stroke_appearance",
+    "question.q_stroke_darkness",
+    "question.q_stroke_pressure_limit",
+    "question.q_stroke_shading",
+    "question.q_stroke_width",
+    "question.q_trad_alternative",
+    "question.q_trad_bundle",
+    "question.q_trad_modifier",
+    "question.q_trad_school_diff",
+    "question.q_trad_status",
+    "question.q_trad_withhold",
+    "report.connection.label",
+    "report.context.label",
+    "report.detail.label",
+    "report.direction.label",
+    "report.form.label",
+    "report.global.label",
+    "report.hierarchy.label",
+    "report.history.label",
+    "report.interpretation.label",
+    "report.movement.label",
+    "report.pair.label",
+    "report.reference.label",
+    "report.signature.label",
+    "report.size.label",
+    "report.space.label",
+    "report.stroke.label",
+    "report.synthesis.label",
+    "school.application.label",
+    "school.big_hilliger.label",
+    "school.gestalt_ahaf.label",
+    "school.jaminian.label",
+    "school.klages_reception.label",
+    "school.morettian.label",
+    "soft.soft_alternative.label",
+    "soft.soft_combination.label",
+    "soft.soft_distinctiveness.label",
+    "soft.soft_graphic_portrait.label",
+    "soft.soft_history.label",
+    "soft.soft_limitation.label",
+    "soft.soft_pair.label",
+    "soft.soft_traditional_synthesis.label",
+    "tone.premium_evidence_dossier.label"
+  ],
   "localization": {
-    "en": {}
+    "en": {
+      "school.big_hilliger.label": "BIG / Hilliger teaching protocol",
+      "school.jaminian.label": "Crépieux-Jamin and contemporary French teaching",
+      "school.gestalt_ahaf.label": "AHAF-supported gestalt approach",
+      "school.klages_reception.label": "Klages-related teaching as currently documented",
+      "school.morettian.label": "Moretti tradition, with source-depth distinctions",
+      "school.application.label": "Application adaptation, not a historical school",
+      "domain.context.label": "Sample context and applicability",
+      "domain.global.label": "Whole-pattern appraisal",
+      "domain.space.label": "Page organization and spacing",
+      "domain.size.label": "Size, proportion and zones",
+      "domain.direction.label": "Slant, baseline and directional tendencies",
+      "domain.connection.label": "Degree and form of joining",
+      "domain.form.label": "Letterform and simplification",
+      "domain.stroke.label": "Stroke appearance and pressure boundary",
+      "domain.movement.label": "Apparent movement, rhythm and variation",
+      "domain.detail.label": "Local gestures, diacritics and letter detail",
+      "domain.signature.label": "Signature and body-text relationship",
+      "domain.hierarchy.label": "Dominants, modifiers and whole-sample coherence",
+      "domain.interpretation.label": "School-specific interpretation and synthesis",
+      "domain.reference.label": "Database-relative distinctiveness",
+      "domain.pair.label": "Two-sample comparison",
+      "domain.history.label": "Within-writer comparison over time",
+      "graphology.writing_style.print": "Print forms",
+      "graphology.writing_style.cursive": "Cursive forms",
+      "graphology.writing_style.hybrid": "Hybrid forms",
+      "graphology.task.copied": "Copied passage",
+      "graphology.task.free": "Free writing",
+      "graphology.task.dictated": "Dictated text",
+      "graphology.task.signature": "Signature",
+      "graphology.task.other": "Other declared task",
+      "graphology.surface.blank": "Blank",
+      "graphology.surface.ruled": "Ruled",
+      "graphology.surface.grid": "Grid",
+      "graphology.surface.form": "Preprinted form",
+      "graphology.capture_frame.whole_page": "Whole page visible",
+      "graphology.capture_frame.cropped_page": "Part of page visible",
+      "graphology.capture_frame.region_only": "Writing region only",
+      "graphology.scale.calibrated": "Verified scale reference",
+      "graphology.scale.uncalibrated": "No verified scale reference",
+      "graphology.direction_context.ltr": "Left to right",
+      "graphology.direction_context.rtl": "Right to left",
+      "graphology.direction_context.vertical": "Vertical",
+      "graphology.direction_context.multiple": "Multiple directions",
+      "graphology.global_balance.form_led": "Form-led appearance",
+      "graphology.global_balance.movement_led": "Movement-led appearance",
+      "graphology.global_balance.neither_dominates": "Neither clearly dominates",
+      "graphology.global_balance.region_dependent": "Different by region",
+      "graphology.coherence.coherent": "Features form a visually consistent whole",
+      "graphology.coherence.partly_coherent": "Some features diverge",
+      "graphology.coherence.fragmented": "Markedly different regional patterns",
+      "graphology.variation_character.uniform": "Closely uniform",
+      "graphology.variation_character.patterned_variation": "Variation with a recurring pattern",
+      "graphology.variation_character.unpatterned_variation": "Variation without a clear pattern",
+      "graphology.space_balance.ink_dominant": "Dense use of available space",
+      "graphology.space_balance.balanced": "Neither ink nor whitespace dominates",
+      "graphology.space_balance.white_dominant": "Open use of available space",
+      "graphology.band3.low": "Below the applicable documented band",
+      "graphology.band3.middle": "Within the applicable documented band",
+      "graphology.band3.high": "Above the applicable documented band",
+      "graphology.trend.decreasing": "Decreasing across the defined sequence",
+      "graphology.trend.stable": "No material trend in the defined sequence",
+      "graphology.trend.increasing": "Increasing across the defined sequence",
+      "graphology.trend.reversing": "Direction changes across the sequence",
+      "graphology.zone_relation.upper_emphasis": "Upper extensions emphasized",
+      "graphology.zone_relation.middle_emphasis": "Middle body emphasized",
+      "graphology.zone_relation.lower_emphasis": "Lower extensions emphasized",
+      "graphology.zone_relation.no_clear_emphasis": "No clear zone emphasis",
+      "graphology.zone_relation.multiple_emphasis": "More than one zone emphasized",
+      "graphology.relative_size.smaller": "Smaller under the matched comparison",
+      "graphology.relative_size.comparable": "Within the documented comparison tolerance",
+      "graphology.relative_size.larger": "Larger under the matched comparison",
+      "graphology.slant.left": "Left-inclined relative to baseline",
+      "graphology.slant.upright": "Near upright relative to baseline",
+      "graphology.slant.right": "Right-inclined relative to baseline",
+      "graphology.baseline.rising": "Rising in the declared writing direction",
+      "graphology.baseline.level": "Approximately level",
+      "graphology.baseline.falling": "Falling in the declared writing direction",
+      "graphology.baseline.nonmonotonic": "Non-monotonic",
+      "graphology.baseline_shape.straight": "Approximately straight",
+      "graphology.baseline_shape.arched": "Arch-shaped",
+      "graphology.baseline_shape.bowed": "Bowl-shaped",
+      "graphology.baseline_shape.undulating": "Undulating",
+      "graphology.baseline_shape.irregular": "No stable shape",
+      "graphology.connection_degree.mainly_joined": "Mainly joined",
+      "graphology.connection_degree.partly_joined": "Partly joined",
+      "graphology.connection_degree.mainly_separate": "Mainly separate",
+      "graphology.connector_form.arcade": "Arcade",
+      "graphology.connector_form.garland": "Garland",
+      "graphology.connector_form.angular": "Angular",
+      "graphology.connector_form.thread": "Thread",
+      "graphology.connector_form.wavy_line": "Wavy line",
+      "graphology.connector_form.copybook": "Copybook connector",
+      "graphology.form_geometry.rounded": "Rounded construction",
+      "graphology.form_geometry.angular": "Angular construction",
+      "graphology.form_geometry.squared": "Squared construction",
+      "graphology.simplification.elaborated": "Extra form detail retained or added",
+      "graphology.simplification.reference_like": "Near the identified reference form",
+      "graphology.simplification.simplified_legible": "Reduced strokes, forms still identifiable",
+      "graphology.simplification.reduced_unclear": "Reduced forms with lost distinction",
+      "graphology.letter_width.narrow": "Narrow under the defined body-width measure",
+      "graphology.letter_width.midrange": "Midrange under the defined measure",
+      "graphology.letter_width.broad": "Broad under the defined measure",
+      "graphology.loop_form.restricted": "Restricted loop space",
+      "graphology.loop_form.moderate": "Intermediate loop space",
+      "graphology.loop_form.expanded": "Expanded loop space",
+      "graphology.stroke_quality.sharp_appearance": "Sharp-looking trace",
+      "graphology.stroke_quality.pastose_appearance": "Pastose-looking trace",
+      "graphology.stroke_quality.heterogeneous": "Different trace appearance by region",
+      "graphology.shading.little_contrast": "Little visible directional thickness contrast",
+      "graphology.shading.visible_contrast": "Visible directional thickness contrast",
+      "graphology.shading.variable_contrast": "Contrast varies across eligible regions",
+      "graphology.movement_impression.flowing": "Flowing visual impression",
+      "graphology.movement_impression.halting": "Halting visual impression",
+      "graphology.movement_impression.formalized": "Formally constructed visual impression",
+      "graphology.movement_impression.variable": "Varies across the sample",
+      "graphology.tempo_impression.rapid_appearance": "Rapid-looking execution",
+      "graphology.tempo_impression.deliberate_appearance": "Deliberate-looking execution",
+      "graphology.tempo_impression.variable_appearance": "Different execution appearances by region",
+      "graphology.graphical_tension.sustained_appearance": "Visually sustained construction",
+      "graphology.graphical_tension.slack_appearance": "Visually slack construction",
+      "graphology.graphical_tension.variable_appearance": "Variable construction",
+      "graphology.rhythm.rhythmic": "Rhythmic",
+      "graphology.rhythm.arrhythmic": "Arrhythmic",
+      "graphology.rhythm.stilted": "Stilted",
+      "graphology.gap_direction.left": "Gap to the left",
+      "graphology.gap_direction.top": "Gap at the top",
+      "graphology.gap_direction.right": "Gap to the right",
+      "graphology.gap_direction.bottom": "Gap at the bottom",
+      "graphology.oval_closure.open": "Open contour",
+      "graphology.oval_closure.closed": "Closed contour",
+      "graphology.oval_closure.overlapped": "Closure overlaps or retraces",
+      "graphology.dot_form.dot": "Dot",
+      "graphology.dot_form.dash": "Dash",
+      "graphology.dot_form.circle": "Circle",
+      "graphology.dot_form.compound": "Compound mark",
+      "graphology.diacritic_variant.expected_form": "Expected orthographic form",
+      "graphology.diacritic_variant.stroke_substitute": "Stroke used as a substitute",
+      "graphology.diacritic_variant.dot_stroke_combination": "Dots and stroke combined",
+      "graphology.diacritic_variant.other_observed_form": "Other documented form",
+      "graphology.lateral_offset.left": "Left of the identified anchor",
+      "graphology.lateral_offset.centred": "Near the identified anchor",
+      "graphology.lateral_offset.right": "Right of the identified anchor",
+      "graphology.vertical_position.low": "Lower region of the identified stem",
+      "graphology.vertical_position.mid": "Middle region of the identified stem",
+      "graphology.vertical_position.high": "Upper region of the identified stem",
+      "graphology.terminal_form.pointed": "Pointed ending",
+      "graphology.terminal_form.blunt": "Blunt ending",
+      "graphology.terminal_form.hooked": "Hook-shaped ending",
+      "graphology.terminal_form.looped": "Looped ending",
+      "graphology.terminal_form.extended": "Extended ending",
+      "graphology.capital_connection.joined": "Joined to following text",
+      "graphology.capital_connection.separate": "Separate from following text",
+      "graphology.signature_location.left": "Left-aligned relative to body text",
+      "graphology.signature_location.centre": "Central relative to body text",
+      "graphology.signature_location.right": "Right-aligned relative to body text",
+      "graphology.signature_location.within": "Within the text block",
+      "graphology.signature_addon.underline": "Underline",
+      "graphology.signature_addon.enclosure": "Enclosure",
+      "graphology.signature_addon.crossing": "Crossing stroke",
+      "graphology.signature_addon.flourish": "Additional flourish",
+      "graphology.dominance.dominant": "Dominant",
+      "graphology.dominance.secondary": "Secondary",
+      "graphology.dominance.miscellaneous": "Miscellaneous",
+      "graphology.sign_relation.supports": "Supports",
+      "graphology.sign_relation.opposes": "Opposes",
+      "graphology.sign_relation.neutral": "No defined effect",
+      "graphology.sign_relation.context_dependent": "Changes with specified context",
+      "graphology.conclusion_state.supported_within_pack": "Supported within this named traditional rule pack",
+      "graphology.conclusion_state.qualified_within_pack": "Supported only with stated qualifications",
+      "graphology.conclusion_state.contradicted_within_pack": "Counterevidence defeats this candidate",
+      "graphology.conclusion_state.unresolved": "No permitted conclusion",
+      "graphology.comparability.matched": "Comparable under the declared policy",
+      "graphology.comparability.limited": "Only a restricted common subset is comparable",
+      "graphology.comparability.incomparable": "No permitted comparison",
+      "graphology.disagreement.aligned": "Candidate interpretations are aligned",
+      "graphology.disagreement.qualified": "Same theme with different qualifications",
+      "graphology.disagreement.contradictory": "Candidates conflict",
+      "graphology.disagreement.unmappable": "School concepts cannot be equated",
+      "question.q_ctx_task": "Which collection task produced this specimen?",
+      "question.q_ctx_surface": "Which writing surface was used?",
+      "question.q_ctx_style": "Which writing style applies to the selected region?",
+      "question.q_ctx_frame": "Are the page boundaries actually present in the supplied image?",
+      "question.q_ctx_scale": "Is a verified physical scale available?",
+      "question.q_ctx_direction": "Which writing direction applies to this region?",
+      "question.q_global_form_movement": "Does the whole sample appear form-led, movement-led, or neither?",
+      "question.q_global_coherence": "How coherently do space, form and apparent movement work together?",
+      "question.q_global_variation": "Is visible variation uniform, patterned, or apparently unpatterned?",
+      "question.q_global_evidence_conflict": "Which supplied measurement-image discrepancies require review?",
+      "question.q_space_balance": "How are written and unwritten areas distributed in the selected frame?",
+      "question.q_space_margins": "Which verified margin characteristics are relevant to the page description?",
+      "question.q_space_margin_trend": "Which observed line-start or line-end trends characterize the sample?",
+      "question.q_space_word": "How does word separation fall within the documented descriptive bands?",
+      "question.q_space_line": "How does interline whitespace fall within the documented descriptive bands?",
+      "question.q_space_letter": "What spacing between identified letters can actually be described?",
+      "question.q_size_physical": "How is actual middle-zone size classified under a documented physical-scale rubric?",
+      "question.q_size_zones": "Which letter zones receive relative visual emphasis?",
+      "question.q_size_capital": "How do capital heights compare with the text middle zone?",
+      "question.q_size_width": "Are identified letter bodies narrow, broad, or intermediate under the stated measure?",
+      "question.q_size_trend": "What pattern of enlargement or reduction occurs through the defined sequence?",
+      "question.q_direction_slant": "Which downstroke orientation relative to the local baseline is supported?",
+      "question.q_direction_slope": "Which baseline direction is measured in the declared writing direction?",
+      "question.q_direction_shape": "Which baseline shapes appear in the supported line regions?",
+      "question.q_direction_variation": "What regional pattern of slant variation is visible?",
+      "question.q_connect_degree": "What degree of letter joining is supported by the current method?",
+      "question.q_connect_form": "Which connector forms occur in the identified letter connections?",
+      "question.q_connect_distribution": "How consistently are connector forms distributed across eligible words?",
+      "question.q_connect_capital": "Are the identified capitals joined to the following text?",
+      "question.q_form_geometry": "Which geometric constructions characterize the identifiable letters?",
+      "question.q_form_simplification": "How are forms reduced or elaborated relative to an identified writing model?",
+      "question.q_form_loops": "How much space is enclosed by the identified loops?",
+      "question.q_form_ornament": "Which nonessential elaborations are evidenced in the selected forms?",
+      "question.q_form_individual": "Which repeated distinctive letter constructions are supported by supplied examples?",
+      "question.q_form_copybook": "Which deviations from the documented writing model deserve a description?",
+      "question.q_stroke_appearance": "Which trace appearances can be judged from the image?",
+      "question.q_stroke_shading": "What visible downstroke/upstroke thickness contrast occurs?",
+      "question.q_stroke_darkness": "Which verified ink-darkness variation is relevant?",
+      "question.q_stroke_width": "Which measured thickness characteristics are reliable enough to explain?",
+      "question.q_stroke_pressure_limit": "What can be said about pressure with the available acquisition mode?",
+      "question.q_movement_impression": "What visual movement impression is supported across the sample?",
+      "question.q_movement_rhythm": "Which rhythm descriptions are supported by the whole-pattern examples?",
+      "question.q_movement_variation": "How is graphical variation organized rather than merely how large is it?",
+      "question.q_movement_tempo": "What apparent tempo can be described under the selected graphical rubric, without claiming measured time?",
+      "question.q_movement_tension": "What graphical tension impression is supported by the visible construction?",
+      "question.q_movement_tempo_limit": "Is actual timing available for a writing-tempo statement?",
+      "question.q_detail_t_height": "Where is the crossbar placed on identified t stems?",
+      "question.q_detail_t_length": "How does crossbar length compare under its documented geometric rubric?",
+      "question.q_detail_t_end": "Which crossbar ending forms occur in identified examples?",
+      "question.q_detail_t_balance": "Which side of the t stem carries greater crossbar extension?",
+      "question.q_detail_dot_form": "Which forms are used for marks on identified dotted letters?",
+      "question.q_detail_dot_offset": "Where do the marks lie relative to their identified letter anchors?",
+      "question.q_detail_diacritic": "What shape variants occur in language-specific diacritics?",
+      "question.q_detail_oval": "How are the identified oval bodies closed?",
+      "question.q_detail_oval_gap": "Where are visible openings located on identified ovals?",
+      "question.q_detail_initial": "Which beginning-stroke characteristics have usable evidence?",
+      "question.q_detail_terminal": "Which ending-stroke characteristics have usable evidence?",
+      "question.q_detail_ppi": "Which supplied examples concern the English personal pronoun I rather than other vertical forms?",
+      "question.q_sig_location": "Where does the identified signature sit relative to the body text?",
+      "question.q_sig_size": "How does signature size compare with body text under a matched method?",
+      "question.q_sig_slant": "Which verified orientation difference between signature and text deserves explanation?",
+      "question.q_sig_connection": "Which joining differences between signature and body text are supported?",
+      "question.q_sig_addon": "Which additional graphic elements occur around the identified signature?",
+      "question.q_sig_relation": "Which whole-pattern similarities and differences between signature and body text are meaningful to describe?",
+      "question.q_hierarchy_main": "Which eligible graphic characteristics dominate the overall sample, whether rare or common?",
+      "question.q_hierarchy_role": "What descriptive importance does each supplied sign have in this sample?",
+      "question.q_hierarchy_support": "Which independent graphic families support the supplied traditional candidate?",
+      "question.q_hierarchy_counter": "Which supplied observations qualify or oppose the proposed reading?",
+      "question.q_hierarchy_relation": "What supportive, opposing or neutral relation is defined for this sign pair within the selected school?",
+      "question.q_hierarchy_scope": "Which local details are too limited to characterize the entire sample?",
+      "question.q_hierarchy_combination": "Which permitted combination best describes how the observed features interact?",
+      "question.q_trad_bundle": "Which source-linked interpretation bundle is eligible within the selected school?",
+      "question.q_trad_status": "What is the precomputed support state of the selected traditional candidate?",
+      "question.q_trad_modifier": "Which school-defined modifiers change the interpretation?",
+      "question.q_trad_alternative": "Which permitted alternative readings remain unresolved?",
+      "question.q_trad_school_diff": "How do the supplied school-specific candidates relate without collapsing distinct concepts?",
+      "question.q_trad_withhold": "Which proposed traditional statements lack sufficient support to publish?",
+      "question.q_ref_eligible": "Which cohort-relative claims have passed the reference service checks?",
+      "question.q_ref_highlight": "Which verified outlier is most useful to explain alongside the full graphic description?",
+      "question.q_ref_combination": "Which precomputed joint distinctive pattern is eligible to display?",
+      "question.q_ref_qualification": "Which reference qualifications must accompany the selected highlight?",
+      "question.q_pair_comparable": "What common descriptor subset is comparable under the declared policy?",
+      "question.q_pair_similar": "Which supplied graphical similarity best characterizes the pair?",
+      "question.q_pair_different": "Which supplied graphical difference is most informative?",
+      "question.q_pair_trad": "Which reviewed traditional contrast may be described for this pair?",
+      "question.q_hist_comparable": "Are task, scale, capture and method versions comparable?",
+      "question.q_hist_change": "Which verified graphical change should be highlighted?",
+      "question.q_hist_stable": "Which characteristics are stable under the comparison tolerance?",
+      "question.q_hist_limit": "Which confounders prevent a stronger interpretation of change?",
+      "soft.soft_graphic_portrait.label": "Describe the overall handwriting pattern without claiming to diagnose its author.",
+      "soft.soft_combination.label": "Explain one evidenced relationship between features, including qualifiers.",
+      "soft.soft_traditional_synthesis.label": "Explain the selected historical/traditional reading as such, naming its school and limits.",
+      "soft.soft_alternative.label": "Explain why an alternative reading remains unresolved instead of choosing a flattering answer.",
+      "soft.soft_distinctiveness.label": "Explain the supplied unusual feature without adding rarity or superiority claims.",
+      "soft.soft_pair.label": "Explain graphical similarities and contrasts while retaining both samples' limitations.",
+      "soft.soft_history.label": "Explain comparable graphical change without claiming a change in character or health.",
+      "soft.soft_limitation.label": "Summarize important unknowns and withheld claims without speculating.",
+      "tone.premium_evidence_dossier.label": "Evidence-first personal dossier",
+      "report.context.label": "Sample context and applicability",
+      "report.global.label": "Whole-pattern appraisal",
+      "report.space.label": "Page organization and spacing",
+      "report.size.label": "Size, proportion and zones",
+      "report.direction.label": "Slant, baseline and directional tendencies",
+      "report.connection.label": "Degree and form of joining",
+      "report.form.label": "Letterform and simplification",
+      "report.stroke.label": "Stroke appearance and pressure boundary",
+      "report.movement.label": "Apparent movement, rhythm and variation",
+      "report.detail.label": "Local gestures, diacritics and letter detail",
+      "report.signature.label": "Signature and body-text relationship",
+      "report.hierarchy.label": "Dominants, modifiers and whole-sample coherence",
+      "report.interpretation.label": "School-specific interpretation and synthesis",
+      "report.reference.label": "Database-relative distinctiveness",
+      "report.pair.label": "Two-sample comparison",
+      "report.history.label": "Within-writer comparison over time",
+      "report.synthesis.label": "Synthesis"
+    }
   },
   "traditional": {
     "association_contract": {
