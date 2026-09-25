@@ -10,6 +10,7 @@
     "model_call_role": "ANSWER",
     "cardinality": "SINGLE",
     "value_set_id": "MOVEMENT_IMPRESSION",
+    "candidate_kind": null,
     "required_inputs": [
       "AUTHORIZED_IMAGE",
       "IDENTIFIED_EVIDENCE_REGION"
@@ -32,6 +33,7 @@
     ],
     "related_canonical_feature_ids": [],
     "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "operational_guardrail": "Apparent only; requires an annotated visual rubric.",
     "source_status": "DRAFT_NOT_ACTIVATED",
     "runtime_status": "DRAFT_NOT_ACTIVE"
   },
@@ -46,6 +48,7 @@
     "model_call_role": "ANSWER",
     "cardinality": "MULTIPLE",
     "value_set_id": "RHYTHM",
+    "candidate_kind": null,
     "required_inputs": [
       "AUTHORIZED_IMAGE",
       "IDENTIFIED_EVIDENCE_REGION"
@@ -68,6 +71,7 @@
     ],
     "related_canonical_feature_ids": [],
     "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "operational_guardrail": "Keep uncertainty; this is not inverse CV and not measured muscular tension.",
     "source_status": "DRAFT_NOT_ACTIVATED",
     "runtime_status": "DRAFT_NOT_ACTIVE"
   },
@@ -82,6 +86,7 @@
     "model_call_role": "ANSWER",
     "cardinality": "SINGLE",
     "value_set_id": "VARIATION_CHARACTER",
+    "candidate_kind": null,
     "required_inputs": [
       "AUTHORIZED_IMAGE",
       "IDENTIFIED_EVIDENCE_REGION"
@@ -104,6 +109,7 @@
     ],
     "related_canonical_feature_ids": [],
     "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "operational_guardrail": "Separate a general descriptor from a named Moretti sign rating.",
     "source_status": "DRAFT_NOT_ACTIVATED",
     "runtime_status": "DRAFT_NOT_ACTIVE"
   },
@@ -118,6 +124,7 @@
     "model_call_role": "ANSWER",
     "cardinality": "SINGLE",
     "value_set_id": "TEMPO_IMPRESSION",
+    "candidate_kind": null,
     "required_inputs": [
       "APPROVED_TEMPO_VISUAL_RUBRIC",
       "AUTHORIZED_IMAGE",
@@ -141,6 +148,7 @@
     ],
     "related_canonical_feature_ids": [],
     "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "operational_guardrail": "Apparent execution only; this may be unassessable and never yields words-per-minute.",
     "source_status": "DRAFT_NOT_ACTIVATED",
     "runtime_status": "DRAFT_NOT_ACTIVE"
   },
@@ -155,6 +163,7 @@
     "model_call_role": "ANSWER",
     "cardinality": "SINGLE",
     "value_set_id": "GRAPHICAL_TENSION",
+    "candidate_kind": null,
     "required_inputs": [
       "APPROVED_TENSION_VISUAL_RUBRIC",
       "AUTHORIZED_IMAGE",
@@ -178,6 +187,44 @@
     ],
     "related_canonical_feature_ids": [],
     "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "operational_guardrail": "Not a claim about muscular force, psychological stress or sensor pressure.",
+    "source_status": "DRAFT_NOT_ACTIVATED",
+    "runtime_status": "DRAFT_NOT_ACTIVE"
+  },
+  {
+    "observation_id": "OBS_MOVEMENT_TEMPO_LIMIT",
+    "source_question_id": "Q_MOVEMENT_TEMPO_LIMIT",
+    "selector_id": "SEL_MOVEMENT_TEMPO_LIMIT",
+    "domain_id": "MOVEMENT",
+    "scope": "INDIVIDUAL",
+    "descriptor_kind": "DETERMINISTIC_DESCRIPTOR",
+    "assessment_owner": "DETERMINISTIC",
+    "model_call_role": "READ_ONLY_CONTEXT_OR_PRECOMPUTED",
+    "cardinality": "SINGLE",
+    "value_set_id": null,
+    "candidate_kind": "ACQUISITION_LIMITATION",
+    "required_inputs": [
+      "ACQUISITION_METADATA"
+    ],
+    "answer_state_policy": "ANSWER_STATE_V1",
+    "permitted_evidence_class": "PRECOMPUTED_DESCRIPTION",
+    "source_refs": [
+      {
+        "source_id": "IHAS",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "SGB",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "MORETTI_I",
+        "relationship": "domain_or_term_basis"
+      }
+    ],
+    "related_canonical_feature_ids": [],
+    "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+    "operational_guardrail": "No words-per-minute or literal pen lifts from a single photograph.",
     "source_status": "DRAFT_NOT_ACTIVATED",
     "runtime_status": "DRAFT_NOT_ACTIVE"
   }
