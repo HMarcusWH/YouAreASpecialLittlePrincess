@@ -203,16 +203,17 @@ def validate(repo: Path) -> list[str]:
     if required_static != actual_static:
         errors.append("static PR2 traceability differs from frozen research")
 
-    required_exclusions = {
-        "Production question text and executable question packs",
-        "Candidate generator implementations",
-        "Soft-field activation and tone profiles",
-        "Report mappings",
-        "Localization",
-        "Compiled premium_interpretation_database_v1.json",
-    }
-    if not required_exclusions <= set(exclusions["intentionally_not_in_scope"]):
-        errors.append("PR2 exclusions are incomplete")
+    if manifest["production_scope"] != "COMPLETE_DATABASE_PENDING_REVIEW":
+        required_exclusions = {
+            "Production question text and executable question packs",
+            "Candidate generator implementations",
+            "Soft-field activation and tone profiles",
+            "Report mappings",
+            "Localization",
+            "Compiled premium_interpretation_database_v1.json",
+        }
+        if not required_exclusions <= set(exclusions["intentionally_not_in_scope"]):
+            errors.append("PR2 exclusions are incomplete")
 
     expected_counts = {
         "observations": 49,
@@ -240,7 +241,12 @@ def validate(repo: Path) -> list[str]:
     if manifest["production_scope"] not in allowed_scopes:
         errors.append("manifest PR2 scope invalid")
 
-    if scaffold.get("status") != "UNPOPULATED":
+    expected_scaffold_status = (
+        "POPULATED_PENDING_REVIEW"
+        if manifest["production_scope"] == "COMPLETE_DATABASE_PENDING_REVIEW"
+        else "UNPOPULATED"
+    )
+    if scaffold.get("status") != expected_scaffold_status:
         errors.append("compiled Premium scaffold must remain UNPOPULATED in PR2")
     t26 = next(x for x in tasks["tasks"] if x["id"] == "T26")
     if t26["status"] not in {"PLANNED", "IMPLEMENTED_PENDING_REVIEW"}:

@@ -154,7 +154,12 @@ def validate(repo: Path) -> list[str]:
     }
     if manifest["runtime_activation"] is not False or manifest["production_scope"] not in allowed_scopes:
         errors.append("manifest scope/runtime activation invalid")
-    if scaffold.get("status") != "UNPOPULATED":
+    expected_scaffold_status = (
+        "POPULATED_PENDING_REVIEW"
+        if manifest["production_scope"] == "COMPLETE_DATABASE_PENDING_REVIEW"
+        else "UNPOPULATED"
+    )
+    if scaffold.get("status") != expected_scaffold_status:
         errors.append("compiled Premium scaffold must remain UNPOPULATED in PR1")
 
     return errors
