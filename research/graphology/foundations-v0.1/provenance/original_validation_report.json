@@ -1,0 +1,137 @@
+{
+  "date": "2026-09-25",
+  "status": "STRUCTURAL_DRAFT_CHECKS_ONLY",
+  "counts": {
+    "sources": 15,
+    "schools": 6,
+    "domains": 16,
+    "questions": 89,
+    "selectors": 89,
+    "fixed_value_sets": 44,
+    "fixed_value_entries": 156,
+    "dynamic_candidate_kinds": 33,
+    "soft_fields": 8,
+    "method_assertions": 4,
+    "historical_example_associations": 2,
+    "questions_by_domain": {
+      "CONTEXT": 6,
+      "GLOBAL": 4,
+      "SPACE": 6,
+      "SIZE": 5,
+      "DIRECTION": 4,
+      "CONNECTION": 4,
+      "FORM": 6,
+      "STROKE": 5,
+      "MOVEMENT": 6,
+      "DETAIL": 12,
+      "SIGNATURE": 6,
+      "HIERARCHY": 7,
+      "INTERPRETATION": 6,
+      "REFERENCE": 4,
+      "PAIR": 4,
+      "HISTORY": 4
+    },
+    "questions_by_owner": {
+      "USER_OR_REVIEWER": 4,
+      "DETERMINISTIC": 24,
+      "PREMIUM_VISUAL": 28,
+      "PREMIUM_EDITOR": 30,
+      "RULE_ENGINE": 3
+    }
+  },
+  "checks": [
+    {
+      "check": "Source IDs unique",
+      "result": "PASS"
+    },
+    {
+      "check": "Question IDs unique",
+      "result": "PASS"
+    },
+    {
+      "check": "Selector IDs unique",
+      "result": "PASS"
+    },
+    {
+      "check": "Value-set IDs unique",
+      "result": "PASS"
+    },
+    {
+      "check": "All canonical feature references exist",
+      "result": "PASS"
+    },
+    {
+      "check": "All question source references resolve",
+      "result": "PASS"
+    },
+    {
+      "check": "All question domains resolve",
+      "result": "PASS"
+    },
+    {
+      "check": "Every question has exactly one answer-domain source",
+      "result": "PASS"
+    },
+    {
+      "check": "Fixed value sets resolve",
+      "result": "PASS"
+    },
+    {
+      "check": "Choice IDs unique within sets",
+      "result": "PASS"
+    },
+    {
+      "check": "No orphan fixed value sets",
+      "result": "PASS"
+    },
+    {
+      "check": "All questions explicitly draft",
+      "result": "PASS"
+    },
+    {
+      "check": "All historical example associations research-only",
+      "result": "PASS"
+    },
+    {
+      "check": "No production inference rules asserted",
+      "result": "PASS"
+    },
+    {
+      "check": "All non-model questions read-only",
+      "result": "PASS"
+    },
+    {
+      "check": "All soft fields forbid new numbers",
+      "result": "PASS"
+    },
+    {
+      "check": "Question pack references resolve",
+      "result": "PASS"
+    },
+    {
+      "check": "No unreferenced question",
+      "result": "PASS"
+    },
+    {
+      "check": "sources.json valid JSON roundtrip",
+      "result": "PASS"
+    },
+    {
+      "check": "graphology_question_selector_blueprint.json valid JSON roundtrip",
+      "result": "PASS"
+    },
+    {
+      "check": "No unintended control characters",
+      "result": "PASS"
+    }
+  ],
+  "not_tested": [
+    "Runtime OpenAI calls",
+    "Graphological inference validity",
+    "Handwriting detection accuracy",
+    "Historical source completeness",
+    "Licensing for reproduction",
+    "User population representativeness"
+  ],
+  "source_schema_sha256": "5c21dfc9f594bbb1c2e9dad77e3b0664a0f53b33b33697311539f7b6ca52b607"
+}

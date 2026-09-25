@@ -25,6 +25,10 @@ jobs:
       - run: python -m compileall -q src
       - run: ruff check src tests tools
       - run: python -m pytest -q
+      - name: Verify graphology research import
+        run: python tools/check_graphology_research.py
+      - name: Run graphology research regression tests
+        run: python tools/test_graphology_research.py
       - name: Build wheel
         run: python -m pip wheel . --no-deps --wheel-dir dist
       - name: Verify installed wheel outside checkout
