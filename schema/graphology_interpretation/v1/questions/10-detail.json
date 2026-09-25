@@ -1,0 +1,561 @@
+[
+  {
+    "question_id": "Q_DETAIL_T_HEIGHT",
+    "version": "1.0.0",
+    "selector_id": "SEL_DETAIL_T_HEIGHT",
+    "domain_id": "DETAIL",
+    "scope": "INDIVIDUAL",
+    "prompt_template_key": "question.q_detail_t_height",
+    "prompt_text_en": "Where is the crossbar placed on identified t stems?",
+    "text_origin": "APPLICATION_AUTHORED",
+    "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+    "source_refs": [
+      {
+        "source_id": "BIG26",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "LEPOUTRE",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "CJ1892",
+        "relationship": "domain_or_term_basis"
+      }
+    ],
+    "answer_mode": "SELECTOR",
+    "answer_owner": "DETERMINISTIC",
+    "model_call_role": "READ_ONLY_CONTEXT_OR_PRECOMPUTED",
+    "required_inputs": [
+      "IDENTIFIED_T_EXAMPLES"
+    ],
+    "required_fact_classes": [
+      "PRECOMPUTED_DESCRIPTION"
+    ],
+    "required_candidate_kinds": [],
+    "minimum_supporting_fact_count": null,
+    "minimum_supporting_association_count": null,
+    "fallback_value_id": null,
+    "answer_state_policy": "ANSWER_STATE_V1",
+    "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+    "report_target": "graphology.detail",
+    "note": "",
+    "order_in_domain": 1,
+    "source_status": "DRAFT_NOT_ACTIVATED",
+    "runtime_status": "DRAFT_NOT_ACTIVE",
+    "enabled": false
+  },
+  {
+    "question_id": "Q_DETAIL_T_LENGTH",
+    "version": "1.0.0",
+    "selector_id": "SEL_DETAIL_T_LENGTH",
+    "domain_id": "DETAIL",
+    "scope": "INDIVIDUAL",
+    "prompt_template_key": "question.q_detail_t_length",
+    "prompt_text_en": "How does crossbar length compare under its documented geometric rubric?",
+    "text_origin": "APPLICATION_AUTHORED",
+    "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+    "source_refs": [
+      {
+        "source_id": "BIG26",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "LEPOUTRE",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "CJ1892",
+        "relationship": "domain_or_term_basis"
+      }
+    ],
+    "answer_mode": "SELECTOR",
+    "answer_owner": "DETERMINISTIC",
+    "model_call_role": "READ_ONLY_CONTEXT_OR_PRECOMPUTED",
+    "required_inputs": [
+      "IDENTIFIED_T_EXAMPLES",
+      "VALID_MIDDLE_ZONE"
+    ],
+    "required_fact_classes": [
+      "PRECOMPUTED_DESCRIPTION"
+    ],
+    "required_candidate_kinds": [],
+    "minimum_supporting_fact_count": null,
+    "minimum_supporting_association_count": null,
+    "fallback_value_id": null,
+    "answer_state_policy": "ANSWER_STATE_V1",
+    "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+    "report_target": "graphology.detail",
+    "note": "",
+    "order_in_domain": 2,
+    "source_status": "DRAFT_NOT_ACTIVATED",
+    "runtime_status": "DRAFT_NOT_ACTIVE",
+    "enabled": false
+  },
+  {
+    "question_id": "Q_DETAIL_T_END",
+    "version": "1.0.0",
+    "selector_id": "SEL_DETAIL_T_END",
+    "domain_id": "DETAIL",
+    "scope": "INDIVIDUAL",
+    "prompt_template_key": "question.q_detail_t_end",
+    "prompt_text_en": "Which crossbar ending forms occur in identified examples?",
+    "text_origin": "APPLICATION_AUTHORED",
+    "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+    "source_refs": [
+      {
+        "source_id": "BIG26",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "LEPOUTRE",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "CJ1892",
+        "relationship": "domain_or_term_basis"
+      }
+    ],
+    "answer_mode": "MULTI_SELECTOR",
+    "answer_owner": "PREMIUM_VISUAL",
+    "model_call_role": "ANSWER",
+    "required_inputs": [
+      "IDENTIFIED_T_EXAMPLES",
+      "AUTHORIZED_IMAGE",
+      "IDENTIFIED_EVIDENCE_REGION"
+    ],
+    "required_fact_classes": [
+      "AI_VISUAL_DESCRIPTION_NOT_CANONICAL_MEASUREMENT"
+    ],
+    "required_candidate_kinds": [],
+    "minimum_supporting_fact_count": null,
+    "minimum_supporting_association_count": null,
+    "fallback_value_id": null,
+    "answer_state_policy": "ANSWER_STATE_V1",
+    "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+    "report_target": "graphology.detail",
+    "note": "",
+    "order_in_domain": 3,
+    "source_status": "DRAFT_NOT_ACTIVATED",
+    "runtime_status": "DRAFT_NOT_ACTIVE",
+    "enabled": false
+  },
+  {
+    "question_id": "Q_DETAIL_T_BALANCE",
+    "version": "1.0.0",
+    "selector_id": "SEL_DETAIL_T_BALANCE",
+    "domain_id": "DETAIL",
+    "scope": "INDIVIDUAL",
+    "prompt_template_key": "question.q_detail_t_balance",
+    "prompt_text_en": "Which side of the t stem carries greater crossbar extension?",
+    "text_origin": "APPLICATION_AUTHORED",
+    "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+    "source_refs": [
+      {
+        "source_id": "BIG26",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "LEPOUTRE",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "CJ1892",
+        "relationship": "domain_or_term_basis"
+      }
+    ],
+    "answer_mode": "SELECTOR",
+    "answer_owner": "DETERMINISTIC",
+    "model_call_role": "READ_ONLY_CONTEXT_OR_PRECOMPUTED",
+    "required_inputs": [
+      "IDENTIFIED_T_EXAMPLES"
+    ],
+    "required_fact_classes": [
+      "PRECOMPUTED_DESCRIPTION"
+    ],
+    "required_candidate_kinds": [],
+    "minimum_supporting_fact_count": null,
+    "minimum_supporting_association_count": null,
+    "fallback_value_id": null,
+    "answer_state_policy": "ANSWER_STATE_V1",
+    "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+    "report_target": "graphology.detail",
+    "note": "",
+    "order_in_domain": 4,
+    "source_status": "DRAFT_NOT_ACTIVATED",
+    "runtime_status": "DRAFT_NOT_ACTIVE",
+    "enabled": false
+  },
+  {
+    "question_id": "Q_DETAIL_DOT_FORM",
+    "version": "1.0.0",
+    "selector_id": "SEL_DETAIL_DOT_FORM",
+    "domain_id": "DETAIL",
+    "scope": "INDIVIDUAL",
+    "prompt_template_key": "question.q_detail_dot_form",
+    "prompt_text_en": "Which forms are used for marks on identified dotted letters?",
+    "text_origin": "APPLICATION_AUTHORED",
+    "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+    "source_refs": [
+      {
+        "source_id": "BIG26",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "LEPOUTRE",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "CJ1892",
+        "relationship": "domain_or_term_basis"
+      }
+    ],
+    "answer_mode": "MULTI_SELECTOR",
+    "answer_owner": "PREMIUM_VISUAL",
+    "model_call_role": "ANSWER",
+    "required_inputs": [
+      "IDENTIFIED_I_J_EXAMPLES",
+      "AUTHORIZED_IMAGE",
+      "IDENTIFIED_EVIDENCE_REGION"
+    ],
+    "required_fact_classes": [
+      "AI_VISUAL_DESCRIPTION_NOT_CANONICAL_MEASUREMENT"
+    ],
+    "required_candidate_kinds": [],
+    "minimum_supporting_fact_count": null,
+    "minimum_supporting_association_count": null,
+    "fallback_value_id": null,
+    "answer_state_policy": "ANSWER_STATE_V1",
+    "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+    "report_target": "graphology.detail",
+    "note": "Absence of an i/j in the sample is not an absent dot.",
+    "order_in_domain": 5,
+    "source_status": "DRAFT_NOT_ACTIVATED",
+    "runtime_status": "DRAFT_NOT_ACTIVE",
+    "enabled": false
+  },
+  {
+    "question_id": "Q_DETAIL_DOT_OFFSET",
+    "version": "1.0.0",
+    "selector_id": "SEL_DETAIL_DOT_OFFSET",
+    "domain_id": "DETAIL",
+    "scope": "INDIVIDUAL",
+    "prompt_template_key": "question.q_detail_dot_offset",
+    "prompt_text_en": "Where do the marks lie relative to their identified letter anchors?",
+    "text_origin": "APPLICATION_AUTHORED",
+    "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+    "source_refs": [
+      {
+        "source_id": "BIG26",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "LEPOUTRE",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "CJ1892",
+        "relationship": "domain_or_term_basis"
+      }
+    ],
+    "answer_mode": "SELECTOR",
+    "answer_owner": "DETERMINISTIC",
+    "model_call_role": "READ_ONLY_CONTEXT_OR_PRECOMPUTED",
+    "required_inputs": [
+      "IDENTIFIED_I_J_EXAMPLES"
+    ],
+    "required_fact_classes": [
+      "PRECOMPUTED_DESCRIPTION"
+    ],
+    "required_candidate_kinds": [],
+    "minimum_supporting_fact_count": null,
+    "minimum_supporting_association_count": null,
+    "fallback_value_id": null,
+    "answer_state_policy": "ANSWER_STATE_V1",
+    "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+    "report_target": "graphology.detail",
+    "note": "",
+    "order_in_domain": 6,
+    "source_status": "DRAFT_NOT_ACTIVATED",
+    "runtime_status": "DRAFT_NOT_ACTIVE",
+    "enabled": false
+  },
+  {
+    "question_id": "Q_DETAIL_DIACRITIC",
+    "version": "1.0.0",
+    "selector_id": "SEL_DETAIL_DIACRITIC",
+    "domain_id": "DETAIL",
+    "scope": "INDIVIDUAL",
+    "prompt_template_key": "question.q_detail_diacritic",
+    "prompt_text_en": "What shape variants occur in language-specific diacritics?",
+    "text_origin": "APPLICATION_AUTHORED",
+    "source_support": "APPLICATION_EXTENSION",
+    "source_refs": [],
+    "answer_mode": "MULTI_SELECTOR",
+    "answer_owner": "PREMIUM_VISUAL",
+    "model_call_role": "ANSWER",
+    "required_inputs": [
+      "KNOWN_LANGUAGE",
+      "IDENTIFIED_DIACRITIC_EXAMPLES",
+      "AUTHORIZED_IMAGE",
+      "IDENTIFIED_EVIDENCE_REGION"
+    ],
+    "required_fact_classes": [
+      "AI_VISUAL_DESCRIPTION_NOT_CANONICAL_MEASUREMENT"
+    ],
+    "required_candidate_kinds": [],
+    "minimum_supporting_fact_count": null,
+    "minimum_supporting_association_count": null,
+    "fallback_value_id": null,
+    "answer_state_policy": "ANSWER_STATE_V1",
+    "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+    "report_target": "graphology.detail",
+    "note": "Application extension for e.g. å/ä/ö; no traditional personality meaning is supplied.",
+    "order_in_domain": 7,
+    "source_status": "DRAFT_NOT_ACTIVATED",
+    "runtime_status": "DRAFT_NOT_ACTIVE",
+    "enabled": false
+  },
+  {
+    "question_id": "Q_DETAIL_OVAL",
+    "version": "1.0.0",
+    "selector_id": "SEL_DETAIL_OVAL",
+    "domain_id": "DETAIL",
+    "scope": "INDIVIDUAL",
+    "prompt_template_key": "question.q_detail_oval",
+    "prompt_text_en": "How are the identified oval bodies closed?",
+    "text_origin": "APPLICATION_AUTHORED",
+    "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+    "source_refs": [
+      {
+        "source_id": "BIG26",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "LEPOUTRE",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "CJ1892",
+        "relationship": "domain_or_term_basis"
+      }
+    ],
+    "answer_mode": "MULTI_SELECTOR",
+    "answer_owner": "PREMIUM_VISUAL",
+    "model_call_role": "ANSWER",
+    "required_inputs": [
+      "IDENTIFIED_OVAL_EXAMPLES",
+      "AUTHORIZED_IMAGE",
+      "IDENTIFIED_EVIDENCE_REGION"
+    ],
+    "required_fact_classes": [
+      "AI_VISUAL_DESCRIPTION_NOT_CANONICAL_MEASUREMENT"
+    ],
+    "required_candidate_kinds": [],
+    "minimum_supporting_fact_count": null,
+    "minimum_supporting_association_count": null,
+    "fallback_value_id": null,
+    "answer_state_policy": "ANSWER_STATE_V1",
+    "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+    "report_target": "graphology.detail",
+    "note": "",
+    "order_in_domain": 8,
+    "source_status": "DRAFT_NOT_ACTIVATED",
+    "runtime_status": "DRAFT_NOT_ACTIVE",
+    "enabled": false
+  },
+  {
+    "question_id": "Q_DETAIL_OVAL_GAP",
+    "version": "1.0.0",
+    "selector_id": "SEL_DETAIL_OVAL_GAP",
+    "domain_id": "DETAIL",
+    "scope": "INDIVIDUAL",
+    "prompt_template_key": "question.q_detail_oval_gap",
+    "prompt_text_en": "Where are visible openings located on identified ovals?",
+    "text_origin": "APPLICATION_AUTHORED",
+    "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+    "source_refs": [
+      {
+        "source_id": "BIG26",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "LEPOUTRE",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "CJ1892",
+        "relationship": "domain_or_term_basis"
+      }
+    ],
+    "answer_mode": "MULTI_SELECTOR",
+    "answer_owner": "PREMIUM_VISUAL",
+    "model_call_role": "ANSWER",
+    "required_inputs": [
+      "IDENTIFIED_OVAL_EXAMPLES",
+      "AUTHORIZED_IMAGE",
+      "IDENTIFIED_EVIDENCE_REGION"
+    ],
+    "required_fact_classes": [
+      "AI_VISUAL_DESCRIPTION_NOT_CANONICAL_MEASUREMENT"
+    ],
+    "required_candidate_kinds": [],
+    "minimum_supporting_fact_count": null,
+    "minimum_supporting_association_count": null,
+    "fallback_value_id": null,
+    "answer_state_policy": "ANSWER_STATE_V1",
+    "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+    "report_target": "graphology.detail",
+    "note": "Opening direction and existence are separate observations.",
+    "order_in_domain": 9,
+    "source_status": "DRAFT_NOT_ACTIVATED",
+    "runtime_status": "DRAFT_NOT_ACTIVE",
+    "enabled": false
+  },
+  {
+    "question_id": "Q_DETAIL_INITIAL",
+    "version": "1.0.0",
+    "selector_id": "SEL_DETAIL_INITIAL",
+    "domain_id": "DETAIL",
+    "scope": "INDIVIDUAL",
+    "prompt_template_key": "question.q_detail_initial",
+    "prompt_text_en": "Which beginning-stroke characteristics have usable evidence?",
+    "text_origin": "APPLICATION_AUTHORED",
+    "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+    "source_refs": [
+      {
+        "source_id": "BIG26",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "LEPOUTRE",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "CJ1892",
+        "relationship": "domain_or_term_basis"
+      }
+    ],
+    "answer_mode": "MULTI_SELECTOR",
+    "answer_owner": "PREMIUM_EDITOR",
+    "model_call_role": "ANSWER",
+    "required_inputs": [
+      "CURRENT_REPORT_CANDIDATES"
+    ],
+    "required_fact_classes": [
+      "SELECTION_OR_SYNTHESIS_OF_SUPPLIED_CANDIDATES"
+    ],
+    "required_candidate_kinds": [
+      "INITIAL_STROKE_DESCRIPTION"
+    ],
+    "minimum_supporting_fact_count": null,
+    "minimum_supporting_association_count": null,
+    "fallback_value_id": null,
+    "answer_state_policy": "ANSWER_STATE_V1",
+    "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+    "report_target": "graphology.detail",
+    "note": "Conventional beginning of a glyph is not observed temporal stroke order.",
+    "order_in_domain": 10,
+    "source_status": "DRAFT_NOT_ACTIVATED",
+    "runtime_status": "DRAFT_NOT_ACTIVE",
+    "enabled": false
+  },
+  {
+    "question_id": "Q_DETAIL_TERMINAL",
+    "version": "1.0.0",
+    "selector_id": "SEL_DETAIL_TERMINAL",
+    "domain_id": "DETAIL",
+    "scope": "INDIVIDUAL",
+    "prompt_template_key": "question.q_detail_terminal",
+    "prompt_text_en": "Which ending-stroke characteristics have usable evidence?",
+    "text_origin": "APPLICATION_AUTHORED",
+    "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+    "source_refs": [
+      {
+        "source_id": "BIG26",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "LEPOUTRE",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "CJ1892",
+        "relationship": "domain_or_term_basis"
+      }
+    ],
+    "answer_mode": "MULTI_SELECTOR",
+    "answer_owner": "PREMIUM_EDITOR",
+    "model_call_role": "ANSWER",
+    "required_inputs": [
+      "CURRENT_REPORT_CANDIDATES"
+    ],
+    "required_fact_classes": [
+      "SELECTION_OR_SYNTHESIS_OF_SUPPLIED_CANDIDATES"
+    ],
+    "required_candidate_kinds": [
+      "TERMINAL_STROKE_DESCRIPTION"
+    ],
+    "minimum_supporting_fact_count": null,
+    "minimum_supporting_association_count": null,
+    "fallback_value_id": null,
+    "answer_state_policy": "ANSWER_STATE_V1",
+    "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+    "report_target": "graphology.detail",
+    "note": "",
+    "order_in_domain": 11,
+    "source_status": "DRAFT_NOT_ACTIVATED",
+    "runtime_status": "DRAFT_NOT_ACTIVE",
+    "enabled": false
+  },
+  {
+    "question_id": "Q_DETAIL_PPI",
+    "version": "1.0.0",
+    "selector_id": "SEL_DETAIL_PPI",
+    "domain_id": "DETAIL",
+    "scope": "INDIVIDUAL",
+    "prompt_template_key": "question.q_detail_ppi",
+    "prompt_text_en": "Which supplied examples concern the English personal pronoun I rather than other vertical forms?",
+    "text_origin": "APPLICATION_AUTHORED",
+    "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+    "source_refs": [
+      {
+        "source_id": "BIG26",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "LEPOUTRE",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "CJ1892",
+        "relationship": "domain_or_term_basis"
+      }
+    ],
+    "answer_mode": "SELECTOR",
+    "answer_owner": "PREMIUM_EDITOR",
+    "model_call_role": "ANSWER",
+    "required_inputs": [
+      "ENGLISH_TEXT_CONTEXT",
+      "IDENTIFIED_PPI_EXAMPLES",
+      "CURRENT_REPORT_CANDIDATES"
+    ],
+    "required_fact_classes": [
+      "SELECTION_OR_SYNTHESIS_OF_SUPPLIED_CANDIDATES"
+    ],
+    "required_candidate_kinds": [
+      "PPI_FORM_DESCRIPTION"
+    ],
+    "minimum_supporting_fact_count": null,
+    "minimum_supporting_association_count": null,
+    "fallback_value_id": null,
+    "answer_state_policy": "ANSWER_STATE_V1",
+    "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+    "report_target": "graphology.detail",
+    "note": "Not universal to Swedish or every capital I; no family/parent diagnosis.",
+    "order_in_domain": 12,
+    "source_status": "DRAFT_NOT_ACTIVATED",
+    "runtime_status": "DRAFT_NOT_ACTIVE",
+    "enabled": false
+  }
+]

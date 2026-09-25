@@ -1,0 +1,290 @@
+[
+  {
+    "question_id": "Q_TRAD_BUNDLE",
+    "version": "1.0.0",
+    "selector_id": "SEL_TRAD_BUNDLE",
+    "domain_id": "INTERPRETATION",
+    "scope": "INDIVIDUAL",
+    "prompt_template_key": "question.q_trad_bundle",
+    "prompt_text_en": "Which source-linked interpretation bundle is eligible within the selected school?",
+    "text_origin": "APPLICATION_AUTHORED",
+    "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+    "source_refs": [
+      {
+        "source_id": "CJ1892",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "BIG26",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "CARBONARI",
+        "relationship": "domain_or_term_basis"
+      }
+    ],
+    "answer_mode": "SELECTOR",
+    "answer_owner": "PREMIUM_EDITOR",
+    "model_call_role": "ANSWER",
+    "required_inputs": [
+      "REVIEWED_SCHOOL_RULE_PACK",
+      "CURRENT_REPORT_CANDIDATES"
+    ],
+    "required_fact_classes": [
+      "SELECTION_OR_SYNTHESIS_OF_SUPPLIED_CANDIDATES"
+    ],
+    "required_candidate_kinds": [
+      "TRADITIONAL_CANDIDATE"
+    ],
+    "minimum_supporting_fact_count": null,
+    "minimum_supporting_association_count": null,
+    "fallback_value_id": null,
+    "answer_state_policy": "ANSWER_STATE_V1",
+    "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+    "report_target": "graphology.interpretation",
+    "note": "No eligible bundle -> abstain. This bank alone does not populate inference rules.",
+    "order_in_domain": 1,
+    "source_status": "DRAFT_NOT_ACTIVATED",
+    "runtime_status": "DRAFT_NOT_ACTIVE",
+    "enabled": false
+  },
+  {
+    "question_id": "Q_TRAD_STATUS",
+    "version": "1.0.0",
+    "selector_id": "SEL_TRAD_STATUS",
+    "domain_id": "INTERPRETATION",
+    "scope": "INDIVIDUAL",
+    "prompt_template_key": "question.q_trad_status",
+    "prompt_text_en": "What is the precomputed support state of the selected traditional candidate?",
+    "text_origin": "APPLICATION_AUTHORED",
+    "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+    "source_refs": [
+      {
+        "source_id": "CJ1892",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "BIG26",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "CARBONARI",
+        "relationship": "domain_or_term_basis"
+      }
+    ],
+    "answer_mode": "SELECTOR",
+    "answer_owner": "RULE_ENGINE",
+    "model_call_role": "READ_ONLY_CONTEXT_OR_PRECOMPUTED",
+    "required_inputs": [
+      "REVIEWED_SCHOOL_RULE_PACK"
+    ],
+    "required_fact_classes": [
+      "PRECOMPUTED_TRADITIONAL_RULE_RESULT_NOT_PSYCHOMETRIC_SCORE"
+    ],
+    "required_candidate_kinds": [],
+    "minimum_supporting_fact_count": null,
+    "minimum_supporting_association_count": null,
+    "fallback_value_id": null,
+    "answer_state_policy": "ANSWER_STATE_V1",
+    "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+    "report_target": "graphology.interpretation",
+    "note": "",
+    "order_in_domain": 2,
+    "source_status": "DRAFT_NOT_ACTIVATED",
+    "runtime_status": "DRAFT_NOT_ACTIVE",
+    "enabled": false
+  },
+  {
+    "question_id": "Q_TRAD_MODIFIER",
+    "version": "1.0.0",
+    "selector_id": "SEL_TRAD_MODIFIER",
+    "domain_id": "INTERPRETATION",
+    "scope": "INDIVIDUAL",
+    "prompt_template_key": "question.q_trad_modifier",
+    "prompt_text_en": "Which school-defined modifiers change the interpretation?",
+    "text_origin": "APPLICATION_AUTHORED",
+    "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+    "source_refs": [
+      {
+        "source_id": "CJ1892",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "BIG26",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "CARBONARI",
+        "relationship": "domain_or_term_basis"
+      }
+    ],
+    "answer_mode": "MULTI_SELECTOR",
+    "answer_owner": "PREMIUM_EDITOR",
+    "model_call_role": "ANSWER",
+    "required_inputs": [
+      "REVIEWED_SCHOOL_RULE_PACK",
+      "CURRENT_REPORT_CANDIDATES"
+    ],
+    "required_fact_classes": [
+      "SELECTION_OR_SYNTHESIS_OF_SUPPLIED_CANDIDATES"
+    ],
+    "required_candidate_kinds": [
+      "TRADITIONAL_MODIFIER"
+    ],
+    "minimum_supporting_fact_count": null,
+    "minimum_supporting_association_count": null,
+    "fallback_value_id": null,
+    "answer_state_policy": "ANSWER_STATE_V1",
+    "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+    "report_target": "graphology.interpretation",
+    "note": "",
+    "order_in_domain": 3,
+    "source_status": "DRAFT_NOT_ACTIVATED",
+    "runtime_status": "DRAFT_NOT_ACTIVE",
+    "enabled": false
+  },
+  {
+    "question_id": "Q_TRAD_ALTERNATIVE",
+    "version": "1.0.0",
+    "selector_id": "SEL_TRAD_ALTERNATIVE",
+    "domain_id": "INTERPRETATION",
+    "scope": "INDIVIDUAL",
+    "prompt_template_key": "question.q_trad_alternative",
+    "prompt_text_en": "Which permitted alternative readings remain unresolved?",
+    "text_origin": "APPLICATION_AUTHORED",
+    "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+    "source_refs": [
+      {
+        "source_id": "CJ1892",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "BIG26",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "CARBONARI",
+        "relationship": "domain_or_term_basis"
+      }
+    ],
+    "answer_mode": "MULTI_SELECTOR",
+    "answer_owner": "PREMIUM_EDITOR",
+    "model_call_role": "ANSWER",
+    "required_inputs": [
+      "REVIEWED_SCHOOL_RULE_PACK",
+      "CURRENT_REPORT_CANDIDATES"
+    ],
+    "required_fact_classes": [
+      "SELECTION_OR_SYNTHESIS_OF_SUPPLIED_CANDIDATES"
+    ],
+    "required_candidate_kinds": [
+      "TRADITIONAL_ALTERNATIVE"
+    ],
+    "minimum_supporting_fact_count": null,
+    "minimum_supporting_association_count": null,
+    "fallback_value_id": null,
+    "answer_state_policy": "ANSWER_STATE_V1",
+    "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+    "report_target": "graphology.interpretation",
+    "note": "",
+    "order_in_domain": 4,
+    "source_status": "DRAFT_NOT_ACTIVATED",
+    "runtime_status": "DRAFT_NOT_ACTIVE",
+    "enabled": false
+  },
+  {
+    "question_id": "Q_TRAD_SCHOOL_DIFF",
+    "version": "1.0.0",
+    "selector_id": "SEL_TRAD_SCHOOL_DIFF",
+    "domain_id": "INTERPRETATION",
+    "scope": "INDIVIDUAL",
+    "prompt_template_key": "question.q_trad_school_diff",
+    "prompt_text_en": "How do the supplied school-specific candidates relate without collapsing distinct concepts?",
+    "text_origin": "APPLICATION_AUTHORED",
+    "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+    "source_refs": [
+      {
+        "source_id": "CJ1892",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "BIG26",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "CARBONARI",
+        "relationship": "domain_or_term_basis"
+      }
+    ],
+    "answer_mode": "SELECTOR",
+    "answer_owner": "RULE_ENGINE",
+    "model_call_role": "READ_ONLY_CONTEXT_OR_PRECOMPUTED",
+    "required_inputs": [
+      "REVIEWED_SCHOOL_RULE_PACK"
+    ],
+    "required_fact_classes": [
+      "PRECOMPUTED_TRADITIONAL_RULE_RESULT_NOT_PSYCHOMETRIC_SCORE"
+    ],
+    "required_candidate_kinds": [],
+    "minimum_supporting_fact_count": null,
+    "minimum_supporting_association_count": null,
+    "fallback_value_id": null,
+    "answer_state_policy": "ANSWER_STATE_V1",
+    "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+    "report_target": "graphology.interpretation",
+    "note": "Shared ancestry is not independent scientific replication.",
+    "order_in_domain": 5,
+    "source_status": "DRAFT_NOT_ACTIVATED",
+    "runtime_status": "DRAFT_NOT_ACTIVE",
+    "enabled": false
+  },
+  {
+    "question_id": "Q_TRAD_WITHHOLD",
+    "version": "1.0.0",
+    "selector_id": "SEL_TRAD_WITHHOLD",
+    "domain_id": "INTERPRETATION",
+    "scope": "INDIVIDUAL",
+    "prompt_template_key": "question.q_trad_withhold",
+    "prompt_text_en": "Which proposed traditional statements lack sufficient support to publish?",
+    "text_origin": "APPLICATION_AUTHORED",
+    "source_support": "DOMAIN_OR_TERM_BASIS_NOT_VERBATIM_QUESTION",
+    "source_refs": [
+      {
+        "source_id": "CJ1892",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "BIG26",
+        "relationship": "domain_or_term_basis"
+      },
+      {
+        "source_id": "CARBONARI",
+        "relationship": "domain_or_term_basis"
+      }
+    ],
+    "answer_mode": "MULTI_SELECTOR",
+    "answer_owner": "PREMIUM_EDITOR",
+    "model_call_role": "ANSWER",
+    "required_inputs": [
+      "REVIEWED_SCHOOL_RULE_PACK",
+      "CURRENT_REPORT_CANDIDATES"
+    ],
+    "required_fact_classes": [
+      "SELECTION_OR_SYNTHESIS_OF_SUPPLIED_CANDIDATES"
+    ],
+    "required_candidate_kinds": [
+      "WITHHELD_CLAIM"
+    ],
+    "minimum_supporting_fact_count": null,
+    "minimum_supporting_association_count": null,
+    "fallback_value_id": null,
+    "answer_state_policy": "ANSWER_STATE_V1",
+    "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+    "report_target": "graphology.interpretation",
+    "note": "",
+    "order_in_domain": 6,
+    "source_status": "DRAFT_NOT_ACTIVATED",
+    "runtime_status": "DRAFT_NOT_ACTIVE",
+    "enabled": false
+  }
+]

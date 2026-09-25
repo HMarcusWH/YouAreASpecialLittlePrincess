@@ -1,0 +1,136 @@
+[
+  {
+    "question_id": "Q_HIST_COMPARABLE",
+    "version": "1.0.0",
+    "selector_id": "SEL_HIST_COMPARABLE",
+    "domain_id": "HISTORY",
+    "scope": "HISTORY",
+    "prompt_template_key": "question.q_hist_comparable",
+    "prompt_text_en": "Are task, scale, capture and method versions comparable?",
+    "text_origin": "APPLICATION_AUTHORED",
+    "source_support": "APPLICATION_EXTENSION",
+    "source_refs": [],
+    "answer_mode": "SELECTOR",
+    "answer_owner": "DETERMINISTIC",
+    "model_call_role": "READ_ONLY_CONTEXT_OR_PRECOMPUTED",
+    "required_inputs": [],
+    "required_fact_classes": [
+      "PRECOMPUTED_DESCRIPTION"
+    ],
+    "required_candidate_kinds": [],
+    "minimum_supporting_fact_count": null,
+    "minimum_supporting_association_count": null,
+    "fallback_value_id": null,
+    "answer_state_policy": "ANSWER_STATE_V1",
+    "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+    "report_target": "graphology.history",
+    "note": "",
+    "order_in_domain": 1,
+    "source_status": "DRAFT_NOT_ACTIVATED",
+    "runtime_status": "DRAFT_NOT_ACTIVE",
+    "enabled": false
+  },
+  {
+    "question_id": "Q_HIST_CHANGE",
+    "version": "1.0.0",
+    "selector_id": "SEL_HIST_CHANGE",
+    "domain_id": "HISTORY",
+    "scope": "HISTORY",
+    "prompt_template_key": "question.q_hist_change",
+    "prompt_text_en": "Which verified graphical change should be highlighted?",
+    "text_origin": "APPLICATION_AUTHORED",
+    "source_support": "APPLICATION_EXTENSION",
+    "source_refs": [],
+    "answer_mode": "SELECTOR",
+    "answer_owner": "PREMIUM_EDITOR",
+    "model_call_role": "ANSWER",
+    "required_inputs": [
+      "CURRENT_REPORT_CANDIDATES"
+    ],
+    "required_fact_classes": [
+      "SELECTION_OR_SYNTHESIS_OF_SUPPLIED_CANDIDATES"
+    ],
+    "required_candidate_kinds": [
+      "HISTORY_CHANGE"
+    ],
+    "minimum_supporting_fact_count": null,
+    "minimum_supporting_association_count": null,
+    "fallback_value_id": null,
+    "answer_state_policy": "ANSWER_STATE_V1",
+    "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+    "report_target": "graphology.history",
+    "note": "",
+    "order_in_domain": 2,
+    "source_status": "DRAFT_NOT_ACTIVATED",
+    "runtime_status": "DRAFT_NOT_ACTIVE",
+    "enabled": false
+  },
+  {
+    "question_id": "Q_HIST_STABLE",
+    "version": "1.0.0",
+    "selector_id": "SEL_HIST_STABLE",
+    "domain_id": "HISTORY",
+    "scope": "HISTORY",
+    "prompt_template_key": "question.q_hist_stable",
+    "prompt_text_en": "Which characteristics are stable under the comparison tolerance?",
+    "text_origin": "APPLICATION_AUTHORED",
+    "source_support": "APPLICATION_EXTENSION",
+    "source_refs": [],
+    "answer_mode": "SELECTOR",
+    "answer_owner": "PREMIUM_EDITOR",
+    "model_call_role": "ANSWER",
+    "required_inputs": [
+      "CURRENT_REPORT_CANDIDATES"
+    ],
+    "required_fact_classes": [
+      "SELECTION_OR_SYNTHESIS_OF_SUPPLIED_CANDIDATES"
+    ],
+    "required_candidate_kinds": [
+      "HISTORY_STABLE_PATTERN"
+    ],
+    "minimum_supporting_fact_count": null,
+    "minimum_supporting_association_count": null,
+    "fallback_value_id": null,
+    "answer_state_policy": "ANSWER_STATE_V1",
+    "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+    "report_target": "graphology.history",
+    "note": "",
+    "order_in_domain": 3,
+    "source_status": "DRAFT_NOT_ACTIVATED",
+    "runtime_status": "DRAFT_NOT_ACTIVE",
+    "enabled": false
+  },
+  {
+    "question_id": "Q_HIST_LIMIT",
+    "version": "1.0.0",
+    "selector_id": "SEL_HIST_LIMIT",
+    "domain_id": "HISTORY",
+    "scope": "HISTORY",
+    "prompt_template_key": "question.q_hist_limit",
+    "prompt_text_en": "Which confounders prevent a stronger interpretation of change?",
+    "text_origin": "APPLICATION_AUTHORED",
+    "source_support": "APPLICATION_EXTENSION",
+    "source_refs": [],
+    "answer_mode": "MULTI_SELECTOR",
+    "answer_owner": "DETERMINISTIC",
+    "model_call_role": "READ_ONLY_CONTEXT_OR_PRECOMPUTED",
+    "required_inputs": [],
+    "required_fact_classes": [
+      "PRECOMPUTED_DESCRIPTION"
+    ],
+    "required_candidate_kinds": [
+      "HISTORY_CAVEAT"
+    ],
+    "minimum_supporting_fact_count": null,
+    "minimum_supporting_association_count": null,
+    "fallback_value_id": null,
+    "answer_state_policy": "ANSWER_STATE_V1",
+    "numeric_threshold_policy": "DOCUMENTED_VERSIONED_RUBRIC_REQUIRED; NONE_INFERRED_FROM_SOURCE_MENTION",
+    "report_target": "graphology.history",
+    "note": "No inference of personality change or health improvement.",
+    "order_in_domain": 4,
+    "source_status": "DRAFT_NOT_ACTIVATED",
+    "runtime_status": "DRAFT_NOT_ACTIVE",
+    "enabled": false
+  }
+]
