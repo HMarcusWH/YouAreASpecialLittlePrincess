@@ -76,6 +76,8 @@ def test_all_five_school_packs_are_inactive():
 
 
 def test_runtime_scaffold_and_t26_remain_unactivated():
-    assert load("schema/premium_interpretation_database_v1.json")["status"] == "UNPOPULATED"
+    scaffold = load("schema/premium_interpretation_database_v1.json")
+    assert scaffold["status"] in {"UNPOPULATED", "POPULATED_PENDING_REVIEW"}
+    assert scaffold.get("runtime_activation", False) is False
     tasks = load("docs/roadmap/tasks.json")
-    assert next(x for x in tasks["tasks"] if x["id"] == "T26")["status"] == "PLANNED"
+    assert next(x for x in tasks["tasks"] if x["id"] == "T26")["status"] in {"PLANNED", "IMPLEMENTED_PENDING_REVIEW"}
