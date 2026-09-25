@@ -12151,8 +12151,977 @@
       "Missing observation evidence never becomes zero or an opposite trait."
     ]
   },
-  "observation_definitions": [],
-  "feature_mappings": [],
+  "observation_definitions": [
+    {
+      "observation_id": "OBS_CTX_TASK",
+      "source_question_id": "Q_CTX_TASK",
+      "selector_id": "SEL_CTX_TASK",
+      "domain_id": "CONTEXT",
+      "scope": "INDIVIDUAL",
+      "descriptor_kind": "DECLARED_CONTEXT",
+      "assessment_owner": "USER_OR_REVIEWER",
+      "model_call_role": "READ_ONLY_CONTEXT_OR_PRECOMPUTED",
+      "cardinality": "SINGLE",
+      "value_set_id": "TASK",
+      "candidate_kind": null,
+      "required_inputs": [],
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "permitted_evidence_class": "DECLARED_METADATA",
+      "source_refs": [
+        {
+          "source_id": "BIG26",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "AHAF",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "related_canonical_feature_ids": [],
+      "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+      "operational_guardrail": "",
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE"
+    },
+    {
+      "observation_id": "OBS_CTX_SURFACE",
+      "source_question_id": "Q_CTX_SURFACE",
+      "selector_id": "SEL_CTX_SURFACE",
+      "domain_id": "CONTEXT",
+      "scope": "INDIVIDUAL",
+      "descriptor_kind": "DECLARED_CONTEXT",
+      "assessment_owner": "USER_OR_REVIEWER",
+      "model_call_role": "READ_ONLY_CONTEXT_OR_PRECOMPUTED",
+      "cardinality": "SINGLE",
+      "value_set_id": "SURFACE",
+      "candidate_kind": null,
+      "required_inputs": [],
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "permitted_evidence_class": "DECLARED_METADATA",
+      "source_refs": [
+        {
+          "source_id": "BIG26",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "AHAF",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "related_canonical_feature_ids": [],
+      "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+      "operational_guardrail": "",
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE"
+    },
+    {
+      "observation_id": "OBS_CTX_STYLE",
+      "source_question_id": "Q_CTX_STYLE",
+      "selector_id": "SEL_CTX_STYLE",
+      "domain_id": "CONTEXT",
+      "scope": "INDIVIDUAL",
+      "descriptor_kind": "DECLARED_CONTEXT",
+      "assessment_owner": "USER_OR_REVIEWER",
+      "model_call_role": "READ_ONLY_CONTEXT_OR_PRECOMPUTED",
+      "cardinality": "SINGLE",
+      "value_set_id": "WRITING_STYLE",
+      "candidate_kind": null,
+      "required_inputs": [],
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "permitted_evidence_class": "DECLARED_METADATA",
+      "source_refs": [
+        {
+          "source_id": "BIG26",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "AHAF",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "related_canonical_feature_ids": [],
+      "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+      "operational_guardrail": "The model can flag a mismatch; user declaration is not automatically verified.",
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE"
+    },
+    {
+      "observation_id": "OBS_CTX_FRAME",
+      "source_question_id": "Q_CTX_FRAME",
+      "selector_id": "SEL_CTX_FRAME",
+      "domain_id": "CONTEXT",
+      "scope": "INDIVIDUAL",
+      "descriptor_kind": "DETERMINISTIC_DESCRIPTOR",
+      "assessment_owner": "DETERMINISTIC",
+      "model_call_role": "READ_ONLY_CONTEXT_OR_PRECOMPUTED",
+      "cardinality": "SINGLE",
+      "value_set_id": "CAPTURE_FRAME",
+      "candidate_kind": null,
+      "required_inputs": [],
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "permitted_evidence_class": "PRECOMPUTED_DESCRIPTION",
+      "source_refs": [
+        {
+          "source_id": "BIG26",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "AHAF",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "related_canonical_feature_ids": [],
+      "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+      "operational_guardrail": "Do not turn crop margins into paper margins.",
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE"
+    },
+    {
+      "observation_id": "OBS_CTX_SCALE",
+      "source_question_id": "Q_CTX_SCALE",
+      "selector_id": "SEL_CTX_SCALE",
+      "domain_id": "CONTEXT",
+      "scope": "INDIVIDUAL",
+      "descriptor_kind": "DETERMINISTIC_DESCRIPTOR",
+      "assessment_owner": "DETERMINISTIC",
+      "model_call_role": "READ_ONLY_CONTEXT_OR_PRECOMPUTED",
+      "cardinality": "SINGLE",
+      "value_set_id": "SCALE",
+      "candidate_kind": null,
+      "required_inputs": [],
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "permitted_evidence_class": "PRECOMPUTED_DESCRIPTION",
+      "source_refs": [
+        {
+          "source_id": "BIG26",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "AHAF",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "related_canonical_feature_ids": [],
+      "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+      "operational_guardrail": "Pixel size alone does not establish millimetres.",
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE"
+    },
+    {
+      "observation_id": "OBS_CTX_DIRECTION",
+      "source_question_id": "Q_CTX_DIRECTION",
+      "selector_id": "SEL_CTX_DIRECTION",
+      "domain_id": "CONTEXT",
+      "scope": "INDIVIDUAL",
+      "descriptor_kind": "DECLARED_CONTEXT",
+      "assessment_owner": "USER_OR_REVIEWER",
+      "model_call_role": "READ_ONLY_CONTEXT_OR_PRECOMPUTED",
+      "cardinality": "SINGLE",
+      "value_set_id": "DIRECTION_CONTEXT",
+      "candidate_kind": null,
+      "required_inputs": [],
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "permitted_evidence_class": "DECLARED_METADATA",
+      "source_refs": [
+        {
+          "source_id": "BIG26",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "AHAF",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "related_canonical_feature_ids": [],
+      "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+      "operational_guardrail": "",
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE"
+    },
+    {
+      "observation_id": "OBS_GLOBAL_FORM_MOVEMENT",
+      "source_question_id": "Q_GLOBAL_FORM_MOVEMENT",
+      "selector_id": "SEL_GLOBAL_FORM_MOVEMENT",
+      "domain_id": "GLOBAL",
+      "scope": "INDIVIDUAL",
+      "descriptor_kind": "VISUAL_DESCRIPTOR",
+      "assessment_owner": "PREMIUM_VISUAL",
+      "model_call_role": "ANSWER",
+      "cardinality": "SINGLE",
+      "value_set_id": "GLOBAL_BALANCE",
+      "candidate_kind": null,
+      "required_inputs": [
+        "AUTHORIZED_IMAGE",
+        "IDENTIFIED_EVIDENCE_REGION"
+      ],
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "permitted_evidence_class": "AI_VISUAL_DESCRIPTION_NOT_CANONICAL_MEASUREMENT",
+      "source_refs": [
+        {
+          "source_id": "AHAF",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "CNPG_A",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "CNPG_B",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "SGB",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "related_canonical_feature_ids": [],
+      "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+      "operational_guardrail": "Describes visual impression, not measured speed or psychological control.",
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE"
+    },
+    {
+      "observation_id": "OBS_GLOBAL_COHERENCE",
+      "source_question_id": "Q_GLOBAL_COHERENCE",
+      "selector_id": "SEL_GLOBAL_COHERENCE",
+      "domain_id": "GLOBAL",
+      "scope": "INDIVIDUAL",
+      "descriptor_kind": "VISUAL_DESCRIPTOR",
+      "assessment_owner": "PREMIUM_VISUAL",
+      "model_call_role": "ANSWER",
+      "cardinality": "SINGLE",
+      "value_set_id": "COHERENCE",
+      "candidate_kind": null,
+      "required_inputs": [
+        "AUTHORIZED_IMAGE",
+        "IDENTIFIED_EVIDENCE_REGION"
+      ],
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "permitted_evidence_class": "AI_VISUAL_DESCRIPTION_NOT_CANONICAL_MEASUREMENT",
+      "source_refs": [
+        {
+          "source_id": "AHAF",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "CNPG_A",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "CNPG_B",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "SGB",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "related_canonical_feature_ids": [],
+      "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+      "operational_guardrail": "Requires reviewable visual anchors; no score for human quality.",
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE"
+    },
+    {
+      "observation_id": "OBS_GLOBAL_VARIATION",
+      "source_question_id": "Q_GLOBAL_VARIATION",
+      "selector_id": "SEL_GLOBAL_VARIATION",
+      "domain_id": "GLOBAL",
+      "scope": "INDIVIDUAL",
+      "descriptor_kind": "VISUAL_DESCRIPTOR",
+      "assessment_owner": "PREMIUM_VISUAL",
+      "model_call_role": "ANSWER",
+      "cardinality": "SINGLE",
+      "value_set_id": "VARIATION_CHARACTER",
+      "candidate_kind": null,
+      "required_inputs": [
+        "AUTHORIZED_IMAGE",
+        "IDENTIFIED_EVIDENCE_REGION"
+      ],
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "permitted_evidence_class": "AI_VISUAL_DESCRIPTION_NOT_CANONICAL_MEASUREMENT",
+      "source_refs": [
+        {
+          "source_id": "AHAF",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "CNPG_A",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "CNPG_B",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "SGB",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "related_canonical_feature_ids": [],
+      "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+      "operational_guardrail": "Not equivalent to Moretti Disuguale metodico without the school method.",
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE"
+    },
+    {
+      "observation_id": "OBS_SPACE_BALANCE",
+      "source_question_id": "Q_SPACE_BALANCE",
+      "selector_id": "SEL_SPACE_BALANCE",
+      "domain_id": "SPACE",
+      "scope": "INDIVIDUAL",
+      "descriptor_kind": "VISUAL_DESCRIPTOR",
+      "assessment_owner": "PREMIUM_VISUAL",
+      "model_call_role": "ANSWER",
+      "cardinality": "SINGLE",
+      "value_set_id": "SPACE_BALANCE",
+      "candidate_kind": null,
+      "required_inputs": [
+        "AUTHORIZED_IMAGE",
+        "IDENTIFIED_EVIDENCE_REGION"
+      ],
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "permitted_evidence_class": "AI_VISUAL_DESCRIPTION_NOT_CANONICAL_MEASUREMENT",
+      "source_refs": [
+        {
+          "source_id": "CNPG_A",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "IHAS",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "LEPOUTRE",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "related_canonical_feature_ids": [
+        "PAGE_INK_AREA_RATIO",
+        "PAGE_TEXT_AREA_RATIO"
+      ],
+      "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+      "operational_guardrail": "",
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE"
+    },
+    {
+      "observation_id": "OBS_SPACE_MARGINS",
+      "source_question_id": "Q_SPACE_MARGINS",
+      "selector_id": "SEL_SPACE_MARGINS",
+      "domain_id": "SPACE",
+      "scope": "INDIVIDUAL",
+      "descriptor_kind": "CANDIDATE_BACKED_DESCRIPTOR",
+      "assessment_owner": "PREMIUM_EDITOR",
+      "model_call_role": "ANSWER",
+      "cardinality": "MULTIPLE",
+      "value_set_id": null,
+      "candidate_kind": "MARGIN_DESCRIPTION",
+      "required_inputs": [
+        "VERIFIED_PAGE_BOUNDARIES",
+        "CURRENT_REPORT_CANDIDATES"
+      ],
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "permitted_evidence_class": "SELECTION_OR_SYNTHESIS_OF_SUPPLIED_CANDIDATES",
+      "source_refs": [
+        {
+          "source_id": "CNPG_A",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "IHAS",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "LEPOUTRE",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "related_canonical_feature_ids": [
+        "MARGIN_TOP_REL",
+        "MARGIN_BOTTOM_REL",
+        "MARGIN_LEFT_REL",
+        "MARGIN_RIGHT_REL"
+      ],
+      "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+      "operational_guardrail": "Use supplied descriptions; no replacement of canonical ratios.",
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE"
+    },
+    {
+      "observation_id": "OBS_SPACE_MARGIN_TREND",
+      "source_question_id": "Q_SPACE_MARGIN_TREND",
+      "selector_id": "SEL_SPACE_MARGIN_TREND",
+      "domain_id": "SPACE",
+      "scope": "INDIVIDUAL",
+      "descriptor_kind": "CANDIDATE_BACKED_DESCRIPTOR",
+      "assessment_owner": "PREMIUM_EDITOR",
+      "model_call_role": "ANSWER",
+      "cardinality": "MULTIPLE",
+      "value_set_id": null,
+      "candidate_kind": "LINE_EDGE_TREND",
+      "required_inputs": [
+        "CURRENT_REPORT_CANDIDATES"
+      ],
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "permitted_evidence_class": "SELECTION_OR_SYNTHESIS_OF_SUPPLIED_CANDIDATES",
+      "source_refs": [
+        {
+          "source_id": "CNPG_A",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "IHAS",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "LEPOUTRE",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "related_canonical_feature_ids": [
+        "LINE_START_DRIFT",
+        "LINE_END_DRIFT"
+      ],
+      "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+      "operational_guardrail": "",
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE"
+    },
+    {
+      "observation_id": "OBS_SPACE_WORD",
+      "source_question_id": "Q_SPACE_WORD",
+      "selector_id": "SEL_SPACE_WORD",
+      "domain_id": "SPACE",
+      "scope": "INDIVIDUAL",
+      "descriptor_kind": "DETERMINISTIC_DESCRIPTOR",
+      "assessment_owner": "DETERMINISTIC",
+      "model_call_role": "READ_ONLY_CONTEXT_OR_PRECOMPUTED",
+      "cardinality": "SINGLE",
+      "value_set_id": "BAND3",
+      "candidate_kind": null,
+      "required_inputs": [],
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "permitted_evidence_class": "PRECOMPUTED_DESCRIPTION",
+      "source_refs": [
+        {
+          "source_id": "CNPG_A",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "IHAS",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "LEPOUTRE",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "related_canonical_feature_ids": [
+        "WORD_SPACING_REL",
+        "WORD_SPACING_CV"
+      ],
+      "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+      "operational_guardrail": "A descriptive band and a population percentile are separate facts.",
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE"
+    },
+    {
+      "observation_id": "OBS_SPACE_LINE",
+      "source_question_id": "Q_SPACE_LINE",
+      "selector_id": "SEL_SPACE_LINE",
+      "domain_id": "SPACE",
+      "scope": "INDIVIDUAL",
+      "descriptor_kind": "DETERMINISTIC_DESCRIPTOR",
+      "assessment_owner": "DETERMINISTIC",
+      "model_call_role": "READ_ONLY_CONTEXT_OR_PRECOMPUTED",
+      "cardinality": "SINGLE",
+      "value_set_id": "BAND3",
+      "candidate_kind": null,
+      "required_inputs": [],
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "permitted_evidence_class": "PRECOMPUTED_DESCRIPTION",
+      "source_refs": [
+        {
+          "source_id": "CNPG_A",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "IHAS",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "LEPOUTRE",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "related_canonical_feature_ids": [
+        "LINE_SPACING_REL",
+        "LINE_SPACING_CV"
+      ],
+      "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+      "operational_guardrail": "",
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE"
+    },
+    {
+      "observation_id": "OBS_SPACE_LETTER",
+      "source_question_id": "Q_SPACE_LETTER",
+      "selector_id": "SEL_SPACE_LETTER",
+      "domain_id": "SPACE",
+      "scope": "INDIVIDUAL",
+      "descriptor_kind": "DETERMINISTIC_DESCRIPTOR",
+      "assessment_owner": "DETERMINISTIC",
+      "model_call_role": "READ_ONLY_CONTEXT_OR_PRECOMPUTED",
+      "cardinality": "SINGLE",
+      "value_set_id": "BAND3",
+      "candidate_kind": null,
+      "required_inputs": [
+        "IDENTIFIED_LETTERS"
+      ],
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "permitted_evidence_class": "PRECOMPUTED_DESCRIPTION",
+      "source_refs": [
+        {
+          "source_id": "CNPG_A",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "IHAS",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "LEPOUTRE",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "related_canonical_feature_ids": [
+        "LETTER_SPACING_REL"
+      ],
+      "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+      "operational_guardrail": "Component spacing is not automatically letter spacing.",
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE"
+    },
+    {
+      "observation_id": "OBS_SIZE_PHYSICAL",
+      "source_question_id": "Q_SIZE_PHYSICAL",
+      "selector_id": "SEL_SIZE_PHYSICAL",
+      "domain_id": "SIZE",
+      "scope": "INDIVIDUAL",
+      "descriptor_kind": "DETERMINISTIC_DESCRIPTOR",
+      "assessment_owner": "DETERMINISTIC",
+      "model_call_role": "READ_ONLY_CONTEXT_OR_PRECOMPUTED",
+      "cardinality": "SINGLE",
+      "value_set_id": "BAND3",
+      "candidate_kind": null,
+      "required_inputs": [
+        "VERIFIED_SCALE",
+        "VALID_MIDDLE_ZONE"
+      ],
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "permitted_evidence_class": "PRECOMPUTED_DESCRIPTION",
+      "source_refs": [
+        {
+          "source_id": "IHAS",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "BIG26",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "CONTIN",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "related_canonical_feature_ids": [
+        "X_HEIGHT_PX"
+      ],
+      "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+      "operational_guardrail": "No px threshold becomes a physical-size rule; a derived physical quantity requires an explicit versioned measurement contract, never relabelling X_HEIGHT_PX as millimetres.",
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE"
+    },
+    {
+      "observation_id": "OBS_SIZE_ZONES",
+      "source_question_id": "Q_SIZE_ZONES",
+      "selector_id": "SEL_SIZE_ZONES",
+      "domain_id": "SIZE",
+      "scope": "INDIVIDUAL",
+      "descriptor_kind": "VISUAL_DESCRIPTOR",
+      "assessment_owner": "PREMIUM_VISUAL",
+      "model_call_role": "ANSWER",
+      "cardinality": "SINGLE",
+      "value_set_id": "ZONE_RELATION",
+      "candidate_kind": null,
+      "required_inputs": [
+        "IDENTIFIED_ZONE_EXAMPLES",
+        "AUTHORIZED_IMAGE",
+        "IDENTIFIED_EVIDENCE_REGION"
+      ],
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "permitted_evidence_class": "AI_VISUAL_DESCRIPTION_NOT_CANONICAL_MEASUREMENT",
+      "source_refs": [
+        {
+          "source_id": "IHAS",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "BIG26",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "CONTIN",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "related_canonical_feature_ids": [
+        "UPPER_ZONE_RATIO",
+        "LOWER_ZONE_RATIO"
+      ],
+      "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+      "operational_guardrail": "",
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE"
+    },
+    {
+      "observation_id": "OBS_SIZE_CAPITAL",
+      "source_question_id": "Q_SIZE_CAPITAL",
+      "selector_id": "SEL_SIZE_CAPITAL",
+      "domain_id": "SIZE",
+      "scope": "INDIVIDUAL",
+      "descriptor_kind": "DETERMINISTIC_DESCRIPTOR",
+      "assessment_owner": "DETERMINISTIC",
+      "model_call_role": "READ_ONLY_CONTEXT_OR_PRECOMPUTED",
+      "cardinality": "SINGLE",
+      "value_set_id": "RELATIVE_SIZE",
+      "candidate_kind": null,
+      "required_inputs": [
+        "IDENTIFIED_CAPITALS",
+        "VALID_MIDDLE_ZONE"
+      ],
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "permitted_evidence_class": "PRECOMPUTED_DESCRIPTION",
+      "source_refs": [
+        {
+          "source_id": "IHAS",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "BIG26",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "CONTIN",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "related_canonical_feature_ids": [
+        "CAPITAL_HEIGHT_RATIO"
+      ],
+      "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+      "operational_guardrail": "",
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE"
+    },
+    {
+      "observation_id": "OBS_SIZE_WIDTH",
+      "source_question_id": "Q_SIZE_WIDTH",
+      "selector_id": "SEL_SIZE_WIDTH",
+      "domain_id": "SIZE",
+      "scope": "INDIVIDUAL",
+      "descriptor_kind": "DETERMINISTIC_DESCRIPTOR",
+      "assessment_owner": "DETERMINISTIC",
+      "model_call_role": "READ_ONLY_CONTEXT_OR_PRECOMPUTED",
+      "cardinality": "SINGLE",
+      "value_set_id": "LETTER_WIDTH",
+      "candidate_kind": null,
+      "required_inputs": [
+        "IDENTIFIED_LETTER_BODIES"
+      ],
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "permitted_evidence_class": "PRECOMPUTED_DESCRIPTION",
+      "source_refs": [
+        {
+          "source_id": "IHAS",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "BIG26",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "CONTIN",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "related_canonical_feature_ids": [
+        "GLYPH_ASPECT_RATIO_MEAN"
+      ],
+      "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+      "operational_guardrail": "Generic component aspect ratio is not an exact Moretti Largo di lettere score.",
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE"
+    },
+    {
+      "observation_id": "OBS_SIZE_TREND",
+      "source_question_id": "Q_SIZE_TREND",
+      "selector_id": "SEL_SIZE_TREND",
+      "domain_id": "SIZE",
+      "scope": "INDIVIDUAL",
+      "descriptor_kind": "VISUAL_DESCRIPTOR",
+      "assessment_owner": "PREMIUM_VISUAL",
+      "model_call_role": "ANSWER",
+      "cardinality": "SINGLE",
+      "value_set_id": "TREND",
+      "candidate_kind": null,
+      "required_inputs": [
+        "ORDERED_WORD_OR_LINE_REGIONS",
+        "AUTHORIZED_IMAGE",
+        "IDENTIFIED_EVIDENCE_REGION"
+      ],
+      "answer_state_policy": "ANSWER_STATE_V1",
+      "permitted_evidence_class": "AI_VISUAL_DESCRIPTION_NOT_CANONICAL_MEASUREMENT",
+      "source_refs": [
+        {
+          "source_id": "IHAS",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "BIG26",
+          "relationship": "domain_or_term_basis"
+        },
+        {
+          "source_id": "CONTIN",
+          "relationship": "domain_or_term_basis"
+        }
+      ],
+      "related_canonical_feature_ids": [],
+      "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+      "operational_guardrail": "Report sequence and regions; cannot infer writing duration.",
+      "source_status": "DRAFT_NOT_ACTIVATED",
+      "runtime_status": "DRAFT_NOT_ACTIVE"
+    }
+  ],
+  "feature_mappings": [
+    {
+      "mapping_id": "MAP_SEL_SPACE_BALANCE_PAGE_INK_AREA_RATIO",
+      "source_question_id": "Q_SPACE_BALANCE",
+      "selector_id": "SEL_SPACE_BALANCE",
+      "observation_id": "OBS_SPACE_BALANCE",
+      "canonical_feature_id": "PAGE_INK_AREA_RATIO",
+      "relationship": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+      "mapping_role": "AUXILIARY_CONTEXT",
+      "operational_guardrail": "",
+      "mapping_status": "DRAFT_SUPPORT_ONLY",
+      "runtime_activation": false
+    },
+    {
+      "mapping_id": "MAP_SEL_SPACE_BALANCE_PAGE_TEXT_AREA_RATIO",
+      "source_question_id": "Q_SPACE_BALANCE",
+      "selector_id": "SEL_SPACE_BALANCE",
+      "observation_id": "OBS_SPACE_BALANCE",
+      "canonical_feature_id": "PAGE_TEXT_AREA_RATIO",
+      "relationship": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+      "mapping_role": "AUXILIARY_CONTEXT",
+      "operational_guardrail": "",
+      "mapping_status": "DRAFT_SUPPORT_ONLY",
+      "runtime_activation": false
+    },
+    {
+      "mapping_id": "MAP_SEL_SPACE_MARGINS_MARGIN_TOP_REL",
+      "source_question_id": "Q_SPACE_MARGINS",
+      "selector_id": "SEL_SPACE_MARGINS",
+      "observation_id": "OBS_SPACE_MARGINS",
+      "canonical_feature_id": "MARGIN_TOP_REL",
+      "relationship": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+      "mapping_role": "CANDIDATE_INPUT",
+      "operational_guardrail": "Use supplied descriptions; no replacement of canonical ratios.",
+      "mapping_status": "DRAFT_SUPPORT_ONLY",
+      "runtime_activation": false
+    },
+    {
+      "mapping_id": "MAP_SEL_SPACE_MARGINS_MARGIN_BOTTOM_REL",
+      "source_question_id": "Q_SPACE_MARGINS",
+      "selector_id": "SEL_SPACE_MARGINS",
+      "observation_id": "OBS_SPACE_MARGINS",
+      "canonical_feature_id": "MARGIN_BOTTOM_REL",
+      "relationship": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+      "mapping_role": "CANDIDATE_INPUT",
+      "operational_guardrail": "Use supplied descriptions; no replacement of canonical ratios.",
+      "mapping_status": "DRAFT_SUPPORT_ONLY",
+      "runtime_activation": false
+    },
+    {
+      "mapping_id": "MAP_SEL_SPACE_MARGINS_MARGIN_LEFT_REL",
+      "source_question_id": "Q_SPACE_MARGINS",
+      "selector_id": "SEL_SPACE_MARGINS",
+      "observation_id": "OBS_SPACE_MARGINS",
+      "canonical_feature_id": "MARGIN_LEFT_REL",
+      "relationship": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+      "mapping_role": "CANDIDATE_INPUT",
+      "operational_guardrail": "Use supplied descriptions; no replacement of canonical ratios.",
+      "mapping_status": "DRAFT_SUPPORT_ONLY",
+      "runtime_activation": false
+    },
+    {
+      "mapping_id": "MAP_SEL_SPACE_MARGINS_MARGIN_RIGHT_REL",
+      "source_question_id": "Q_SPACE_MARGINS",
+      "selector_id": "SEL_SPACE_MARGINS",
+      "observation_id": "OBS_SPACE_MARGINS",
+      "canonical_feature_id": "MARGIN_RIGHT_REL",
+      "relationship": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+      "mapping_role": "CANDIDATE_INPUT",
+      "operational_guardrail": "Use supplied descriptions; no replacement of canonical ratios.",
+      "mapping_status": "DRAFT_SUPPORT_ONLY",
+      "runtime_activation": false
+    },
+    {
+      "mapping_id": "MAP_SEL_SPACE_MARGIN_TREND_LINE_START_DRIFT",
+      "source_question_id": "Q_SPACE_MARGIN_TREND",
+      "selector_id": "SEL_SPACE_MARGIN_TREND",
+      "observation_id": "OBS_SPACE_MARGIN_TREND",
+      "canonical_feature_id": "LINE_START_DRIFT",
+      "relationship": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+      "mapping_role": "CANDIDATE_INPUT",
+      "operational_guardrail": "",
+      "mapping_status": "DRAFT_SUPPORT_ONLY",
+      "runtime_activation": false
+    },
+    {
+      "mapping_id": "MAP_SEL_SPACE_MARGIN_TREND_LINE_END_DRIFT",
+      "source_question_id": "Q_SPACE_MARGIN_TREND",
+      "selector_id": "SEL_SPACE_MARGIN_TREND",
+      "observation_id": "OBS_SPACE_MARGIN_TREND",
+      "canonical_feature_id": "LINE_END_DRIFT",
+      "relationship": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+      "mapping_role": "CANDIDATE_INPUT",
+      "operational_guardrail": "",
+      "mapping_status": "DRAFT_SUPPORT_ONLY",
+      "runtime_activation": false
+    },
+    {
+      "mapping_id": "MAP_SEL_SPACE_WORD_WORD_SPACING_REL",
+      "source_question_id": "Q_SPACE_WORD",
+      "selector_id": "SEL_SPACE_WORD",
+      "observation_id": "OBS_SPACE_WORD",
+      "canonical_feature_id": "WORD_SPACING_REL",
+      "relationship": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+      "mapping_role": "PRIMARY_VALUE",
+      "operational_guardrail": "A descriptive band and a population percentile are separate facts.",
+      "mapping_status": "DRAFT_SUPPORT_ONLY",
+      "runtime_activation": false
+    },
+    {
+      "mapping_id": "MAP_SEL_SPACE_WORD_WORD_SPACING_CV",
+      "source_question_id": "Q_SPACE_WORD",
+      "selector_id": "SEL_SPACE_WORD",
+      "observation_id": "OBS_SPACE_WORD",
+      "canonical_feature_id": "WORD_SPACING_CV",
+      "relationship": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+      "mapping_role": "VARIABILITY_CONTEXT",
+      "operational_guardrail": "A descriptive band and a population percentile are separate facts.",
+      "mapping_status": "DRAFT_SUPPORT_ONLY",
+      "runtime_activation": false
+    },
+    {
+      "mapping_id": "MAP_SEL_SPACE_LINE_LINE_SPACING_REL",
+      "source_question_id": "Q_SPACE_LINE",
+      "selector_id": "SEL_SPACE_LINE",
+      "observation_id": "OBS_SPACE_LINE",
+      "canonical_feature_id": "LINE_SPACING_REL",
+      "relationship": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+      "mapping_role": "PRIMARY_VALUE",
+      "operational_guardrail": "",
+      "mapping_status": "DRAFT_SUPPORT_ONLY",
+      "runtime_activation": false
+    },
+    {
+      "mapping_id": "MAP_SEL_SPACE_LINE_LINE_SPACING_CV",
+      "source_question_id": "Q_SPACE_LINE",
+      "selector_id": "SEL_SPACE_LINE",
+      "observation_id": "OBS_SPACE_LINE",
+      "canonical_feature_id": "LINE_SPACING_CV",
+      "relationship": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+      "mapping_role": "VARIABILITY_CONTEXT",
+      "operational_guardrail": "",
+      "mapping_status": "DRAFT_SUPPORT_ONLY",
+      "runtime_activation": false
+    },
+    {
+      "mapping_id": "MAP_SEL_SPACE_LETTER_LETTER_SPACING_REL",
+      "source_question_id": "Q_SPACE_LETTER",
+      "selector_id": "SEL_SPACE_LETTER",
+      "observation_id": "OBS_SPACE_LETTER",
+      "canonical_feature_id": "LETTER_SPACING_REL",
+      "relationship": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+      "mapping_role": "PRIMARY_VALUE",
+      "operational_guardrail": "Component spacing is not automatically letter spacing.",
+      "mapping_status": "DRAFT_SUPPORT_ONLY",
+      "runtime_activation": false
+    },
+    {
+      "mapping_id": "MAP_SEL_SIZE_PHYSICAL_X_HEIGHT_PX",
+      "source_question_id": "Q_SIZE_PHYSICAL",
+      "selector_id": "SEL_SIZE_PHYSICAL",
+      "observation_id": "OBS_SIZE_PHYSICAL",
+      "canonical_feature_id": "X_HEIGHT_PX",
+      "relationship": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+      "mapping_role": "PRIMARY_VALUE",
+      "operational_guardrail": "No px threshold becomes a physical-size rule; a derived physical quantity requires an explicit versioned measurement contract, never relabelling X_HEIGHT_PX as millimetres.",
+      "mapping_status": "DRAFT_SUPPORT_ONLY",
+      "runtime_activation": false
+    },
+    {
+      "mapping_id": "MAP_SEL_SIZE_ZONES_UPPER_ZONE_RATIO",
+      "source_question_id": "Q_SIZE_ZONES",
+      "selector_id": "SEL_SIZE_ZONES",
+      "observation_id": "OBS_SIZE_ZONES",
+      "canonical_feature_id": "UPPER_ZONE_RATIO",
+      "relationship": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+      "mapping_role": "AUXILIARY_CONTEXT",
+      "operational_guardrail": "",
+      "mapping_status": "DRAFT_SUPPORT_ONLY",
+      "runtime_activation": false
+    },
+    {
+      "mapping_id": "MAP_SEL_SIZE_ZONES_LOWER_ZONE_RATIO",
+      "source_question_id": "Q_SIZE_ZONES",
+      "selector_id": "SEL_SIZE_ZONES",
+      "observation_id": "OBS_SIZE_ZONES",
+      "canonical_feature_id": "LOWER_ZONE_RATIO",
+      "relationship": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+      "mapping_role": "AUXILIARY_CONTEXT",
+      "operational_guardrail": "",
+      "mapping_status": "DRAFT_SUPPORT_ONLY",
+      "runtime_activation": false
+    },
+    {
+      "mapping_id": "MAP_SEL_SIZE_CAPITAL_CAPITAL_HEIGHT_RATIO",
+      "source_question_id": "Q_SIZE_CAPITAL",
+      "selector_id": "SEL_SIZE_CAPITAL",
+      "observation_id": "OBS_SIZE_CAPITAL",
+      "canonical_feature_id": "CAPITAL_HEIGHT_RATIO",
+      "relationship": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+      "mapping_role": "PRIMARY_VALUE",
+      "operational_guardrail": "",
+      "mapping_status": "DRAFT_SUPPORT_ONLY",
+      "runtime_activation": false
+    },
+    {
+      "mapping_id": "MAP_SEL_SIZE_WIDTH_GLYPH_ASPECT_RATIO_MEAN",
+      "source_question_id": "Q_SIZE_WIDTH",
+      "selector_id": "SEL_SIZE_WIDTH",
+      "observation_id": "OBS_SIZE_WIDTH",
+      "canonical_feature_id": "GLYPH_ASPECT_RATIO_MEAN",
+      "relationship": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
+      "mapping_role": "PRIMARY_VALUE",
+      "operational_guardrail": "Generic component aspect ratio is not an exact Moretti Largo di lettere score.",
+      "mapping_status": "DRAFT_SUPPORT_ONLY",
+      "runtime_activation": false
+    }
+  ],
   "candidate_validation_policy": {
     "policy_id": "CANDIDATE_VALIDATION_V1",
     "version": "graphology-candidate-validation/1",
