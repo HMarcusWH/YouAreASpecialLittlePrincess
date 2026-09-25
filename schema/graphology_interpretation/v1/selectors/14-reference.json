@@ -18,7 +18,8 @@
     "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
     "report_target": "graphology.reference",
     "source_status": "DRAFT_NOT_ACTIVATED",
-    "runtime_status": "DRAFT_NOT_ACTIVE"
+    "runtime_status": "DRAFT_NOT_ACTIVE",
+    "operational_guardrail": ""
   },
   {
     "selector_id": "SEL_REF_HIGHLIGHT",
@@ -41,7 +42,8 @@
     "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
     "report_target": "graphology.reference",
     "source_status": "DRAFT_NOT_ACTIVATED",
-    "runtime_status": "DRAFT_NOT_ACTIVE"
+    "runtime_status": "DRAFT_NOT_ACTIVE",
+    "operational_guardrail": ""
   },
   {
     "selector_id": "SEL_REF_COMBINATION",
@@ -64,7 +66,8 @@
     "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
     "report_target": "graphology.reference",
     "source_status": "DRAFT_NOT_ACTIVATED",
-    "runtime_status": "DRAFT_NOT_ACTIVE"
+    "runtime_status": "DRAFT_NOT_ACTIVE",
+    "operational_guardrail": "No multiplication of marginal rarity estimates."
   },
   {
     "selector_id": "SEL_REF_QUALIFICATION",
@@ -85,6 +88,7 @@
     "feature_mapping_relation": "SUPPORTING_NOT_AUTOMATIC_SEMANTIC_EQUIVALENCE",
     "report_target": "graphology.reference",
     "source_status": "DRAFT_NOT_ACTIVATED",
-    "runtime_status": "DRAFT_NOT_ACTIVE"
+    "runtime_status": "DRAFT_NOT_ACTIVE",
+    "operational_guardrail": ""
   }
 ]
