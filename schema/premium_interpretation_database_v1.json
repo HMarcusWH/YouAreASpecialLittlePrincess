@@ -15817,6 +15817,7 @@
       "production_status": "STRUCTURE_ONLY",
       "runtime_activation": false
     },
+    "candidate_validation_policy_id": "CANDIDATE_VALIDATION_V1",
     "method_policies": [
       {
         "policy_id": "POLICY_CJ_CONTEXTUAL_SYNTHESIS_V1",
@@ -16088,7 +16089,6 @@
         }
       ],
       "pack_activation_rule": "A pack remains inactive until every included association has reviewed operational premises, applicability, counterevidence behavior, source provenance, and explicit promotion evidence."
-    },
-    "candidate_validation_policy_id": "CANDIDATE_VALIDATION_V1"
+    }
   }
 }
