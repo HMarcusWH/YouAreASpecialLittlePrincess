@@ -1,0 +1,117 @@
+{
+  "version": "graphology-pr4-content-traceability/1",
+  "records": [
+    {
+      "research_kind": "QUESTION_PACK",
+      "research_id": "INDIVIDUAL_GRAPHIC_DRAFT",
+      "production_kind": "QUESTION_PACK",
+      "production_id": "PREMIUM_INDIVIDUAL_GRAPHIC_V1",
+      "disposition": "PROMOTED_WITH_VERSIONED_ID_AND_APPLICATION_PRECONDITIONS",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "QUESTION_PACK",
+      "research_id": "TRADITIONAL_READING_DRAFT",
+      "production_kind": "QUESTION_PACK",
+      "production_id": "PREMIUM_TRADITIONAL_READING_V1",
+      "disposition": "PROMOTED_WITH_VERSIONED_ID_AND_APPLICATION_PRECONDITIONS",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "QUESTION_PACK",
+      "research_id": "REFERENCE_DRAFT",
+      "production_kind": "QUESTION_PACK",
+      "production_id": "PREMIUM_REFERENCE_V1",
+      "disposition": "PROMOTED_WITH_VERSIONED_ID_AND_APPLICATION_PRECONDITIONS",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "QUESTION_PACK",
+      "research_id": "PAIR_DRAFT",
+      "production_kind": "QUESTION_PACK",
+      "production_id": "PREMIUM_PAIR_V1",
+      "disposition": "PROMOTED_WITH_VERSIONED_ID_AND_APPLICATION_PRECONDITIONS",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "QUESTION_PACK",
+      "research_id": "HISTORY_DRAFT",
+      "production_kind": "QUESTION_PACK",
+      "production_id": "PREMIUM_HISTORY_V1",
+      "disposition": "PROMOTED_WITH_VERSIONED_ID_AND_APPLICATION_PRECONDITIONS",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "SOFT_FIELD",
+      "research_id": "SOFT_GRAPHIC_PORTRAIT",
+      "production_kind": "SOFT_FIELD",
+      "production_id": "SOFT_GRAPHIC_PORTRAIT",
+      "disposition": "PROMOTED_WITH_TONE_AND_SAFETY_METADATA",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "SOFT_FIELD",
+      "research_id": "SOFT_COMBINATION",
+      "production_kind": "SOFT_FIELD",
+      "production_id": "SOFT_COMBINATION",
+      "disposition": "PROMOTED_WITH_TONE_AND_SAFETY_METADATA",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "SOFT_FIELD",
+      "research_id": "SOFT_TRADITIONAL_SYNTHESIS",
+      "production_kind": "SOFT_FIELD",
+      "production_id": "SOFT_TRADITIONAL_SYNTHESIS",
+      "disposition": "PROMOTED_WITH_TONE_AND_SAFETY_METADATA",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "SOFT_FIELD",
+      "research_id": "SOFT_ALTERNATIVE",
+      "production_kind": "SOFT_FIELD",
+      "production_id": "SOFT_ALTERNATIVE",
+      "disposition": "PROMOTED_WITH_TONE_AND_SAFETY_METADATA",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "SOFT_FIELD",
+      "research_id": "SOFT_DISTINCTIVENESS",
+      "production_kind": "SOFT_FIELD",
+      "production_id": "SOFT_DISTINCTIVENESS",
+      "disposition": "PROMOTED_WITH_TONE_AND_SAFETY_METADATA",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "SOFT_FIELD",
+      "research_id": "SOFT_PAIR",
+      "production_kind": "SOFT_FIELD",
+      "production_id": "SOFT_PAIR",
+      "disposition": "PROMOTED_WITH_TONE_AND_SAFETY_METADATA",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "SOFT_FIELD",
+      "research_id": "SOFT_HISTORY",
+      "production_kind": "SOFT_FIELD",
+      "production_id": "SOFT_HISTORY",
+      "disposition": "PROMOTED_WITH_TONE_AND_SAFETY_METADATA",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "SOFT_FIELD",
+      "research_id": "SOFT_LIMITATION",
+      "production_kind": "SOFT_FIELD",
+      "production_id": "SOFT_LIMITATION",
+      "disposition": "PROMOTED_WITH_TONE_AND_SAFETY_METADATA",
+      "runtime_effect": "NONE"
+    },
+    {
+      "research_kind": "MODEL_PACK_POLICY",
+      "research_id": "model_pack_policy",
+      "production_kind": "QUESTION_PACK_POLICY",
+      "production_id": "graphology-model-pack-policy/1",
+      "disposition": "PROMOTED_INTO_EACH_PACK",
+      "runtime_effect": "NONE"
+    }
+  ]
+}

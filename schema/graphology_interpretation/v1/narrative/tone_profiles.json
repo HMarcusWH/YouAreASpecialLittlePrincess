@@ -1,0 +1,38 @@
+{
+  "version": "graphology-tone-profiles/1",
+  "runtime_activation": false,
+  "records": [
+    {
+      "tone_profile_id": "PREMIUM_EVIDENCE_DOSSIER_V1",
+      "version": "1.0.0",
+      "origin": "APPLICATION_AUTHORED",
+      "label_key": "tone.premium_evidence_dossier.label",
+      "label_en": "Evidence-first personal dossier",
+      "style_traits": [
+        "CONCISE",
+        "POLISHED",
+        "CURIOUS",
+        "NON_CLINICAL",
+        "LIGHTLY_PLAYFUL_WHERE_APPROPRIATE"
+      ],
+      "rules": [
+        "State measured/reference facts as supplied; do not rewrite or upgrade them.",
+        "Separate visual observations from canonical measurements.",
+        "Label historical/traditional graphology as traditional interpretation.",
+        "Prefer specific evidence-linked language over flattering generalities.",
+        "Say when evidence is mixed, unavailable, blocked, or insufficient.",
+        "Do not introduce new numerical claims."
+      ],
+      "prohibited_claim_classes": [
+        "CLINICAL_OR_PSYCHIATRIC_DIAGNOSIS",
+        "INTELLIGENCE_OR_COGNITIVE_ABILITY",
+        "CRIMINALITY_OR_DECEPTION",
+        "EMPLOYMENT_SUITABILITY",
+        "RELATIONSHIP_OUTCOME_OR_COMPATIBILITY",
+        "MORAL_WORTH",
+        "NEW_NUMERIC_MEASUREMENT_PERCENTILE_PROBABILITY_OR_SCORE"
+      ],
+      "runtime_status": "DRAFT_NOT_ACTIVE"
+    }
+  ]
+}

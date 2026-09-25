@@ -1,0 +1,176 @@
+{
+  "version": "graphology-report-slots/1",
+  "runtime_activation": false,
+  "records": [
+    {
+      "report_slot_id": "SLOT_CONTEXT",
+      "report_target": "graphology.context",
+      "scope": "INDIVIDUAL",
+      "order": 1,
+      "label_key": "report.context.label",
+      "label_en": "Sample context and applicability",
+      "content_origin": "APPLICATION_REPORT_ARCHITECTURE",
+      "runtime_status": "DRAFT_NOT_ACTIVE"
+    },
+    {
+      "report_slot_id": "SLOT_GLOBAL",
+      "report_target": "graphology.global",
+      "scope": "INDIVIDUAL",
+      "order": 2,
+      "label_key": "report.global.label",
+      "label_en": "Whole-pattern appraisal",
+      "content_origin": "APPLICATION_REPORT_ARCHITECTURE",
+      "runtime_status": "DRAFT_NOT_ACTIVE"
+    },
+    {
+      "report_slot_id": "SLOT_SPACE",
+      "report_target": "graphology.space",
+      "scope": "INDIVIDUAL",
+      "order": 3,
+      "label_key": "report.space.label",
+      "label_en": "Page organization and spacing",
+      "content_origin": "APPLICATION_REPORT_ARCHITECTURE",
+      "runtime_status": "DRAFT_NOT_ACTIVE"
+    },
+    {
+      "report_slot_id": "SLOT_SIZE",
+      "report_target": "graphology.size",
+      "scope": "INDIVIDUAL",
+      "order": 4,
+      "label_key": "report.size.label",
+      "label_en": "Size, proportion and zones",
+      "content_origin": "APPLICATION_REPORT_ARCHITECTURE",
+      "runtime_status": "DRAFT_NOT_ACTIVE"
+    },
+    {
+      "report_slot_id": "SLOT_DIRECTION",
+      "report_target": "graphology.direction",
+      "scope": "INDIVIDUAL",
+      "order": 5,
+      "label_key": "report.direction.label",
+      "label_en": "Slant, baseline and directional tendencies",
+      "content_origin": "APPLICATION_REPORT_ARCHITECTURE",
+      "runtime_status": "DRAFT_NOT_ACTIVE"
+    },
+    {
+      "report_slot_id": "SLOT_CONNECTION",
+      "report_target": "graphology.connection",
+      "scope": "INDIVIDUAL",
+      "order": 6,
+      "label_key": "report.connection.label",
+      "label_en": "Degree and form of joining",
+      "content_origin": "APPLICATION_REPORT_ARCHITECTURE",
+      "runtime_status": "DRAFT_NOT_ACTIVE"
+    },
+    {
+      "report_slot_id": "SLOT_FORM",
+      "report_target": "graphology.form",
+      "scope": "INDIVIDUAL",
+      "order": 7,
+      "label_key": "report.form.label",
+      "label_en": "Letterform and simplification",
+      "content_origin": "APPLICATION_REPORT_ARCHITECTURE",
+      "runtime_status": "DRAFT_NOT_ACTIVE"
+    },
+    {
+      "report_slot_id": "SLOT_STROKE",
+      "report_target": "graphology.stroke",
+      "scope": "INDIVIDUAL",
+      "order": 8,
+      "label_key": "report.stroke.label",
+      "label_en": "Stroke appearance and pressure boundary",
+      "content_origin": "APPLICATION_REPORT_ARCHITECTURE",
+      "runtime_status": "DRAFT_NOT_ACTIVE"
+    },
+    {
+      "report_slot_id": "SLOT_MOVEMENT",
+      "report_target": "graphology.movement",
+      "scope": "INDIVIDUAL",
+      "order": 9,
+      "label_key": "report.movement.label",
+      "label_en": "Apparent movement, rhythm and variation",
+      "content_origin": "APPLICATION_REPORT_ARCHITECTURE",
+      "runtime_status": "DRAFT_NOT_ACTIVE"
+    },
+    {
+      "report_slot_id": "SLOT_DETAIL",
+      "report_target": "graphology.detail",
+      "scope": "INDIVIDUAL",
+      "order": 10,
+      "label_key": "report.detail.label",
+      "label_en": "Local gestures, diacritics and letter detail",
+      "content_origin": "APPLICATION_REPORT_ARCHITECTURE",
+      "runtime_status": "DRAFT_NOT_ACTIVE"
+    },
+    {
+      "report_slot_id": "SLOT_SIGNATURE",
+      "report_target": "graphology.signature",
+      "scope": "INDIVIDUAL",
+      "order": 11,
+      "label_key": "report.signature.label",
+      "label_en": "Signature and body-text relationship",
+      "content_origin": "APPLICATION_REPORT_ARCHITECTURE",
+      "runtime_status": "DRAFT_NOT_ACTIVE"
+    },
+    {
+      "report_slot_id": "SLOT_HIERARCHY",
+      "report_target": "graphology.hierarchy",
+      "scope": "INDIVIDUAL",
+      "order": 12,
+      "label_key": "report.hierarchy.label",
+      "label_en": "Dominants, modifiers and whole-sample coherence",
+      "content_origin": "APPLICATION_REPORT_ARCHITECTURE",
+      "runtime_status": "DRAFT_NOT_ACTIVE"
+    },
+    {
+      "report_slot_id": "SLOT_INTERPRETATION",
+      "report_target": "graphology.interpretation",
+      "scope": "INDIVIDUAL",
+      "order": 13,
+      "label_key": "report.interpretation.label",
+      "label_en": "School-specific interpretation and synthesis",
+      "content_origin": "APPLICATION_REPORT_ARCHITECTURE",
+      "runtime_status": "DRAFT_NOT_ACTIVE"
+    },
+    {
+      "report_slot_id": "SLOT_REFERENCE",
+      "report_target": "graphology.reference",
+      "scope": "INDIVIDUAL",
+      "order": 14,
+      "label_key": "report.reference.label",
+      "label_en": "Database-relative distinctiveness",
+      "content_origin": "APPLICATION_REPORT_ARCHITECTURE",
+      "runtime_status": "DRAFT_NOT_ACTIVE"
+    },
+    {
+      "report_slot_id": "SLOT_PAIR",
+      "report_target": "graphology.pair",
+      "scope": "PAIR",
+      "order": 15,
+      "label_key": "report.pair.label",
+      "label_en": "Two-sample comparison",
+      "content_origin": "APPLICATION_REPORT_ARCHITECTURE",
+      "runtime_status": "DRAFT_NOT_ACTIVE"
+    },
+    {
+      "report_slot_id": "SLOT_HISTORY",
+      "report_target": "graphology.history",
+      "scope": "HISTORY",
+      "order": 16,
+      "label_key": "report.history.label",
+      "label_en": "Within-writer comparison over time",
+      "content_origin": "APPLICATION_REPORT_ARCHITECTURE",
+      "runtime_status": "DRAFT_NOT_ACTIVE"
+    },
+    {
+      "report_slot_id": "SLOT_SYNTHESIS",
+      "report_target": "graphology.synthesis",
+      "scope": "ALL",
+      "order": 17,
+      "label_key": "report.synthesis.label",
+      "label_en": "Synthesis",
+      "content_origin": "APPLICATION_REPORT_ARCHITECTURE",
+      "runtime_status": "DRAFT_NOT_ACTIVE"
+    }
+  ]
+}
