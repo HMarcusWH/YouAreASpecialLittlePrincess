@@ -37,6 +37,11 @@ REQUIRED_DISTINCT_PURPOSES = (
 )
 # Deletion lineage must start from these handwriting-bearing artifacts.
 HANDWRITING_ROOTS = ("upload_original", "pilot_capture")
+# Artifact kinds that carry page pixels by construction; their classification is not a per-node choice.
+HANDWRITING_ARTIFACTS = (
+    "upload_original", "pilot_capture", "normalized_image", "crop_overlay_thumbnail", "premium_payload",
+    "provider_copy", "export_artifact", "reference_member", "support_case_copy",
+)
 FREE_SERVICE_PURPOSE = "service_processing"
 # Purposes designed to be offered. Only APPROVED ones are usable for real
 # permission decisions; DRAFT is usable solely inside synthetic fixtures.
@@ -484,6 +489,12 @@ def check_lineage(doc: dict, retention: dict[str, dict]) -> list[Issue]:
                 or root_class is None or not root_class["contains_handwriting"]):
             issues.append(Issue("HANDWRITING_ROOT_REQUIRED", root,
                                 "a declared root that contains handwriting and uses a handwriting retention class"))
+    for kind in HANDWRITING_ARTIFACTS:
+        node = nodes.get(kind)
+        if node is not None and not node["contains_handwriting"]:
+            issues.append(Issue("HANDWRITING_ARTIFACT_DECLASSIFIED", kind, "this artifact kind always carries page pixels"))
+        elif node is None:
+            issues.append(Issue("HANDWRITING_ARTIFACT_MISSING", kind, "deletion lineage must track every handwriting-bearing kind"))
     for kind, node in nodes.items():
         if not node["parents"] and kind not in doc["roots"]:
             issues.append(Issue("UNDECLARED_ROOT", kind, "a parentless kind must be a declared root"))
@@ -543,6 +554,9 @@ def check_source_rights(doc: dict) -> list[Issue]:
             issues.append(Issue("CLEARED_WITHOUT_REVIEW", where, "clearance requires a recorded review"))
         if reviewed and s["kind"] == "EXTERNAL_DATASET" and not s["review"]["archive_sha256"]:
             issues.append(Issue("REVIEW_WITHOUT_ARCHIVE_HASH", where, "an external review pins the exact archive checksum"))
+        if reviewed and s["review"]["expires_on"] is not None and (
+                parse_timestamp(s["review"]["expires_on"]) <= parse_timestamp(s["review"]["reviewed_on"])):
+            issues.append(Issue("REVIEW_WINDOW_INVALID", where, "expires_on must be after reviewed_on"))
         data = s["rights"]["data"]["status"]
         for use, status in s["allowed_uses"].items():
             if status == "CLEARED" and data != "CLEARED":
@@ -589,10 +603,13 @@ def check_pilot_gate(gate: dict, protocol: dict, notices: dict, purposes: dict[t
 
 
 def gate_approved_by(gate: dict | None, when: str | None) -> bool:
-    """True when the pilot gate is APPROVED with a recorded approval decided at or before `when`."""
-    decided_on = ((gate or {}).get("approval") or {}).get("decided_on")
-    return ((gate or {}).get("status") == "APPROVED" and bool(decided_on) and bool(when)
-            and parse_timestamp(decided_on) <= parse_timestamp(when))
+    """True when the pilot gate is APPROVED, with every required decision recorded and its approval at or before `when`."""
+    gate = gate or {}
+    approval = gate.get("approval") or {}
+    decided = {d["decision_key"] for d in gate.get("decisions", []) if d["status"] == "DECIDED" and d["decision_ref"]}
+    return (gate.get("status") == "APPROVED" and bool(approval.get("decision_ref")) and bool(approval.get("decided_on"))
+            and set(REQUIRED_PILOT_DECISIONS) <= decided and bool(when)
+            and parse_timestamp(approval["decided_on"]) <= parse_timestamp(when))
 
 
 # ---------------------------------------------------------- collection protocol
@@ -694,7 +711,7 @@ class CollectionSummary:
 
 
 def source_clearance_issues(protocol: dict, release_purpose: dict, sources: dict[str, dict] | None,
-                            cutoff: datetime) -> list[Issue]:
+                            cutoff: datetime, publish_at: datetime | None = None) -> list[Issue]:
     """A human release needs the collection's own data rights and the release's use cleared by a review recorded by the cutoff."""
     use = RELEASE_SOURCE_USES.get(release_purpose["purpose_id"])
     source = (sources or {}).get(protocol["source_id"])
@@ -710,6 +727,9 @@ def source_clearance_issues(protocol: dict, release_purpose: dict, sources: dict
     if parse_timestamp(source["review"]["reviewed_on"]) > cutoff:
         return [Issue("SOURCE_NOT_CLEARED", protocol["source_id"],
                       f"cleared by a review dated {source['review']['reviewed_on']}, after the release cutoff")]
+    expires_on = source["review"]["expires_on"]
+    if expires_on is not None and parse_timestamp(expires_on) <= max(cutoff, publish_at or cutoff):
+        return [Issue("SOURCE_NOT_CLEARED", protocol["source_id"], f"the clearance expired at {expires_on}")]
     return []
 
 
@@ -756,7 +776,7 @@ def check_collection_manifest(
                 issues.append(Issue("PILOT_GATE_NOT_APPROVED", "pilot_gate",
                                     "pilot_rights_consent must be APPROVED, with its approval preceding the protocol's"))
                 releasable = False
-        clearance = source_clearance_issues(protocol, manifest["release_purpose"], sources, cutoff)
+        clearance = source_clearance_issues(protocol, manifest["release_purpose"], sources, cutoff, publish_at)
         issues += clearance
         releasable = releasable and not clearance
         if publish_at is None:
@@ -768,6 +788,7 @@ def check_collection_manifest(
             releasable = False
     if (manifest["protocol"]["protocol_id"], manifest["protocol"]["version"]) != (protocol["protocol_id"], protocol["version"]):
         issues.append(Issue("PROTOCOL_MISMATCH", "protocol", "manifest was collected under another protocol version"))
+        releasable = False  # its prompts and consent contract are not the ones being checked
     for label, rows, key in (("writer", manifest["writers"], "writer_id"), ("enrollment", manifest["writers"], "enrollment_id"),
                              ("specimen", manifest["specimens"], "specimen_id"), ("capture", manifest["captures"], "capture_id")):
         for value in duplicates(row[key] for row in rows):
@@ -864,21 +885,23 @@ def check_collection_manifest(
         if specimen is None:
             issues.append(Issue("DANGLING_REFERENCE", where, f"unknown specimen {c['specimen_id']}"))
             continue
+        broken = []
         if (c["specimen_id"], c["capture_index"]) in indexes:
-            issues.append(Issue("CAPTURE_INDEX_CONFLICT", where, "capture_index repeats within a specimen"))
+            broken.append(Issue("CAPTURE_INDEX_CONFLICT", where, "capture_index repeats within a specimen"))
         indexes.add((c["specimen_id"], c["capture_index"]))
         repeat = c["repeat_of_capture_id"]
         if repeat is None and c["capture_index"] != 1:
-            issues.append(Issue("REPEAT_WITHOUT_ORIGINAL", where, "every capture after the first names the earlier capture it repeats"))
+            broken.append(Issue("REPEAT_WITHOUT_ORIGINAL", where, "every capture after the first names the earlier capture it repeats"))
         if repeat is not None:
             original = captures.get(repeat)
             if original is None or repeat == where:
-                issues.append(Issue("DANGLING_REFERENCE", where, f"repeat_of_capture_id {repeat} is not another capture"))
+                broken.append(Issue("DANGLING_REFERENCE", where, f"repeat_of_capture_id {repeat} is not another capture"))
             elif original["specimen_id"] != c["specimen_id"]:
-                issues.append(Issue("REPEAT_CROSSES_SPECIMEN", where, "a repeat photo belongs to the same page"))
+                broken.append(Issue("REPEAT_CROSSES_SPECIMEN", where, "a repeat photo belongs to the same page"))
             elif original["capture_index"] >= c["capture_index"]:
                 # Pointing only backwards keeps repeat lineage acyclic, with an original at its root.
-                issues.append(Issue("REPEAT_NOT_EARLIER", where, f"{repeat} is not an earlier capture of this page"))
+                broken.append(Issue("REPEAT_NOT_EARLIER", where, f"{repeat} is not an earlier capture of this page"))
+        issues += broken
         first = by_hash.get(c["content_sha256"])
         if first is not None:
             other = specimens.get(captures[first]["specimen_id"])
@@ -888,6 +911,8 @@ def check_collection_manifest(
                 issues.append(Issue("DUPLICATE_CAPTURE_BYTES", where, f"identical bytes to {first}"))
             continue
         by_hash[c["content_sha256"]] = where
+        if broken:
+            continue  # a capture whose provenance failed validation is not evidence of anything
         if c["specimen_id"] in included:
             counted.append(c["specimen_id"])
 
@@ -1013,17 +1038,18 @@ def event_validity(event: dict, context: ConsentContext) -> list[str]:
     if event["subject"]["kind"] == "WRITER" and event["subject"]["id"] not in context.writers:
         codes.append("UNKNOWN_WRITER")
     scope = event["scope"]
-    if scope["kind"] not in purpose["grant_scopes"] and not (kind == "WITHDRAW" and purpose["status"] not in OFFERED):
+    # A denial or withdrawal may always cover the whole subject: it only ever narrows what is permitted.
+    restrictive_wide = kind in {"DENY", "WITHDRAW"} and scope["kind"] == "SUBJECT_WIDE"
+    if (scope["kind"] not in purpose["grant_scopes"] and not restrictive_wide
+            and not (kind == "WITHDRAW" and purpose["status"] not in OFFERED)):
         codes.append("SCOPE_NOT_ALLOWED")
     if scope["kind"] == "SUBJECT_WIDE" and scope["id"] != event["subject"]["id"]:
         codes.append("SCOPE_SUBJECT_MISMATCH")
     codes += notice_window_codes(event, context)
 
-    recorded, effective = parse_timestamp(event["recorded_at"]), parse_timestamp(event["effective_at"])
-    if effective < recorded:
+    # Only grants may be scheduled; a denial or withdrawal always takes effect when recorded (effective_time).
+    if kind == "GRANT" and parse_timestamp(event["effective_at"]) < parse_timestamp(event["recorded_at"]):
         codes.append("BACKDATED_EVENT")
-    if kind == "WITHDRAW" and effective != recorded:
-        codes.append("DELAYED_WITHDRAWAL")
 
     derived = event["derived_from"]
     if kind == "GRANT":
@@ -1066,6 +1092,12 @@ def event_validity(event: dict, context: ConsentContext) -> list[str]:
     return sorted(set(codes))
 
 
+def effective_time(event: dict) -> datetime:
+    """When an event changes permission: restrictive choices apply as soon as they are recorded."""
+    field = "effective_at" if event["event_type"] == "GRANT" else "recorded_at"
+    return parse_timestamp(event[field])
+
+
 def scope_covers(event_scope: dict, query_scope: dict, subject: dict, covering_scopes: tuple[dict, ...] = ()) -> bool:
     if event_scope == query_scope or event_scope in covering_scopes:
         return True
@@ -1096,14 +1128,14 @@ def evaluate_permission(
         if event["subject"] == subject
         and purpose_key(event["purpose"]) == purpose_key(purpose_ref)
         and scope_covers(event["scope"], scope, subject, covering_scopes)
-        and parse_timestamp(event["effective_at"]) <= at
+        and effective_time(event) <= at
     ]
     if not candidates:
         return "NOT_ASKED"
     _index, latest = max(
         candidates,
         key=lambda item: (
-            parse_timestamp(item[1]["effective_at"]),
+            effective_time(item[1]),
             parse_timestamp(item[1]["recorded_at"]),
             RESTRICTIVENESS[item[1]["event_type"]],
             item[0],

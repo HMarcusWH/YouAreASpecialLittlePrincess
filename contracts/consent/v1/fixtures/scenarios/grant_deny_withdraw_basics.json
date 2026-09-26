@@ -201,6 +201,46 @@
         "status": "RECORDED"
       },
       "subject_eligibility": "DECLARED_ADULT"
+    },
+    {
+      "contract_version": "consent-event/v1",
+      "event_id": "evt_0105",
+      "event_type": "WITHDRAW",
+      "subject": {
+        "kind": "WRITER",
+        "id": "wrt_0001"
+      },
+      "purpose": {
+        "purpose_id": "service_processing",
+        "purpose_version": 1
+      },
+      "notice": {
+        "notice_id": "notice.consent-choices",
+        "version": 1
+      },
+      "scope": {
+        "kind": "SUBJECT_WIDE",
+        "id": "wrt_0001"
+      },
+      "actor": {
+        "kind": "SYSTEM",
+        "id": "sys_0001"
+      },
+      "presented_default": "NOT_PRESENTED",
+      "capture_method": "VERIFIED_REQUEST",
+      "derived_from": {
+        "kind": "ACCOUNT_DELETION",
+        "id": "del_0001"
+      },
+      "surface": "SYSTEM",
+      "recorded_at": "2026-02-15T09:00:00Z",
+      "effective_at": "2026-02-15T09:00:00Z",
+      "evidence": {
+        "kind": "SYSTEM_RECORD",
+        "ref": "evd_0105",
+        "status": "RECORDED"
+      },
+      "subject_eligibility": "DECLARED_ADULT"
     }
   ],
   "checks": [
@@ -222,6 +262,11 @@
     {
       "kind": "EVENT_VALIDITY",
       "event_id": "evt_0104",
+      "expect": []
+    },
+    {
+      "kind": "EVENT_VALIDITY",
+      "event_id": "evt_0105",
       "expect": []
     },
     {
@@ -341,6 +386,37 @@
       "at": "2026-02-11T09:00:00Z",
       "expect": "AVAILABLE",
       "note": "Withdrawing saved history does not remove the Free report."
+    },
+    {
+      "kind": "PERMISSION",
+      "subject": {
+        "kind": "WRITER",
+        "id": "wrt_0001"
+      },
+      "purpose": {
+        "purpose_id": "service_processing",
+        "purpose_version": 1
+      },
+      "scope": {
+        "kind": "SPECIMEN",
+        "id": "spc_0001"
+      },
+      "at": "2026-02-16T09:00:00Z",
+      "expect": "WITHDRAWN",
+      "note": "Account deletion withdraws the purpose subject-wide, covering every specimen-scoped grant."
+    },
+    {
+      "kind": "FREE_REPORT",
+      "subject": {
+        "kind": "WRITER",
+        "id": "wrt_0001"
+      },
+      "scope": {
+        "kind": "SPECIMEN",
+        "id": "spc_0001"
+      },
+      "at": "2026-02-16T09:00:00Z",
+      "expect": "UNAVAILABLE"
     }
   ]
 }

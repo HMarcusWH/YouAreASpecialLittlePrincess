@@ -34,11 +34,15 @@
         "review": {
           "type": "object",
           "additionalProperties": false,
-          "required": ["decision_ref", "reviewer_role", "reviewed_on", "archive_sha256"],
+          "required": ["decision_ref", "reviewer_role", "reviewed_on", "expires_on", "archive_sha256"],
           "properties": {
             "decision_ref": {"$ref": "common.schema.json#/$defs/required_decision_ref"},
             "reviewer_role": {"$ref": "common.schema.json#/$defs/text"},
             "reviewed_on": {"$ref": "common.schema.json#/$defs/timestamp"},
+            "expires_on": {
+              "$ref": "common.schema.json#/$defs/nullable_timestamp",
+              "description": "When the reviewed terms stop covering use; null only when the terms have no end. Checked at release cutoff and publication."
+            },
             "archive_sha256": {
               "type": ["string", "null"],
               "pattern": "^[0-9a-f]{64}$"

@@ -39,9 +39,9 @@ Evidence such as signed agreements lives in protected storage and is referenced 
 An event is **invalid** and never changes state when any of these hold (validator codes in brackets):
 
 - The purpose is unknown [`UNKNOWN_PURPOSE`]. A grant targets a purpose that is not offered [`PURPOSE_NOT_OFFERED`], or one that is still a draft outside synthetic fixtures [`PURPOSE_NOT_APPROVED`].
-- The scope kind is not allowed for the purpose [`SCOPE_NOT_ALLOWED`], or a subject-wide scope names someone else [`SCOPE_SUBJECT_MISMATCH`].
+- The scope kind is not allowed for the purpose [`SCOPE_NOT_ALLOWED`], or a subject-wide scope names someone else [`SCOPE_SUBJECT_MISMATCH`]. A denial or withdrawal may always be subject-wide, for example on account deletion, and then covers every narrower grant.
 - A grant was collected under a notice that was not in effect when recorded [`OBSOLETE_NOTICE`, `NOTICE_NOT_YET_IN_EFFECT`]. Any event naming a notice that does not cover the purpose is also invalid [`NOTICE_DOES_NOT_COVER_PURPOSE`]. **Denials and withdrawals** are honoured under any notice the subject was ever shown.
-- The event is backdated [`BACKDATED_EVENT`], or a withdrawal is scheduled for later instead of taking effect immediately [`DELAYED_WITHDRAWAL`].
+- A grant is backdated [`BACKDATED_EVENT`]. A denial or withdrawal always takes effect when it is recorded, whatever `effective_at` says, so it can never be postponed or made retroactive.
 - A grant is derived from a purchase or entitlement [`PAYMENT_IS_NOT_CONSENT`] or from any other business event [`GRANT_MUST_BE_DIRECT`].
 - A grant was prechecked [`PRECHECKED_GRANT`], was never presented [`CHOICE_NOT_PRESENTED`], or was not captured through an explicit control or signed pilot agreement [`GRANT_NOT_EXPLICIT`]. A pilot participant's grant must come from the signed agreement; a pilot denial through any explicit control is honoured. A grant's evidence must match its capture method: an explicit control has UI-interaction evidence, and a signed agreement has signed-agreement evidence captured in a pilot session [`EVIDENCE_MISMATCH`].
 - A grant for an approved purpose was recorded before the approval's `decided_on` [`GRANTED_BEFORE_APPROVAL`]. Approval is never retroactive, so choices captured while the purpose was a draft stay invalid.

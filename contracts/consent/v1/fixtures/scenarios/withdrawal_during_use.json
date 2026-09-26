@@ -93,6 +93,43 @@
     },
     {
       "contract_version": "consent-event/v1",
+      "event_id": "evt_0509",
+      "event_type": "GRANT",
+      "subject": {
+        "kind": "WRITER",
+        "id": "wrt_0001"
+      },
+      "purpose": {
+        "purpose_id": "image_retention",
+        "purpose_version": 1
+      },
+      "notice": {
+        "notice_id": "notice.consent-choices",
+        "version": 1
+      },
+      "scope": {
+        "kind": "SUBJECT_WIDE",
+        "id": "wrt_0001"
+      },
+      "actor": {
+        "kind": "ACCOUNT",
+        "id": "acc_0001"
+      },
+      "presented_default": "UNSELECTED",
+      "capture_method": "EXPLICIT_CONTROL",
+      "derived_from": null,
+      "surface": "WEB",
+      "recorded_at": "2026-02-01T09:00:00Z",
+      "effective_at": "2026-02-01T09:00:00Z",
+      "evidence": {
+        "kind": "UI_INTERACTION",
+        "ref": "evd_0509",
+        "status": "RECORDED"
+      },
+      "subject_eligibility": "DECLARED_ADULT"
+    },
+    {
+      "contract_version": "consent-event/v1",
       "event_id": "evt_0502",
       "event_type": "GRANT",
       "subject": {
@@ -371,9 +408,25 @@
     {
       "kind": "EVENT_VALIDITY",
       "event_id": "evt_0505",
-      "expect": [
-        "DELAYED_WITHDRAWAL"
-      ]
+      "expect": []
+    },
+    {
+      "kind": "PERMISSION",
+      "subject": {
+        "kind": "WRITER",
+        "id": "wrt_0001"
+      },
+      "purpose": {
+        "purpose_id": "image_retention",
+        "purpose_version": 1
+      },
+      "scope": {
+        "kind": "SPECIMEN",
+        "id": "spc_0001"
+      },
+      "at": "2026-02-12T09:00:00Z",
+      "expect": "WITHDRAWN",
+      "note": "A withdrawal scheduled for day 20 takes effect when it is recorded on day 11."
     },
     {
       "kind": "EVENT_VALIDITY",

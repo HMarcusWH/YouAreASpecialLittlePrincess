@@ -85,7 +85,8 @@ def cleared_sources(*uses):
     sources = {s["source_id"]: copy.deepcopy(s) for s in load("source_rights.json")["sources"]}
     owned = sources["owned_pilot_collection_v1"]
     owned.update(review_status="REVIEWED", review={"decision_ref": "decision:test-review", "reviewer_role": "owner",
-                                                   "reviewed_on": "2025-12-01T00:00:00Z", "archive_sha256": None})
+                                                   "reviewed_on": "2025-12-01T00:00:00Z", "expires_on": None,
+                                                   "archive_sha256": None})
     owned["rights"]["data"]["status"] = "CLEARED"
     for use in uses:
         owned["allowed_uses"][use] = "CLEARED"
@@ -410,8 +411,49 @@ def test_every_later_capture_names_its_original(protocol):
     fixture = vcp.load_json(vcp.CONSENT_DIR / "fixtures" / "collection" / "valid_pilot_lineage.json")
     manifest = copy.deepcopy(fixture["manifest"])
     manifest["captures"][1]["repeat_of_capture_id"] = None
-    issues, _summary = check_fixture_manifest(fixture, protocol, manifest)
-    assert [(i.code, i.where) for i in issues] == [("REPEAT_WITHOUT_ORIGINAL", "cap_0102")]
+    issues, summary = check_fixture_manifest(fixture, protocol, manifest)
+    # Codex review of #12: the unlinked capture was reported but still counted.
+    assert [(i.code, i.where) for i in issues if i.code != "COUNT_MISMATCH"] == [("REPEAT_WITHOUT_ORIGINAL", "cap_0102")]
+    assert (summary.specimens, summary.captures) == (6, 6)
+
+
+def test_gate_with_pending_decisions_blocks_human_release(registry, protocol):
+    # Codex review of #12: an APPROVED gate with every decision still pending passed the release path.
+    fixture = vcp.load_json(vcp.CONSENT_DIR / "fixtures" / "collection" / "valid_pilot_lineage.json")
+    manifest = dict(copy.deepcopy(fixture["manifest"]), synthetic=False)
+    gate = approved_gate()
+    gate["decisions"][0].update(status="PENDING_OWNER_DECISION", decision_ref=None)
+    issues, summary = check_fixture_manifest(
+        fixture, approved_protocol(protocol), manifest, human_release=True, fixture_mode=False,
+        registry=approve_in(registry, "engineering_evaluation"), sources=cleared_sources("engineering_testing"),
+        notices=active_pilot_notices(), publish_at=CUTOFF, gate=gate)
+    assert codes(issues) == ["COUNT_MISMATCH", "PILOT_GATE_NOT_APPROVED"] and summary.specimens == 0
+
+
+def test_protocol_mismatch_counts_nothing(protocol):
+    # Codex review of #12: a manifest from protocol version 999 was still counted 3/6/7.
+    fixture = vcp.load_json(vcp.CONSENT_DIR / "fixtures" / "collection" / "valid_pilot_lineage.json")
+    manifest = copy.deepcopy(fixture["manifest"])
+    manifest["protocol"]["version"] = 999
+    issues, summary = check_fixture_manifest(fixture, protocol, manifest)
+    assert codes(issues) == ["COUNT_MISMATCH", "PROTOCOL_MISMATCH"]
+    assert (summary.writers, summary.specimens, summary.captures) == (0, 0, 0)
+
+
+def test_source_clearance_expires(protocol):
+    # Codex review of #12: a review had no expiry, so time-limited terms stayed cleared forever.
+    engineering = {"purpose_id": "engineering_evaluation", "purpose_version": 1}
+    sources = cleared_sources("engineering_testing")
+    review = sources["owned_pilot_collection_v1"]["review"]
+    review["expires_on"] = "2026-06-01T00:00:00Z"
+    assert vcp.source_clearance_issues(protocol, engineering, sources, CUTOFF, CUTOFF) == []
+    late = vcp.parse_timestamp("2026-06-02T00:00:00Z")
+    expired = vcp.source_clearance_issues(protocol, engineering, sources, CUTOFF, late)
+    assert codes(expired) == ["SOURCE_NOT_CLEARED"] and "expired" in expired[0].message
+    review["expires_on"] = "2025-11-01T00:00:00Z"
+    register = {"contract_version": "source-rights/v1", "sources": list(sources.values())}
+    assert "REVIEW_WINDOW_INVALID" in codes(vcp.check_source_rights(register))
+    assert vcp.SchemaSet().validate(register, "source-rights.schema.json") == []
 
 
 def test_collection_summary_counts_writers_not_pages(protocol):
@@ -821,7 +863,7 @@ def test_deletion_lineage_rules():
         "HANDWRITING_ROOT_REQUIRED", "LINEAGE_UNREACHABLE", "UNDECLARED_ROOT"]
     # Codex review of #12: a handwriting root could be declassified or dropped.
     declassified = with_node(kind="upload_original", contains_handwriting=False, retention_class="analytics_events")
-    assert codes(vcp.check_lineage(declassified, retention)) == ["HANDWRITING_ROOT_REQUIRED"]
+    assert codes(vcp.check_lineage(declassified, retention)) == ["HANDWRITING_ARTIFACT_DECLASSIFIED", "HANDWRITING_ROOT_REQUIRED"]
     dropped = copy.deepcopy(lineage)
     dropped["roots"], doomed, changed = ["upload_original"], {"pilot_capture"}, True
     while changed:  # remove pilot_capture and everything derived only from it
@@ -833,7 +875,12 @@ def test_deletion_lineage_rules():
                 changed = True
             node["parents"] = kept or node["parents"]
     dropped["nodes"] = [n for n in dropped["nodes"] if n["artifact_kind"] not in doomed]
-    assert codes(vcp.check_lineage(dropped, retention)) == ["HANDWRITING_ROOT_REQUIRED"]
+    assert codes(vcp.check_lineage(dropped, retention)) == ["HANDWRITING_ARTIFACT_MISSING", "HANDWRITING_ROOT_REQUIRED"]
+    # Codex review of #12: a derived handwriting kind could still be declassified and retained.
+    for kind in ("provider_copy", "normalized_image", "premium_payload", "export_artifact"):
+        declassified = with_node(kind=kind, contains_handwriting=False, retention_class="accounting_records",
+                                 on_upstream_deletion="RETAIN_UNDER_SEPARATE_OBLIGATION")
+        assert codes(vcp.check_lineage(declassified, retention)) == ["HANDWRITING_ARTIFACT_DECLASSIFIED"], kind
     assert codes(vcp.check_lineage(with_node(kind="export_artifact", on_upstream_deletion="RETAIN_UNDER_SEPARATE_OBLIGATION"),
                                    retention)) == ["HANDWRITING_RETAINED"]
     assert codes(vcp.check_lineage(with_node(kind="crop_overlay_thumbnail", retention_class="analytics_events"),
@@ -853,7 +900,7 @@ def test_code_data_and_weight_rights_are_distinct():
     source["allowed_uses"]["benchmark_statistics"] = "CLEARED"
     source["review_status"] = "REVIEWED"
     source["review"] = {"decision_ref": "decision:nist-review", "reviewer_role": "data owner",
-                        "reviewed_on": "2026-10-01T00:00:00Z", "archive_sha256": "0" * 64}
+                        "reviewed_on": "2026-10-01T00:00:00Z", "expires_on": None, "archive_sha256": "0" * 64}
     assert codes(vcp.check_source_rights(nist)) == ["USE_CLEARED_WITHOUT_DATA_RIGHTS"]
 
     unreviewed = copy.deepcopy(rights)

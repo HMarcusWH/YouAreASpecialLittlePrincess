@@ -11,6 +11,7 @@ A source record keeps **code**, **data** and **model-weight** rights apart, each
 - A use may be `CLEARED` only when the **data** right is `CLEARED` [`USE_CLEARED_WITHOUT_DATA_RIGHTS`].
 - While data rights are `NOT_CLEARED`, every use stays `NOT_CLEARED` [`USE_OPEN_ON_UNCLEARED_DATA`].
 - Any clearance requires a recorded review with a decision reference [`CLEARED_WITHOUT_REVIEW`]. For an external dataset, the review must also pin the exact archive SHA-256 [`REVIEW_WITHOUT_ARCHIVE_HASH`].
+- A review records `expires_on` (null only when the terms have no end), after `reviewed_on` [`REVIEW_WINDOW_INVALID`]. A release is refused when the clearance has expired by its cutoff or publication [`SOURCE_NOT_CLEARED`].
 
 Uses are tracked separately: engineering testing, benchmark statistics, display, redistribution and model training.
 
