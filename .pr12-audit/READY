@@ -1,0 +1,3 @@
+Assemble validated repair delta for base 1667d72cffed9c46c361bfb7bf273535c6f9417b.
+Expected packed SHA256: 9eec4f752bbe54fb9a15a2430b6480c58dea298a37e7b765cf458f96eeec5a27.
+No branch refs may be updated by assembly; verify the returned artifact before the connector fast-forward.
