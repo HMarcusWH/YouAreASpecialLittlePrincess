@@ -145,6 +145,8 @@ The fourth Codex review found three more gaps, each reproduced before the fix:
 
 Regressions: `test_lock_without_manifest_or_ci_job_is_not_reviewed`, `test_repository_ci_matrix_tests_every_lock`, `test_executable_build_configuration_is_rejected[*]`, `test_marker_state_is_unknown_for_variables_the_lock_does_not_fix[*]` and `test_patch_level_markers_count_as_active_edges`. All 13 failed against the previous tool.
 
+The fifth Codex review found that the CI matrix was located by a regular expression over the whole workflow, so a `- python: '3.13'` entry inside a `run: |` block counted as a job. The workflow is now read structurally. Only block-style entries under `jobs.test.strategy.matrix.include` count. Comments, block or folded scalars, other jobs and flow-style matrices never do, and an unrecognised layout fails closed. `test_only_real_matrix_entries_count_as_ci_jobs[block-scalar|other-job|folded-scalar]` failed against the previous tool.
+
 ### Supported build configuration and residual trust
 
 The supported configuration is a pyproject-only setuptools project with an explicit `setuptools.build_meta` backend, exact reviewed build pins, and static dependency metadata. See the [requirements README](../../requirements/README.md#supported-build-configuration). Residual trust remains in three places:

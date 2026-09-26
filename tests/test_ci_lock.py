@@ -981,6 +981,46 @@ def test_lock_without_manifest_or_ci_job_is_not_reviewed(tmp_path, capsys):
     assert "advertises Python versions with no reviewed lock or CI job: 3.13" in output
 
 
+FAKE_313 = "- python: '3.13'\n{pad}  manifest: requirements/ci-py313.txt\n{pad}  lock: requirements/ci-py313.lock\n"
+
+
+@pytest.mark.parametrize(
+    "decoy",
+    [
+        # Codex review of #12: the matrix was found by regex over the whole file.
+        "      - name: docs\n        run: |\n          " + FAKE_313.format(pad="          "),
+        "        # " + FAKE_313.format(pad="        # "),
+        "  other:\n    strategy:\n      matrix:\n        include:\n          " + FAKE_313.format(pad="          "),
+        "  lint:\n    env:\n      NOTE: >\n        " + FAKE_313.format(pad="        "),
+    ],
+    ids=["block-scalar", "comment", "other-job", "folded-scalar"],
+)
+def test_only_real_matrix_entries_count_as_ci_jobs(tmp_path, decoy):
+    requirements, workflow = write_reviewed_interpreters(tmp_path, (10, 11, 12, 13), ci_minors=(10, 11, 12))
+    workflow.write_text(workflow.read_text(encoding="utf-8") + decoy, encoding="utf-8")
+    reviewed, errors = verify_project_dependency_policy.interpreter_coverage(requirements, workflow)
+    assert reviewed == REVIEWED_PYTHONS
+    assert errors == ["requirements/ci-py313.lock has no CI matrix job for Python 3.13 in ci.yml; its interpreter is not reviewed"]
+
+
+def test_flow_style_matrix_fails_closed(tmp_path):
+    requirements, workflow = write_reviewed_interpreters(tmp_path, (10,))
+    workflow.write_text(
+        "jobs:\n  test:\n    strategy:\n      matrix:\n        include: [{python: '3.10', "
+        "manifest: requirements/ci-py310.txt, lock: requirements/ci-py310.lock}]\n",
+        encoding="utf-8",
+    )
+    reviewed, errors = verify_project_dependency_policy.interpreter_coverage(requirements, workflow)
+    assert reviewed == set() and len(errors) == 1
+
+
+def test_repository_workflow_matrix_is_parsed_structurally():
+    root = Path(__file__).resolve().parents[1]
+    assert verify_project_dependency_policy.ci_matrix(root / ".github" / "workflows" / "ci.yml") == [
+        (f"3.{minor}", f"requirements/ci-py3{minor}.txt", f"requirements/ci-py3{minor}.lock") for minor in (10, 11, 12)
+    ]
+
+
 @pytest.mark.parametrize(
     ("project_lines", "tool", "expected"),
     [

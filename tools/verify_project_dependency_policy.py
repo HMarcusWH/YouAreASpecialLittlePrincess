@@ -47,10 +47,10 @@ UNFIXED_MARKER_VARIABLES = frozenset({
     "platform_python_implementation", "implementation_name",
 })
 
-# CI matrix entries in .github/workflows/ci.yml, in the order the workflow lists their keys.
-CI_MATRIX_ENTRY = re.compile(
-    r"-\s*python:\s*['\"]?(?P<python>\d+\.\d+)['\"]?\s*\n\s*manifest:\s*(?P<manifest>\S+)\s*\n\s*lock:\s*(?P<lock>\S+)"
-)
+# Where the lock-testing jobs live in .github/workflows/ci.yml.
+CI_MATRIX_PATH = ("jobs", "test", "strategy", "matrix", "include")
+YAML_KEY = re.compile(r"""(?P<key>[A-Za-z0-9_.-]+|'[^']*'|"[^"]*")\s*:(?:\s+(?P<value>.*))?$""")
+YAML_BLOCK_SCALAR = re.compile(r":\s*[|>][-+0-9]*\s*(#.*)?$")
 
 BACKEND_HOOKS = ("get_requires_for_build_wheel", "get_requires_for_build_editable", "get_requires_for_build_sdist")
 
@@ -273,12 +273,62 @@ def dependency_records(data: dict, extras: list[str]) -> list[tuple[str, str, li
     return records
 
 
+def _yaml_scalar(value: str | None) -> str:
+    value = (value or "").strip()
+    if value[:1] in ("'", '"'):
+        end = value.find(value[0], 1)
+        return value[1:end] if end > 0 else value
+    return value.split(" #", 1)[0].strip()
+
+
+def _yaml_structure(text: str):
+    """(indent, is_item, key, value) for block-style YAML mapping lines; comments and block scalars are skipped."""
+    block_indent = None
+    for raw in text.splitlines():
+        stripped = raw.strip()
+        indent = len(raw) - len(raw.lstrip(" "))
+        if block_indent is not None:
+            if not stripped or indent > block_indent:
+                continue  # inside a | or > block scalar: text, never structure
+            block_indent = None
+        if not stripped or stripped.startswith("#"):
+            continue
+        is_item = stripped.startswith("- ")
+        body = stripped[2:].lstrip() if is_item else stripped
+        match = YAML_KEY.match(body)
+        if match:
+            yield indent, is_item, _yaml_scalar(match["key"]), match["value"]
+            if YAML_BLOCK_SCALAR.search(body):
+                block_indent = indent
+        elif YAML_BLOCK_SCALAR.search(body) or body in ("|", ">"):
+            block_indent = indent
+
+
 def ci_matrix(workflow: Path) -> list[tuple[str, str, str]]:
-    """(python, manifest, lock) for each job in the CI workflow's matrix."""
+    """(python, manifest, lock) for each include entry of the workflow's jobs.test.strategy.matrix.
+
+    Only block-style mappings are read. Text inside block scalars or comments,
+    other jobs, and flow-style matrices never count, so an unparsed layout
+    yields no jobs and every lock fails closed as untested.
+    """
     if not workflow.is_file():
         return []
-    text = workflow.read_text(encoding="utf-8")
-    return [(m["python"], m["manifest"], m["lock"]) for m in CI_MATRIX_ENTRY.finditer(text)]
+    stack: list[tuple[int, str]] = []
+    entries: list[dict[str, str]] = []
+    entry_indent = None
+    for indent, is_item, key, value in _yaml_structure(workflow.read_text(encoding="utf-8")):
+        while stack and stack[-1][0] >= indent:
+            stack.pop()
+        in_matrix = tuple(k for _i, k in stack) == CI_MATRIX_PATH
+        if in_matrix and is_item:
+            entries.append({})
+            entry_indent = indent + 2
+        if in_matrix and entries and (is_item or indent == entry_indent):
+            entries[-1][key] = _yaml_scalar(value)
+            continue
+        if not is_item and not (value or "").strip():
+            stack.append((indent, key))
+    return [(e["python"], e["manifest"], e["lock"]) for e in entries if {"python", "manifest", "lock"} <= set(e)]
 
 
 def interpreter_coverage(requirements_dir: Path, workflow: Path | None = None) -> tuple[set[tuple[int, int]], list[str]]:
