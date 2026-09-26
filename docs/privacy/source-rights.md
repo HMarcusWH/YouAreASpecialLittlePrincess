@@ -12,6 +12,7 @@ A source record keeps **code**, **data** and **model-weight** rights apart, each
 - While data rights are `NOT_CLEARED`, every use stays `NOT_CLEARED` [`USE_OPEN_ON_UNCLEARED_DATA`].
 - Any clearance requires a recorded review with a decision reference [`CLEARED_WITHOUT_REVIEW`]. For an external dataset, the review must also pin the exact archive SHA-256 [`REVIEW_WITHOUT_ARCHIVE_HASH`].
 - A review records `expires_on` (null only when the terms have no end), after `reviewed_on` [`REVIEW_WINDOW_INVALID`]. A release is refused when the clearance has expired by its cutoff or publication [`SOURCE_NOT_CLEARED`].
+- A review binds what it cleared: `review.content_sha256` is the SHA-256 of the source's canonical JSON without `review_status` and `review`. Clearing another use, changing a right or its terms, or dropping a restriction afterwards is `REVIEW_CONTENT_MISMATCH`, and no release can rely on the old review.
 
 Uses are tracked separately: engineering testing, benchmark statistics, display, redistribution and model training.
 

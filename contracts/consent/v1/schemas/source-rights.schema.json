@@ -34,7 +34,7 @@
         "review": {
           "type": "object",
           "additionalProperties": false,
-          "required": ["decision_ref", "reviewer_role", "reviewed_on", "expires_on", "archive_sha256"],
+          "required": ["decision_ref", "reviewer_role", "reviewed_on", "expires_on", "archive_sha256", "content_sha256"],
           "properties": {
             "decision_ref": {"$ref": "common.schema.json#/$defs/required_decision_ref"},
             "reviewer_role": {"$ref": "common.schema.json#/$defs/text"},
@@ -46,6 +46,10 @@
             "archive_sha256": {
               "type": ["string", "null"],
               "pattern": "^[0-9a-f]{64}$"
+            },
+            "content_sha256": {
+              "$ref": "common.schema.json#/$defs/sha256",
+              "description": "What the review cleared: SHA-256 of the canonical JSON of the source without review_status and review. Any later change to rights, uses, terms or restrictions needs a new review."
             }
           }
         },

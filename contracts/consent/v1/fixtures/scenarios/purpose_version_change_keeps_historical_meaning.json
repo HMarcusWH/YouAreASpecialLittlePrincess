@@ -139,6 +139,7 @@
       "writer_id": "wrt_0001",
       "self_account_id": "acc_0001",
       "self_account_linked_at": "2026-01-01T00:00:00Z",
+      "previous_account_links": [],
       "adult_eligibility": "DECLARED_ADULT"
     }
   ],

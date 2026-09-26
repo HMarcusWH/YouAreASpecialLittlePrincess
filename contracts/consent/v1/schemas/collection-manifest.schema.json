@@ -81,11 +81,15 @@
     "capture": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["capture_id", "specimen_id", "capture_index", "content_sha256", "repeat_of_capture_id"],
+      "required": ["capture_id", "specimen_id", "capture_index", "captured_at", "content_sha256", "repeat_of_capture_id"],
       "properties": {
         "capture_id": {"$ref": "common.schema.json#/$defs/opaque_id"},
         "specimen_id": {"$ref": "common.schema.json#/$defs/opaque_id"},
         "capture_index": {"$ref": "common.schema.json#/$defs/version"},
+        "captured_at": {
+          "$ref": "common.schema.json#/$defs/timestamp",
+          "description": "When the photo was taken, so its bytes entered the system. It must not precede the page's collected_at nor follow the release cutoff, and a protocol purpose must be permitted then."
+        },
         "content_sha256": {"$ref": "common.schema.json#/$defs/sha256"},
         "repeat_of_capture_id": {
           "type": ["string", "null"],

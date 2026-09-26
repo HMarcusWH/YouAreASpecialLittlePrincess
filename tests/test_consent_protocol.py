@@ -48,6 +48,18 @@ def bind(document):
     return document
 
 
+def bind_notice(notice):
+    """Stamp a decided notice with a digest of its current purposes, wording and start (tests only)."""
+    notice["content_sha256"] = vcp.content_sha256(notice, vcp.NOTICE_DECISION_FIELDS)
+    return notice
+
+
+def bind_review(source):
+    """Stamp a source's review with a digest of the rights, uses and restrictions it cleared (tests only)."""
+    source["review"]["content_sha256"] = vcp.content_sha256(source, vcp.SOURCE_REVIEW_FIELDS)
+    return source
+
+
 def approve(purpose, decided_on="2025-12-01T00:00:00Z"):
     """An in-memory approval for tests, with a decision for every related gate; the repository records none."""
     approval = {"decision_ref": "decision:test-approval", "decided_by_role": "owner", "decided_on": decided_on,
@@ -65,7 +77,7 @@ def approved_protocol(protocol, decided_on="2026-01-10T00:00:00Z", *, decide_rig
     return bind(approved)
 
 
-def approved_gate(decided_on="2026-01-05T00:00:00Z"):
+def approved_gate(decided_on="2025-11-15T00:00:00Z"):
     """pilot_gate.json approved with every decision recorded (tests only)."""
     gate = copy.deepcopy(load("pilot_gate.json"))
     gate.update(status="APPROVED", approval={"decision_ref": "decision:test-gate", "decided_by_role": "owner",
@@ -80,6 +92,7 @@ def active_pilot_notices(effective_from="2026-01-01T00:00:00Z"):
     notices = copy.deepcopy(load("notices.json"))
     pilot = next(n for n in notices["notices"] if n["notice_id"] == "notice.pilot-collection")
     pilot.update(status="ACTIVE", effective_from=effective_from, decision_ref="decision:test-notice")
+    bind_notice(pilot)
     return notices
 
 
@@ -102,6 +115,7 @@ def cleared_sources(*uses):
     owned["rights"]["data"]["status"] = "CLEARED"
     for use in uses:
         owned["allowed_uses"][use] = "CLEARED"
+    bind_review(owned)
     return sources
 
 
@@ -497,7 +511,8 @@ def test_repeat_chain_through_an_invalid_capture_is_not_counted(protocol):
     manifest = copy.deepcopy(fixture["manifest"])
     manifest["captures"][1]["repeat_of_capture_id"] = None
     manifest["captures"].append({"capture_id": "cap_0105", "specimen_id": "spc_0101", "capture_index": 3,
-                                 "content_sha256": "f" * 64, "repeat_of_capture_id": "cap_0102"})
+                                 "captured_at": "2026-02-01T10:15:00Z", "content_sha256": "f" * 64,
+                                 "repeat_of_capture_id": "cap_0102"})
     issues, summary = check_fixture_manifest(fixture, protocol, manifest)
     assert [(i.code, i.where) for i in issues if i.code != "COUNT_MISMATCH"] == [
         ("REPEAT_WITHOUT_ORIGINAL", "cap_0102"), ("REPEAT_OF_INVALID_CAPTURE", "cap_0105")]
@@ -579,7 +594,8 @@ def test_sessions_without_repeat_captures_reject_repeats(protocol):
     fixture = valid_lineage()
     manifest = copy.deepcopy(fixture["manifest"])
     manifest["captures"].append({"capture_id": "cap_0105", "specimen_id": "spc_0103", "capture_index": 2,
-                                 "content_sha256": "e" * 64, "repeat_of_capture_id": "cap_0104"})
+                                 "captured_at": "2026-02-15T10:10:00Z", "content_sha256": "e" * 64,
+                                 "repeat_of_capture_id": "cap_0104"})
     issues, summary = check_fixture_manifest(fixture, protocol, manifest)
     assert [(i.code, i.where) for i in issues] == [("REPEAT_NOT_IN_SESSION_PLAN", "cap_0105")]
     assert counts_of(summary) == (3, 6, 7)
@@ -604,8 +620,8 @@ def test_every_capture_sharing_an_index_is_excluded_in_any_order(protocol):
     results = []
     for position in (None, 0):
         manifest = copy.deepcopy(fixture["manifest"])
-        extra = {"capture_id": "cap_0109", "specimen_id": "spc_0102", "capture_index": 1, "content_sha256": "d" * 64,
-                 "repeat_of_capture_id": None}
+        extra = {"capture_id": "cap_0109", "specimen_id": "spc_0102", "capture_index": 1, "captured_at": "2026-02-01T10:05:00Z",
+                 "content_sha256": "d" * 64, "repeat_of_capture_id": None}
         manifest["captures"].insert(len(manifest["captures"]) if position is None else position, extra)
         manifest["claimed_counts"] = {"writers": 3, "specimens": 5, "captures": 6}
         issues, summary = check_fixture_manifest(fixture, protocol, manifest)
@@ -620,7 +636,8 @@ def test_captures_behind_rejected_bytes_are_not_counted(protocol):
     chain = copy.deepcopy(fixture["manifest"])
     chain["captures"][1]["content_sha256"] = chain["captures"][0]["content_sha256"]
     chain["captures"].append({"capture_id": "cap_0105", "specimen_id": "spc_0101", "capture_index": 3,
-                              "content_sha256": "c" * 64, "repeat_of_capture_id": "cap_0102"})
+                              "captured_at": "2026-02-01T10:15:00Z", "content_sha256": "c" * 64,
+                              "repeat_of_capture_id": "cap_0102"})
     chain["claimed_counts"]["captures"] = 6
     issues, summary = check_fixture_manifest(fixture, protocol, chain)
     assert sorted((i.code, i.where) for i in issues) == [
@@ -638,6 +655,104 @@ def test_captures_behind_rejected_bytes_are_not_counted(protocol):
         results.append((sorted((i.code, i.where) for i in issues if i.code.startswith("DUPLICATE")), counts_of(summary)))
     assert results[0] == results[1]
     assert results[0][0] == [("DUPLICATE_COUNTED_AS_WRITER", "cap_0101"), ("DUPLICATE_COUNTED_AS_WRITER", "cap_0201")]
+
+
+def test_every_specimen_sharing_a_session_slot_is_excluded_in_any_order(protocol):
+    # Codex review of #12: only the later of two pages for one writer/task/session was rejected.
+    fixture = vcp.load_json(vcp.CONSENT_DIR / "fixtures" / "collection" / "same_session_page_recorded_twice.json")
+    results = []
+    for order in (1, -1):
+        manifest = copy.deepcopy(fixture["manifest"])
+        manifest["specimens"] = manifest["specimens"][::order]
+        issues, summary = check_fixture_manifest(fixture, protocol, manifest)
+        results.append((sorted((i.code, i.where) for i in issues), counts_of(summary)))
+    assert results[0] == results[1] == (
+        [("DUPLICATE_SPECIMEN_IN_SESSION", "spc_0101"), ("DUPLICATE_SPECIMEN_IN_SESSION", "spc_0102")], (0, 0, 0))
+
+
+@pytest.mark.parametrize(
+    ("capture", "expected"),
+    [
+        # Codex review of #12: captures carried no time, so a photo taken while withdrawn counted after a re-grant.
+        ({"captured_at": "2026-02-01T09:00:00Z"}, [("CAPTURED_BEFORE_WRITING", "cap_0105"), ("REPEAT_NOT_EARLIER", "cap_0105")]),
+        ({"captured_at": "2026-03-02T00:00:00Z"}, [("CAPTURED_AFTER_CUTOFF", "cap_0105")]),
+        ({"captured_at": "2026-02-01T10:01:00Z"}, [("REPEAT_NOT_EARLIER", "cap_0105")]),  # before its original (10:05)
+        ({"captured_at": "2026-02-01T10:15:00Z"}, []),
+    ],
+)
+def test_captures_are_timed_after_their_page_and_original(protocol, capture, expected):
+    fixture = valid_lineage()
+    manifest = copy.deepcopy(fixture["manifest"])
+    manifest["captures"].append(dict({"capture_id": "cap_0105", "specimen_id": "spc_0101", "capture_index": 3,
+                                      "content_sha256": "b" * 64, "repeat_of_capture_id": "cap_0101"}, **capture))
+    manifest["claimed_counts"]["captures"] = 7 if expected else 8
+    issues, _summary = check_fixture_manifest(fixture, protocol, manifest)
+    assert [(i.code, i.where) for i in issues] == expected
+
+
+def test_photos_need_permission_when_taken(protocol):
+    fixture = vcp.load_json(vcp.CONSENT_DIR / "fixtures" / "collection" / "repeat_capture_taken_while_withdrawn.json")
+    issues, summary = check_fixture_manifest(fixture, protocol)
+    assert [(i.code, i.where) for i in issues] == [("NO_CAPTURE_PERMISSION", "cap_0102")] and counts_of(summary) == (1, 1, 1)
+    retaken = copy.deepcopy(fixture["manifest"])
+    retaken["captures"][1]["captured_at"] = "2026-02-13T10:00:00Z"  # after the re-grant
+    retaken["claimed_counts"]["captures"] = 2
+    assert check_fixture_manifest(fixture, protocol, retaken)[0] == []
+
+
+def test_nothing_gated_takes_effect_before_the_pilot_gate(registry, protocol):
+    # Codex review of #12: a gated purpose and its pilot notice could take effect before the gate's approval.
+    fixture = valid_lineage()
+    manifest = dict(copy.deepcopy(fixture["manifest"]), synthetic=False)
+    ledger = approve_in(registry, "engineering_evaluation")
+    late_gate = approved_gate("2026-01-08T00:00:00Z")  # after the purpose (December) and notice (1 January)
+    issues, summary = check_fixture_manifest(fixture, approved_protocol(protocol), manifest, human_release=True,
+                                             fixture_mode=False, registry=ledger,
+                                             sources=cleared_sources("engineering_testing"),
+                                             notices=active_pilot_notices(), publish_at=CUTOFF, gate=late_gate)
+    found = [i for i in issues if i.code == "PILOT_GATE_NOT_APPROVED"]
+    assert len(found) == 1 and "engineering_evaluation@1" in found[0].message and "notice.pilot-collection@1" in found[0].message
+    assert counts_of(summary) == (0, 0, 0)
+    gate_issues = vcp.check_pilot_gate(late_gate, approved_protocol(protocol), active_pilot_notices(), purposes_by_key(ledger))
+    assert sorted((i.code, i.where) for i in gate_issues) == [
+        ("NOTICE_PREDATES_GATE", "notice.pilot-collection@1"), ("PURPOSE_APPROVED_BEFORE_GATE", "engineering_evaluation@1")]
+
+
+def test_notices_bind_the_wording_that_was_decided(registry, protocol):
+    # Codex review of #12: an ACTIVE notice's wording could be edited in place under its old decision.
+    fixture = valid_lineage()
+    manifest = dict(copy.deepcopy(fixture["manifest"]), synthetic=False)
+    ledger = approve_in(approve_in(registry, "engineering_evaluation"), "reference_contribution")
+    notices = active_pilot_notices()
+    assert vcp.check_notices(notices, purposes_by_key(ledger)) == []
+    pilot = next(n for n in notices["notices"] if n["notice_id"] == "notice.pilot-collection")
+    pilot["copy"][0]["explanation"] = "Rewritten after the decision."
+    assert codes(vcp.check_notices(notices, purposes_by_key(ledger))) == ["NOTICE_CONTENT_MISMATCH"]
+    assert vcp.registry_notice_windows(notices) == []  # an edited notice is not in effect for anyone
+    issues, summary = check_fixture_manifest(fixture, approved_protocol(protocol), manifest, human_release=True,
+                                             fixture_mode=False, registry=ledger,
+                                             sources=cleared_sources("engineering_testing"), notices=notices,
+                                             publish_at=CUTOFF, gate=approved_gate())
+    assert "NO_COLLECTION_PERMISSION" in codes(issues) and counts_of(summary) == (0, 0, 0)
+
+
+def test_source_clearance_is_bound_to_the_reviewed_rights(protocol):
+    # Codex review of #12: a use could be cleared, or restrictions dropped, after the review under its old decision.
+    fixture = valid_lineage()
+    manifest = dict(copy.deepcopy(fixture["manifest"]), synthetic=False)
+    ledger = approve_in(load("purposes.json"), "engineering_evaluation")
+    reviewed = cleared_sources()  # data rights cleared, no use cleared yet
+    widened = copy.deepcopy(reviewed)
+    widened["owned_pilot_collection_v1"]["allowed_uses"]["engineering_testing"] = "CLEARED"
+    widened["owned_pilot_collection_v1"]["restrictions"] = []
+    assert [(i.code, i.where) for i in vcp.check_source_rights({"sources": list(widened.values())})] == [
+        ("REVIEW_CONTENT_MISMATCH", "owned_pilot_collection_v1")]
+    issues, summary = check_fixture_manifest(fixture, approved_protocol(protocol), manifest, human_release=True,
+                                             fixture_mode=False, registry=ledger, sources=widened,
+                                             notices=active_pilot_notices(), publish_at=CUTOFF, gate=approved_gate())
+    assert "SOURCE_NOT_CLEARED" in codes(issues) and counts_of(summary) == (0, 0, 0)
+    bind_review(widened["owned_pilot_collection_v1"])  # a new review of the wider clearance
+    assert vcp.check_source_rights({"sources": list(widened.values())}) == []
 
 
 def test_collection_summary_counts_writers_not_pages(protocol):
@@ -785,10 +900,12 @@ def test_approval_is_never_retroactive(registry):
     notices["notices"][0].update(status="ACTIVE", effective_from="2026-09-01T00:00:00Z", decision_ref="decision:n-1234",
                                  purposes=[{"purpose_id": "reference_contribution", "purpose_version": 1}])
     notices["notices"][0]["copy"] = [c for c in notices["notices"][0]["copy"] if c["purpose_id"] == "reference_contribution"]
+    bind_notice(notices["notices"][0])
     purposes = purposes_by_key(ledger)
     assert codes(vcp.check_notices(notices, purposes)) == ["NOTICE_PREDATES_APPROVAL"]
     notices["notices"][0]["effective_from"] = "2026-10-01T00:00:00Z"
-    assert vcp.check_notices(notices, purposes) == []
+    assert codes(vcp.check_notices(notices, purposes)) == ["NOTICE_CONTENT_MISMATCH"]  # a new start is a new decision
+    assert vcp.check_notices({"notices": [bind_notice(notices["notices"][0])]}, purposes) == []
 
 
 def test_account_authority_is_judged_when_the_event_is_recorded(registry):
@@ -806,6 +923,31 @@ def test_account_authority_is_judged_when_the_event_is_recorded(registry):
     writer["self_account_linked_at"] = None
     assert vcp.build_context(registry, scenario, fixture_mode=True).event_issues[grant["event_id"]] == ["NO_AUTHOR_AUTHORITY"]
     assert "ACCOUNT_LINK_INCONSISTENT" in codes(vcp.run_scenario(registry, scenario | {"checks": []}))
+
+
+def test_relinking_never_voids_an_earlier_withdrawal(registry):
+    # Codex review of #12: relinking a writer judged every past event against the new account, so an account
+    # withdrawal lost its authority and the participant's earlier grant came back.
+    pilot = vcp.load_json(vcp.CONSENT_DIR / "fixtures" / "scenarios" / "pilot_participant_signed_agreement.json")
+    grant = pilot["events"][0]
+    withdraw = dict(copy.deepcopy(grant), event_id="evt_9601", event_type="WITHDRAW", capture_method="WITHDRAWAL_CONTROL",
+                    presented_default="NOT_PRESENTED", surface="WEB", actor={"kind": "ACCOUNT", "id": "acc_0010"},
+                    evidence=dict(grant["evidence"], kind="UI_INTERACTION"),
+                    recorded_at="2026-02-10T00:00:00Z", effective_at="2026-02-10T00:00:00Z")
+    scenario = dict(copy.deepcopy(pilot), events=[grant, withdraw], checks=[])
+    writer = scenario["writers"][0]
+    writer.update(self_account_id="acc_9999", self_account_linked_at="2026-02-20T00:00:00Z",
+                  previous_account_links=[{"account_id": "acc_0010", "linked_at": "2026-02-05T00:00:00Z",
+                                           "unlinked_at": "2026-02-20T00:00:00Z"}])
+    at = vcp.parse_timestamp("2026-03-01T00:00:00Z")
+    context = vcp.build_context(registry, scenario, fixture_mode=True)
+    assert context.event_issues == {"evt_1001": [], "evt_9601": []}
+    assert vcp.evaluate_permission(context, grant["subject"], grant["purpose"], grant["scope"], at) == "WITHDRAWN"
+    assert vcp.run_scenario(registry, scenario) == []
+
+    # The link history is append-only and never overlaps.
+    writer["previous_account_links"][0]["unlinked_at"] = "2026-02-25T00:00:00Z"
+    assert codes(vcp.run_scenario(registry, scenario)) == ["ACCOUNT_LINK_INCONSISTENT"]
 
 
 def test_free_uses_the_service_version_in_effect(registry):
@@ -883,6 +1025,7 @@ def test_retired_purposes_keep_their_definition(registry, retention_ids):
                   copy=[c for c in notice["copy"] if c["purpose_id"] == "product_analytics"],
                   status="SUPERSEDED", effective_from="2026-01-01T00:00:00Z", effective_until="2026-06-01T00:00:00Z",
                   decision_ref="decision:n-1234")
+    bind_notice(notice)
     assert vcp.check_notices(notices, purposes) == []
     notice.update(status="ACTIVE", effective_until=None)
     assert codes(vcp.check_notices(notices, purposes)) == ["NOTICE_OFFERS_INACTIVE_PURPOSE"]
@@ -938,6 +1081,7 @@ def test_notice_rules(registry):
     # every grant under it would be rejected as PURPOSE_NOT_APPROVED.
     active = copy.deepcopy(notices)
     active["notices"][0].update(status="ACTIVE", effective_from="2026-10-01T00:00:00Z", decision_ref="decision:n-1234")
+    bind_notice(active["notices"][0])
     found = vcp.check_notices(active, purposes)
     assert codes(found) == ["NOTICE_ACTIVE_FOR_UNAPPROVED_PURPOSE"]
     assert len(found) == len(active["notices"][0]["purposes"])
@@ -950,6 +1094,7 @@ def test_notice_rules(registry):
     # Codex review of #12: a superseded notice without an end stayed usable forever.
     superseded = copy.deepcopy(notices)
     superseded["notices"][0].update(status="SUPERSEDED", effective_from="2026-01-01T00:00:00Z", decision_ref="decision:n-1234")
+    bind_notice(superseded["notices"][0])
     assert codes(vcp.check_notices(superseded, approved)) == ["NOTICE_WINDOW_INVALID"]
 
     overlapping = copy.deepcopy(notices)
@@ -958,8 +1103,12 @@ def test_notice_rules(registry):
                                      effective_until="2026-06-01T00:00:00Z", decision_ref="decision:n-0001")
     second.update(version=2, status="ACTIVE", effective_from="2026-05-01T00:00:00Z", decision_ref="decision:n-0002")
     overlapping["notices"].append(second)
+    for notice in overlapping["notices"]:
+        if notice["status"] != "DRAFT":
+            bind_notice(notice)
     assert codes(vcp.check_notices(overlapping, approved)) == ["NOTICE_WINDOW_OVERLAP"]
     second["effective_from"] = "2026-06-01T00:00:00Z"
+    bind_notice(second)  # a new start is recorded with its own decision
     assert vcp.check_notices(overlapping, approved) == []
 
 
@@ -1141,6 +1290,7 @@ def test_code_data_and_weight_rights_are_distinct():
     source["review_status"] = "REVIEWED"
     source["review"] = {"decision_ref": "decision:nist-review", "reviewer_role": "data owner",
                         "reviewed_on": "2026-10-01T00:00:00Z", "expires_on": None, "archive_sha256": "0" * 64}
+    bind_review(source)
     assert codes(vcp.check_source_rights(nist)) == ["USE_CLEARED_WITHOUT_DATA_RIGHTS"]
 
     unreviewed = copy.deepcopy(rights)

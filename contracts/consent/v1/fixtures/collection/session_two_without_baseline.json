@@ -170,6 +170,7 @@
         "capture_id": "cap_0101",
         "specimen_id": "spc_0101",
         "capture_index": 1,
+        "captured_at": "2026-02-01T10:05:00Z",
         "content_sha256": "025eb8d0359ddcd7279c388ff30c6a4c6b62db87a4e0fd5af1f7c99d9ecd349b",
         "repeat_of_capture_id": null
       },
@@ -177,6 +178,7 @@
         "capture_id": "cap_0102",
         "specimen_id": "spc_0102",
         "capture_index": 1,
+        "captured_at": "2026-02-15T10:05:00Z",
         "content_sha256": "22871cd37babaa6ae9425861b8d3074ce01ba1fa2eb7cfcca3b3460d41975b38",
         "repeat_of_capture_id": null
       },
@@ -184,6 +186,7 @@
         "capture_id": "cap_0201",
         "specimen_id": "spc_0201",
         "capture_index": 1,
+        "captured_at": "2026-02-15T10:05:00Z",
         "content_sha256": "bc4a25689e9a6c575f3d9278b37da4f49c911b0103e35966f01536f92873680c",
         "repeat_of_capture_id": null
       }

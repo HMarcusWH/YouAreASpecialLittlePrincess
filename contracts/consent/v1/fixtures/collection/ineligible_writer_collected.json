@@ -102,6 +102,7 @@
         "capture_id": "cap_0101",
         "specimen_id": "spc_0101",
         "capture_index": 1,
+        "captured_at": "2026-02-01T10:05:00Z",
         "content_sha256": "025eb8d0359ddcd7279c388ff30c6a4c6b62db87a4e0fd5af1f7c99d9ecd349b",
         "repeat_of_capture_id": null
       }

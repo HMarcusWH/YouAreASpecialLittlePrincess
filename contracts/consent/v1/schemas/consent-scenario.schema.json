@@ -36,7 +36,7 @@
     "writer": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["writer_id", "self_account_id", "self_account_linked_at", "adult_eligibility"],
+      "required": ["writer_id", "self_account_id", "self_account_linked_at", "previous_account_links", "adult_eligibility"],
       "properties": {
         "writer_id": {"$ref": "common.schema.json#/$defs/opaque_id"},
         "self_account_id": {
@@ -46,6 +46,20 @@
         "self_account_linked_at": {
           "$ref": "common.schema.json#/$defs/nullable_timestamp",
           "description": "When self_account_id was linked to this writer. An account decides for the writer only in events recorded at or after this instant, so a later link never revives an earlier uploader's choice. Null exactly when self_account_id is null."
+        },
+        "previous_account_links": {
+          "type": "array",
+          "description": "Append-only history of accounts linked to this writer before the current one. Authority is judged against the link in effect when each event was recorded, so relinking never voids an earlier withdrawal.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["account_id", "linked_at", "unlinked_at"],
+            "properties": {
+              "account_id": {"type": "string", "pattern": "^[a-z]{2,8}_[A-Za-z0-9]{4,64}$"},
+              "linked_at": {"$ref": "common.schema.json#/$defs/timestamp"},
+              "unlinked_at": {"$ref": "common.schema.json#/$defs/timestamp"}
+            }
+          }
         },
         "adult_eligibility": {"$ref": "common.schema.json#/$defs/adult_eligibility"}
       }

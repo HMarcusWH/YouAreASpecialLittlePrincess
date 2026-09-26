@@ -21,7 +21,7 @@ These are versioned draft contracts. T01 owns the final product wire DTOs and co
 
 All fixtures are synthetic. They contain opaque IDs and hashes of labels, never real handwriting.
 
-- `v1/fixtures/scenarios/`: thirteen append-only event logs with expected outcomes. They cover:
+- `v1/fixtures/scenarios/`: fourteen append-only event logs with expected outcomes. They cover:
   - grant, deny and withdraw;
   - declining keeps Free;
   - payment is not AI consent;
@@ -34,10 +34,11 @@ All fixtures are synthetic. They contain opaque IDs and hashes of labels, never 
   - a pilot signed agreement;
   - restrictive choices failing closed;
   - eligibility bound to the grant;
-  - a service purpose change requiring the current version's grant.
+  - a service purpose change requiring the current version's grant;
+  - a relink that keeps the earlier account's withdrawal.
 
   Scenarios run in fixture mode, the only mode in which draft purposes are usable.
-- `v1/fixtures/collection/`: seventeen collection manifests, each with its own synthetic consent log and the error codes it should produce. They include a duplicate specimen counted as a writer, a repeat capture filed under another writer, pointing to a later capture or taken in a session without repeats, a release without permission, a withdrawal before the cutoff or before publication (`publish_at`), a page written after the cutoff or before any grant, a writer in two language cohorts, and session 2 without a baseline.
+- `v1/fixtures/collection/`: eighteen collection manifests, each with its own synthetic consent log and the error codes it should produce. They include a duplicate specimen counted as a writer, a repeat capture filed under another writer, pointing to a later capture, taken in a session without repeats or taken while permission was withdrawn, a release without permission, a withdrawal before the cutoff or before publication (`publish_at`), a page written after the cutoff or before any grant, a writer in two language cohorts, and session 2 without a baseline.
 
 ## Validation
 

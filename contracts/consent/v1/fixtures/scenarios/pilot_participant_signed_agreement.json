@@ -26,6 +26,7 @@
       "writer_id": "wrt_0010",
       "self_account_id": null,
       "self_account_linked_at": null,
+      "previous_account_links": [],
       "adult_eligibility": "DECLARED_ADULT"
     }
   ],

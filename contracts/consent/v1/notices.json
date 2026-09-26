@@ -18,6 +18,7 @@
       "effective_from": null,
       "effective_until": null,
       "decision_ref": null,
+      "content_sha256": null,
       "copy": [
         {
           "purpose_id": "service_processing", "locale": "en",
@@ -128,6 +129,7 @@
       "effective_from": null,
       "effective_until": null,
       "decision_ref": null,
+      "content_sha256": null,
       "copy": [
         {
           "purpose_id": "engineering_evaluation", "locale": "en",

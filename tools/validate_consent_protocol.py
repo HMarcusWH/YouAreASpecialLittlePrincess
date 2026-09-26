@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import itertools
 import json
 import re
 import sys
@@ -296,14 +297,20 @@ def known_gates(tasks_json: Path = TASKS_JSON) -> set[str]:
     return set(load_json(tasks_json)["gate_registry"])
 
 
-def content_sha256(document: dict) -> str:
-    """What an approval covers: SHA-256 of the canonical JSON of the document without its status and approval.
+# Fields a content digest leaves out: the record of the decision itself and later lifecycle changes.
+APPROVAL_FIELDS = ("status", "approval")
+NOTICE_DECISION_FIELDS = ("status", "effective_until", "decision_ref", "content_sha256")
+SOURCE_REVIEW_FIELDS = ("review_status", "review")
 
-    Canonical means sorted keys, no insignificant whitespace and UTF-8. A later
-    status change (such as RETIRED) keeps the approval; any other edit needs a
-    new approval or a new version.
+
+def content_sha256(document: dict, exclude: tuple[str, ...] = APPROVAL_FIELDS) -> str:
+    """What a decision covers: SHA-256 of the canonical JSON of the document without `exclude`.
+
+    Canonical means sorted keys, no insignificant whitespace and UTF-8. For an
+    approval, a later status change (such as RETIRED) keeps it; any other edit
+    needs a new approval or a new version.
     """
-    body = {key: value for key, value in document.items() if key not in {"status", "approval"}}
+    body = {key: value for key, value in document.items() if key not in exclude}
     return hashlib.sha256(json.dumps(body, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")).hexdigest()
 
 
@@ -323,6 +330,18 @@ def approval_issues(document: dict, where: str) -> list[Issue]:
         return [Issue("APPROVAL_CONTENT_MISMATCH", where,
                       "changed since approval: approval.content_sha256 does not match; record a new approval or version")]
     return []
+
+
+def notice_decision_bound(notice: dict) -> bool:
+    """The notice's decision covers its current purposes, wording and start."""
+    return bool(notice["decision_ref"]) and notice.get("content_sha256") == content_sha256(notice, NOTICE_DECISION_FIELDS)
+
+
+def review_bound(source: dict) -> bool:
+    """The source's review covers its current rights, uses, terms and restrictions."""
+    review = source.get("review") or {}
+    return (source["review_status"] == "REVIEWED" and bool(review.get("decision_ref"))
+            and review.get("content_sha256") == content_sha256(source, SOURCE_REVIEW_FIELDS))
 
 
 def purpose_approval_complete(purpose: dict) -> bool:
@@ -470,10 +489,14 @@ def check_notices(doc: dict, purposes: dict[tuple[str, int], dict]) -> list[Issu
             if purpose_id not in listed:
                 issues.append(Issue("COPY_FOR_UNLISTED_PURPOSE", where, purpose_id))
         if notice["status"] == "DRAFT":
-            if notice["effective_from"] or notice["effective_until"] or notice["decision_ref"]:
+            if notice["effective_from"] or notice["effective_until"] or notice["decision_ref"] or notice["content_sha256"]:
                 issues.append(Issue("DRAFT_NOTICE_IN_EFFECT", where, "a draft notice has no effective window or decision"))
         elif not (notice["effective_from"] and notice["decision_ref"]):
             issues.append(Issue("NOTICE_ACTIVE_WITHOUT_DECISION", where, "ACTIVE/SUPERSEDED notices need a decision and start time"))
+        elif not notice_decision_bound(notice):
+            # Wording or purposes edited after the decision are a new notice version, never the approved one.
+            issues.append(Issue("NOTICE_CONTENT_MISMATCH", where,
+                                "content_sha256 does not match the notice's purposes, wording and start; record a new version"))
         elif notice["status"] == "SUPERSEDED" and not notice["effective_until"]:
             issues.append(Issue("NOTICE_WINDOW_INVALID", where, "a superseded notice needs the time it stopped being shown"))
     issues += notice_window_issues([n for n in doc["notices"] if n["effective_from"]], "notices.json")
@@ -629,6 +652,9 @@ def check_source_rights(doc: dict) -> list[Issue]:
         reviewed = s["review_status"] == "REVIEWED" and "review" in s
         if s["review_status"] == "REVIEWED" and "review" not in s:
             issues.append(Issue("REVIEW_WITHOUT_RECORD", where, "REVIEWED requires a review record"))
+        elif reviewed and not review_bound(s):
+            issues.append(Issue("REVIEW_CONTENT_MISMATCH", where,
+                                "review.content_sha256 does not match the rights, uses and restrictions it cleared"))
         if "CLEARED" in statuses and not reviewed:
             issues.append(Issue("CLEARED_WITHOUT_REVIEW", where, "clearance requires a recorded review"))
         if reviewed and s["kind"] == "EXTERNAL_DATASET" and not s["review"]["archive_sha256"]:
@@ -656,6 +682,8 @@ def check_pilot_gate(gate: dict, protocol: dict, notices: dict, purposes: dict[t
     for key in REQUIRED_PILOT_DECISIONS:
         if key not in present:
             issues.append(Issue("MISSING_GATE_DECISION", key, "required owner decision was removed from the gate"))
+    gated = {key for key, p in purposes.items() if gate["gate"] in p["related_gates"]}
+    gated |= {purpose_key(ref) for ref in protocol["consent_purposes"]}
     if gate["status"] == "APPROVED":
         issues += approval_issues(gate, "pilot_gate.json")
         if any(d["status"] != "DECIDED" for d in gate["decisions"]):
@@ -664,10 +692,17 @@ def check_pilot_gate(gate: dict, protocol: dict, notices: dict, purposes: dict[t
         if protocol["status"] == "APPROVED" and not gate_approved_by(gate, protocol_approval.get("decided_on")):
             issues.append(Issue("GATE_APPROVED_AFTER_PROTOCOL", "pilot_gate.json",
                                 "the participant-rights gate must be approved before the collection protocol"))
+        # Consent is acquired only after the participant-rights gate: nothing gated takes effect before it.
+        gate_at = (gate.get("approval") or {}).get("decided_on")
+        if gate_at:
+            live = [n for n in notices["notices"] if n["status"] != "DRAFT" and n["effective_from"]]
+            early_purposes, early_notices = gated_before(gated, purposes, live, gate_at)
+            issues += [Issue("PURPOSE_APPROVED_BEFORE_GATE", where, f"approved before {gate['gate']} at {gate_at}")
+                       for where in early_purposes]
+            issues += [Issue("NOTICE_PREDATES_GATE", where, f"in effect before {gate['gate']} at {gate_at}")
+                       for where in early_notices]
         return issues
     # While the gate is pending nothing downstream may behave as if it were approved.
-    gated = {key for key, p in purposes.items() if gate["gate"] in p["related_gates"]}
-    gated |= {purpose_key(ref) for ref in protocol["consent_purposes"]}
     if protocol["status"] == "APPROVED":
         issues.append(Issue("GATE_BYPASSED", "content/collection/v1/manifest.json", "protocol approved while the gate is pending"))
     for notice in notices["notices"]:
@@ -678,6 +713,22 @@ def check_pilot_gate(gate: dict, protocol: dict, notices: dict, purposes: dict[t
         if purposes.get(key, {}).get("status") == "APPROVED":
             issues.append(Issue("GATE_BYPASSED", f"{key[0]}@{key[1]}", "gated purpose approved while the gate is pending"))
     return issues
+
+
+def gated_before(gated: set[tuple[str, int]], purposes: dict[tuple[str, int], dict], windows: list[dict],
+                 gate_at: str) -> tuple[list[str], list[str]]:
+    """Gated purposes approved, and notice windows over them started, before the gate's approval at `gate_at`."""
+    cutoff = parse_timestamp(gate_at)
+    early_purposes = sorted(
+        f"{key[0]}@{key[1]}" for key in gated
+        if (decided := ((purposes.get(key) or {}).get("approval") or {}).get("decided_on"))
+        and parse_timestamp(decided) < cutoff
+    )
+    early_notices = sorted(
+        f"{n['notice_id']}@{n['version']}" for n in windows
+        if parse_timestamp(n["effective_from"]) < cutoff and any(purpose_key(ref) in gated for ref in n["purposes"])
+    )
+    return early_purposes, early_notices
 
 
 def gate_approved_by(gate: dict | None, when: str | None) -> bool:
@@ -798,11 +849,11 @@ def source_clearance_issues(protocol: dict, release_purpose: dict, sources: dict
         return [Issue("SOURCE_NOT_CLEARED", "release_purpose", f"no source-rights use is defined for {release_purpose['purpose_id']}")]
     if source is None:
         return [Issue("SOURCE_NOT_CLEARED", protocol["source_id"], "the source-rights register has no entry for this collection")]
-    reviewed = source["review_status"] == "REVIEWED" and "review" in source
-    if not (reviewed and source["rights"]["data"]["status"] == "CLEARED" and source["allowed_uses"][use] == "CLEARED"):
+    if not (review_bound(source) and source["rights"]["data"]["status"] == "CLEARED" and source["allowed_uses"][use] == "CLEARED"):
+        bound = "a review bound to them" if review_bound(source) else "no review bound to the current rights"
         return [Issue("SOURCE_NOT_CLEARED", protocol["source_id"],
                       f"{use} is {source['allowed_uses'][use]} and data rights are {source['rights']['data']['status']} "
-                      f"({source['review_status']})")]
+                      f"({source['review_status']}, {bound})")]
     if parse_timestamp(source["review"]["reviewed_on"]) > cutoff:
         return [Issue("SOURCE_NOT_CLEARED", protocol["source_id"],
                       f"cleared by a review dated {source['review']['reviewed_on']}, after the release cutoff")]
@@ -859,6 +910,14 @@ def check_collection_manifest(
                 issues.append(Issue("PILOT_GATE_NOT_APPROVED", "pilot_gate",
                                     "pilot_rights_consent must be APPROVED, with its approval preceding the protocol's"))
                 releasable = False
+            else:
+                gated = {purpose_key(ref) for ref in protocol["consent_purposes"]}
+                early = [*itertools.chain(*gated_before(gated, consent.purposes, list(consent.notices.values()),
+                                                        gate["approval"]["decided_on"]))]
+                if early:
+                    issues.append(Issue("PILOT_GATE_NOT_APPROVED", "pilot_gate",
+                                        f"{', '.join(early)} took effect before pilot_rights_consent was approved"))
+                    releasable = False
         clearance = source_clearance_issues(protocol, manifest["release_purpose"], sources, cutoff, publish_at)
         issues += clearance
         releasable = releasable and not clearance
@@ -896,6 +955,15 @@ def check_collection_manifest(
         issues.append(Issue("RELEASE_PURPOSE_NOT_IN_PROTOCOL", "release_purpose",
                             f"{release_purpose['purpose_id']}@{release_purpose['purpose_version']} is not a protocol purpose"))
 
+    def collection_permitted(specimen: dict, at: datetime) -> bool:
+        """Some protocol purpose permits collecting this page at `at`, directly or through the writer's enrollment."""
+        enrollment = ({"kind": "PILOT_ENROLLMENT", "id": writers[specimen["writer_id"]]["enrollment_id"]},)
+        return any(
+            evaluate_permission(consent, {"kind": "WRITER", "id": specimen["writer_id"]}, ref,
+                                {"kind": "SPECIMEN", "id": specimen["specimen_id"]}, at, covering_scopes=enrollment) == "PERMITTED"
+            for ref in protocol["consent_purposes"]
+        )
+
     # Each participant writes in one chosen language, so a writer never enters two language cohorts.
     chosen: dict[str, set[str]] = {}
     for s in manifest["specimens"]:
@@ -903,8 +971,13 @@ def check_collection_manifest(
             chosen.setdefault(s["writer_id"], set()).add(s["declared_language"])
     multilingual = {writer_id for writer_id, found in chosen.items() if len(found) > 1}
 
+    # Two pages claiming one writer/task/session slot leave no unambiguous page for it, whatever the order.
+    slots: dict[tuple[str, str, int], list[str]] = {}
+    for s in manifest["specimens"]:
+        if s["specimen_id"] not in ambiguous_specimens and s["writer_id"] not in ambiguous_writers:
+            slots.setdefault((s["writer_id"], s["task_id"], s["session_index"]), []).append(s["specimen_id"])
+
     included: set[str] = set()
-    seen_session_task: dict[tuple[str, str, int], str] = {}
     for s in manifest["specimens"]:
         where = s["specimen_id"]
         if where in ambiguous_specimens or s["writer_id"] in ambiguous_writers:
@@ -941,11 +1014,11 @@ def check_collection_manifest(
         if s["declared_language"] != task["language"]:
             issues.append(Issue("TASK_LANGUAGE_MISMATCH", where, f"{s['task_id']} is a {task['language']} task"))
             continue
-        session_key = (s["writer_id"], s["task_id"], s["session_index"])
-        if session_key in seen_session_task:
-            issues.append(Issue("DUPLICATE_SPECIMEN_IN_SESSION", where, f"same writer/task/session as {seen_session_task[session_key]}"))
+        slot = slots[(s["writer_id"], s["task_id"], s["session_index"])]
+        if len(slot) > 1:
+            others = ", ".join(sorted(specimen_id for specimen_id in slot if specimen_id != where))
+            issues.append(Issue("DUPLICATE_SPECIMEN_IN_SESSION", where, f"same writer/task/session as {others}"))
             continue
-        seen_session_task[session_key] = where
         collected = parse_timestamp(s["collected_at"])
         if collected > cutoff:
             issues.append(Issue("COLLECTED_AFTER_CUTOFF", where, f"collected at {s['collected_at']}"))
@@ -959,11 +1032,7 @@ def check_collection_manifest(
         # The page itself needs some protocol purpose permitted when it was written;
         # a later grant never legitimizes collection that had no permission.
         enrollment = ({"kind": "PILOT_ENROLLMENT", "id": writer["enrollment_id"]},)
-        if not any(
-            evaluate_permission(consent, {"kind": "WRITER", "id": s["writer_id"]}, ref, {"kind": "SPECIMEN", "id": where},
-                                collected, covering_scopes=enrollment) == "PERMITTED"
-            for ref in protocol["consent_purposes"]
-        ):
+        if not collection_permitted(s, collected):
             issues.append(Issue("NO_COLLECTION_PERMISSION", where, f"no protocol purpose was permitted at {s['collected_at']}"))
             continue
         checks = [("the release cutoff", cutoff)] + ([("publication", publish_at)] if publish_at is not None else [])
@@ -995,7 +1064,16 @@ def check_collection_manifest(
         repeat = c["repeat_of_capture_id"]
         if repeat is None and c["capture_index"] != 1:
             broken.append(Issue("REPEAT_WITHOUT_ORIGINAL", where, "every capture after the first names the earlier capture it repeats"))
-        session = sessions.get(specimens[c["specimen_id"]]["session_index"])
+        page = specimens[c["specimen_id"]]
+        captured, written = parse_timestamp(c["captured_at"]), parse_timestamp(page["collected_at"])
+        if captured < written:
+            broken.append(Issue("CAPTURED_BEFORE_WRITING", where, f"photographed before the page was written at {page['collected_at']}"))
+        elif captured > cutoff and written <= cutoff:  # a page written after the cutoff is reported as such
+            broken.append(Issue("CAPTURED_AFTER_CUTOFF", where, f"captured at {c['captured_at']}"))
+        elif c["specimen_id"] in included and not collection_permitted(page, captured):
+            # The photo is when private bytes entered the system: collection must be permitted then too.
+            broken.append(Issue("NO_CAPTURE_PERMISSION", where, f"no protocol purpose was permitted at {c['captured_at']}"))
+        session = sessions.get(page["session_index"])
         if (repeat is not None or c["capture_index"] != 1) and session is not None and session["repeat_captures"] == "NONE":
             broken.append(Issue("REPEAT_NOT_IN_SESSION_PLAN", where,
                                 f"session {session['session_index']} takes no repeat captures"))
@@ -1005,7 +1083,8 @@ def check_collection_manifest(
                 broken.append(Issue("DANGLING_REFERENCE", where, f"repeat_of_capture_id {repeat} is not another capture"))
             elif original["specimen_id"] != c["specimen_id"]:
                 broken.append(Issue("REPEAT_CROSSES_SPECIMEN", where, "a repeat photo belongs to the same page"))
-            elif original["capture_index"] >= c["capture_index"]:
+            elif (original["capture_index"] >= c["capture_index"]
+                  or parse_timestamp(original["captured_at"]) > captured):
                 # Pointing only backwards keeps repeat lineage acyclic, with an original at its root.
                 broken.append(Issue("REPEAT_NOT_EARLIER", where, f"{repeat} is not an earlier capture of this page"))
         issues += broken
@@ -1140,6 +1219,15 @@ def notice_window_codes(event: dict, context: ConsentContext) -> list[str]:
     return codes
 
 
+def account_links(writer: dict) -> list[tuple[str, datetime, datetime | None]]:
+    """Every account ever linked to the writer, with when the link started and (for earlier links) ended."""
+    links = [(link["account_id"], parse_timestamp(link["linked_at"]), parse_timestamp(link["unlinked_at"]))
+             for link in writer["previous_account_links"]]
+    if writer["self_account_id"] is not None and writer["self_account_linked_at"] is not None:
+        links.append((writer["self_account_id"], parse_timestamp(writer["self_account_linked_at"]), None))
+    return links
+
+
 def has_authority(event: dict, context: ConsentContext) -> bool:
     actor, subject = event["actor"], event["subject"]
     if subject["kind"] == "ACCOUNT":
@@ -1148,10 +1236,11 @@ def has_authority(event: dict, context: ConsentContext) -> bool:
     if writer is None:
         return False
     if actor["kind"] == "ACCOUNT":
-        # Authority is judged as of the event: linking the account later never revives an uploader's choice.
-        linked_at = writer.get("self_account_linked_at")
-        return (writer["self_account_id"] is not None and actor["id"] == writer["self_account_id"]
-                and linked_at is not None and parse_timestamp(linked_at) <= parse_timestamp(event["recorded_at"]))
+        # Authority is judged as of the event against the link then in effect: linking an account later never
+        # revives an uploader's choice, and relinking never voids a choice the earlier account made.
+        recorded = parse_timestamp(event["recorded_at"])
+        return any(account_id == actor["id"] and start <= recorded and (end is None or recorded < end)
+                   for account_id, start, end in account_links(writer))
     if actor["kind"] == "PILOT_PARTICIPANT":
         return actor["id"] == writer["writer_id"]
     return False
@@ -1318,7 +1407,8 @@ def registry_notice_windows(notices_doc: dict | None) -> list[dict]:
     """Windows of the notices the authoritative registry actually put in effect."""
     return [
         {key: n[key] for key in ("notice_id", "version", "effective_from", "effective_until", "purposes")}
-        for n in (notices_doc or {}).get("notices", []) if n["status"] != "DRAFT" and n["effective_from"]
+        for n in (notices_doc or {}).get("notices", [])
+        if n["status"] != "DRAFT" and n["effective_from"] and notice_decision_bound(n)
     ]
 
 
@@ -1335,7 +1425,7 @@ def collection_consent_context(registry: dict, manifest: dict, consent_log: dict
     windows = consent_log["notices"] if fixture_mode else registry_notice_windows(notices)
     writers = [
         {"writer_id": w["writer_id"], "self_account_id": None, "self_account_linked_at": None,
-         "adult_eligibility": w["adult_eligibility"]}
+         "previous_account_links": [], "adult_eligibility": w["adult_eligibility"]}
         for w in manifest["writers"]
     ]
     scenario = {"notices": windows, "writers": writers, "events": consent_log["events"]}
@@ -1357,9 +1447,16 @@ def run_scenario(registry: dict, scenario: dict) -> list[Issue]:
     for window in scenario["notices"]:
         issues += listed_purpose_issues(window["purposes"], f"{scenario_id}:{window['notice_id']}@{window['version']}")
     for writer in scenario["writers"]:
+        where = f"{scenario_id}:{writer['writer_id']}"
         if (writer["self_account_id"] is None) != (writer["self_account_linked_at"] is None):
-            issues.append(Issue("ACCOUNT_LINK_INCONSISTENT", f"{scenario_id}:{writer['writer_id']}",
-                                "self_account_linked_at is set exactly when self_account_id is"))
+            issues.append(Issue("ACCOUNT_LINK_INCONSISTENT", where, "self_account_linked_at is set exactly when self_account_id is"))
+            continue
+        # The link history is append-only: each link ends before the next begins, and the current one is last.
+        spans = sorted(account_links(writer), key=lambda link: link[1])
+        if any(end is not None and end <= start for _account, start, end in spans) or any(
+            end is None or end > next_start for (_a, _s, end), (_b, next_start, _e) in zip(spans, spans[1:])
+        ):
+            issues.append(Issue("ACCOUNT_LINK_INCONSISTENT", where, "account links must not overlap and must end after they start"))
     context = build_context(registry, scenario, fixture_mode=scenario["synthetic"] is True)
     for index, check in enumerate(scenario["checks"]):
         where = f"{scenario_id}.checks[{index}]"
