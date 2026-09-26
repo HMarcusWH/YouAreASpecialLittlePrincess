@@ -6,9 +6,6 @@ from pathlib import Path
 import json
 import sys
 
-TOOLS = Path(__file__).resolve().parent
-if str(TOOLS) not in sys.path:
-    sys.path.insert(0, str(TOOLS))
 from graphology_db_common import load, verify_research_baseline
 
 

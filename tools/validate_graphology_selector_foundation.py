@@ -6,9 +6,6 @@ from pathlib import Path
 import json
 import sys
 
-TOOLS = Path(__file__).resolve().parent
-if str(TOOLS) not in sys.path:
-    sys.path.insert(0, str(TOOLS))
 from graphology_db_common import load, concat, verify_research_baseline
 
 OBS_CLASSES = {"DECLARED_METADATA", "PRECOMPUTED_DESCRIPTION", "AI_VISUAL_DESCRIPTION_NOT_CANONICAL_MEASUREMENT"}

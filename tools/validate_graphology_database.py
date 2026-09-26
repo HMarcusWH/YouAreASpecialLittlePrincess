@@ -7,9 +7,6 @@ import json
 import sys
 import importlib.util
 
-TOOLS = Path(__file__).resolve().parent
-if str(TOOLS) not in sys.path:
-    sys.path.insert(0, str(TOOLS))
 from graphology_db_common import load, concat
 from validate_graphology_ontology import validate as validate_ontology
 from validate_graphology_selector_foundation import validate as validate_selectors
