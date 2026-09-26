@@ -626,11 +626,12 @@ def test_approvals_bind_the_content_they_approved(registry, retention_ids, proto
     assert "PROTOCOL_NOT_APPROVED" in codes(issues) and counts_of(summary) == (0, 0, 0)
     assert vcp.check_protocol(bind(approved), purposes, base) == []  # a new approval of the new wording
 
-    # Purposes and the gate alike: only a status change, such as RETIRED, keeps an approval.
+    # The original approval survives a separately recorded later retirement; a bare status edit does not.
     ledger = approve_in(registry, "product_analytics")
     purpose = next(p for p in ledger["purposes"] if p["purpose_id"] == "product_analytics")
-    purpose["status"] = "RETIRED"
+    bind_retirement(purpose, "2026-06-01T00:00:00Z")
     assert vcp.approved_by(purpose, "2026-01-01T00:00:00Z")
+    purpose.pop("retirement")
     purpose["status"] = "APPROVED"
     purpose["data_categories"].append("page_images")
     assert codes(vcp.check_purposes(ledger, retention_ids, vcp.known_gates())) == ["APPROVAL_CONTENT_MISMATCH"]
@@ -969,7 +970,7 @@ def test_retired_purposes_keep_their_history(registry, retention_ids):
     purpose.update(status="APPROVED", retirement={"retired_on": "2026-03-01T00:00:00Z", "decision_ref": "decision:x-1234"})
     assert codes(vcp.check_purposes(ledger, retention_ids, vcp.known_gates())) == ["RETIREMENT_ON_ACTIVE_PURPOSE"]
     purpose.pop("retirement")
-    bind_retirement(purpose, "2026-01-01T00:00:00Z", "decision:x-1234", decided_on="2026-01-01T00:00:00Z")
+    bind_retirement(purpose, "2025-11-01T00:00:00Z", "decision:x-1234", decided_on="2025-11-01T00:00:00Z")
     assert codes(vcp.check_purposes(ledger, retention_ids, vcp.known_gates())) == ["RETIREMENT_BEFORE_APPROVAL"]
 
 
