@@ -1,0 +1,41 @@
+name: Roadmap documentation materialization
+
+on:
+  push:
+    branches: [docs/agent-roadmap-v2-multiplatform]
+
+permissions:
+  contents: write
+
+jobs:
+  generate:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.11'
+      - name: Add navigation and generate detailed backlog
+        run: |
+          python .github/roadmap_bootstrap.py
+          python docs/roadmap/plan_tools.py --write
+          python docs/roadmap/plan_tools.py --check
+          python -m unittest discover -s docs/roadmap -p 'test_plan_tools.py'
+          python docs/roadmap/plan_tools.py --ready
+          git diff --check
+      - name: Commit only materialized documentation
+        shell: bash
+        env:
+          EXPECTED_HEAD: ${{ github.sha }}
+        run: |
+          actual="$(git ls-remote origin refs/heads/docs/agent-roadmap-v2-multiplatform | cut -f1)"
+          test "$actual" = "$EXPECTED_HEAD"
+          git add README.md docs/roadmap/01-data-architecture.md docs/roadmap/02-corpus-benchmarks.md docs/roadmap/03-premium-openai.md docs/roadmap/04-reports-design.md docs/roadmap/05-release-operations.md docs/roadmap/06-agent-backlog.md docs/roadmap/07-evidence-register.md
+          if git diff --cached --quiet; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'docs: generate agent task briefs and connect retained specifications'
+          git push origin HEAD:docs/agent-roadmap-v2-multiplatform
