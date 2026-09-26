@@ -32,14 +32,19 @@ def registry():
 
 
 def check_fixture_manifest(fixture, protocol, manifest=None, *, human_release=False, fixture_mode=True, registry=None,
-                           sources=None, notices=None, publish_at=None, gate=None):
-    """Run check_collection_manifest with the fixture's own consent ledger."""
+                           sources=None, notices=None, publish_at=None, gate=None, retention=...):
+    """Run check_collection_manifest with the fixture's own consent ledger.
+
+    A human release gets the approved retention policy unless `retention` is given (None tests its absence).
+    """
     manifest = fixture["manifest"] if manifest is None else manifest
     registry = load("purposes.json") if registry is None else registry
+    if retention is ...:
+        retention = approved_retention() if human_release else None
     consent = vcp.collection_consent_context(registry, manifest, fixture["consent_log"], fixture_mode=fixture_mode,
                                              notices=notices)
     return vcp.check_collection_manifest(manifest, protocol, consent, human_release=human_release, sources=sources,
-                                         publish_at=publish_at, gate=gate)
+                                         publish_at=publish_at, gate=gate, retention=retention)
 
 
 def bind(document):
@@ -104,6 +109,21 @@ def approve_in(registry, purpose_id, decided_on="2025-12-01T00:00:00Z"):
     mutated = copy.deepcopy(registry)
     mutated["purposes"] = [approve(p, decided_on) if p["purpose_id"] == purpose_id else p for p in mutated["purposes"]]
     return mutated
+
+
+def pilot_ledger(registry):
+    """Both purposes the pilot notice offers approved, so the notice is valid as a whole (tests only)."""
+    return approve_in(approve_in(registry, "engineering_evaluation"), "reference_contribution")
+
+
+def approved_retention(decided_on="2025-11-01T00:00:00Z"):
+    """retention.json approved with every class decided, before the test purposes' approvals (tests only)."""
+    retention = copy.deepcopy(load("retention.json"))
+    retention.update(status="APPROVED", approval={"decision_ref": "decision:ret-policy", "decided_by_role": "owner",
+                                                  "decided_on": decided_on})
+    for c in retention["classes"]:
+        c.update(decision_status="DECIDED", decision_ref="decision:ret-1234", max_retention={"value": 30, "unit": "DAYS"})
+    return bind(retention)
 
 
 def cleared_sources(*uses):
@@ -234,7 +254,7 @@ def test_t03_negative_cases_have_fixtures(required):
 def test_human_release_rejects_synthetic_manifests(protocol):
     fixture = vcp.load_json(vcp.CONSENT_DIR / "fixtures" / "collection" / "valid_pilot_lineage.json")
     issues, summary = check_fixture_manifest(fixture, approved_protocol(protocol), human_release=True, fixture_mode=False,
-                                             registry=approve_in(load("purposes.json"), "engineering_evaluation"),
+                                             registry=pilot_ledger(load("purposes.json")),
                                              sources=cleared_sources("engineering_testing"), publish_at=CUTOFF,
                                              notices=active_pilot_notices(), gate=approved_gate())
     # Codex review of #12: the diagnostic was raised but the synthetic cohort was still counted.
@@ -287,7 +307,7 @@ def test_human_release_needs_an_approved_protocol_and_cleared_source(registry, p
     # protocol, with the collection's source rights still pending, was counted.
     fixture = vcp.load_json(vcp.CONSENT_DIR / "fixtures" / "collection" / "valid_pilot_lineage.json")
     manifest = dict(copy.deepcopy(fixture["manifest"]), synthetic=False)
-    ledger = approve_in(registry, "engineering_evaluation")
+    ledger = pilot_ledger(registry)
     approved = approved_protocol(protocol)
 
     def run(protocol_doc, sources):
@@ -352,7 +372,7 @@ def test_protocol_approval_is_never_retroactive(registry, protocol):
     manifest = dict(copy.deepcopy(fixture["manifest"]), synthetic=False)
     issues, summary = check_fixture_manifest(
         fixture, approved_protocol(protocol, decided_on="2026-02-10T00:00:00Z"), manifest, human_release=True,
-        fixture_mode=False, registry=approve_in(registry, "engineering_evaluation"),
+        fixture_mode=False, registry=pilot_ledger(registry),
         sources=cleared_sources("engineering_testing"), notices=active_pilot_notices(), publish_at=CUTOFF,
         gate=approved_gate())
     assert codes(issues) == ["COLLECTED_BEFORE_PROTOCOL_APPROVAL", "COUNT_MISMATCH", "SESSION_WITHOUT_BASELINE"]
@@ -368,7 +388,7 @@ def test_human_release_rechecks_permission_at_publication(registry, protocol):
                     scope={"kind": "SPECIMEN", "id": "spc_0102"},
                     recorded_at="2026-03-02T00:00:00Z", effective_at="2026-03-02T00:00:00Z")
     fixture["consent_log"]["events"].append(withdraw)
-    common = dict(human_release=True, fixture_mode=False, registry=approve_in(registry, "engineering_evaluation"),
+    common = dict(human_release=True, fixture_mode=False, registry=pilot_ledger(registry),
                   sources=cleared_sources("engineering_testing"), notices=active_pilot_notices(), gate=approved_gate())
 
     issues, summary = check_fixture_manifest(fixture, approved_protocol(protocol), manifest,
@@ -393,10 +413,10 @@ def test_collection_notices_come_from_the_registry(registry, protocol):
     manifest = dict(fixture["manifest"], synthetic=False)
     issues, summary = check_fixture_manifest(
         fixture, approved_protocol(protocol), manifest, human_release=True, fixture_mode=False,
-        registry=approve_in(registry, "engineering_evaluation"), sources=cleared_sources("engineering_testing"),
+        registry=pilot_ledger(registry), sources=cleared_sources("engineering_testing"),
         notices=active_pilot_notices(), publish_at=CUTOFF, gate=approved_gate())
     assert codes(issues) == ["COUNT_MISMATCH", "NO_COLLECTION_PERMISSION"] and summary.writers == 0
-    context = vcp.collection_consent_context(approve_in(registry, "engineering_evaluation"), manifest,
+    context = vcp.collection_consent_context(pilot_ledger(registry), manifest,
                                              fixture["consent_log"], notices=active_pilot_notices())
     assert all(found == ["UNKNOWN_NOTICE"] for found in context.event_issues.values())
     assert vcp.registry_notice_windows(load("notices.json")) == []
@@ -406,7 +426,7 @@ def test_human_release_needs_the_pilot_gate_before_the_protocol(registry, protoc
     # Codex review of #12: a gate approved in 2099 did not stop a protocol approved in 2026.
     fixture = vcp.load_json(vcp.CONSENT_DIR / "fixtures" / "collection" / "valid_pilot_lineage.json")
     manifest = dict(copy.deepcopy(fixture["manifest"]), synthetic=False)
-    common = dict(human_release=True, fixture_mode=False, registry=approve_in(registry, "engineering_evaluation"),
+    common = dict(human_release=True, fixture_mode=False, registry=pilot_ledger(registry),
                   sources=cleared_sources("engineering_testing"), notices=active_pilot_notices(), publish_at=CUTOFF)
     for gate in (None, load("pilot_gate.json"), approved_gate("2099-01-01T00:00:00Z")):
         issues, summary = check_fixture_manifest(fixture, approved_protocol(protocol), manifest, gate=gate, **common)
@@ -454,7 +474,7 @@ def test_gate_with_pending_decisions_blocks_human_release(registry, protocol):
     gate["decisions"][0].update(status="PENDING_OWNER_DECISION", decision_ref=None)
     issues, summary = check_fixture_manifest(
         fixture, approved_protocol(protocol), manifest, human_release=True, fixture_mode=False,
-        registry=approve_in(registry, "engineering_evaluation"), sources=cleared_sources("engineering_testing"),
+        registry=pilot_ledger(registry), sources=cleared_sources("engineering_testing"),
         notices=active_pilot_notices(), publish_at=CUTOFF, gate=gate)
     assert codes(issues) == ["COUNT_MISMATCH", "PILOT_GATE_NOT_APPROVED"] and summary.specimens == 0
 
@@ -497,7 +517,7 @@ def test_human_release_needs_decided_prompt_rights(registry, protocol):
     manifest = dict(copy.deepcopy(fixture["manifest"]), synthetic=False)
     issues, summary = check_fixture_manifest(
         fixture, approved_protocol(protocol, decide_rights=False), manifest, human_release=True, fixture_mode=False,
-        registry=approve_in(registry, "engineering_evaluation"), sources=cleared_sources("engineering_testing"),
+        registry=pilot_ledger(registry), sources=cleared_sources("engineering_testing"),
         notices=active_pilot_notices(), publish_at=CUTOFF, gate=approved_gate())
     assert codes(issues) == ["COUNT_MISMATCH", "PROTOCOL_NOT_APPROVED"] and summary.specimens == 0
 
@@ -547,7 +567,7 @@ def test_purpose_grants_need_every_related_gate_decided(registry, protocol):
     # without its gate decisions released the whole cohort.
     fixture = valid_lineage()
     manifest = dict(copy.deepcopy(fixture["manifest"]), synthetic=False)
-    ledger = approve_in(registry, "engineering_evaluation")
+    ledger = pilot_ledger(registry)
     issues, summary = human_release(fixture, approved_protocol(protocol), manifest, ledger)
     assert issues == [] and counts_of(summary) == (3, 6, 7)
 
@@ -557,7 +577,8 @@ def test_purpose_grants_need_every_related_gate_decided(registry, protocol):
     issues, summary = human_release(fixture, approved_protocol(protocol), manifest, ledger)
     assert "NO_COLLECTION_PERMISSION" in codes(issues) and counts_of(summary) == (0, 0, 0)
     consent = vcp.collection_consent_context(ledger, manifest, fixture["consent_log"], notices=active_pilot_notices())
-    assert set(itertools.chain.from_iterable(consent.event_issues.values())) == {"PURPOSE_NOT_APPROVED"}
+    # The grants fail, and so does the pilot notice offering the incompletely approved purpose.
+    assert set(itertools.chain.from_iterable(consent.event_issues.values())) == {"PURPOSE_NOT_APPROVED", "UNKNOWN_NOTICE"}
     subject, scope = {"kind": "WRITER", "id": "wrt_0001"}, {"kind": "SPECIMEN", "id": "spc_0101"}
     assert vcp.evaluate_permission(consent, subject, manifest["release_purpose"], scope, CUTOFF) == "NOT_APPROVED"
 
@@ -576,7 +597,7 @@ def test_approvals_bind_the_content_they_approved(registry, retention_ids, proto
     assert codes(vcp.check_protocol(approved, purposes, base)) == ["APPROVAL_CONTENT_MISMATCH"]
     fixture = valid_lineage()
     manifest = dict(copy.deepcopy(fixture["manifest"]), synthetic=False)
-    issues, summary = human_release(fixture, approved, manifest, approve_in(registry, "engineering_evaluation"))
+    issues, summary = human_release(fixture, approved, manifest, pilot_ledger(registry))
     assert "PROTOCOL_NOT_APPROVED" in codes(issues) and counts_of(summary) == (0, 0, 0)
     assert vcp.check_protocol(bind(approved), purposes, base) == []  # a new approval of the new wording
 
@@ -712,7 +733,7 @@ def test_nothing_gated_takes_effect_before_the_pilot_gate(registry, protocol):
     # Codex review of #12: a gated purpose and its pilot notice could take effect before the gate's approval.
     fixture = valid_lineage()
     manifest = dict(copy.deepcopy(fixture["manifest"]), synthetic=False)
-    ledger = approve_in(registry, "engineering_evaluation")
+    ledger = pilot_ledger(registry)
     late_gate = approved_gate("2026-01-08T00:00:00Z")  # after the purpose (December) and notice (1 January)
     issues, summary = check_fixture_manifest(fixture, approved_protocol(protocol), manifest, human_release=True,
                                              fixture_mode=False, registry=ledger,
@@ -723,14 +744,15 @@ def test_nothing_gated_takes_effect_before_the_pilot_gate(registry, protocol):
     assert counts_of(summary) == (0, 0, 0)
     gate_issues = vcp.check_pilot_gate(late_gate, approved_protocol(protocol), active_pilot_notices(), purposes_by_key(ledger))
     assert sorted((i.code, i.where) for i in gate_issues) == [
-        ("NOTICE_PREDATES_GATE", "notice.pilot-collection@1"), ("PURPOSE_APPROVED_BEFORE_GATE", "engineering_evaluation@1")]
+        ("NOTICE_PREDATES_GATE", "notice.pilot-collection@1"), ("PURPOSE_APPROVED_BEFORE_GATE", "engineering_evaluation@1"),
+        ("PURPOSE_APPROVED_BEFORE_GATE", "reference_contribution@1")]
 
 
 def test_notices_bind_the_wording_that_was_decided(registry, protocol):
     # Codex review of #12: an ACTIVE notice's wording could be edited in place under its old decision.
     fixture = valid_lineage()
     manifest = dict(copy.deepcopy(fixture["manifest"]), synthetic=False)
-    ledger = approve_in(approve_in(registry, "engineering_evaluation"), "reference_contribution")
+    ledger = pilot_ledger(registry)
     notices = active_pilot_notices()
     assert vcp.check_notices(notices, purposes_by_key(ledger)) == []
     pilot = next(n for n in notices["notices"] if n["notice_id"] == "notice.pilot-collection")
@@ -748,7 +770,7 @@ def test_source_clearance_is_bound_to_the_reviewed_rights(protocol):
     # Codex review of #12: a use could be cleared, or restrictions dropped, after the review under its old decision.
     fixture = valid_lineage()
     manifest = dict(copy.deepcopy(fixture["manifest"]), synthetic=False)
-    ledger = approve_in(load("purposes.json"), "engineering_evaluation")
+    ledger = pilot_ledger(load("purposes.json"))
     reviewed = cleared_sources()  # data rights cleared, no use cleared yet
     widened = copy.deepcopy(reviewed)
     widened["owned_pilot_collection_v1"]["allowed_uses"]["engineering_testing"] = "CLEARED"
@@ -767,7 +789,7 @@ def test_decision_records_are_bound_with_their_dates(registry, retention_ids, pr
     # Codex review of #12: the digest left out the approval record, so decided_on could be backdated in place.
     fixture = valid_lineage()
     manifest = dict(copy.deepcopy(fixture["manifest"]), synthetic=False)
-    ledger = approve_in(registry, "engineering_evaluation")
+    ledger = pilot_ledger(registry)
     late = approved_protocol(protocol, decided_on="2026-02-10T00:00:00Z")  # after the pages were written
     assert counts_of(human_release(fixture, late, manifest, ledger)[1]) == (0, 0, 0)
     late["approval"]["decided_on"] = "2026-01-10T00:00:00Z"
@@ -792,7 +814,7 @@ def test_release_needs_every_gate_row_decided(registry, protocol, extra):
     gate["decisions"].append(dict(gate["decisions"][0], decision_key=extra, status="PENDING_OWNER_DECISION", decision_ref=None))
     bind(gate)
     issues, summary = check_fixture_manifest(fixture, approved_protocol(protocol), manifest, human_release=True,
-                                             fixture_mode=False, registry=approve_in(registry, "engineering_evaluation"),
+                                             fixture_mode=False, registry=pilot_ledger(registry),
                                              sources=cleared_sources("engineering_testing"), notices=active_pilot_notices(),
                                              publish_at=CUTOFF, gate=gate)
     assert "PILOT_GATE_NOT_APPROVED" in codes(issues) and counts_of(summary) == (0, 0, 0)
@@ -802,7 +824,7 @@ def test_source_reviews_record_attribution_and_releases_carry_it(registry, proto
     # Codex review of #12: the closed source contract had nowhere to record attribution such as CC BY.
     fixture = valid_lineage()
     manifest = dict(copy.deepcopy(fixture["manifest"]), synthetic=False)
-    ledger = approve_in(registry, "engineering_evaluation")
+    ledger = pilot_ledger(registry)
     sources = cleared_sources("engineering_testing")
     owned = sources["owned_pilot_collection_v1"]
     owned["review"]["attribution"] = {"required": True, "wording": "Handwriting pilot v1, CC BY 4.0", "delivery": None}
@@ -821,6 +843,108 @@ def test_source_reviews_record_attribution_and_releases_carry_it(registry, proto
     del owned["review"]["attribution"]
     assert "SCHEMA" in codes(schema.validate({"contract_version": "source-rights/v1", "sources": list(sources.values())},
                                              "source-rights.schema.json"))
+
+
+@pytest.mark.parametrize("written", ["2026-01-15T10:00:00Z", "2026-02-01T18:00:00Z"], ids=["before", "same-day"])
+def test_later_sessions_come_on_a_later_day_than_their_baseline(protocol, written):
+    # Codex review of #12: a session-2 page dated before its session-1 baseline was counted.
+    fixture = valid_lineage()
+    manifest = copy.deepcopy(fixture["manifest"])
+    next(s for s in manifest["specimens"] if s["specimen_id"] == "spc_0103")["collected_at"] = written
+    capture = next(c for c in manifest["captures"] if c["specimen_id"] == "spc_0103")
+    capture["captured_at"] = written.replace(":00:00Z", ":05:00Z")  # five minutes after the page
+    manifest["claimed_counts"] = {"writers": 3, "specimens": 5, "captures": 6}
+    issues, summary = check_fixture_manifest(fixture, protocol, manifest)
+    assert [(i.code, i.where) for i in issues] == [("SESSION_NOT_AFTER_EARLIER", "spc_0103")]
+    assert counts_of(summary) == (3, 5, 6)
+
+
+def test_release_notices_need_every_listed_purpose_approved(registry, protocol):
+    # Codex review of #12: a pilot notice also offering a draft purpose still admitted grants for its approved one.
+    fixture = valid_lineage()
+    manifest = dict(copy.deepcopy(fixture["manifest"]), synthetic=False)
+    half = approve_in(registry, "engineering_evaluation")
+    assert codes(vcp.check_notices(active_pilot_notices(), purposes_by_key(half))) == ["NOTICE_ACTIVE_FOR_UNAPPROVED_PURPOSE"]
+    assert vcp.registry_notice_windows(active_pilot_notices(), purposes_by_key(half)) == []
+    issues, summary = human_release(fixture, approved_protocol(protocol), manifest, half)
+    assert "NO_COLLECTION_PERMISSION" in codes(issues) and counts_of(summary) == (0, 0, 0)
+    issues, summary = human_release(fixture, approved_protocol(protocol), manifest, pilot_ledger(registry))
+    assert issues == [] and counts_of(summary) == (3, 6, 7)
+
+
+def test_human_release_needs_the_approved_retention_policy(registry, protocol):
+    # Codex review of #12: a release never looked at retention, so draft classes with no period passed.
+    fixture = valid_lineage()
+    manifest = dict(copy.deepcopy(fixture["manifest"]), synthetic=False)
+    common = dict(human_release=True, fixture_mode=False, registry=pilot_ledger(registry),
+                  sources=cleared_sources("engineering_testing"), notices=active_pilot_notices(), publish_at=CUTOFF,
+                  gate=approved_gate())
+    for retention in (None, load("retention.json")):
+        issues, summary = check_fixture_manifest(fixture, approved_protocol(protocol), manifest, retention=retention, **common)
+        assert "PURPOSE_RETENTION_UNDECIDED" in codes(issues) and counts_of(summary) == (0, 0, 0)
+    issues, summary = check_fixture_manifest(fixture, approved_protocol(protocol), manifest, retention=approved_retention(), **common)
+    assert issues == [] and counts_of(summary) == (3, 6, 7)
+
+
+def test_release_source_must_be_the_owned_collection(registry, protocol):
+    # Codex review of #12: rebinding the protocol to a cleared external dataset borrowed its clearance.
+    fixture = valid_lineage()
+    manifest = dict(copy.deepcopy(fixture["manifest"]), synthetic=False)
+    sources = cleared_sources("engineering_testing")
+    iam = sources["iam_handwriting_database"]
+    iam.update(review_status="REVIEWED", release="release:test-only",
+               review=dict(copy.deepcopy(sources["owned_pilot_collection_v1"]["review"]), archive_sha256="0" * 64))
+    iam["rights"]["data"]["status"] = "CLEARED"
+    iam["allowed_uses"]["engineering_testing"] = "CLEARED"
+    bind_review(iam)
+    rebound = bind(dict(approved_protocol(protocol), source_id="iam_handwriting_database"))
+    issues, summary = check_fixture_manifest(fixture, rebound, manifest, human_release=True, fixture_mode=False,
+                                             registry=pilot_ledger(registry), sources=sources, notices=active_pilot_notices(),
+                                             publish_at=CUTOFF, gate=approved_gate())
+    found = [i for i in issues if i.code == "SOURCE_NOT_CLEARED"]
+    assert found and "not an owned collection" in found[0].message and counts_of(summary) == (0, 0, 0)
+
+
+def test_external_reviews_pin_the_canonical_url_and_release():
+    # Codex review of #12: an external review could name no publisher URL or release.
+    rights = copy.deepcopy(load("source_rights.json"))
+    dhsd = next(s for s in rights["sources"] if s["source_id"] == "dhsd_v1")
+    assert dhsd["canonical_url"] == "https://zenodo.org/records/18743313" and dhsd["release"] is None
+    dhsd.update(review_status="REVIEWED", review={"decision_ref": "decision:dhsd-review", "reviewer_role": "data owner",
+                                                  "reviewed_on": "2026-10-01T00:00:00Z", "expires_on": None,
+                                                  "archive_sha256": "0" * 64, "attribution": NO_ATTRIBUTION})
+    bind_review(dhsd)
+    assert [(i.code, i.where) for i in vcp.check_source_rights(rights)] == [("REVIEW_WITHOUT_RELEASE_PIN", "dhsd_v1")]
+    dhsd["release"] = "release:test-only"
+    bind_review(dhsd)
+    assert vcp.check_source_rights(rights) == []
+    del dhsd["release"]
+    assert "SCHEMA" in codes(vcp.SchemaSet().validate(rights, "source-rights.schema.json"))
+
+
+def test_retired_purposes_keep_their_history(registry, retention_ids):
+    # Codex review of #12: retiring a purpose voided its grants even for instants before the retirement.
+    scenario = vcp.load_json(vcp.CONSENT_DIR / "fixtures" / "scenarios" / "grant_deny_withdraw_basics.json")
+    grant = dict(copy.deepcopy(scenario["events"][2]), scope={"kind": "SPECIMEN", "id": "spc_0001"})
+    late = dict(copy.deepcopy(grant), event_id="evt_9701", recorded_at="2026-03-10T00:00:00Z", effective_at="2026-03-10T00:00:00Z",
+                scope={"kind": "SPECIMEN", "id": "spc_0002"})
+    ledger = approve_in(registry, "image_retention")
+    purpose = next(p for p in ledger["purposes"] if p["purpose_id"] == "image_retention")
+    purpose.update(status="RETIRED", retirement={"retired_on": "2026-03-01T00:00:00Z", "decision_ref": "decision:retire-images"})
+    assert vcp.check_purposes(ledger, retention_ids, vcp.known_gates()) == []
+    context = vcp.build_context(ledger, dict(scenario, events=[grant, late]))
+    assert context.event_issues == {grant["event_id"]: [], "evt_9701": ["PURPOSE_RETIRED"]}
+    subject, ref = grant["subject"], grant["purpose"]
+    before, after = vcp.parse_timestamp("2026-02-05T00:00:00Z"), vcp.parse_timestamp("2026-03-05T00:00:00Z")
+    assert vcp.evaluate_permission(context, subject, ref, grant["scope"], before) == "PERMITTED"
+    assert vcp.evaluate_permission(context, subject, ref, grant["scope"], after) == "RETIRED"
+
+    del purpose["retirement"]
+    assert codes(vcp.check_purposes(ledger, retention_ids, vcp.known_gates())) == ["RETIREMENT_WITHOUT_RECORD"]
+    purpose.update(status="APPROVED", retirement={"retired_on": "2026-03-01T00:00:00Z", "decision_ref": "decision:x-1234"})
+    assert codes(vcp.check_purposes(ledger, retention_ids, vcp.known_gates())) == ["RETIREMENT_ON_ACTIVE_PURPOSE"]
+    purpose.update(status="RETIRED", retirement={"retired_on": "2025-01-01T00:00:00Z", "decision_ref": "decision:x-1234"})
+    assert codes(vcp.check_purposes(ledger, retention_ids, vcp.known_gates())) == ["RETIREMENT_BEFORE_APPROVAL"]
 
 
 def test_collection_summary_counts_writers_not_pages(protocol):
@@ -1086,7 +1210,8 @@ def test_approved_purposes_need_every_related_gate_decided(registry, retention_i
 def test_retired_purposes_keep_their_definition(registry, retention_ids):
     # Codex review of #12: retiring a purpose required wiping its scopes, recipients and retention.
     retired = approve_in(registry, "product_analytics")
-    next(p for p in retired["purposes"] if p["purpose_id"] == "product_analytics")["status"] = "RETIRED"
+    next(p for p in retired["purposes"] if p["purpose_id"] == "product_analytics").update(
+        status="RETIRED", retirement={"retired_on": "2026-06-01T00:00:00Z", "decision_ref": "decision:retire-analytics"})
     assert vcp.check_purposes(retired, retention_ids, vcp.known_gates()) == []
     not_offered = copy.deepcopy(registry)
     next(p for p in not_offered["purposes"] if p["purpose_id"] == "product_analytics")["status"] = "NOT_OFFERED"
@@ -1362,6 +1487,7 @@ def test_code_data_and_weight_rights_are_distinct():
     source["rights"]["code"]["status"] = "CLEARED"
     source["allowed_uses"]["benchmark_statistics"] = "CLEARED"
     source["review_status"] = "REVIEWED"
+    source["release"] = "release:test-only"  # an external review pins the exact release
     source["review"] = {"decision_ref": "decision:nist-review", "reviewer_role": "data owner",
                         "reviewed_on": "2026-10-01T00:00:00Z", "expires_on": None, "archive_sha256": "0" * 64,
                         "attribution": NO_ATTRIBUTION}

@@ -58,6 +58,16 @@
         "purpose_version": {"$ref": "common.schema.json#/$defs/version"},
         "status": {"enum": ["DRAFT", "NOT_OFFERED", "APPROVED", "RETIRED"]},
         "approval": {"$ref": "#/$defs/approval"},
+        "retirement": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Required exactly when RETIRED. Grants recorded before retired_on keep their history; from retired_on on the purpose permits nothing and takes no grants.",
+          "required": ["retired_on", "decision_ref"],
+          "properties": {
+            "retired_on": {"$ref": "common.schema.json#/$defs/timestamp"},
+            "decision_ref": {"$ref": "common.schema.json#/$defs/required_decision_ref"}
+          }
+        },
         "summary": {"$ref": "common.schema.json#/$defs/text"},
         "subject_kind": {"enum": ["WRITER", "ACCOUNT"]},
         "required_for_service": {"type": "boolean"},

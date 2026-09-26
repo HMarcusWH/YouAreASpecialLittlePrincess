@@ -22,7 +22,7 @@ Status: draft pending owner review. Legal bases are `PENDING_OWNER_DECISION` for
 
 Each purpose record also lists data categories, recipients, retention classes, withdrawal propagation, the human gates it depends on, and `not_implied_by` (always including `purchase`).
 
-Service processing, image retention (storage), reference contribution, third-party AI processing, ordinary sharing, partner comparison and public examples (public disclosure) must each exist as a separate purpose [`MISSING_DISTINCT_PURPOSE`]. A `RETIRED` version keeps its full definition, so its append-only history stays interpretable. It accepts no new grants, and it may appear only on superseded notices. Only `NOT_OFFERED` purposes must have no scopes, recipients or retention.
+Service processing, image retention (storage), reference contribution, third-party AI processing, ordinary sharing, partner comparison and public examples (public disclosure) must each exist as a separate purpose [`MISSING_DISTINCT_PURPOSE`]. A `RETIRED` version keeps its full definition, so its append-only history stays interpretable. It records a `retirement` with `retired_on` and a decision reference [`RETIREMENT_WITHOUT_RECORD`, `RETIREMENT_ON_ACTIVE_PURPOSE`, `RETIREMENT_BEFORE_APPROVAL`]. Grants recorded before `retired_on` keep their meaning for evaluation at earlier instants; from `retired_on` on it permits nothing (`RETIRED`) and takes no grants [`PURPOSE_RETIRED`]. It may appear only on superseded notices. Only `NOT_OFFERED` purposes must have no scopes, recipients or retention.
 
 ## Consent events
 

@@ -24,11 +24,21 @@
     "source": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["source_id", "kind", "title", "evidence_refs", "review_status", "rights", "allowed_uses", "restrictions"],
+      "required": ["source_id", "kind", "title", "canonical_url", "release", "evidence_refs", "review_status", "rights", "allowed_uses", "restrictions"],
       "properties": {
         "source_id": {"$ref": "common.schema.json#/$defs/stable_key"},
         "kind": {"enum": ["EXTERNAL_DATASET", "OWNED_COLLECTION"]},
         "title": {"$ref": "common.schema.json#/$defs/text"},
+        "canonical_url": {
+          "type": ["string", "null"],
+          "pattern": "^https://[^\\s]+$",
+          "description": "The publisher's canonical page for an external dataset; null for an owned collection. A review of an external dataset requires it."
+        },
+        "release": {
+          "type": ["string", "null"],
+          "minLength": 1,
+          "description": "The exact publisher release or version reviewed. Null until a review pins it; a review of an external dataset requires it."
+        },
         "evidence_refs": {"$ref": "common.schema.json#/$defs/text_list"},
         "review_status": {"enum": ["PENDING_REVIEW", "REVIEWED"]},
         "review": {

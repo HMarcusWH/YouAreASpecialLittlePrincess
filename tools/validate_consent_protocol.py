@@ -300,7 +300,7 @@ def known_gates(tasks_json: Path = TASKS_JSON) -> set[str]:
 
 # Lifecycle fields a decision's digest leaves out. Everything else is bound, including the decision
 # record itself (reference, role, dates, gate decisions), except the digest it carries.
-APPROVAL_LIFECYCLE = ("status",)
+APPROVAL_LIFECYCLE = ("status", "retirement")
 NOTICE_LIFECYCLE = ("status", "effective_until", "content_sha256")
 SOURCE_REVIEW_LIFECYCLE = ("review_status",)
 
@@ -374,6 +374,14 @@ def purpose_approval_complete(purpose: dict) -> bool:
             and set(purpose["related_gates"]) <= passed and approval_recorded(purpose))
 
 
+def retired_at(purpose: dict) -> datetime | None:
+    """When a RETIRED purpose stopped being offered; None for any other status (or a retirement without a record)."""
+    retirement = purpose.get("retirement") or {}
+    if purpose["status"] != "RETIRED" or not retirement.get("retired_on"):
+        return None
+    return parse_timestamp(retirement["retired_on"])
+
+
 def approved_by(purpose: dict, when: str) -> bool:
     """True when the purpose's complete approval was decided at or before `when`."""
     return (purpose_approval_complete(purpose)
@@ -419,6 +427,15 @@ def check_purposes(doc: dict, retention_ids: set[str], gates: set[str]) -> list[
             for gate in p["related_gates"]:
                 if gate not in passed:
                     issues.append(Issue("GATE_NOT_APPROVED", where, f"{gate} has no recorded decision in approval.gate_decisions"))
+        retirement = p.get("retirement")
+        if p["status"] == "RETIRED" and not (retirement and retirement.get("decision_ref")):
+            issues.append(Issue("RETIREMENT_WITHOUT_RECORD", where,
+                                "RETIRED needs a retirement record with retired_on and a decision_ref, so history before it stays usable"))
+        elif p["status"] != "RETIRED" and retirement is not None:
+            issues.append(Issue("RETIREMENT_ON_ACTIVE_PURPOSE", where, "only a RETIRED purpose carries a retirement record"))
+        elif retirement is not None and (p.get("approval") or {}).get("decided_on") and (
+                parse_timestamp(retirement["retired_on"]) <= parse_timestamp(p["approval"]["decided_on"])):
+            issues.append(Issue("RETIREMENT_BEFORE_APPROVAL", where, "a purpose is retired after it was approved"))
         if p["legal_basis"] == "DECIDED" and p["status"] not in {"APPROVED", "RETIRED"}:
             issues.append(Issue("LEGAL_BASIS_WITHOUT_APPROVAL", where, "a decided legal basis belongs to an approved purpose"))
         if offered and not p["grant_scopes"]:
@@ -684,6 +701,9 @@ def check_source_rights(doc: dict) -> list[Issue]:
             issues.append(Issue("CLEARED_WITHOUT_REVIEW", where, "clearance requires a recorded review"))
         if reviewed and s["kind"] == "EXTERNAL_DATASET" and not s["review"]["archive_sha256"]:
             issues.append(Issue("REVIEW_WITHOUT_ARCHIVE_HASH", where, "an external review pins the exact archive checksum"))
+        if reviewed and s["kind"] == "EXTERNAL_DATASET" and not (s["canonical_url"] and s["release"]):
+            issues.append(Issue("REVIEW_WITHOUT_RELEASE_PIN", where,
+                                "an external review names the publisher's canonical URL and the exact release it reviewed"))
         if reviewed and s["review"]["expires_on"] is not None and (
                 parse_timestamp(s["review"]["expires_on"]) <= parse_timestamp(s["review"]["reviewed_on"])):
             issues.append(Issue("REVIEW_WINDOW_INVALID", where, "expires_on must be after reviewed_on"))
@@ -879,6 +899,9 @@ def source_clearance_issues(protocol: dict, release_purpose: dict, sources: dict
         return [Issue("SOURCE_NOT_CLEARED", "release_purpose", f"no source-rights use is defined for {release_purpose['purpose_id']}")]
     if source is None:
         return [Issue("SOURCE_NOT_CLEARED", protocol["source_id"], "the source-rights register has no entry for this collection")]
+    if source["kind"] != "OWNED_COLLECTION":
+        return [Issue("SOURCE_NOT_CLEARED", protocol["source_id"],
+                      "not an owned collection: another dataset's clearance never covers pilot pages")]
     if not (review_bound(source) and attribution_consistent(source["review"])
             and source["rights"]["data"]["status"] == "CLEARED" and source["allowed_uses"][use] == "CLEARED"):
         bound = "a review bound to them" if review_bound(source) else "no review bound to the current rights"
@@ -897,6 +920,7 @@ def source_clearance_issues(protocol: dict, release_purpose: dict, sources: dict
 def check_collection_manifest(
     manifest: dict, protocol: dict, consent: ConsentContext, *, human_release: bool = True,
     sources: dict[str, dict] | None = None, publish_at: datetime | None = None, gate: dict | None = None,
+    retention: dict | None = None,
 ) -> tuple[list[Issue], CollectionSummary]:
     """Writer/specimen/capture lineage: pages, photos and sessions never become extra people.
 
@@ -954,6 +978,16 @@ def check_collection_manifest(
         releasable = releasable and not clearance
         if not clearance:
             summary.attribution = copy.deepcopy(sources[protocol["source_id"]]["review"]["attribution"])
+        # The protocol's purposes may only rely on retention classes decided in the approved, content-bound policy.
+        if retention is None:
+            retention_issues = [Issue("PURPOSE_RETENTION_UNDECIDED", "retention",
+                                      "a human release needs the approved retention policy (retention.json)")]
+        else:
+            protocol_purposes = [consent.purposes[purpose_key(ref)] for ref in protocol["consent_purposes"]
+                                 if purpose_key(ref) in consent.purposes]
+            retention_issues = check_purpose_retention({"purposes": protocol_purposes}, retention)
+        issues += retention_issues
+        releasable = releasable and not retention_issues
         if publish_at is None:
             issues.append(Issue("PUBLICATION_NOT_RECHECKED", "publish_at",
                                 "a human release re-evaluates every permission immediately before publication"))
@@ -1163,14 +1197,26 @@ def check_collection_manifest(
 
     # A specimen evidenced only by someone else's bytes is not evidence of another writer.
     included &= set(counted)
-    # Later sessions estimate within-writer variation, so they need the same
-    # writer's session-1 specimen for the same task in this release.
-    baseline = {(specimens[i]["writer_id"], specimens[i]["task_id"]) for i in included if specimens[i]["session_index"] == 1}
-    for specimen_id in sorted(included):
+    # Later sessions estimate within-writer variation, so they need the same writer's
+    # session-1 specimen for the same task in this release, and come on a later day
+    # than every earlier session of that task.
+    by_writer_task: dict[tuple[str, str], list[str]] = {}
+    for specimen_id in included:
+        by_writer_task.setdefault((specimens[specimen_id]["writer_id"], specimens[specimen_id]["task_id"]), []).append(specimen_id)
+    for specimen_id in sorted(included, key=lambda i: (specimens[i]["session_index"], i)):
         s = specimens[specimen_id]
-        if s["session_index"] != 1 and (s["writer_id"], s["task_id"]) not in baseline:
+        if s["session_index"] == 1:
+            continue
+        earlier = [specimens[o] for o in by_writer_task[(s["writer_id"], s["task_id"])]
+                   if o in included and specimens[o]["session_index"] < s["session_index"]]
+        day = parse_timestamp(s["collected_at"]).date()
+        if not any(o["session_index"] == 1 for o in earlier):
             issues.append(Issue("SESSION_WITHOUT_BASELINE", specimen_id,
                                 f"session {s['session_index']} has no included session-1 {s['task_id']} specimen"))
+            included.discard(specimen_id)
+        elif any(parse_timestamp(o["collected_at"]).date() >= day for o in earlier):
+            issues.append(Issue("SESSION_NOT_AFTER_EARLIER", specimen_id,
+                                f"session {s['session_index']} must be written on a later day than the earlier sessions of {s['task_id']}"))
             included.discard(specimen_id)
     summary.writers = len({specimens[s]["writer_id"] for s in included})
     summary.specimens = len(included)
@@ -1287,7 +1333,12 @@ def event_validity(event: dict, context: ConsentContext) -> list[str]:
     purpose = context.purposes.get(purpose_key(event["purpose"]))
     if purpose is None:
         return ["UNKNOWN_PURPOSE"]
-    if kind == "GRANT" and purpose["status"] not in context.usable_statuses:
+    if kind == "GRANT" and purpose["status"] == "RETIRED":
+        # Grants recorded while the purpose was offered keep their history; none are taken after retirement.
+        retired = retired_at(purpose)
+        if retired is None or parse_timestamp(event["recorded_at"]) >= retired:
+            codes.append("PURPOSE_RETIRED")
+    elif kind == "GRANT" and purpose["status"] not in context.usable_statuses:
         codes.append("PURPOSE_NOT_APPROVED" if purpose["status"] == "DRAFT" else "PURPOSE_NOT_OFFERED")
     if event["subject"]["kind"] != purpose["subject_kind"]:
         codes.append("SUBJECT_KIND_MISMATCH")
@@ -1330,9 +1381,9 @@ def event_validity(event: dict, context: ConsentContext) -> list[str]:
         if event["actor"]["kind"] == "PILOT_PARTICIPANT" and event["capture_method"] != "SIGNED_PILOT_AGREEMENT":
             codes.append("GRANT_NOT_EXPLICIT")
         # Approval is never retroactive: a grant captured while the purpose was a draft stays invalid.
-        if purpose["status"] == "APPROVED" and not purpose_approval_complete(purpose):
+        if purpose["status"] in {"APPROVED", "RETIRED"} and not purpose_approval_complete(purpose):
             codes.append("PURPOSE_NOT_APPROVED")
-        elif purpose["status"] == "APPROVED" and not approved_by(purpose, event["recorded_at"]):
+        elif purpose["status"] in {"APPROVED", "RETIRED"} and not approved_by(purpose, event["recorded_at"]):
             codes.append("GRANTED_BEFORE_APPROVAL")
     if kind in {"GRANT", "DENY"}:
         if not has_authority(event, context):
@@ -1369,11 +1420,16 @@ def evaluate_permission(
     """The most recently recorded valid event in effect at `at` wins. covering_scopes are broader scopes the caller vouches
     contain the query scope (e.g. a specimen's pilot enrollment)."""
     purpose = context.purposes.get(purpose_key(purpose_ref))
-    if purpose is None or purpose["status"] not in OFFERED:
+    if purpose is not None and purpose["status"] == "RETIRED":
+        # History before retirement is evaluated as it was; from retirement on nothing is permitted.
+        retired = retired_at(purpose)
+        if retired is None or at >= retired:
+            return "RETIRED"
+    elif purpose is None or purpose["status"] not in OFFERED:
         return "NOT_OFFERED"
-    if purpose["status"] not in context.usable_statuses:
+    elif purpose["status"] not in context.usable_statuses:
         return "NOT_APPROVED"
-    if purpose["status"] == "APPROVED" and not purpose_approval_complete(purpose):
+    if purpose["status"] in {"APPROVED", "RETIRED"} and not purpose_approval_complete(purpose):
         return "NOT_APPROVED"  # a status edit without its decisions, gate decisions or unchanged content
     if scope["kind"] not in purpose["grant_scopes"]:
         # A use the purpose never offered cannot be authorized by any broader grant.
@@ -1437,12 +1493,19 @@ def evaluate_free_report(context: ConsentContext, writer_id: str, scope: dict, a
     return "AVAILABLE" if permitted else "UNAVAILABLE"
 
 
-def registry_notice_windows(notices_doc: dict | None) -> list[dict]:
-    """Windows of the notices the authoritative registry actually put in effect."""
+def registry_notice_windows(notices_doc: dict | None, purposes: dict[tuple[str, int], dict] | None = None) -> list[dict]:
+    """Windows of the notices the authoritative registry actually put in effect.
+
+    With `purposes`, a notice counts only if every purpose it lists had a
+    complete approval before the notice took effect: a notice that also offers
+    a draft purpose is invalid as a whole, not valid for its approved part.
+    """
     return [
         {key: n[key] for key in ("notice_id", "version", "effective_from", "effective_until", "purposes")}
         for n in (notices_doc or {}).get("notices", [])
         if n["status"] != "DRAFT" and n["effective_from"] and notice_decision_bound(n)
+        and (purposes is None or all(purpose_key(ref) in purposes and approved_by(purposes[purpose_key(ref)], n["effective_from"])
+                                     for ref in n["purposes"]))
     ]
 
 
@@ -1456,7 +1519,8 @@ def collection_consent_context(registry: dict, manifest: dict, consent_log: dict
     """
     if fixture_mode and not manifest["synthetic"]:
         raise ValueError("fixture mode is only for synthetic manifests; human data needs approved purposes and registry notices")
-    windows = consent_log["notices"] if fixture_mode else registry_notice_windows(notices)
+    purposes = {purpose_key(p): p for p in registry["purposes"]}
+    windows = consent_log["notices"] if fixture_mode else registry_notice_windows(notices, purposes)
     writers = [
         {"writer_id": w["writer_id"], "self_account_id": None, "self_account_linked_at": None,
          "previous_account_links": [], "adult_eligibility": w["adult_eligibility"]}
