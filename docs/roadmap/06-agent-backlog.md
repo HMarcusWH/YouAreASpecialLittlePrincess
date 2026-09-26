@@ -14,7 +14,7 @@ Use `python docs/roadmap/plan_tools.py --ready` or `--task ID`. Edit tasks.json 
 | Task | Status | Hard predecessors | Owner |
 |---|---|---|---|
 | [T00 — Green baseline and dependency policy](#t00) | DONE | — | platform |
-| [T00A — Post-merge dependency graph hardening](#t00a) | PLANNED | T00 | platform-security |
+| [T00A — Post-merge dependency graph hardening](#t00a) | IMPLEMENTED_PENDING_REVIEW | T00 | platform-security |
 | [T01 — Product contracts and zero-AI capability manifest](#t01) | PLANNED | T00, T00A, T03 | contracts |
 | [T02 — Persistence identity authorization](#t02) | PLANNED | T01, T27, T28 | backend |
 | [T03 — Rights consent and collection protocol](#t03) | PLANNED | — | product-data |
@@ -181,7 +181,7 @@ Historical completion evidence: Merged PR #10; source head 90e88e5c73a0811829745
 <a id="t00a"></a>
 ## T00A — Post-merge dependency graph hardening
 
-**Status:** `PLANNED` · **Owner:** platform-security · **Milestone:** foundation
+**Status:** `IMPLEMENTED_PENDING_REVIEW` · **Owner:** platform-security · **Milestone:** foundation
 
 **Hard predecessors:** [T00](#t00)
 **Platforms:** core, ci
@@ -203,6 +203,7 @@ tools/verify_project_dependency_policy.py
 tests/test_ci_lock.py
 .github/workflows/ci.yml
 docs/ci/T00_BASELINE.md
+requirements/README.md
 ```
 
 ### Coding sequence

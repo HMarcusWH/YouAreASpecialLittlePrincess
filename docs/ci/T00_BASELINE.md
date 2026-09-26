@@ -86,3 +86,52 @@ A fourth review found three remaining policy-coverage gaps: selected optional-gr
 ## Closeout rule
 
 T00 remains marked `DONE` only if the current PR head satisfies the complete reviewed policy. The final head must pass SHA-256 artifact authentication, marker-aware project/optional/build-system dependency-policy verification, direct-URL and upstream-extra rejection, no-dependency local project installation, manifest/lock equality, duplicate-aware exact installed-environment verification, build-tool verification, `pip check`, generation/validator checks, Ruff, pytest, research checks, offline wheel construction and installed-wheel smoke on Python 3.10 / 3.11 / 3.12. The exact final commit and Actions run are recorded in the PR conversation.
+
+## T00A post-merge follow-up
+
+Status: `IMPLEMENTED_PENDING_REVIEW`. This section is appended; the T00 history above is unchanged.
+
+The final Codex review of PR #10 at `90e88e5c73a081182974575925561ac948dbc0e1` ([review 5324261655](https://github.com/HMarcusWH/YouAreASpecialLittlePrincess/pull/10#pullrequestreview-5324261655)) was submitted after the merge decision and left four P2 findings. T00 stays `DONE` as a historical record; T00A owns these repairs.
+
+### Reproduction on the pre-T00A head
+
+Base: `main` at `c7f511945d6a9f37938e0cd1a050ab194e7d2d52`. Environment: CPython 3.11.15, Linux x86_64, with `requirements/ci-py311.lock` downloaded with `--require-hashes` and installed offline (pip 26.2.1, setuptools 84.0.0, wheel 0.48.0, packaging 26.3). Each scenario used a temporary project; `verify_project_dependency_policy.py` exited 0 in all four:
+
+| # | Finding | Observed behaviour before T00A |
+|---|---|---|
+| 1 | Locked distributions' `Requires-Dist` edges were never inspected | A locked `parentpkg` declaring `childpkg[feature]>=1` passed; an ordinary `pip install --dry-run parentpkg` resolved `childpkg`, `grandchild`, `parentpkg`, with `grandchild` outside the lock. |
+| 2 | Dynamic dependency metadata bypassed the static check | With `dynamic = ["dependencies"]` and `[tool.setuptools.dynamic]`, setuptools' `prepare_metadata_for_build_wheel` emitted `Requires-Dist: evilpkg @ https://example.invalid/…`. |
+| 3 | Backend-reported build requirements were never validated | With `setup.cfg` `setup_requires`, setuptools' `get_requires_for_build_{wheel,editable,sdist}` each returned `unreviewed-build-helper @ https://example.invalid/helper.whl`. pip 26.2.1 calls those hooks only when build isolation is on, so CI never saw them. |
+| 4 | A missing `[build-system]` table was accepted | pip's `load_pyproject_toml` supplied `requires=['setuptools>=40.8.0']`, `backend='setuptools.build_meta:__legacy__'`. |
+
+### Disposition
+
+| # | Repair | Regression cases (`tests/test_ci_lock.py`) |
+|---|---|---|
+| 1 | `--lock/--wheelhouse/--root`: read `METADATA` from the hash-authenticated wheels without installing or importing them, then walk every active `Requires-Dist` edge from the reviewed roots. Reject active extras or direct URLs, edges leaving the lock, unsatisfied versions, unreachable lock entries, wheelhouse/lock drift, duplicate wheels or `.dist-info` directories, identity mismatches, and a lock target header that differs from the running interpreter. | `test_locked_requires_dist_*`, `test_inactive_locked_markers_are_not_edges`, `test_unreachable_locked_distribution_is_rejected`, `test_duplicate_wheels_*`, `test_wheel_*`, `test_wheelhouse_must_equal_lock`, `test_lock_*` |
+| 2 | Reject `project.dynamic` entries for `dependencies` / `optional-dependencies`, the matching `[tool.setuptools.dynamic]` tables, and a missing `[project]` table. The alternative generated-metadata policy was not adopted. | `test_dynamic_dependency_metadata_is_rejected[*]`, `test_missing_project_table_is_rejected` |
+| 3 | Static prohibition of `setup.py`, `setup.cfg`, `backend-path` and non-allowlisted backends. Then `--backend-requirements` runs the three hooks of the allowlisted, hash-locked backend, each in its own subprocess on a temporary copy of the project, with socket egress denied and the project tree removed from `sys.path`. Reported requirements must already be exact-pinned in `build-system.requires`. The hooks never run if the static policy fails. | `test_legacy_setuptools_configuration_is_rejected[*]`, `test_unreviewed_build_backend_is_rejected[*]`, `test_in_tree_*`, `test_backend_*`, `test_repository_backend_reports_no_unreviewed_build_requirements` |
+| 4 | Require an explicit `[build-system]` with a `requires` list and `build-backend` (`setuptools.build_meta` only, with its provider declared), and exact `==` pins to the reviewed manifest. | `test_missing_build_*`, `test_build_backend_provider_must_be_declared`, `test_build_requirement_must_be_an_exact_reviewed_pin[*]` |
+
+Failing-before/passing-after: the final `tests/test_ci_lock.py` (56 cases) run against the pre-T00A tools gives 43 failed and 13 passed. The 13 are the nine original T00 regressions plus four positive controls. The same file gives 56 passed with the repaired tools on Python 3.10, 3.11 and 3.12. Re-running the four end-to-end scenarios through the repaired CLI now exits 1 for each, with the errors shown in the PR description.
+
+The existing protections are unchanged: SHA-256 wheelhouse download, offline `--no-deps` installation, manifest/lock equality, duplicate-aware exact installed-environment verification, `pip check`, direct-URL and upstream-extra rejection in pyproject surfaces, and selected-extra marker context.
+
+### Locally executed results on the T00A head
+
+The same wheel locks were hash-downloaded and installed into per-interpreter virtual environments, and the CI steps were run in order:
+
+- `verify_project_dependency_policy.py … --lock … --wheelhouse … --root pip`: PASS. Closed graphs: py310 has 25 distributions and 27 active edges; py311 and py312 each have 23 and 25.
+- `verify_project_dependency_policy.py … --backend-requirements`: PASS. setuptools 84.0.0 reports `wheel=[]`, `editable=[]` and `sdist=[]` on each interpreter.
+
+These are local results. Exact-head GitHub Actions evidence for the PR head is recorded in the PR conversation. T00A moves to `DONE` only after that run and review.
+
+### Supported build configuration and residual trust
+
+The supported configuration is a pyproject-only setuptools project with an explicit `setuptools.build_meta` backend, exact reviewed build pins, and static dependency metadata. See the [requirements README](../../requirements/README.md#supported-build-configuration). Residual trust remains in three places:
+
+- the hash-locked setuptools/pip/wheel releases themselves;
+- the in-process egress guard, which is best effort and not a sandbox against a hostile backend;
+- downstream source builds outside CI, which resolve the exact `build-system.requires` pins from their own index without these hashes.
+
+New ecosystems (T28) must extend these checks deliberately.

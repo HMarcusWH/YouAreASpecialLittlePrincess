@@ -37,7 +37,7 @@ Product scope and execution order: [v2 index](docs/roadmap/00-index.md) and task
 
 Before content work read [research index](research/graphology/README.md) and [research handoff](research/graphology/DATABASE_HANDOFF.md). Preserve the frozen `research/graphology/foundations-v0.1/` bytes. Source fidelity, empirical validity, feasibility, within-sample salience and rarity stay separate. A roadmap schema/prompt sketch does not override reviewed production fields.
 
-T00 is historically DONE, but [T00A](docs/roadmap/06-agent-backlog.md#t00a) records unresolved post-merge dependency graph hardening. Do not claim that adding this roadmap fixes those four findings.
+T00 is historically DONE. [T00A](docs/roadmap/06-agent-backlog.md#t00a) implements the four post-merge dependency-graph repairs and stays `IMPLEMENTED_PENDING_REVIEW` until exact-head CI and review are recorded. Do not treat it as DONE earlier, and do not weaken its supported build configuration (see [requirements](requirements/README.md#supported-build-configuration)) to make a new dependency pass.
 
 ## Testing and completion
 

@@ -61,11 +61,21 @@ jobs:
           python -m pip --version
           python -c 'import setuptools, wheel; assert setuptools.__version__ == "84.0.0"; assert wheel.__version__ == "0.48.0"'
 
-      - name: Verify project dependency policy
+      - name: Verify project dependency policy and closed locked graph
         run: >-
           python tools/verify_project_dependency_policy.py
           --manifest "${{ matrix.manifest }}"
           --extra dev
+          --lock "${{ matrix.lock }}"
+          --wheelhouse "$RUNNER_TEMP/ci-wheelhouse"
+          --root pip
+
+      - name: Verify backend-reported build requirements
+        run: >-
+          python tools/verify_project_dependency_policy.py
+          --manifest "${{ matrix.manifest }}"
+          --extra dev
+          --backend-requirements
 
       - name: Install local project without dependency resolution
         shell: bash
