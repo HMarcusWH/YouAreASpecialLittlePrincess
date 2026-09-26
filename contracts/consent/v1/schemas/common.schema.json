@@ -1,0 +1,107 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:princess:contracts:consent:v1:common",
+  "title": "Shared consent/collection definitions",
+  "$comment": "T03 draft. T01 maps these into contracts/product/v1 and generated DTOs; until then this directory is the source.",
+  "$defs": {
+    "opaque_id": {
+      "type": "string",
+      "pattern": "^[a-z]{2,8}_[A-Za-z0-9]{4,64}$",
+      "description": "Opaque server-issued identifier with a type prefix; never derived from names, emails or handwriting."
+    },
+    "stable_key": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]{2,63}$"
+    },
+    "dotted_key": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*(\\.[a-z0-9][a-z0-9_-]*)+$"
+    },
+    "version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "UTC RFC 3339 with a Z suffix."
+    },
+    "nullable_timestamp": {
+      "type": ["string", "null"],
+      "format": "date-time"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "text": {
+      "type": "string",
+      "minLength": 1
+    },
+    "text_list": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1},
+      "uniqueItems": true
+    },
+    "locale": {
+      "enum": ["en", "sv"]
+    },
+    "decision_status": {
+      "enum": ["PENDING_OWNER_DECISION", "DECIDED"],
+      "description": "DECIDED requires a decision reference; agents never record DECIDED on their own authority."
+    },
+    "required_decision_ref": {
+      "type": "string",
+      "pattern": "^decision:[a-z0-9][a-z0-9-]{3,80}$",
+      "description": "Non-null pointer to a recorded human decision; used wherever something is approved or reviewed."
+    },
+    "decision_ref": {
+      "type": ["string", "null"],
+      "pattern": "^decision:[a-z0-9][a-z0-9-]{3,80}$",
+      "description": "Pointer to a human decision record kept outside Git when it contains personal or contractual data."
+    },
+    "purpose_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["purpose_id", "purpose_version"],
+      "properties": {
+        "purpose_id": {"$ref": "#/$defs/stable_key"},
+        "purpose_version": {"$ref": "#/$defs/version"}
+      }
+    },
+    "notice_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["notice_id", "version"],
+      "properties": {
+        "notice_id": {"$ref": "#/$defs/dotted_key"},
+        "version": {"$ref": "#/$defs/version"}
+      }
+    },
+    "scope_kind": {
+      "enum": ["SUBJECT_WIDE", "SPECIMEN", "REPORT", "SHARE_GRANT", "COMPARISON", "PILOT_ENROLLMENT", "SUPPORT_CASE"]
+    },
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "id"],
+      "properties": {
+        "kind": {"$ref": "#/$defs/scope_kind"},
+        "id": {"$ref": "#/$defs/opaque_id"}
+      }
+    },
+    "subject": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "id"],
+      "properties": {
+        "kind": {"enum": ["WRITER", "ACCOUNT"]},
+        "id": {"$ref": "#/$defs/opaque_id"}
+      }
+    },
+    "adult_eligibility": {
+      "enum": ["DECLARED_ADULT", "UNKNOWN", "DECLARED_NOT_ADULT"],
+      "description": "Self-declared eligibility without a birth date. Never inferred from handwriting."
+    }
+  }
+}

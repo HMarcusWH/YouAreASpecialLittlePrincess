@@ -1,0 +1,103 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:princess:contracts:consent:v1:source-rights",
+  "title": "SourceRightsRegister",
+  "$comment": "Code, data and model-weight rights are separate. A public URL or a permissive code licence clears nothing else.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["contract_version", "sources"],
+  "properties": {
+    "contract_version": {"const": "source-rights/v1"},
+    "sources": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/source"}}
+  },
+  "$defs": {
+    "right": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "observed_terms"],
+      "properties": {
+        "status": {"enum": ["NOT_APPLICABLE", "PENDING_REVIEW", "CLEARED", "NOT_CLEARED"]},
+        "observed_terms": {"type": ["string", "null"], "minLength": 1}
+      }
+    },
+    "use_status": {"enum": ["NOT_CLEARED", "PENDING_REVIEW", "CLEARED"]},
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source_id", "kind", "title", "canonical_url", "release", "evidence_refs", "review_status", "rights", "allowed_uses", "restrictions"],
+      "properties": {
+        "source_id": {"$ref": "common.schema.json#/$defs/stable_key"},
+        "kind": {"enum": ["EXTERNAL_DATASET", "OWNED_COLLECTION"]},
+        "title": {"$ref": "common.schema.json#/$defs/text"},
+        "canonical_url": {
+          "type": ["string", "null"],
+          "pattern": "^https://[^\\s]+$",
+          "description": "The publisher's canonical page for an external dataset; null for an owned collection. A review of an external dataset requires it."
+        },
+        "release": {
+          "type": ["string", "null"],
+          "minLength": 1,
+          "description": "The exact publisher release or version reviewed. Null until a review pins it; a review of an external dataset requires it."
+        },
+        "evidence_refs": {"$ref": "common.schema.json#/$defs/text_list"},
+        "review_status": {"enum": ["PENDING_REVIEW", "REVIEWED"]},
+        "review": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["decision_ref", "reviewer_role", "reviewed_on", "expires_on", "archive_sha256", "attribution", "content_sha256"],
+          "properties": {
+            "decision_ref": {"$ref": "common.schema.json#/$defs/required_decision_ref"},
+            "reviewer_role": {"$ref": "common.schema.json#/$defs/text"},
+            "reviewed_on": {"$ref": "common.schema.json#/$defs/timestamp"},
+            "expires_on": {
+              "$ref": "common.schema.json#/$defs/nullable_timestamp",
+              "description": "When the reviewed terms stop covering use; null only when the terms have no end. Checked at release cutoff and publication."
+            },
+            "archive_sha256": {
+              "type": ["string", "null"],
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "attribution": {
+              "type": "object",
+              "additionalProperties": false,
+              "description": "The attribution the reviewed terms require (for example CC BY): the exact wording and where and how it must be delivered. Both are null exactly when the terms require none; a release carries this obligation.",
+              "required": ["required", "wording", "delivery"],
+              "properties": {
+                "required": {"type": "boolean"},
+                "wording": {"type": ["string", "null"], "minLength": 1},
+                "delivery": {"type": ["string", "null"], "minLength": 1}
+              }
+            },
+            "content_sha256": {
+              "$ref": "common.schema.json#/$defs/sha256",
+              "description": "What the review cleared: SHA-256 of the canonical JSON of the source without review_status, with the review record minus this digest. Any later change to rights, uses, terms, restrictions, review dates or attribution needs a new review."
+            }
+          }
+        },
+        "rights": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["code", "data", "model_weights"],
+          "properties": {
+            "code": {"$ref": "#/$defs/right"},
+            "data": {"$ref": "#/$defs/right"},
+            "model_weights": {"$ref": "#/$defs/right"}
+          }
+        },
+        "allowed_uses": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["engineering_testing", "benchmark_statistics", "display", "redistribution", "model_training"],
+          "properties": {
+            "engineering_testing": {"$ref": "#/$defs/use_status"},
+            "benchmark_statistics": {"$ref": "#/$defs/use_status"},
+            "display": {"$ref": "#/$defs/use_status"},
+            "redistribution": {"$ref": "#/$defs/use_status"},
+            "model_training": {"$ref": "#/$defs/use_status"}
+          }
+        },
+        "restrictions": {"$ref": "common.schema.json#/$defs/text_list"}
+      }
+    }
+  }
+}

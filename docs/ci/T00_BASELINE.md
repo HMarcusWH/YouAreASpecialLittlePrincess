@@ -86,3 +86,99 @@ A fourth review found three remaining policy-coverage gaps: selected optional-gr
 ## Closeout rule
 
 T00 remains marked `DONE` only if the current PR head satisfies the complete reviewed policy. The final head must pass SHA-256 artifact authentication, marker-aware project/optional/build-system dependency-policy verification, direct-URL and upstream-extra rejection, no-dependency local project installation, manifest/lock equality, duplicate-aware exact installed-environment verification, build-tool verification, `pip check`, generation/validator checks, Ruff, pytest, research checks, offline wheel construction and installed-wheel smoke on Python 3.10 / 3.11 / 3.12. The exact final commit and Actions run are recorded in the PR conversation.
+
+## T00A post-merge follow-up
+
+Status: `IMPLEMENTED_PENDING_REVIEW`. This section is appended; the T00 history above is unchanged.
+
+The final Codex review of PR #10 at `90e88e5c73a081182974575925561ac948dbc0e1` ([review 5324261655](https://github.com/HMarcusWH/YouAreASpecialLittlePrincess/pull/10#pullrequestreview-5324261655)) was submitted after the merge decision and left four P2 findings. T00 stays `DONE` as a historical record; T00A owns these repairs.
+
+### Reproduction on the pre-T00A head
+
+Base: `main` at `c7f511945d6a9f37938e0cd1a050ab194e7d2d52`. Environment: CPython 3.11.15, Linux x86_64, with `requirements/ci-py311.lock` downloaded with `--require-hashes` and installed offline (pip 26.2.1, setuptools 84.0.0, wheel 0.48.0, packaging 26.3). Each scenario used a temporary project; `verify_project_dependency_policy.py` exited 0 in all four:
+
+| # | Finding | Observed behaviour before T00A |
+|---|---|---|
+| 1 | Locked distributions' `Requires-Dist` edges were never inspected | A locked `parentpkg` declaring `childpkg[feature]>=1` passed; an ordinary `pip install --dry-run parentpkg` resolved `childpkg`, `grandchild`, `parentpkg`, with `grandchild` outside the lock. |
+| 2 | Dynamic dependency metadata bypassed the static check | With `dynamic = ["dependencies"]` and `[tool.setuptools.dynamic]`, setuptools' `prepare_metadata_for_build_wheel` emitted `Requires-Dist: evilpkg @ https://example.invalid/…`. |
+| 3 | Backend-reported build requirements were never validated | With `setup.cfg` `setup_requires`, setuptools' `get_requires_for_build_{wheel,editable,sdist}` each returned `unreviewed-build-helper @ https://example.invalid/helper.whl`. pip 26.2.1 calls those hooks only when build isolation is on, so CI never saw them. |
+| 4 | A missing `[build-system]` table was accepted | pip's `load_pyproject_toml` supplied `requires=['setuptools>=40.8.0']`, `backend='setuptools.build_meta:__legacy__'`. |
+
+### Disposition
+
+| # | Repair | Regression cases (`tests/test_ci_lock.py`) |
+|---|---|---|
+| 1 | `--lock/--wheelhouse/--root`: read `METADATA` from the hash-authenticated wheels without installing or importing them, then walk every active `Requires-Dist` edge from the reviewed roots. Reject active extras or direct URLs, edges leaving the lock, unsatisfied versions, unreachable lock entries, wheelhouse/lock drift, duplicate wheels or `.dist-info` directories, identity mismatches, and a lock target header that differs from the running interpreter. | `test_locked_requires_dist_*`, `test_inactive_locked_markers_are_not_edges`, `test_unreachable_locked_distribution_is_rejected`, `test_duplicate_wheels_*`, `test_wheel_*`, `test_wheelhouse_must_equal_lock`, `test_lock_*` |
+| 2 | Reject `project.dynamic` entries for `dependencies` / `optional-dependencies`, the matching `[tool.setuptools.dynamic]` tables, and a missing `[project]` table. The alternative generated-metadata policy was not adopted. | `test_dynamic_dependency_metadata_is_rejected[*]`, `test_missing_project_table_is_rejected` |
+| 3 | Static prohibition of `setup.py`, `setup.cfg`, `backend-path` and non-allowlisted backends. Then `--backend-requirements` runs the three hooks of the allowlisted, hash-locked backend, each in its own subprocess on a temporary copy of the project, with socket egress denied and the project tree removed from `sys.path`. Reported requirements must already be exact-pinned in `build-system.requires`. The hooks never run if the static policy fails. | `test_legacy_setuptools_configuration_is_rejected[*]`, `test_unreviewed_build_backend_is_rejected[*]`, `test_in_tree_*`, `test_backend_*`, `test_repository_backend_reports_no_unreviewed_build_requirements` |
+| 4 | Require an explicit `[build-system]` with a `requires` list and `build-backend` (`setuptools.build_meta` only, with its provider declared), and exact `==` pins to the reviewed manifest. | `test_missing_build_*`, `test_build_backend_provider_must_be_declared`, `test_build_requirement_must_be_an_exact_reviewed_pin[*]` |
+
+Failing-before/passing-after: the final `tests/test_ci_lock.py` (56 cases) run against the pre-T00A tools gives 43 failed and 13 passed. The 13 are the nine original T00 regressions plus four positive controls. The same file gives 56 passed with the repaired tools on Python 3.10, 3.11 and 3.12. Re-running the four end-to-end scenarios through the repaired CLI now exits 1 for each, with the errors shown in the PR description.
+
+The existing protections are unchanged: SHA-256 wheelhouse download, offline `--no-deps` installation, manifest/lock equality, duplicate-aware exact installed-environment verification, `pip check`, direct-URL and upstream-extra rejection in pyproject surfaces, and selected-extra marker context.
+
+### Locally executed results on the T00A head
+
+The same wheel locks were hash-downloaded and installed into per-interpreter virtual environments, and the CI steps were run in order:
+
+- `verify_project_dependency_policy.py … --lock … --wheelhouse … --root pip`: PASS. Closed graphs: py310 has 25 distributions and 27 active edges; py311 and py312 each have 23 and 25.
+- `verify_project_dependency_policy.py … --backend-requirements`: PASS. setuptools 84.0.0 reports `wheel=[]`, `editable=[]` and `sdist=[]` on each interpreter.
+
+These are local results. Exact-head GitHub Actions evidence for the PR head is recorded in the PR conversation. T00A moves to `DONE` only after that run and review.
+
+### PR #12 review follow-up
+
+The Codex review of the T00A head found that an inactive environment marker on a `build-system.requires` entry skipped the manifest and exact-pin checks, while the entry's raw name still counted as declaring the backend provider. Build requirements must now be marker-free, and the provider must be declared unconditionally. Backend-reported requirements are validated whatever their marker says. Regressions: `test_build_requirements_must_be_unconditional[*]` and the updated `test_backend_reported_requirement_must_be_a_declared_reviewed_build_requirement`.
+
+Codex's re-review then found that `requires-python` was never checked, so widening it (to `>=3.9`, for example) passed while advertising unreviewed interpreters. The policy now derives the reviewed minors from the `# Python X.Y` headers of `requirements/ci-py*.lock`. `requires-python` must fully cover exactly those minors, and a missing value fails. Regressions: `test_requires_python_matches_reviewed_interpreters[*]`, `test_reviewed_interpreters_come_from_the_repository_locks` and `test_cli_checks_requires_python_against_discovered_locks`.
+
+The third Codex review found two more gaps, both reproduced before the fix:
+
+- Coverage was probed only at patches 0 and 99 of each minor, so `>=3.10,<3.13,!=3.11.5` passed. `requires-python` may now contain only whole-minor `>=X.Y` and `<X.Y` clauses. Their intersection is one interval with minor-aligned ends, so the probes are exact. The new cases in `test_requires_python_matches_reviewed_interpreters[*]` failed 7/7 against the previous tool.
+- The hook subprocess started in the project copy with the working directory on `sys.path`, so a committed `socket.py` executed before the egress guard was installed. Hooks now run under `python -I -B`, which also ignores `PYTHONPATH`. `test_project_modules_cannot_shadow_the_runner_imports` and `test_pythonpath_cannot_supply_the_backend` failed against the previous tool. The fake backends in the tests are now installed into a throwaway venv's site-packages instead of `PYTHONPATH`.
+
+The fourth Codex review found three more gaps, each reproduced before the fix:
+
+- A target-stamped `ci-py313.lock` alone widened the reviewed set, so `<3.14` passed while CI never tested 3.13. A minor now counts only when its lock has its manifest and a `python`/`manifest`/`lock` job in the CI workflow matrix. Otherwise the policy reports the uncovered lock.
+- `dynamic = ["version"]` with `[tool.setuptools.dynamic] version = {attr = ...}` passed the static policy, and setuptools imported the in-tree module during the hooks. All dynamic fields, `[tool.setuptools.dynamic]` and `[tool.setuptools].cmdclass` are now rejected before any hook runs.
+- A `python_full_version == "3.11.5"` edge was evaluated only for the runner's patch, so an unlocked dependency passed. Markers now use three-valued evaluation: a variable the lock target does not fix makes the edge count as active unless the rest of the marker is false. The only such marker in the current locks, setuptools' `pytest-mypy` edge, is inactive because it also requires `extra == "type"`, so the locked graphs are unchanged.
+
+Regressions: `test_lock_without_manifest_or_ci_job_is_not_reviewed`, `test_repository_ci_matrix_tests_every_lock`, `test_executable_build_configuration_is_rejected[*]`, `test_marker_state_is_unknown_for_variables_the_lock_does_not_fix[*]` and `test_patch_level_markers_count_as_active_edges`. All 13 failed against the previous tool.
+
+The fifth Codex review found that the CI matrix was located by a regular expression over the whole workflow, so a `- python: '3.13'` entry inside a `run: |` block counted as a job. The workflow is now read structurally. Only block-style entries under `jobs.test.strategy.matrix.include` count. Comments, block or folded scalars, other jobs and flow-style matrices never do, and an unrecognised layout fails closed. `test_only_real_matrix_entries_count_as_ci_jobs[block-scalar|other-job|folded-scalar]` failed against the previous tool.
+
+The eighth Codex review found that a double-quoted `note` value spanning several lines hid a 3.13 entry from YAML but not from the reader, which counted it as a job. The reader now accepts only a strict block subset and refuses the whole workflow otherwise. Every scalar must end on its own line, every line must continue an open mapping or sequence, keys are unique, and anchors, aliases, tags and tabs are refused. A refused workflow makes every lock untested. Only quoted or plainly textual strings count as matrix values, since YAML reads an unquoted `3.10` as the number 3.1, and values nested inside an entry never count as entries. Before landing, the reader was compared with PyYAML 6.0.3 in a scratch environment on 120,000 generated workflows: fuzzed decoys inserted into `ci.yml`, and random documents written by PyYAML's own dumper. It never reported a job that YAML does not define. The twelve new cases in `test_yaml_outside_the_read_subset_untrusts_the_whole_matrix[*]`, `test_values_nested_in_an_entry_are_not_entries`, `test_sequences_at_their_key_indentation_are_read` and `test_unquoted_versions_are_numbers_not_matrix_strings` all failed against the previous tool.
+
+### Supported build configuration and residual trust
+
+The supported configuration is a pyproject-only setuptools project with an explicit `setuptools.build_meta` backend, exact reviewed build pins, and static dependency metadata. See the [requirements README](../../requirements/README.md#supported-build-configuration). Residual trust remains in three places:
+
+- the hash-locked setuptools/pip/wheel releases themselves;
+- the in-process egress guard, which is best effort and not a sandbox against a hostile backend;
+- downstream source builds outside CI, which resolve the exact `build-system.requires` pins from their own index without these hashes.
+
+New ecosystems (T28) must extend these checks deliberately.
+
+
+## PR #12 — structural invariant repair after review 13
+
+Baseline: `1667d72cffed9c46c361bfb7bf273535c6f9417b`. The previous YAML-reader
+history above is preserved as historical evidence; that reader is now removed.
+Strict target JSON plus the complete generated workflow replace its coverage
+inference. Whole-minor support is compared as an exact interval, not a sample grid.
+The full mandatory job, runtime bindings, commands and trigger configuration must
+match the reviewed renderer. Symlinked policy/lock artifacts are not evidence.
+
+The local hash-locked Python 3.12.14 replay passes **633 tests**: all 436 existing
+cases retained and 197 additional cases. Nine isolated fault-removal controls each
+produce exercised assertion failures, and the unmodified implementation passes.
+The canonical workflow runs those controls on every target. Dependency graph,
+backend hooks, exact environment, contract compilers, validators, research checks,
+offline wheel build, installed-wheel smoke and roadmap checks all passed locally.
+Actual 3.10/3.11/3.12 Actions results are recorded on the exact PR commit, not inferred
+from the local 3.12 run. See [machine-readable evidence](PR12_INVARIANTS.json) and
+[the release-boundary handoff](../privacy/validated-release-boundary.md).
+
+No runtime dependency or lock changed. No source, retention or owner decision was
+fabricated. The numerical core and research imports are unchanged. Rollback reverts
+the structural repair, not any protected consent history or owner decisions.

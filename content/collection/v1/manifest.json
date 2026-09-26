@@ -1,0 +1,124 @@
+{
+  "contract_version": "collection-protocol/v1",
+  "protocol_id": "collection_protocol",
+  "version": 1,
+  "status": "DRAFT_PENDING_OWNER_REVIEW",
+  "gate": "pilot_rights_consent",
+  "source_id": "owned_pilot_collection_v1",
+  "consent_purposes": [
+    {
+      "purpose_id": "engineering_evaluation",
+      "purpose_version": 1
+    },
+    {
+      "purpose_id": "reference_contribution",
+      "purpose_version": 1
+    }
+  ],
+  "supported_contexts": {
+    "scripts": [
+      "LATIN"
+    ],
+    "languages": [
+      "en",
+      "sv"
+    ]
+  },
+  "pooling": {
+    "copy_with_free": false,
+    "across_languages": false,
+    "repeat_captures_as_writers": false
+  },
+  "tasks": [
+    {
+      "task_id": "copy_en",
+      "task_kind": "COPY",
+      "language": "en",
+      "prompt_file": "prompts/copy-en.v1.md",
+      "prompt_sha256": "fc3f8ddc59c64fbf9aca5e3c47f04da930fda4fb18cba83f9d41edc6c915bd79",
+      "rights": {
+        "origin": "ORIGINAL_FOR_THIS_PROJECT",
+        "decision_status": "PENDING_OWNER_DECISION",
+        "decision_ref": null
+      }
+    },
+    {
+      "task_id": "copy_sv",
+      "task_kind": "COPY",
+      "language": "sv",
+      "prompt_file": "prompts/copy-sv.v1.md",
+      "prompt_sha256": "031eb4007e33ae431585b6b7ffdcdca192cbe1dea0735a63f3d0fed020e48768",
+      "rights": {
+        "origin": "ORIGINAL_FOR_THIS_PROJECT",
+        "decision_status": "PENDING_OWNER_DECISION",
+        "decision_ref": null
+      }
+    },
+    {
+      "task_id": "free_en",
+      "task_kind": "FREE",
+      "language": "en",
+      "prompt_file": "prompts/free-en.v1.md",
+      "prompt_sha256": "5ff55e4fa984a7d74d442b02125c695a04f1e97f9e1b481bde9f43b036e5d989",
+      "rights": {
+        "origin": "ORIGINAL_FOR_THIS_PROJECT",
+        "decision_status": "PENDING_OWNER_DECISION",
+        "decision_ref": null
+      }
+    },
+    {
+      "task_id": "free_sv",
+      "task_kind": "FREE",
+      "language": "sv",
+      "prompt_file": "prompts/free-sv.v1.md",
+      "prompt_sha256": "86f3c6dc7d6d37476cd44f5a2d5a23a063d3209bf4def8bb9d275f41e4e134a4",
+      "rights": {
+        "origin": "ORIGINAL_FOR_THIS_PROJECT",
+        "decision_status": "PENDING_OWNER_DECISION",
+        "decision_ref": null
+      }
+    }
+  ],
+  "guidance": [
+    {
+      "guidance_id": "capture_and_author_en",
+      "locale": "en",
+      "file": "guidance/capture-and-author.en.md",
+      "sha256": "2aac0bfbabd26e4cfb67c83a3a2a84b793c50111c6cf3be98d859902780a725e"
+    },
+    {
+      "guidance_id": "capture_and_author_sv",
+      "locale": "sv",
+      "file": "guidance/capture-and-author.sv.md",
+      "sha256": "e6745bb8ffc65285626cdd1af32ae9a46375073b34dace5f1b04677632733d1b"
+    }
+  ],
+  "session_plan": [
+    {
+      "session_index": 1,
+      "participants": "ALL_ENROLLED",
+      "tasks_per_language": [
+        "COPY",
+        "FREE"
+      ],
+      "repeat_captures": "SELECTED_PAGES",
+      "summary": "Each participant writes the copy task and the free task in their chosen language on separate pages; selected pages are photographed again to estimate capture sensitivity."
+    },
+    {
+      "session_index": 2,
+      "participants": "OPTIONAL_SUBSET",
+      "tasks_per_language": [
+        "COPY",
+        "FREE"
+      ],
+      "repeat_captures": "NONE",
+      "summary": "A later session for an optional subset produces new specimens by the same writers to estimate within-writer variation."
+    }
+  ],
+  "exclusions": [
+    "Signatures are not collected in protocol v1.",
+    "Writers who have not declared adult eligibility are not enrolled.",
+    "Pages in unsupported scripts or languages are recorded as UNSUPPORTED context and excluded from reference cohorts.",
+    "Synthetic or rendered handwriting is never added to a human collection."
+  ]
+}

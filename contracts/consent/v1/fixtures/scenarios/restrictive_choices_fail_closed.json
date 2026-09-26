@@ -1,0 +1,652 @@
+{
+  "contract_version": "consent-scenario/v1",
+  "scenario_id": "restrictive_choices_fail_closed",
+  "description": "A denial or withdrawal takes effect even while its evidence is pending or its notice is outdated; only grants wait.",
+  "synthetic": true,
+  "notices": [
+    {
+      "notice_id": "notice.consent-choices",
+      "version": 1,
+      "effective_from": "2026-01-01T00:00:00Z",
+      "effective_until": "2026-03-01T00:00:00Z",
+      "purposes": [
+        {
+          "purpose_id": "service_processing",
+          "purpose_version": 1
+        },
+        {
+          "purpose_id": "image_retention",
+          "purpose_version": 1
+        },
+        {
+          "purpose_id": "third_party_ai_processing",
+          "purpose_version": 1
+        },
+        {
+          "purpose_id": "ordinary_sharing",
+          "purpose_version": 1
+        },
+        {
+          "purpose_id": "partner_comparison",
+          "purpose_version": 1
+        },
+        {
+          "purpose_id": "reference_contribution",
+          "purpose_version": 1
+        },
+        {
+          "purpose_id": "support_human_review",
+          "purpose_version": 1
+        },
+        {
+          "purpose_id": "product_analytics",
+          "purpose_version": 1
+        }
+      ]
+    },
+    {
+      "notice_id": "notice.consent-choices",
+      "version": 2,
+      "effective_from": "2026-03-01T00:00:00Z",
+      "effective_until": null,
+      "purposes": [
+        {
+          "purpose_id": "service_processing",
+          "purpose_version": 1
+        },
+        {
+          "purpose_id": "image_retention",
+          "purpose_version": 1
+        },
+        {
+          "purpose_id": "third_party_ai_processing",
+          "purpose_version": 1
+        },
+        {
+          "purpose_id": "ordinary_sharing",
+          "purpose_version": 1
+        },
+        {
+          "purpose_id": "partner_comparison",
+          "purpose_version": 1
+        },
+        {
+          "purpose_id": "reference_contribution",
+          "purpose_version": 1
+        },
+        {
+          "purpose_id": "support_human_review",
+          "purpose_version": 1
+        },
+        {
+          "purpose_id": "product_analytics",
+          "purpose_version": 1
+        }
+      ]
+    }
+  ],
+  "writers": [
+    {
+      "writer_id": "wrt_0001",
+      "self_account_id": "acc_0001",
+      "self_account_linked_at": "2026-01-01T00:00:00Z",
+      "previous_account_links": [],
+      "adult_eligibility": "DECLARED_ADULT"
+    }
+  ],
+  "events": [
+    {
+      "contract_version": "consent-event/v1",
+      "event_id": "evt_1101",
+      "event_type": "GRANT",
+      "subject": {
+        "kind": "WRITER",
+        "id": "wrt_0001"
+      },
+      "purpose": {
+        "purpose_id": "reference_contribution",
+        "purpose_version": 1
+      },
+      "notice": {
+        "notice_id": "notice.consent-choices",
+        "version": 1
+      },
+      "scope": {
+        "kind": "SUBJECT_WIDE",
+        "id": "wrt_0001"
+      },
+      "actor": {
+        "kind": "ACCOUNT",
+        "id": "acc_0001"
+      },
+      "presented_default": "UNSELECTED",
+      "capture_method": "EXPLICIT_CONTROL",
+      "derived_from": null,
+      "surface": "WEB",
+      "recorded_at": "2026-02-01T09:00:00Z",
+      "effective_at": "2026-02-01T09:00:00Z",
+      "evidence": {
+        "kind": "UI_INTERACTION",
+        "ref": "evd_1101",
+        "status": "RECORDED"
+      },
+      "subject_eligibility": "DECLARED_ADULT"
+    },
+    {
+      "contract_version": "consent-event/v1",
+      "event_id": "evt_1102",
+      "event_type": "DENY",
+      "subject": {
+        "kind": "WRITER",
+        "id": "wrt_0001"
+      },
+      "purpose": {
+        "purpose_id": "reference_contribution",
+        "purpose_version": 1
+      },
+      "notice": {
+        "notice_id": "notice.consent-choices",
+        "version": 1
+      },
+      "scope": {
+        "kind": "SUBJECT_WIDE",
+        "id": "wrt_0001"
+      },
+      "actor": {
+        "kind": "ACCOUNT",
+        "id": "acc_0001"
+      },
+      "presented_default": "UNSELECTED",
+      "capture_method": "EXPLICIT_CONTROL",
+      "derived_from": null,
+      "surface": "WEB",
+      "recorded_at": "2026-02-05T09:00:00Z",
+      "effective_at": "2026-02-05T09:00:00Z",
+      "evidence": {
+        "kind": "UI_INTERACTION",
+        "ref": "evd_1102",
+        "status": "PENDING"
+      },
+      "subject_eligibility": "DECLARED_ADULT"
+    },
+    {
+      "contract_version": "consent-event/v1",
+      "event_id": "evt_1103",
+      "event_type": "GRANT",
+      "subject": {
+        "kind": "WRITER",
+        "id": "wrt_0001"
+      },
+      "purpose": {
+        "purpose_id": "image_retention",
+        "purpose_version": 1
+      },
+      "notice": {
+        "notice_id": "notice.consent-choices",
+        "version": 1
+      },
+      "scope": {
+        "kind": "SUBJECT_WIDE",
+        "id": "wrt_0001"
+      },
+      "actor": {
+        "kind": "ACCOUNT",
+        "id": "acc_0001"
+      },
+      "presented_default": "UNSELECTED",
+      "capture_method": "EXPLICIT_CONTROL",
+      "derived_from": null,
+      "surface": "WEB",
+      "recorded_at": "2026-02-01T09:00:00Z",
+      "effective_at": "2026-02-01T09:00:00Z",
+      "evidence": {
+        "kind": "UI_INTERACTION",
+        "ref": "evd_1103",
+        "status": "RECORDED"
+      },
+      "subject_eligibility": "DECLARED_ADULT"
+    },
+    {
+      "contract_version": "consent-event/v1",
+      "event_id": "evt_1104",
+      "event_type": "DENY",
+      "subject": {
+        "kind": "WRITER",
+        "id": "wrt_0001"
+      },
+      "purpose": {
+        "purpose_id": "image_retention",
+        "purpose_version": 1
+      },
+      "notice": {
+        "notice_id": "notice.consent-choices",
+        "version": 1
+      },
+      "scope": {
+        "kind": "SUBJECT_WIDE",
+        "id": "wrt_0001"
+      },
+      "actor": {
+        "kind": "ACCOUNT",
+        "id": "acc_0001"
+      },
+      "presented_default": "UNSELECTED",
+      "capture_method": "EXPLICIT_CONTROL",
+      "derived_from": null,
+      "surface": "WEB",
+      "recorded_at": "2026-04-05T09:00:00Z",
+      "effective_at": "2026-04-05T09:00:00Z",
+      "evidence": {
+        "kind": "UI_INTERACTION",
+        "ref": "evd_1104",
+        "status": "RECORDED"
+      },
+      "subject_eligibility": "DECLARED_ADULT"
+    },
+    {
+      "contract_version": "consent-event/v1",
+      "event_id": "evt_1105",
+      "event_type": "GRANT",
+      "subject": {
+        "kind": "WRITER",
+        "id": "wrt_0001"
+      },
+      "purpose": {
+        "purpose_id": "image_retention",
+        "purpose_version": 1
+      },
+      "notice": {
+        "notice_id": "notice.consent-choices",
+        "version": 1
+      },
+      "scope": {
+        "kind": "SPECIMEN",
+        "id": "spc_0002"
+      },
+      "actor": {
+        "kind": "ACCOUNT",
+        "id": "acc_0001"
+      },
+      "presented_default": "UNSELECTED",
+      "capture_method": "EXPLICIT_CONTROL",
+      "derived_from": null,
+      "surface": "WEB",
+      "recorded_at": "2026-04-05T09:00:00Z",
+      "effective_at": "2026-04-05T09:00:00Z",
+      "evidence": {
+        "kind": "UI_INTERACTION",
+        "ref": "evd_1105",
+        "status": "RECORDED"
+      },
+      "subject_eligibility": "DECLARED_ADULT"
+    },
+    {
+      "contract_version": "consent-event/v1",
+      "event_id": "evt_1106",
+      "event_type": "GRANT",
+      "subject": {
+        "kind": "WRITER",
+        "id": "wrt_0001"
+      },
+      "purpose": {
+        "purpose_id": "third_party_ai_processing",
+        "purpose_version": 1
+      },
+      "notice": {
+        "notice_id": "notice.consent-choices",
+        "version": 1
+      },
+      "scope": {
+        "kind": "REPORT",
+        "id": "rpt_0001"
+      },
+      "actor": {
+        "kind": "ACCOUNT",
+        "id": "acc_0001"
+      },
+      "presented_default": "UNSELECTED",
+      "capture_method": "EXPLICIT_CONTROL",
+      "derived_from": null,
+      "surface": "WEB",
+      "recorded_at": "2026-02-01T09:00:00Z",
+      "effective_at": "2026-02-01T09:00:00Z",
+      "evidence": {
+        "kind": "UI_INTERACTION",
+        "ref": "evd_1106",
+        "status": "RECORDED"
+      },
+      "subject_eligibility": "DECLARED_ADULT"
+    },
+    {
+      "contract_version": "consent-event/v1",
+      "event_id": "evt_1107",
+      "event_type": "WITHDRAW",
+      "subject": {
+        "kind": "WRITER",
+        "id": "wrt_0001"
+      },
+      "purpose": {
+        "purpose_id": "third_party_ai_processing",
+        "purpose_version": 1
+      },
+      "notice": {
+        "notice_id": "notice.consent-choices",
+        "version": 1
+      },
+      "scope": {
+        "kind": "REPORT",
+        "id": "rpt_0001"
+      },
+      "actor": {
+        "kind": "ACCOUNT",
+        "id": "acc_0001"
+      },
+      "presented_default": "NOT_PRESENTED",
+      "capture_method": "WITHDRAWAL_CONTROL",
+      "derived_from": null,
+      "surface": "WEB",
+      "recorded_at": "2026-02-06T09:00:00Z",
+      "effective_at": "2026-02-06T09:00:00Z",
+      "evidence": {
+        "kind": "UI_INTERACTION",
+        "ref": "evd_1107",
+        "status": "PENDING"
+      },
+      "subject_eligibility": "DECLARED_ADULT"
+    },
+    {
+      "contract_version": "consent-event/v1",
+      "event_id": "evt_1108",
+      "event_type": "GRANT",
+      "subject": {
+        "kind": "WRITER",
+        "id": "wrt_0001"
+      },
+      "purpose": {
+        "purpose_id": "ordinary_sharing",
+        "purpose_version": 1
+      },
+      "notice": {
+        "notice_id": "notice.consent-choices",
+        "version": 1
+      },
+      "scope": {
+        "kind": "SHARE_GRANT",
+        "id": "shr_0001"
+      },
+      "actor": {
+        "kind": "ACCOUNT",
+        "id": "acc_0001"
+      },
+      "presented_default": "UNSELECTED",
+      "capture_method": "EXPLICIT_CONTROL",
+      "derived_from": null,
+      "surface": "WEB",
+      "recorded_at": "2026-02-01T09:00:00Z",
+      "effective_at": "2026-02-01T09:00:00Z",
+      "evidence": {
+        "kind": "UI_INTERACTION",
+        "ref": "evd_1108",
+        "status": "RECORDED"
+      },
+      "subject_eligibility": "DECLARED_ADULT"
+    },
+    {
+      "contract_version": "consent-event/v1",
+      "event_id": "evt_1109",
+      "event_type": "DENY",
+      "subject": {
+        "kind": "WRITER",
+        "id": "wrt_0001"
+      },
+      "purpose": {
+        "purpose_id": "ordinary_sharing",
+        "purpose_version": 1
+      },
+      "notice": {
+        "notice_id": "notice.consent-choices",
+        "version": 1
+      },
+      "scope": {
+        "kind": "SHARE_GRANT",
+        "id": "shr_0001"
+      },
+      "actor": {
+        "kind": "ACCOUNT",
+        "id": "acc_0001"
+      },
+      "presented_default": "UNSELECTED",
+      "capture_method": "EXPLICIT_CONTROL",
+      "derived_from": null,
+      "surface": "WEB",
+      "recorded_at": "2026-02-03T09:00:00Z",
+      "effective_at": "2026-02-09T09:00:00Z",
+      "evidence": {
+        "kind": "UI_INTERACTION",
+        "ref": "evd_1109",
+        "status": "RECORDED"
+      },
+      "subject_eligibility": "DECLARED_ADULT"
+    },
+    {
+      "contract_version": "consent-event/v1",
+      "event_id": "evt_1110",
+      "event_type": "GRANT",
+      "subject": {
+        "kind": "WRITER",
+        "id": "wrt_0001"
+      },
+      "purpose": {
+        "purpose_id": "partner_comparison",
+        "purpose_version": 1
+      },
+      "notice": {
+        "notice_id": "notice.consent-choices",
+        "version": 1
+      },
+      "scope": {
+        "kind": "COMPARISON",
+        "id": "cmp_0001"
+      },
+      "actor": {
+        "kind": "ACCOUNT",
+        "id": "acc_0001"
+      },
+      "presented_default": "UNSELECTED",
+      "capture_method": "EXPLICIT_CONTROL",
+      "derived_from": null,
+      "surface": "WEB",
+      "recorded_at": "2026-02-02T09:00:00Z",
+      "effective_at": "2026-03-01T09:00:00Z",
+      "evidence": {
+        "kind": "UI_INTERACTION",
+        "ref": "evd_1110",
+        "status": "RECORDED"
+      },
+      "subject_eligibility": "DECLARED_ADULT"
+    },
+    {
+      "contract_version": "consent-event/v1",
+      "event_id": "evt_1111",
+      "event_type": "WITHDRAW",
+      "subject": {
+        "kind": "WRITER",
+        "id": "wrt_0001"
+      },
+      "purpose": {
+        "purpose_id": "partner_comparison",
+        "purpose_version": 1
+      },
+      "notice": {
+        "notice_id": "notice.consent-choices",
+        "version": 1
+      },
+      "scope": {
+        "kind": "COMPARISON",
+        "id": "cmp_0001"
+      },
+      "actor": {
+        "kind": "ACCOUNT",
+        "id": "acc_0001"
+      },
+      "presented_default": "NOT_PRESENTED",
+      "capture_method": "WITHDRAWAL_CONTROL",
+      "derived_from": null,
+      "surface": "WEB",
+      "recorded_at": "2026-02-10T09:00:00Z",
+      "effective_at": "2026-02-10T09:00:00Z",
+      "evidence": {
+        "kind": "UI_INTERACTION",
+        "ref": "evd_1111",
+        "status": "RECORDED"
+      },
+      "subject_eligibility": "DECLARED_ADULT"
+    }
+  ],
+  "checks": [
+    {
+      "kind": "EVENT_VALIDITY",
+      "event_id": "evt_1102",
+      "expect": []
+    },
+    {
+      "kind": "EVENT_VALIDITY",
+      "event_id": "evt_1104",
+      "expect": []
+    },
+    {
+      "kind": "EVENT_VALIDITY",
+      "event_id": "evt_1107",
+      "expect": []
+    },
+    {
+      "kind": "EVENT_VALIDITY",
+      "event_id": "evt_1105",
+      "expect": [
+        "OBSOLETE_NOTICE"
+      ]
+    },
+    {
+      "kind": "PERMISSION",
+      "subject": {
+        "kind": "WRITER",
+        "id": "wrt_0001"
+      },
+      "purpose": {
+        "purpose_id": "reference_contribution",
+        "purpose_version": 1
+      },
+      "scope": {
+        "kind": "SPECIMEN",
+        "id": "spc_0001"
+      },
+      "at": "2026-02-06T09:00:00Z",
+      "expect": "DENIED",
+      "note": "A delayed evidence write never lets an earlier grant keep processing."
+    },
+    {
+      "kind": "PERMISSION",
+      "subject": {
+        "kind": "WRITER",
+        "id": "wrt_0001"
+      },
+      "purpose": {
+        "purpose_id": "image_retention",
+        "purpose_version": 1
+      },
+      "scope": {
+        "kind": "SPECIMEN",
+        "id": "spc_0001"
+      },
+      "at": "2026-04-06T09:00:00Z",
+      "expect": "DENIED",
+      "note": "A denial under the outdated notice is honoured."
+    },
+    {
+      "kind": "PERMISSION",
+      "subject": {
+        "kind": "WRITER",
+        "id": "wrt_0001"
+      },
+      "purpose": {
+        "purpose_id": "image_retention",
+        "purpose_version": 1
+      },
+      "scope": {
+        "kind": "SPECIMEN",
+        "id": "spc_0002"
+      },
+      "at": "2026-04-06T09:00:00Z",
+      "expect": "DENIED",
+      "note": "The grant under the outdated notice is invalid, so the subject-wide denial still applies."
+    },
+    {
+      "kind": "PERMISSION",
+      "subject": {
+        "kind": "WRITER",
+        "id": "wrt_0001"
+      },
+      "purpose": {
+        "purpose_id": "third_party_ai_processing",
+        "purpose_version": 1
+      },
+      "scope": {
+        "kind": "REPORT",
+        "id": "rpt_0001"
+      },
+      "at": "2026-02-07T09:00:00Z",
+      "expect": "WITHDRAWN"
+    },
+    {
+      "kind": "EVENT_VALIDITY",
+      "event_id": "evt_1109",
+      "expect": []
+    },
+    {
+      "kind": "PERMISSION",
+      "subject": {
+        "kind": "WRITER",
+        "id": "wrt_0001"
+      },
+      "purpose": {
+        "purpose_id": "ordinary_sharing",
+        "purpose_version": 1
+      },
+      "scope": {
+        "kind": "SHARE_GRANT",
+        "id": "shr_0001"
+      },
+      "at": "2026-02-04T09:00:00Z",
+      "expect": "DENIED",
+      "note": "A denial recorded on day 3 applies at once, whatever later effective time it carries."
+    },
+    {
+      "kind": "EVENT_VALIDITY",
+      "event_id": "evt_1110",
+      "expect": []
+    },
+    {
+      "kind": "EVENT_VALIDITY",
+      "event_id": "evt_1111",
+      "expect": []
+    },
+    {
+      "kind": "PERMISSION",
+      "subject": {
+        "kind": "WRITER",
+        "id": "wrt_0001"
+      },
+      "purpose": {
+        "purpose_id": "partner_comparison",
+        "purpose_version": 1
+      },
+      "scope": {
+        "kind": "COMPARISON",
+        "id": "cmp_0001"
+      },
+      "at": "2026-04-01T09:00:00Z",
+      "expect": "WITHDRAWN",
+      "note": "A grant scheduled for 1 March never overrides the withdrawal recorded after it on 10 February."
+    }
+  ]
+}

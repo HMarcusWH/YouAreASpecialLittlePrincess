@@ -1,0 +1,330 @@
+{
+  "contract_version": "consent-scenario/v1",
+  "scenario_id": "purpose_version_change_keeps_historical_meaning",
+  "description": "A changed purpose gets a new version; grants for the old version never authorize the new one.",
+  "synthetic": true,
+  "extra_purposes": [
+    {
+      "purpose_id": "reference_contribution",
+      "purpose_version": 2,
+      "status": "DRAFT",
+      "summary": "Hypothetical changed contribution purpose, used only to test versioning.",
+      "subject_kind": "WRITER",
+      "required_for_service": false,
+      "affects_free_report": false,
+      "presented_default": "UNSELECTED",
+      "grant_scopes": [
+        "SUBJECT_WIDE",
+        "SPECIMEN"
+      ],
+      "requires_author_authority": true,
+      "requires_adult_declaration": true,
+      "data_categories": [
+        "handwriting_image",
+        "derived_measurements",
+        "declared_context"
+      ],
+      "recipients": [
+        "application_reference_plane"
+      ],
+      "retention_classes": [
+        "reference_members"
+      ],
+      "withdrawal": {
+        "available": true,
+        "effect": "PROSPECTIVE",
+        "propagation": [
+          "exclude_from_future_releases",
+          "rebuild_or_retire_affected_releases",
+          "delete_restricted_member_assets"
+        ]
+      },
+      "related_gates": [
+        "pilot_rights_consent",
+        "public_reference_validation",
+        "benchmark_promotion"
+      ],
+      "legal_basis": "PENDING_OWNER_DECISION",
+      "not_implied_by": [
+        "service_processing",
+        "image_retention",
+        "purchase"
+      ]
+    }
+  ],
+  "notices": [
+    {
+      "notice_id": "notice.consent-choices",
+      "version": 2,
+      "effective_from": "2026-01-01T00:00:00Z",
+      "effective_until": "2026-06-01T00:00:00Z",
+      "purposes": [
+        {
+          "purpose_id": "service_processing",
+          "purpose_version": 1
+        },
+        {
+          "purpose_id": "image_retention",
+          "purpose_version": 1
+        },
+        {
+          "purpose_id": "third_party_ai_processing",
+          "purpose_version": 1
+        },
+        {
+          "purpose_id": "ordinary_sharing",
+          "purpose_version": 1
+        },
+        {
+          "purpose_id": "partner_comparison",
+          "purpose_version": 1
+        },
+        {
+          "purpose_id": "reference_contribution",
+          "purpose_version": 1
+        },
+        {
+          "purpose_id": "support_human_review",
+          "purpose_version": 1
+        },
+        {
+          "purpose_id": "product_analytics",
+          "purpose_version": 1
+        }
+      ]
+    },
+    {
+      "notice_id": "notice.consent-choices",
+      "version": 3,
+      "effective_from": "2026-06-01T00:00:00Z",
+      "effective_until": null,
+      "purposes": [
+        {
+          "purpose_id": "service_processing",
+          "purpose_version": 1
+        },
+        {
+          "purpose_id": "image_retention",
+          "purpose_version": 1
+        },
+        {
+          "purpose_id": "third_party_ai_processing",
+          "purpose_version": 1
+        },
+        {
+          "purpose_id": "ordinary_sharing",
+          "purpose_version": 1
+        },
+        {
+          "purpose_id": "partner_comparison",
+          "purpose_version": 1
+        },
+        {
+          "purpose_id": "reference_contribution",
+          "purpose_version": 2
+        },
+        {
+          "purpose_id": "support_human_review",
+          "purpose_version": 1
+        },
+        {
+          "purpose_id": "product_analytics",
+          "purpose_version": 1
+        }
+      ]
+    }
+  ],
+  "writers": [
+    {
+      "writer_id": "wrt_0001",
+      "self_account_id": "acc_0001",
+      "self_account_linked_at": "2026-01-01T00:00:00Z",
+      "previous_account_links": [],
+      "adult_eligibility": "DECLARED_ADULT"
+    }
+  ],
+  "events": [
+    {
+      "contract_version": "consent-event/v1",
+      "event_id": "evt_0701",
+      "event_type": "GRANT",
+      "subject": {
+        "kind": "WRITER",
+        "id": "wrt_0001"
+      },
+      "purpose": {
+        "purpose_id": "reference_contribution",
+        "purpose_version": 1
+      },
+      "notice": {
+        "notice_id": "notice.consent-choices",
+        "version": 2
+      },
+      "scope": {
+        "kind": "SUBJECT_WIDE",
+        "id": "wrt_0001"
+      },
+      "actor": {
+        "kind": "ACCOUNT",
+        "id": "acc_0001"
+      },
+      "presented_default": "UNSELECTED",
+      "capture_method": "EXPLICIT_CONTROL",
+      "derived_from": null,
+      "surface": "WEB",
+      "recorded_at": "2026-02-01T09:00:00Z",
+      "effective_at": "2026-02-01T09:00:00Z",
+      "evidence": {
+        "kind": "UI_INTERACTION",
+        "ref": "evd_0701",
+        "status": "RECORDED"
+      },
+      "subject_eligibility": "DECLARED_ADULT"
+    },
+    {
+      "contract_version": "consent-event/v1",
+      "event_id": "evt_0702",
+      "event_type": "GRANT",
+      "subject": {
+        "kind": "WRITER",
+        "id": "wrt_0001"
+      },
+      "purpose": {
+        "purpose_id": "reference_contribution",
+        "purpose_version": 2
+      },
+      "notice": {
+        "notice_id": "notice.consent-choices",
+        "version": 2
+      },
+      "scope": {
+        "kind": "SUBJECT_WIDE",
+        "id": "wrt_0001"
+      },
+      "actor": {
+        "kind": "ACCOUNT",
+        "id": "acc_0001"
+      },
+      "presented_default": "UNSELECTED",
+      "capture_method": "EXPLICIT_CONTROL",
+      "derived_from": null,
+      "surface": "WEB",
+      "recorded_at": "2026-05-01T09:00:00Z",
+      "effective_at": "2026-05-01T09:00:00Z",
+      "evidence": {
+        "kind": "UI_INTERACTION",
+        "ref": "evd_0702",
+        "status": "RECORDED"
+      },
+      "subject_eligibility": "DECLARED_ADULT"
+    },
+    {
+      "contract_version": "consent-event/v1",
+      "event_id": "evt_0703",
+      "event_type": "GRANT",
+      "subject": {
+        "kind": "WRITER",
+        "id": "wrt_0001"
+      },
+      "purpose": {
+        "purpose_id": "reference_contribution",
+        "purpose_version": 2
+      },
+      "notice": {
+        "notice_id": "notice.consent-choices",
+        "version": 3
+      },
+      "scope": {
+        "kind": "SUBJECT_WIDE",
+        "id": "wrt_0001"
+      },
+      "actor": {
+        "kind": "ACCOUNT",
+        "id": "acc_0001"
+      },
+      "presented_default": "UNSELECTED",
+      "capture_method": "EXPLICIT_CONTROL",
+      "derived_from": null,
+      "surface": "WEB",
+      "recorded_at": "2026-06-02T09:00:00Z",
+      "effective_at": "2026-06-02T09:00:00Z",
+      "evidence": {
+        "kind": "UI_INTERACTION",
+        "ref": "evd_0703",
+        "status": "RECORDED"
+      },
+      "subject_eligibility": "DECLARED_ADULT"
+    }
+  ],
+  "checks": [
+    {
+      "kind": "EVENT_VALIDITY",
+      "event_id": "evt_0701",
+      "expect": []
+    },
+    {
+      "kind": "EVENT_VALIDITY",
+      "event_id": "evt_0702",
+      "expect": [
+        "NOTICE_DOES_NOT_COVER_PURPOSE"
+      ]
+    },
+    {
+      "kind": "EVENT_VALIDITY",
+      "event_id": "evt_0703",
+      "expect": []
+    },
+    {
+      "kind": "PERMISSION",
+      "subject": {
+        "kind": "WRITER",
+        "id": "wrt_0001"
+      },
+      "purpose": {
+        "purpose_id": "reference_contribution",
+        "purpose_version": 1
+      },
+      "scope": {
+        "kind": "SPECIMEN",
+        "id": "spc_0001"
+      },
+      "at": "2026-06-01T09:00:00Z",
+      "expect": "PERMITTED"
+    },
+    {
+      "kind": "PERMISSION",
+      "subject": {
+        "kind": "WRITER",
+        "id": "wrt_0001"
+      },
+      "purpose": {
+        "purpose_id": "reference_contribution",
+        "purpose_version": 2
+      },
+      "scope": {
+        "kind": "SPECIMEN",
+        "id": "spc_0001"
+      },
+      "at": "2026-06-01T09:00:00Z",
+      "expect": "NOT_ASKED",
+      "note": "The v1 grant does not silently become a v2 grant."
+    },
+    {
+      "kind": "PERMISSION",
+      "subject": {
+        "kind": "WRITER",
+        "id": "wrt_0001"
+      },
+      "purpose": {
+        "purpose_id": "reference_contribution",
+        "purpose_version": 2
+      },
+      "scope": {
+        "kind": "SPECIMEN",
+        "id": "spc_0001"
+      },
+      "at": "2026-06-03T09:00:00Z",
+      "expect": "PERMITTED"
+    }
+  ]
+}

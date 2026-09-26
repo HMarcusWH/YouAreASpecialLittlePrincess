@@ -1,0 +1,173 @@
+{
+  "contract_version": "deletion-lineage/v1",
+  "status": "DRAFT_PENDING_OWNER_REVIEW",
+  "roots": [
+    "upload_original",
+    "pilot_capture"
+  ],
+  "nodes": [
+    {
+      "artifact_kind": "upload_original",
+      "parents": [],
+      "retention_class": "upload_original",
+      "contains_handwriting": true,
+      "on_upstream_deletion": "DELETE",
+      "notes": "Root for product uploads."
+    },
+    {
+      "artifact_kind": "pilot_capture",
+      "parents": [],
+      "retention_class": "pilot_collection_originals",
+      "contains_handwriting": true,
+      "on_upstream_deletion": "DELETE",
+      "notes": "Root for pilot collection photos."
+    },
+    {
+      "artifact_kind": "normalized_image",
+      "parents": [
+        "upload_original",
+        "pilot_capture"
+      ],
+      "retention_class": "derived_assets",
+      "contains_handwriting": true,
+      "on_upstream_deletion": "DELETE",
+      "notes": "Includes the full transform chain back to the original frame."
+    },
+    {
+      "artifact_kind": "crop_overlay_thumbnail",
+      "parents": [
+        "normalized_image"
+      ],
+      "retention_class": "derived_assets",
+      "contains_handwriting": true,
+      "on_upstream_deletion": "DELETE",
+      "notes": "Evidence crops, overlays and thumbnails."
+    },
+    {
+      "artifact_kind": "analysis_run",
+      "parents": [
+        "normalized_image"
+      ],
+      "retention_class": "analysis_record",
+      "contains_handwriting": false,
+      "on_upstream_deletion": "DELETE",
+      "notes": "Measurements are derived data about the writer and follow the source."
+    },
+    {
+      "artifact_kind": "report_revision",
+      "parents": [
+        "analysis_run"
+      ],
+      "retention_class": "analysis_record",
+      "contains_handwriting": false,
+      "on_upstream_deletion": "DELETE",
+      "notes": "Immutable content is made unavailable and deleted; it is never silently edited."
+    },
+    {
+      "artifact_kind": "premium_payload",
+      "parents": [
+        "report_revision",
+        "crop_overlay_thumbnail"
+      ],
+      "retention_class": "premium_request_payload",
+      "contains_handwriting": true,
+      "on_upstream_deletion": "DELETE",
+      "notes": "Stored evidence packet and validated output."
+    },
+    {
+      "artifact_kind": "provider_copy",
+      "parents": [
+        "premium_payload"
+      ],
+      "retention_class": "provider_side_copies",
+      "contains_handwriting": true,
+      "on_upstream_deletion": "REQUEST_PROCESSOR_DELETION",
+      "notes": "Cannot be promised instantly revocable; outcome is recorded."
+    },
+    {
+      "artifact_kind": "export_artifact",
+      "parents": [
+        "report_revision",
+        "crop_overlay_thumbnail"
+      ],
+      "retention_class": "export_artifacts",
+      "contains_handwriting": true,
+      "on_upstream_deletion": "DELETE",
+      "notes": "Downloaded copies held by recipients cannot be recalled; this is disclosed before export."
+    },
+    {
+      "artifact_kind": "share_route",
+      "parents": [
+        "report_revision",
+        "export_artifact"
+      ],
+      "retention_class": "share_routes",
+      "contains_handwriting": false,
+      "on_upstream_deletion": "REVOKE_THEN_DELETE",
+      "notes": "Revocation happens before asset deletion so no window serves stale content."
+    },
+    {
+      "artifact_kind": "comparison_report",
+      "parents": [
+        "report_revision"
+      ],
+      "retention_class": "analysis_record",
+      "contains_handwriting": false,
+      "on_upstream_deletion": "DELETE",
+      "notes": "Deleting or withdrawing either author's input removes the comparison for both."
+    },
+    {
+      "artifact_kind": "reference_member",
+      "parents": [
+        "analysis_run",
+        "normalized_image"
+      ],
+      "retention_class": "reference_members",
+      "contains_handwriting": true,
+      "on_upstream_deletion": "EXCLUDE_AND_REBUILD_OR_RETIRE",
+      "notes": "Membership lineage locates every release containing the specimen."
+    },
+    {
+      "artifact_kind": "benchmark_artifact",
+      "parents": [
+        "reference_member"
+      ],
+      "retention_class": "reference_members",
+      "contains_handwriting": false,
+      "on_upstream_deletion": "EXCLUDE_AND_REBUILD_OR_RETIRE",
+      "notes": "Aggregate retention after withdrawal is a separate owner/privacy decision."
+    },
+    {
+      "artifact_kind": "annotation",
+      "parents": [
+        "pilot_capture",
+        "normalized_image"
+      ],
+      "retention_class": "annotations",
+      "contains_handwriting": false,
+      "on_upstream_deletion": "DELETE",
+      "notes": "Annotations follow their specimen."
+    },
+    {
+      "artifact_kind": "support_case_copy",
+      "parents": [
+        "upload_original",
+        "report_revision"
+      ],
+      "retention_class": "support_case_material",
+      "contains_handwriting": true,
+      "on_upstream_deletion": "DELETE",
+      "notes": "Staff access ends before copies are deleted."
+    },
+    {
+      "artifact_kind": "purchase_ledger_entry",
+      "parents": [
+        "report_revision"
+      ],
+      "retention_class": "accounting_records",
+      "contains_handwriting": false,
+      "on_upstream_deletion": "RETAIN_UNDER_SEPARATE_OBLIGATION",
+      "notes": "Keeps only opaque references needed for financial records; never handwriting."
+    }
+  ]
+}

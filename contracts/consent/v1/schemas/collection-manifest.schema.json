@@ -1,0 +1,101 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:princess:contracts:consent:v1:collection-manifest",
+  "title": "CollectionManifest",
+  "$comment": "T11 handoff shape. Holds pseudonymous IDs and hashes only; images, signed agreements and names never enter Git.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract_version", "protocol", "synthetic", "release_purpose", "release_cutoff", "writers", "specimens", "captures",
+    "claimed_counts"
+  ],
+  "properties": {
+    "contract_version": {"const": "collection-manifest/v1"},
+    "protocol": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["protocol_id", "version"],
+      "properties": {
+        "protocol_id": {"$ref": "common.schema.json#/$defs/stable_key"},
+        "version": {"$ref": "common.schema.json#/$defs/version"}
+      }
+    },
+    "synthetic": {"type": "boolean"},
+    "release_purpose": {
+      "$ref": "common.schema.json#/$defs/purpose_ref",
+      "description": "The protocol purpose every included specimen must be permitted for, e.g. engineering_evaluation."
+    },
+    "release_cutoff": {
+      "$ref": "common.schema.json#/$defs/timestamp",
+      "description": "Permissions are evaluated at this instant; withdrawals before it exclude the specimen."
+    },
+    "writers": {"type": "array", "items": {"$ref": "#/$defs/writer"}},
+    "specimens": {"type": "array", "items": {"$ref": "#/$defs/specimen"}},
+    "captures": {"type": "array", "items": {"$ref": "#/$defs/capture"}},
+    "claimed_counts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["writers", "specimens", "captures"],
+      "properties": {
+        "writers": {"type": "integer", "minimum": 0},
+        "specimens": {"type": "integer", "minimum": 0},
+        "captures": {"type": "integer", "minimum": 0}
+      }
+    }
+  },
+  "$defs": {
+    "writer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["writer_id", "adult_eligibility", "enrollment_id"],
+      "properties": {
+        "writer_id": {"$ref": "common.schema.json#/$defs/opaque_id"},
+        "adult_eligibility": {"$ref": "common.schema.json#/$defs/adult_eligibility"},
+        "enrollment_id": {"$ref": "common.schema.json#/$defs/opaque_id"}
+      }
+    },
+    "specimen": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "specimen_id", "writer_id", "task_id", "session_index", "collected_at", "declared_language", "declared_script",
+        "declared_style", "paper", "instrument", "context_status"
+      ],
+      "properties": {
+        "specimen_id": {"$ref": "common.schema.json#/$defs/opaque_id"},
+        "writer_id": {"$ref": "common.schema.json#/$defs/opaque_id"},
+        "task_id": {"$ref": "common.schema.json#/$defs/stable_key"},
+        "session_index": {"$ref": "common.schema.json#/$defs/version"},
+        "collected_at": {
+          "$ref": "common.schema.json#/$defs/timestamp",
+          "description": "When the page was written. It must not precede the protocol approval nor follow the release cutoff."
+        },
+        "declared_language": {"type": "string", "pattern": "^[a-z]{2,3}$"},
+        "declared_script": {"enum": ["LATIN", "CYRILLIC", "GREEK", "ARABIC", "HEBREW", "CJK", "DEVANAGARI", "OTHER"]},
+        "declared_style": {"enum": ["PRINT", "CURSIVE", "MIXED", "UNDECLARED"]},
+        "paper": {"enum": ["BLANK", "LINED", "GRID", "OTHER", "UNDECLARED"]},
+        "instrument": {"enum": ["BALLPOINT", "GEL_OR_ROLLERBALL", "FOUNTAIN", "PENCIL", "FELT_TIP", "OTHER", "UNDECLARED"]},
+        "context_status": {"enum": ["SUPPORTED", "UNSUPPORTED"]}
+      }
+    },
+    "capture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["capture_id", "specimen_id", "capture_index", "captured_at", "content_sha256", "repeat_of_capture_id"],
+      "properties": {
+        "capture_id": {"$ref": "common.schema.json#/$defs/opaque_id"},
+        "specimen_id": {"$ref": "common.schema.json#/$defs/opaque_id"},
+        "capture_index": {"$ref": "common.schema.json#/$defs/version"},
+        "captured_at": {
+          "$ref": "common.schema.json#/$defs/timestamp",
+          "description": "When the photo was taken, so its bytes entered the system. It must not precede the page's collected_at nor follow the release cutoff, and a protocol purpose must be permitted then."
+        },
+        "content_sha256": {"$ref": "common.schema.json#/$defs/sha256"},
+        "repeat_of_capture_id": {
+          "type": ["string", "null"],
+          "pattern": "^[a-z]{2,8}_[A-Za-z0-9]{4,64}$"
+        }
+      }
+    }
+  }
+}

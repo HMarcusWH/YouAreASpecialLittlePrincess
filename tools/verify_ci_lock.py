@@ -5,8 +5,13 @@ from __future__ import annotations
 
 import argparse
 import importlib.metadata
+import platform
 import re
+import sys
 from pathlib import Path
+
+# Header written by generate_ci_lock.py, e.g. "# Python 3.12; Linux x86_64."
+LOCK_TARGET = re.compile(r"# Python (\d+\.\d+); (\S+) (\S+)\.")
 
 
 def normalize(name: str) -> str:
@@ -53,6 +58,22 @@ def read_lock(path: Path) -> dict[str, str]:
             raise ValueError(f"Duplicate lock entry: {name}")
         expected[name] = version
     return expected
+
+
+def read_lock_target(path: Path) -> tuple[str, str, str] | None:
+    """Return the (python, system, machine) environment a lock was generated for."""
+    targets = {
+        match.groups()
+        for raw in path.read_text(encoding="utf-8").splitlines()
+        if (match := LOCK_TARGET.fullmatch(raw.strip()))
+    }
+    if len(targets) > 1:
+        raise ValueError(f"Lock declares conflicting target environments: {sorted(targets)}")
+    return targets.pop() if targets else None
+
+
+def running_target() -> tuple[str, str, str]:
+    return f"{sys.version_info.major}.{sys.version_info.minor}", platform.system(), platform.machine()
 
 
 def installed_distributions() -> dict[str, str]:

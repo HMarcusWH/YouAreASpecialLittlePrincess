@@ -1,0 +1,221 @@
+{
+  "fixture_id": "writer_in_two_language_cohorts",
+  "description": "Writer 1 copied the English passage but wrote the free task in Swedish; one participant never enters two language cohorts.",
+  "expected_errors": [
+    "WRITER_LANGUAGE_CONFLICT"
+  ],
+  "consent_log": {
+    "notices": [
+      {
+        "notice_id": "notice.pilot-collection",
+        "version": 1,
+        "effective_from": "2026-01-01T00:00:00Z",
+        "effective_until": null,
+        "purposes": [
+          {
+            "purpose_id": "engineering_evaluation",
+            "purpose_version": 1
+          },
+          {
+            "purpose_id": "reference_contribution",
+            "purpose_version": 1
+          }
+        ]
+      }
+    ],
+    "events": [
+      {
+        "contract_version": "consent-event/v1",
+        "event_id": "evt_0100",
+        "event_type": "GRANT",
+        "subject": {
+          "kind": "WRITER",
+          "id": "wrt_0001"
+        },
+        "purpose": {
+          "purpose_id": "engineering_evaluation",
+          "purpose_version": 1
+        },
+        "notice": {
+          "notice_id": "notice.pilot-collection",
+          "version": 1
+        },
+        "scope": {
+          "kind": "PILOT_ENROLLMENT",
+          "id": "enr_0001"
+        },
+        "actor": {
+          "kind": "PILOT_PARTICIPANT",
+          "id": "wrt_0001"
+        },
+        "presented_default": "UNSELECTED",
+        "capture_method": "SIGNED_PILOT_AGREEMENT",
+        "derived_from": null,
+        "surface": "PILOT_SESSION",
+        "recorded_at": "2026-01-15T10:00:00Z",
+        "effective_at": "2026-01-15T10:00:00Z",
+        "evidence": {
+          "kind": "SIGNED_AGREEMENT",
+          "ref": "evd_0100",
+          "status": "RECORDED"
+        },
+        "subject_eligibility": "DECLARED_ADULT"
+      },
+      {
+        "contract_version": "consent-event/v1",
+        "event_id": "evt_0101",
+        "event_type": "GRANT",
+        "subject": {
+          "kind": "WRITER",
+          "id": "wrt_0002"
+        },
+        "purpose": {
+          "purpose_id": "engineering_evaluation",
+          "purpose_version": 1
+        },
+        "notice": {
+          "notice_id": "notice.pilot-collection",
+          "version": 1
+        },
+        "scope": {
+          "kind": "PILOT_ENROLLMENT",
+          "id": "enr_0002"
+        },
+        "actor": {
+          "kind": "PILOT_PARTICIPANT",
+          "id": "wrt_0002"
+        },
+        "presented_default": "UNSELECTED",
+        "capture_method": "SIGNED_PILOT_AGREEMENT",
+        "derived_from": null,
+        "surface": "PILOT_SESSION",
+        "recorded_at": "2026-01-15T10:00:00Z",
+        "effective_at": "2026-01-15T10:00:00Z",
+        "evidence": {
+          "kind": "SIGNED_AGREEMENT",
+          "ref": "evd_0101",
+          "status": "RECORDED"
+        },
+        "subject_eligibility": "DECLARED_ADULT"
+      }
+    ]
+  },
+  "manifest": {
+    "contract_version": "collection-manifest/v1",
+    "protocol": {
+      "protocol_id": "collection_protocol",
+      "version": 1
+    },
+    "synthetic": true,
+    "release_purpose": {
+      "purpose_id": "engineering_evaluation",
+      "purpose_version": 1
+    },
+    "release_cutoff": "2026-03-01T00:00:00Z",
+    "writers": [
+      {
+        "writer_id": "wrt_0001",
+        "adult_eligibility": "DECLARED_ADULT",
+        "enrollment_id": "enr_0001"
+      },
+      {
+        "writer_id": "wrt_0002",
+        "adult_eligibility": "DECLARED_ADULT",
+        "enrollment_id": "enr_0002"
+      }
+    ],
+    "specimens": [
+      {
+        "specimen_id": "spc_0101",
+        "writer_id": "wrt_0001",
+        "task_id": "copy_en",
+        "session_index": 1,
+        "collected_at": "2026-02-01T10:00:00Z",
+        "declared_language": "en",
+        "declared_script": "LATIN",
+        "declared_style": "MIXED",
+        "paper": "BLANK",
+        "instrument": "BALLPOINT",
+        "context_status": "SUPPORTED"
+      },
+      {
+        "specimen_id": "spc_0102",
+        "writer_id": "wrt_0001",
+        "task_id": "free_sv",
+        "session_index": 1,
+        "collected_at": "2026-02-01T10:00:00Z",
+        "declared_language": "sv",
+        "declared_script": "LATIN",
+        "declared_style": "MIXED",
+        "paper": "BLANK",
+        "instrument": "BALLPOINT",
+        "context_status": "SUPPORTED"
+      },
+      {
+        "specimen_id": "spc_0201",
+        "writer_id": "wrt_0002",
+        "task_id": "copy_en",
+        "session_index": 1,
+        "collected_at": "2026-02-01T10:00:00Z",
+        "declared_language": "en",
+        "declared_script": "LATIN",
+        "declared_style": "MIXED",
+        "paper": "BLANK",
+        "instrument": "BALLPOINT",
+        "context_status": "SUPPORTED"
+      },
+      {
+        "specimen_id": "spc_0202",
+        "writer_id": "wrt_0002",
+        "task_id": "free_en",
+        "session_index": 1,
+        "collected_at": "2026-02-01T10:00:00Z",
+        "declared_language": "en",
+        "declared_script": "LATIN",
+        "declared_style": "MIXED",
+        "paper": "BLANK",
+        "instrument": "BALLPOINT",
+        "context_status": "SUPPORTED"
+      }
+    ],
+    "captures": [
+      {
+        "capture_id": "cap_0101",
+        "specimen_id": "spc_0101",
+        "capture_index": 1,
+        "captured_at": "2026-02-01T10:05:00Z",
+        "content_sha256": "025eb8d0359ddcd7279c388ff30c6a4c6b62db87a4e0fd5af1f7c99d9ecd349b",
+        "repeat_of_capture_id": null
+      },
+      {
+        "capture_id": "cap_0102",
+        "specimen_id": "spc_0102",
+        "capture_index": 1,
+        "captured_at": "2026-02-01T10:05:00Z",
+        "content_sha256": "22871cd37babaa6ae9425861b8d3074ce01ba1fa2eb7cfcca3b3460d41975b38",
+        "repeat_of_capture_id": null
+      },
+      {
+        "capture_id": "cap_0201",
+        "specimen_id": "spc_0201",
+        "capture_index": 1,
+        "captured_at": "2026-02-01T10:05:00Z",
+        "content_sha256": "bc4a25689e9a6c575f3d9278b37da4f49c911b0103e35966f01536f92873680c",
+        "repeat_of_capture_id": null
+      },
+      {
+        "capture_id": "cap_0202",
+        "specimen_id": "spc_0202",
+        "capture_index": 1,
+        "captured_at": "2026-02-01T10:05:00Z",
+        "content_sha256": "7a88d070357baafe41650807d2310277aed34d9660dc2b7986c358ea6dde0474",
+        "repeat_of_capture_id": null
+      }
+    ],
+    "claimed_counts": {
+      "writers": 1,
+      "specimens": 2,
+      "captures": 2
+    }
+  }
+}

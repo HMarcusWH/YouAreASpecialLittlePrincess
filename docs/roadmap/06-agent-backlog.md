@@ -14,10 +14,10 @@ Use `python docs/roadmap/plan_tools.py --ready` or `--task ID`. Edit tasks.json 
 | Task | Status | Hard predecessors | Owner |
 |---|---|---|---|
 | [T00 — Green baseline and dependency policy](#t00) | DONE | — | platform |
-| [T00A — Post-merge dependency graph hardening](#t00a) | PLANNED | T00 | platform-security |
+| [T00A — Post-merge dependency graph hardening](#t00a) | IMPLEMENTED_PENDING_REVIEW | T00 | platform-security |
 | [T01 — Product contracts and zero-AI capability manifest](#t01) | PLANNED | T00, T00A, T03 | contracts |
 | [T02 — Persistence identity authorization](#t02) | PLANNED | T01, T27, T28 | backend |
-| [T03 — Rights consent and collection protocol](#t03) | PLANNED | — | product-data |
+| [T03 — Rights consent and collection protocol](#t03) | IMPLEMENTED_PENDING_REVIEW | — | product-data |
 | [T04 — Safe intake and durable analysis jobs](#t04) | PLANNED | T02, T03, T28 | backend |
 | [T05 — Evidence payload and chart observations](#t05) | PLANNED | T01 | engine |
 | [T06 — Calibration suitability core repair](#t06) | PLANNED | T05, T11 | evaluation |
@@ -81,6 +81,16 @@ python tools/test_graphology_research.py
 ruff check src tests tools
 python -m compileall -q src
 python -m pytest -q
+```
+
+<a id="validation-consent"></a>
+### consent
+
+State: `EXISTS_IN_THIS_PR`. T03 draft consent/retention/source-rights/collection contracts: strict schema subset, semantic rules, reference permission evaluator, scenario and collection fixtures. Validates drafts; approves nothing.
+
+```bash
+python tools/validate_consent_protocol.py
+python -m pytest -q tests/test_consent_protocol.py
 ```
 
 <a id="validation-contracts"></a>
@@ -181,7 +191,7 @@ Historical completion evidence: Merged PR #10; source head 90e88e5c73a0811829745
 <a id="t00a"></a>
 ## T00A — Post-merge dependency graph hardening
 
-**Status:** `PLANNED` · **Owner:** platform-security · **Milestone:** foundation
+**Status:** `IMPLEMENTED_PENDING_REVIEW` · **Owner:** platform-security · **Milestone:** foundation
 
 **Hard predecessors:** [T00](#t00)
 **Platforms:** core, ci
@@ -203,6 +213,7 @@ tools/verify_project_dependency_policy.py
 tests/test_ci_lock.py
 .github/workflows/ci.yml
 docs/ci/T00_BASELINE.md
+requirements/README.md
 ```
 
 ### Coding sequence
@@ -392,7 +403,7 @@ No approval is created by this task brief. Mock/disabled implementation is not a
 <a id="t03"></a>
 ## T03 — Rights consent and collection protocol
 
-**Status:** `PLANNED` · **Owner:** product-data · **Milestone:** foundation
+**Status:** `IMPLEMENTED_PENDING_REVIEW` · **Owner:** product-data · **Milestone:** foundation
 
 **Hard predecessors:** None
 **Platforms:** shared, policy
@@ -412,6 +423,8 @@ Planned targets unless present in the code tree:
 docs/privacy/
 contracts/consent/
 content/collection/
+tools/validate_consent_protocol.py
+tests/test_consent_protocol.py
 ```
 
 ### Coding sequence
@@ -445,7 +458,7 @@ Versioned purpose/protocol IDs and approved-or-pending evidence references; serv
 
 ### Validation and human gates
 
-Validation profiles: [docs](#validation-docs). Planned suites must be implemented and their actual command documented by the owning task; they are not passing tests today.
+Validation profiles: [docs](#validation-docs), [consent](#validation-consent). Planned suites must be implemented and their actual command documented by the owning task; they are not passing tests today.
 
 - `pilot_rights_consent`: Owner-reviewed collection agreement, purpose/retention/withdrawal protocol before recruitment.
 

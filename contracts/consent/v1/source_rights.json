@@ -1,0 +1,187 @@
+{
+  "contract_version": "source-rights/v1",
+  "sources": [
+    {
+      "source_id": "owned_pilot_collection_v1",
+      "kind": "OWNED_COLLECTION",
+      "title": "Owned consented pilot collection, protocol collection_protocol v1",
+      "canonical_url": null,
+      "release": null,
+      "evidence_refs": [
+        "docs/privacy/collection-protocol.md",
+        "contracts/consent/v1/pilot_gate.json"
+      ],
+      "review_status": "PENDING_REVIEW",
+      "rights": {
+        "code": {
+          "status": "NOT_APPLICABLE",
+          "observed_terms": null
+        },
+        "data": {
+          "status": "PENDING_REVIEW",
+          "observed_terms": "Per-participant engineering_evaluation and reference_contribution permissions under an owner-approved agreement; none collected yet."
+        },
+        "model_weights": {
+          "status": "NOT_APPLICABLE",
+          "observed_terms": null
+        }
+      },
+      "allowed_uses": {
+        "engineering_testing": "PENDING_REVIEW",
+        "benchmark_statistics": "PENDING_REVIEW",
+        "display": "NOT_CLEARED",
+        "redistribution": "NOT_CLEARED",
+        "model_training": "NOT_CLEARED"
+      },
+      "restrictions": [
+        "No collection before the pilot_rights_consent gate is APPROVED.",
+        "Each specimen is usable only for purposes its writer currently permits.",
+        "No participant images, names or signed agreements in Git or public fixtures."
+      ]
+    },
+    {
+      "source_id": "iam_handwriting_database",
+      "kind": "EXTERNAL_DATASET",
+      "title": "IAM Handwriting Database",
+      "canonical_url": "https://fki.tic.heia-fr.ch/databases/download-the-iam-handwriting-database",
+      "release": null,
+      "evidence_refs": [
+        "docs/roadmap/07-evidence-register.md (S03)",
+        "docs/roadmap/02-corpus-benchmarks.md (section 2)"
+      ],
+      "review_status": "PENDING_REVIEW",
+      "rights": {
+        "code": {
+          "status": "NOT_APPLICABLE",
+          "observed_terms": null
+        },
+        "data": {
+          "status": "NOT_CLEARED",
+          "observed_terms": "Publisher download terms inspected 2026-09-25 specify non-commercial research use."
+        },
+        "model_weights": {
+          "status": "NOT_APPLICABLE",
+          "observed_terms": null
+        }
+      },
+      "allowed_uses": {
+        "engineering_testing": "NOT_CLEARED",
+        "benchmark_statistics": "NOT_CLEARED",
+        "display": "NOT_CLEARED",
+        "redistribution": "NOT_CLEARED",
+        "model_training": "NOT_CLEARED"
+      },
+      "restrictions": [
+        "Excluded unless written commercial permission is obtained and recorded; derived features do not bypass the terms."
+      ]
+    },
+    {
+      "source_id": "cvl_database",
+      "kind": "EXTERNAL_DATASET",
+      "title": "TU Wien CVL database",
+      "canonical_url": "https://cvl.tuwien.ac.at/research/cvl-databases/an-off-line-database-for-writer-retrieval-writer-identification-and-word-spotting/",
+      "release": null,
+      "evidence_refs": [
+        "docs/roadmap/07-evidence-register.md (S04)",
+        "docs/roadmap/02-corpus-benchmarks.md (section 2)"
+      ],
+      "review_status": "PENDING_REVIEW",
+      "rights": {
+        "code": {
+          "status": "NOT_APPLICABLE",
+          "observed_terms": null
+        },
+        "data": {
+          "status": "NOT_CLEARED",
+          "observed_terms": "Publisher page inspected 2026-09-25 states non-commercial restrictions."
+        },
+        "model_weights": {
+          "status": "NOT_APPLICABLE",
+          "observed_terms": null
+        }
+      },
+      "allowed_uses": {
+        "engineering_testing": "NOT_CLEARED",
+        "benchmark_statistics": "NOT_CLEARED",
+        "display": "NOT_CLEARED",
+        "redistribution": "NOT_CLEARED",
+        "model_training": "NOT_CLEARED"
+      },
+      "restrictions": [
+        "Same permission gate as IAM; German/English scanned pages are not Swedish population norms."
+      ]
+    },
+    {
+      "source_id": "nist_special_database_19",
+      "kind": "EXTERNAL_DATASET",
+      "title": "NIST Special Database 19",
+      "canonical_url": "https://www.nist.gov/srd/nist-special-database-19",
+      "release": null,
+      "evidence_refs": [
+        "docs/roadmap/07-evidence-register.md (S05)",
+        "docs/roadmap/02-corpus-benchmarks.md (section 2)"
+      ],
+      "review_status": "PENDING_REVIEW",
+      "rights": {
+        "code": {
+          "status": "PENDING_REVIEW",
+          "observed_terms": "Publisher page describes public-domain recognition software separately from the data."
+        },
+        "data": {
+          "status": "PENDING_REVIEW",
+          "observed_terms": "Exact data licence not yet verified; software wording is not a data licence."
+        },
+        "model_weights": {
+          "status": "NOT_APPLICABLE",
+          "observed_terms": null
+        }
+      },
+      "allowed_uses": {
+        "engineering_testing": "PENDING_REVIEW",
+        "benchmark_statistics": "PENDING_REVIEW",
+        "display": "PENDING_REVIEW",
+        "redistribution": "PENDING_REVIEW",
+        "model_training": "PENDING_REVIEW"
+      },
+      "restrictions": [
+        "Isolated character crops cannot calibrate page margins or natural cursive spacing."
+      ]
+    },
+    {
+      "source_id": "dhsd_v1",
+      "kind": "EXTERNAL_DATASET",
+      "title": "DHSD v1 (Zenodo record 18743313)",
+      "canonical_url": "https://zenodo.org/records/18743313",
+      "release": null,
+      "evidence_refs": [
+        "docs/roadmap/07-evidence-register.md (S06)",
+        "docs/roadmap/02-corpus-benchmarks.md (section 2)"
+      ],
+      "review_status": "PENDING_REVIEW",
+      "rights": {
+        "code": {
+          "status": "NOT_APPLICABLE",
+          "observed_terms": null
+        },
+        "data": {
+          "status": "PENDING_REVIEW",
+          "observed_terms": "Record declares CC BY 4.0 with an OpenStreetMap/ODbL provenance caveat; both layers need review."
+        },
+        "model_weights": {
+          "status": "NOT_APPLICABLE",
+          "observed_terms": null
+        }
+      },
+      "allowed_uses": {
+        "engineering_testing": "PENDING_REVIEW",
+        "benchmark_statistics": "PENDING_REVIEW",
+        "display": "PENDING_REVIEW",
+        "redistribution": "PENDING_REVIEW",
+        "model_training": "PENDING_REVIEW"
+      },
+      "restrictions": [
+        "5,939 word crops from 37 writers are not 5,939 independent people and are not page-layout norms."
+      ]
+    }
+  ]
+}

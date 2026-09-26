@@ -1,0 +1,91 @@
+# Purposes, notices and consent events
+
+[Privacy drafts](README.md) · [purposes.json](../../contracts/consent/v1/purposes.json) · [notices.json](../../contracts/consent/v1/notices.json) · [consent-event schema](../../contracts/consent/v1/schemas/consent-event.schema.json)
+
+Status: draft pending owner review. Legal bases are `PENDING_OWNER_DECISION` for every purpose.
+
+## Purpose registry v1
+
+| Purpose | Subject | Grant scopes | Required for Free? | Notes |
+|---|---|---|---|---|
+| `service_processing` | writer | specimen | yes: it *is* the analysis | Nothing leaves the application. The only purpose that may affect Free. |
+| `image_retention` | writer | subject-wide, specimen | no | Saved visual history. Without it, originals are deleted after analysis. |
+| `third_party_ai_processing` | writer | report | no | Per report. Payment or entitlement never implies it. Gated on provider/spend/eval decisions. |
+| `ordinary_sharing` | writer | share grant | no | A revocable link/card for an allowlisted projection. Downloaded copies cannot be recalled. |
+| `partner_comparison` | writer | comparison | no | **Each author** grants for their own input. Sharing a report is not comparison permission. |
+| `reference_contribution` | writer | subject-wide, specimen | no | Candidate reference membership. Gated on `pilot_rights_consent`, `public_reference_validation` and `benchmark_promotion`. |
+| `engineering_evaluation` | writer | pilot enrollment, specimen | no | Protected accuracy/robustness and annotation work. Separate from contribution. |
+| `support_human_review` | writer | support case | no | Restricted staff may view a private sample for one case. |
+| `product_analytics` | account | subject-wide | no | Allowlisted usage events only; no handwriting. |
+| `model_training` | writer | — | no | `NOT_OFFERED`. Defined so no other permission can be read as it. |
+| `public_example` | writer | — | no | `NOT_OFFERED` in v1; no galleries or public examples. |
+
+Each purpose record also lists data categories, recipients, retention classes, withdrawal propagation, the human gates it depends on, and `not_implied_by` (always including `purchase`).
+
+Service processing, image retention (storage), reference contribution, third-party AI processing, ordinary sharing, partner comparison and public examples (public disclosure) must each exist as a separate purpose [`MISSING_DISTINCT_PURPOSE`]. A `RETIRED` version keeps its full definition, so its append-only history stays interpretable. It records a `retirement` with `retired_on` and a decision reference [`RETIREMENT_WITHOUT_RECORD`, `RETIREMENT_ON_ACTIVE_PURPOSE`, `RETIREMENT_BEFORE_APPROVAL`]. Grants recorded before `retired_on` keep their meaning for evaluation at earlier instants; from `retired_on` on it permits nothing (`RETIRED`) and takes no grants [`PURPOSE_RETIRED`]. It may appear only on superseded notices. Only `NOT_OFFERED` purposes must have no scopes, recipients or retention.
+
+## Consent events
+
+The permission ledger is append-only. Each `GRANT`, `DENY` or `WITHDRAW` event carries:
+
+- subject, purpose/version, notice/version and scope;
+- the actor, what the UI presented as the default, and the capture method;
+- the subject's self-declared eligibility at the time the event was captured (`subject_eligibility`);
+- `derived_from` (for example an account deletion or support request);
+- surface, recorded and effective times, and an evidence pointer.
+
+Evidence such as signed agreements lives in protected storage and is referenced by an opaque ID. Events are never edited. A correction is a new event.
+
+A grant with any of the following defects is invalid and cannot add permission. An authorized denial or withdrawal with a semantic defect is **not silently discarded**: it makes the context `AMBIGUOUS_RESTRICTION` and blocks permission until reconciled. This includes verified support and system withdrawals; they use the same actor-authority predicate as event validation. Schema-invalid or duplicate-ID ledgers also block the context. The defect codes are:
+
+- The purpose is unknown [`UNKNOWN_PURPOSE`]. A grant targets a purpose that is not offered [`PURPOSE_NOT_OFFERED`], or one that is still a draft outside synthetic fixtures [`PURPOSE_NOT_APPROVED`].
+- The scope kind is not allowed for the purpose [`SCOPE_NOT_ALLOWED`], or a subject-wide scope names someone else [`SCOPE_SUBJECT_MISMATCH`]. A denial or withdrawal may always be subject-wide, for example on account deletion, and then covers every narrower grant.
+- A grant was collected under a notice that was not in effect when recorded [`OBSOLETE_NOTICE`, `NOTICE_NOT_YET_IN_EFFECT`]. Any event naming a notice that does not cover the purpose is also invalid [`NOTICE_DOES_NOT_COVER_PURPOSE`]. **Denials and withdrawals** are honoured under any notice the subject was ever shown.
+- A grant is backdated [`BACKDATED_EVENT`]. A denial or withdrawal always takes effect when it is recorded, whatever `effective_at` says, so it can never be postponed or made retroactive.
+- A grant is derived from a purchase or entitlement [`PAYMENT_IS_NOT_CONSENT`] or from any other business event [`GRANT_MUST_BE_DIRECT`].
+- A grant was prechecked [`PRECHECKED_GRANT`], was never presented [`CHOICE_NOT_PRESENTED`], or was not captured through an explicit control or signed pilot agreement [`GRANT_NOT_EXPLICIT`]. A pilot participant's grant must come from the signed agreement; a pilot denial through any explicit control is honoured. A grant's evidence must match its capture method: an explicit control has UI-interaction evidence, and a signed agreement has signed-agreement evidence captured in a pilot session [`EVIDENCE_MISMATCH`].
+- A grant for an approved purpose was recorded before the approval's `decided_on` [`GRANTED_BEFORE_APPROVAL`]. Approval is never retroactive, so choices captured while the purpose was a draft stay invalid.
+- The actor lacks authority: another account, staff or system granting for a writer [`NO_AUTHOR_AUTHORITY`]. An account acts for a writer only in events recorded while it was linked: from `self_account_linked_at` for the current account, or within a `previous_account_links` entry for an earlier one. Linking an uploader's account later never revives their earlier choice, and relinking never voids a withdrawal the earlier account made. The link history is append-only and never overlaps [`ACCOUNT_LINK_INCONSISTENT`]. A withdrawal must come from the subject, from staff acting on a verified support request, or from the system on account deletion, share revocation or purpose retirement [`NO_AUTHORITY`].
+- A grant's evidence is still `PENDING` [`EVIDENCE_PENDING`]. Restrictive choices fail closed: a denial or withdrawal takes effect while its evidence is pending.
+- A grant for a purpose requiring an adult declaration was captured without `DECLARED_ADULT` [`INELIGIBLE_AT_GRANT`]. A later declaration never revives it; the writer must grant again.
+
+## Evaluating a permission
+
+`evaluate_permission(subject, purpose@version, scope, at)` in [validate_consent_protocol.py](../../tools/validate_consent_protocol.py) is the reference semantics:
+
+0. A malformed/ambiguous context returns `INVALID_CONTEXT`; an inconsistent writer authority timeline returns `INVALID_AUTHORITY`. Pure reference evaluation is not release authority; human releases require the sealed context built from a compiled policy.
+1. The purpose is unknown or not offered → `NOT_OFFERED`. It is still a draft → `NOT_APPROVED`, unless the evaluator runs in fixture mode for synthetic scenarios. Draft purposes never permit a real decision.
+2. The purpose requires an adult declaration and the writer's current eligibility is not `DECLARED_ADULT` → `INELIGIBLE`. The grant must also have been captured with `DECLARED_ADULT` (see above).
+3. The query scope kind is not one the purpose grants → `SCOPE_NOT_GRANTABLE`. A broad grant never authorizes a use the purpose does not offer.
+4. Among **valid** events for the same subject and purpose version, keep those effective at `at` whose scope is one of the following: the query scope; subject-wide for the same subject; or a broader scope the caller vouches contains the query, such as a specimen's pilot enrollment.
+5. No such event → `NOT_ASKED`. Otherwise the event recorded last wins: `PERMITTED`, `DENIED` or `WITHDRAWN`. A grant scheduled for a later effective time therefore never overrides a denial or withdrawal recorded after it. Ties resolve to the more restrictive state.
+
+A **use** (Premium job, benchmark build, share publication) must be `PERMITTED` both when it starts and immediately before it publishes (`BLOCKED_AT_START` / `BLOCKED_AT_PUBLICATION`). A **comparison** needs every author's `partner_comparison` permission for that comparison. The **Free report** is available when `service_processing` is permitted at the one version presented by the notices in effect. Historical versions are not extra prerequisites, and after a material change a grant for the old version does not cover new processing (`service_change_requires_current_grant`). It is the only purpose allowed to be `required_for_service`, and optional purposes are not consulted at all.
+
+## Versioning and rollback
+
+A material change to what a purpose means creates a new `purpose_version`. Grants for version 1 never authorize version 2 (see the `purpose_version_change_keeps_historical_meaning` scenario), so historical grants keep their meaning. Notice wording changes create a new notice version with a non-overlapping effective window. A decided notice records `content_sha256`, the SHA-256 of its canonical JSON without `status`, `effective_until` and `content_sha256`, so its `decision_ref` is bound too. Editing its purposes, wording or start afterwards is `NOTICE_CONTENT_MISMATCH`, and production evaluation no longer treats it as in effect. A notice can only be `ACTIVE` once every purpose it lists is `APPROVED` (`NOTICE_ACTIVE_FOR_UNAPPROVED_PURPOSE`), and its window cannot start before that approval (`NOTICE_PREDATES_APPROVAL`). A notice lists one version of each purpose, because its choice copy is keyed by purpose (`NOTICE_LISTS_PURPOSE_TWICE`). An approved purpose may only use retention classes that are decided in a retention policy approved, with its own approval record, no later than the purpose (`PURPOSE_RETENTION_UNDECIDED`; an unrecorded policy approval is `APPROVAL_WITHOUT_EVIDENCE`), and its approval records a decision for every related gate in `approval.gate_decisions` (`GATE_NOT_APPROVED`). A purpose gated by `pilot_rights_consent`, or used by the collection protocol, is approved no earlier than the gate, and no notice over it takes effect before the gate (`PURPOSE_APPROVED_BEFORE_GATE`, `NOTICE_PREDATES_GATE`). A grant counts only against a complete approval: the decision, the decided legal basis, every related gate's decision and an `approval.content_sha256` that still matches the purpose. Without all of them, grants are `PURPOSE_NOT_APPROVED` and evaluation returns `NOT_APPROVED`. The same digest binds the approvals of the pilot gate, the collection protocol, the retention policy and the deletion lineage. It is the SHA-256 of the record's canonical JSON (sorted keys, no insignificant whitespace, UTF-8) without its `status`, with the approval record included minus its own digest, so the decision reference, role, date and gate decisions cannot be rewritten or backdated in place. A status change such as `RETIRED` keeps an approval, but any other edit is `APPROVAL_CONTENT_MISMATCH` until it is approved again. Production evaluation resolves notices from `notices.json`, never from windows a ledger describes for itself. Approvals and reviews always carry a non-null `decision_ref`. Rolling back stops future collection under the new version; it never rewrites recorded events.
+
+## Relation to other tasks
+
+- T01 maps these schemas into product DTOs and codegen; the enum values and IDs here are the draft source until then.
+- T02 persists the ledger with owner-scoped access and implements this evaluator.
+- T04/T15/T19/T22 re-check permission at publication time.
+- T24 executes deletion.
+- The payment ledger (T19) never writes consent events.
+
+### Notice activation and complete release validation
+
+A non-draft notice now records `decided_by_role` and `decided_on` alongside its
+`decision_ref`. They are included in the activation content digest. The activation
+decision must precede or coincide with `effective_from`; a rehashed backdated
+activation is still invalid (`NOTICE_ACTIVATION_BACKDATED`). Draft values stay
+null. Notice endings and purpose retirement keep their own bound transition
+records and validate chronology in the shared predicate as well as the diagnostic
+checker. A malformed member, duplicate version or overlapping window invalidates
+the authoritative notice registry; no dictionary silently selects a version.
+
+All policy documents now pass the same schema/uniqueness/semantic pipeline before
+a human release can use them. [The boundary handoff](validated-release-boundary.md)
+describes the stronger release-readiness rules and the distinction between
+content consistency, authenticated decisions and actual runtime publication.

@@ -1,0 +1,173 @@
+{
+  "contract_version": "notice-registry/v1",
+  "notices": [
+    {
+      "notice_id": "notice.consent-choices",
+      "version": 1,
+      "status": "DRAFT",
+      "purposes": [
+        {"purpose_id": "service_processing", "purpose_version": 1},
+        {"purpose_id": "image_retention", "purpose_version": 1},
+        {"purpose_id": "third_party_ai_processing", "purpose_version": 1},
+        {"purpose_id": "ordinary_sharing", "purpose_version": 1},
+        {"purpose_id": "partner_comparison", "purpose_version": 1},
+        {"purpose_id": "reference_contribution", "purpose_version": 1},
+        {"purpose_id": "support_human_review", "purpose_version": 1},
+        {"purpose_id": "product_analytics", "purpose_version": 1}
+      ],
+      "effective_from": null,
+      "effective_until": null,
+      "decision_ref": null,
+      "decided_by_role": null,
+      "decided_on": null,
+      "content_sha256": null,
+      "end_decision_ref": null,
+      "end_decided_by_role": null,
+      "end_decided_on": null,
+      "end_content_sha256": null,
+      "copy": [
+        {
+          "purpose_id": "service_processing", "locale": "en",
+          "label": "Analyse this page",
+          "explanation": "We process this photo of your own handwriting to measure it and build your report. Nothing is sent to an AI service for this.",
+          "decline_consequence": "We cannot produce a report without processing the photo."
+        },
+        {
+          "purpose_id": "service_processing", "locale": "sv",
+          "label": "Analysera den här sidan",
+          "explanation": "Vi behandlar fotot av din egen handstil för att mäta den och skapa din rapport. Inget skickas till någon AI-tjänst för detta.",
+          "decline_consequence": "Utan att behandla fotot kan vi inte skapa någon rapport."
+        },
+        {
+          "purpose_id": "image_retention", "locale": "en",
+          "label": "Keep my photos in my history",
+          "explanation": "Store the original photo and its cut-outs so you can see them again later. You can delete them at any time.",
+          "decline_consequence": "Your report still works; the photo is deleted after the analysis instead of being saved."
+        },
+        {
+          "purpose_id": "image_retention", "locale": "sv",
+          "label": "Spara mina foton i min historik",
+          "explanation": "Originalfotot och utsnitten sparas så att du kan se dem igen senare. Du kan radera dem när som helst.",
+          "decline_consequence": "Din rapport fungerar ändå; fotot raderas efter analysen i stället för att sparas."
+        },
+        {
+          "purpose_id": "third_party_ai_processing", "locale": "en",
+          "label": "Send this report to the AI provider for Premium",
+          "explanation": "For this one Premium report, the photo and measured evidence are sent to an external AI provider. Paying does not switch this on; you choose it separately.",
+          "decline_consequence": "Your Free report is unchanged. Premium cannot run for this report without this choice."
+        },
+        {
+          "purpose_id": "third_party_ai_processing", "locale": "sv",
+          "label": "Skicka den här rapporten till AI-leverantören för Premium",
+          "explanation": "För just den här Premium-rapporten skickas fotot och de uppmätta underlagen till en extern AI-leverantör. Att betala slår inte på detta; du väljer det separat.",
+          "decline_consequence": "Din gratisrapport påverkas inte. Premium kan inte köras för den här rapporten utan det här valet."
+        },
+        {
+          "purpose_id": "ordinary_sharing", "locale": "en",
+          "label": "Create a share link",
+          "explanation": "Anyone with the link can see the parts of this report you pick. You can revoke the link; copies people have already downloaded cannot be recalled.",
+          "decline_consequence": "Nothing is shared. Your report is unchanged."
+        },
+        {
+          "purpose_id": "ordinary_sharing", "locale": "sv",
+          "label": "Skapa en delningslänk",
+          "explanation": "Alla som har länken kan se de delar av rapporten som du väljer. Du kan återkalla länken; kopior som redan har laddats ner kan inte hämtas tillbaka.",
+          "decline_consequence": "Inget delas. Din rapport påverkas inte."
+        },
+        {
+          "purpose_id": "partner_comparison", "locale": "en",
+          "label": "Use my sample in this comparison",
+          "explanation": "Compare your sample with another person's. Each person agrees for their own sample; sharing a link is not the same as agreeing to a comparison.",
+          "decline_consequence": "No comparison is created. Your own report is unchanged."
+        },
+        {
+          "purpose_id": "partner_comparison", "locale": "sv",
+          "label": "Använd mitt prov i den här jämförelsen",
+          "explanation": "Jämför ditt prov med en annan persons. Var och en godkänner sitt eget prov; att dela en länk är inte samma sak som att godkänna en jämförelse.",
+          "decline_consequence": "Ingen jämförelse skapas. Din egen rapport påverkas inte."
+        },
+        {
+          "purpose_id": "reference_contribution", "locale": "en",
+          "label": "Contribute to the reference collection",
+          "explanation": "Your sample may become part of a future reference group that helps describe how handwriting varies. You can withdraw later; future reference releases will then exclude it.",
+          "decline_consequence": "Your Free report is exactly the same whether or not you contribute."
+        },
+        {
+          "purpose_id": "reference_contribution", "locale": "sv",
+          "label": "Bidra till referenssamlingen",
+          "explanation": "Ditt prov kan ingå i en framtida referensgrupp som hjälper oss beskriva hur handstilar varierar. Du kan dra tillbaka ditt bidrag senare; kommande referensversioner utesluter det då.",
+          "decline_consequence": "Din gratisrapport blir exakt densamma oavsett om du bidrar eller inte."
+        },
+        {
+          "purpose_id": "support_human_review", "locale": "en",
+          "label": "Let support look at this sample",
+          "explanation": "A small support team may view this photo and report only to handle the problem you reported.",
+          "decline_consequence": "We can still help with anything that does not require seeing your handwriting."
+        },
+        {
+          "purpose_id": "support_human_review", "locale": "sv",
+          "label": "Låt supporten titta på det här provet",
+          "explanation": "Ett litet supportteam kan se fotot och rapporten, enbart för att lösa problemet du rapporterade.",
+          "decline_consequence": "Vi kan fortfarande hjälpa till med allt som inte kräver att vi ser din handstil."
+        },
+        {
+          "purpose_id": "product_analytics", "locale": "en",
+          "label": "Share usage statistics",
+          "explanation": "Counts of which screens and features are used, never your handwriting or report contents.",
+          "decline_consequence": "Everything works the same without it."
+        },
+        {
+          "purpose_id": "product_analytics", "locale": "sv",
+          "label": "Dela användningsstatistik",
+          "explanation": "Statistik över vilka skärmar och funktioner som används, aldrig din handstil eller rapportens innehåll.",
+          "decline_consequence": "Allt fungerar likadant utan detta."
+        }
+      ]
+    },
+    {
+      "notice_id": "notice.pilot-collection",
+      "version": 1,
+      "status": "DRAFT",
+      "purposes": [
+        {"purpose_id": "engineering_evaluation", "purpose_version": 1},
+        {"purpose_id": "reference_contribution", "purpose_version": 1}
+      ],
+      "effective_from": null,
+      "effective_until": null,
+      "decision_ref": null,
+      "decided_by_role": null,
+      "decided_on": null,
+      "content_sha256": null,
+      "end_decision_ref": null,
+      "end_decided_by_role": null,
+      "end_decided_on": null,
+      "end_content_sha256": null,
+      "copy": [
+        {
+          "purpose_id": "engineering_evaluation", "locale": "en",
+          "label": "Use my pages to test the measurements",
+          "explanation": "Your pages and photos are used, under a pseudonymous ID, to check how accurately the app measures handwriting. Trained reviewers may annotate them.",
+          "decline_consequence": "You can still take part in any other part of the pilot you choose, and any compensation does not depend on this choice."
+        },
+        {
+          "purpose_id": "engineering_evaluation", "locale": "sv",
+          "label": "Använd mina sidor för att testa mätningarna",
+          "explanation": "Dina sidor och foton används, under ett pseudonymt id, för att kontrollera hur exakt appen mäter handstil. Utbildade granskare kan kommentera dem.",
+          "decline_consequence": "Du kan ändå delta i de andra delar av piloten som du väljer, och en eventuell ersättning beror inte på det här valet."
+        },
+        {
+          "purpose_id": "reference_contribution", "locale": "en",
+          "label": "Include my pages in the reference collection",
+          "explanation": "Your pages may become part of a future reference group used to describe how handwriting varies. This is separate from testing the measurements.",
+          "decline_consequence": "Your participation and any compensation are the same whether or not you agree."
+        },
+        {
+          "purpose_id": "reference_contribution", "locale": "sv",
+          "label": "Ta med mina sidor i referenssamlingen",
+          "explanation": "Dina sidor kan ingå i en framtida referensgrupp som beskriver hur handstilar varierar. Det här är skilt från att testa mätningarna.",
+          "decline_consequence": "Ditt deltagande och en eventuell ersättning är desamma oavsett om du samtycker eller inte."
+        }
+      ]
+    }
+  ]
+}
