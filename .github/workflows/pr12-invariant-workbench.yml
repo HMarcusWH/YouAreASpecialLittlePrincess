@@ -8,22 +8,26 @@ permissions:
   contents: read
 
 jobs:
-  snapshot:
+  toolchain:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           ref: 1667d72cffed9c46c361bfb7bf273535c6f9417b
           persist-credentials: false
-      - name: Export committed baseline without Git credentials or working data
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12'
+      - name: Export runtime and hash-verified wheels for the offline audit
         shell: bash
         run: |
-          mkdir -p "$RUNNER_TEMP/pr12-audit"
-          git archive --format=tar.gz --output="$RUNNER_TEMP/pr12-audit/source-1667d72.tar.gz" HEAD
-          git rev-parse HEAD > "$RUNNER_TEMP/pr12-audit/BASELINE.txt"
+          mkdir -p "$RUNNER_TEMP/pr12-toolchain/wheels"
+          python -m pip download --require-hashes --only-binary=:all: --no-deps --dest "$RUNNER_TEMP/pr12-toolchain/wheels" -r requirements/ci-py312.lock
+          tar -C "$pythonLocation" --exclude='lib/python3.12/site-packages' --exclude='__pycache__' --exclude='lib/python3.12/test' -czf "$RUNNER_TEMP/pr12-toolchain/python312.tar.gz" bin lib include
+          python --version > "$RUNNER_TEMP/pr12-toolchain/PYTHON.txt"
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: pr12-audit-baseline
-          path: ${{ runner.temp }}/pr12-audit/
+          name: pr12-audit-toolchain
+          path: ${{ runner.temp }}/pr12-toolchain/
           retention-days: 2
           if-no-files-found: error
