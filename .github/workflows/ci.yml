@@ -61,12 +61,18 @@ jobs:
           python -m pip --version
           python -c 'import setuptools, wheel; assert setuptools.__version__ == "84.0.0"; assert wheel.__version__ == "0.48.0"'
 
-      - name: Install local project and validate declared dependencies offline
+      - name: Verify project dependency policy
+        run: >-
+          python tools/verify_project_dependency_policy.py
+          --manifest "${{ matrix.manifest }}"
+          --extra dev
+
+      - name: Install local project without dependency resolution
         shell: bash
         run: |
           python -m pip install \
             --no-index \
-            --find-links "$RUNNER_TEMP/ci-wheelhouse" \
+            --no-deps \
             --no-build-isolation \
             -e '.[dev]'
 

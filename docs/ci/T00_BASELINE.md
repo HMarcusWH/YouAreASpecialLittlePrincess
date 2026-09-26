@@ -52,7 +52,7 @@ The repair did not weaken Ruff. It normalized the T26 support code, removed modu
 - CI dependencies: exact per-Python manifests plus SHA-256-authenticated wheel locks in `requirements/ci-py*`
 - Build toolchain: `pip==26.2.1`, `setuptools==84.0.0`, `wheel==0.48.0`, included in every hash lock
 - Build isolation: disabled after authenticated build-tool installation; setuptools/wheel are also exact in `[build-system].requires`
-- Supply-chain integrity: hash-checked wheel download, offline wheelhouse installation, offline `.[dev]` resolution, exact installed-graph verification, and `python -m pip check`
+- Supply-chain integrity: hash-checked wheel download, offline wheelhouse installation, direct-URL rejection, reviewed runtime/dev dependency-policy verification, local project installation with `--no-deps`, duplicate-aware exact installed-graph verification, and `python -m pip check`
 - Ruff baseline: 0.16.9
 - GitHub checkout action: v7.0.1 pinned to commit `3d3c42e5aac5ba805825da76410c181273ba90b1`
 - GitHub setup-python action: v7.0.0 pinned to commit `5fda3b95a4ea91299a34e894583c3862153e4b97`
@@ -77,8 +77,10 @@ Commit `11a6657c1b1360ca41936c00c576698d06596a95` passed the complete first-gene
 
 Codex review first identified three policy gaps: the build toolchain was not included in the snapshot, Python metadata advertised versions outside the matrix, and the assigned run `36168879709` had not been explicitly diagnosed. Those were repaired on `4b07e54337852a5a5943901de4d8bd15dbcbdb33`, which passed run `36206449686`.
 
-A second review identified two deeper supply-chain gaps: exact versions did not authenticate artifact bytes, and constraint files did not reject dependencies absent from the reviewed snapshot. T00 therefore moved to per-Python SHA-256 wheel locks, offline wheelhouse installation/resolution, manifest-lock equality checks, and exact installed-environment verification. The final hash-locked head must pass the full matrix before PR #10 is merge-ready.
+A second review identified two deeper supply-chain gaps: exact versions did not authenticate artifact bytes, and constraint files did not reject dependencies absent from the reviewed snapshot. T00 therefore moved to per-Python SHA-256 wheel locks, authenticated wheelhouse installation, manifest-lock equality checks, and exact installed-environment verification.
+
+A third review identified two final bypasses: a PEP 508 direct URL could still be fetched during editable dependency resolution, and duplicate installed distribution metadata could be silently collapsed by the verifier. The final policy therefore rejects direct URLs before local installation, installs the local project with `--no-deps`, checks selected runtime/dev requirements against the reviewed manifest, and rejects duplicate normalized installed distributions explicitly.
 
 ## Closeout rule
 
-T00 remains marked `DONE` only if the current PR head satisfies the complete reviewed policy. The final head must pass SHA-256 artifact authentication, offline dependency resolution, manifest/lock equality, exact installed-environment verification, build-tool verification, `pip check`, generation/validator checks, Ruff, pytest, research checks, offline wheel construction and installed-wheel smoke on Python 3.10 / 3.11 / 3.12. The exact final commit and Actions run are recorded in the PR conversation.
+T00 remains marked `DONE` only if the current PR head satisfies the complete reviewed policy. The final head must pass SHA-256 artifact authentication, direct-URL/dependency-policy verification, no-dependency local project installation, manifest/lock equality, duplicate-aware exact installed-environment verification, build-tool verification, `pip check`, generation/validator checks, Ruff, pytest, research checks, offline wheel construction and installed-wheel smoke on Python 3.10 / 3.11 / 3.12. The exact final commit and Actions run are recorded in the PR conversation.

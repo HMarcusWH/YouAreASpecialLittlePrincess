@@ -5,7 +5,7 @@ T00 uses two reviewed files per supported interpreter:
 - `ci-pyXYZ.txt` is the exact name/version manifest.
 - `ci-pyXYZ.lock` repeats that complete manifest and records the SHA-256 of the one reviewed Linux x86_64 wheel used by CI.
 
-CI verifies that the manifest and lock contain the same package/version set, hash-checks every downloaded wheel, installs only from the authenticated local wheelhouse, resolves the local project and its `dev` extra with `--no-index`, and then verifies that the installed distribution set is exactly the lock plus the local project.
+CI verifies that the manifest and lock contain the same package/version set, hash-checks every downloaded wheel, installs only from the authenticated local wheelhouse, statically verifies the runtime + `dev` dependency declarations against the reviewed manifest (including a direct-URL prohibition), installs the local project with `--no-deps`, and then verifies that the installed distribution set is exactly the lock plus the local project.
 
 ## Supported interpreters
 
@@ -43,9 +43,11 @@ Dependency updates are explicit review work:
 4. run the full matrix, which must:
    - hash-authenticate all wheels;
    - install only from the local wheelhouse;
-   - resolve `.[dev]` offline;
+   - reject direct URL dependencies before local project installation;
+   - verify all selected runtime/dev direct dependencies exist in the reviewed manifest at compatible versions;
+   - install the local project with `--no-deps` so project metadata cannot trigger any download;
    - reject manifest/lock drift;
-   - reject missing, extra or version-mismatched installed distributions;
+   - reject duplicate, missing, extra or version-mismatched installed distributions;
    - pass `pip check`, validators, Ruff, pytest, research regressions, wheel build and installed-wheel smoke;
 5. merge only when the reviewed head is green.
 

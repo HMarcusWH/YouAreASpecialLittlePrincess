@@ -56,12 +56,20 @@ def read_lock(path: Path) -> dict[str, str]:
 
 
 def installed_distributions() -> dict[str, str]:
-    installed: dict[str, str] = {}
+    records: dict[str, list[str]] = {}
     for dist in importlib.metadata.distributions():
         name = dist.metadata.get("Name")
         if name:
-            installed[normalize(name)] = dist.version
-    return installed
+            records.setdefault(normalize(name), []).append(dist.version)
+
+    duplicates = {name: versions for name, versions in records.items() if len(versions) > 1}
+    if duplicates:
+        details = "; ".join(
+            f"{name}={','.join(versions)}" for name, versions in sorted(duplicates.items())
+        )
+        raise ValueError(f"Duplicate installed distributions detected: {details}")
+
+    return {name: versions[0] for name, versions in records.items()}
 
 
 def report_mapping_diff(label: str, expected: dict[str, str], actual: dict[str, str]) -> bool:
@@ -97,7 +105,12 @@ def main() -> int:
         name, version = parse_exact(value)
         expected_installed[name] = version
 
-    installed = installed_distributions()
+    try:
+        installed = installed_distributions()
+    except ValueError as exc:
+        print(exc)
+        return 1
+
     failed = report_mapping_diff("Installed environment", expected_installed, installed) or failed
     return 1 if failed else 0
 
