@@ -28,6 +28,7 @@ The permission ledger is append-only. Each `GRANT`, `DENY` or `WITHDRAW` event c
 
 - subject, purpose/version, notice/version and scope;
 - the actor, what the UI presented as the default, and the capture method;
+- the subject's self-declared eligibility at the time the event was captured (`subject_eligibility`);
 - `derived_from` (for example an account deletion or support request);
 - surface, recorded and effective times, and an evidence pointer.
 
@@ -35,25 +36,26 @@ Evidence such as signed agreements lives in protected storage and is referenced 
 
 An event is **invalid** and never changes state when any of these hold (validator codes in brackets):
 
-- The purpose is unknown [`UNKNOWN_PURPOSE`], or a grant targets a purpose that is not offered [`PURPOSE_NOT_OFFERED`].
+- The purpose is unknown [`UNKNOWN_PURPOSE`]. A grant targets a purpose that is not offered [`PURPOSE_NOT_OFFERED`], or one that is still a draft outside synthetic fixtures [`PURPOSE_NOT_APPROVED`].
 - The scope kind is not allowed for the purpose [`SCOPE_NOT_ALLOWED`], or a subject-wide scope names someone else [`SCOPE_SUBJECT_MISMATCH`].
-- A grant or denial was collected under a notice that was not in effect when recorded [`OBSOLETE_NOTICE`, `NOTICE_NOT_YET_IN_EFFECT`], or under a notice that does not cover the purpose [`NOTICE_DOES_NOT_COVER_PURPOSE`]. A **withdrawal** is accepted under any notice the subject was ever shown.
+- A grant was collected under a notice that was not in effect when recorded [`OBSOLETE_NOTICE`, `NOTICE_NOT_YET_IN_EFFECT`]. Any event naming a notice that does not cover the purpose is also invalid [`NOTICE_DOES_NOT_COVER_PURPOSE`]. **Denials and withdrawals** are honoured under any notice the subject was ever shown.
 - The event is backdated [`BACKDATED_EVENT`], or a withdrawal is scheduled for later instead of taking effect immediately [`DELAYED_WITHDRAWAL`].
 - A grant is derived from a purchase or entitlement [`PAYMENT_IS_NOT_CONSENT`] or from any other business event [`GRANT_MUST_BE_DIRECT`].
 - A grant was prechecked [`PRECHECKED_GRANT`], was never presented [`CHOICE_NOT_PRESENTED`], or was not captured through an explicit control or signed pilot agreement [`GRANT_NOT_EXPLICIT`].
 - The actor lacks authority: another account, staff or system granting for a writer [`NO_AUTHOR_AUTHORITY`]. A withdrawal must come from the subject, from staff acting on a verified support request, or from the system on account deletion, share revocation or purpose retirement [`NO_AUTHORITY`].
-- The grant's evidence is still `PENDING` [`EVIDENCE_PENDING`].
+- A grant's evidence is still `PENDING` [`EVIDENCE_PENDING`]. Restrictive choices fail closed: a denial or withdrawal takes effect while its evidence is pending.
+- A grant for a purpose requiring an adult declaration was captured without `DECLARED_ADULT` [`INELIGIBLE_AT_GRANT`]. A later declaration never revives it; the writer must grant again.
 
 ## Evaluating a permission
 
 `evaluate_permission(subject, purpose@version, scope, at)` in [validate_consent_protocol.py](../../tools/validate_consent_protocol.py) is the reference semantics:
 
-1. The purpose is unknown or not offered → `NOT_OFFERED`.
-2. The purpose requires an adult declaration and the writer's eligibility is not `DECLARED_ADULT` → `INELIGIBLE`.
+1. The purpose is unknown or not offered → `NOT_OFFERED`. It is still a draft → `NOT_APPROVED`, unless the evaluator runs in fixture mode for synthetic scenarios. Draft purposes never permit a real decision.
+2. The purpose requires an adult declaration and the writer's current eligibility is not `DECLARED_ADULT` → `INELIGIBLE`. The grant must also have been captured with `DECLARED_ADULT` (see above).
 3. Among **valid** events for the same subject and purpose version, keep those effective at `at` whose scope equals the query scope, or is subject-wide for the same subject.
 4. No such event → `NOT_ASKED`. Otherwise the latest event wins: `PERMITTED`, `DENIED` or `WITHDRAWN`. Ties resolve to the more restrictive state.
 
-A **use** (Premium job, benchmark build, share publication) must be `PERMITTED` both when it starts and immediately before it publishes (`BLOCKED_AT_START` / `BLOCKED_AT_PUBLICATION`). A **comparison** needs every author's `partner_comparison` permission for that comparison. The **Free report** is available when every purpose marked `required_for_service` is permitted; optional purposes are not consulted at all.
+A **use** (Premium job, benchmark build, share publication) must be `PERMITTED` both when it starts and immediately before it publishes (`BLOCKED_AT_START` / `BLOCKED_AT_PUBLICATION`). A **comparison** needs every author's `partner_comparison` permission for that comparison. The **Free report** is available when `service_processing` is permitted. It is the only purpose allowed to be `required_for_service`, and optional purposes are not consulted at all.
 
 ## Versioning and rollback
 

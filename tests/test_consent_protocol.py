@@ -89,8 +89,9 @@ def test_collection_fixture(path, protocol):
     fixture = vcp.load_json(path)
     assert fixture["manifest"]["synthetic"] is True
     assert vcp.SchemaSet().validate(fixture["manifest"], "collection-manifest.schema.json") == []
-    issues, _summary = vcp.check_collection_manifest(fixture["manifest"], protocol)
+    issues, summary = vcp.check_collection_manifest(fixture["manifest"], protocol, human_release=False)
     assert codes(issues) == sorted(fixture["expected_errors"])
+    assert summary.synthetic is True
 
 
 def expected_codes_in(paths):
@@ -112,6 +113,7 @@ def expected_codes_in(paths):
         "OBSOLETE_NOTICE",  # reused obsolete notice
         "DUPLICATE_COUNTED_AS_WRITER",  # duplicate specimen counted as a writer
         "PRECHECKED_GRANT",
+        "INELIGIBLE_AT_GRANT",
         "DENIED",
         "WITHDRAWN",
         "NOT_ASKED",
@@ -122,9 +124,31 @@ def test_t03_negative_cases_have_fixtures(required):
     assert required in expected_codes_in(SCENARIOS + COLLECTIONS)
 
 
-def test_collection_summary_counts_writers_not_pages(protocol):
+def test_human_release_rejects_synthetic_manifests(protocol):
     fixture = vcp.load_json(vcp.CONSENT_DIR / "fixtures" / "collection" / "valid_pilot_lineage.json")
     issues, summary = vcp.check_collection_manifest(fixture["manifest"], protocol)
+    assert codes(issues) == ["SYNTHETIC_IN_HUMAN_RELEASE"]
+    assert summary.synthetic is True
+
+
+@pytest.mark.parametrize(
+    ("mutate", "code"),
+    [
+        (lambda m: m["writers"][1].update(enrollment_id=m["writers"][0]["enrollment_id"]), "DUPLICATE_ID"),
+        (lambda m: m["specimens"][0].update(session_index=99), "UNKNOWN_SESSION"),
+    ],
+)
+def test_collection_identity_and_session_rules(protocol, mutate, code):
+    fixture = vcp.load_json(vcp.CONSENT_DIR / "fixtures" / "collection" / "valid_pilot_lineage.json")
+    manifest = copy.deepcopy(fixture["manifest"])
+    mutate(manifest)
+    issues, _summary = vcp.check_collection_manifest(manifest, protocol, human_release=False)
+    assert code in codes(issues)
+
+
+def test_collection_summary_counts_writers_not_pages(protocol):
+    fixture = vcp.load_json(vcp.CONSENT_DIR / "fixtures" / "collection" / "valid_pilot_lineage.json")
+    issues, summary = vcp.check_collection_manifest(fixture["manifest"], protocol, human_release=False)
     assert issues == []
     assert (summary.writers, summary.specimens, summary.captures) == (3, 6, 7)
     # Copied and free writing, and each language, stay separate cohorts.
@@ -157,7 +181,7 @@ def test_free_report_never_depends_on_optional_choices(registry):
                              purpose={"purpose_id": purpose_id, "purpose_version": 1})
                 events.append(event)
         scenario = dict(base, events=events)
-        context = vcp.build_context(registry, scenario)
+        context = vcp.build_context(registry, scenario, fixture_mode=True)
         assert all(not found for found in context.event_issues.values())
         outcomes.add(vcp.evaluate_free_report(context, "wrt_0001", specimen, at))
     assert outcomes == {"AVAILABLE"}
@@ -165,7 +189,7 @@ def test_free_report_never_depends_on_optional_choices(registry):
 
 def test_invalid_events_never_change_state(registry):
     scenario = vcp.load_json(vcp.CONSENT_DIR / "fixtures" / "scenarios" / "payment_is_not_ai_consent.json")
-    context = vcp.build_context(registry, scenario)
+    context = vcp.build_context(registry, scenario, fixture_mode=True)
     valid_ids = {event["event_id"] for _index, event in context.valid}
     assert "evt_0302" not in valid_ids and "evt_0303" not in valid_ids
 
@@ -173,7 +197,7 @@ def test_invalid_events_never_change_state(registry):
 def test_duplicate_event_ids_invalidate_both(registry):
     scenario = vcp.load_json(vcp.CONSENT_DIR / "fixtures" / "scenarios" / "grant_deny_withdraw_basics.json")
     scenario["events"].append(copy.deepcopy(scenario["events"][0]))
-    context = vcp.build_context(registry, scenario)
+    context = vcp.build_context(registry, scenario, fixture_mode=True)
     assert "DUPLICATE_EVENT_ID" in context.event_issues["evt_0101"]
     assert all(event["event_id"] != "evt_0101" for _index, event in context.valid)
 
@@ -195,8 +219,11 @@ def mutate_purpose(registry, purpose_id, **changes):
         ("reference_contribution", {"presented_default": "SELECTED"}, "PRECHECKED_DEFAULT"),
         ("ordinary_sharing", {"presented_default": "SELECTED"}, "PRECHECKED_DEFAULT"),
         ("reference_contribution", {"affects_free_report": True}, "OPTIONAL_PURPOSE_AFFECTS_FREE"),
-        ("image_retention", {"required_for_service": True}, "MULTIPLE_REQUIRED_PURPOSES"),
+        ("image_retention", {"required_for_service": True}, "SERVICE_REQUIREMENT_MISMATCH"),
         ("third_party_ai_processing", {"status": "APPROVED"}, "APPROVAL_WITHOUT_EVIDENCE"),
+        ("product_analytics", {"status": "APPROVED", "approval": {"decision_ref": "decision:pa-1234", "decided_by_role": "owner",
+                                                                  "decided_on": "2026-10-01T00:00:00Z"}},
+         "APPROVED_WITHOUT_LEGAL_BASIS"),
         ("third_party_ai_processing", {"legal_basis": "DECIDED"}, "LEGAL_BASIS_WITHOUT_APPROVAL"),
         ("third_party_ai_processing", {"not_implied_by": ["entitlement"]}, "PAYMENT_NOT_EXCLUDED"),
         ("partner_comparison", {"withdrawal": {"available": False, "effect": "PROSPECTIVE", "propagation": []}}, "WITHDRAWAL_UNAVAILABLE"),
@@ -211,6 +238,32 @@ def test_purpose_registry_rules(registry, retention_ids, purpose_id, changes, co
     assert vcp.check_purposes(registry, retention_ids, vcp.known_gates()) == []
     mutated = mutate_purpose(registry, purpose_id, **changes)
     assert code in codes(vcp.check_purposes(mutated, retention_ids, vcp.known_gates()))
+
+
+def test_free_cannot_be_tied_to_an_optional_purpose(registry, retention_ids):
+    # Codex review of #12: moving required_for_service to contribution passed validation.
+    mutated = mutate_purpose(registry, "service_processing", required_for_service=False, affects_free_report=False)
+    mutated = mutate_purpose(mutated, "reference_contribution", required_for_service=True)
+    issues = vcp.check_purposes(mutated, retention_ids, vcp.known_gates())
+    assert sorted((i.code, i.where) for i in issues) == [
+        ("SERVICE_REQUIREMENT_MISMATCH", "reference_contribution@1"),
+        ("SERVICE_REQUIREMENT_MISMATCH", "service_processing@1"),
+    ]
+
+
+def test_draft_purposes_never_permit_outside_fixtures(registry):
+    scenario = vcp.load_json(vcp.CONSENT_DIR / "fixtures" / "scenarios" / "grant_deny_withdraw_basics.json")
+    subject, specimen = {"kind": "WRITER", "id": "wrt_0001"}, {"kind": "SPECIMEN", "id": "spc_0001"}
+    at = vcp.parse_timestamp("2026-02-03T00:00:00Z")
+    service = {"purpose_id": "service_processing", "purpose_version": 1}
+
+    production = vcp.build_context(registry, scenario)
+    assert production.event_issues["evt_0101"] == ["PURPOSE_NOT_APPROVED"]
+    assert vcp.evaluate_permission(production, subject, service, specimen, at) == "NOT_APPROVED"
+    assert vcp.evaluate_free_report(production, "wrt_0001", specimen, at) == "UNAVAILABLE"
+
+    fixture = vcp.build_context(registry, scenario, fixture_mode=True)
+    assert vcp.evaluate_permission(fixture, subject, service, specimen, at) == "PERMITTED"
 
 
 def test_partner_comparison_cannot_be_folded_into_sharing(registry, retention_ids):
@@ -238,6 +291,27 @@ def test_notice_rules(registry):
     offers_inactive["notices"][0]["purposes"].append({"purpose_id": "model_training", "purpose_version": 1})
     assert "NOTICE_OFFERS_INACTIVE_PURPOSE" in codes(vcp.check_notices(offers_inactive, purposes))
 
+    # Codex review of #12: a superseded notice without an end stayed usable forever.
+    superseded = copy.deepcopy(notices)
+    superseded["notices"][0].update(status="SUPERSEDED", effective_from="2026-01-01T00:00:00Z", decision_ref="decision:n-1234")
+    assert codes(vcp.check_notices(superseded, purposes)) == ["NOTICE_WINDOW_INVALID"]
+
+    overlapping = copy.deepcopy(notices)
+    second = copy.deepcopy(overlapping["notices"][0])
+    overlapping["notices"][0].update(status="SUPERSEDED", effective_from="2026-01-01T00:00:00Z",
+                                     effective_until="2026-06-01T00:00:00Z", decision_ref="decision:n-0001")
+    second.update(version=2, status="ACTIVE", effective_from="2026-05-01T00:00:00Z", decision_ref="decision:n-0002")
+    overlapping["notices"].append(second)
+    assert codes(vcp.check_notices(overlapping, purposes)) == ["NOTICE_WINDOW_OVERLAP"]
+    second["effective_from"] = "2026-06-01T00:00:00Z"
+    assert vcp.check_notices(overlapping, purposes) == []
+
+
+def test_scenario_notice_windows_must_not_overlap(registry):
+    scenario = vcp.load_json(vcp.CONSENT_DIR / "fixtures" / "scenarios" / "reused_obsolete_notice.json")
+    scenario["notices"][1]["effective_from"] = "2026-02-01T00:00:00Z"
+    assert "NOTICE_WINDOW_OVERLAP" in codes(vcp.run_scenario(registry, scenario))
+
 
 # ----------------------------------------------------------- retention/lineage
 
@@ -252,7 +326,20 @@ def test_retention_is_configuration_not_legal_claim():
 
     unit_only = copy.deepcopy(retention)
     unit_only["classes"][0]["max_retention"] = {"value": None, "unit": "DAYS"}
-    assert codes(vcp.check_retention(unit_only)) == ["RETENTION_UNIT_MISMATCH"]
+    assert codes(vcp.check_retention(unit_only)) == ["RETENTION_UNIT_MISMATCH", "RETENTION_WITHOUT_DECISION"]
+
+    # Codex review of #12: DECIDED with null period passed, so approval needed no periods.
+    decided_without_period = copy.deepcopy(retention)
+    decided_without_period["classes"][0].update(decision_status="DECIDED", decision_ref="decision:ret-1234")
+    assert codes(vcp.check_retention(decided_without_period)) == ["RETENTION_DECIDED_WITHOUT_PERIOD"]
+
+    event_bound = copy.deepcopy(retention)
+    event_bound["classes"][0].update(decision_status="DECIDED", decision_ref="decision:ret-1234",
+                                     max_retention={"value": None, "unit": "EVENT_BOUND"})
+    assert vcp.check_retention(event_bound) == []
+    assert vcp.SchemaSet().validate(event_bound, "retention-policy.schema.json") == []
+    event_bound["classes"][0]["max_retention"]["value"] = 30
+    assert codes(vcp.check_retention(event_bound)) == ["RETENTION_UNIT_MISMATCH"]
 
     unsafe_restore = copy.deepcopy(retention)
     unsafe_restore["classes"][0]["backup_restore"] = "NOT_BACKED_UP"
@@ -331,6 +418,13 @@ def test_pilot_gate_blocks_activation_until_approved(registry, protocol):
     approved_protocol = dict(protocol, status="APPROVED")
     assert codes(vcp.check_pilot_gate(gate, approved_protocol, notices, purposes)) == ["GATE_BYPASSED"]
 
+    # Codex review of #12: deleting pending decisions let the gate approve with one decision.
+    stripped = copy.deepcopy(approved)
+    stripped["decisions"] = [dict(stripped["decisions"][0], status="DECIDED", decision_ref="decision:controller-1")]
+    found = vcp.check_pilot_gate(stripped, protocol, notices, purposes)
+    assert codes(found) == ["MISSING_GATE_DECISION"]
+    assert sorted(i.where for i in found) == sorted(vcp.REQUIRED_PILOT_DECISIONS[1:])
+
 
 # ------------------------------------------------------- collection protocol
 
@@ -358,6 +452,16 @@ def test_free_writing_never_contains_a_copy_passage(registry, protocol, collecti
     task = next(t for t in mutated["tasks"] if t["task_id"] == "free_en")
     task["prompt_sha256"] = vcp.hashlib.sha256(path.read_bytes()).hexdigest()
     assert codes(vcp.check_protocol(mutated, purposes, collection_copy)) == ["FREE_TASK_HAS_PASSAGE"]
+
+
+def test_protocol_approval_requires_decided_prompt_rights(registry, protocol):
+    approved = dict(copy.deepcopy(protocol), status="APPROVED")
+    found = vcp.check_protocol(approved, purposes_by_key(registry))
+    assert codes(found) == ["PROTOCOL_APPROVED_WITH_PENDING_RIGHTS"]
+    assert len(found) == len(protocol["tasks"])
+    for task in approved["tasks"]:
+        task["rights"].update(decision_status="DECIDED", decision_ref="decision:prompt-rights")
+    assert vcp.check_protocol(approved, purposes_by_key(registry)) == []
 
 
 def test_every_language_has_one_copy_and_one_free_task(registry, protocol):

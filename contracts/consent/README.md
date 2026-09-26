@@ -21,7 +21,21 @@ These are versioned draft contracts. T01 owns the final product wire DTOs and co
 
 All fixtures are synthetic. They contain opaque IDs and hashes of labels, never real handwriting.
 
-- `v1/fixtures/scenarios/`: ten append-only event logs with expected outcomes. They cover grant, deny and withdraw; declining keeps Free; payment is not AI consent; the uploader lacks author authority; withdrawal during use; a reused obsolete notice; a purpose version change; partner comparison versus sharing; precheck, eligibility and evidence; and a pilot signed agreement.
+- `v1/fixtures/scenarios/`: twelve append-only event logs with expected outcomes. They cover:
+  - grant, deny and withdraw;
+  - declining keeps Free;
+  - payment is not AI consent;
+  - the uploader lacks author authority;
+  - withdrawal during use;
+  - a reused obsolete notice;
+  - a purpose version change;
+  - partner comparison versus sharing;
+  - precheck, eligibility and evidence;
+  - a pilot signed agreement;
+  - restrictive choices failing closed;
+  - eligibility bound to the grant.
+
+  Scenarios run in fixture mode, the only mode in which draft purposes are usable.
 - `v1/fixtures/collection/`: eight collection manifests with their expected error codes, including a duplicate specimen counted as a writer and a repeat capture filed under another writer.
 
 ## Validation

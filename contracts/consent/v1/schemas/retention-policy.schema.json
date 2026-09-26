@@ -32,7 +32,10 @@
           "required": ["value", "unit"],
           "properties": {
             "value": {"type": ["integer", "null"], "minimum": 0},
-            "unit": {"enum": ["DAYS", null]}
+            "unit": {
+              "enum": ["DAYS", "EVENT_BOUND", null],
+              "description": "null = pending decision; DAYS = decided maximum; EVENT_BOUND = decided that the class has no fixed maximum and ends only on its listed events."
+            }
           }
         },
         "decision_status": {"$ref": "common.schema.json#/$defs/decision_status"},

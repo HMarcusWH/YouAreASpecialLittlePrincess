@@ -33,7 +33,16 @@ REQUIRED_DISTINCT_PURPOSES = (
     "ordinary_sharing",
     "partner_comparison",
 )
+FREE_SERVICE_PURPOSE = "service_processing"
+# Purposes designed to be offered. Only APPROVED ones are usable for real
+# permission decisions; DRAFT is usable solely inside synthetic fixtures.
 OFFERED = {"DRAFT", "APPROVED"}
+# The pilot gate cannot be approved unless every one of these owner decisions is recorded.
+REQUIRED_PILOT_DECISIONS = (
+    "controller_and_legal_basis", "age_eligibility", "retention_periods", "aggregate_after_withdrawal",
+    "notice_wording", "collection_agreement", "compensation", "recruitment_channels",
+    "processors_and_storage_region", "annotator_access", "prompt_rights",
+)
 LOCALES = ("en", "sv")
 EXTRA_LETTERS = {"sv": "åäö"}
 REQUIRED_PUNCTUATION = ",.:?!"
@@ -267,20 +276,20 @@ def check_purposes(doc: dict, retention_ids: set[str], gates: set[str]) -> list[
         if required not in ids:
             issues.append(Issue("MISSING_DISTINCT_PURPOSE", required, "handoff requires this as a separate purpose"))
 
-    required_for_service = [p["purpose_id"] for p in purposes if p["required_for_service"]]
-    if len(set(required_for_service)) > 1:
-        issues.append(Issue("MULTIPLE_REQUIRED_PURPOSES", ",".join(required_for_service),
-                            "only one purpose may be required to receive the service"))
-
     for p in purposes:
         where = f"{p['purpose_id']}@{p['purpose_version']}"
         offered = p["status"] in OFFERED
         if p["presented_default"] != "UNSELECTED":
             issues.append(Issue("PRECHECKED_DEFAULT", where, "choices must start unselected"))
+        if p["required_for_service"] != (p["purpose_id"] == FREE_SERVICE_PURPOSE):
+            issues.append(Issue("SERVICE_REQUIREMENT_MISMATCH", where,
+                                f"only {FREE_SERVICE_PURPOSE} may be (and must be) required for the service"))
         if p["affects_free_report"] and not p["required_for_service"]:
             issues.append(Issue("OPTIONAL_PURPOSE_AFFECTS_FREE", where, "declining an optional purpose must not reduce Free"))
         if p["status"] == "APPROVED" and "approval" not in p:
             issues.append(Issue("APPROVAL_WITHOUT_EVIDENCE", where, "APPROVED requires an approval record"))
+        if p["status"] == "APPROVED" and p["legal_basis"] != "DECIDED":
+            issues.append(Issue("APPROVED_WITHOUT_LEGAL_BASIS", where, "approval requires a decided legal basis"))
         if p["legal_basis"] == "DECIDED" and p["status"] != "APPROVED":
             issues.append(Issue("LEGAL_BASIS_WITHOUT_APPROVAL", where, "a decided legal basis belongs to an approved purpose"))
         if offered and not p["grant_scopes"]:
@@ -302,6 +311,8 @@ def check_purposes(doc: dict, retention_ids: set[str], gates: set[str]) -> list[
 
     if doc["registry_status"] == "APPROVED" and "approval" not in doc:
         issues.append(Issue("APPROVAL_WITHOUT_EVIDENCE", "purposes.json", "APPROVED registry requires an approval record"))
+    if doc["registry_status"] == "APPROVED" and doc["legal_basis_status"] != "DECIDED":
+        issues.append(Issue("APPROVED_WITHOUT_LEGAL_BASIS", "purposes.json", "approval requires decided legal bases"))
     if doc["legal_basis_status"] == "DECIDED" and doc["registry_status"] != "APPROVED":
         issues.append(Issue("LEGAL_BASIS_WITHOUT_APPROVAL", "purposes.json", "legal bases are decided with registry approval"))
     return issues
@@ -332,10 +343,34 @@ def check_notices(doc: dict, purposes: dict[tuple[str, int], dict]) -> list[Issu
             if purpose_id not in listed:
                 issues.append(Issue("COPY_FOR_UNLISTED_PURPOSE", where, purpose_id))
         if notice["status"] == "DRAFT":
-            if notice["effective_from"] is not None or notice["decision_ref"] is not None:
-                issues.append(Issue("DRAFT_NOTICE_IN_EFFECT", where, "a draft notice has no effective date or decision"))
+            if notice["effective_from"] or notice["effective_until"] or notice["decision_ref"]:
+                issues.append(Issue("DRAFT_NOTICE_IN_EFFECT", where, "a draft notice has no effective window or decision"))
         elif not (notice["effective_from"] and notice["decision_ref"]):
             issues.append(Issue("NOTICE_ACTIVE_WITHOUT_DECISION", where, "ACTIVE/SUPERSEDED notices need a decision and start time"))
+        elif notice["status"] == "SUPERSEDED" and not notice["effective_until"]:
+            issues.append(Issue("NOTICE_WINDOW_INVALID", where, "a superseded notice needs the time it stopped being shown"))
+    issues += notice_window_issues([n for n in doc["notices"] if n["effective_from"]], "notices.json")
+    return issues
+
+
+def notice_window_issues(windows: list[dict], where: str) -> list[Issue]:
+    """Each window must end after it starts; versions of one notice never overlap."""
+    issues: list[Issue] = []
+    spans: dict[str, list[tuple[datetime, datetime | None, int]]] = {}
+    for window in windows:
+        start = parse_timestamp(window["effective_from"])
+        end = parse_timestamp(window["effective_until"]) if window["effective_until"] else None
+        label = f"{where}:{window['notice_id']}@{window['version']}"
+        if end is not None and end <= start:
+            issues.append(Issue("NOTICE_WINDOW_INVALID", label, "effective_until must be after effective_from"))
+            continue
+        spans.setdefault(window["notice_id"], []).append((start, end, window["version"]))
+    for notice_id, items in spans.items():
+        items.sort(key=lambda item: item[0])
+        for (start_a, end_a, version_a), (start_b, _end_b, version_b) in zip(items, items[1:]):
+            if end_a is None or end_a > start_b:
+                issues.append(Issue("NOTICE_WINDOW_OVERLAP", f"{where}:{notice_id}",
+                                    f"versions {version_a} and {version_b} are both in effect at {start_b.isoformat()}"))
     return issues
 
 
@@ -350,10 +385,15 @@ def check_retention(doc: dict) -> list[Issue]:
     for c in doc["classes"]:
         where = c["class_id"]
         value, unit = c["max_retention"]["value"], c["max_retention"]["unit"]
-        if (value is None) != (unit is None):
-            issues.append(Issue("RETENTION_UNIT_MISMATCH", where, "value and unit are set together"))
-        if value is not None and not (c["decision_status"] == "DECIDED" and c["decision_ref"]):
+        # null/null is the pending state; DAYS needs a number; EVENT_BOUND is the
+        # explicit, reviewed choice of no fixed maximum (ends only on listed events).
+        if (unit == "DAYS") != (value is not None):
+            issues.append(Issue("RETENTION_UNIT_MISMATCH", where, "DAYS needs a value; other units carry none"))
+        if unit is not None and not (c["decision_status"] == "DECIDED" and c["decision_ref"]):
             issues.append(Issue("RETENTION_WITHOUT_DECISION", where, "a retention period needs a recorded owner decision"))
+        if c["decision_status"] == "DECIDED" and unit is None:
+            issues.append(Issue("RETENTION_DECIDED_WITHOUT_PERIOD", where,
+                                "a decided class records DAYS or the explicit EVENT_BOUND choice"))
         issues += decided_with_ref(c["decision_status"], c["decision_ref"], "DECISION_WITHOUT_REF", where)
         if c["contains_handwriting"]:
             if not c["deletion_actions"]:
@@ -448,6 +488,10 @@ def check_pilot_gate(gate: dict, protocol: dict, notices: dict, purposes: dict[t
         issues.append(Issue("DUPLICATE_DECISION", key, "declared twice"))
     for decision in gate["decisions"]:
         issues += decided_with_ref(decision["status"], decision["decision_ref"], "DECISION_WITHOUT_REF", decision["decision_key"])
+    present = {d["decision_key"] for d in gate["decisions"]}
+    for key in REQUIRED_PILOT_DECISIONS:
+        if key not in present:
+            issues.append(Issue("MISSING_GATE_DECISION", key, "required owner decision was removed from the gate"))
     if gate["status"] == "APPROVED":
         if "approval" not in gate:
             issues.append(Issue("APPROVAL_WITHOUT_EVIDENCE", "pilot_gate.json", "APPROVED requires an approval record"))
@@ -495,6 +539,8 @@ def check_protocol(protocol: dict, purposes: dict[tuple[str, int], dict], base: 
 
     for task in protocol["tasks"]:
         where = task["task_id"]
+        if protocol["status"] == "APPROVED" and not (task["rights"]["decision_status"] == "DECIDED" and task["rights"]["decision_ref"]):
+            issues.append(Issue("PROTOCOL_APPROVED_WITH_PENDING_RIGHTS", where, "prompt rights must be decided before approval"))
         if task["language"] not in languages:
             issues.append(Issue("UNSUPPORTED_TASK_LANGUAGE", where, task["language"]))
         issues += decided_with_ref(task["rights"]["decision_status"], task["rights"]["decision_ref"], "DECISION_WITHOUT_REF", where)
@@ -551,20 +597,28 @@ def check_protocol(protocol: dict, purposes: dict[tuple[str, int], dict], base: 
 
 @dataclass
 class CollectionSummary:
+    synthetic: bool = False
     writers: int = 0
     specimens: int = 0
     captures: int = 0
     by_task: dict[str, dict[str, int]] = field(default_factory=dict)
 
 
-def check_collection_manifest(manifest: dict, protocol: dict) -> tuple[list[Issue], CollectionSummary]:
-    """Writer/specimen/capture lineage: pages, photos and sessions never become extra people."""
+def check_collection_manifest(manifest: dict, protocol: dict, *, human_release: bool = True) -> tuple[list[Issue], CollectionSummary]:
+    """Writer/specimen/capture lineage: pages, photos and sessions never become extra people.
+
+    By default the manifest is treated as a human release, which must not be
+    synthetic. Fixture checks pass human_release=False; their summary stays
+    marked synthetic and must never feed human statistics.
+    """
     issues: list[Issue] = []
-    summary = CollectionSummary()
+    summary = CollectionSummary(synthetic=manifest["synthetic"])
+    if human_release and manifest["synthetic"]:
+        issues.append(Issue("SYNTHETIC_IN_HUMAN_RELEASE", "synthetic", "synthetic samples are excluded from human statistics"))
     if (manifest["protocol"]["protocol_id"], manifest["protocol"]["version"]) != (protocol["protocol_id"], protocol["version"]):
         issues.append(Issue("PROTOCOL_MISMATCH", "protocol", "manifest was collected under another protocol version"))
-    for label, rows, key in (("writer", manifest["writers"], "writer_id"), ("specimen", manifest["specimens"], "specimen_id"),
-                             ("capture", manifest["captures"], "capture_id")):
+    for label, rows, key in (("writer", manifest["writers"], "writer_id"), ("enrollment", manifest["writers"], "enrollment_id"),
+                             ("specimen", manifest["specimens"], "specimen_id"), ("capture", manifest["captures"], "capture_id")):
         for value in duplicates(row[key] for row in rows):
             issues.append(Issue("DUPLICATE_ID", label, value))
 
@@ -572,6 +626,7 @@ def check_collection_manifest(manifest: dict, protocol: dict) -> tuple[list[Issu
     specimens = {s["specimen_id"]: s for s in manifest["specimens"]}
     captures = {c["capture_id"]: c for c in manifest["captures"]}
     tasks = {t["task_id"]: t for t in protocol["tasks"]}
+    sessions = {session["session_index"] for session in protocol["session_plan"]}
     scripts = set(protocol["supported_contexts"]["scripts"])
     languages = set(protocol["supported_contexts"]["languages"])
 
@@ -589,6 +644,9 @@ def check_collection_manifest(manifest: dict, protocol: dict) -> tuple[list[Issu
         task = tasks.get(s["task_id"])
         if task is None:
             issues.append(Issue("UNKNOWN_TASK", where, s["task_id"]))
+            continue
+        if s["session_index"] not in sessions:
+            issues.append(Issue("UNKNOWN_SESSION", where, f"session {s['session_index']} is not in the protocol session plan"))
             continue
         supported = s["declared_script"] in scripts and s["declared_language"] in languages
         if supported != (s["context_status"] == "SUPPORTED"):
@@ -666,11 +724,18 @@ class ConsentContext:
     notices: dict[tuple[str, int], dict]
     writers: dict[str, dict]
     events: list[dict]
+    usable_statuses: frozenset[str] = frozenset({"APPROVED"})
     valid: list[tuple[int, dict]] = field(default_factory=list)
     event_issues: dict[str, list[str]] = field(default_factory=dict)
 
 
-def build_context(registry: dict, scenario: dict) -> ConsentContext:
+def build_context(registry: dict, scenario: dict, *, fixture_mode: bool = False) -> ConsentContext:
+    """Index a scenario's event log.
+
+    Only APPROVED purposes can grant anything. fixture_mode additionally lets
+    DRAFT purposes run so synthetic scenarios can exercise the rules before
+    any owner approval exists; it must never be used for real decisions.
+    """
     purposes = {purpose_key(p): p for p in registry["purposes"]}
     for extra in scenario.get("extra_purposes", []):
         purposes.setdefault(purpose_key(extra), extra)
@@ -679,6 +744,7 @@ def build_context(registry: dict, scenario: dict) -> ConsentContext:
         notices={(n["notice_id"], n["version"]): n for n in scenario["notices"]},
         writers={w["writer_id"]: w for w in scenario["writers"]},
         events=scenario["events"],
+        usable_statuses=frozenset({"APPROVED", "DRAFT"} if fixture_mode else {"APPROVED"}),
     )
     for index, event in enumerate(context.events):
         codes = event_validity(event, context)
@@ -698,7 +764,7 @@ def notice_window_codes(event: dict, context: ConsentContext) -> list[str]:
     codes = []
     if purpose_key(event["purpose"]) not in {purpose_key(ref) for ref in notice["purposes"]}:
         codes.append("NOTICE_DOES_NOT_COVER_PURPOSE")
-    if event["event_type"] != "WITHDRAW":  # withdrawal stays possible under any notice ever shown
+    if event["event_type"] == "GRANT":  # denials and withdrawals are honoured under any notice ever shown
         recorded = parse_timestamp(event["recorded_at"])
         start = parse_timestamp(notice["effective_from"])
         end = parse_timestamp(notice["effective_until"]) if notice["effective_until"] else None
@@ -730,8 +796,8 @@ def event_validity(event: dict, context: ConsentContext) -> list[str]:
     purpose = context.purposes.get(purpose_key(event["purpose"]))
     if purpose is None:
         return ["UNKNOWN_PURPOSE"]
-    if kind == "GRANT" and purpose["status"] not in OFFERED:
-        codes.append("PURPOSE_NOT_OFFERED")
+    if kind == "GRANT" and purpose["status"] not in context.usable_statuses:
+        codes.append("PURPOSE_NOT_APPROVED" if purpose["status"] == "DRAFT" else "PURPOSE_NOT_OFFERED")
     if event["subject"]["kind"] != purpose["subject_kind"]:
         codes.append("SUBJECT_KIND_MISMATCH")
     if event["subject"]["kind"] == "WRITER" and event["subject"]["id"] not in context.writers:
@@ -759,13 +825,17 @@ def event_validity(event: dict, context: ConsentContext) -> list[str]:
             codes.append("CHOICE_NOT_PRESENTED")
         if event["capture_method"] not in {"EXPLICIT_CONTROL", "SIGNED_PILOT_AGREEMENT"}:
             codes.append("GRANT_NOT_EXPLICIT")
+        # Eligibility is bound to the grant: a later declaration never revives it.
+        if purpose["requires_adult_declaration"] and event["subject_eligibility"] != "DECLARED_ADULT":
+            codes.append("INELIGIBLE_AT_GRANT")
+        # Only grants wait for evidence; restrictive choices take effect regardless.
+        if event["evidence"]["status"] != "RECORDED":
+            codes.append("EVIDENCE_PENDING")
     if kind in {"GRANT", "DENY"}:
         if event["actor"]["kind"] == "PILOT_PARTICIPANT" and event["capture_method"] != "SIGNED_PILOT_AGREEMENT":
             codes.append("GRANT_NOT_EXPLICIT")
         if not has_authority(event, context):
             codes.append("NO_AUTHOR_AUTHORITY" if purpose["requires_author_authority"] else "NO_AUTHORITY")
-        if event["evidence"]["status"] != "RECORDED":
-            codes.append("EVIDENCE_PENDING")
     else:
         actor = event["actor"]["kind"]
         if actor in {"ACCOUNT", "PILOT_PARTICIPANT"}:
@@ -789,6 +859,8 @@ def evaluate_permission(context: ConsentContext, subject: dict, purpose_ref: dic
     purpose = context.purposes.get(purpose_key(purpose_ref))
     if purpose is None or purpose["status"] not in OFFERED:
         return "NOT_OFFERED"
+    if purpose["status"] not in context.usable_statuses:
+        return "NOT_APPROVED"
     if purpose["requires_adult_declaration"] and subject["kind"] == "WRITER":
         writer = context.writers.get(subject["id"])
         if writer is None or writer["adult_eligibility"] != "DECLARED_ADULT":
@@ -826,7 +898,8 @@ def evaluate_use(context: ConsentContext, subject: dict, purpose_ref: dict, scop
 def evaluate_free_report(context: ConsentContext, writer_id: str, scope: dict, at: datetime) -> str:
     """Free availability depends only on purposes required for the service, never on optional choices."""
     subject = {"kind": "WRITER", "id": writer_id}
-    required = [p for p in context.purposes.values() if p["required_for_service"] and p["status"] in OFFERED]
+    required = [p for p in context.purposes.values()
+                if p["purpose_id"] == FREE_SERVICE_PURPOSE and p["status"] in context.usable_statuses]
     if required and all(
         evaluate_permission(context, subject, {"purpose_id": p["purpose_id"], "purpose_version": p["purpose_version"]}, scope, at)
         == "PERMITTED"
@@ -846,9 +919,9 @@ CHECK_FIELDS = {
 
 
 def run_scenario(registry: dict, scenario: dict) -> list[Issue]:
-    issues: list[Issue] = []
-    context = build_context(registry, scenario)
     scenario_id = scenario["scenario_id"]
+    issues = notice_window_issues(scenario["notices"], scenario_id)
+    context = build_context(registry, scenario, fixture_mode=scenario["synthetic"] is True)
     for index, check in enumerate(scenario["checks"]):
         where = f"{scenario_id}.checks[{index}]"
         kind = check["kind"]
@@ -962,7 +1035,7 @@ def validate_repository(consent_dir: Path = CONSENT_DIR, collection_dir: Path = 
         if not fixture["manifest"]["synthetic"]:
             found.append(Issue("NON_SYNTHETIC_FIXTURE", path.name, "repository fixtures must be synthetic"))
         if not found:
-            actual, _summary = check_collection_manifest(fixture["manifest"], protocol)
+            actual, _summary = check_collection_manifest(fixture["manifest"], protocol, human_release=False)
             codes = sorted({issue.code for issue in actual})
             if codes != sorted(fixture["expected_errors"]):
                 found.append(Issue("FIXTURE_EXPECTATION", path.name, f"expected {sorted(fixture['expected_errors'])}, got {codes}"))

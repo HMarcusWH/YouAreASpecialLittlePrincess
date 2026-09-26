@@ -7,7 +7,8 @@
   "additionalProperties": false,
   "required": [
     "contract_version", "event_id", "event_type", "subject", "purpose", "notice", "scope", "actor",
-    "presented_default", "capture_method", "derived_from", "surface", "recorded_at", "effective_at", "evidence"
+    "presented_default", "capture_method", "derived_from", "surface", "recorded_at", "effective_at", "evidence",
+    "subject_eligibility"
   ],
   "properties": {
     "contract_version": {"const": "consent-event/v1"},
@@ -38,6 +39,10 @@
       }
     },
     "surface": {"enum": ["WEB", "IOS", "ANDROID", "PILOT_SESSION", "SUPPORT_CONSOLE", "SYSTEM"]},
+    "subject_eligibility": {
+      "enum": ["DECLARED_ADULT", "UNKNOWN", "DECLARED_NOT_ADULT", "NOT_APPLICABLE"],
+      "description": "The subject's self-declared eligibility when the event was captured. A grant for a purpose requiring an adult declaration is valid only with DECLARED_ADULT; a later declaration never revives an earlier grant."
+    },
     "recorded_at": {"$ref": "common.schema.json#/$defs/timestamp"},
     "effective_at": {"$ref": "common.schema.json#/$defs/timestamp"},
     "evidence": {

@@ -97,7 +97,8 @@
         "kind": "UI_INTERACTION",
         "ref": "evd_0201",
         "status": "RECORDED"
-      }
+      },
+      "subject_eligibility": "DECLARED_ADULT"
     },
     {
       "contract_version": "consent-event/v1",
@@ -133,7 +134,8 @@
         "kind": "UI_INTERACTION",
         "ref": "evd_0210",
         "status": "RECORDED"
-      }
+      },
+      "subject_eligibility": "DECLARED_ADULT"
     },
     {
       "contract_version": "consent-event/v1",
@@ -169,7 +171,8 @@
         "kind": "UI_INTERACTION",
         "ref": "evd_0211",
         "status": "RECORDED"
-      }
+      },
+      "subject_eligibility": "DECLARED_ADULT"
     },
     {
       "contract_version": "consent-event/v1",
@@ -205,7 +208,8 @@
         "kind": "UI_INTERACTION",
         "ref": "evd_0212",
         "status": "RECORDED"
-      }
+      },
+      "subject_eligibility": "DECLARED_ADULT"
     },
     {
       "contract_version": "consent-event/v1",
@@ -241,7 +245,8 @@
         "kind": "UI_INTERACTION",
         "ref": "evd_0213",
         "status": "RECORDED"
-      }
+      },
+      "subject_eligibility": "DECLARED_ADULT"
     },
     {
       "contract_version": "consent-event/v1",
@@ -277,7 +282,8 @@
         "kind": "UI_INTERACTION",
         "ref": "evd_0220",
         "status": "RECORDED"
-      }
+      },
+      "subject_eligibility": "DECLARED_ADULT"
     },
     {
       "contract_version": "consent-event/v1",
@@ -313,7 +319,8 @@
         "kind": "UI_INTERACTION",
         "ref": "evd_0230",
         "status": "RECORDED"
-      }
+      },
+      "subject_eligibility": "DECLARED_ADULT"
     },
     {
       "contract_version": "consent-event/v1",
@@ -349,7 +356,8 @@
         "kind": "UI_INTERACTION",
         "ref": "evd_0231",
         "status": "RECORDED"
-      }
+      },
+      "subject_eligibility": "DECLARED_ADULT"
     },
     {
       "contract_version": "consent-event/v1",
@@ -385,7 +393,8 @@
         "kind": "UI_INTERACTION",
         "ref": "evd_0232",
         "status": "RECORDED"
-      }
+      },
+      "subject_eligibility": "DECLARED_ADULT"
     },
     {
       "contract_version": "consent-event/v1",
@@ -421,7 +430,8 @@
         "kind": "UI_INTERACTION",
         "ref": "evd_0233",
         "status": "RECORDED"
-      }
+      },
+      "subject_eligibility": "DECLARED_ADULT"
     }
   ],
   "checks": [

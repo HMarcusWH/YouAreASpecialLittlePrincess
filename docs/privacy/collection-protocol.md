@@ -36,12 +36,14 @@ Repeat photos are captures of the same specimen. A second session creates new sp
 - repeated bytes [`DUPLICATE_CAPTURE_BYTES`];
 - repeats filed under another page [`REPEAT_CROSSES_SPECIMEN`];
 - two specimens for the same writer, task and session [`DUPLICATE_SPECIMEN_IN_SESSION`];
+- a session index that is not in the protocol's session plan [`UNKNOWN_SESSION`];
+- two writer rows sharing one enrollment [`DUPLICATE_ID`];
 - writers not declared adult [`INELIGIBLE_WRITER`];
 - context status that contradicts the declared script or language [`CONTEXT_STATUS_MISMATCH`];
 - language/task mixing [`TASK_LANGUAGE_MISMATCH`];
 - claimed counts that the lineage does not support [`COUNT_MISMATCH`].
 
-Counts are reported per task, so copied and free writing, and Swedish and English, are never pooled.
+Counts are reported per task, so copied and free writing, and Swedish and English, are never pooled. The check treats a manifest as a human release by default and rejects synthetic manifests there [`SYNTHETIC_IN_HUMAN_RELEASE`]. Repository fixtures are checked in non-release mode, and their summary stays marked synthetic.
 
 ## Unsupported contexts
 
@@ -53,7 +55,7 @@ Only adults who declare eligibility themselves take part; the age threshold per 
 
 ## Handoff to T11 once the gate is approved
 
-1. Record the eleven gate decisions and approval in `pilot_gate.json`, with evidence kept outside Git. Move the pilot notice to `ACTIVE` with its effective window.
+1. Record all eleven gate decisions and the approval in `pilot_gate.json`, with evidence kept outside Git. The validator requires every decision key to be present; removing one fails. Approving the protocol also requires decided prompt rights for every task. Move the pilot notice to `ACTIVE` with its effective window.
 2. Implement collection tooling that writes consent events and a collection manifest in the shapes defined here. Store images and signed agreements only in protected storage.
 3. Run `python tools/validate_consent_protocol.py` and `check_collection_manifest` on every pilot release manifest before annotation or splitting.
 4. Exercise withdrawal and deletion before the first corpus release.

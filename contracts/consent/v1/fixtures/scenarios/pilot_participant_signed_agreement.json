@@ -63,7 +63,8 @@
         "kind": "SIGNED_AGREEMENT",
         "ref": "evd_1001",
         "status": "RECORDED"
-      }
+      },
+      "subject_eligibility": "DECLARED_ADULT"
     },
     {
       "contract_version": "consent-event/v1",
@@ -99,7 +100,8 @@
         "kind": "SIGNED_AGREEMENT",
         "ref": "evd_1002",
         "status": "RECORDED"
-      }
+      },
+      "subject_eligibility": "DECLARED_ADULT"
     },
     {
       "contract_version": "consent-event/v1",
@@ -135,7 +137,8 @@
         "kind": "UI_INTERACTION",
         "ref": "evd_1003",
         "status": "RECORDED"
-      }
+      },
+      "subject_eligibility": "DECLARED_ADULT"
     },
     {
       "contract_version": "consent-event/v1",
@@ -171,7 +174,8 @@
         "kind": "SIGNED_AGREEMENT",
         "ref": "evd_1004",
         "status": "RECORDED"
-      }
+      },
+      "subject_eligibility": "DECLARED_ADULT"
     },
     {
       "contract_version": "consent-event/v1",
@@ -207,7 +211,8 @@
         "kind": "UI_INTERACTION",
         "ref": "evd_1005",
         "status": "RECORDED"
-      }
+      },
+      "subject_eligibility": "DECLARED_ADULT"
     }
   ],
   "checks": [
