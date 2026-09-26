@@ -1,3 +1,4 @@
+# trigger third-pass regeneration
 name: Temporary roadmap regeneration
 
 on:
