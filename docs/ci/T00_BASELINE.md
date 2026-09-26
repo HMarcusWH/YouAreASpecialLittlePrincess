@@ -130,6 +130,8 @@ These are local results. Exact-head GitHub Actions evidence for the PR head is r
 
 The Codex review of the T00A head found that an inactive environment marker on a `build-system.requires` entry skipped the manifest and exact-pin checks, while the entry's raw name still counted as declaring the backend provider. Build requirements must now be marker-free, and the provider must be declared unconditionally. Backend-reported requirements are validated whatever their marker says. Regressions: `test_build_requirements_must_be_unconditional[*]` and the updated `test_backend_reported_requirement_must_be_a_declared_reviewed_build_requirement`.
 
+Codex's re-review then found that `requires-python` was never checked, so widening it (to `>=3.9`, for example) passed while advertising unreviewed interpreters. The policy now derives the reviewed minors from the `# Python X.Y` headers of `requirements/ci-py*.lock`. `requires-python` must fully cover exactly those minors, and a missing value fails. Regressions: `test_requires_python_matches_reviewed_interpreters[*]`, `test_reviewed_interpreters_come_from_the_repository_locks` and `test_cli_checks_requires_python_against_discovered_locks`.
+
 ### Supported build configuration and residual trust
 
 The supported configuration is a pyproject-only setuptools project with an explicit `setuptools.build_meta` backend, exact reviewed build pins, and static dependency metadata. See the [requirements README](../../requirements/README.md#supported-build-configuration). Residual trust remains in three places:

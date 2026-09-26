@@ -18,6 +18,7 @@ from pathlib import Path
 
 from packaging.markers import default_environment
 from packaging.requirements import InvalidRequirement, Requirement
+from packaging.specifiers import InvalidSpecifier, SpecifierSet
 from packaging.utils import InvalidWheelFilename, parse_wheel_filename
 from packaging.version import InvalidVersion, Version
 
@@ -223,9 +224,55 @@ def dependency_records(data: dict, extras: list[str]) -> list[tuple[str, str, li
     return records
 
 
-def validate(pyproject: Path, manifest: Path, extras: list[str]) -> list[str]:
+def reviewed_interpreters(requirements_dir: Path) -> set[tuple[int, int]]:
+    """Python minors that have a reviewed, target-stamped CI lock."""
+    minors = set()
+    for lock in sorted(requirements_dir.glob("ci-py*.lock")):
+        target = read_lock_target(lock)
+        if target is not None:
+            major, minor = target[0].split(".")
+            minors.add((int(major), int(minor)))
+    return minors
+
+
+def requires_python_errors(data: dict, reviewed: set[tuple[int, int]]) -> list[str]:
+    """requires-python must advertise exactly the interpreters that have reviewed locks."""
+    if not reviewed:
+        return ["No reviewed interpreter locks found; requires-python cannot be checked"]
+    raw = table(data, "project").get("requires-python")
+    supported = ", ".join(f"{major}.{minor}" for major, minor in sorted(reviewed))
+    if not isinstance(raw, str) or not raw.strip():
+        return [f"[project].requires-python must bound support to the reviewed interpreters ({supported})"]
+    try:
+        spec = SpecifierSet(raw)
+    except InvalidSpecifier as exc:
+        return [f"Invalid [project].requires-python {raw!r}: {exc}"]
+
+    def covers(major: int, minor: int) -> list[bool]:
+        return [spec.contains(f"{major}.{minor}.{patch}") for patch in (0, 99)]
+
+    errors = []
+    for major, minor in sorted(reviewed):
+        if not all(covers(major, minor)):
+            errors.append(f"requires-python {raw!r} does not fully support reviewed Python {major}.{minor}")
+    unreviewed = [
+        f"{major}.{minor}"
+        for major in (2, 3, 4)
+        for minor in range(0, 50)
+        if (major, minor) not in reviewed and any(covers(major, minor))
+    ]
+    if unreviewed:
+        shown = ", ".join(unreviewed[:4]) + (f" and {len(unreviewed) - 4} more" if len(unreviewed) > 4 else "")
+        errors.append(f"requires-python {raw!r} advertises Python versions with no reviewed lock or CI job: {shown}")
+    return errors
+
+
+def validate(pyproject: Path, manifest: Path, extras: list[str],
+             reviewed_pythons: set[tuple[int, int]] | None = None) -> list[str]:
     data = load_pyproject(pyproject)
     errors = build_configuration_errors(pyproject, data)
+    if reviewed_pythons is not None:
+        errors += requires_python_errors(data, reviewed_pythons)
     reviewed = read_manifest(manifest)
 
     optional = table(table(data, "project"), "optional-dependencies")
@@ -535,6 +582,9 @@ def is_exact_pin(requirement: Requirement, version: Version) -> bool:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--pyproject", type=Path, default=Path("pyproject.toml"))
+    parser.add_argument(
+        "--requirements-dir", type=Path, help="directory of target-stamped ci-py*.lock files (default: <pyproject dir>/requirements)"
+    )
     parser.add_argument("--manifest", type=Path, required=True)
     parser.add_argument("--extra", action="append", default=[])
     parser.add_argument("--lock", type=Path, help="hash lock whose active Requires-Dist graph must be closed")
@@ -551,7 +601,8 @@ def main(argv: list[str] | None = None) -> int:
     if (args.lock is None) != (args.wheelhouse is None):
         parser.error("--lock and --wheelhouse must be given together")
 
-    errors = validate(args.pyproject, args.manifest, args.extra)
+    requirements_dir = args.requirements_dir or args.pyproject.resolve().parent / "requirements"
+    errors = validate(args.pyproject, args.manifest, args.extra, reviewed_interpreters(requirements_dir))
     # Later stages trust the static configuration (backend allowlist, no
     # setup.py/setup.cfg); never execute backend code when it failed.
     if args.lock is not None and not errors:

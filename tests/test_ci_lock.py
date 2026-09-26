@@ -802,6 +802,13 @@ def test_backend_hooks_never_run_when_static_policy_fails(tmp_path, monkeypatch,
 
 def test_cli_combines_static_graph_and_backend_checks(tmp_path, monkeypatch, capsys):
     pyproject, manifest, lock, wheelhouse = write_graph_fixture(tmp_path, {"parentpkg": ("1.0", [])})
+    pyproject.write_text(
+        pyproject.read_text(encoding="utf-8").replace('version = "0.1.0"', 'version = "0.1.0"\nrequires-python = ">=3.10,<3.13"'),
+        encoding="utf-8",
+    )
+    (tmp_path / "requirements").mkdir()
+    for minor in (10, 11, 12):
+        (tmp_path / "requirements" / f"ci-py3{minor}.lock").write_text(f"# Python 3.{minor}; Linux x86_64.\n", encoding="utf-8")
     monkeypatch.setattr(
         verify_project_dependency_policy,
         "capture_backend_requirements",
@@ -816,3 +823,50 @@ def test_cli_combines_static_graph_and_backend_checks(tmp_path, monkeypatch, cap
     assert exit_code == 0
     assert "Closed locked graph: 3 distributions, 0 active edges" in output
     assert "Backend-reported build requirements: wheel=[], editable=[], sdist=[]" in output
+
+
+REVIEWED_PYTHONS = {(3, 10), (3, 11), (3, 12)}
+
+
+@pytest.mark.parametrize(
+    ("requires_python", "expected"),
+    [
+        (">=3.10,<3.13", []),
+        # Codex review of #12: widening the advertised range passed every other check.
+        (">=3.9", ["requires-python '>=3.9' advertises Python versions with no reviewed lock or CI job: "
+                   "3.9, 3.13, 3.14, 3.15 and 84 more"]),
+        (">=3.10,<3.14", ["requires-python '>=3.10,<3.14' advertises Python versions with no reviewed lock or CI job: 3.13"]),
+        (">=3.10,<3.12", ["requires-python '>=3.10,<3.12' does not fully support reviewed Python 3.12"]),
+        (">=3.10,<3.13,!=3.11.*", ["requires-python '>=3.10,<3.13,!=3.11.*' does not fully support reviewed Python 3.11"]),
+        (None, ["[project].requires-python must bound support to the reviewed interpreters (3.10, 3.11, 3.12)"]),
+    ],
+)
+def test_requires_python_matches_reviewed_interpreters(tmp_path, requires_python, expected):
+    body = MINIMAL_PROJECT if requires_python is None else MINIMAL_PROJECT.replace(
+        'version = "0.1.0"', f'version = "0.1.0"\nrequires-python = "{requires_python}"'
+    )
+    pyproject, manifest = write_policy_fixture(tmp_path, body, "")
+
+    assert verify_project_dependency_policy.validate(pyproject, manifest, ["dev"], REVIEWED_PYTHONS) == expected
+
+
+def test_reviewed_interpreters_come_from_the_repository_locks():
+    root = Path(__file__).resolve().parents[1]
+    assert verify_project_dependency_policy.reviewed_interpreters(root / "requirements") == REVIEWED_PYTHONS
+    data = verify_project_dependency_policy.load_pyproject(root / "pyproject.toml")
+    assert verify_project_dependency_policy.requires_python_errors(data, REVIEWED_PYTHONS) == []
+
+
+def test_cli_checks_requires_python_against_discovered_locks(tmp_path, capsys):
+    pyproject, manifest = write_policy_fixture(
+        tmp_path, MINIMAL_PROJECT.replace('version = "0.1.0"', 'version = "0.1.0"\nrequires-python = ">=3.10"'), ""
+    )
+    assert verify_project_dependency_policy.main(["--pyproject", str(pyproject), "--manifest", str(manifest)]) == 1
+    assert "No reviewed interpreter locks found" in capsys.readouterr().out
+
+    locks = tmp_path / "requirements"
+    locks.mkdir()
+    for minor in (10, 11, 12):
+        (locks / f"ci-py3{minor}.lock").write_text(f"# Python 3.{minor}; Linux x86_64.\n", encoding="utf-8")
+    assert verify_project_dependency_policy.main(["--pyproject", str(pyproject), "--manifest", str(manifest)]) == 1
+    assert "advertises Python versions with no reviewed lock or CI job: 3.13" in capsys.readouterr().out
