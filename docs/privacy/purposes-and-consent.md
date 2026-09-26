@@ -36,7 +36,7 @@ The permission ledger is append-only. Each `GRANT`, `DENY` or `WITHDRAW` event c
 
 Evidence such as signed agreements lives in protected storage and is referenced by an opaque ID. Events are never edited. A correction is a new event.
 
-An event is **invalid** and never changes state when any of these hold (validator codes in brackets):
+A grant with any of the following defects is invalid and cannot add permission. An authorized denial or withdrawal with a semantic defect is **not silently discarded**: it makes the context `AMBIGUOUS_RESTRICTION` and blocks permission until reconciled. This includes verified support and system withdrawals; they use the same actor-authority predicate as event validation. Schema-invalid or duplicate-ID ledgers also block the context. The defect codes are:
 
 - The purpose is unknown [`UNKNOWN_PURPOSE`]. A grant targets a purpose that is not offered [`PURPOSE_NOT_OFFERED`], or one that is still a draft outside synthetic fixtures [`PURPOSE_NOT_APPROVED`].
 - The scope kind is not allowed for the purpose [`SCOPE_NOT_ALLOWED`], or a subject-wide scope names someone else [`SCOPE_SUBJECT_MISMATCH`]. A denial or withdrawal may always be subject-wide, for example on account deletion, and then covers every narrower grant.
@@ -53,6 +53,7 @@ An event is **invalid** and never changes state when any of these hold (validato
 
 `evaluate_permission(subject, purpose@version, scope, at)` in [validate_consent_protocol.py](../../tools/validate_consent_protocol.py) is the reference semantics:
 
+0. A malformed/ambiguous context returns `INVALID_CONTEXT`; an inconsistent writer authority timeline returns `INVALID_AUTHORITY`. Pure reference evaluation is not release authority; human releases require the sealed context built from a compiled policy.
 1. The purpose is unknown or not offered → `NOT_OFFERED`. It is still a draft → `NOT_APPROVED`, unless the evaluator runs in fixture mode for synthetic scenarios. Draft purposes never permit a real decision.
 2. The purpose requires an adult declaration and the writer's current eligibility is not `DECLARED_ADULT` → `INELIGIBLE`. The grant must also have been captured with `DECLARED_ADULT` (see above).
 3. The query scope kind is not one the purpose grants → `SCOPE_NOT_GRANTABLE`. A broad grant never authorizes a use the purpose does not offer.
@@ -72,3 +73,19 @@ A material change to what a purpose means creates a new `purpose_version`. Grant
 - T04/T15/T19/T22 re-check permission at publication time.
 - T24 executes deletion.
 - The payment ledger (T19) never writes consent events.
+
+### Notice activation and complete release validation
+
+A non-draft notice now records `decided_by_role` and `decided_on` alongside its
+`decision_ref`. They are included in the activation content digest. The activation
+decision must precede or coincide with `effective_from`; a rehashed backdated
+activation is still invalid (`NOTICE_ACTIVATION_BACKDATED`). Draft values stay
+null. Notice endings and purpose retirement keep their own bound transition
+records and validate chronology in the shared predicate as well as the diagnostic
+checker. A malformed member, duplicate version or overlapping window invalidates
+the authoritative notice registry; no dictionary silently selects a version.
+
+All policy documents now pass the same schema/uniqueness/semantic pipeline before
+a human release can use them. [The boundary handoff](validated-release-boundary.md)
+describes the stronger release-readiness rules and the distinction between
+content consistency, authenticated decisions and actual runtime publication.

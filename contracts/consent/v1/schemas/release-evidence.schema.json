@@ -1,0 +1,120 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:princess:contracts:consent:v1:release-evidence",
+  "title": "ReleaseEvidence",
+  "$comment": "Reference attestation only: evidence pointers refer to protected storage. T02/T11 must attest actual current checks and fence atomic publication. No production approval is issued by this schema.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract_version",
+    "policy_sha256",
+    "manifest_sha256",
+    "consent_events_sha256",
+    "checked_at",
+    "checks",
+    "approval"
+  ],
+  "properties": {
+    "contract_version": {
+      "const": "release-evidence/v1"
+    },
+    "policy_sha256": {
+      "$ref": "common.schema.json#/$defs/sha256"
+    },
+    "manifest_sha256": {
+      "$ref": "common.schema.json#/$defs/sha256"
+    },
+    "consent_events_sha256": {
+      "$ref": "common.schema.json#/$defs/sha256"
+    },
+    "checked_at": {
+      "$ref": "common.schema.json#/$defs/timestamp"
+    },
+    "checks": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "WITHDRAWAL_RECONCILIATION",
+        "DELETION_PROPAGATION",
+        "RESTORE_TOMBSTONES"
+      ],
+      "properties": {
+        "WITHDRAWAL_RECONCILIATION": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "status",
+            "evidence_ref",
+            "evidence_sha256"
+          ],
+          "properties": {
+            "status": {
+              "enum": [
+                "PENDING",
+                "PASS",
+                "FAIL"
+              ]
+            },
+            "evidence_ref": {
+              "$ref": "common.schema.json#/$defs/opaque_id"
+            },
+            "evidence_sha256": {
+              "$ref": "common.schema.json#/$defs/sha256"
+            }
+          }
+        },
+        "DELETION_PROPAGATION": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "status",
+            "evidence_ref",
+            "evidence_sha256"
+          ],
+          "properties": {
+            "status": {
+              "enum": [
+                "PENDING",
+                "PASS",
+                "FAIL"
+              ]
+            },
+            "evidence_ref": {
+              "$ref": "common.schema.json#/$defs/opaque_id"
+            },
+            "evidence_sha256": {
+              "$ref": "common.schema.json#/$defs/sha256"
+            }
+          }
+        },
+        "RESTORE_TOMBSTONES": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "status",
+            "evidence_ref",
+            "evidence_sha256"
+          ],
+          "properties": {
+            "status": {
+              "enum": [
+                "PENDING",
+                "PASS",
+                "FAIL"
+              ]
+            },
+            "evidence_ref": {
+              "$ref": "common.schema.json#/$defs/opaque_id"
+            },
+            "evidence_sha256": {
+              "$ref": "common.schema.json#/$defs/sha256"
+            }
+          }
+        }
+      }
+    },
+    "approval": {
+      "$ref": "purpose-registry.schema.json#/$defs/approval"
+    }
+  }
+}

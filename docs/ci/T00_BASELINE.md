@@ -158,3 +158,27 @@ The supported configuration is a pyproject-only setuptools project with an expli
 - downstream source builds outside CI, which resolve the exact `build-system.requires` pins from their own index without these hashes.
 
 New ecosystems (T28) must extend these checks deliberately.
+
+
+## PR #12 — structural invariant repair after review 13
+
+Baseline: `1667d72cffed9c46c361bfb7bf273535c6f9417b`. The previous YAML-reader
+history above is preserved as historical evidence; that reader is now removed.
+Strict target JSON plus the complete generated workflow replace its coverage
+inference. Whole-minor support is compared as an exact interval, not a sample grid.
+The full mandatory job, runtime bindings, commands and trigger configuration must
+match the reviewed renderer. Symlinked policy/lock artifacts are not evidence.
+
+The local hash-locked Python 3.12.14 replay passes **633 tests**: all 436 existing
+cases retained and 197 additional cases. Nine isolated fault-removal controls each
+produce exercised assertion failures, and the unmodified implementation passes.
+The canonical workflow runs those controls on every target. Dependency graph,
+backend hooks, exact environment, contract compilers, validators, research checks,
+offline wheel build, installed-wheel smoke and roadmap checks all passed locally.
+Actual 3.10/3.11/3.12 Actions results are recorded on the exact PR commit, not inferred
+from the local 3.12 run. See [machine-readable evidence](PR12_INVARIANTS.json) and
+[the release-boundary handoff](../privacy/validated-release-boundary.md).
+
+No runtime dependency or lock changed. No source, retention or owner decision was
+fabricated. The numerical core and research imports are unchanged. Rollback reverts
+the structural repair, not any protected consent history or owner decisions.

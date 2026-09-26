@@ -27,6 +27,8 @@ try:
 except ModuleNotFoundError:  # Python 3.10
     import tomli as tomllib
 
+from render_ci_workflow import require_regular_file, verified_targets
+
 from verify_ci_lock import read_lock, read_lock_target, read_manifest, running_target
 
 # The explicitly supported build configuration. Each backend maps to the
@@ -46,17 +48,6 @@ UNFIXED_MARKER_VARIABLES = frozenset({
     "python_full_version", "implementation_version", "platform_release", "platform_version",
     "platform_python_implementation", "implementation_name",
 })
-
-# Where the lock-testing jobs live in .github/workflows/ci.yml.
-CI_MATRIX_PATH = ("jobs", "test", "strategy", "matrix", "include")
-YAML_KEY = re.compile(r"""(?P<key>[A-Za-z0-9_.-]+|'[^']*'|"[^"]*")\s*:(?:\s+(?P<value>.*))?$""")
-YAML_BLOCK_HEADER = re.compile(r"[|>][-+0-9]*(\s+#.*)?")
-# Anchors, aliases, tags, directives and reserved indicators: the reader never resolves them.
-YAML_UNREAD_INDICATORS = "&*!%@`"
-# Plain scalars YAML 1.1 or 1.2 may resolve to a number, boolean, null or timestamp: 3.10 is the float 3.1.
-YAML_PLAIN_NON_STRING = re.compile(r"[-+.~0-9].*|(?i:y|n|yes|no|on|off|true|false|null)")
-# The value of a flow collection, block scalar or non-string plain scalar: never a version or path.
-YAML_NOT_A_STRING = object()
 
 BACKEND_HOOKS = ("get_requires_for_build_wheel", "get_requires_for_build_editable", "get_requires_for_build_sdist")
 
@@ -279,169 +270,22 @@ def dependency_records(data: dict, extras: list[str]) -> list[tuple[str, str, li
     return records
 
 
-class UnsupportedWorkflowYaml(ValueError):
-    """The workflow uses YAML the matrix reader does not interpret exactly, so none of it is trusted."""
-
-    def __init__(self, line: int, reason: str):
-        super().__init__(f"line {line}: {reason}")
-
-
-def _yaml_flow_end(value: str) -> int | None:
-    """Index just past a flow collection that closes on this line, or None."""
-    depth, quote, index = 0, None, 0
-    while index < len(value):
-        char = value[index]
-        if quote:
-            if quote == '"' and char == "\\":
-                index += 1
-            elif char == quote:
-                quote = None
-        elif char in "'\"":
-            quote = char
-        elif char in "[{":
-            depth += 1
-        elif char in "]}":
-            depth -= 1
-            if depth == 0:
-                return index + 1
-        index += 1
-    return None
-
-
-def _yaml_inline(value: str, line: int):
-    """A one-line scalar's text, or YAML_NOT_A_STRING; anything YAML could continue onto the next line is refused."""
-    value = value.strip()
-    head = value[:1]
-    if head in ("'", '"'):
-        index, end = 1, None
-        while index < len(value):
-            if head == '"' and value[index] == "\\":
-                index += 2
-                continue
-            if value[index] == head:
-                if head == "'" and value[index + 1:index + 2] == "'":
-                    index += 2
-                    continue
-                end = index
-                break
-            index += 1
-        if end is None:
-            raise UnsupportedWorkflowYaml(line, "a quoted scalar continues onto the next line")
-        if value[end + 1:].strip() and not re.match(r"\s+#", value[end + 1:]):
-            raise UnsupportedWorkflowYaml(line, "text follows a quoted scalar")
-        # Double-quoted escapes stay undecoded: such a value never equals a plain version or path.
-        return value[1:end].replace("''", "'") if head == "'" else value[1:end]
-    if head in ("[", "{"):
-        end = _yaml_flow_end(value)
-        if end is None:
-            raise UnsupportedWorkflowYaml(line, "a flow collection continues onto the next line")
-        if value[end:].strip() and not re.match(r"\s+#", value[end:]):
-            raise UnsupportedWorkflowYaml(line, "text follows a flow collection")
-        return YAML_NOT_A_STRING  # opaque: never a mapping the reader descends into
-    if head and head in YAML_UNREAD_INDICATORS:
-        raise UnsupportedWorkflowYaml(line, f"{head!r} (anchor, alias, tag or reserved indicator) is not resolved")
-    text = re.split(r"\s#", value, maxsplit=1)[0].strip()
-    return YAML_NOT_A_STRING if YAML_PLAIN_NON_STRING.fullmatch(text) else text
-
-
-def _yaml_structure(text: str):
-    """(line, path, key, value) for each block-style node line of a workflow.
-
-    A strict subset of YAML: mappings and sequences in block style whose
-    scalars end on their own line, plus | and > block scalars, whose text is
-    skipped. `path` locates the mapping that holds `key` (mapping keys, and
-    sequence positions as ints); a sequence item without a key has key None
-    and the item's own path. `value` is None when a nested node follows, the
-    text of a quoted or plain string, or YAML_NOT_A_STRING. Anything that
-    could make YAML read text as structure, or structure as text, raises
-    UnsupportedWorkflowYaml: multi-line quoted or plain scalars, multi-line
-    flow collections, anchors, aliases, tags, tabs in indentation, duplicate
-    keys, indentation that does not continue an open mapping or sequence,
-    and lines that are neither a key nor an item.
-    """
-    levels: list[dict] = []  # open block nodes, outermost first
-    pending: tuple[int, tuple] | None = (-1, ())  # (column, path) of a node that may open on the next line
-    block_indent = None  # inside a block scalar, lines indented beyond this are its text
-    for number, raw in enumerate(text.splitlines(), start=1):
-        stripped = raw.strip()
-        indent = len(raw) - len(raw.lstrip(" "))
-        if block_indent is not None:
-            if not stripped or indent > block_indent:
-                continue
-            block_indent = None
-        if not stripped or stripped.startswith("#"):
-            continue
-        if raw[indent] == "\t":
-            raise UnsupportedWorkflowYaml(number, "tabs in indentation")
-        is_item = stripped == "-" or stripped.startswith("- ")
-        body = stripped[1:].lstrip() if is_item else stripped
-        column = len(raw) - len(body)
-        kind = "seq" if is_item else "map"
-        # A key's nested node opens deeper than the key, or as a sequence at the key's own indentation.
-        if pending is not None and (indent > pending[0] or (is_item and indent == pending[0])):
-            levels.append({"indent": indent, "kind": kind, "path": pending[1], "keys": set(), "items": 0})
-        else:
-            if pending is None and levels and indent > levels[-1]["indent"]:
-                raise UnsupportedWorkflowYaml(number, "a scalar from the line above continues onto this line")
-            while levels and (levels[-1]["indent"] > indent or (levels[-1]["indent"] == indent and levels[-1]["kind"] != kind
-                                                                   and len(levels) > 1 and levels[-2]["indent"] == indent)):
-                levels.pop()
-            if not levels or (levels[-1]["indent"], levels[-1]["kind"]) != (indent, kind):
-                raise UnsupportedWorkflowYaml(number, "indentation does not continue an open mapping or sequence")
-        if not body:
-            raise UnsupportedWorkflowYaml(number, "an item whose node starts on the next line")
-        container = levels[-1]
-        if is_item:
-            container = {"indent": column, "kind": "map", "path": (*container["path"], container["items"]),
-                         "keys": set(), "items": 0}
-            levels[-1]["items"] += 1
-        match = YAML_KEY.match(body)
-        if match:
-            # Plain keys keep their text: none on the matrix path (jobs, test, ..., lock) resolves to a non-string.
-            key = _yaml_inline(match["key"], number) if match["key"][0] in "'\"" else match["key"]
-            if is_item:
-                levels.append(container)
-            if key in container["keys"]:
-                raise UnsupportedWorkflowYaml(number, f"duplicate key {key!r}")
-            container["keys"].add(key)
-            raw_value = (match["value"] or "").strip()
-        elif is_item:
-            key, raw_value = None, body
-        else:
-            raise UnsupportedWorkflowYaml(number, "neither a 'key: value' mapping line nor a '- ' item")
-        pending = None
-        if not raw_value or raw_value.startswith("#"):
-            if key is None:
-                raise UnsupportedWorkflowYaml(number, "an item whose node starts on the next line")
-            value = None
-            pending = (column, (*container["path"], key))
-        elif YAML_BLOCK_HEADER.fullmatch(raw_value):
-            value = YAML_NOT_A_STRING  # its text is skipped, never read as structure
-            block_indent = column if match else indent
-        else:
-            value = _yaml_inline(raw_value, number)
-        yield number, container["path"], key, value
+class UnsupportedWorkflowConfiguration(ValueError):
+    """Non-canonical workflow/targets cannot supply evidence of mandatory coverage."""
 
 
 def ci_matrix(workflow: Path) -> list[tuple[str, str, str]]:
-    """(python, manifest, lock) for each include entry of the workflow's jobs.test.strategy.matrix.
+    """Read reviewed target JSON only after exact verification of the entire workflow.
 
-    Only block-style mappings are read, and only string values count. Text
-    inside scalars or comments, other jobs, values nested inside an entry and
-    flow-style matrices never count, so an unparsed layout yields no jobs and
-    every lock fails closed as untested. YAML outside the subset
-    _yaml_structure() reads exactly raises UnsupportedWorkflowYaml.
+    No YAML parser, ignored job controls, fake matrix text or optional test jobs.
     """
     if not workflow.is_file():
         return []
-    entries: dict[int, dict] = {}
-    for _line, path, key, value in _yaml_structure(workflow.read_text(encoding="utf-8")):
-        if len(path) == len(CI_MATRIX_PATH) + 1 and path[:-1] == CI_MATRIX_PATH and isinstance(path[-1], int):
-            entry = entries.setdefault(path[-1], {})
-            if key is not None:
-                entry[key] = value
-    return [(e["python"], e["manifest"], e["lock"]) for _index, e in sorted(entries.items())
-            if all(isinstance(e.get(field), str) for field in ("python", "manifest", "lock"))]
+    try:
+        targets = verified_targets(workflow.absolute().parents[2], workflow)
+    except (OSError, ValueError, TypeError, IndexError) as exc:
+        raise UnsupportedWorkflowConfiguration(str(exc)) from exc
+    return [(t["python"], t["manifest"], t["lock"]) for t in targets]
 
 
 def interpreter_coverage(requirements_dir: Path, workflow: Path | None = None) -> tuple[set[tuple[int, int]], list[str]]:
@@ -451,17 +295,28 @@ def interpreter_coverage(requirements_dir: Path, workflow: Path | None = None) -
     CI actually downloads, installs and tests that lock on that Python.
     """
     workflow = workflow or requirements_dir.resolve().parent / ".github" / "workflows" / "ci.yml"
-    root = requirements_dir.resolve().parent
+    root = requirements_dir.absolute().parent
     minors: set[tuple[int, int]] = set()
     errors: list[str] = []
     try:
         jobs = ci_matrix(workflow)
-    except UnsupportedWorkflowYaml as exc:
+    except UnsupportedWorkflowConfiguration as exc:
         jobs = []
-        errors.append(f"{workflow.name} {exc}; the CI matrix is read only from plain block YAML, so no lock counts as tested")
+        errors.append(f"{workflow.name} {exc}; no lock counts as tested")
+    for python, manifest_name, lock_name in jobs:
+        if not (root / lock_name).is_file() or not (root / manifest_name).is_file():
+            errors.append(f"CI target {python} lacks its manifest/lock; coverage is incomplete")
     for lock in sorted(requirements_dir.glob("ci-py*.lock")):
+        try:
+            require_regular_file(lock)
+            if lock.with_suffix(".txt").exists():
+                require_regular_file(lock.with_suffix(".txt"))
+        except (OSError, ValueError) as exc:
+            errors.append(str(exc))
+            continue
         target = read_lock_target(lock)
-        if target is None:
+        if target is None or target[1:] != ("Linux", "x86_64"):
+            errors.append(f"{lock.name} has no supported Linux x86_64 target stamp")
             continue
         manifest = lock.with_suffix(".txt")
         relative = lock.resolve().relative_to(root).as_posix()
@@ -496,9 +351,9 @@ def requires_python_errors(data: dict, reviewed: set[tuple[int, int]]) -> list[s
         return [f"Invalid [project].requires-python {raw!r}: {exc}"]
 
     # Only whole-minor >= and < bounds are accepted. Their intersection is one
-    # interval whose ends fall on minor boundaries, so probing the first and a
-    # late patch of each minor below is exact. Exclusions such as !=3.11.5,
-    # wildcards, ~= and patch-level bounds would slip between those probes.
+    # interval whose boundaries can be compared exactly without sampling patches
+    # or enumerating a finite grid of minors. Exclusions, wildcards and patch-only
+    # bounds are outside this reviewed whole-minor contract.
     shapes = []
     for clause in sorted(spec, key=str):
         try:
@@ -508,6 +363,7 @@ def requires_python_errors(data: dict, reviewed: set[tuple[int, int]]) -> list[s
         if (
             clause.operator not in (">=", "<")
             or version is None
+            or len(version.release) < 2
             or version.epoch
             or version.is_prerelease
             or version.is_postrelease
@@ -518,23 +374,18 @@ def requires_python_errors(data: dict, reviewed: set[tuple[int, int]]) -> list[s
     if shapes:
         return shapes
 
-    def covers(major: int, minor: int) -> list[bool]:
-        return [spec.contains(f"{major}.{minor}.{patch}") for patch in (0, 99)]
-
-    errors = []
-    for major, minor in sorted(reviewed):
-        if not all(covers(major, minor)):
-            errors.append(f"requires-python {raw!r} does not fully support reviewed Python {major}.{minor}")
-    unreviewed = [
-        f"{major}.{minor}"
-        for major in (2, 3, 4)
-        for minor in range(0, 50)
-        if (major, minor) not in reviewed and any(covers(major, minor))
-    ]
-    if unreviewed:
-        shown = ", ".join(unreviewed[:4]) + (f" and {len(unreviewed) - 4} more" if len(unreviewed) > 4 else "")
-        errors.append(f"requires-python {raw!r} advertises Python versions with no reviewed lock or CI job: {shown}")
-    return errors
+    lower = [Version(c.version).release[:2] for c in spec if c.operator == ">="]
+    upper = [Version(c.version).release[:2] for c in spec if c.operator == "<"]
+    if not lower or not upper:
+        return ["requires-python needs both a finite lower and upper whole-minor bound"]
+    first, last = min(reviewed), max(reviewed)
+    if first[0] != last[0] or len(reviewed) != last[1] - first[1] + 1:
+        return ["reviewed interpreters must be a contiguous set of whole minors"]
+    expected_upper = (last[0], last[1] + 1)
+    if max(lower) != first or min(upper) != expected_upper:
+        return [f"requires-python {raw!r} must equal the reviewed whole-minor interval "
+                f">={first[0]}.{first[1]},<{expected_upper[0]}.{expected_upper[1]}"]
+    return []
 
 
 def validate(pyproject: Path, manifest: Path, extras: list[str],

@@ -1,0 +1,192 @@
+{
+  "baseline_head": "1667d72cffed9c46c361bfb7bf273535c6f9417b",
+  "scope": "T00A/T03 structural release and CI contract repair",
+  "baseline_pytest": 436,
+  "post_repair_pytest": 633,
+  "added_cases": 197,
+  "local_python": "3.12.14",
+  "toolchain": "requirements/ci-py312.lock; hash-verified Actions export installed offline",
+  "baseline_reproductions": {
+    "valid_control": {
+      "issues": [],
+      "counts": [
+        3,
+        6,
+        7
+      ]
+    },
+    "duplicate_notice": {
+      "issues": [],
+      "counts": [
+        3,
+        6,
+        7
+      ]
+    },
+    "duplicate_purpose": {
+      "issues": [],
+      "counts": [
+        3,
+        6,
+        7
+      ]
+    },
+    "duplicate_retention": {
+      "issues": [],
+      "counts": [
+        3,
+        6,
+        7
+      ]
+    },
+    "duplicate_session": {
+      "issues": [],
+      "counts": [
+        3,
+        6,
+        7
+      ]
+    },
+    "unapproved_lineage": {
+      "issues": [],
+      "counts": [
+        3,
+        6,
+        7
+      ]
+    },
+    "activation_time_fields": [
+      "end_decided_by_role",
+      "end_decided_on"
+    ],
+    "changed_prompt": {
+      "standalone": [
+        "PROMPT_HASH_MISMATCH"
+      ],
+      "release": {
+        "issues": [],
+        "counts": [
+          3,
+          6,
+          7
+        ]
+      }
+    },
+    "overlapping_account_links": {
+      "scenario": [
+        "ACCOUNT_LINK_INCONSISTENT",
+        "SCENARIO_EXPECTATION"
+      ],
+      "event_issues": {
+        "evt_1501": [],
+        "evt_1502": [],
+        "evt_1503": [],
+        "evt_1504": [],
+        "evt_1505": [
+          "NO_AUTHOR_AUTHORITY"
+        ]
+      }
+    },
+    "deep_repeat_chain": "RecursionError",
+    "allowed_failure_coverage": [
+      [
+        "3.10",
+        "requirements/ci-py310.txt",
+        "requirements/ci-py310.lock"
+      ],
+      [
+        "3.11",
+        "requirements/ci-py311.txt",
+        "requirements/ci-py311.lock"
+      ],
+      [
+        "3.12",
+        "requirements/ci-py312.txt",
+        "requirements/ci-py312.lock"
+      ]
+    ]
+  },
+  "fault_controls": [
+    {
+      "fault": "duplicate_index",
+      "detected": true,
+      "calls": 382,
+      "pytest": "2 failed, 16 passed, 148 deselected in 0.35s"
+    },
+    {
+      "fault": "lineage_validation",
+      "detected": true,
+      "calls": 6,
+      "pytest": "2 failed, 6 passed, 158 deselected in 0.21s"
+    },
+    {
+      "fault": "retention_chronology",
+      "detected": true,
+      "calls": 1,
+      "pytest": "1 failed, 165 deselected in 0.08s"
+    },
+    {
+      "fault": "notice_activation",
+      "detected": true,
+      "calls": 1,
+      "pytest": "1 failed, 165 deselected in 0.08s"
+    },
+    {
+      "fault": "account_history",
+      "detected": true,
+      "calls": 1,
+      "pytest": "1 failed, 165 deselected in 0.07s"
+    },
+    {
+      "fault": "capture_ancestors",
+      "detected": true,
+      "calls": 1,
+      "pytest": "1 failed, 180 deselected in 0.11s"
+    },
+    {
+      "fault": "publication_evidence",
+      "detected": true,
+      "calls": 1,
+      "pytest": "1 failed, 165 deselected in 0.11s"
+    },
+    {
+      "fault": "approval_binding",
+      "detected": true,
+      "calls": 293,
+      "pytest": "15 failed, 151 deselected in 0.45s"
+    },
+    {
+      "fault": "mandatory_workflow",
+      "detected": true,
+      "calls": 14,
+      "pytest": "14 failed, 17 deselected in 0.23s"
+    }
+  ],
+  "local_checks": [
+    "exact canonical CI workflow",
+    "closed locked dependency graph",
+    "backend build-requirement hooks",
+    "exact installed environment",
+    "pip check",
+    "feature contract compiler freshness",
+    "Premium compiler freshness",
+    "all five graphology validators",
+    "consent policy/scenario/collection validator",
+    "compileall src",
+    "Ruff src tests tools",
+    "633 pytest cases",
+    "nine exercised fault-removal controls",
+    "research import/regressions",
+    "offline wheel build",
+    "installed wheel outside checkout",
+    "roadmap integrity and 13 roadmap unit tests",
+    "git diff --check"
+  ],
+  "not_claimed": [
+    "No real owner approval, consent, collection, source clearance, or pilot activation",
+    "No storage deletion system or atomic publication adapter implemented",
+    "Unkeyed digests do not authenticate decision makers",
+    "No proof that all possible defects are absent",
+    "Python 3.10/3.11 CI evidence is recorded separately on the exact PR commit after publication"
+  ]
+}

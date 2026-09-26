@@ -1,6 +1,9 @@
 """Regression tests for the T00 CI lock and dependency policy."""
 
 import subprocess
+import json
+
+import render_ci_workflow
 import venv
 import zipfile
 from pathlib import Path
@@ -889,14 +892,11 @@ def write_reviewed_interpreters(root, minors, ci_minors=None, manifests=None):
         (requirements / f"ci-py3{minor}.txt").write_text("", encoding="utf-8")
     workflow = root / ".github" / "workflows" / "ci.yml"
     workflow.parent.mkdir(parents=True, exist_ok=True)
-    workflow.write_text(
-        "jobs:\n  test:\n    strategy:\n      matrix:\n        include:\n" + "".join(
-            f"          - python: '3.{minor}'\n            manifest: requirements/ci-py3{minor}.txt\n"
-            f"            lock: requirements/ci-py3{minor}.lock\n"
-            for minor in (minors if ci_minors is None else ci_minors)
-        ),
-        encoding="utf-8",
-    )
+    targets = [{"python": f"3.{minor}", "manifest": f"requirements/ci-py3{minor}.txt",
+                "lock": f"requirements/ci-py3{minor}.lock", "system": "Linux", "machine": "x86_64"}
+               for minor in (minors if ci_minors is None else ci_minors)]
+    (requirements / "ci-targets.json").write_text(json.dumps({"version": 1, "targets": targets}), encoding="utf-8")
+    workflow.write_text(render_ci_workflow.render_workflow(targets), encoding="utf-8")
     return requirements, workflow
 WHOLE_MINOR = "is not a whole-minor bound; use only '>=X.Y' and '<X.Y'"
 
@@ -906,10 +906,9 @@ WHOLE_MINOR = "is not a whole-minor bound; use only '>=X.Y' and '<X.Y'"
     [
         (">=3.10,<3.13", []),
         # Codex review of #12: widening the advertised range passed every other check.
-        (">=3.9", ["requires-python '>=3.9' advertises Python versions with no reviewed lock or CI job: "
-                   "3.9, 3.13, 3.14, 3.15 and 84 more"]),
-        (">=3.10,<3.14", ["requires-python '>=3.10,<3.14' advertises Python versions with no reviewed lock or CI job: 3.13"]),
-        (">=3.10,<3.12", ["requires-python '>=3.10,<3.12' does not fully support reviewed Python 3.12"]),
+        (">=3.9", ["requires-python needs both a finite lower and upper whole-minor bound"]),
+        (">=3.10,<3.14", ["requires-python '>=3.10,<3.14' must equal the reviewed whole-minor interval >=3.10,<3.13"]),
+        (">=3.10,<3.12", ["requires-python '>=3.10,<3.12' must equal the reviewed whole-minor interval >=3.10,<3.13"]),
         (">=3.10.0,<3.13.0", []),
         (None, ["[project].requires-python must bound support to the reviewed interpreters (3.10, 3.11, 3.12)"]),
         # Codex re-review of #12: probing two patches per minor missed partial
@@ -948,7 +947,7 @@ def test_cli_checks_requires_python_against_discovered_locks(tmp_path, capsys):
 
     write_reviewed_interpreters(tmp_path, (10, 11, 12))
     assert verify_project_dependency_policy.main(["--pyproject", str(pyproject), "--manifest", str(manifest)]) == 1
-    assert "advertises Python versions with no reviewed lock or CI job: 3.13" in capsys.readouterr().out
+    assert "finite lower and upper whole-minor bound" in capsys.readouterr().out
 
 
 def test_repository_ci_matrix_tests_every_lock():
@@ -978,7 +977,7 @@ def test_lock_without_manifest_or_ci_job_is_not_reviewed(tmp_path, capsys):
     assert verify_project_dependency_policy.main(["--pyproject", str(pyproject), "--manifest", str(manifest)]) == 1
     output = capsys.readouterr().out
     assert "ci-py313.lock has no CI matrix job" in output
-    assert "advertises Python versions with no reviewed lock or CI job: 3.13" in output
+    assert "must equal the reviewed whole-minor interval >=3.10,<3.13" in output
 
 
 FAKE_313 = "- python: '3.13'\n{pad}  manifest: requirements/ci-py313.txt\n{pad}  lock: requirements/ci-py313.lock\n"
@@ -999,8 +998,8 @@ def test_only_real_matrix_entries_count_as_ci_jobs(tmp_path, decoy):
     requirements, workflow = write_reviewed_interpreters(tmp_path, (10, 11, 12, 13), ci_minors=(10, 11, 12))
     workflow.write_text(workflow.read_text(encoding="utf-8") + decoy, encoding="utf-8")
     reviewed, errors = verify_project_dependency_policy.interpreter_coverage(requirements, workflow)
-    assert reviewed == REVIEWED_PYTHONS
-    assert errors == ["requirements/ci-py313.lock has no CI matrix job for Python 3.13 in ci.yml; its interpreter is not reviewed"]
+    assert reviewed == set()
+    assert "canonical mandatory-job policy" in errors[0] and len(errors) == 5
 
 
 def test_flow_style_matrix_fails_closed(tmp_path):
@@ -1011,7 +1010,7 @@ def test_flow_style_matrix_fails_closed(tmp_path):
         encoding="utf-8",
     )
     reviewed, errors = verify_project_dependency_policy.interpreter_coverage(requirements, workflow)
-    assert reviewed == set() and len(errors) == 1
+    assert reviewed == set() and len(errors) == 2 and "canonical mandatory-job policy" in errors[0]
 
 
 def test_repository_workflow_matrix_is_parsed_structurally():
@@ -1051,7 +1050,7 @@ def test_yaml_outside_the_read_subset_untrusts_the_whole_matrix(tmp_path, snippe
     workflow.write_text(workflow.read_text(encoding="utf-8") + snippet, encoding="utf-8")
     reviewed, errors = verify_project_dependency_policy.interpreter_coverage(requirements, workflow)
     assert reviewed == set()
-    assert errors[0] == f"ci.yml {reason}{UNTRUSTED_MATRIX}"
+    assert "canonical mandatory-job policy" in errors[0]
     assert len(errors) == 5
 
 
@@ -1059,13 +1058,11 @@ def test_values_nested_in_an_entry_are_not_entries(tmp_path):
     requirements, workflow = write_reviewed_interpreters(tmp_path, (10, 11, 12, 13), ci_minors=(10, 11, 12))
     workflow.write_text(workflow.read_text(encoding="utf-8") + "            extra:\n              "
                         + FAKE_313.format(pad="              "), encoding="utf-8")
-    assert verify_project_dependency_policy.interpreter_coverage(requirements, workflow) == (
-        REVIEWED_PYTHONS,
-        ["requirements/ci-py313.lock has no CI matrix job for Python 3.13 in ci.yml; its interpreter is not reviewed"],
-    )
+    reviewed, errors = verify_project_dependency_policy.interpreter_coverage(requirements, workflow)
+    assert reviewed == set() and "canonical mandatory-job policy" in errors[0]
 
 
-def test_sequences_at_their_key_indentation_are_read(tmp_path):
+def test_alternative_yaml_layout_is_not_a_canonical_workflow(tmp_path):
     requirements, workflow = write_reviewed_interpreters(tmp_path, (10, 11))
     workflow.write_text(
         "jobs:\n  test:\n    strategy:\n      matrix:\n        include:\n" + "".join(
@@ -1074,16 +1071,16 @@ def test_sequences_at_their_key_indentation_are_read(tmp_path):
         ) + "    steps:\n    - run: pytest\n",
         encoding="utf-8",
     )
-    assert verify_project_dependency_policy.interpreter_coverage(requirements, workflow) == ({(3, 10), (3, 11)}, [])
+    reviewed, errors = verify_project_dependency_policy.interpreter_coverage(requirements, workflow)
+    assert reviewed == set() and "canonical mandatory-job policy" in errors[0]
 
 
 def test_unquoted_versions_are_numbers_not_matrix_strings(tmp_path):
     # YAML reads an unquoted 3.10 as the number 3.1, so that job would not run Python 3.10.
     requirements, workflow = write_reviewed_interpreters(tmp_path, (10,))
     workflow.write_text(workflow.read_text(encoding="utf-8").replace("python: '3.10'", "python: 3.10"), encoding="utf-8")
-    assert verify_project_dependency_policy.interpreter_coverage(requirements, workflow) == (
-        set(), ["requirements/ci-py310.lock has no CI matrix job for Python 3.10 in ci.yml; its interpreter is not reviewed"]
-    )
+    reviewed, errors = verify_project_dependency_policy.interpreter_coverage(requirements, workflow)
+    assert reviewed == set() and "canonical mandatory-job policy" in errors[0]
 
 
 @pytest.mark.parametrize(

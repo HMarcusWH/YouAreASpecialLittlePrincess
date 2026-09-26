@@ -35,3 +35,5 @@ The validator is stdlib-only. It enforces the JSON Schemas with a strict subset 
 ## Owner review checklist
 
 The eleven decisions in [pilot_gate.json](../../contracts/consent/v1/pilot_gate.json) must be recorded before T11 may recruit anyone. They cover controller and legal basis, age threshold, retention periods, aggregates after withdrawal, notice wording, the collection agreement, compensation, recruitment channels, processors/regions, annotator access and prompt rights. Record each decision outside Git where it contains personal or contractual data, and reference it by `decision:<id>`.
+
+- [Validated release boundary and migration](validated-release-boundary.md): compiled-policy API, immutable snapshots, release evidence, historical regression controls and runtime publication obligations.

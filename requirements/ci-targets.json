@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "targets": [
+    {
+      "python": "3.10",
+      "manifest": "requirements/ci-py310.txt",
+      "lock": "requirements/ci-py310.lock",
+      "system": "Linux",
+      "machine": "x86_64"
+    },
+    {
+      "python": "3.11",
+      "manifest": "requirements/ci-py311.txt",
+      "lock": "requirements/ci-py311.lock",
+      "system": "Linux",
+      "machine": "x86_64"
+    },
+    {
+      "python": "3.12",
+      "manifest": "requirements/ci-py312.txt",
+      "lock": "requirements/ci-py312.lock",
+      "system": "Linux",
+      "machine": "x86_64"
+    }
+  ]
+}

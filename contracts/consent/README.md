@@ -59,3 +59,16 @@ Approval of a purpose or notice binds the content originally approved. Later lif
 - malformed or edited lifecycle transitions fail closed in permission/notice evaluation.
 
 Human reference releases also reapply the standalone protocol/retention invariants they depend on: duplicate collection task IDs and retention classes without recorded decision references block release rather than being collapsed or inferred.
+
+## Compiled human-release handoff
+
+The shared policy validator checks all draft contracts together. A human release
+additionally requires `compile_release_policy` to succeed with all seven policy
+documents, then an authoritative context for the exact policy/manifest and the
+new `release-evidence/v1` attestation. The human endpoint returns either an
+immutable `ApprovedCollection` or issues with no value. Synthetic preview uses
+`check_fixture_collection_manifest` instead. Notice activations now include bound
+actor/time metadata. See [the API and trust-boundary handoff](../../docs/privacy/validated-release-boundary.md).
+
+There are twelve schema files after adding `release-evidence.schema.json`. The
+attestation contract does not manufacture real deletion evidence or owner approval.

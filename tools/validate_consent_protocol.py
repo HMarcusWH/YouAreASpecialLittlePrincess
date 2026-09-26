@@ -14,12 +14,20 @@ import argparse
 import copy
 import hashlib
 import itertools
+import math
+import os
+import stat
+from collections import Counter
 import json
 import re
 import sys
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, fields, replace
 from datetime import datetime, timezone
 from pathlib import Path
+
+from consent_primitives import (
+    Issue, ValidationResult, digest, freeze_json, input_tree_issues, rooted_nodes, unique_index,
+)
 
 ROOT = Path(__file__).resolve().parents[1]
 CONSENT_DIR = ROOT / "contracts" / "consent" / "v1"
@@ -96,16 +104,6 @@ GRANT_EVIDENCE = {
 TIMESTAMP = re.compile(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,6})?Z")
 
 
-@dataclass(frozen=True)
-class Issue:
-    code: str
-    where: str
-    message: str
-
-    def __str__(self) -> str:
-        return f"{self.code} {self.where}: {self.message}"
-
-
 # --------------------------------------------------------------------------- JSON
 
 
@@ -123,7 +121,16 @@ def load_json(path: Path):
     def constant(value):
         raise ValueError(f"non-finite JSON constant {value} in {path}")
 
-    return json.loads(path.read_text(encoding="utf-8"), object_pairs_hook=pairs, parse_constant=constant)
+    if path.stat().st_size > 32 * 1024 * 1024:
+        raise ValueError(f"JSON input exceeds 32 MiB: {path.name}")
+    try:
+        value = json.loads(path.read_text(encoding="utf-8"), object_pairs_hook=pairs, parse_constant=constant)
+    except RecursionError as exc:
+        raise ValueError(f"JSON nesting is too deep: {path.name}") from exc
+    issues = input_tree_issues(value, path.name)
+    if issues:
+        raise ValueError(str(issues[0]))
+    return value
 
 
 def parse_timestamp(value: str) -> datetime:
@@ -238,8 +245,8 @@ class SchemaSet:
             if not any(TYPE_CHECKS[t](value) for t in types):
                 fail(f"expected {'/'.join(types)}, got {type(value).__name__}")
                 return
-        if is_number(value) and isinstance(value, float) and value != value:
-            fail("NaN is not allowed")
+        if isinstance(value, float) and not math.isfinite(value):
+            fail("non-finite numbers are not allowed")
         if "const" in schema and not json_equal(value, schema["const"]):
             fail(f"must equal {schema['const']!r}")
         if "enum" in schema and not any(json_equal(value, option) for option in schema["enum"]):
@@ -286,12 +293,12 @@ def purpose_key(ref: dict) -> tuple[str, int]:
 
 
 def duplicates(values) -> list:
-    seen, repeated = set(), []
+    seen, repeated = set(), set()
     for value in values:
-        if value in seen and value not in repeated:
-            repeated.append(value)
+        if value in seen:
+            repeated.add(value)
         seen.add(value)
-    return repeated
+    return sorted(repeated, key=repr)
 
 
 def known_gates(tasks_json: Path = TASKS_JSON) -> set[str]:
@@ -321,7 +328,7 @@ def content_sha256(document: dict, lifecycle: tuple[str, ...] = APPROVAL_LIFECYC
     body = {key: value for key, value in document.items() if key not in lifecycle}
     if record is not None and isinstance(body.get(record), dict):
         body[record] = {key: value for key, value in body[record].items() if key != "content_sha256"}
-    return hashlib.sha256(json.dumps(body, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")).hexdigest()
+    return digest(body)
 
 
 def notice_digest(notice: dict) -> str:
@@ -337,18 +344,21 @@ def retirement_digest(purpose: dict) -> str:
         "approval_content_sha256": (purpose.get("approval") or {}).get("content_sha256"),
         "retirement": {key: value for key, value in retirement.items() if key != "content_sha256"},
     }
-    return hashlib.sha256(json.dumps(body, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")).hexdigest()
+    return digest(body)
 
 
 def retirement_recorded(purpose: dict) -> bool:
     retirement = purpose.get("retirement") or {}
-    return (
-        purpose.get("status") == "RETIRED"
-        and bool(retirement.get("decision_ref"))
-        and bool(retirement.get("decided_by_role"))
-        and bool(retirement.get("decided_on"))
-        and retirement.get("content_sha256") == retirement_digest(purpose)
-    )
+    approval = purpose.get("approval") or {}
+    if not (purpose.get("status") == "RETIRED" and decision_metadata_valid(retirement)
+            and decision_metadata_valid(approval) and retirement.get("retired_on")):
+        return False
+    try:
+        ordered = (parse_timestamp(approval["decided_on"]) < parse_timestamp(retirement["decided_on"])
+                   <= parse_timestamp(retirement["retired_on"]))
+    except ValueError:
+        return False
+    return ordered and retirement.get("content_sha256") == retirement_digest(purpose)
 
 
 def notice_end_digest(notice: dict) -> str:
@@ -362,51 +372,68 @@ def notice_end_digest(notice: dict) -> str:
         "end_decided_by_role": notice.get("end_decided_by_role"),
         "end_decided_on": notice.get("end_decided_on"),
     }
-    return hashlib.sha256(json.dumps(body, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")).hexdigest()
+    return digest(body)
 
 
 def notice_end_recorded(notice: dict) -> bool:
-    return (
-        notice.get("status") == "SUPERSEDED"
-        and bool(notice.get("effective_until"))
-        and bool(notice.get("end_decision_ref"))
-        and bool(notice.get("end_decided_by_role"))
-        and bool(notice.get("end_decided_on"))
-        and notice.get("end_content_sha256") == notice_end_digest(notice)
-    )
+    end = {"decision_ref": notice.get("end_decision_ref"), "decided_by_role": notice.get("end_decided_by_role"),
+           "decided_on": notice.get("end_decided_on")}
+    if not (notice.get("status") == "SUPERSEDED" and decision_metadata_valid(end)
+            and notice_decision_bound(notice) and notice.get("effective_until")):
+        return False
+    try:
+        ordered = (parse_timestamp(notice["effective_from"]) < parse_timestamp(notice["effective_until"])
+                   and parse_timestamp(notice["decided_on"]) <= parse_timestamp(end["decided_on"])
+                   <= parse_timestamp(notice["effective_until"]))
+    except ValueError:
+        return False
+    return ordered and notice.get("end_content_sha256") == notice_end_digest(notice)
 
 
 def review_digest(source: dict) -> str:
     return content_sha256(source, SOURCE_REVIEW_LIFECYCLE, record="review")
 
 
+def decision_metadata_valid(record: dict, *, role: str = "decided_by_role", time: str = "decided_on") -> bool:
+    """Common evidence shape; a digest binds content, not the truth of the claimed decision."""
+    if not isinstance(record, dict):
+        return False
+    if not all(isinstance(record.get(k), str) and record[k].strip() for k in ("decision_ref", role, time)):
+        return False
+    if not re.fullmatch(r"decision:[a-z0-9][a-z0-9-]{3,80}", record["decision_ref"]):
+        return False
+    try:
+        parse_timestamp(record[time])
+    except ValueError:
+        return False
+    return True
+
+
 def approval_recorded(document: dict | None) -> bool:
-    """The document carries an approval record naming its decision and binding its current content."""
     approval = (document or {}).get("approval") or {}
-    return (bool(approval.get("decision_ref")) and bool(approval.get("decided_on"))
-            and approval.get("content_sha256") == content_sha256(document))
+    return decision_metadata_valid(approval) and approval.get("content_sha256") == content_sha256(document)
 
 
 def approval_issues(document: dict, where: str) -> list[Issue]:
-    """For an APPROVED document: its approval record exists and still matches what was approved."""
     approval = document.get("approval") or {}
-    if not approval.get("decision_ref"):
-        return [Issue("APPROVAL_WITHOUT_EVIDENCE", where, "APPROVED requires an approval record with a decision_ref")]
+    if not decision_metadata_valid(approval):
+        return [Issue("APPROVAL_WITHOUT_EVIDENCE", where, "approval needs a decision reference, role and UTC decision time")]
     if approval.get("content_sha256") != content_sha256(document):
-        return [Issue("APPROVAL_CONTENT_MISMATCH", where,
-                      "changed since approval: approval.content_sha256 does not match; record a new approval or version")]
+        return [Issue("APPROVAL_CONTENT_MISMATCH", where, "content or decision metadata changed since approval")]
     return []
 
 
 def notice_decision_bound(notice: dict) -> bool:
-    """The notice's decision covers its current purposes, wording and start."""
-    return bool(notice["decision_ref"]) and notice.get("content_sha256") == notice_digest(notice)
+    """Activation is a dated decision, not a backdatable status/wording label."""
+    return (decision_metadata_valid(notice) and bool(notice.get("effective_from"))
+            and parse_timestamp(notice["decided_on"]) <= parse_timestamp(notice["effective_from"])
+            and notice.get("content_sha256") == notice_digest(notice))
 
 
 def review_bound(source: dict) -> bool:
-    """The source's review covers its current rights, uses, terms, restrictions, dates and attribution."""
     review = source.get("review") or {}
-    return (source["review_status"] == "REVIEWED" and bool(review.get("decision_ref"))
+    return (source["review_status"] == "REVIEWED"
+            and decision_metadata_valid(review, role="reviewer_role", time="reviewed_on")
             and review.get("content_sha256") == review_digest(source))
 
 
@@ -425,7 +452,8 @@ def purpose_approval_complete(purpose: dict) -> bool:
     base = (
         purpose["status"] in {"APPROVED", "RETIRED"}
         and purpose["legal_basis"] == "DECIDED"
-        and set(purpose["related_gates"]) <= passed
+        and not duplicates(d["gate"] for d in approval.get("gate_decisions", []))
+        and set(purpose["related_gates"]) == passed
         and approval_recorded(purpose)
     )
     return base and (purpose["status"] != "RETIRED" or retirement_recorded(purpose))
@@ -480,6 +508,8 @@ def check_purposes(doc: dict, retention_ids: set[str], gates: set[str]) -> list[
             issues.append(Issue("APPROVED_WITHOUT_LEGAL_BASIS", where, "approval requires a decided legal basis"))
         if p["status"] == "APPROVED":
             passed = {d["gate"] for d in (p.get("approval") or {}).get("gate_decisions", [])}
+            for unexpected in sorted(passed - set(p["related_gates"])):
+                issues.append(Issue("UNRELATED_GATE_DECISION", where, unexpected))
             for gate in p["related_gates"]:
                 if gate not in passed:
                     issues.append(Issue("GATE_NOT_APPROVED", where, f"{gate} has no recorded decision in approval.gate_decisions"))
@@ -489,6 +519,9 @@ def check_purposes(doc: dict, retention_ids: set[str], gates: set[str]) -> list[
                     "retired_on", "decision_ref", "decided_by_role", "decided_on", "content_sha256")):
                 issues.append(Issue("RETIREMENT_WITHOUT_RECORD", where,
                                     "RETIRED needs a complete content-bound retirement decision record"))
+            elif retirement.get("content_sha256") == retirement_digest(p) and decision_metadata_valid(retirement):
+                code = "RETIREMENT_BEFORE_APPROVAL" if parse_timestamp(retirement["decided_on"]) <= parse_timestamp(p["approval"]["decided_on"]) else "RETIREMENT_BACKDATED"
+                issues.append(Issue(code, where, "retirement decision chronology is invalid"))
             else:
                 issues.append(Issue("RETIREMENT_CONTENT_MISMATCH", where,
                                     "retirement decision does not bind the current retired_on/reference/content"))
@@ -535,9 +568,14 @@ def check_purposes(doc: dict, retention_ids: set[str], gates: set[str]) -> list[
 def check_purpose_retention(doc: dict, retention_doc: dict) -> list[Issue]:
     """An approved purpose may only use retention classes that are decided in an approved policy."""
     issues: list[Issue] = []
-    classes = {c["class_id"]: c for c in retention_doc["classes"]}
+    indexed = unique_index(retention_doc["classes"], lambda c: c["class_id"],
+                           code="DUPLICATE_RETENTION_CLASS", where="retention.json")
+    if indexed.issues:
+        return list(indexed.issues)
+    classes = indexed.value
+    issues += check_retention(retention_doc)
     for p in doc["purposes"]:
-        if p["status"] != "APPROVED":
+        if p["status"] not in {"APPROVED", "RETIRED"}:
             continue
         where = f"{p['purpose_id']}@{p['purpose_version']}"
         purpose_approved_on = (p.get("approval") or {}).get("decided_on")
@@ -548,7 +586,8 @@ def check_purpose_retention(doc: dict, retention_doc: dict) -> list[Issue]:
         for class_id in p["retention_classes"]:
             retention_class = classes.get(class_id)
             if retention_class is None:
-                continue  # reported as UNKNOWN_RETENTION_CLASS by check_purposes
+                issues.append(Issue("UNKNOWN_RETENTION_CLASS", where, class_id))
+                continue
             if not (
                 retention_class["decision_status"] == "DECIDED"
                 and retention_class["decision_ref"]
@@ -603,10 +642,13 @@ def check_notices(doc: dict, purposes: dict[tuple[str, int], dict]) -> list[Issu
             notice.get("end_decided_on"), notice.get("end_content_sha256"),
         )
         if notice["status"] == "DRAFT":
-            if notice["effective_from"] or notice["effective_until"] or notice["decision_ref"] or notice["content_sha256"] or any(end_fields):
+            if (notice["effective_from"] or notice["effective_until"] or notice["decision_ref"] or notice["content_sha256"]
+                    or notice.get("decided_on") or notice.get("decided_by_role") or any(end_fields)):
                 issues.append(Issue("DRAFT_NOTICE_IN_EFFECT", where, "a draft notice has no effective window or decision"))
-        elif not (notice["effective_from"] and notice["decision_ref"]):
+        elif not (notice["effective_from"] and decision_metadata_valid(notice)):
             issues.append(Issue("NOTICE_ACTIVE_WITHOUT_DECISION", where, "ACTIVE/SUPERSEDED notices need a decision and start time"))
+        elif parse_timestamp(notice["decided_on"]) > parse_timestamp(notice["effective_from"]):
+            issues.append(Issue("NOTICE_ACTIVATION_BACKDATED", where, "activation must be decided before its window starts"))
         elif not notice_decision_bound(notice):
             # Wording or purposes edited after the decision are a new notice version, never the approved one.
             issues.append(Issue("NOTICE_CONTENT_MISMATCH", where,
@@ -737,6 +779,9 @@ def check_lineage(doc: dict, retention: dict[str, dict]) -> list[Issue]:
             issues.append(Issue("RETENTION_CLASS_UNDERSTATES_HANDWRITING", kind, node["retention_class"]))
         if node["contains_handwriting"] and node["on_upstream_deletion"] == "RETAIN_UNDER_SEPARATE_OBLIGATION":
             issues.append(Issue("HANDWRITING_RETAINED", kind, "handwriting-bearing artifacts are never retained after deletion"))
+
+    if set(nodes) - set(LINEAGE_PLAN):
+        return issues  # an unreviewed, unbounded graph is not an approved deletion plan
 
     state: dict[str, int] = {}
 
@@ -885,6 +930,36 @@ def extract_passage(text: str) -> str | None:
     return match.group(1) if match else None
 
 
+def read_collection_asset(base: Path, relative: str) -> bytes:
+    """Local assets only; no traversal, symlink, special file or unbounded read."""
+    path = Path(relative)
+    if path.is_absolute() or not path.parts or ".." in path.parts:
+        raise ValueError("collection asset path must stay beneath its root")
+    if not hasattr(os, "O_NOFOLLOW"):
+        raise ValueError("this platform lacks safe no-follow asset opens")
+    root = Path(base).resolve(strict=True)
+    directory = os.open(root, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+    handle = None
+    try:
+        for part in path.parts[:-1]:
+            child = os.open(part, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=directory)
+            os.close(directory)
+            directory = child
+        handle = os.open(path.parts[-1], os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=directory)
+        if not stat.S_ISREG(os.fstat(handle).st_mode):
+            raise ValueError("collection asset must be a regular file")
+        with os.fdopen(handle, "rb") as reader:
+            handle = None
+            data = reader.read(1_048_577)
+        if len(data) > 1_048_576:
+            raise ValueError("collection asset exceeds 1 MiB")
+        return data
+    finally:
+        os.close(directory)
+        if handle is not None:
+            os.close(handle)
+
+
 def check_protocol(protocol: dict, purposes: dict[tuple[str, int], dict], base: Path = COLLECTION_DIR, *,
                    sources: dict[str, dict] | None = None) -> list[Issue]:
     issues: list[Issue] = []
@@ -916,20 +991,24 @@ def check_protocol(protocol: dict, purposes: dict[tuple[str, int], dict], base: 
         if task["language"] not in languages:
             issues.append(Issue("UNSUPPORTED_TASK_LANGUAGE", where, task["language"]))
         issues += decided_with_ref(task["rights"]["decision_status"], task["rights"]["decision_ref"], "DECISION_WITHOUT_REF", where)
-        path = base / task["prompt_file"]
-        if not path.is_file():
-            issues.append(Issue("MISSING_PROMPT", where, task["prompt_file"]))
+        try:
+            data = read_collection_asset(base, task["prompt_file"])
+        except (OSError, ValueError) as exc:
+            issues.append(Issue("MISSING_PROMPT", where, str(exc)))
             continue
-        data = path.read_bytes()
         if hashlib.sha256(data).hexdigest() != task["prompt_sha256"]:
             issues.append(Issue("PROMPT_HASH_MISMATCH", where, "prompt text changed without a new reviewed version/hash"))
-        text = data.decode("utf-8")
+        try:
+            text = data.decode("utf-8")
+        except UnicodeDecodeError:
+            issues.append(Issue("PROMPT_ENCODING", where, "prompt must be UTF-8"))
+            continue
         passage = extract_passage(text)
         if task["task_kind"] == "FREE":
             if passage is not None:
                 issues.append(Issue("FREE_TASK_HAS_PASSAGE", where, "free writing must not contain text to copy"))
             lowered = text.lower()
-            for term in FREE_PRIVACY_TERMS[task["language"]]:
+            for term in FREE_PRIVACY_TERMS.get(task["language"], ()):
                 if term not in lowered:
                     issues.append(Issue("FREE_PRIVACY_INSTRUCTION", where, f"missing instruction not to write {term}"))
             continue
@@ -950,21 +1029,287 @@ def check_protocol(protocol: dict, purposes: dict[tuple[str, int], dict], base: 
             issues.append(Issue("COPY_SHAPES", where, "include capitals and digits"))
 
     for guidance in protocol["guidance"]:
-        path = base / guidance["file"]
-        if not path.is_file():
-            issues.append(Issue("MISSING_GUIDANCE", guidance["guidance_id"], guidance["file"]))
-        elif hashlib.sha256(path.read_bytes()).hexdigest() != guidance["sha256"]:
+        try:
+            data = read_collection_asset(base, guidance["file"])
+        except (OSError, ValueError) as exc:
+            issues.append(Issue("MISSING_GUIDANCE", guidance["guidance_id"], str(exc)))
+            continue
+        if hashlib.sha256(data).hexdigest() != guidance["sha256"]:
             issues.append(Issue("GUIDANCE_HASH_MISMATCH", guidance["guidance_id"], "guidance changed without a new hash"))
     for locale in languages:
         if not any(g["locale"] == locale for g in protocol["guidance"]):
             issues.append(Issue("MISSING_GUIDANCE", locale, "every supported language needs participant guidance"))
 
-    indexes = [s["session_index"] for s in protocol["session_plan"]]
+    indexes = sorted(s["session_index"] for s in protocol["session_plan"])
     if indexes != list(range(1, len(indexes) + 1)):
         issues.append(Issue("SESSION_PLAN_ORDER", "session_plan", f"session indexes must be 1..n in order, got {indexes}"))
-    elif protocol["session_plan"][0]["participants"] != "ALL_ENROLLED":
+    elif next(s for s in protocol["session_plan"] if s["session_index"] == 1)["participants"] != "ALL_ENROLLED":
         issues.append(Issue("SESSION_PLAN_ORDER", "session_plan", "session 1 covers every enrolled writer"))
     return issues
+
+
+# ------------------------------------------------ authoritative policy boundary
+
+POLICY_SCHEMAS = {
+    "purposes": "purpose-registry.schema.json", "notices": "notice-registry.schema.json",
+    "retention": "retention-policy.schema.json", "lineage": "deletion-lineage.schema.json",
+    "sources": "source-rights.schema.json", "gate": "pilot-gate.schema.json",
+    "protocol": "collection-protocol.schema.json",
+}
+POLICY_INDEXES = (
+    ("purposes", "purposes", purpose_key, "DUPLICATE_PURPOSE"),
+    ("notices", "notices", lambda n: (n["notice_id"], n["version"]), "DUPLICATE_NOTICE"),
+    ("retention", "classes", lambda c: c["class_id"], "DUPLICATE_RETENTION_CLASS"),
+    ("lineage", "nodes", lambda n: n["artifact_kind"], "DUPLICATE_ARTIFACT_KIND"),
+    ("sources", "sources", lambda s: s["source_id"], "DUPLICATE_SOURCE"),
+    ("gate", "decisions", lambda d: d["decision_key"], "DUPLICATE_DECISION"),
+    ("protocol", "tasks", lambda t: t["task_id"], "DUPLICATE_TASK"),
+    ("protocol", "session_plan", lambda s: s["session_index"], "SESSION_PLAN_ORDER"),
+    ("protocol", "guidance", lambda g: g["guidance_id"], "DUPLICATE_GUIDANCE"),
+)
+
+
+def policy_document_issues(documents: dict, *, collection_dir: Path = COLLECTION_DIR,
+                           schemas: SchemaSet | None = None, tasks_json: Path = TASKS_JSON) -> list[Issue]:
+    """The *same* complete validation pipeline for repository drafts and releases.
+
+    Valid drafts may pass this structural/semantic validation. Readiness for a
+    human release is a separate, strictly stronger predicate in the compiler.
+    """
+    schemas = schemas or SchemaSet()
+    issues = []
+    for name, schema in POLICY_SCHEMAS.items():
+        document = documents.get(name)
+        if document is None:
+            issues.append(Issue("MISSING_POLICY_DOCUMENT", name, "required policy document is absent"))
+            continue
+        found = input_tree_issues(document, name)
+        issues += found or schemas.validate(document, schema, name)
+    if issues:
+        return issues  # no indexing or semantic assumptions on malformed shapes
+    indexes = {}
+    for name, rows, key, code in POLICY_INDEXES:
+        result = unique_index(documents[name][rows], key, code=code, where=f"{name}.{rows}")
+        issues += result.issues
+        if result.value is not None:
+            indexes[(name, rows)] = result.value
+    for purpose in documents["purposes"]["purposes"]:
+        result = unique_index((purpose.get("approval") or {}).get("gate_decisions", []), lambda d: d["gate"],
+                              code="DUPLICATE_GATE_DECISION", where=str(purpose_key(purpose)))
+        issues += result.issues
+    if issues:
+        return issues  # duplicate keys never choose a winner by array position
+    registry, notices, retention = documents["purposes"], documents["notices"], documents["retention"]
+    purposes, classes, sources = indexes[("purposes", "purposes")], indexes[("retention", "classes")], indexes[("sources", "sources")]
+    protocol, gate, lineage = documents["protocol"], documents["gate"], documents["lineage"]
+    issues += check_purposes(registry, set(classes), known_gates(tasks_json))
+    issues += check_retention(retention)
+    issues += check_purpose_retention(registry, retention)
+    issues += check_notices(notices, purposes)
+    issues += check_lineage(lineage, classes)
+    issues += check_source_rights(documents["sources"])
+    issues += check_protocol(protocol, purposes, collection_dir, sources=sources)
+    issues += check_pilot_gate(gate, protocol, notices, purposes)
+    # Schema cannot express equality across related references.
+    if protocol["gate"] != gate["gate"]:
+        issues.append(Issue("PROTOCOL_GATE_MISMATCH", "protocol.gate", "protocol and supplied gate differ"))
+    return sorted(set(issues), key=lambda i: (i.code, i.where, i.message))
+
+
+@dataclass(frozen=True, init=False)
+class ReleasePolicy:
+    """Immutable, in-process result of compile_release_policy; never deserialize this type.
+
+    This is a validated-code boundary, not a defence against code execution in
+    the Python process. Trusted decision storage is responsible for authentic
+    decision references and append-only history; hashes alone cannot prove them.
+    """
+    documents: dict
+    fingerprint: str
+    collection_dir: Path
+    assets: tuple[tuple[str, str], ...]
+
+    def __new__(cls, *_args, **_kwargs):
+        raise TypeError("construct a release policy through compile_release_policy")
+
+
+def compile_release_policy(*, registry: dict | None = None, notices: dict | None = None,
+                           protocol: dict | None = None, retention: dict | None = None,
+                           lineage: dict | None = None, sources: dict | None = None, gate: dict | None = None,
+                           collection_dir: Path = COLLECTION_DIR) -> ValidationResult[ReleasePolicy]:
+    """No usable value escapes if any dependency is missing, invalid or unapproved."""
+    documents = dict(purposes=registry, notices=notices, protocol=protocol, retention=retention,
+                     lineage=lineage, sources=sources, gate=gate)
+    try:
+        collection_dir = Path(collection_dir)
+        issues = policy_document_issues(documents, collection_dir=collection_dir)
+        if issues:
+            return ValidationResult(None, tuple(issues))
+        for name, field in (("purposes", "registry_status"), ("protocol", "status"),
+                            ("retention", "status"), ("lineage", "status"), ("gate", "status")):
+            if documents[name][field] != "APPROVED" or not approval_recorded(documents[name]):
+                issues.append(Issue("POLICY_NOT_APPROVED", name, "human use needs a complete, content-bound approval"))
+        purposes = unique_index(registry["purposes"], purpose_key, code="DUPLICATE_PURPOSE", where="purposes").value
+        for ref in protocol["consent_purposes"]:
+            if not purpose_approval_complete(purposes[purpose_key(ref)]):
+                issues.append(Issue("PURPOSE_NOT_APPROVED", str(purpose_key(ref)), "protocol purpose is not approved"))
+        if issues:
+            return ValidationResult(None, tuple(issues))
+        # Snapshot the actual asset digests as well as the protocol JSON. Rechecked
+        # at the release boundary, so a stale compiled object cannot hide file edits.
+        paths = [(t["prompt_file"], t["prompt_sha256"]) for t in protocol["tasks"]]
+        paths += [(g["file"], g["sha256"]) for g in protocol["guidance"]]
+        for path, expected in paths:
+            if hashlib.sha256(read_collection_asset(collection_dir, path)).hexdigest() != expected:
+                issues.append(Issue("ASSET_CHANGED_DURING_COMPILATION", path, "asset no longer matches the approved protocol"))
+        if issues:
+            return ValidationResult(None, tuple(issues))
+        result = object.__new__(ReleasePolicy)
+        object.__setattr__(result, "documents", freeze_json(documents))
+        object.__setattr__(result, "fingerprint", digest(documents))
+        object.__setattr__(result, "collection_dir", collection_dir.resolve(strict=True))
+        object.__setattr__(result, "assets", tuple(paths))
+        return ValidationResult(result)
+    except (OSError, ValueError, TypeError, KeyError, OverflowError, RecursionError) as exc:
+        return ValidationResult(None, (Issue("INVALID_POLICY_INPUT", "policy", str(exc)),))
+
+
+PUBLICATION_CHECKS = ("WITHDRAWAL_RECONCILIATION", "DELETION_PROPAGATION", "RESTORE_TOMBSTONES")
+
+
+def release_evidence_issues(evidence: dict | None, policy: ReleasePolicy, manifest: dict,
+                            consent: ConsentContext, publish_at: datetime) -> list[Issue]:
+    """Require a current, content-bound attestation of the external deletion checks.
+
+    This reference validator verifies the attestation contract, not a live
+    storage system. T02/T11 must issue it from authoritative snapshots and fence
+    the subsequent atomic publication on those snapshots (see the handoff).
+    """
+    if evidence is None:
+        return [Issue("PUBLICATION_EVIDENCE_REQUIRED", "release", "withdrawal/deletion check evidence is required")]
+    issues = input_tree_issues(evidence, "release_evidence")
+    issues += [] if issues else SchemaSet().validate(evidence, "release-evidence.schema.json")
+    if issues:
+        return issues
+    expected = {"policy_sha256": policy.fingerprint, "manifest_sha256": digest(manifest),
+                "consent_events_sha256": digest(consent.events)}
+    for field_name, value in expected.items():
+        if evidence[field_name] != value:
+            issues.append(Issue("PUBLICATION_EVIDENCE_MISMATCH", field_name, "check evidence is for different inputs"))
+    if parse_timestamp(evidence["checked_at"]) != publish_at:
+        issues.append(Issue("STALE_PUBLICATION_EVIDENCE", "checked_at", "evidence must be from the publication snapshot"))
+    if not approval_recorded(evidence) or parse_timestamp(evidence["approval"]["decided_on"]) != publish_at:
+        issues.append(Issue("PUBLICATION_EVIDENCE_UNBOUND", "approval", "attestation must bind the exact publication snapshot"))
+    for name in PUBLICATION_CHECKS:
+        if evidence["checks"][name]["status"] != "PASS":
+            issues.append(Issue("PUBLICATION_CHECK_FAILED", name, "a pending or failed check cannot authorize release"))
+    return issues
+
+
+@dataclass(frozen=True, init=False)
+class ApprovedCollection:
+    writers: int
+    specimens: int
+    captures: int
+    by_task: dict
+    attribution: dict | None
+    writer_ids: tuple[str, ...]
+    specimen_ids: tuple[str, ...]
+    capture_ids: tuple[str, ...]
+    manifest_sha256: str
+    policy_sha256: str
+    consent_events_sha256: str
+    evidence_sha256: str
+    publish_at: datetime
+    synthetic: bool = False
+
+    def __new__(cls, *_args, **_kwargs):
+        raise TypeError("obtain an approved collection through check_collection_manifest")
+
+
+def _approved_collection(**values) -> ApprovedCollection:
+    result = object.__new__(ApprovedCollection)
+    for item in fields(ApprovedCollection):
+        object.__setattr__(result, item.name, values[item.name] if item.name in values else item.default)
+    return result
+
+
+def check_collection_manifest(manifest: dict, policy: ReleasePolicy, consent: ConsentContext, *,
+                              publish_at: datetime | None = None, release_evidence: dict | None = None
+                              ) -> ValidationResult[ApprovedCollection]:
+    """The ONLY human-release entry point. Invalid inputs never return release counts."""
+    if not isinstance(policy, ReleasePolicy):
+        return ValidationResult(None, (Issue("UNCOMPILED_POLICY", "policy", "raw contracts are not release authority"),))
+    try:
+        issues = input_tree_issues(manifest, "manifest")
+        issues += [] if issues else SchemaSet().validate(manifest, "collection-manifest.schema.json")
+        if issues:
+            return ValidationResult(None, tuple(issues))
+        for rows, field in (("writers", "writer_id"), ("writers", "enrollment_id"),
+                            ("specimens", "specimen_id"), ("captures", "capture_id")):
+            checked = unique_index(manifest[rows], lambda row: row[field], code="DUPLICATE_ID", where=field)
+            issues += checked.issues
+        if issues:
+            return ValidationResult(None, tuple(issues))
+        if manifest["synthetic"]:
+            return ValidationResult(None, (Issue("SYNTHETIC_IN_HUMAN_RELEASE", "manifest", "fixtures are not human evidence"),))
+        if not isinstance(consent, ConsentContext) or consent.fixture_mode:
+            return ValidationResult(None, (Issue("FIXTURE_CONSENT_IN_HUMAN_RELEASE", "consent", "a production context is required"),))
+        if (not isinstance(consent, AuthoritativeConsentContext) or consent.policy_sha256 != policy.fingerprint
+                or consent.manifest_sha256 != digest(manifest)):
+            return ValidationResult(None, (Issue("CONSENT_CONTEXT_MISMATCH", "consent", "context must be compiled for this policy and manifest"),))
+        if consent.issues:
+            return ValidationResult(None, consent.issues)
+        if not isinstance(publish_at, datetime) or publish_at.tzinfo is None or publish_at.utcoffset() != timezone.utc.utcoffset(publish_at):
+            return ValidationResult(None, (Issue("PUBLICATION_NOT_RECHECKED", "publish_at", "an explicit UTC publication instant is required"),))
+        for path, expected in policy.assets:
+            if hashlib.sha256(read_collection_asset(policy.collection_dir, path)).hexdigest() != expected:
+                issues.append(Issue("PROTOCOL_ASSET_MISMATCH", path, "bytes changed after policy compilation"))
+        issues += release_evidence_issues(release_evidence, policy, manifest, consent, publish_at)
+        if issues:
+            return ValidationResult(None, tuple(issues))
+        docs = policy.documents
+        for name in ("purposes", "protocol", "retention", "lineage", "gate"):
+            if parse_timestamp(docs[name]["approval"]["decided_on"]) > publish_at:
+                issues.append(Issue("POLICY_APPROVED_AFTER_PUBLICATION", name, "future approval is not release evidence"))
+        if issues:
+            return ValidationResult(None, tuple(issues))
+        sources = unique_index(docs["sources"]["sources"], lambda s: s["source_id"], code="DUPLICATE_SOURCE", where="sources").value
+        issues, summary = _collection_counts(manifest, docs["protocol"], consent, human_release=True,
+                                             sources=sources, publish_at=publish_at, gate=docs["gate"], retention=docs["retention"])
+        # Diagnostics are not authorization. Preview/filter rows in the fixture
+        # tooling, then submit a clean, correctly counted release manifest.
+        if issues:
+            return ValidationResult(None, tuple(issues))
+        return ValidationResult(_approved_collection(
+            writers=summary.writers, specimens=summary.specimens, captures=summary.captures,
+            by_task=freeze_json(summary.by_task), attribution=freeze_json(summary.attribution),
+            writer_ids=summary.writer_ids, specimen_ids=summary.specimen_ids, capture_ids=summary.capture_ids,
+            manifest_sha256=digest(manifest), policy_sha256=policy.fingerprint,
+            consent_events_sha256=digest(consent.events), evidence_sha256=digest(release_evidence), publish_at=publish_at,
+        ))
+    except (OSError, ValueError, TypeError, KeyError, OverflowError, RecursionError) as exc:
+        return ValidationResult(None, (Issue("INVALID_RELEASE_INPUT", "release", str(exc)),))
+
+
+def check_fixture_collection_manifest(manifest: dict, protocol: dict, consent: ConsentContext, *,
+                                      publish_at: datetime | None = None) -> tuple[list[Issue], CollectionSummary]:
+    """Explicit synthetic-only diagnostic path. No switch turns this into a human release."""
+    if not isinstance(manifest, dict) or manifest.get("synthetic") is not True:
+        return [Issue("NON_SYNTHETIC_FIXTURE", "manifest", "fixture summaries are only for synthetic data")], CollectionSummary(synthetic=True)
+    found = []
+    for name, value, spec in (("manifest", manifest, "collection-manifest.schema.json"),
+                              ("protocol", protocol, "collection-protocol.schema.json")):
+        bad = input_tree_issues(value, name)
+        found += bad or SchemaSet().validate(value, spec, name)
+    if not isinstance(consent, ConsentContext):
+        found.append(Issue("SCHEMA", "consent", "an evaluated fixture context is required"))
+    if found:
+        return found, CollectionSummary(synthetic=True)
+    try:
+        return _collection_counts(manifest, protocol, consent, human_release=False, publish_at=publish_at)
+    except (ValueError, TypeError, KeyError, OverflowError, RecursionError) as exc:
+        return [Issue("INVALID_FIXTURE_INPUT", "fixture", str(exc))], CollectionSummary(synthetic=True)
 
 
 @dataclass
@@ -976,6 +1321,9 @@ class CollectionSummary:
     by_task: dict[str, dict[str, int]] = field(default_factory=dict)
     # For a cleared human release: the attribution its source review requires, carried with the counts.
     attribution: dict | None = None
+    writer_ids: tuple[str, ...] = ()
+    specimen_ids: tuple[str, ...] = ()
+    capture_ids: tuple[str, ...] = ()
 
 
 def source_clearance_issues(protocol: dict, release_purpose: dict, sources: dict[str, dict] | None,
@@ -1005,7 +1353,7 @@ def source_clearance_issues(protocol: dict, release_purpose: dict, sources: dict
     return []
 
 
-def check_collection_manifest(
+def _collection_counts(
     manifest: dict, protocol: dict, consent: ConsentContext, *, human_release: bool = True,
     sources: dict[str, dict] | None = None, publish_at: datetime | None = None, gate: dict | None = None,
     retention: dict | None = None,
@@ -1177,7 +1525,7 @@ def check_collection_manifest(
             continue
         slot = slots[(s["writer_id"], s["task_id"], s["session_index"])]
         if len(slot) > 1:
-            others = ", ".join(sorted(specimen_id for specimen_id in slot if specimen_id != where))
+            others = f"{len(slot) - 1} other records"
             issues.append(Issue("DUPLICATE_SPECIMEN_IN_SESSION", where, f"same writer/task/session as {others}"))
             continue
         collected = parse_timestamp(s["collected_at"])
@@ -1266,28 +1614,25 @@ def check_collection_manifest(
         for c in group:
             if one_page and c is keep:
                 continue
-            others = ", ".join(sorted(o["capture_id"] for o in group if o is not c))
+            others = f"a group of {len(group)} identical byte records"
             code = "DUPLICATE_COUNTED_AS_WRITER" if len(writers_with_bytes) > 1 else "DUPLICATE_CAPTURE_BYTES"
             issues.append(Issue(code, c["capture_id"], f"identical bytes to {others}"))
             excluded.add(c["capture_id"])
 
-    def rooted(capture_id: str) -> bool:
-        """Every capture back to the original stands. Links that stand point to a lower index, so this terminates."""
-        if capture_id in excluded:
-            return False
-        repeat = captures[capture_id]["repeat_of_capture_id"]
-        return repeat is None or rooted(repeat)
+    rooted = rooted_nodes({cid: c["repeat_of_capture_id"] for cid, c in captures.items()}, excluded)
 
     counted: list[str] = []
+    counted_capture_ids = []
     for c in known:
         where = c["capture_id"]
         if where in excluded:
             continue  # a capture whose provenance or bytes failed validation is not evidence of anything
-        if not rooted(where):
+        if where not in rooted:
             issues.append(Issue("REPEAT_OF_INVALID_CAPTURE", where, "its repeat chain does not reach a valid original"))
             continue
         if c["specimen_id"] in included:
             counted.append(c["specimen_id"])
+            counted_capture_ids.append(c["capture_id"])
 
     # A specimen evidenced only by someone else's bytes is not evidence of another writer.
     included &= set(counted)
@@ -1312,14 +1657,18 @@ def check_collection_manifest(
             issues.append(Issue("SESSION_NOT_AFTER_EARLIER", specimen_id,
                                 f"session {s['session_index']} must be written on a later day than the earlier sessions of {s['task_id']}"))
             included.discard(specimen_id)
-    summary.writers = len({specimens[s]["writer_id"] for s in included})
+    summary.writer_ids = tuple(sorted({specimens[s]["writer_id"] for s in included}))
+    summary.specimen_ids = tuple(sorted(included))
+    summary.capture_ids = tuple(sorted(cid for cid in counted_capture_ids if captures[cid]["specimen_id"] in included))
+    summary.writers = len(summary.writer_ids)
     summary.specimens = len(included)
     summary.captures = sum(1 for specimen_id in counted if specimen_id in included)
+    capture_counts = Counter(counted)
     for specimen_id in sorted(included):
         s = specimens[specimen_id]
         cohort = summary.by_task.setdefault(s["task_id"], {"writers": 0, "specimens": 0, "captures": 0})
         cohort["specimens"] += 1
-        cohort["captures"] += counted.count(specimen_id)  # repeat photos stay in their page's task cohort
+        cohort["captures"] += capture_counts[specimen_id]  # repeat photos stay in their page's task cohort
     for task_id, cohort in summary.by_task.items():
         cohort["writers"] = len({specimens[s]["writer_id"] for s in included if specimens[s]["task_id"] == task_id})
 
@@ -1334,7 +1683,7 @@ def check_collection_manifest(
 # ------------------------------------------------------- permission evaluation
 
 
-@dataclass
+@dataclass(frozen=True)
 class ConsentContext:
     purposes: dict[tuple[str, int], dict]
     notices: dict[tuple[str, int], dict]
@@ -1344,6 +1693,19 @@ class ConsentContext:
     fixture_mode: bool = False
     valid: list[tuple[int, dict]] = field(default_factory=list)
     event_issues: dict[str, list[str]] = field(default_factory=dict)
+    issues: tuple[Issue, ...] = ()
+    invalid_writers: frozenset[str] = frozenset()
+    authority: dict = field(default_factory=dict)
+    policy_sha256: str | None = None
+    manifest_sha256: str | None = None
+
+
+@dataclass(frozen=True, init=False)
+class AuthoritativeConsentContext(ConsentContext):
+    """Only collection_consent_context can construct the human-release context."""
+
+    def __new__(cls, *_args, **_kwargs):
+        raise TypeError("construct authoritative consent from a compiled policy and ledger")
 
 
 def build_context(registry: dict, scenario: dict, *, fixture_mode: bool = False) -> ConsentContext:
@@ -1353,26 +1715,80 @@ def build_context(registry: dict, scenario: dict, *, fixture_mode: bool = False)
     DRAFT purposes run so synthetic scenarios can exercise the rules before
     any owner approval exists; it must never be used for real decisions.
     """
-    purposes = {purpose_key(p): p for p in registry["purposes"]}
-    for extra in scenario.get("extra_purposes", []):
-        purposes.setdefault(purpose_key(extra), extra)
+    problems = input_tree_issues(registry, "registry") + input_tree_issues(scenario, "scenario")
+    if not isinstance(registry, dict) or not isinstance(scenario, dict):
+        problems.append(Issue("SCHEMA", "context", "registry and scenario must be objects"))
+    if problems:
+        return ConsentContext({}, {}, {}, [], fixture_mode=fixture_mode, issues=tuple(problems))
+    schema = SchemaSet()
+    problems += schema.validate(registry, "purpose-registry.schema.json")
+    for name in ("writers", "notices", "events"):
+        if not isinstance(scenario.get(name), list):
+            problems.append(Issue("SCHEMA", name, "context requires an array"))
+    if problems:
+        return ConsentContext({}, {}, {}, [], fixture_mode=fixture_mode, issues=tuple(problems))
+    for name, rows, spec in (("writers", scenario.get("writers", []), "consent-scenario.schema.json#/$defs/writer"),
+                              ("notices", scenario.get("notices", []), "consent-scenario.schema.json#/$defs/notice_window"),
+                              ("events", scenario.get("events", []), "consent-event.schema.json")):
+        found = input_tree_issues(rows, name)
+        problems += found
+        if not found:
+            for index, row in enumerate(rows):
+                problems += schema.validate(row, spec, f"{name}[{index}]")
+    if problems:
+        return ConsentContext({}, {}, {}, [], fixture_mode=fixture_mode, issues=tuple(problems))
+    extras = scenario.get("extra_purposes", [])
+    if not isinstance(extras, list):
+        problems.append(Issue("SCHEMA", "extra_purposes", "extra purposes must be an array"))
+    else:
+        for index, row in enumerate(extras):
+            problems += schema.validate(row, "purpose-registry.schema.json#/$defs/purpose", f"extra_purposes[{index}]")
+    if problems:
+        return ConsentContext({}, {}, {}, [], fixture_mode=fixture_mode, issues=tuple(problems))
+    purpose_rows = [*registry["purposes"], *extras]
+    indexes = []
+    for rows, key, code, name in (
+        (purpose_rows, purpose_key, "DUPLICATE_PURPOSE", "purposes"),
+        (scenario["notices"], lambda n: (n["notice_id"], n["version"]), "DUPLICATE_NOTICE", "notices"),
+        (scenario["writers"], lambda w: w["writer_id"], "DUPLICATE_WRITER", "writers"),
+    ):
+        result = unique_index(rows, key, code=code, where=name)
+        problems += result.issues
+        indexes.append(result.value or {})
+    purposes, notices, writers = indexes
+    problems += notice_window_issues(scenario["notices"], "context")
+    for notice in scenario["notices"]:
+        problems += listed_purpose_issues(notice["purposes"], str((notice["notice_id"], notice["version"])))
+    invalid_writers, authority = set(), {}
+    for writer in scenario["writers"]:
+        found = account_link_issues(writer)
+        if found:
+            invalid_writers.add(writer["writer_id"])
+        else:
+            authority[writer["writer_id"]] = tuple(sorted(account_links(writer), key=lambda link: link[1]))
     context = ConsentContext(
-        purposes=purposes,
-        notices={(n["notice_id"], n["version"]): n for n in scenario["notices"]},
-        writers={w["writer_id"]: w for w in scenario["writers"]},
-        events=scenario["events"],
+        purposes=freeze_json(purposes), notices=freeze_json(notices), writers=freeze_json(writers),
+        events=freeze_json(scenario["events"]),
         usable_statuses=frozenset({"APPROVED", "DRAFT"} if fixture_mode else {"APPROVED"}),
-        fixture_mode=fixture_mode,
+        fixture_mode=fixture_mode, issues=tuple(problems), invalid_writers=frozenset(invalid_writers),
+        authority=freeze_json(authority),
     )
+    valid, event_issues = [], {}
+    repeated = set(duplicates(e["event_id"] for e in context.events))
+    if repeated:
+        problems += [Issue("DUPLICATE_EVENT_ID", eid, "ambiguous ledger identity; cannot discard a possible withdrawal")
+                     for eid in sorted(repeated)]
     for index, event in enumerate(context.events):
         codes = event_validity(event, context)
-        context.event_issues[event["event_id"]] = codes
+        if event["event_id"] in repeated:
+            codes = sorted(set(codes) | {"DUPLICATE_EVENT_ID"})
+        event_issues[event["event_id"]] = codes
+        if (codes and event["event_type"] in {"DENY", "WITHDRAW"} and event_actor_authorized(event, context)):
+            problems.append(Issue("AMBIGUOUS_RESTRICTION", event["event_id"],
+                                  "an authorized restrictive choice cannot be dropped to revive an older grant"))
         if not codes:
-            context.valid.append((index, event))
-    for event_id in duplicates(e["event_id"] for e in context.events):
-        context.event_issues[event_id] = sorted(set(context.event_issues[event_id]) | {"DUPLICATE_EVENT_ID"})
-        context.valid = [(i, e) for i, e in context.valid if e["event_id"] != event_id]
-    return context
+            valid.append((index, event))
+    return replace(context, valid=freeze_json(valid), event_issues=freeze_json(event_issues), issues=tuple(problems))
 
 
 def notice_window_codes(event: dict, context: ConsentContext) -> list[str]:
@@ -1402,8 +1818,19 @@ def account_links(writer: dict) -> list[tuple[str, datetime, datetime | None]]:
     return links
 
 
+def account_link_issues(writer: dict) -> list[Issue]:
+    invalid = (writer["self_account_id"] is None) != (writer["self_account_linked_at"] is None)
+    spans = sorted(account_links(writer), key=lambda link: link[1])
+    invalid |= any(end is not None and end <= start for _account, start, end in spans)
+    invalid |= any(end is None or end > next_start
+                   for (_a, _s, end), (_b, next_start, _e) in zip(spans, spans[1:]))
+    return [Issue("ACCOUNT_LINK_INCONSISTENT", writer["writer_id"], "authority intervals are inconsistent/overlapping")] if invalid else []
+
+
 def has_authority(event: dict, context: ConsentContext) -> bool:
     actor, subject = event["actor"], event["subject"]
+    if subject["kind"] == "WRITER" and subject["id"] in context.invalid_writers:
+        return False
     if subject["kind"] == "ACCOUNT":
         return actor["kind"] == "ACCOUNT" and actor["id"] == subject["id"]
     writer = context.writers.get(subject["id"])
@@ -1414,10 +1841,24 @@ def has_authority(event: dict, context: ConsentContext) -> bool:
         # revives an uploader's choice, and relinking never voids a choice the earlier account made.
         recorded = parse_timestamp(event["recorded_at"])
         return any(account_id == actor["id"] and start <= recorded and (end is None or recorded < end)
-                   for account_id, start, end in account_links(writer))
+                   for account_id, start, end in context.authority.get(subject["id"], ()))
     if actor["kind"] == "PILOT_PARTICIPANT":
         return actor["id"] == writer["writer_id"]
     return False
+
+
+def event_actor_authorized(event: dict, context: ConsentContext) -> bool:
+    """One actor-authority predicate for validation AND fail-closed restrictions.
+
+    SYSTEM/support inputs must already come from authenticated application ports;
+    the reference ledger records their verified source, not a public identity claim.
+    """
+    if event["event_type"] != "WITHDRAW" or event["actor"]["kind"] in {"ACCOUNT", "PILOT_PARTICIPANT"}:
+        return has_authority(event, context)
+    derived = event["derived_from"] or {}
+    if event["actor"]["kind"] == "SUPPORT_STAFF":
+        return derived.get("kind") == "SUPPORT_REQUEST" and event["capture_method"] == "VERIFIED_REQUEST"
+    return event["actor"]["kind"] == "SYSTEM" and derived.get("kind") in SYSTEM_WITHDRAWAL_SOURCES
 
 
 def event_validity(event: dict, context: ConsentContext) -> list[str]:
@@ -1479,19 +1920,8 @@ def event_validity(event: dict, context: ConsentContext) -> list[str]:
             codes.append("PURPOSE_NOT_APPROVED")
         elif purpose["status"] in {"APPROVED", "RETIRED"} and not approved_by(purpose, event["recorded_at"]):
             codes.append("GRANTED_BEFORE_APPROVAL")
-    if kind in {"GRANT", "DENY"}:
-        if not has_authority(event, context):
-            codes.append("NO_AUTHOR_AUTHORITY" if purpose["requires_author_authority"] else "NO_AUTHORITY")
-    else:
-        actor = event["actor"]["kind"]
-        if actor in {"ACCOUNT", "PILOT_PARTICIPANT"}:
-            permitted = has_authority(event, context)
-        elif actor == "SUPPORT_STAFF":
-            permitted = (derived or {}).get("kind") == "SUPPORT_REQUEST" and event["capture_method"] == "VERIFIED_REQUEST"
-        else:
-            permitted = (derived or {}).get("kind") in SYSTEM_WITHDRAWAL_SOURCES
-        if not permitted:
-            codes.append("NO_AUTHORITY")
+    if not event_actor_authorized(event, context):
+        codes.append("NO_AUTHOR_AUTHORITY" if kind in {"GRANT", "DENY"} and purpose["requires_author_authority"] else "NO_AUTHORITY")
     return sorted(set(codes))
 
 
@@ -1513,6 +1943,10 @@ def evaluate_permission(
 ) -> str:
     """The most recently recorded valid event in effect at `at` wins. covering_scopes are broader scopes the caller vouches
     contain the query scope (e.g. a specimen's pilot enrollment)."""
+    if context.issues:
+        return "INVALID_CONTEXT"
+    if subject["kind"] == "WRITER" and subject["id"] in context.invalid_writers:
+        return "INVALID_AUTHORITY"
     purpose = context.purposes.get(purpose_key(purpose_ref))
     if purpose is not None and purpose["status"] == "RETIRED":
         # History before retirement is evaluated as it was; from retirement on nothing is permitted.
@@ -1594,14 +2028,16 @@ def registry_notice_windows(notices_doc: dict | None, purposes: dict[tuple[str, 
     complete approval before the notice took effect: a notice that also offers
     a draft purpose is invalid as a whole, not valid for its approved part.
     """
-    return [
-        {key: n[key] for key in ("notice_id", "version", "effective_from", "effective_until", "purposes")}
-        for n in (notices_doc or {}).get("notices", [])
-        if n["status"] != "DRAFT" and n["effective_from"] and notice_decision_bound(n)
-        and (n["status"] != "SUPERSEDED" or notice_end_recorded(n))
-        and (purposes is None or all(purpose_key(ref) in purposes and approved_by(purposes[purpose_key(ref)], n["effective_from"])
-                                     for ref in n["purposes"]))
-    ]
+    if notices_doc is None:
+        return []
+    # Historical windows are all-or-nothing: no contradictory duplicate, overlap,
+    # bad copy or invalid lifecycle transition is authoritative.
+    if purposes is None:
+        return []
+    if SchemaSet().validate(notices_doc, "notice-registry.schema.json") or check_notices(notices_doc, purposes):
+        return []
+    return [{key: n[key] for key in ("notice_id", "version", "effective_from", "effective_until", "purposes")}
+            for n in notices_doc["notices"] if n["status"] != "DRAFT"]
 
 
 def collection_consent_context(registry: dict, manifest: dict, consent_log: dict, *, fixture_mode: bool = False,
@@ -1612,17 +2048,43 @@ def collection_consent_context(registry: dict, manifest: dict, consent_log: dict
     notice registry (`notices`, i.e. notices.json); windows a ledger describes
     for itself are ignored, so a fabricated notice cannot make a grant valid.
     """
+    policy = registry if isinstance(registry, ReleasePolicy) else None
+    if policy is not None:
+        registry, notices = policy.documents["purposes"], policy.documents["notices"]
+        if fixture_mode:
+            raise ValueError("a compiled human policy cannot use fixture mode")
+    problems = []
+    schema = SchemaSet()
+    for name, value, spec in (("manifest", manifest, "collection-manifest.schema.json"),
+                               ("registry", registry, "purpose-registry.schema.json")):
+        found = input_tree_issues(value, name)
+        problems += found or schema.validate(value, spec, name)
+    problems += input_tree_issues(consent_log, "consent_log")
+    if not isinstance(consent_log, dict) or not isinstance(consent_log.get("events"), list):
+        problems.append(Issue("SCHEMA", "consent_log.events", "a ledger object with an event array is required"))
+    if fixture_mode and (not isinstance(consent_log, dict) or not isinstance(consent_log.get("notices"), list)):
+        problems.append(Issue("SCHEMA", "consent_log.notices", "synthetic fixtures require notice windows"))
+    if problems:
+        return ConsentContext({}, {}, {}, [], fixture_mode=fixture_mode, issues=tuple(problems))
     if fixture_mode and not manifest["synthetic"]:
-        raise ValueError("fixture mode is only for synthetic manifests; human data needs approved purposes and registry notices")
-    purposes = {purpose_key(p): p for p in registry["purposes"]}
-    windows = consent_log["notices"] if fixture_mode else registry_notice_windows(notices, purposes)
+        raise ValueError("fixture mode is only for synthetic manifests")
+    result = unique_index(registry["purposes"], purpose_key, code="DUPLICATE_PURPOSE", where="purposes")
+    windows = consent_log["notices"] if fixture_mode else registry_notice_windows(notices, result.value)
     writers = [
         {"writer_id": w["writer_id"], "self_account_id": None, "self_account_linked_at": None,
          "previous_account_links": [], "adult_eligibility": w["adult_eligibility"]}
         for w in manifest["writers"]
     ]
     scenario = {"notices": windows, "writers": writers, "events": consent_log["events"]}
-    return build_context(registry, scenario, fixture_mode=fixture_mode)
+    context = build_context(registry, scenario, fixture_mode=fixture_mode)
+    if policy is not None:
+        authoritative = object.__new__(AuthoritativeConsentContext)
+        for item in fields(ConsentContext):
+            object.__setattr__(authoritative, item.name, getattr(context, item.name))
+        object.__setattr__(authoritative, "policy_sha256", policy.fingerprint)
+        object.__setattr__(authoritative, "manifest_sha256", digest(manifest))
+        return authoritative
+    return context
 
 
 CHECK_FIELDS = {
@@ -1640,16 +2102,7 @@ def run_scenario(registry: dict, scenario: dict) -> list[Issue]:
     for window in scenario["notices"]:
         issues += listed_purpose_issues(window["purposes"], f"{scenario_id}:{window['notice_id']}@{window['version']}")
     for writer in scenario["writers"]:
-        where = f"{scenario_id}:{writer['writer_id']}"
-        if (writer["self_account_id"] is None) != (writer["self_account_linked_at"] is None):
-            issues.append(Issue("ACCOUNT_LINK_INCONSISTENT", where, "self_account_linked_at is set exactly when self_account_id is"))
-            continue
-        # The link history is append-only: each link ends before the next begins, and the current one is last.
-        spans = sorted(account_links(writer), key=lambda link: link[1])
-        if any(end is not None and end <= start for _account, start, end in spans) or any(
-            end is None or end > next_start for (_a, _s, end), (_b, next_start, _e) in zip(spans, spans[1:])
-        ):
-            issues.append(Issue("ACCOUNT_LINK_INCONSISTENT", where, "account links must not overlap and must end after they start"))
+        issues += account_link_issues(writer)
     context = build_context(registry, scenario, fixture_mode=scenario["synthetic"] is True)
     for index, check in enumerate(scenario["checks"]):
         where = f"{scenario_id}.checks[{index}]"
@@ -1717,34 +2170,15 @@ def validate_repository(consent_dir: Path = CONSENT_DIR, collection_dir: Path = 
     if report.issues:
         return report  # semantic rules assume schema-valid documents
 
-    registry, notices = loaded["purposes.json"], loaded["notices.json"]
-    retention = {c["class_id"]: c for c in loaded["retention.json"]["classes"]}
-    sources = {s["source_id"]: s for s in loaded["source_rights.json"]["sources"]}
-    purposes = {purpose_key(p): p for p in registry["purposes"]}
-    checks = [
-        ("purposes", check_purposes(registry, set(retention), known_gates(tasks_json))
-         + check_purpose_retention(registry, loaded["retention.json"]),
-         f"{len(purposes)} purposes, {sum(p['status'] in OFFERED for p in purposes.values())} offered, "
-         f"{sum(p['status'] == 'APPROVED' for p in purposes.values())} approved"),
-        ("notices", check_notices(notices, purposes),
-         f"{len(notices['notices'])} notices, {sum(len(n['copy']) for n in notices['notices'])} choice texts, "
-         f"{sum(n['status'] != 'DRAFT' for n in notices['notices'])} in effect"),
-        ("retention", check_retention(loaded["retention.json"]),
-         f"{len(retention)} classes, {sum(c['max_retention']['value'] is not None for c in retention.values())} periods decided"),
-        ("deletion lineage", check_lineage(loaded["deletion_lineage.json"], retention),
-         f"{len(loaded['deletion_lineage.json']['nodes'])} artifact kinds from {len(loaded['deletion_lineage.json']['roots'])} roots"),
-        ("source rights", check_source_rights(loaded["source_rights.json"]),
-         f"{len(loaded['source_rights.json']['sources'])} sources, "
-         f"{sum(s['review_status'] == 'REVIEWED' for s in loaded['source_rights.json']['sources'])} reviewed"),
-        ("collection protocol", check_protocol(protocol, purposes, collection_dir, sources=sources),
-         f"{len(protocol['tasks'])} tasks, {len(protocol['guidance'])} guidance files"),
-        ("pilot gate", check_pilot_gate(loaded["pilot_gate.json"], protocol, notices, purposes),
-         f"{loaded['pilot_gate.json']['status']}, "
-         f"{sum(d['status'] == 'DECIDED' for d in loaded['pilot_gate.json']['decisions'])}/{len(loaded['pilot_gate.json']['decisions'])} decisions recorded"),
-    ]
-    for label, issues, detail in checks:
-        report.issues += issues
-        report.lines.append(f"{'PASS' if not issues else 'FAIL'} {label}: {detail}")
+    registry = loaded["purposes.json"]
+    documents = {"purposes": registry, "notices": loaded["notices.json"], "retention": loaded["retention.json"],
+                 "lineage": loaded["deletion_lineage.json"], "sources": loaded["source_rights.json"],
+                 "gate": loaded["pilot_gate.json"], "protocol": protocol}
+    policy_issues = policy_document_issues(documents, collection_dir=collection_dir, schemas=schemas, tasks_json=tasks_json)
+    report.issues += policy_issues
+    report.lines.append(f"{'FAIL' if policy_issues else 'PASS'} policy documents: same complete pipeline as human release")
+    if policy_issues:
+        return report
 
     scenario_files = sorted((consent_dir / "fixtures" / "scenarios").glob("*.json"))
     scenario_checks = 0
@@ -1777,8 +2211,7 @@ def validate_repository(consent_dir: Path = CONSENT_DIR, collection_dir: Path = 
         if not found:
             consent = collection_consent_context(registry, fixture["manifest"], fixture["consent_log"], fixture_mode=True)
             publish_at = parse_timestamp(fixture["publish_at"]) if "publish_at" in fixture else None
-            actual, _summary = check_collection_manifest(fixture["manifest"], protocol, consent, human_release=False,
-                                                         sources=sources, publish_at=publish_at)
+            actual, _summary = check_fixture_collection_manifest(fixture["manifest"], protocol, consent, publish_at=publish_at)
             codes = sorted({issue.code for issue in actual})
             if codes != sorted(fixture["expected_errors"]):
                 found.append(Issue("FIXTURE_EXPECTATION", path.name, f"expected {sorted(fixture['expected_errors'])}, got {codes}"))
@@ -1793,7 +2226,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.parse_args(argv)
     try:
         report = validate_repository()
-    except (OSError, ValueError, KeyError) as exc:
+    except (OSError, ValueError, TypeError, KeyError, OverflowError, RecursionError) as exc:
         print(f"FAIL: {exc}", file=sys.stderr)
         return 1
     for line in report.lines:

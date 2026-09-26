@@ -13,7 +13,7 @@
     "notice": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["notice_id", "version", "status", "purposes", "effective_from", "effective_until", "decision_ref", "content_sha256", "end_decision_ref", "end_decided_by_role", "end_decided_on", "end_content_sha256", "copy"],
+      "required": ["notice_id", "version", "status", "purposes", "effective_from", "effective_until", "decision_ref", "decided_by_role", "decided_on", "content_sha256", "end_decision_ref", "end_decided_by_role", "end_decided_on", "end_content_sha256", "copy"],
       "properties": {
         "notice_id": {"$ref": "common.schema.json#/$defs/dotted_key"},
         "version": {"$ref": "common.schema.json#/$defs/version"},
@@ -26,6 +26,8 @@
         "effective_from": {"$ref": "common.schema.json#/$defs/nullable_timestamp"},
         "effective_until": {"$ref": "common.schema.json#/$defs/nullable_timestamp"},
         "decision_ref": {"$ref": "common.schema.json#/$defs/decision_ref"},
+        "decided_by_role": {"type": ["string", "null"], "minLength": 1},
+        "decided_on": {"$ref": "common.schema.json#/$defs/nullable_timestamp"},
         "content_sha256": {
           "type": ["string", "null"],
           "pattern": "^[0-9a-f]{64}$",

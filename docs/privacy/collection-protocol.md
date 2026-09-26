@@ -51,7 +51,29 @@ Repeat photos are captures of the same specimen. A second session creates new sp
 - language/task mixing [`TASK_LANGUAGE_MISMATCH`], or one writer's supported pages in more than one language; none of that writer's pages is counted, since each participant writes in one chosen language [`WRITER_LANGUAGE_CONFLICT`];
 - claimed counts that the lineage does not support [`COUNT_MISMATCH`].
 
-Counts, captures included, are reported per task, so copied and free writing, and Swedish and English, are never pooled. The check treats a manifest as a human release by default. A human release counts nothing if the manifest is synthetic [`SYNTHETIC_IN_HUMAN_RELEASE`] or its consent context was built in fixture mode, which is refused for non-synthetic manifests [`FIXTURE_CONSENT_IN_HUMAN_RELEASE`]. Captures whose repeat lineage fails validation are reported and never counted. It also counts nothing unless `pilot_rights_consent` was approved, with every decision row decided once and none pending, before the protocol and before any protocol purpose was approved or any notice over one took effect [`PILOT_GATE_NOT_APPROVED`; `check_pilot_gate` reports `GATE_APPROVED_AFTER_PROTOCOL`, `PURPOSE_APPROVED_BEFORE_GATE` and `NOTICE_PREDATES_GATE`], and unless the protocol is `APPROVED` with a recorded approval whose `content_sha256` still matches the protocol, including every prompt and guidance hash, and every prompt's rights decided [`PROTOCOL_NOT_APPROVED`; `check_protocol` reports `APPROVAL_CONTENT_MISMATCH`, so new wording needs a new approval]; pages written before that approval are excluded [`COLLECTED_BEFORE_PROTOCOL_APPROVAL`]; and the protocol's `source_id` entry in `source_rights.json` is an owned collection with reviewed, cleared data rights and a cleared use for the release purpose: `engineering_testing` for `engineering_evaluation`, `benchmark_statistics` for `reference_contribution`, by a review dated no later than the cutoff whose `content_sha256` still matches the source's rights, uses and restrictions [`SOURCE_NOT_CLEARED`]. Participant consent alone never clears a use, and the release summary carries the attribution that review requires. Notices come from `notices.json`, not from the ledger's own windows, only while their `content_sha256` matches the wording that was decided, and only if every purpose they list was completely approved before they took effect. The protocol's purposes must use retention classes decided in the approved, content-bound retention policy, which a human release is given explicitly [`PURPOSE_RETENTION_UNDECIDED`]. Every permission is evaluated again at `publish_at`, immediately before publication, so a withdrawal during release construction removes the page [`NO_RELEASE_PERMISSION`]. A release without that recheck is refused [`PUBLICATION_NOT_RECHECKED`, `PUBLICATION_BEFORE_CUTOFF`]. Repository fixtures are checked in non-release mode, and their summary stays marked synthetic.
+Counts, captures included, are reported per task, so copied and free writing,
+and Swedish and English, are never pooled. The human-release API now returns a
+`ValidationResult[ApprovedCollection]`: **any issue means `value=None`, not a
+partially usable release summary**. The diagnostics above describe why rows fail;
+they do not permit a caller to publish the remaining rows of an invalid manifest.
+Submit a clean manifest with correctly recomputed counts and a fresh bound
+publication attestation. Honest unsupported contexts remain excluded by design.
+
+A human release requires the complete compiled policy: approved purpose registry,
+protocol, retention, deletion lineage and pilot gate; unique canonical indexes;
+authoritative notices with activation/end decision metadata; prompt/guidance bytes
+matching their reviewed hashes; source-rights records; and a context compiled for
+the exact policy and manifest. The owned collection's relevant source use must
+have been reviewed by the cutoff and remain unexpired at publication. Permissions
+are checked when writing and photographing each page, at cutoff and at publication.
+Source attribution is carried with successful output. Success also contains the
+exact writer, specimen and capture IDs, not just totals.
+
+`check_fixture_collection_manifest` is a separate **synthetic-only** diagnostic
+API. Its summaries remain marked synthetic and cannot be passed to the human
+release endpoint. There is no `human_release=False` switch on the human API.
+See [Validated release boundary](validated-release-boundary.md) for the full
+handoff, migration and publication evidence contract.
 
 ## Unsupported contexts
 
@@ -65,5 +87,5 @@ Only adults who declare eligibility themselves take part; the age threshold per 
 
 1. Record all eleven gate decisions and the approval in `pilot_gate.json`, with evidence kept outside Git. The validator requires every decision key to be present; removing one fails. Approving the protocol also requires decided prompt rights for every task. Move the pilot notice to `ACTIVE` with its effective window.
 2. Implement collection tooling that writes consent events and a collection manifest in the shapes defined here. Store images and signed agreements only in protected storage.
-3. Run `python tools/validate_consent_protocol.py` on every pilot release manifest before annotation or splitting. Also run `check_collection_manifest` with the protected consent ledger (via `collection_consent_context`, never in fixture mode).
+3. Run `python tools/validate_consent_protocol.py` to validate the repository drafts and fixtures. This command does **not** ingest arbitrary pilot releases. For an actual release, compile the complete protected policy with `compile_release_policy`, build `collection_consent_context` from that compiled policy and the protected ledger, then call `check_collection_manifest` with the exact manifest, publication instant and bound withdrawal/deletion attestation. Publish only its successful value, using the runtime fencing requirements in the boundary handoff.
 4. Exercise withdrawal and deletion before the first corpus release.
