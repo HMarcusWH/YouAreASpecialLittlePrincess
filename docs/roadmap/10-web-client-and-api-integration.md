@@ -24,10 +24,11 @@ T28 establishes a pinned pnpm workspace and Node/toolchain matrix. Preserve the 
 | `/v1/report-exports`, `/{id}` | Async PDF/card creation, authorized retrieval | T21 |
 | `/v1/share-grants`, invitations | Scope, preview, redeem, revoke; no implicit image or Premium consent | T22 |
 | `/v1/contributions`, withdrawals | Contribution-specific permission plus corpus lineage/release invalidation; uses the T02 permission ledger | T02/T12/T14 |
-| `/v1/devices`, notifications, feedback | Push token binding, preferences and report-content feedback | T29/T24/T20 |
+| `/v1/devices`, notifications | Push token binding and notification preferences | T29/T24 |
+| `/v1/reports/{id}/feedback` | Owner-bound, redacted report-content feedback with retention/deletion and restricted support review | T24 backend; T20/T30/T31 clients |
 | `/v1/webhooks/{provider}` | Raw signature verification then durable inbox | T19/T24 |
 
-These are planned route contracts, not endpoints that exist today. T01 freezes DTOs; each owning task adds route schemas, operation IDs, status/error codes and generated clients. Follow existing [05](05-release-operations.md) semantics, including safe intake and deletion. Upload completion and analysis submission are deliberately separate: `/samples/{id}/complete` verifies/promotes immutable bytes and may enqueue decode preparation, while `POST /v1/analyses` is the explicit idempotent business operation that creates or reuses the intended deterministic AnalysisRun/job.
+These are planned route contracts, not endpoints that exist today. T01 freezes DTOs; each owning task adds route schemas, operation IDs, status/error codes and generated clients. Follow existing [05](05-release-operations.md) semantics, including safe intake and deletion. Partner comparison is a distinct permission purpose from ordinary sharing; invitation or share state never substitutes for an effective partner-comparison grant in the T02 permission ledger. Upload completion and analysis submission are deliberately separate: `/samples/{id}/complete` verifies/promotes immutable bytes and may enqueue decode preparation, while `POST /v1/analyses` is the explicit idempotent business operation that creates or reuses the intended deterministic AnalysisRun/job.
 
 Mutating API calls use server-scoped idempotency keys and a canonical request digest. A reused key with a different body fails. Responses identify job/report revision separately; `202` acceptance is not successful inference. Use cursor pagination with stable ordering, bounded page sizes and ownership checks. Return machine error codes plus localized UI actions; keep traces and internal paths private.
 

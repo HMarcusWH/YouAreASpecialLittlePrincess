@@ -110,6 +110,9 @@ def validate_plan(data: dict, root: Path | None = None) -> list[str]:
             ]
             if unfinished:
                 errors.append(f"{task_id}: DONE with unfinished predecessors: {', '.join(unfinished)}")
+            evidence = task.get("completion_evidence")
+            if not isinstance(evidence, str) or not evidence.strip():
+                errors.append(f"{task_id}: DONE requires nonempty completion_evidence")
     visiting: list[str] = []
     visited: set[str] = set()
 

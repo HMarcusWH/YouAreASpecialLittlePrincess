@@ -8,7 +8,7 @@ import plan_tools
 
 
 def task(task_id, depends=(), status="PLANNED"):
-    return {
+    record = {
         "id": task_id, "title": "Fixture task", "status": status,
         "depends_on": list(depends), "owner_role": "test", "milestone": "test",
         "platforms": ["shared"], "connectors": [], "required_docs": ["ROADMAP.md"],
@@ -17,6 +17,9 @@ def task(task_id, depends=(), status="PLANNED"):
         "negative_tests": ["Reject invalid input"], "artifacts": ["Fixture"],
         "production_gates": [], "validation_profiles": ["docs"], "rollback": ["Revert fixture"],
     }
+    if status == "DONE":
+        record["completion_evidence"] = "fixture evidence"
+    return record
 
 
 def plan():
@@ -57,9 +60,19 @@ class PlanTests(unittest.TestCase):
     def test_done_requires_done_predecessors(self):
         data = plan()
         data["tasks"][2]["status"] = "DONE"
+        data["tasks"][2]["completion_evidence"] = "reviewed evidence"
         errors = "\n".join(plan_tools.validate_plan(data))
         self.assertIn("DONE with unfinished predecessors", errors)
         data["tasks"][1]["status"] = "DONE"
+        data["tasks"][1]["completion_evidence"] = "reviewed evidence"
+        self.assertEqual(plan_tools.validate_plan(data), [])
+
+    def test_done_requires_completion_evidence(self):
+        data = plan()
+        data["tasks"][1]["status"] = "DONE"
+        errors = "\n".join(plan_tools.validate_plan(data))
+        self.assertIn("DONE requires nonempty completion_evidence", errors)
+        data["tasks"][1]["completion_evidence"] = "reviewed exact-head evidence"
         self.assertEqual(plan_tools.validate_plan(data), [])
 
     def test_connector_requires_canonical_spec(self):
