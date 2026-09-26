@@ -46,10 +46,13 @@ SANDBOX_IGNORE = shutil.ignore_patterns(
     ".git", ".venv", "build", "dist", "*.egg-info", "__pycache__", ".pytest_cache", ".ruff_cache", "node_modules"
 )
 
-# Executed as `python -c RUNNER BACKEND HOOK RESULT_PATH` inside the sandbox copy.
-# Socket egress is denied before the backend is imported, the project tree is
-# removed from sys.path so an in-tree module cannot pose as the backend, and
-# backend output is diverted so only the JSON result file is trusted.
+# Executed as `python -I -B -c RUNNER BACKEND HOOK RESULT_PATH` inside the sandbox copy.
+# Isolated mode (-I) keeps the working directory, PYTHONPATH and the user site
+# off sys.path from interpreter start-up, so a committed socket.py or json.py
+# cannot run in place of these imports. Socket egress is denied
+# before the backend is imported, the project tree is stripped from sys.path
+# again as a second guard, and backend output is diverted so only the JSON
+# result file is trusted.
 BACKEND_HOOK_RUNNER = r"""
 import contextlib, importlib, json, os, socket, sys
 
@@ -247,6 +250,29 @@ def requires_python_errors(data: dict, reviewed: set[tuple[int, int]]) -> list[s
         spec = SpecifierSet(raw)
     except InvalidSpecifier as exc:
         return [f"Invalid [project].requires-python {raw!r}: {exc}"]
+
+    # Only whole-minor >= and < bounds are accepted. Their intersection is one
+    # interval whose ends fall on minor boundaries, so probing the first and a
+    # late patch of each minor below is exact. Exclusions such as !=3.11.5,
+    # wildcards, ~= and patch-level bounds would slip between those probes.
+    shapes = []
+    for clause in sorted(spec, key=str):
+        try:
+            version = Version(clause.version)
+        except InvalidVersion:
+            version = None
+        if (
+            clause.operator not in (">=", "<")
+            or version is None
+            or version.epoch
+            or version.is_prerelease
+            or version.is_postrelease
+            or version.local
+            or any(version.release[2:])
+        ):
+            shapes.append(f"requires-python clause {str(clause)!r} is not a whole-minor bound; use only '>=X.Y' and '<X.Y'")
+    if shapes:
+        return shapes
 
     def covers(major: int, minor: int) -> list[bool]:
         return [spec.contains(f"{major}.{minor}.{patch}") for patch in (0, 99)]
@@ -504,7 +530,8 @@ def capture_backend_requirements(
     """
     reported: dict[str, list[str]] = {}
     errors: list[str] = []
-    environment = dict(os.environ, PIP_NO_INDEX="1", PIP_NO_INPUT="1", PYTHONDONTWRITEBYTECODE="1")
+    # -I ignores PYTHON* variables, so -B replaces PYTHONDONTWRITEBYTECODE.
+    environment = dict(os.environ, PIP_NO_INDEX="1", PIP_NO_INPUT="1")
     with tempfile.TemporaryDirectory(prefix="backend-hooks-") as tmp:
         sandbox = Path(tmp) / "project"
         shutil.copytree(project_root, sandbox, symlinks=True, ignore=SANDBOX_IGNORE)
@@ -512,7 +539,7 @@ def capture_backend_requirements(
             result_path = Path(tmp) / f"{hook}.json"
             try:
                 completed = subprocess.run(
-                    [python, "-c", BACKEND_HOOK_RUNNER, backend, hook, str(result_path)],
+                    [python, "-I", "-B", "-c", BACKEND_HOOK_RUNNER, backend, hook, str(result_path)],
                     cwd=sandbox,
                     env=environment,
                     stdin=subprocess.DEVNULL,

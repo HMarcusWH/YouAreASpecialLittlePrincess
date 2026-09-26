@@ -1,5 +1,7 @@
 """Regression tests for the T00 CI lock and dependency policy."""
 
+import subprocess
+import venv
 import zipfile
 from pathlib import Path
 from types import SimpleNamespace
@@ -627,15 +629,30 @@ def test_repository_locks_declare_their_target(version):
     assert (python.replace(".", ""), system, machine) == (version, "Linux", "x86_64")
 
 
-def fake_backend(tmp_path, monkeypatch, body: str, name: str = "fake_backend"):
-    """Install a fake PEP 517 backend on PYTHONPATH (outside the project tree) and return the project root."""
+def backend_python(project: Path) -> Path:
+    return project.parent / "venv" / "bin" / "python"
+
+
+def fake_backend(tmp_path, body: str, name: str = "fake_backend"):
+    """Install a fake PEP 517 backend into a throwaway venv (outside the project tree) and return the project root.
+
+    Hooks run under python -I, which ignores PYTHONPATH, so the backend is made
+    importable the way a real one is: through the interpreter's site-packages.
+    """
     backends = tmp_path / "backends"
     backends.mkdir(exist_ok=True)
     (backends / f"{name}.py").write_text(body, encoding="utf-8")
-    monkeypatch.setenv("PYTHONPATH", str(backends))
     project = tmp_path / "project"
     project.mkdir(exist_ok=True)
     (project / "pyproject.toml").write_text(REVIEWED_BUILD_SYSTEM + MINIMAL_PROJECT, encoding="utf-8")
+    python = backend_python(project)
+    if not python.exists():
+        venv.create(python.parent.parent, with_pip=False, symlinks=True)
+        purelib = subprocess.run(
+            [str(python), "-I", "-c", "import sysconfig; print(sysconfig.get_paths()['purelib'])"],
+            capture_output=True, text=True, check=True,
+        ).stdout.strip()
+        (Path(purelib) / "fake_backends.pth").write_text(f"{backends}\n", encoding="utf-8")
     return project
 
 
@@ -649,18 +666,20 @@ def get_requires_for_build_editable(config_settings=None):
 
 
 def backend_errors(project, backend="fake_backend", manifest=None, declared=("setuptools", "wheel")):
-    reported, errors = verify_project_dependency_policy.capture_backend_requirements(project, backend, timeout=60)
+    reported, errors = verify_project_dependency_policy.capture_backend_requirements(
+        project, backend, python=str(backend_python(project)), timeout=60
+    )
     reviewed = manifest or {"setuptools": "84.0.0", "wheel": "0.48.0", "helper": "1.0"}
     return reported, errors + verify_project_dependency_policy.backend_requirement_errors(
         reported, reviewed, set(declared)
     )
 
 
-def test_backend_reported_requirements_outside_the_lock_are_rejected(tmp_path, monkeypatch):
+def test_backend_reported_requirements_outside_the_lock_are_rejected(tmp_path):
     # PR #10 post-merge finding 3: --no-build-isolation never asks the backend,
     # but an isolated source build installs whatever it reports.
     project = fake_backend(
-        tmp_path, monkeypatch,
+        tmp_path,
         REPORTING_BACKEND.format(wheel=["unreviewed-helper>=1"], editable=["helper[fast]", "x @ https://example.invalid/x.whl"]),
     )
 
@@ -680,9 +699,9 @@ def test_backend_reported_requirements_outside_the_lock_are_rejected(tmp_path, m
     ]
 
 
-def test_backend_reported_requirement_must_be_a_declared_reviewed_build_requirement(tmp_path, monkeypatch):
+def test_backend_reported_requirement_must_be_a_declared_reviewed_build_requirement(tmp_path):
     project = fake_backend(
-        tmp_path, monkeypatch,
+        tmp_path,
         REPORTING_BACKEND.format(wheel=["wheel==0.48.0", 'legacy; python_version < "3"'], editable=["helper>=1", "wheel>=0.40"]),
     )
 
@@ -702,9 +721,9 @@ def test_backend_reported_requirement_must_be_a_declared_reviewed_build_requirem
     ]
 
 
-def test_backend_hooks_cannot_reach_the_network(tmp_path, monkeypatch):
+def test_backend_hooks_cannot_reach_the_network(tmp_path):
     project = fake_backend(
-        tmp_path, monkeypatch,
+        tmp_path,
         """
 import socket
 
@@ -724,9 +743,9 @@ def get_requires_for_build_wheel(config_settings=None):
     assert "192.0.2.1" in errors[0]
 
 
-def test_backend_hooks_run_on_a_disposable_copy(tmp_path, monkeypatch):
+def test_backend_hooks_run_on_a_disposable_copy(tmp_path):
     project = fake_backend(
-        tmp_path, monkeypatch,
+        tmp_path,
         """
 import pathlib
 
@@ -743,8 +762,8 @@ def get_requires_for_build_wheel(config_settings=None):
     assert not (project / "generated.egg-info").exists()
 
 
-def test_in_tree_module_cannot_pose_as_the_backend(tmp_path, monkeypatch):
-    project = fake_backend(tmp_path, monkeypatch, "", name="unrelated")
+def test_in_tree_module_cannot_pose_as_the_backend(tmp_path):
+    project = fake_backend(tmp_path, "", name="unrelated")
     (project / "intree_backend.py").write_text(
         "def get_requires_for_build_wheel(config_settings=None):\n    return ['evil']\n", encoding="utf-8"
     )
@@ -755,9 +774,43 @@ def test_in_tree_module_cannot_pose_as_the_backend(tmp_path, monkeypatch):
     assert all("ModuleNotFoundError" in error for error in errors)
 
 
-def test_failing_or_malformed_backend_hooks_are_errors(tmp_path, monkeypatch):
+def test_project_modules_cannot_shadow_the_runner_imports(tmp_path):
+    # Codex review of #12: the hook process started in the project copy with
+    # the working directory on sys.path, so a committed socket.py ran before
+    # the egress guard was installed.
+    project = fake_backend(tmp_path, REPORTING_BACKEND.format(wheel=[], editable=[]))
+    ran = tmp_path / "shadow-ran"
+    ran.mkdir()
+    for module in ("socket", "json", "contextlib"):
+        (project / f"{module}.py").write_text(
+            f"open({str(ran / module)!r}, 'w').close()\nraise SystemExit('project {module}.py was imported')\n",
+            encoding="utf-8",
+        )
+
+    reported, errors = backend_errors(project)
+    assert errors == []
+    assert reported == {hook: [] for hook in verify_project_dependency_policy.BACKEND_HOOKS}
+    assert sorted(path.name for path in ran.iterdir()) == []
+
+
+def test_pythonpath_cannot_supply_the_backend(tmp_path, monkeypatch):
+    project = fake_backend(tmp_path, "", name="unrelated")
+    injected = tmp_path / "injected"
+    injected.mkdir()
+    (injected / "env_backend.py").write_text(
+        "def get_requires_for_build_wheel(config_settings=None):\n    return ['evil']\n", encoding="utf-8"
+    )
+    monkeypatch.setenv("PYTHONPATH", str(injected))
+
+    reported, errors = backend_errors(project, backend="env_backend")
+    assert reported == {}
+    assert len(errors) == 3
+    assert all("ModuleNotFoundError" in error for error in errors)
+
+
+def test_failing_or_malformed_backend_hooks_are_errors(tmp_path):
     project = fake_backend(
-        tmp_path, monkeypatch,
+        tmp_path,
         """
 def get_requires_for_build_wheel(config_settings=None):
     raise SystemExit("setup() aborted")
@@ -785,7 +838,7 @@ def test_repository_backend_reports_no_unreviewed_build_requirements():
 
 
 def test_backend_hooks_never_run_when_static_policy_fails(tmp_path, monkeypatch, capsys):
-    project = fake_backend(tmp_path, monkeypatch, "raise SystemExit('backend must not be imported')\n")
+    project = fake_backend(tmp_path, "raise SystemExit('backend must not be imported')\n")
     (project / "setup.py").write_text("raise SystemExit('setup.py must not run')\n", encoding="utf-8")
     manifest = tmp_path / "manifest.txt"
     manifest.write_text(REVIEWED_TOOLCHAIN, encoding="utf-8")
@@ -826,6 +879,7 @@ def test_cli_combines_static_graph_and_backend_checks(tmp_path, monkeypatch, cap
 
 
 REVIEWED_PYTHONS = {(3, 10), (3, 11), (3, 12)}
+WHOLE_MINOR = "is not a whole-minor bound; use only '>=X.Y' and '<X.Y'"
 
 
 @pytest.mark.parametrize(
@@ -837,8 +891,17 @@ REVIEWED_PYTHONS = {(3, 10), (3, 11), (3, 12)}
                    "3.9, 3.13, 3.14, 3.15 and 84 more"]),
         (">=3.10,<3.14", ["requires-python '>=3.10,<3.14' advertises Python versions with no reviewed lock or CI job: 3.13"]),
         (">=3.10,<3.12", ["requires-python '>=3.10,<3.12' does not fully support reviewed Python 3.12"]),
-        (">=3.10,<3.13,!=3.11.*", ["requires-python '>=3.10,<3.13,!=3.11.*' does not fully support reviewed Python 3.11"]),
+        (">=3.10.0,<3.13.0", []),
         (None, ["[project].requires-python must bound support to the reviewed interpreters (3.10, 3.11, 3.12)"]),
+        # Codex re-review of #12: probing two patches per minor missed partial
+        # exclusions, so only whole-minor >= and < bounds are accepted.
+        (">=3.10,<3.13,!=3.11.5", [f"requires-python clause '!=3.11.5' {WHOLE_MINOR}"]),
+        (">=3.10,<3.13,!=3.11.*", [f"requires-python clause '!=3.11.*' {WHOLE_MINOR}"]),
+        (">=3.10,<3.12.5", [f"requires-python clause '<3.12.5' {WHOLE_MINOR}"]),
+        (">3.9.99,<3.13", [f"requires-python clause '>3.9.99' {WHOLE_MINOR}"]),
+        ("~=3.10", [f"requires-python clause '~=3.10' {WHOLE_MINOR}"]),
+        (">=3.10,<3.13,<=3.12", [f"requires-python clause '<=3.12' {WHOLE_MINOR}"]),
+        (">=3.10rc1,<3.13", [f"requires-python clause '>=3.10rc1' {WHOLE_MINOR}"]),
     ],
 )
 def test_requires_python_matches_reviewed_interpreters(tmp_path, requires_python, expected):

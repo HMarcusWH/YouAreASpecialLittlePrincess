@@ -132,6 +132,11 @@ The Codex review of the T00A head found that an inactive environment marker on a
 
 Codex's re-review then found that `requires-python` was never checked, so widening it (to `>=3.9`, for example) passed while advertising unreviewed interpreters. The policy now derives the reviewed minors from the `# Python X.Y` headers of `requirements/ci-py*.lock`. `requires-python` must fully cover exactly those minors, and a missing value fails. Regressions: `test_requires_python_matches_reviewed_interpreters[*]`, `test_reviewed_interpreters_come_from_the_repository_locks` and `test_cli_checks_requires_python_against_discovered_locks`.
 
+The third Codex review found two more gaps, both reproduced before the fix:
+
+- Coverage was probed only at patches 0 and 99 of each minor, so `>=3.10,<3.13,!=3.11.5` passed. `requires-python` may now contain only whole-minor `>=X.Y` and `<X.Y` clauses. Their intersection is one interval with minor-aligned ends, so the probes are exact. The new cases in `test_requires_python_matches_reviewed_interpreters[*]` failed 7/7 against the previous tool.
+- The hook subprocess started in the project copy with the working directory on `sys.path`, so a committed `socket.py` executed before the egress guard was installed. Hooks now run under `python -I -B`, which also ignores `PYTHONPATH`. `test_project_modules_cannot_shadow_the_runner_imports` and `test_pythonpath_cannot_supply_the_backend` failed against the previous tool. The fake backends in the tests are now installed into a throwaway venv's site-packages instead of `PYTHONPATH`.
+
 ### Supported build configuration and residual trust
 
 The supported configuration is a pyproject-only setuptools project with an explicit `setuptools.build_meta` backend, exact reviewed build pins, and static dependency metadata. See the [requirements README](../../requirements/README.md#supported-build-configuration). Residual trust remains in three places:
