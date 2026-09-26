@@ -34,7 +34,7 @@ Use `python docs/roadmap/plan_tools.py --ready` or `--task ID`. Edit tasks.json 
 | [T17 — Interactive Free web product](#t17) | PLANNED | T02, T04, T09, T10, T28 | frontend |
 | [T18 — Deterministic pair and history comparison](#t18) | PLANNED | T08, T09 | statistics-report |
 | [T19 — Cross-platform purchase ledger entitlements and metered jobs](#t19) | PLANNED | T02, T03, T09, T15, T27 | commerce |
-| [T20 — Premium and paid-pair web experience](#t20) | PLANNED | T15, T16, T17, T18, T19, T21 | frontend-premium |
+| [T20 — Premium and paid-pair web experience](#t20) | PLANNED | T15, T16, T17, T18, T19, T21, T24 | frontend-premium |
 | [T21 — Same-content PDF and share-card rendering](#t21) | PLANNED | T09, T10, T17 | report-frontend |
 | [T22 — Scoped sharing and comparison invitations](#t22) | PLANNED | T17, T18, T21 | backend-frontend |
 | [T23 — Multi-platform end-to-end QA and threat model](#t23) | PLANNED | T00, T00A, T06, T08, T14, T18, T20, T21, T22, T24, T30, T31 | independent-review |
@@ -347,7 +347,7 @@ src/princess_app/application/permissions/
 ### Coding sequence
 
 1. Implement initial principal/identity, asset/sample/capture, run/measurement/region, report, job/outbox and version tables with reviewed Alembic migrations; defer commerce-specific tables to T19.
-2. Implement an append-only permission/consent event ledger and owner-scoped grant/withdraw lifecycle for service processing, retention, third-party AI processing, contribution and sharing, using T03 purpose/policy IDs; check effective permission at use time rather than mutating historical grants.
+2. Implement an append-only permission/consent event ledger and owner-scoped grant/withdraw lifecycle for service processing, retention, third-party AI processing, contribution, ordinary sharing and partner comparison as distinct purposes, using T03 purpose/policy IDs; check effective permission at use time rather than mutating historical grants.
 3. Map verified provider identities to internal principals; implement guest-to-account transfer and deletion/session revocation. No home-grown password system or email-only account linking.
 4. Persist canonical result JSON and relational projections atomically; enforce owner/run composite references and actual non-owner runtime roles.
 5. Publish authenticated API composition and repository/unit-of-work fakes plus PostgreSQL integration fixtures.
@@ -361,11 +361,13 @@ Stable internal ownership IDs, transaction boundaries and versioned persistence 
 - Cross-owner/run access and duplicate features are rejected by application and relevant database constraints.
 - Actual PostgreSQL role/RLS and migration/restore smoke pass; reference members remain service-only.
 - Permission grants/withdrawals persist as append-only purpose/policy/scope events; stale or withdrawn permission cannot authorize later processing.
+- Partner-comparison authorization is a separate purpose from ordinary sharing, with independent grant/withdraw/audit state checked at use time.
 
 ### Required failure and regression cases
 
 - Guessed report IDs, forged region parent, guest-transfer race, revoked token, duplicate projection write and migration rollback with existing rows.
 - Permission replay, stale policy version, concurrent withdraw/use, contribution without authority and AI processing after withdrawal.
+- Ordinary share grant reused as partner-comparison authority, withdrawn partner comparison reused by a stale invitation, and concurrent partner withdrawal/use.
 
 ### Deliverables
 
@@ -414,14 +416,14 @@ content/collection/
 
 ### Coding sequence
 
-1. Draft purpose-specific consent/withdrawal, retention and source-license contracts without inventing approvals; coordinate their final DTO mapping with T01.
+1. Draft purpose-specific consent/withdrawal, retention and source-license contracts without inventing approvals; define partner comparison as a distinct purpose from ordinary sharing, and coordinate final DTO mapping with T01.
 2. Prepare original Swedish/English controlled/free-writing prompts and capture/author guidance, keeping copied tasks separate from free writing and repeat captures separate from writers.
 3. Specify deletion lineage, participant/source rights evidence, adult eligibility and unsupported context handling for owner review.
 4. Provide fixtures for grant/deny/withdraw/no-authority cases and a gated pilot handoff; actual recruitment belongs to T11.
 
 ### Contract and integration handoff
 
-Versioned purpose/protocol IDs and approved-or-pending evidence references; service permission is separate from contribution, AI processing and sharing.
+Versioned purpose/protocol IDs and approved-or-pending evidence references; service permission, contribution, AI processing, ordinary sharing and partner comparison are distinct purposes.
 
 ### Acceptance evidence
 
@@ -1159,7 +1161,7 @@ No approval is created by this task brief. Mock/disabled implementation is not a
 
 **Hard predecessors:** [T01](#t01), [T09](#t09), [T26](#t26), [T27](#t27)
 **Platforms:** backend, workers
-**Connector ports:** PremiumModelProvider
+**Connector ports:** PremiumModelProvider, ObjectStore
 
 ### Required reading
 
@@ -1167,6 +1169,7 @@ No approval is created by this task brief. Mock/disabled implementation is not a
 - [docs/roadmap/08-premium-question-selector-database.md](08-premium-question-selector-database.md)
 - [docs/connectors/premium-model.md](../connectors/premium-model.md)
 - [docs/roadmap/14-payments-entitlements-and-commerce.md](14-payments-entitlements-and-commerce.md)
+- [docs/connectors/object-storage.md](../connectors/object-storage.md)
 
 ### Owned implementation surfaces
 
@@ -1181,10 +1184,11 @@ evaluation/premium/
 
 ### Coding sequence
 
-1. Assemble a bounded immutable packet from authorized image/evidence, eligible reference facts and T26 applicable question/candidate contracts.
-2. Implement supported deterministic candidate producers and explicit unavailable states; compile per-request strict enums/output schema from frozen data.
-3. Implement one bounded multimodal Responses request with server-only credentials and no hidden retry/tool/browse behavior; begin with fakes.
-4. Validate shape, evidence, semantics and text bounds before a saved overlay; hand off reservation/publication integration to shared commerce rather than inventing a second ledger.
+1. Retrieve only the authorized image/analysis derivative through the restricted ObjectStore port with scoped worker access; re-check consent/deletion before transfer and never expose a reusable storage credential to the model provider.
+2. Assemble a bounded immutable packet from authorized image/evidence, eligible reference facts and T26 applicable question/candidate contracts.
+3. Implement supported deterministic candidate producers and explicit unavailable states; compile per-request strict enums/output schema from frozen data.
+4. Implement one bounded multimodal Responses request with server-only credentials and no hidden retry/tool/browse behavior; begin with fakes.
+5. Validate shape, evidence, semantics and text bounds before a saved overlay; hand off reservation/publication integration to shared commerce rather than inventing a second ledger.
 
 ### Contract and integration handoff
 
@@ -1487,7 +1491,7 @@ No approval is created by this task brief. Mock/disabled implementation is not a
 
 **Status:** `PLANNED` · **Owner:** frontend-premium · **Milestone:** premium
 
-**Hard predecessors:** [T15](#t15), [T16](#t16), [T17](#t17), [T18](#t18), [T19](#t19), [T21](#t21)
+**Hard predecessors:** [T15](#t15), [T16](#t16), [T17](#t17), [T18](#t18), [T19](#t19), [T21](#t21), [T24](#t24)
 **Platforms:** web, shared
 **Connector ports:** AnalyticsSink
 
@@ -1513,7 +1517,7 @@ packages/report-core/
 
 1. Integrate a truthful offer, explicit image-provider processing permission and server catalog/credit status; no fabricated pre-generated personal teaser.
 2. Implement purchase pending/verify/granted, job/refusal/failure/refund and saved-overlay states using real backend APIs.
-3. Add optional paid-pair narrative and safe report-content feedback, preserving deterministic pair access without requiring two individual purchases.
+3. Add optional paid-pair narrative and submit report-content feedback only through the T24 backend feedback API, preserving deterministic pair access without requiring two individual purchases.
 4. Ensure panel expansion/reopen/theme/export reads saved content and never calls the model.
 
 ### Contract and integration handoff
@@ -1702,10 +1706,11 @@ docs/release/
 
 ### Coding sequence
 
-1. Execute the complete core journey and failure matrix across web/iPhone/iPad/approved Android devices with actual authorized samples and controlled provider sandboxes.
-2. Review the threat model and test ownership, media/resource attacks, model injection, payment/replay/refund, share/deletion/cache and old-client compatibility.
-3. Compare facts and labels across native/web/PDF/cards, accessibility and no-provider Free behavior.
-4. Publish exact candidate evidence, unresolved critical findings and approved limitations; route defects back to owners before qualification.
+1. Before any real sample, paid-provider, billing or signed-device execution, verify and record the corresponding T23 production gates; mock-only coverage may be developed earlier but cannot satisfy T23 DONE.
+2. Execute the complete core journey and failure matrix across web/iPhone/iPad/approved Android devices with actual authorized samples and controlled provider sandboxes.
+3. Review the threat model and test ownership, media/resource attacks, model injection, payment/replay/refund, share/deletion/cache and old-client compatibility.
+4. Compare facts and labels across native/web/PDF/cards, accessibility and no-provider Free behavior.
+5. Publish exact candidate evidence, unresolved critical findings and approved limitations; route defects back to owners before qualification.
 
 ### Contract and integration handoff
 
@@ -1732,7 +1737,14 @@ Independent release-candidate QA/security/privacy evidence for store readiness a
 
 Validation profiles: [core](#validation-core), [docs](#validation-docs), [backend](#validation-backend), [web_render](#validation-web_render), [native](#validation-native), [empirical](#validation-empirical), [release](#validation-release). Planned suites must be implemented and their actual command documented by the owning task; they are not passing tests today.
 
-No task-specific production gate; all repository privacy/security and scope boundaries still apply.
+- `actual_participants_and_permissions`: Real participant permissions, collection and protected annotation evidence; never agent-fabricated.
+- `processor_retention_contracts`: Approved providers, regions, purposes, retention/deletion and support obligations.
+- `api_access_spend_before_live_calls`: Approved model account, data controls and spend cap before live provider calls.
+- `model_evaluation_and_data_controls`: Actual model capability/safety/usefulness evaluation and data-processing approval before enablement.
+- `price_account_terms_before_charges`: Approved products/prices/accounts/tax/refund/storefront and portability policy before real charges.
+- `native_signing_accounts`: Owner-authorized developer accounts, identifiers, signing custody and protected release credentials.
+
+No approval is created by this task brief. Mock/disabled implementation is not authorization for live collection, charges, signing or release.
 
 [Back to task table](#task-table) · [Documentation index](00-index.md) · [Execution sequence](20-end-to-end-build-sequence.md)
 
@@ -1765,14 +1777,19 @@ infra/
 docs/runbooks/
 src/princess_app/adapters/notifications/
 apps/workers/
+src/princess_app/domain/feedback/
+src/princess_app/application/feedback/
+src/princess_app/adapters/feedback/
+migrations/
 ```
 
 ### Coding sequence
 
 1. Deploy staging and approved production topology with narrow worker roles, migrations, private storage, secret rotation and independent capability kill switches.
 2. Implement outbox mail/APNs/FCM delivery and safe telemetry/analytics adapters with failure isolation, token/suppression lifecycle and named alert owners.
-3. Exercise backups/restore with deletion tombstones, durable job/payment reconciliation, model outage, cost limits and compatible mobile/API rollout.
-4. Write actionable incident/refund/deletion/key compromise/store halt and version rollback runbooks with actual deployed commands and support responsibility.
+3. Implement the authenticated report-feedback API, minimal/redacted persistence, retention/deletion lifecycle and restricted support-review access; feedback is not a telemetry event and may not include raw handwriting or unrestricted report payloads.
+4. Exercise backups/restore with deletion tombstones, durable job/payment reconciliation, model outage, cost limits and compatible mobile/API rollout.
+5. Write actionable incident/refund/deletion/key compromise/store halt and version rollback runbooks with actual deployed commands and support responsibility.
 
 ### Contract and integration handoff
 
@@ -1782,10 +1799,12 @@ Operable staged infrastructure and recovery/notification/support evidence, not p
 
 - A restore cannot resurrect erased data or duplicate credits/provider calls.
 - Provider outage preserves Free and safe business state; no private writing in dashboards or crash logs.
+- Report feedback is owner/report-bound, redacted to an allowlisted contract, removable under the approved lifecycle and inaccessible to generic analytics/telemetry roles.
 
 ### Required failure and regression cases
 
 - Mail/push outage, queue restoration, stale token, budget breaker, key revocation, expired DB connection, refund reconciliation and rollback to withdrawn benchmark.
+- Feedback containing raw writing/full report payload, cross-owner report feedback, support-role overreach, duplicate submission, and deletion followed by backup/queue resurrection.
 
 ### Deliverables
 
