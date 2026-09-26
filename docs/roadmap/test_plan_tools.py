@@ -80,6 +80,18 @@ class PlanTests(unittest.TestCase):
             page.write_text("[bad](b.md#missing)\n[absent](gone.md)\n", encoding="utf-8")
             self.assertEqual(len(plan_tools.validate_links(root, [page])), 2)
 
+    def test_required_markdown_outside_standard_folders_is_link_checked(self):
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            required = root / "docs/ci/required.md"
+            required.parent.mkdir(parents=True)
+            required.write_text("[broken](missing.md)\n", encoding="utf-8")
+            data = plan()
+            data["tasks"][0]["required_docs"] = ["docs/ci/required.md"]
+            paths = plan_tools.markdown_paths(root, data)
+            self.assertIn(required, paths)
+            self.assertTrue(plan_tools.validate_links(root, paths))
+
     def test_fenced_examples_do_not_create_links(self):
         with TemporaryDirectory() as directory:
             root = Path(directory)

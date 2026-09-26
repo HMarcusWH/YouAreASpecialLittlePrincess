@@ -209,11 +209,28 @@ def anchors(text: str) -> set[str]:
     return found
 
 
-def markdown_paths(root: Path) -> list[Path]:
+def markdown_paths(root: Path, data: dict | None = None) -> list[Path]:
     paths = [root / name for name in ("README.md", "ROADMAP.md", "AGENTS.md")]
     for folder in ("docs/roadmap", "docs/adr", "docs/connectors", "docs/release"):
         paths.extend(sorted((root / folder).glob("*.md")))
-    return [path for path in paths if path.is_file()]
+
+    if data is not None:
+        for task in data.get("tasks", []):
+            for rel in task.get("required_docs", []):
+                candidate = root / rel
+                if candidate.suffix.lower() == ".md":
+                    paths.append(candidate)
+
+    result: list[Path] = []
+    seen: set[Path] = set()
+    resolved_root = root.resolve()
+    for path in paths:
+        resolved = path.resolve()
+        if not resolved.is_relative_to(resolved_root) or not resolved.is_file() or resolved in seen:
+            continue
+        seen.add(resolved)
+        result.append(path)
+    return result
 
 
 def validate_links(root: Path, paths: list[Path]) -> list[str]:
@@ -273,7 +290,7 @@ def main(argv: list[str] | None = None) -> int:
                 raise ValueError(f"Unknown task: {args.task}")
             print(render_task(matches[0], data))
             return 0
-        errors = validate_links(ROOT, markdown_paths(ROOT))
+        errors = validate_links(ROOT, markdown_paths(ROOT, data))
         if not target.exists() or target.read_text(encoding="utf-8") != rendered:
             errors.append("Generated backlog is stale: run python docs/roadmap/plan_tools.py --write")
         if errors:

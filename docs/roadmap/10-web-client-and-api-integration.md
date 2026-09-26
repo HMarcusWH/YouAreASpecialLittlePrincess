@@ -14,6 +14,7 @@ T28 establishes a pinned pnpm workspace and Node/toolchain matrix. Preserve the 
 |---|---|---|
 | `/v1/me`, identity/session binding | Resolve internal principal; guest upgrade; account deletion request | T02 |
 | `/v1/samples`, `/{id}/upload`, `/{id}/complete` | Reserve asset, issue bounded upload authorization, bind immutable verified bytes, enqueue decoding | T04 |
+| `POST /v1/analyses` | Idempotently start deterministic analysis from an authorized completed sample/capture and return the AnalysisRun/job reference | T04 |
 | `/v1/jobs/{id}` | Owner-scoped status, progress stage and safe error code | T04 |
 | `/v1/reports/{id}` and history pagination | Authorized immutable revision projection, not raw DB rows | T09/T17 |
 | `/v1/reports/{id}/premium` | Validate consent/credit/suitability, reserve one business fulfilment | T15/T19 |
@@ -25,7 +26,7 @@ T28 establishes a pinned pnpm workspace and Node/toolchain matrix. Preserve the 
 | `/v1/devices`, notifications, feedback | Push token binding, preferences and report-content feedback | T29/T24/T20 |
 | `/v1/webhooks/{provider}` | Raw signature verification then durable inbox | T19/T24 |
 
-These are planned route contracts, not endpoints that exist today. T01 freezes DTOs; each owning task adds route schemas, operation IDs, status/error codes and generated clients. Follow existing [05](05-release-operations.md) semantics, including safe intake and deletion.
+These are planned route contracts, not endpoints that exist today. T01 freezes DTOs; each owning task adds route schemas, operation IDs, status/error codes and generated clients. Follow existing [05](05-release-operations.md) semantics, including safe intake and deletion. Upload completion and analysis submission are deliberately separate: `/samples/{id}/complete` verifies/promotes immutable bytes and may enqueue decode preparation, while `POST /v1/analyses` is the explicit idempotent business operation that creates or reuses the intended deterministic AnalysisRun/job.
 
 Mutating API calls use server-scoped idempotency keys and a canonical request digest. A reused key with a different body fails. Responses identify job/report revision separately; `202` acceptance is not successful inference. Use cursor pagination with stable ordering, bounded page sizes and ownership checks. Return machine error codes plus localized UI actions; keep traces and internal paths private.
 
