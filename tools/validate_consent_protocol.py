@@ -28,11 +28,15 @@ TASKS_JSON = ROOT / "docs" / "roadmap" / "tasks.json"
 # Purposes the T03 contract handoff requires to exist as separate permissions.
 REQUIRED_DISTINCT_PURPOSES = (
     "service_processing",
+    "image_retention",
     "reference_contribution",
     "third_party_ai_processing",
     "ordinary_sharing",
     "partner_comparison",
+    "public_example",
 )
+# Deletion lineage must start from these handwriting-bearing artifacts.
+HANDWRITING_ROOTS = ("upload_original", "pilot_capture")
 FREE_SERVICE_PURPOSE = "service_processing"
 # Purposes designed to be offered. Only APPROVED ones are usable for real
 # permission decisions; DRAFT is usable solely inside synthetic fixtures.
@@ -269,7 +273,8 @@ def known_gates(tasks_json: Path = TASKS_JSON) -> set[str]:
 def approved_by(purpose: dict, when: str) -> bool:
     """True when the purpose's recorded approval was decided at or before `when`."""
     decided_on = (purpose.get("approval") or {}).get("decided_on")
-    return purpose["status"] == "APPROVED" and bool(decided_on) and parse_timestamp(decided_on) <= parse_timestamp(when)
+    return (purpose["status"] in {"APPROVED", "RETIRED"} and bool(decided_on)
+            and parse_timestamp(decided_on) <= parse_timestamp(when))
 
 
 def decided_with_ref(status: str, ref, code: str, where: str) -> list[Issue]:
@@ -311,11 +316,12 @@ def check_purposes(doc: dict, retention_ids: set[str], gates: set[str]) -> list[
             for gate in p["related_gates"]:
                 if gate not in passed:
                     issues.append(Issue("GATE_NOT_APPROVED", where, f"{gate} has no recorded decision in approval.gate_decisions"))
-        if p["legal_basis"] == "DECIDED" and p["status"] != "APPROVED":
+        if p["legal_basis"] == "DECIDED" and p["status"] not in {"APPROVED", "RETIRED"}:
             issues.append(Issue("LEGAL_BASIS_WITHOUT_APPROVAL", where, "a decided legal basis belongs to an approved purpose"))
         if offered and not p["grant_scopes"]:
             issues.append(Issue("OFFERED_WITHOUT_SCOPE", where, "an offered purpose needs at least one grant scope"))
-        if not offered and (p["grant_scopes"] or p["recipients"] or p["retention_classes"]):
+        # RETIRED keeps its definition: append-only history is interpreted against it.
+        if p["status"] == "NOT_OFFERED" and (p["grant_scopes"] or p["recipients"] or p["retention_classes"]):
             issues.append(Issue("INACTIVE_PURPOSE_HAS_USE", where, "a purpose that is not offered cannot have scopes, recipients or retention"))
         if not p["withdrawal"]["available"]:
             issues.append(Issue("WITHDRAWAL_UNAVAILABLE", where, "withdrawal must remain available"))
@@ -376,9 +382,10 @@ def check_notices(doc: dict, purposes: dict[tuple[str, int], dict]) -> list[Issu
             purpose = purposes.get(purpose_key(ref))
             if purpose is None:
                 issues.append(Issue("UNKNOWN_PURPOSE", where, f"{ref['purpose_id']}@{ref['purpose_version']}"))
-            elif purpose["status"] not in OFFERED:
+            elif purpose["status"] not in OFFERED and not (purpose["status"] == "RETIRED" and notice["status"] == "SUPERSEDED"):
+                # A superseded notice is history; it may still list a purpose retired since.
                 issues.append(Issue("NOTICE_OFFERS_INACTIVE_PURPOSE", where, ref["purpose_id"]))
-            elif notice["status"] != "DRAFT" and purpose["status"] != "APPROVED":
+            elif notice["status"] != "DRAFT" and purpose["status"] == "DRAFT":
                 # Grants against unapproved purposes are rejected, so a live notice over them would be unusable.
                 issues.append(Issue("NOTICE_ACTIVE_FOR_UNAPPROVED_PURPOSE", where, ref["purpose_id"]))
             elif notice["status"] != "DRAFT" and notice["effective_from"] and not approved_by(purpose, notice["effective_from"]):
@@ -470,6 +477,13 @@ def check_lineage(doc: dict, retention: dict[str, dict]) -> list[Issue]:
     for root in doc["roots"]:
         if root not in nodes or nodes[root]["parents"]:
             issues.append(Issue("INVALID_ROOT", root, "roots must exist and have no parents"))
+    for root in HANDWRITING_ROOTS:
+        node = nodes.get(root)
+        root_class = retention.get(node["retention_class"]) if node else None
+        if (root not in doc["roots"] or node is None or not node["contains_handwriting"]
+                or root_class is None or not root_class["contains_handwriting"]):
+            issues.append(Issue("HANDWRITING_ROOT_REQUIRED", root,
+                                "a declared root that contains handwriting and uses a handwriting retention class"))
     for kind, node in nodes.items():
         if not node["parents"] and kind not in doc["roots"]:
             issues.append(Issue("UNDECLARED_ROOT", kind, "a parentless kind must be a declared root"))
@@ -554,6 +568,10 @@ def check_pilot_gate(gate: dict, protocol: dict, notices: dict, purposes: dict[t
             issues.append(Issue("APPROVAL_WITHOUT_EVIDENCE", "pilot_gate.json", "APPROVED requires an approval record with a decision_ref"))
         if any(d["status"] != "DECIDED" for d in gate["decisions"]):
             issues.append(Issue("APPROVED_WITH_PENDING_DECISIONS", "pilot_gate.json", "every gate decision must be decided"))
+        protocol_approval = protocol.get("approval") or {}
+        if protocol["status"] == "APPROVED" and not gate_approved_by(gate, protocol_approval.get("decided_on")):
+            issues.append(Issue("GATE_APPROVED_AFTER_PROTOCOL", "pilot_gate.json",
+                                "the participant-rights gate must be approved before the collection protocol"))
         return issues
     # While the gate is pending nothing downstream may behave as if it were approved.
     gated = {key for key, p in purposes.items() if gate["gate"] in p["related_gates"]}
@@ -568,6 +586,13 @@ def check_pilot_gate(gate: dict, protocol: dict, notices: dict, purposes: dict[t
         if purposes.get(key, {}).get("status") == "APPROVED":
             issues.append(Issue("GATE_BYPASSED", f"{key[0]}@{key[1]}", "gated purpose approved while the gate is pending"))
     return issues
+
+
+def gate_approved_by(gate: dict | None, when: str | None) -> bool:
+    """True when the pilot gate is APPROVED with a recorded approval decided at or before `when`."""
+    decided_on = ((gate or {}).get("approval") or {}).get("decided_on")
+    return ((gate or {}).get("status") == "APPROVED" and bool(decided_on) and bool(when)
+            and parse_timestamp(decided_on) <= parse_timestamp(when))
 
 
 # ---------------------------------------------------------- collection protocol
@@ -690,14 +715,16 @@ def source_clearance_issues(protocol: dict, release_purpose: dict, sources: dict
 
 def check_collection_manifest(
     manifest: dict, protocol: dict, consent: ConsentContext, *, human_release: bool = True,
-    sources: dict[str, dict] | None = None, publish_at: datetime | None = None,
+    sources: dict[str, dict] | None = None, publish_at: datetime | None = None, gate: dict | None = None,
 ) -> tuple[list[Issue], CollectionSummary]:
     """Writer/specimen/capture lineage: pages, photos and sessions never become extra people.
 
     Every included specimen needs the manifest's release purpose to be
     PERMITTED at the release cutoff in the consent ledger, directly or through
     its writer's pilot enrollment. By default the manifest is treated as a human
-    release: it must not be synthetic, its protocol must be APPROVED with a
+    release: it must not be synthetic or use a fixture-mode consent context,
+    the pilot gate (`gate`, pilot_gate.json) must be approved before the
+    protocol, its protocol must be APPROVED with a
     recorded approval that precedes every included specimen, the collection's
     entry in `sources` (source_rights.json by source_id) must clear the
     release's use by the cutoff, and every permission is evaluated again at
@@ -713,6 +740,11 @@ def check_collection_manifest(
     if human_release:
         if manifest["synthetic"]:
             issues.append(Issue("SYNTHETIC_IN_HUMAN_RELEASE", "synthetic", "synthetic samples are excluded from human statistics"))
+            releasable = False
+        if consent.fixture_mode:
+            issues.append(Issue("FIXTURE_CONSENT_IN_HUMAN_RELEASE", "consent",
+                                "fixture mode treats draft purposes and self-described notices as usable"))
+            releasable = False
         approval = protocol.get("approval") or {}
         if protocol["status"] != "APPROVED" or not approval.get("decision_ref"):
             issues.append(Issue("PROTOCOL_NOT_APPROVED", "protocol",
@@ -720,6 +752,10 @@ def check_collection_manifest(
             releasable = False
         else:
             protocol_approved_at = parse_timestamp(approval["decided_on"])
+            if not gate_approved_by(gate, approval["decided_on"]):
+                issues.append(Issue("PILOT_GATE_NOT_APPROVED", "pilot_gate",
+                                    "pilot_rights_consent must be APPROVED, with its approval preceding the protocol's"))
+                releasable = False
         clearance = source_clearance_issues(protocol, manifest["release_purpose"], sources, cutoff)
         issues += clearance
         releasable = releasable and not clearance
@@ -797,11 +833,21 @@ def check_collection_manifest(
             continue
         if not (release_allowed and releasable):
             continue
+        # The page itself needs some protocol purpose permitted when it was written;
+        # a later grant never legitimizes collection that had no permission.
+        enrollment = ({"kind": "PILOT_ENROLLMENT", "id": writer["enrollment_id"]},)
+        if not any(
+            evaluate_permission(consent, {"kind": "WRITER", "id": s["writer_id"]}, ref, {"kind": "SPECIMEN", "id": where},
+                                collected, covering_scopes=enrollment) == "PERMITTED"
+            for ref in protocol["consent_purposes"]
+        ):
+            issues.append(Issue("NO_COLLECTION_PERMISSION", where, f"no protocol purpose was permitted at {s['collected_at']}"))
+            continue
         checks = [("the release cutoff", cutoff)] + ([("publication", publish_at)] if publish_at is not None else [])
         for label, instant in checks:
             state = evaluate_permission(
                 consent, {"kind": "WRITER", "id": s["writer_id"]}, release_purpose, {"kind": "SPECIMEN", "id": where},
-                instant, covering_scopes=({"kind": "PILOT_ENROLLMENT", "id": writer["enrollment_id"]},),
+                instant, covering_scopes=enrollment,
             )
             if state != "PERMITTED":
                 issues.append(Issue("NO_RELEASE_PERMISSION", where, f"{release_purpose['purpose_id']} is {state} at {label}"))
@@ -822,6 +868,8 @@ def check_collection_manifest(
             issues.append(Issue("CAPTURE_INDEX_CONFLICT", where, "capture_index repeats within a specimen"))
         indexes.add((c["specimen_id"], c["capture_index"]))
         repeat = c["repeat_of_capture_id"]
+        if repeat is None and c["capture_index"] != 1:
+            issues.append(Issue("REPEAT_WITHOUT_ORIGINAL", where, "every capture after the first names the earlier capture it repeats"))
         if repeat is not None:
             original = captures.get(repeat)
             if original is None or repeat == where:
@@ -882,6 +930,7 @@ class ConsentContext:
     writers: dict[str, dict]
     events: list[dict]
     usable_statuses: frozenset[str] = frozenset({"APPROVED"})
+    fixture_mode: bool = False
     valid: list[tuple[int, dict]] = field(default_factory=list)
     event_issues: dict[str, list[str]] = field(default_factory=dict)
 
@@ -902,6 +951,7 @@ def build_context(registry: dict, scenario: dict, *, fixture_mode: bool = False)
         writers={w["writer_id"]: w for w in scenario["writers"]},
         events=scenario["events"],
         usable_statuses=frozenset({"APPROVED", "DRAFT"} if fixture_mode else {"APPROVED"}),
+        fixture_mode=fixture_mode,
     )
     for index, event in enumerate(context.events):
         codes = event_validity(event, context)
@@ -1110,6 +1160,8 @@ def collection_consent_context(registry: dict, manifest: dict, consent_log: dict
     notice registry (`notices`, i.e. notices.json); windows a ledger describes
     for itself are ignored, so a fabricated notice cannot make a grant valid.
     """
+    if fixture_mode and not manifest["synthetic"]:
+        raise ValueError("fixture mode is only for synthetic manifests; human data needs approved purposes and registry notices")
     windows = consent_log["notices"] if fixture_mode else registry_notice_windows(notices)
     writers = [
         {"writer_id": w["writer_id"], "self_account_id": None, "self_account_linked_at": None,

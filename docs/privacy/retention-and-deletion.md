@@ -29,7 +29,7 @@ Accounting records and the consent ledger are retained under their own decided o
 | `REQUEST_PROCESSOR_DELETION` | provider-side copies; the outcome is recorded, never promised as instant |
 | `RETAIN_UNDER_SEPARATE_OBLIGATION` | purchase ledger entries only; the validator forbids it for any handwriting-bearing kind |
 
-The validator checks that roots are declared, parents exist, the graph is acyclic, and every kind is reachable from a root. It also checks that a handwriting-bearing kind is never assigned a retention class that understates handwriting. If a new kind cannot be reached from a root, deletion cannot find it.
+The validator checks that roots are declared, parents exist, the graph is acyclic, and every kind is reachable from a root. `upload_original` and `pilot_capture` must stay declared roots that contain handwriting and use a handwriting retention class [`HANDWRITING_ROOT_REQUIRED`], so page bytes cannot be declassified out of the deletion controls. It also checks that a handwriting-bearing kind is never assigned a retention class that understates handwriting. If a new kind cannot be reached from a root, deletion cannot find it.
 
 ## Deletion sequence (for T02/T24)
 

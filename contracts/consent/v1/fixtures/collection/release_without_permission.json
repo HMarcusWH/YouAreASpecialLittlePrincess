@@ -1,6 +1,6 @@
 {
   "fixture_id": "release_without_permission",
-  "description": "Writer 2 never granted engineering_evaluation, so their pages cannot enter the release.",
+  "description": "Writer 2 contributed under reference_contribution only and never granted engineering_evaluation, so their pages cannot enter this release.",
   "expected_errors": [
     "NO_RELEASE_PERMISSION"
   ],
@@ -57,6 +57,43 @@
         "evidence": {
           "kind": "SIGNED_AGREEMENT",
           "ref": "evd_0100",
+          "status": "RECORDED"
+        },
+        "subject_eligibility": "DECLARED_ADULT"
+      },
+      {
+        "contract_version": "consent-event/v1",
+        "event_id": "evt_0110",
+        "event_type": "GRANT",
+        "subject": {
+          "kind": "WRITER",
+          "id": "wrt_0002"
+        },
+        "purpose": {
+          "purpose_id": "reference_contribution",
+          "purpose_version": 1
+        },
+        "notice": {
+          "notice_id": "notice.pilot-collection",
+          "version": 1
+        },
+        "scope": {
+          "kind": "SUBJECT_WIDE",
+          "id": "wrt_0002"
+        },
+        "actor": {
+          "kind": "PILOT_PARTICIPANT",
+          "id": "wrt_0002"
+        },
+        "presented_default": "UNSELECTED",
+        "capture_method": "SIGNED_PILOT_AGREEMENT",
+        "derived_from": null,
+        "surface": "PILOT_SESSION",
+        "recorded_at": "2026-01-15T10:00:00Z",
+        "effective_at": "2026-01-15T10:00:00Z",
+        "evidence": {
+          "kind": "SIGNED_AGREEMENT",
+          "ref": "evd_0110",
           "status": "RECORDED"
         },
         "subject_eligibility": "DECLARED_ADULT"
