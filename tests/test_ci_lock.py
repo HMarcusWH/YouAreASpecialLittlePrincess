@@ -988,7 +988,7 @@ FAKE_313 = "- python: '3.13'\n{pad}  manifest: requirements/ci-py313.txt\n{pad} 
     "decoy",
     [
         # Codex review of #12: the matrix was found by regex over the whole file.
-        "      - name: docs\n        run: |\n          " + FAKE_313.format(pad="          "),
+        "    steps:\n      - name: docs\n        run: |\n          " + FAKE_313.format(pad="          "),
         "        # " + FAKE_313.format(pad="        # "),
         "  other:\n    strategy:\n      matrix:\n        include:\n          " + FAKE_313.format(pad="          "),
         "  lint:\n    env:\n      NOTE: >\n        " + FAKE_313.format(pad="        "),
@@ -1019,6 +1019,71 @@ def test_repository_workflow_matrix_is_parsed_structurally():
     assert verify_project_dependency_policy.ci_matrix(root / ".github" / "workflows" / "ci.yml") == [
         (f"3.{minor}", f"requirements/ci-py3{minor}.txt", f"requirements/ci-py3{minor}.lock") for minor in (10, 11, 12)
     ]
+
+
+UNTRUSTED_MATRIX = "; the CI matrix is read only from plain block YAML, so no lock counts as tested"
+
+
+@pytest.mark.parametrize(
+    ("snippet", "reason"),
+    [
+        # Codex review of #12: YAML reads these 3.13 lines as text inside the
+        # 3.12 entry's note, but the reader counted a second job.
+        ('            note: "harmless\n          ' + FAKE_313.format(pad="          ") + '            end"\n',
+         "line 15: a quoted scalar continues onto the next line"),
+        ("            note: 'harmless\n          " + FAKE_313.format(pad="          ") + "            end'\n",
+         "line 15: a quoted scalar continues onto the next line"),
+        ("            note: harmless\n              " + FAKE_313.format(pad="              "),
+         "line 16: a scalar from the line above continues onto this line"),
+        ("            note: [harmless,\n          " + FAKE_313.format(pad="          ") + "            ]\n",
+         "line 15: a flow collection continues onto the next line"),
+        ("          note: |\n          " + FAKE_313.format(pad="          "),
+         "line 15: indentation does not continue an open mapping or sequence"),
+        ("            python: '3.13'\n", "line 15: duplicate key 'python'"),
+        ("            note: &entry x\n", "line 15: '&' (anchor, alias, tag or reserved indicator) is not resolved"),
+        ("            <<: *entry\n", "line 15: neither a 'key: value' mapping line nor a '- ' item"),
+        ("\t    note: x\n", "line 15: tabs in indentation"),
+    ],
+    ids=["double-quoted", "single-quoted", "plain", "flow", "misindented", "duplicate-key", "anchor", "merge-key", "tab"],
+)
+def test_yaml_outside_the_read_subset_untrusts_the_whole_matrix(tmp_path, snippet, reason):
+    requirements, workflow = write_reviewed_interpreters(tmp_path, (10, 11, 12, 13), ci_minors=(10, 11, 12))
+    workflow.write_text(workflow.read_text(encoding="utf-8") + snippet, encoding="utf-8")
+    reviewed, errors = verify_project_dependency_policy.interpreter_coverage(requirements, workflow)
+    assert reviewed == set()
+    assert errors[0] == f"ci.yml {reason}{UNTRUSTED_MATRIX}"
+    assert len(errors) == 5
+
+
+def test_values_nested_in_an_entry_are_not_entries(tmp_path):
+    requirements, workflow = write_reviewed_interpreters(tmp_path, (10, 11, 12, 13), ci_minors=(10, 11, 12))
+    workflow.write_text(workflow.read_text(encoding="utf-8") + "            extra:\n              "
+                        + FAKE_313.format(pad="              "), encoding="utf-8")
+    assert verify_project_dependency_policy.interpreter_coverage(requirements, workflow) == (
+        REVIEWED_PYTHONS,
+        ["requirements/ci-py313.lock has no CI matrix job for Python 3.13 in ci.yml; its interpreter is not reviewed"],
+    )
+
+
+def test_sequences_at_their_key_indentation_are_read(tmp_path):
+    requirements, workflow = write_reviewed_interpreters(tmp_path, (10, 11))
+    workflow.write_text(
+        "jobs:\n  test:\n    strategy:\n      matrix:\n        include:\n" + "".join(
+            f"        - python: '3.{minor}'\n          manifest: requirements/ci-py3{minor}.txt\n"
+            f"          lock: requirements/ci-py3{minor}.lock\n" for minor in (10, 11)
+        ) + "    steps:\n    - run: pytest\n",
+        encoding="utf-8",
+    )
+    assert verify_project_dependency_policy.interpreter_coverage(requirements, workflow) == ({(3, 10), (3, 11)}, [])
+
+
+def test_unquoted_versions_are_numbers_not_matrix_strings(tmp_path):
+    # YAML reads an unquoted 3.10 as the number 3.1, so that job would not run Python 3.10.
+    requirements, workflow = write_reviewed_interpreters(tmp_path, (10,))
+    workflow.write_text(workflow.read_text(encoding="utf-8").replace("python: '3.10'", "python: 3.10"), encoding="utf-8")
+    assert verify_project_dependency_policy.interpreter_coverage(requirements, workflow) == (
+        set(), ["requirements/ci-py310.lock has no CI matrix job for Python 3.10 in ci.yml; its interpreter is not reviewed"]
+    )
 
 
 @pytest.mark.parametrize(
