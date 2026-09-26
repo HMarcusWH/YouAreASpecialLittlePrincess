@@ -1,3 +1,7 @@
+<!-- roadmap-v2-navigation -->
+> **Building the app:** [complete roadmap](ROADMAP.md) · [coding-agent entry](AGENTS.md) · [documentation index](docs/roadmap/00-index.md) · [detailed task briefs](docs/roadmap/06-agent-backlog.md).
+> The web/iOS/Android product is planned in the linked roadmap. The library documentation below describes the existing measurement core, not a claim that the full consumer app is already implemented.
+
 # YouAreASpecialLittlePrincess — Canonical Measurement Engine
 
 Deterministic handwriting-image descriptors with a schema-enforced interface.

@@ -1,0 +1,65 @@
+# 22 — Primary-source refresh and implementation evidence
+
+[Index](00-index.md) · [Original evidence register](07-evidence-register.md) · [Provider decisions](19-provider-decision-register.md) · [Connector index](../connectors/README.md).
+
+**Checked for this planning pass:** 2026-09-26. These sources support integration design, not an assertion that our accounts, region configuration, products or binaries have been approved. Provider rules, SDK support, submission deadlines and pricing must be rechecked at the owning task and release candidate. No exact model, tariff or store exception is approved by this document.
+
+## Repository evidence
+
+The code baseline is `251668a521150668b90c3551530daab694a5c739`, the merge of [PR #10](https://github.com/HMarcusWH/YouAreASpecialLittlePrincess/pull/10). Its source head was `90e88e5c73a081182974575925561ac948dbc0e1`; the PR's final premerge CI run was [36212342579](https://github.com/HMarcusWH/YouAreASpecialLittlePrincess/actions/runs/36212342579). The historical run recorded 158 pytest passes for each of Python 3.10, 3.11 and 3.12 plus its configured checks. These are historical observations, not a result for this documentation PR's future head.
+
+T00A records the four later code-review findings on PR #10: locked-distribution dependency edges, dynamic dependency metadata, backend-reported build requirements and implicit build-system fallback. They are not repaired by this roadmap. T26's [manifest](../../schema/graphology_interpretation/v1/manifest.json) and [handoff](../../schema/graphology_interpretation/v1/README.md) establish reviewed database structure with runtime disabled, not empirical personality validity or active traditional packs.
+
+## Apple and Android
+
+| ID | Primary source | Design implication and verification limit |
+|---|---|---|
+| E01 | [Apple App Review Guidelines](https://developer.apple.com/app-store/review/guidelines/) | Native digital purchase, account/login, privacy and truthful-functionality rules must be checked against the actual product/storefront. Default to StoreKit for native paid digital analysis; regional alternatives are not a blanket exemption. |
+| E02 | [Apple In-App Purchase](https://developer.apple.com/in-app-purchase/) and [App Store Server API history response](https://developer.apple.com/documentation/appstoreserverapi/historyresponse) | Use supported store/server verification and lifecycle APIs. History can assist reconciliation; rediscovery never creates a duplicate application grant. Check endpoint/product/version coverage during implementation. |
+| E03 | [StoreKit currentEntitlements](https://developer.apple.com/documentation/storekit/transaction/currententitlements) and [Transaction.all](https://developer.apple.com/documentation/storekit/transaction/all) | Consumable balances are not represented by currentEntitlements. Transaction-history behavior has product/configuration details; account-backed application credits and saved reports require our ledger, not a generic restore assumption. |
+| E04 | [Google Play Billing integration](https://developer.android.com/google/play/billing/integrate) | Handle purchase state and platform completion. Grant durable benefit before finishing the provider lifecycle; consuming a consumable satisfies its acknowledgement obligation. Do not wait for a model job or treat every product as both acknowledge-and-consume. Recheck deadlines at implementation. |
+| E05 | [Play Billing security](https://developer.android.com/google/play/billing/security) | Verify on the secure backend; purchase token is the deduplication reference, and PENDING is not a grant. Preserve account/package/product binding. |
+| E06 | [Expo in-app purchases](https://docs.expo.dev/guides/in-app-purchases/) | Native purchase dependencies require development builds; Expo Go alone is insufficient. Select a maintained bridge only after testing exact Expo/RN/native compatibility. |
+| E07 | [Expo Build](https://docs.expo.dev/build/introduction/) and [application variants](https://docs.expo.dev/build-reference/variants/) | Signed builds and environment variants need explicit configuration. EAS is a candidate build service, not automatic approval to hand over signing keys or private data. |
+| E08 | [Google Play RTDN reference](https://developer.android.com/google/play/billing/rtdn-reference) | A real-time notification signals a change; query the Developer API for authoritative purchase state. Pub/Sub delivery and business fulfilment are separate lifecycles. |
+| E09 | [Apple account deletion](https://developer.apple.com/support/offering-account-deletion-in-your-app/) | An app supporting account creation must provide the applicable in-app deletion flow. Implement lineage/revocation as well as a button. |
+| E10 | [Apple privacy manifest reference](https://developer.apple.com/documentation/bundleresources/privacy-manifest-files) | Navigation/reference entry for required manifests and SDK data audit. Detailed API/SDK declarations must be inspected against the release build; the JavaScript-only reference was not fully extracted in this pass. |
+| E11 | [Google Play payments policy](https://support.google.com/googleplay/android-developer/answer/10281818) | Default native digital commerce to Play Billing; alternative-billing/external-offer programmes require current eligibility, terms and enrollment. |
+| E12 | [Play personal-account testing policy](https://support.google.com/googleplay/android-developer/answer/14151465) | Account-specific closed-test/production-access requirements must be checked in the owner's actual account at T33. Full policy retrieval did not complete in this pass; earlier tester-count/duration discussion is not accepted as a frozen release rule. |
+| E13 | [Google Play AI-generated-content policy](https://support.google.com/googleplay/android-developer/answer/13985936?hl=en) | Review applicability to Premium and provide the required user feedback/reporting path. A private analysis product is not permission to ignore generated-content safety. |
+| E14 | [Google Play account deletion guidance](https://support.google.com/googleplay/android-developer/answer/13327111) | T33 verifies the current in-app and public deletion-path requirements and Data Safety answers. Full guidance retrieval did not complete in this pass; leave release verification pending rather than claiming compliance. |
+
+## Model, commerce and backend
+
+| ID | Primary source | Design implication |
+|---|---|---|
+| E15 | [OpenAI Structured Outputs](https://developers.openai.com/api/docs/guides/structured-outputs) | Use strict supported schema output plus application semantic validation. Shape validity alone is not factual or source validity. |
+| E16 | [OpenAI image inputs](https://developers.openai.com/api/docs/guides/images-vision) | The approved image derivative can accompany typed evidence in the same bounded request. Evaluate detail, limitations and billed input; no image-derived overwrite of canonical measurements. |
+| E17 | [OpenAI data controls](https://developers.openai.com/api/docs/guides/your-data) | `store=false` is not a zero-retention promise. Verify account/endpoint/model/region controls, abuse-monitoring retention and image exceptions before live processing. No blanket residency or compliance claim is made here. |
+| E18 | [Stripe webhooks](https://docs.stripe.com/webhooks) | Verify raw-body signatures, durably deduplicate and reconcile. A redirect is not authoritative payment evidence; event arrival order is not the ledger state order. |
+| E19 | [PostgreSQL SELECT locking](https://www.postgresql.org/docs/current/sql-select.html) | `SKIP LOCKED` can support queue-like consumers. Use short transactions, explicit leases/fencing and outbox publication; do not hold row locks across CPU/model work. |
+| E20 | [Alembic autogenerate](https://alembic.sqlalchemy.org/en/latest/autogenerate.html) | Generated migrations are candidates requiring review. Test actual PostgreSQL roles, constraints and expand/contract compatibility. |
+| E21 | [Cloudflare R2 presigned URLs](https://developers.cloudflare.com/r2/api/s3/presigned-urls/) | Presigned operations are bearer capabilities and provider-specific in detail. Bind verified immutable bytes before analysis; size/checksum/version semantics need capability tests, not assumed S3 equivalence. |
+| E22 | [FastAPI BackgroundTasks](https://fastapi.tiangolo.com/tutorial/background-tasks/) | Do not use in-process after-response work as the durable analysis/model queue. Separate durable worker execution from HTTP completion. |
+| E23 | [OpenID Connect Core](https://openid.net/specs/openid-connect-core-1_0.html) | Validate issuer, audience, expiry and appropriate token/session semantics. Map provider subjects to internal principals; provider identity is not object authorization. |
+| E24 | [OAuth for Native Apps, RFC 8252](https://www.rfc-editor.org/rfc/rfc8252) | Use external user-agent authorization and the appropriate native redirect/PKCE flow. Do not collect social-provider passwords in embedded webviews. |
+
+## Clients and operations
+
+| ID | Primary source | Design implication |
+|---|---|---|
+| E25 | [Playwright page.pdf](https://playwright.dev/docs/api/class-page#page-pdf) | Render trusted print components from an authorized snapshot. Print-media/tagged-output features do not by themselves prove accessible PDF or safe arbitrary browsing. |
+| E26 | [Turnstile server-side validation](https://developers.cloudflare.com/turnstile/get-started/server-side-validation/) | Server verification is required; tokens are short-lived/single-use. Bind action/hostname and combine with application quotas and fallback policy. |
+| E27 | [Resend idempotency keys](https://resend.com/docs/dashboard/emails/idempotency-keys) | Provider deduplication can help retry safety, but application outbox/idempotency must survive beyond the provider's retention window. |
+| E28 | [OpenTelemetry Python](https://opentelemetry.io/docs/languages/python/) | Prefer vendor-neutral telemetry interfaces. Verify the maturity and compatibility of the selected SDK/exporters; never auto-export private report content. |
+| E29 | [Firebase Cloud Messaging](https://firebase.google.com/docs/cloud-messaging) | Push is a best-effort wake-up/navigation signal. Bind tokens to installation/account/environment and fetch authoritative current state after opening. |
+| E30 | [APNs registration](https://developer.apple.com/documentation/usernotifications/registering-your-app-with-apns) | Platform reference entry for registration/token lifecycle. Detailed native behavior must be tested with current entitlements and signed builds; the JavaScript-only page was not fully extracted in this pass. |
+| E31 | [Play Integrity overview](https://developer.android.com/google/play/integrity/overview) | Integrity responses are server-validated risk signals with request binding and fallback policy, not substitutes for ownership or purchase verification. |
+
+## Research and decision limits
+
+The Next.js, Expo/native module, managed identity/database, S3 storage, email, telemetry, analytics and abuse choices are engineering defaults/candidates documented in [ADRs](../adr/README.md). This PR does not provide comparative vendor price quotations, contract clearance or completed account tests. Complete those records before real adapter activation.
+
+Recheck minimum/target SDKs, App Store/Play submission rules, native billing-library support, native-library page-size compatibility, privacy forms, age/content rating, login requirements, storefront credit portability, developer-account testing and provider data controls at release. Exact versions, prices and region availability must come from that dated verification, not from an old prose example.
+
+Sources E01–E31 are public technical/policy inputs. Design choices elsewhere in the roadmap are labelled implementation defaults or acceptance requirements. Original R/P/S references in chapter 07 remain historical evidence; they do not override current source JSON or the explicit v2 amendments in [00](00-index.md).
