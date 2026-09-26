@@ -16,7 +16,7 @@ import zipfile
 from dataclasses import dataclass
 from pathlib import Path
 
-from packaging.markers import default_environment
+from packaging.markers import Marker, Variable, default_environment
 from packaging.requirements import InvalidRequirement, Requirement
 from packaging.specifiers import InvalidSpecifier, SpecifierSet
 from packaging.utils import InvalidWheelFilename, parse_wheel_filename
@@ -38,6 +38,19 @@ SUPPORTED_BUILD_BACKENDS = {"setuptools.build_meta": "setuptools"}
 PROHIBITED_BUILD_FILES = ("setup.py", "setup.cfg")
 
 DYNAMIC_DEPENDENCY_FIELDS = ("dependencies", "optional-dependencies")
+
+# A lock is stamped with a Python minor, system and machine. These marker
+# variables are not fixed by that target, so a marker using them can change
+# value between interpreters the lock and requires-python both cover.
+UNFIXED_MARKER_VARIABLES = frozenset({
+    "python_full_version", "implementation_version", "platform_release", "platform_version",
+    "platform_python_implementation", "implementation_name",
+})
+
+# CI matrix entries in .github/workflows/ci.yml, in the order the workflow lists their keys.
+CI_MATRIX_ENTRY = re.compile(
+    r"-\s*python:\s*['\"]?(?P<python>\d+\.\d+)['\"]?\s*\n\s*manifest:\s*(?P<manifest>\S+)\s*\n\s*lock:\s*(?P<lock>\S+)"
+)
 
 BACKEND_HOOKS = ("get_requires_for_build_wheel", "get_requires_for_build_editable", "get_requires_for_build_sdist")
 
@@ -94,7 +107,31 @@ def normalize(name: str) -> str:
     return re.sub(r"[-_.]+", "-", name).lower()
 
 
+def marker_state(marker: Marker, environment: dict[str, str]) -> bool | None:
+    """Evaluate a marker for the lock target; None when it depends on a variable the target does not fix."""
+    return _marker_items_state(marker._markers, environment)
+
+
+def _marker_items_state(items: list, environment: dict[str, str]) -> bool | None:
+    # packaging's marker list: atoms, nested lists and "and"/"or", with "and"
+    # binding tighter. Unknown atoms propagate with three-valued logic.
+    groups: list[list[bool | None]] = [[]]
+    for item in items:
+        if item == "or":
+            groups.append([])
+        elif isinstance(item, list):
+            groups[-1].append(_marker_items_state(item, environment))
+        elif isinstance(item, tuple):
+            if any(isinstance(node, Variable) and node.value in UNFIXED_MARKER_VARIABLES for node in item):
+                groups[-1].append(None)
+            else:
+                groups[-1].append(Marker(" ".join(node.serialize() for node in item)).evaluate(environment))
+    results = [False if False in group else None if None in group else True for group in groups]
+    return True if True in results else None if None in results else False
+
+
 def marker_matches(requirement: Requirement, extras: list[str]) -> bool:
+    """Active unless the marker is false for every interpreter/platform the lock target covers."""
     if requirement.marker is None:
         return True
 
@@ -102,7 +139,7 @@ def marker_matches(requirement: Requirement, extras: list[str]) -> bool:
     for extra in contexts:
         environment = default_environment()
         environment["extra"] = extra
-        if requirement.marker.evaluate(environment=environment):
+        if marker_state(requirement.marker, environment) is not False:
             return True
     return False
 
@@ -184,17 +221,26 @@ def build_configuration_errors(pyproject: Path, data: dict) -> list[str]:
     if not is_string_list(dynamic):
         errors.append("[project].dynamic must be a list of field names")
     else:
-        for field in DYNAMIC_DEPENDENCY_FIELDS:
-            if field in dynamic:
+        for field in dynamic:
+            if field in DYNAMIC_DEPENDENCY_FIELDS:
                 errors.append(
                     f"Dynamic {field} are prohibited: backend-generated dependency metadata "
                     f"bypasses the reviewed manifest"
                 )
+            else:
+                errors.append(
+                    f"Dynamic {field} is prohibited: setuptools may import project code to compute it "
+                    f"while the build hooks run"
+                )
 
-    setuptools_dynamic = table(table(table(data, "tool"), "setuptools"), "dynamic")
-    for field in DYNAMIC_DEPENDENCY_FIELDS:
-        if field in setuptools_dynamic:
+    setuptools = table(table(data, "tool"), "setuptools")
+    for field in table(setuptools, "dynamic"):
+        if field in DYNAMIC_DEPENDENCY_FIELDS:
             errors.append(f"[tool.setuptools.dynamic].{field} is prohibited: declare dependencies statically")
+        else:
+            errors.append(f"[tool.setuptools.dynamic].{field} is prohibited: declare metadata statically")
+    if "cmdclass" in setuptools:
+        errors.append("[tool.setuptools].cmdclass is prohibited: custom commands run project code in the build hooks")
 
     if not is_string_list(project.get("dependencies", [])):
         errors.append("[project].dependencies must be a list of requirement strings")
@@ -227,15 +273,46 @@ def dependency_records(data: dict, extras: list[str]) -> list[tuple[str, str, li
     return records
 
 
-def reviewed_interpreters(requirements_dir: Path) -> set[tuple[int, int]]:
-    """Python minors that have a reviewed, target-stamped CI lock."""
-    minors = set()
+def ci_matrix(workflow: Path) -> list[tuple[str, str, str]]:
+    """(python, manifest, lock) for each job in the CI workflow's matrix."""
+    if not workflow.is_file():
+        return []
+    text = workflow.read_text(encoding="utf-8")
+    return [(m["python"], m["manifest"], m["lock"]) for m in CI_MATRIX_ENTRY.finditer(text)]
+
+
+def interpreter_coverage(requirements_dir: Path, workflow: Path | None = None) -> tuple[set[tuple[int, int]], list[str]]:
+    """Python minors whose target-stamped lock has its manifest and a CI matrix job, plus coverage errors.
+
+    A lock header alone is not reviewed evidence: the minor counts only when
+    CI actually downloads, installs and tests that lock on that Python.
+    """
+    workflow = workflow or requirements_dir.resolve().parent / ".github" / "workflows" / "ci.yml"
+    jobs = ci_matrix(workflow)
+    root = requirements_dir.resolve().parent
+    minors: set[tuple[int, int]] = set()
+    errors: list[str] = []
     for lock in sorted(requirements_dir.glob("ci-py*.lock")):
         target = read_lock_target(lock)
-        if target is not None:
+        if target is None:
+            continue
+        manifest = lock.with_suffix(".txt")
+        relative = lock.resolve().relative_to(root).as_posix()
+        job = (target[0], manifest.resolve().relative_to(root).as_posix(), relative)
+        if not manifest.is_file():
+            errors.append(f"{relative} has no matching manifest {manifest.name}; the lock is not reviewed evidence")
+        elif job not in jobs:
+            errors.append(f"{relative} has no CI matrix job for Python {target[0]} in {workflow.name}; "
+                          f"its interpreter is not reviewed")
+        else:
             major, minor = target[0].split(".")
             minors.add((int(major), int(minor)))
-    return minors
+    return minors, errors
+
+
+def reviewed_interpreters(requirements_dir: Path, workflow: Path | None = None) -> set[tuple[int, int]]:
+    """Python minors with a target-stamped lock, its manifest and a CI matrix job."""
+    return interpreter_coverage(requirements_dir, workflow)[0]
 
 
 def requires_python_errors(data: dict, reviewed: set[tuple[int, int]]) -> list[str]:
@@ -493,7 +570,9 @@ def locked_graph_errors(
             except InvalidRequirement as exc:
                 errors.append(f"Invalid requirement in locked metadata: {label} ({exc})")
                 continue
-            if requirement.marker is not None and not requirement.marker.evaluate(environment=environment):
+            # A marker that depends on a variable the lock target does not fix
+            # (python_full_version, platform_release, ...) counts as active.
+            if requirement.marker is not None and marker_state(requirement.marker, environment) is False:
                 continue
             edges += 1
             if requirement.url is not None:
@@ -612,6 +691,9 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--requirements-dir", type=Path, help="directory of target-stamped ci-py*.lock files (default: <pyproject dir>/requirements)"
     )
+    parser.add_argument(
+        "--workflow", type=Path, help="CI workflow whose matrix must test every lock (default: <pyproject dir>/.github/workflows/ci.yml)"
+    )
     parser.add_argument("--manifest", type=Path, required=True)
     parser.add_argument("--extra", action="append", default=[])
     parser.add_argument("--lock", type=Path, help="hash lock whose active Requires-Dist graph must be closed")
@@ -629,7 +711,9 @@ def main(argv: list[str] | None = None) -> int:
         parser.error("--lock and --wheelhouse must be given together")
 
     requirements_dir = args.requirements_dir or args.pyproject.resolve().parent / "requirements"
-    errors = validate(args.pyproject, args.manifest, args.extra, reviewed_interpreters(requirements_dir))
+    workflow = args.workflow or args.pyproject.resolve().parent / ".github" / "workflows" / "ci.yml"
+    reviewed, errors = interpreter_coverage(requirements_dir, workflow)
+    errors += validate(args.pyproject, args.manifest, args.extra, reviewed)
     # Later stages trust the static configuration (backend allowlist, no
     # setup.py/setup.cfg); never execute backend code when it failed.
     if args.lock is not None and not errors:

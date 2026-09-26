@@ -859,9 +859,7 @@ def test_cli_combines_static_graph_and_backend_checks(tmp_path, monkeypatch, cap
         pyproject.read_text(encoding="utf-8").replace('version = "0.1.0"', 'version = "0.1.0"\nrequires-python = ">=3.10,<3.13"'),
         encoding="utf-8",
     )
-    (tmp_path / "requirements").mkdir()
-    for minor in (10, 11, 12):
-        (tmp_path / "requirements" / f"ci-py3{minor}.lock").write_text(f"# Python 3.{minor}; Linux x86_64.\n", encoding="utf-8")
+    write_reviewed_interpreters(tmp_path, (10, 11, 12))
     monkeypatch.setattr(
         verify_project_dependency_policy,
         "capture_backend_requirements",
@@ -879,6 +877,27 @@ def test_cli_combines_static_graph_and_backend_checks(tmp_path, monkeypatch, cap
 
 
 REVIEWED_PYTHONS = {(3, 10), (3, 11), (3, 12)}
+
+
+def write_reviewed_interpreters(root, minors, ci_minors=None, manifests=None):
+    """Target-stamped locks, their manifests and a CI workflow matrix under root."""
+    requirements = root / "requirements"
+    requirements.mkdir(exist_ok=True)
+    for minor in minors:
+        (requirements / f"ci-py3{minor}.lock").write_text(f"# Python 3.{minor}; Linux x86_64.\n", encoding="utf-8")
+    for minor in minors if manifests is None else manifests:
+        (requirements / f"ci-py3{minor}.txt").write_text("", encoding="utf-8")
+    workflow = root / ".github" / "workflows" / "ci.yml"
+    workflow.parent.mkdir(parents=True, exist_ok=True)
+    workflow.write_text(
+        "jobs:\n  test:\n    strategy:\n      matrix:\n        include:\n" + "".join(
+            f"          - python: '3.{minor}'\n            manifest: requirements/ci-py3{minor}.txt\n"
+            f"            lock: requirements/ci-py3{minor}.lock\n"
+            for minor in (minors if ci_minors is None else ci_minors)
+        ),
+        encoding="utf-8",
+    )
+    return requirements, workflow
 WHOLE_MINOR = "is not a whole-minor bound; use only '>=X.Y' and '<X.Y'"
 
 
@@ -927,9 +946,98 @@ def test_cli_checks_requires_python_against_discovered_locks(tmp_path, capsys):
     assert verify_project_dependency_policy.main(["--pyproject", str(pyproject), "--manifest", str(manifest)]) == 1
     assert "No reviewed interpreter locks found" in capsys.readouterr().out
 
-    locks = tmp_path / "requirements"
-    locks.mkdir()
-    for minor in (10, 11, 12):
-        (locks / f"ci-py3{minor}.lock").write_text(f"# Python 3.{minor}; Linux x86_64.\n", encoding="utf-8")
+    write_reviewed_interpreters(tmp_path, (10, 11, 12))
     assert verify_project_dependency_policy.main(["--pyproject", str(pyproject), "--manifest", str(manifest)]) == 1
     assert "advertises Python versions with no reviewed lock or CI job: 3.13" in capsys.readouterr().out
+
+
+def test_repository_ci_matrix_tests_every_lock():
+    root = Path(__file__).resolve().parents[1]
+    assert verify_project_dependency_policy.interpreter_coverage(root / "requirements") == (REVIEWED_PYTHONS, [])
+
+
+def test_lock_without_manifest_or_ci_job_is_not_reviewed(tmp_path, capsys):
+    # Codex review of #12: a target-stamped ci-py313.lock let requires-python
+    # advertise 3.13 although CI never installed or tested that lock.
+    requirements, workflow = write_reviewed_interpreters(tmp_path, (10, 11, 12, 13), ci_minors=(10, 11, 12))
+    reviewed, errors = verify_project_dependency_policy.interpreter_coverage(requirements, workflow)
+    assert reviewed == REVIEWED_PYTHONS
+    assert errors == ["requirements/ci-py313.lock has no CI matrix job for Python 3.13 in ci.yml; its interpreter is not reviewed"]
+
+    (requirements / "ci-py313.txt").unlink()
+    reviewed, errors = verify_project_dependency_policy.interpreter_coverage(requirements, workflow)
+    assert errors == ["requirements/ci-py313.lock has no matching manifest ci-py313.txt; the lock is not reviewed evidence"]
+
+    workflow.unlink()
+    assert verify_project_dependency_policy.interpreter_coverage(requirements, workflow)[0] == set()
+
+    write_reviewed_interpreters(tmp_path, (10, 11, 12, 13), ci_minors=(10, 11, 12))
+    pyproject, manifest = write_policy_fixture(
+        tmp_path, MINIMAL_PROJECT.replace('version = "0.1.0"', 'version = "0.1.0"\nrequires-python = ">=3.10,<3.14"'), ""
+    )
+    assert verify_project_dependency_policy.main(["--pyproject", str(pyproject), "--manifest", str(manifest)]) == 1
+    output = capsys.readouterr().out
+    assert "ci-py313.lock has no CI matrix job" in output
+    assert "advertises Python versions with no reviewed lock or CI job: 3.13" in output
+
+
+@pytest.mark.parametrize(
+    ("project_lines", "tool", "expected"),
+    [
+        # Codex review of #12: setuptools imports the module named by an attr
+        # directive while the build hooks run, executing committed code.
+        ('dynamic = ["version"]', '[tool.setuptools.dynamic]\nversion = {attr = "demo.VERSION"}',
+         ["Dynamic version is prohibited: setuptools may import project code to compute it while the build hooks run",
+          "[tool.setuptools.dynamic].version is prohibited: declare metadata statically"]),
+        ('version = "0.1.0"\ndynamic = ["readme"]', "",
+         ["Dynamic readme is prohibited: setuptools may import project code to compute it while the build hooks run"]),
+        ('version = "0.1.0"', '[tool.setuptools.cmdclass]\negg_info = "demo.build:EggInfo"',
+         ["[tool.setuptools].cmdclass is prohibited: custom commands run project code in the build hooks"]),
+    ],
+)
+def test_executable_build_configuration_is_rejected(tmp_path, project_lines, tool, expected):
+    body = MINIMAL_PROJECT.replace('version = "0.1.0"', project_lines) + "\n" + tool + "\n"
+    pyproject, manifest = write_policy_fixture(tmp_path, body, "")
+    assert verify_project_dependency_policy.validate(pyproject, manifest, ["dev"]) == expected
+
+
+@pytest.mark.parametrize(
+    ("marker", "state"),
+    [
+        ('python_version >= "3"', True),
+        ('python_version < "3"', False),
+        ('python_full_version == "3.11.5"', None),
+        ('platform_release == "6.1"', None),
+        ('platform_python_implementation != "PyPy" and extra == "type"', False),
+        ('platform_python_implementation != "PyPy" or python_version >= "3"', True),
+        ('python_version < "3" or (implementation_name == "pypy" and os_name == "posix")', None),
+    ],
+)
+def test_marker_state_is_unknown_for_variables_the_lock_does_not_fix(marker, state):
+    from packaging.markers import Marker, default_environment
+
+    environment = dict(default_environment(), extra="")
+    assert verify_project_dependency_policy.marker_state(Marker(marker), environment) is state
+
+
+def test_patch_level_markers_count_as_active_edges(tmp_path):
+    # Codex review of #12: a python_full_version marker was evaluated only for
+    # the runner's patch, hiding a dependency another 3.x patch would install.
+    pyproject, _manifest, lock, wheelhouse = write_graph_fixture(
+        tmp_path, {"parentpkg": ("1.0", ['childpkg; python_full_version == "3.11.5"'])}
+    )
+    assert graph_errors(pyproject, lock, wheelhouse) == [
+        "Locked dependency edge leaves the reviewed lock: parentpkg-1.0-py3-none-any.whl "
+        "Requires-Dist 'childpkg; python_full_version == \"3.11.5\"'"
+    ]
+
+    locked = tmp_path / "locked"
+    locked.mkdir()
+    pyproject, _manifest, lock, wheelhouse = write_graph_fixture(
+        locked,
+        {"parentpkg": ("1.0", ['childpkg>=1; python_full_version == "3.11.5"',
+                               'ignored; platform_python_implementation != "PyPy" and extra == "type"']),
+         "childpkg": ("1.2", [])},
+    )
+    errors, edges = verify_project_dependency_policy.locked_graph_errors(pyproject, lock, wheelhouse, ["dev"], [])
+    assert (errors, edges) == ([], 1)

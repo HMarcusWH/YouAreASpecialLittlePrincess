@@ -137,6 +137,14 @@ The third Codex review found two more gaps, both reproduced before the fix:
 - Coverage was probed only at patches 0 and 99 of each minor, so `>=3.10,<3.13,!=3.11.5` passed. `requires-python` may now contain only whole-minor `>=X.Y` and `<X.Y` clauses. Their intersection is one interval with minor-aligned ends, so the probes are exact. The new cases in `test_requires_python_matches_reviewed_interpreters[*]` failed 7/7 against the previous tool.
 - The hook subprocess started in the project copy with the working directory on `sys.path`, so a committed `socket.py` executed before the egress guard was installed. Hooks now run under `python -I -B`, which also ignores `PYTHONPATH`. `test_project_modules_cannot_shadow_the_runner_imports` and `test_pythonpath_cannot_supply_the_backend` failed against the previous tool. The fake backends in the tests are now installed into a throwaway venv's site-packages instead of `PYTHONPATH`.
 
+The fourth Codex review found three more gaps, each reproduced before the fix:
+
+- A target-stamped `ci-py313.lock` alone widened the reviewed set, so `<3.14` passed while CI never tested 3.13. A minor now counts only when its lock has its manifest and a `python`/`manifest`/`lock` job in the CI workflow matrix. Otherwise the policy reports the uncovered lock.
+- `dynamic = ["version"]` with `[tool.setuptools.dynamic] version = {attr = ...}` passed the static policy, and setuptools imported the in-tree module during the hooks. All dynamic fields, `[tool.setuptools.dynamic]` and `[tool.setuptools].cmdclass` are now rejected before any hook runs.
+- A `python_full_version == "3.11.5"` edge was evaluated only for the runner's patch, so an unlocked dependency passed. Markers now use three-valued evaluation: a variable the lock target does not fix makes the edge count as active unless the rest of the marker is false. The only such marker in the current locks, setuptools' `pytest-mypy` edge, is inactive because it also requires `extra == "type"`, so the locked graphs are unchanged.
+
+Regressions: `test_lock_without_manifest_or_ci_job_is_not_reviewed`, `test_repository_ci_matrix_tests_every_lock`, `test_executable_build_configuration_is_rejected[*]`, `test_marker_state_is_unknown_for_variables_the_lock_does_not_fix[*]` and `test_patch_level_markers_count_as_active_edges`. All 13 failed against the previous tool.
+
 ### Supported build configuration and residual trust
 
 The supported configuration is a pyproject-only setuptools project with an explicit `setuptools.build_meta` backend, exact reviewed build pins, and static dependency metadata. See the [requirements README](../../requirements/README.md#supported-build-configuration). Residual trust remains in three places:
