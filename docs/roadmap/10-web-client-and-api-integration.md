@@ -13,6 +13,7 @@ T28 establishes a pinned pnpm workspace and Node/toolchain matrix. Preserve the 
 | Route family | Use case | Implemented by |
 |---|---|---|
 | `/v1/me`, identity/session binding | Resolve internal principal; guest upgrade; account deletion request | T02 |
+| `/v1/permissions`, grants/withdrawals/status | Persist/query append-only purpose, policy, scope and effective permission state for service, retention, AI, contribution and sharing | T02 |
 | `/v1/samples`, `/{id}/upload`, `/{id}/complete` | Reserve asset, issue bounded upload authorization, bind immutable verified bytes, enqueue decoding | T04 |
 | `POST /v1/analyses` | Idempotently start deterministic analysis from an authorized completed sample/capture and return the AnalysisRun/job reference | T04 |
 | `/v1/jobs/{id}` | Owner-scoped status, progress stage and safe error code | T04 |
@@ -22,7 +23,7 @@ T28 establishes a pinned pnpm workspace and Node/toolchain matrix. Preserve the 
 | `/v1/comparisons` | Authorized common-feature comparison of specific revisions | T18/T22 |
 | `/v1/report-exports`, `/{id}` | Async PDF/card creation, authorized retrieval | T21 |
 | `/v1/share-grants`, invitations | Scope, preview, redeem, revoke; no implicit image or Premium consent | T22 |
-| `/v1/contributions`, withdrawals | Separate corpus purpose and lineage | T03/T12/T14 |
+| `/v1/contributions`, withdrawals | Contribution-specific permission plus corpus lineage/release invalidation; uses the T02 permission ledger | T02/T12/T14 |
 | `/v1/devices`, notifications, feedback | Push token binding, preferences and report-content feedback | T29/T24/T20 |
 | `/v1/webhooks/{provider}` | Raw signature verification then durable inbox | T19/T24 |
 

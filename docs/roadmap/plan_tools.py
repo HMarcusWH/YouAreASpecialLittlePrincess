@@ -26,6 +26,18 @@ PORTS = {
     "NativePurchaseClient", "TransactionalMailer", "PushProvider",
     "AbuseChallengeProvider", "AnalyticsSink", "TelemetryExporter",
 }
+PORT_DOCS = {
+    "IdentityProvider": "docs/connectors/identity.md",
+    "ObjectStore": "docs/connectors/object-storage.md",
+    "PremiumModelProvider": "docs/connectors/premium-model.md",
+    "PaymentProvider": "docs/connectors/payments.md",
+    "NativePurchaseClient": "docs/connectors/payments.md",
+    "TransactionalMailer": "docs/connectors/email.md",
+    "PushProvider": "docs/connectors/push.md",
+    "AbuseChallengeProvider": "docs/connectors/abuse-challenge.md",
+    "AnalyticsSink": "docs/connectors/analytics.md",
+    "TelemetryExporter": "docs/connectors/telemetry.md",
+}
 
 
 def validate_plan(data: dict, root: Path | None = None) -> list[str]:
@@ -72,6 +84,11 @@ def validate_plan(data: dict, root: Path | None = None) -> list[str]:
         for port in task.get("connectors", []) if isinstance(task.get("connectors"), list) else []:
             if isinstance(port, str) and port not in PORTS:
                 errors.append(f"{task_id}: unknown connector {port}")
+            elif isinstance(port, str):
+                required = PORT_DOCS.get(port)
+                docs = task.get("required_docs", [])
+                if required and isinstance(docs, list) and required not in docs:
+                    errors.append(f"{task_id}: connector {port} requires canonical spec {required}")
         if root is not None and isinstance(task.get("required_docs"), list):
             for rel in task["required_docs"]:
                 if not isinstance(rel, str):
@@ -86,6 +103,13 @@ def validate_plan(data: dict, root: Path | None = None) -> list[str]:
         for dep in deps:
             if not isinstance(dep, str) or dep not in by_id:
                 errors.append(f"{task_id}: unknown predecessor {dep!r}")
+        if task.get("status") == "DONE":
+            unfinished = [
+                dep for dep in deps
+                if isinstance(dep, str) and dep in by_id and by_id[dep].get("status") != "DONE"
+            ]
+            if unfinished:
+                errors.append(f"{task_id}: DONE with unfinished predecessors: {', '.join(unfinished)}")
     visiting: list[str] = []
     visited: set[str] = set()
 

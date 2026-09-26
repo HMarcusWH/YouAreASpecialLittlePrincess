@@ -54,6 +54,22 @@ class PlanTests(unittest.TestCase):
         self.assertIn("READY must be computed", errors)
         self.assertIn("planned suite", errors)
 
+    def test_done_requires_done_predecessors(self):
+        data = plan()
+        data["tasks"][2]["status"] = "DONE"
+        errors = "\n".join(plan_tools.validate_plan(data))
+        self.assertIn("DONE with unfinished predecessors", errors)
+        data["tasks"][1]["status"] = "DONE"
+        self.assertEqual(plan_tools.validate_plan(data), [])
+
+    def test_connector_requires_canonical_spec(self):
+        data = plan()
+        data["tasks"][0]["connectors"] = ["ObjectStore"]
+        errors = "\n".join(plan_tools.validate_plan(data))
+        self.assertIn("connector ObjectStore requires canonical spec", errors)
+        data["tasks"][0]["required_docs"].append("docs/connectors/object-storage.md")
+        self.assertEqual(plan_tools.validate_plan(data), [])
+
     def test_required_documents_are_checked_but_owned_paths_are_planned(self):
         with TemporaryDirectory() as directory:
             root = Path(directory)
