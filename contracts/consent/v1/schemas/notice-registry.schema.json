@@ -13,7 +13,7 @@
     "notice": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["notice_id", "version", "status", "purposes", "effective_from", "effective_until", "decision_ref", "content_sha256", "copy"],
+      "required": ["notice_id", "version", "status", "purposes", "effective_from", "effective_until", "decision_ref", "content_sha256", "end_decision_ref", "end_decided_by_role", "end_decided_on", "end_content_sha256", "copy"],
       "properties": {
         "notice_id": {"$ref": "common.schema.json#/$defs/dotted_key"},
         "version": {"$ref": "common.schema.json#/$defs/version"},
@@ -29,7 +29,15 @@
         "content_sha256": {
           "type": ["string", "null"],
           "pattern": "^[0-9a-f]{64}$",
-          "description": "What the decision approved: SHA-256 of the canonical JSON of the notice without status, effective_until and content_sha256, so decision_ref is bound too. Null exactly while DRAFT; changed purposes or wording need a new notice version."
+          "description": "What the activation decision approved: SHA-256 of the canonical JSON of the notice without status, final end-decision fields or content_sha256, so decision_ref is bound too. Null exactly while DRAFT; changed purposes or wording need a new notice version."
+        },
+        "end_decision_ref": {"$ref": "common.schema.json#/$defs/decision_ref"},
+        "end_decided_by_role": {"type": ["string", "null"], "minLength": 1},
+        "end_decided_on": {"$ref": "common.schema.json#/$defs/nullable_timestamp"},
+        "end_content_sha256": {
+          "type": ["string", "null"],
+          "pattern": "^[0-9a-f]{64}$",
+          "description": "For SUPERSEDED only: binds notice identity, activation content hash, effective_until and the recorded end decision so the historical notice window cannot be extended under the old decision."
         },
         "copy": {
           "type": "array",

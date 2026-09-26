@@ -53,9 +53,34 @@ def bind(document):
     return document
 
 
+def bind_retirement(purpose, retired_on, decision_ref="decision:test-retirement", decided_on=None):
+    """Record a content-bound retirement transition without rewriting the purpose approval."""
+    decided_on = decided_on or retired_on
+    purpose["status"] = "RETIRED"
+    purpose["retirement"] = {
+        "retired_on": retired_on,
+        "decision_ref": decision_ref,
+        "decided_by_role": "owner",
+        "decided_on": decided_on,
+        "content_sha256": None,
+    }
+    purpose["retirement"]["content_sha256"] = vcp.retirement_digest(purpose)
+    return purpose
+
+
 def bind_notice(notice):
-    """Stamp a decided notice with a digest of its current purposes, wording and start (tests only)."""
+    """Stamp notice activation and, when superseded, its separately recorded final end."""
     notice["content_sha256"] = vcp.notice_digest(notice)
+    if notice["status"] == "SUPERSEDED" and notice["effective_until"]:
+        notice["end_decision_ref"] = notice.get("end_decision_ref") or "decision:test-notice-end"
+        notice["end_decided_by_role"] = notice.get("end_decided_by_role") or "owner"
+        notice["end_decided_on"] = notice.get("end_decided_on") or notice["effective_until"]
+        notice["end_content_sha256"] = vcp.notice_end_digest(notice)
+    else:
+        notice["end_decision_ref"] = None
+        notice["end_decided_by_role"] = None
+        notice["end_decided_on"] = None
+        notice["end_content_sha256"] = None
     return notice
 
 
@@ -930,7 +955,7 @@ def test_retired_purposes_keep_their_history(registry, retention_ids):
                 scope={"kind": "SPECIMEN", "id": "spc_0002"})
     ledger = approve_in(registry, "image_retention")
     purpose = next(p for p in ledger["purposes"] if p["purpose_id"] == "image_retention")
-    purpose.update(status="RETIRED", retirement={"retired_on": "2026-03-01T00:00:00Z", "decision_ref": "decision:retire-images"})
+    bind_retirement(purpose, "2026-03-01T00:00:00Z", "decision:retire-images")
     assert vcp.check_purposes(ledger, retention_ids, vcp.known_gates()) == []
     context = vcp.build_context(ledger, dict(scenario, events=[grant, late]))
     assert context.event_issues == {grant["event_id"]: [], "evt_9701": ["PURPOSE_RETIRED"]}
@@ -943,8 +968,92 @@ def test_retired_purposes_keep_their_history(registry, retention_ids):
     assert codes(vcp.check_purposes(ledger, retention_ids, vcp.known_gates())) == ["RETIREMENT_WITHOUT_RECORD"]
     purpose.update(status="APPROVED", retirement={"retired_on": "2026-03-01T00:00:00Z", "decision_ref": "decision:x-1234"})
     assert codes(vcp.check_purposes(ledger, retention_ids, vcp.known_gates())) == ["RETIREMENT_ON_ACTIVE_PURPOSE"]
-    purpose.update(status="RETIRED", retirement={"retired_on": "2025-01-01T00:00:00Z", "decision_ref": "decision:x-1234"})
+    purpose.pop("retirement")
+    bind_retirement(purpose, "2026-01-01T00:00:00Z", "decision:x-1234", decided_on="2026-01-01T00:00:00Z")
     assert codes(vcp.check_purposes(ledger, retention_ids, vcp.known_gates())) == ["RETIREMENT_BEFORE_APPROVAL"]
+
+
+def test_retirement_timestamp_is_bound_and_tampering_fails_closed(registry, retention_ids):
+    scenario = vcp.load_json(vcp.CONSENT_DIR / "fixtures" / "scenarios" / "grant_deny_withdraw_basics.json")
+    grant = dict(copy.deepcopy(scenario["events"][2]), scope={"kind": "SPECIMEN", "id": "spc_0001"})
+    ledger = approve_in(registry, "image_retention")
+    purpose = next(p for p in ledger["purposes"] if p["purpose_id"] == "image_retention")
+    bind_retirement(purpose, "2026-03-01T00:00:00Z")
+    assert vcp.check_purposes(ledger, retention_ids, vcp.known_gates()) == []
+
+    purpose["retirement"]["retired_on"] = "2026-04-01T00:00:00Z"
+    assert codes(vcp.check_purposes(ledger, retention_ids, vcp.known_gates())) == ["RETIREMENT_CONTENT_MISMATCH"]
+    context = vcp.build_context(ledger, dict(scenario, events=[grant]))
+    assert vcp.evaluate_permission(
+        context, grant["subject"], grant["purpose"], grant["scope"], vcp.parse_timestamp("2026-03-15T00:00:00Z")
+    ) == "RETIRED"
+
+
+def test_notice_end_timestamp_is_separately_bound(registry):
+    notices = copy.deepcopy(load("notices.json"))
+    notice = notices["notices"][0]
+    approved = {key: approve(purpose) for key, purpose in purposes_by_key(registry).items()}
+    notice.update(
+        status="SUPERSEDED",
+        effective_from="2026-01-01T00:00:00Z",
+        effective_until="2026-02-01T00:00:00Z",
+        decision_ref="decision:test-notice",
+    )
+    bind_notice(notice)
+    assert vcp.check_notices({"notices": [notice]}, approved) == []
+    assert len(vcp.registry_notice_windows({"notices": [notice]}, approved)) == 1
+
+    notice["effective_until"] = "2026-04-01T00:00:00Z"
+    assert codes(vcp.check_notices({"notices": [notice]}, approved)) == ["NOTICE_END_CONTENT_MISMATCH"]
+    assert vcp.registry_notice_windows({"notices": [notice]}, approved) == []
+
+
+def test_purpose_registry_approval_binds_registry_content(registry, retention_ids):
+    approved = copy.deepcopy(registry)
+    approved.update(
+        registry_status="APPROVED",
+        legal_basis_status="DECIDED",
+        approval={"decision_ref": "decision:purpose-registry", "decided_by_role": "owner",
+                  "decided_on": "2026-01-01T00:00:00Z"},
+    )
+    assert codes(vcp.check_purposes(approved, retention_ids, vcp.known_gates())) == ["APPROVAL_CONTENT_MISMATCH"]
+    bind(approved)
+    assert vcp.check_purposes(approved, retention_ids, vcp.known_gates()) == []
+    approved["purposes"][0]["summary"] += " changed"
+    assert "APPROVAL_CONTENT_MISMATCH" in codes(vcp.check_purposes(approved, retention_ids, vcp.known_gates()))
+
+
+def test_human_release_requires_retention_class_decision_refs(registry, protocol):
+    fixture = valid_lineage()
+    manifest = dict(copy.deepcopy(fixture["manifest"]), synthetic=False)
+    retention = approved_retention()
+    for item in retention["classes"]:
+        item["decision_ref"] = None
+    bind(retention)
+    issues, summary = check_fixture_manifest(
+        fixture, approved_protocol(protocol), manifest,
+        human_release=True, fixture_mode=False, registry=pilot_ledger(registry),
+        sources=cleared_sources("engineering_testing"), notices=active_pilot_notices(),
+        publish_at=CUTOFF, gate=approved_gate(), retention=retention,
+    )
+    assert "PURPOSE_RETENTION_UNDECIDED" in codes(issues)
+    assert counts_of(summary) == (0, 0, 0)
+
+
+def test_human_release_rejects_duplicate_protocol_task_ids(registry, protocol):
+    fixture = valid_lineage()
+    manifest = dict(copy.deepcopy(fixture["manifest"]), synthetic=False)
+    approved = approved_protocol(protocol)
+    approved["tasks"].append(copy.deepcopy(approved["tasks"][0]))
+    bind(approved)
+    issues, summary = check_fixture_manifest(
+        fixture, approved, manifest,
+        human_release=True, fixture_mode=False, registry=pilot_ledger(registry),
+        sources=cleared_sources("engineering_testing"), notices=active_pilot_notices(),
+        publish_at=CUTOFF, gate=approved_gate(), retention=approved_retention(),
+    )
+    assert "DUPLICATE_TASK" in codes(issues)
+    assert counts_of(summary) == (0, 0, 0)
 
 
 def test_collection_summary_counts_writers_not_pages(protocol):
@@ -1210,8 +1319,8 @@ def test_approved_purposes_need_every_related_gate_decided(registry, retention_i
 def test_retired_purposes_keep_their_definition(registry, retention_ids):
     # Codex review of #12: retiring a purpose required wiping its scopes, recipients and retention.
     retired = approve_in(registry, "product_analytics")
-    next(p for p in retired["purposes"] if p["purpose_id"] == "product_analytics").update(
-        status="RETIRED", retirement={"retired_on": "2026-06-01T00:00:00Z", "decision_ref": "decision:retire-analytics"})
+    bind_retirement(next(p for p in retired["purposes"] if p["purpose_id"] == "product_analytics"),
+                    "2026-06-01T00:00:00Z", "decision:retire-analytics")
     assert vcp.check_purposes(retired, retention_ids, vcp.known_gates()) == []
     not_offered = copy.deepcopy(registry)
     next(p for p in not_offered["purposes"] if p["purpose_id"] == "product_analytics")["status"] = "NOT_OFFERED"
@@ -1227,6 +1336,7 @@ def test_retired_purposes_keep_their_definition(registry, retention_ids):
     bind_notice(notice)
     assert vcp.check_notices(notices, purposes) == []
     notice.update(status="ACTIVE", effective_until=None)
+    bind_notice(notice)
     assert codes(vcp.check_notices(notices, purposes)) == ["NOTICE_OFFERS_INACTIVE_PURPOSE"]
 
 

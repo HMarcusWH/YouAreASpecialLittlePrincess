@@ -62,10 +62,16 @@
           "type": "object",
           "additionalProperties": false,
           "description": "Required exactly when RETIRED. Grants recorded before retired_on keep their history; from retired_on on the purpose permits nothing and takes no grants.",
-          "required": ["retired_on", "decision_ref"],
+          "required": ["retired_on", "decision_ref", "decided_by_role", "decided_on", "content_sha256"],
           "properties": {
             "retired_on": {"$ref": "common.schema.json#/$defs/timestamp"},
-            "decision_ref": {"$ref": "common.schema.json#/$defs/required_decision_ref"}
+            "decision_ref": {"$ref": "common.schema.json#/$defs/required_decision_ref"},
+            "decided_by_role": {"$ref": "common.schema.json#/$defs/text"},
+            "decided_on": {"$ref": "common.schema.json#/$defs/timestamp"},
+            "content_sha256": {
+              "$ref": "common.schema.json#/$defs/sha256",
+              "description": "SHA-256 binding this purpose/version, its approved content hash and the retirement decision including retired_on."
+            }
           }
         },
         "summary": {"$ref": "common.schema.json#/$defs/text"},

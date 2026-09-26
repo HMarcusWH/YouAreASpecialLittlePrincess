@@ -48,3 +48,14 @@ python -m pytest -q tests/test_consent_protocol.py
 ```
 
 The schema validator supports a strict keyword subset and fails on anything else, so a schema can never silently lose a constraint. Objects are closed, and integers exclude booleans and floats. JSON with duplicate keys or `NaN`/`Infinity` is rejected.
+
+
+## Lifecycle transitions
+
+Approval of a purpose or notice binds the content originally approved. Later lifecycle changes do not rewrite that approval:
+
+- purpose retirement carries its own decision reference, role, decision time and content hash binding the exact `retired_on` transition;
+- a notice's final `effective_until` carries a separate end-decision record and hash bound to the original notice decision;
+- malformed or edited lifecycle transitions fail closed in permission/notice evaluation.
+
+Human reference releases also reapply the standalone protocol/retention invariants they depend on: duplicate collection task IDs and retention classes without recorded decision references block release rather than being collapsed or inferred.

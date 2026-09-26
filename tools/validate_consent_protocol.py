@@ -301,7 +301,11 @@ def known_gates(tasks_json: Path = TASKS_JSON) -> set[str]:
 # Lifecycle fields a decision's digest leaves out. Everything else is bound, including the decision
 # record itself (reference, role, dates, gate decisions), except the digest it carries.
 APPROVAL_LIFECYCLE = ("status", "retirement")
-NOTICE_LIFECYCLE = ("status", "effective_until", "content_sha256")
+NOTICE_LIFECYCLE = (
+    "status", "effective_until",
+    "end_decision_ref", "end_decided_by_role", "end_decided_on", "end_content_sha256",
+    "content_sha256",
+)
 SOURCE_REVIEW_LIFECYCLE = ("review_status",)
 
 
@@ -322,6 +326,54 @@ def content_sha256(document: dict, lifecycle: tuple[str, ...] = APPROVAL_LIFECYC
 
 def notice_digest(notice: dict) -> str:
     return content_sha256(notice, NOTICE_LIFECYCLE, record=None)
+
+
+def retirement_digest(purpose: dict) -> str:
+    """Bind a retirement transition separately from the purpose's original approval."""
+    retirement = purpose.get("retirement") or {}
+    body = {
+        "purpose_id": purpose.get("purpose_id"),
+        "purpose_version": purpose.get("purpose_version"),
+        "approval_content_sha256": (purpose.get("approval") or {}).get("content_sha256"),
+        "retirement": {key: value for key, value in retirement.items() if key != "content_sha256"},
+    }
+    return hashlib.sha256(json.dumps(body, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")).hexdigest()
+
+
+def retirement_recorded(purpose: dict) -> bool:
+    retirement = purpose.get("retirement") or {}
+    return (
+        purpose.get("status") == "RETIRED"
+        and bool(retirement.get("decision_ref"))
+        and bool(retirement.get("decided_by_role"))
+        and bool(retirement.get("decided_on"))
+        and retirement.get("content_sha256") == retirement_digest(purpose)
+    )
+
+
+def notice_end_digest(notice: dict) -> str:
+    """Bind the final end of an approved notice without rewriting its original decision."""
+    body = {
+        "notice_id": notice.get("notice_id"),
+        "version": notice.get("version"),
+        "notice_content_sha256": notice.get("content_sha256"),
+        "effective_until": notice.get("effective_until"),
+        "end_decision_ref": notice.get("end_decision_ref"),
+        "end_decided_by_role": notice.get("end_decided_by_role"),
+        "end_decided_on": notice.get("end_decided_on"),
+    }
+    return hashlib.sha256(json.dumps(body, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")).hexdigest()
+
+
+def notice_end_recorded(notice: dict) -> bool:
+    return (
+        notice.get("status") == "SUPERSEDED"
+        and bool(notice.get("effective_until"))
+        and bool(notice.get("end_decision_ref"))
+        and bool(notice.get("end_decided_by_role"))
+        and bool(notice.get("end_decided_on"))
+        and notice.get("end_content_sha256") == notice_end_digest(notice)
+    )
 
 
 def review_digest(source: dict) -> str:
@@ -370,16 +422,20 @@ def purpose_approval_complete(purpose: dict) -> bool:
     """Approved with every piece of evidence the registry rules require, for the purpose's current content."""
     approval = purpose.get("approval") or {}
     passed = {d["gate"] for d in approval.get("gate_decisions", []) if d.get("decision_ref")}
-    return (purpose["status"] in {"APPROVED", "RETIRED"} and purpose["legal_basis"] == "DECIDED"
-            and set(purpose["related_gates"]) <= passed and approval_recorded(purpose))
+    base = (
+        purpose["status"] in {"APPROVED", "RETIRED"}
+        and purpose["legal_basis"] == "DECIDED"
+        and set(purpose["related_gates"]) <= passed
+        and approval_recorded(purpose)
+    )
+    return base and (purpose["status"] != "RETIRED" or retirement_recorded(purpose))
 
 
 def retired_at(purpose: dict) -> datetime | None:
-    """When a RETIRED purpose stopped being offered; None for any other status (or a retirement without a record)."""
-    retirement = purpose.get("retirement") or {}
-    if purpose["status"] != "RETIRED" or not retirement.get("retired_on"):
+    """When a content-bound RETIRED transition took effect; malformed retirement fails closed."""
+    if not retirement_recorded(purpose):
         return None
-    return parse_timestamp(retirement["retired_on"])
+    return parse_timestamp(purpose["retirement"]["retired_on"])
 
 
 def approved_by(purpose: dict, when: str) -> bool:
@@ -428,14 +484,25 @@ def check_purposes(doc: dict, retention_ids: set[str], gates: set[str]) -> list[
                 if gate not in passed:
                     issues.append(Issue("GATE_NOT_APPROVED", where, f"{gate} has no recorded decision in approval.gate_decisions"))
         retirement = p.get("retirement")
-        if p["status"] == "RETIRED" and not (retirement and retirement.get("decision_ref")):
-            issues.append(Issue("RETIREMENT_WITHOUT_RECORD", where,
-                                "RETIRED needs a retirement record with retired_on and a decision_ref, so history before it stays usable"))
+        if p["status"] == "RETIRED" and not retirement_recorded(p):
+            if not retirement or not all(retirement.get(key) for key in (
+                    "retired_on", "decision_ref", "decided_by_role", "decided_on", "content_sha256")):
+                issues.append(Issue("RETIREMENT_WITHOUT_RECORD", where,
+                                    "RETIRED needs a complete content-bound retirement decision record"))
+            else:
+                issues.append(Issue("RETIREMENT_CONTENT_MISMATCH", where,
+                                    "retirement decision does not bind the current retired_on/reference/content"))
         elif p["status"] != "RETIRED" and retirement is not None:
             issues.append(Issue("RETIREMENT_ON_ACTIVE_PURPOSE", where, "only a RETIRED purpose carries a retirement record"))
-        elif retirement is not None and (p.get("approval") or {}).get("decided_on") and (
-                parse_timestamp(retirement["retired_on"]) <= parse_timestamp(p["approval"]["decided_on"])):
-            issues.append(Issue("RETIREMENT_BEFORE_APPROVAL", where, "a purpose is retired after it was approved"))
+        elif retirement is not None:
+            approval_on = (p.get("approval") or {}).get("decided_on")
+            decided_on = parse_timestamp(retirement["decided_on"])
+            retired_on = parse_timestamp(retirement["retired_on"])
+            if approval_on and decided_on <= parse_timestamp(approval_on):
+                issues.append(Issue("RETIREMENT_BEFORE_APPROVAL", where, "retirement decision must follow the purpose approval"))
+            elif decided_on > retired_on:
+                issues.append(Issue("RETIREMENT_BACKDATED", where,
+                                    "retired_on cannot precede the recorded retirement decision"))
         if p["legal_basis"] == "DECIDED" and p["status"] not in {"APPROVED", "RETIRED"}:
             issues.append(Issue("LEGAL_BASIS_WITHOUT_APPROVAL", where, "a decided legal basis belongs to an approved purpose"))
         if offered and not p["grant_scopes"]:
@@ -456,8 +523,8 @@ def check_purposes(doc: dict, retention_ids: set[str], gates: set[str]) -> list[
             if retention_class not in retention_ids:
                 issues.append(Issue("UNKNOWN_RETENTION_CLASS", where, f"{retention_class} is not in retention.json"))
 
-    if doc["registry_status"] == "APPROVED" and not (doc.get("approval") or {}).get("decision_ref"):
-        issues.append(Issue("APPROVAL_WITHOUT_EVIDENCE", "purposes.json", "APPROVED registry requires an approval record"))
+    if doc["registry_status"] == "APPROVED":
+        issues += approval_issues(doc, "purposes.json")
     if doc["registry_status"] == "APPROVED" and doc["legal_basis_status"] != "DECIDED":
         issues.append(Issue("APPROVED_WITHOUT_LEGAL_BASIS", "purposes.json", "approval requires decided legal bases"))
     if doc["legal_basis_status"] == "DECIDED" and doc["registry_status"] != "APPROVED":
@@ -482,9 +549,13 @@ def check_purpose_retention(doc: dict, retention_doc: dict) -> list[Issue]:
             retention_class = classes.get(class_id)
             if retention_class is None:
                 continue  # reported as UNKNOWN_RETENTION_CLASS by check_purposes
-            if not (retention_class["decision_status"] == "DECIDED" and retention_class["max_retention"]["unit"] is not None):
+            if not (
+                retention_class["decision_status"] == "DECIDED"
+                and retention_class["decision_ref"]
+                and retention_class["max_retention"]["unit"] is not None
+            ):
                 issues.append(Issue("PURPOSE_RETENTION_UNDECIDED", where,
-                                    f"{class_id} has no decided maximum or explicit EVENT_BOUND choice"))
+                                    f"{class_id} has no recorded decision for its maximum or explicit EVENT_BOUND choice"))
     return issues
 
 
@@ -527,8 +598,12 @@ def check_notices(doc: dict, purposes: dict[tuple[str, int], dict]) -> list[Issu
         for purpose_id, _locale in seen:
             if purpose_id not in listed:
                 issues.append(Issue("COPY_FOR_UNLISTED_PURPOSE", where, purpose_id))
+        end_fields = (
+            notice.get("end_decision_ref"), notice.get("end_decided_by_role"),
+            notice.get("end_decided_on"), notice.get("end_content_sha256"),
+        )
         if notice["status"] == "DRAFT":
-            if notice["effective_from"] or notice["effective_until"] or notice["decision_ref"] or notice["content_sha256"]:
+            if notice["effective_from"] or notice["effective_until"] or notice["decision_ref"] or notice["content_sha256"] or any(end_fields):
                 issues.append(Issue("DRAFT_NOTICE_IN_EFFECT", where, "a draft notice has no effective window or decision"))
         elif not (notice["effective_from"] and notice["decision_ref"]):
             issues.append(Issue("NOTICE_ACTIVE_WITHOUT_DECISION", where, "ACTIVE/SUPERSEDED notices need a decision and start time"))
@@ -536,8 +611,21 @@ def check_notices(doc: dict, purposes: dict[tuple[str, int], dict]) -> list[Issu
             # Wording or purposes edited after the decision are a new notice version, never the approved one.
             issues.append(Issue("NOTICE_CONTENT_MISMATCH", where,
                                 "content_sha256 does not match the notice's purposes, wording and start; record a new version"))
-        elif notice["status"] == "SUPERSEDED" and not notice["effective_until"]:
-            issues.append(Issue("NOTICE_WINDOW_INVALID", where, "a superseded notice needs the time it stopped being shown"))
+        elif notice["status"] == "ACTIVE" and (notice["effective_until"] or any(end_fields)):
+            issues.append(Issue("NOTICE_END_ON_ACTIVE", where, "an ACTIVE notice has no final end-decision record"))
+        elif notice["status"] == "SUPERSEDED":
+            if not notice["effective_until"]:
+                issues.append(Issue("NOTICE_WINDOW_INVALID", where, "a superseded notice needs the time it stopped being shown"))
+            elif not notice_end_recorded(notice):
+                if not all(end_fields):
+                    issues.append(Issue("NOTICE_END_WITHOUT_DECISION", where,
+                                        "a superseded notice needs a complete content-bound end decision"))
+                else:
+                    issues.append(Issue("NOTICE_END_CONTENT_MISMATCH", where,
+                                        "the end decision does not bind the current effective_until/reference/content"))
+            elif parse_timestamp(notice["end_decided_on"]) > parse_timestamp(notice["effective_until"]):
+                issues.append(Issue("NOTICE_END_BACKDATED", where,
+                                    "effective_until cannot precede the recorded end decision"))
     issues += notice_window_issues([n for n in doc["notices"] if n["effective_from"]], "notices.json")
     return issues
 
@@ -1012,6 +1100,12 @@ def check_collection_manifest(
     writers = {w["writer_id"]: w for w in manifest["writers"]}
     specimens = {s["specimen_id"]: s for s in manifest["specimens"]}
     captures = {c["capture_id"]: c for c in manifest["captures"]}
+    duplicate_task_ids = set(duplicates(t["task_id"] for t in protocol["tasks"]))
+    for task_id in sorted(duplicate_task_ids):
+        issues.append(Issue("DUPLICATE_TASK", task_id,
+                            "human release cannot choose between conflicting task definitions with one canonical ID"))
+    if duplicate_task_ids:
+        releasable = False
     tasks = {t["task_id"]: t for t in protocol["tasks"]}
     sessions = {session["session_index"]: session for session in protocol["session_plan"]}
     scripts = set(protocol["supported_contexts"]["scripts"])
@@ -1504,6 +1598,7 @@ def registry_notice_windows(notices_doc: dict | None, purposes: dict[tuple[str, 
         {key: n[key] for key in ("notice_id", "version", "effective_from", "effective_until", "purposes")}
         for n in (notices_doc or {}).get("notices", [])
         if n["status"] != "DRAFT" and n["effective_from"] and notice_decision_bound(n)
+        and (n["status"] != "SUPERSEDED" or notice_end_recorded(n))
         and (purposes is None or all(purpose_key(ref) in purposes and approved_by(purposes[purpose_key(ref)], n["effective_from"])
                                      for ref in n["purposes"]))
     ]

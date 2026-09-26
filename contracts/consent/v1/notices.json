@@ -19,6 +19,10 @@
       "effective_until": null,
       "decision_ref": null,
       "content_sha256": null,
+      "end_decision_ref": null,
+      "end_decided_by_role": null,
+      "end_decided_on": null,
+      "end_content_sha256": null,
       "copy": [
         {
           "purpose_id": "service_processing", "locale": "en",
@@ -130,6 +134,10 @@
       "effective_until": null,
       "decision_ref": null,
       "content_sha256": null,
+      "end_decision_ref": null,
+      "end_decided_by_role": null,
+      "end_decided_on": null,
+      "end_content_sha256": null,
       "copy": [
         {
           "purpose_id": "engineering_evaluation", "locale": "en",
