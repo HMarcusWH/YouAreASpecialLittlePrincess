@@ -1,6 +1,8 @@
 """Shared integrity helpers for the graphology interpretation database."""
+
 from __future__ import annotations
-import hashlib, json
+import hashlib
+import json
 from pathlib import Path
 
 EXPECTED_BASELINE_COMMIT = "f96aa6b54cfaf91f0a8243e7c7e266baa053eedc"
@@ -8,10 +10,24 @@ EXPECTED_IMPORT_MANIFEST_BLOB = "00c2fe4d0ba6ca4d95fb5fd9441de066937b2f2c"
 EXPECTED_SNAPSHOT_TREE_LOCK_BLOB = "110d88f33094c38c05367adc34fea39319dae500"
 
 DOMAINS = [
-    "01-context","02-global","03-space","04-size","05-direction","06-connection",
-    "07-form","08-stroke","09-movement","10-detail","11-signature","12-hierarchy",
-    "13-interpretation","14-reference","15-pair","16-history",
+    "01-context",
+    "02-global",
+    "03-space",
+    "04-size",
+    "05-direction",
+    "06-connection",
+    "07-form",
+    "08-stroke",
+    "09-movement",
+    "10-detail",
+    "11-signature",
+    "12-hierarchy",
+    "13-interpretation",
+    "14-reference",
+    "15-pair",
+    "16-history",
 ]
+
 
 def load(path: Path):
     def pairs(items):
@@ -21,15 +37,20 @@ def load(path: Path):
                 raise ValueError(f"Duplicate JSON key in {path}: {key}")
             out[key] = value
         return out
+
     def constant(value):
         raise ValueError(f"Non-finite JSON constant in {path}: {value}")
+
     return json.loads(path.read_text(encoding="utf-8"), object_pairs_hook=pairs, parse_constant=constant)
+
 
 def git_blob_sha(data: bytes) -> str:
     return hashlib.sha1(b"blob " + str(len(data)).encode("ascii") + b"\0" + data).hexdigest()
 
+
 def sha256(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
+
 
 def verify_research_baseline(repo: Path) -> list[str]:
     errors = []
@@ -41,15 +62,15 @@ def verify_research_baseline(repo: Path) -> list[str]:
     tree_lock = load(tree_lock_path)
     manifest = load(repo / lock["import_manifest_path"])
 
-    expected_lock_paths={
-        "research_snapshot":"research/graphology/foundations-v0.1",
-        "import_manifest_path":"research/graphology/foundations-v0.1/provenance/import_manifest.json",
-        "snapshot_tree_lock_path":"schema/graphology_interpretation/v1/traceability/research_snapshot_tree_lock.json",
+    expected_lock_paths = {
+        "research_snapshot": "research/graphology/foundations-v0.1",
+        "import_manifest_path": "research/graphology/foundations-v0.1/provenance/import_manifest.json",
+        "snapshot_tree_lock_path": "schema/graphology_interpretation/v1/traceability/research_snapshot_tree_lock.json",
     }
     for key, expected in expected_lock_paths.items():
-        if lock.get(key)!=expected:
+        if lock.get(key) != expected:
             errors.append(f"research baseline lock path drift: {key}")
-    if tree_lock.get("research_snapshot")!="research/graphology/foundations-v0.1":
+    if tree_lock.get("research_snapshot") != "research/graphology/foundations-v0.1":
         errors.append("snapshot tree lock research path drift")
 
     if lock["research_baseline_commit"] != EXPECTED_BASELINE_COMMIT:
@@ -61,11 +82,7 @@ def verify_research_baseline(repo: Path) -> list[str]:
 
     snapshot_root = repo / lock["research_snapshot"]
     locked = {x["path"]: x for x in tree_lock["files"]}
-    actual_paths = {
-        p.relative_to(snapshot_root).as_posix()
-        for p in snapshot_root.rglob("*")
-        if p.is_file()
-    }
+    actual_paths = {p.relative_to(snapshot_root).as_posix() for p in snapshot_root.rglob("*") if p.is_file()}
     if actual_paths != set(locked):
         missing = sorted(set(locked) - actual_paths)
         extra = sorted(actual_paths - set(locked))
@@ -102,6 +119,7 @@ def verify_research_baseline(repo: Path) -> list[str]:
         if sha256(path.read_bytes()) != record["sha256"]:
             errors.append(f"frozen research SHA-256 mismatch: {record['path']}")
     return errors
+
 
 def concat(root: Path, relative: str):
     return [item for name in DOMAINS for item in load(root / relative / f"{name}.json")]

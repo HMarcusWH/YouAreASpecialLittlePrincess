@@ -10,17 +10,82 @@ permissions:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
-        python: ['3.10', '3.11', '3.12']
+        include:
+          - python: '3.10'
+            manifest: requirements/ci-py310.txt
+            lock: requirements/ci-py310.lock
+          - python: '3.11'
+            manifest: requirements/ci-py311.txt
+            lock: requirements/ci-py311.lock
+          - python: '3.12'
+            manifest: requirements/ci-py312.txt
+            lock: requirements/ci-py312.lock
+    env:
+      PIP_DISABLE_PIP_VERSION_CHECK: '1'
+      PIP_NO_INPUT: '1'
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: ${{ matrix.python }}
-      - run: python -m pip install -e '.[dev]'
+
+      - name: Download reviewed dependency artifacts
+        shell: bash
+        run: |
+          mkdir -p "$RUNNER_TEMP/ci-wheelhouse"
+          python -m pip download \
+            --require-hashes \
+            --only-binary=:all: \
+            --no-deps \
+            --dest "$RUNNER_TEMP/ci-wheelhouse" \
+            -r "${{ matrix.lock }}"
+
+      - name: Install reviewed dependency artifacts
+        shell: bash
+        run: |
+          python -m pip install \
+            --require-hashes \
+            --only-binary=:all: \
+            --no-index \
+            --no-deps \
+            --force-reinstall \
+            --find-links "$RUNNER_TEMP/ci-wheelhouse" \
+            -r "${{ matrix.lock }}"
+
+      - name: Verify build toolchain
+        run: |
+          python -m pip --version
+          python -c 'import setuptools, wheel; assert setuptools.__version__ == "84.0.0"; assert wheel.__version__ == "0.48.0"'
+
+      - name: Verify project dependency policy
+        run: >-
+          python tools/verify_project_dependency_policy.py
+          --manifest "${{ matrix.manifest }}"
+          --extra dev
+
+      - name: Install local project without dependency resolution
+        shell: bash
+        run: |
+          python -m pip install \
+            --no-index \
+            --no-deps \
+            --no-build-isolation \
+            -e '.[dev]'
+
+      - name: Verify exact reviewed environment
+        run: >-
+          python tools/verify_ci_lock.py
+          "${{ matrix.lock }}"
+          --manifest "${{ matrix.manifest }}"
+          --allow "special-little-princess-graphology==0.1.0"
+
+      - run: python -m pip check
+      - name: Show resolved dependencies
+        run: python -m pip freeze --all
       - run: python tools/generate_feature_contract.py --check
       - run: python tools/compile_premium_interpretation_db.py --check
       - run: python tools/validate_graphology_integrity.py
@@ -35,11 +100,11 @@ jobs:
         run: python tools/check_graphology_research.py
       - name: Run graphology research regression tests
         run: python tools/test_graphology_research.py
-      - name: Build wheel
-        run: python -m pip wheel . --no-deps --wheel-dir dist
+      - name: Build wheel offline
+        run: python -m pip wheel . --no-deps --no-build-isolation --no-index --wheel-dir dist
       - name: Verify installed wheel outside checkout
         shell: bash
         run: |
-          python -m pip install --no-deps --target "$RUNNER_TEMP/princess-installed" dist/*.whl
+          python -m pip install --no-index --no-deps --target "$RUNNER_TEMP/princess-installed" dist/*.whl
           cd "$RUNNER_TEMP"
           PYTHONPATH="$RUNNER_TEMP/princess-installed" python -c 'import json; import numpy as np; from princess_graphology import GraphologyEngine; from princess_graphology.schema_validation import load_contract; assert load_contract()["feature_count"] == 272; assert len(json.loads(GraphologyEngine().analyze(np.full((40, 60), 255, np.uint8)).to_json())["measurements"]) == 64'
