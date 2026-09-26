@@ -10,17 +10,28 @@ permissions:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
-        python: ['3.10', '3.11', '3.12']
+        include:
+          - python: '3.10'
+            constraints: requirements/ci-py310.txt
+          - python: '3.11'
+            constraints: requirements/ci-py311.txt
+          - python: '3.12'
+            constraints: requirements/ci-py312.txt
+    env:
+      PIP_CONSTRAINT: ${{ github.workspace }}/${{ matrix.constraints }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: ${{ matrix.python }}
       - run: python -m pip install -e '.[dev]'
+      - run: python -m pip check
+      - name: Show resolved dependencies
+        run: python -m pip freeze --all
       - run: python tools/generate_feature_contract.py --check
       - run: python tools/compile_premium_interpretation_db.py --check
       - run: python tools/validate_graphology_integrity.py
