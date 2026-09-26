@@ -2,7 +2,25 @@
 
 Status: `DONE`
 
-## Broken baseline
+## Assigned baseline-run diagnosis
+
+T00 originally assigned GitHub Actions run `36168879709` at commit `8f2ec7b07f23f7b3613ccc71576714f3c245e7a0`.
+
+Retained GitHub evidence:
+
+- run created and started: 2026-09-25 17:43:14 UTC;
+- run completed: failure, updated 2026-09-25 17:43:19 UTC;
+- matrix jobs: Python 3.10, 3.11 and 3.12;
+- all three jobs completed with `failure`;
+- all three jobs expose zero workflow steps through the GitHub Actions job API;
+- workflow-job step lookup returns an empty step list for each job;
+- job-log retrieval is unavailable for those jobs, so there is no retained command output to attribute the failure to checkout, Python setup, dependency installation, lint or tests.
+
+Diagnosis: the assigned run failed before any executable workflow step was recorded. That rules out a demonstrated repository command/test failure for this run. The retained API evidence does **not** distinguish among runner dispatch, account/billing, permissions or another pre-step GitHub Actions condition, so T00 records the exact subcause as unrecoverable rather than guessing.
+
+A later run with usable step logs was therefore required to identify the repository-level baseline defect.
+
+## Reproducible broken baseline
 
 - Main commit: `7a767754c8190e42f3d9f98f9cc0f95da9375713`
 - GitHub Actions run: `36203571871`
@@ -29,8 +47,11 @@ The repair did not weaken Ruff. It normalized the T26 support code, removed modu
 ## Dependency and platform policy
 
 - Python support baseline: 3.10 / 3.11 / 3.12
+- Package metadata: `requires-python = ">=3.10,<3.13"`
 - CI runner: Ubuntu 24.04
 - CI dependencies: exact per-Python constraints in `requirements/ci-py*.txt`
+- Build toolchain: `pip==26.2.1`, `setuptools==84.0.0`, `wheel==0.48.0`
+- Build isolation: disabled in CI after explicit toolchain installation; setuptools/wheel are also exact in `[build-system].requires`
 - Dependency integrity: `python -m pip check`
 - Ruff baseline: 0.16.9
 - GitHub checkout action: v7.0.1 pinned to commit `3d3c42e5aac5ba805825da76410c181273ba90b1`
@@ -41,7 +62,7 @@ Node selection source checked on 2026-09-26: https://nodejs.org/en/download/arch
 
 ## Policy-locked baseline
 
-Commit `11a6657c1b1360ca41936c00c576698d06596a95` passed the complete pinned/constraint-driven matrix in GitHub Actions run `36205683287`:
+Commit `11a6657c1b1360ca41936c00c576698d06596a95` passed the complete first-generation constraint-driven matrix in GitHub Actions run `36205683287`:
 
 - `pip check`: PASS on Python 3.10 / 3.11 / 3.12
 - resolved-dependency logging: PASS
@@ -54,6 +75,8 @@ Commit `11a6657c1b1360ca41936c00c576698d06596a95` passed the complete pinned/con
 - wheel build: PASS
 - installed-wheel smoke: PASS
 
+Codex review then identified three policy gaps: the build toolchain was not included in the snapshot, Python metadata advertised versions outside the matrix, and the assigned run `36168879709` had not been explicitly diagnosed. Those gaps are repaired in the subsequent review-remediation commit; that commit must pass the full matrix before PR #10 is merge-ready.
+
 ## Closeout rule
 
-T00 is promoted to `DONE` by the closing status commit that contains this document and the task-state update. That exact closing commit must pass the same matrix before the PR is considered merge-ready. Its final GitHub Actions run is recorded on the pull request conversation as the self-referential evidence record.
+T00 remains marked `DONE` only if the current PR head satisfies the complete reviewed policy. The final review-remediation head must pass build-tool verification, `pip check`, generation/validator checks, Ruff, 149-test pytest suite, research checks, wheel construction and installed-wheel smoke on Python 3.10 / 3.11 / 3.12. The exact final commit and Actions run are recorded in the PR conversation.

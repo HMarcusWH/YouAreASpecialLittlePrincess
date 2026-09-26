@@ -1,12 +1,12 @@
 [build-system]
-requires = ["setuptools>=68", "wheel"]
+requires = ["setuptools==84.0.0", "wheel==0.48.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "special-little-princess-graphology"
 version = "0.1.0"
 description = "Hybrid deterministic handwriting measurement engine for YouAreASpecialLittlePrincess"
-requires-python = ">=3.10"
+requires-python = ">=3.10,<3.13"
 dependencies = [
   "numpy>=1.24,<3",
   "opencv-python-headless>=4.8,<6",
