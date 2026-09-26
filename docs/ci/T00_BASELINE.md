@@ -52,7 +52,7 @@ The repair did not weaken Ruff. It normalized the T26 support code, removed modu
 - CI dependencies: exact per-Python manifests plus SHA-256-authenticated wheel locks in `requirements/ci-py*`
 - Build toolchain: `pip==26.2.1`, `setuptools==84.0.0`, `wheel==0.48.0`, included in every hash lock
 - Build isolation: disabled after authenticated build-tool installation; setuptools/wheel are also exact in `[build-system].requires`
-- Supply-chain integrity: hash-checked wheel download, offline wheelhouse installation, direct-URL rejection, reviewed runtime/dev dependency-policy verification, local project installation with `--no-deps`, duplicate-aware exact installed-graph verification, and `python -m pip check`
+- Supply-chain integrity: hash-checked wheel download, offline wheelhouse installation, marker-aware runtime/dev/build-system policy verification, direct-URL and upstream-extra rejection, local project installation with `--no-deps`, duplicate-aware exact installed-graph verification, and `python -m pip check`
 - Ruff baseline: 0.16.9
 - GitHub checkout action: v7.0.1 pinned to commit `3d3c42e5aac5ba805825da76410c181273ba90b1`
 - GitHub setup-python action: v7.0.0 pinned to commit `5fda3b95a4ea91299a34e894583c3862153e4b97`
@@ -79,8 +79,10 @@ Codex review first identified three policy gaps: the build toolchain was not inc
 
 A second review identified two deeper supply-chain gaps: exact versions did not authenticate artifact bytes, and constraint files did not reject dependencies absent from the reviewed snapshot. T00 therefore moved to per-Python SHA-256 wheel locks, authenticated wheelhouse installation, manifest-lock equality checks, and exact installed-environment verification.
 
-A third review identified two final bypasses: a PEP 508 direct URL could still be fetched during editable dependency resolution, and duplicate installed distribution metadata could be silently collapsed by the verifier. The final policy therefore rejects direct URLs before local installation, installs the local project with `--no-deps`, checks selected runtime/dev requirements against the reviewed manifest, and rejects duplicate normalized installed distributions explicitly.
+A third review identified two bypasses: a PEP 508 direct URL could still be fetched during editable dependency resolution, and duplicate installed distribution metadata could be silently collapsed by the verifier. That repair added `--no-deps`, direct-URL checks, reviewed runtime/dev dependency checks, and duplicate rejection.
+
+A fourth review found three remaining policy-coverage gaps: selected optional-group markers were evaluated without the selected `extra` context, upstream dependency extras such as `pkg[feature]` could activate unreviewed transitives, and `build-system.requires` was outside the static policy check. The final policy carries selected-extra marker context, rejects upstream dependency extras until their complete graph is explicitly locked, and validates build-system requirements against the same reviewed manifest.
 
 ## Closeout rule
 
-T00 remains marked `DONE` only if the current PR head satisfies the complete reviewed policy. The final head must pass SHA-256 artifact authentication, direct-URL/dependency-policy verification, no-dependency local project installation, manifest/lock equality, duplicate-aware exact installed-environment verification, build-tool verification, `pip check`, generation/validator checks, Ruff, pytest, research checks, offline wheel construction and installed-wheel smoke on Python 3.10 / 3.11 / 3.12. The exact final commit and Actions run are recorded in the PR conversation.
+T00 remains marked `DONE` only if the current PR head satisfies the complete reviewed policy. The final head must pass SHA-256 artifact authentication, marker-aware project/optional/build-system dependency-policy verification, direct-URL and upstream-extra rejection, no-dependency local project installation, manifest/lock equality, duplicate-aware exact installed-environment verification, build-tool verification, `pip check`, generation/validator checks, Ruff, pytest, research checks, offline wheel construction and installed-wheel smoke on Python 3.10 / 3.11 / 3.12. The exact final commit and Actions run are recorded in the PR conversation.

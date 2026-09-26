@@ -5,7 +5,7 @@ T00 uses two reviewed files per supported interpreter:
 - `ci-pyXYZ.txt` is the exact name/version manifest.
 - `ci-pyXYZ.lock` repeats that complete manifest and records the SHA-256 of the one reviewed Linux x86_64 wheel used by CI.
 
-CI verifies that the manifest and lock contain the same package/version set, hash-checks every downloaded wheel, installs only from the authenticated local wheelhouse, statically verifies the runtime + `dev` dependency declarations against the reviewed manifest (including a direct-URL prohibition), installs the local project with `--no-deps`, and then verifies that the installed distribution set is exactly the lock plus the local project.
+CI verifies that the manifest and lock contain the same package/version set, hash-checks every downloaded wheel, installs only from the authenticated local wheelhouse, and statically validates `project.dependencies`, each selected optional-dependency group, and `build-system.requires` against the reviewed manifest. Optional markers are evaluated with the selected extra context. Direct URLs are prohibited, and upstream dependency extras such as `pkg[feature]` are rejected until their activated transitive graph is explicitly reviewed and locked. The local project is then installed with `--no-deps`, and the installed distribution set must exactly equal the lock plus the local project.
 
 ## Supported interpreters
 
@@ -43,8 +43,11 @@ Dependency updates are explicit review work:
 4. run the full matrix, which must:
    - hash-authenticate all wheels;
    - install only from the local wheelhouse;
-   - reject direct URL dependencies before local project installation;
-   - verify all selected runtime/dev direct dependencies exist in the reviewed manifest at compatible versions;
+   - validate `project.dependencies`, selected optional groups, and `build-system.requires`;
+   - evaluate optional dependency markers with the selected extra context;
+   - reject direct URL dependencies in all reviewed dependency surfaces;
+   - reject upstream dependency extras until their full activated graph is explicitly locked;
+   - verify all active reviewed dependencies exist in the manifest at compatible versions;
    - install the local project with `--no-deps` so project metadata cannot trigger any download;
    - reject manifest/lock drift;
    - reject duplicate, missing, extra or version-mismatched installed distributions;
