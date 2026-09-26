@@ -598,3 +598,190 @@ def test_repository_locks_declare_their_target(version):
     root = Path(__file__).resolve().parents[1]
     python, system, machine = verify_ci_lock.read_lock_target(root / "requirements" / f"ci-py{version}.lock")
     assert (python.replace(".", ""), system, machine) == (version, "Linux", "x86_64")
+
+
+def fake_backend(tmp_path, monkeypatch, body: str, name: str = "fake_backend"):
+    """Install a fake PEP 517 backend on PYTHONPATH (outside the project tree) and return the project root."""
+    backends = tmp_path / "backends"
+    backends.mkdir(exist_ok=True)
+    (backends / f"{name}.py").write_text(body, encoding="utf-8")
+    monkeypatch.setenv("PYTHONPATH", str(backends))
+    project = tmp_path / "project"
+    project.mkdir(exist_ok=True)
+    (project / "pyproject.toml").write_text(REVIEWED_BUILD_SYSTEM + MINIMAL_PROJECT, encoding="utf-8")
+    return project
+
+
+REPORTING_BACKEND = """
+def get_requires_for_build_wheel(config_settings=None):
+    return {wheel!r}
+
+def get_requires_for_build_editable(config_settings=None):
+    return {editable!r}
+"""
+
+
+def backend_errors(project, backend="fake_backend", manifest=None, declared=("setuptools", "wheel")):
+    reported, errors = verify_project_dependency_policy.capture_backend_requirements(project, backend, timeout=60)
+    reviewed = manifest or {"setuptools": "84.0.0", "wheel": "0.48.0", "helper": "1.0"}
+    return reported, errors + verify_project_dependency_policy.backend_requirement_errors(
+        reported, reviewed, set(declared)
+    )
+
+
+def test_backend_reported_requirements_outside_the_lock_are_rejected(tmp_path, monkeypatch):
+    # PR #10 post-merge finding 3: --no-build-isolation never asks the backend,
+    # but an isolated source build installs whatever it reports.
+    project = fake_backend(
+        tmp_path, monkeypatch,
+        REPORTING_BACKEND.format(wheel=["unreviewed-helper>=1"], editable=["helper[fast]", "x @ https://example.invalid/x.whl"]),
+    )
+
+    reported, errors = backend_errors(project)
+    assert reported == {
+        "get_requires_for_build_wheel": ["unreviewed-helper>=1"],
+        "get_requires_for_build_editable": ["helper[fast]", "x @ https://example.invalid/x.whl"],
+        "get_requires_for_build_sdist": [],
+    }
+    assert errors == [
+        "Backend-reported build requirement missing from reviewed manifest: "
+        "get_requires_for_build_wheel reported 'unreviewed-helper>=1'",
+        "Dependency extras are prohibited in backend-reported requirements: "
+        "get_requires_for_build_editable reported 'helper[fast]'",
+        "Direct URL dependency is prohibited in backend-reported requirements: "
+        "get_requires_for_build_editable reported 'x @ https://example.invalid/x.whl'",
+    ]
+
+
+def test_backend_reported_requirement_must_be_a_declared_reviewed_build_requirement(tmp_path, monkeypatch):
+    project = fake_backend(
+        tmp_path, monkeypatch,
+        REPORTING_BACKEND.format(wheel=["wheel==0.48.0", 'legacy; python_version < "3"'], editable=["helper>=1", "wheel>=0.40"]),
+    )
+
+    _reported, errors = backend_errors(project)
+    assert errors == [
+        "Backend-reported build requirement is not declared in [build-system].requires: "
+        "get_requires_for_build_editable reported 'helper>=1'"
+    ]
+    _reported, errors = backend_errors(project, manifest={"setuptools": "84.0.0", "wheel": "0.47.0", "helper": "1.0"},
+                                       declared=("setuptools", "wheel", "helper"))
+    assert errors == [
+        "Reviewed version wheel==0.47.0 does not satisfy get_requires_for_build_wheel reported 'wheel==0.48.0'",
+    ]
+
+
+def test_backend_hooks_cannot_reach_the_network(tmp_path, monkeypatch):
+    project = fake_backend(
+        tmp_path, monkeypatch,
+        """
+import socket
+
+def get_requires_for_build_wheel(config_settings=None):
+    try:
+        socket.create_connection(("192.0.2.1", 9), timeout=1)
+    except OSError:
+        pass  # a backend swallowing the failure must still be reported
+    return []
+""",
+    )
+
+    reported, errors = backend_errors(project)
+    assert reported["get_requires_for_build_wheel"] == []
+    assert len(errors) == 1
+    assert errors[0].startswith("fake_backend get_requires_for_build_wheel attempted network access: ")
+    assert "192.0.2.1" in errors[0]
+
+
+def test_backend_hooks_run_on_a_disposable_copy(tmp_path, monkeypatch):
+    project = fake_backend(
+        tmp_path, monkeypatch,
+        """
+import pathlib
+
+def get_requires_for_build_wheel(config_settings=None):
+    pathlib.Path("generated.egg-info").mkdir()
+    print("noise on stdout is ignored")
+    return []
+""",
+    )
+
+    reported, errors = backend_errors(project)
+    assert errors == []
+    assert reported["get_requires_for_build_wheel"] == []
+    assert not (project / "generated.egg-info").exists()
+
+
+def test_in_tree_module_cannot_pose_as_the_backend(tmp_path, monkeypatch):
+    project = fake_backend(tmp_path, monkeypatch, "", name="unrelated")
+    (project / "intree_backend.py").write_text(
+        "def get_requires_for_build_wheel(config_settings=None):\n    return ['evil']\n", encoding="utf-8"
+    )
+
+    reported, errors = backend_errors(project, backend="intree_backend")
+    assert reported == {}
+    assert len(errors) == 3
+    assert all("ModuleNotFoundError" in error for error in errors)
+
+
+def test_failing_or_malformed_backend_hooks_are_errors(tmp_path, monkeypatch):
+    project = fake_backend(
+        tmp_path, monkeypatch,
+        """
+def get_requires_for_build_wheel(config_settings=None):
+    raise SystemExit("setup() aborted")
+
+def get_requires_for_build_editable(config_settings=None):
+    return "wheel"
+""",
+    )
+
+    reported, errors = backend_errors(project)
+    assert reported == {"get_requires_for_build_sdist": []}
+    assert errors == [
+        "fake_backend get_requires_for_build_wheel failed: SystemExit: setup() aborted",
+        "fake_backend get_requires_for_build_editable failed: TypeError: returned 'wheel', not a list of strings",
+    ]
+
+
+def test_repository_backend_reports_no_unreviewed_build_requirements():
+    pytest.importorskip("setuptools.build_meta")
+    root = Path(__file__).resolve().parents[1]
+
+    reported, errors = verify_project_dependency_policy.capture_backend_requirements(root, "setuptools.build_meta")
+    assert errors == []
+    assert reported == {hook: [] for hook in verify_project_dependency_policy.BACKEND_HOOKS}
+
+
+def test_backend_hooks_never_run_when_static_policy_fails(tmp_path, monkeypatch, capsys):
+    project = fake_backend(tmp_path, monkeypatch, "raise SystemExit('backend must not be imported')\n")
+    (project / "setup.py").write_text("raise SystemExit('setup.py must not run')\n", encoding="utf-8")
+    manifest = tmp_path / "manifest.txt"
+    manifest.write_text(REVIEWED_TOOLCHAIN, encoding="utf-8")
+    calls = []
+    monkeypatch.setattr(verify_project_dependency_policy, "capture_backend_requirements", lambda *a, **k: calls.append(a))
+
+    exit_code = verify_project_dependency_policy.main(
+        ["--pyproject", str(project / "pyproject.toml"), "--manifest", str(manifest), "--backend-requirements"]
+    )
+    assert exit_code == 1
+    assert calls == []
+    assert "setup.py is prohibited" in capsys.readouterr().out
+
+
+def test_cli_combines_static_graph_and_backend_checks(tmp_path, monkeypatch, capsys):
+    pyproject, manifest, lock, wheelhouse = write_graph_fixture(tmp_path, {"parentpkg": ("1.0", [])})
+    monkeypatch.setattr(
+        verify_project_dependency_policy,
+        "capture_backend_requirements",
+        lambda root, backend: ({hook: [] for hook in verify_project_dependency_policy.BACKEND_HOOKS}, []),
+    )
+
+    exit_code = verify_project_dependency_policy.main([
+        "--pyproject", str(pyproject), "--manifest", str(manifest), "--extra", "dev",
+        "--lock", str(lock), "--wheelhouse", str(wheelhouse), "--backend-requirements",
+    ])
+    output = capsys.readouterr().out
+    assert exit_code == 0
+    assert "Closed locked graph: 3 distributions, 0 active edges" in output
+    assert "Backend-reported build requirements: wheel=[], editable=[], sdist=[]" in output
