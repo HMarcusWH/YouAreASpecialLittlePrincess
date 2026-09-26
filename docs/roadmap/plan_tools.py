@@ -238,7 +238,7 @@ def anchors(text: str) -> set[str]:
 
 def markdown_paths(root: Path, data: dict | None = None) -> list[Path]:
     paths = [root / name for name in ("README.md", "ROADMAP.md", "AGENTS.md")]
-    for folder in ("docs/roadmap", "docs/adr", "docs/connectors", "docs/release"):
+    for folder in ("docs/roadmap", "docs/adr", "docs/connectors", "docs/release", "docs/privacy", "contracts/consent", "content/collection"):
         paths.extend(sorted((root / folder).glob("*.md")))
 
     if data is not None:

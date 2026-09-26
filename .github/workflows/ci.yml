@@ -103,6 +103,7 @@ jobs:
       - run: python tools/validate_graphology_selector_foundation.py
       - run: python tools/validate_graphology_traditional_rules.py
       - run: python tools/validate_graphology_database.py
+      - run: python tools/validate_consent_protocol.py
       - run: python -m compileall -q src
       - run: ruff check src tests tools
       - run: python -m pytest -q

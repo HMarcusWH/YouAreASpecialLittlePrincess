@@ -11,7 +11,7 @@
 | Backend/platform | [05 API/operations](05-release-operations.md), [09 Ports](09-connectors-and-provider-boundaries.md), [15 Environments](15-environments-deployment-and-secrets.md), [17 Security](17-security-privacy-and-abuse.md), [18 Operations](18-observability-support-and-cost-control.md). |
 | Web/render/design | [04 Reports](04-reports-design.md), [10 Web](10-web-client-and-api-integration.md), [16 Tests](16-testing-evals-and-quality-gates.md), [web release](../release/web.md). |
 | Native | [11 Mobile](11-mobile-architecture.md), [12 Apple](12-apple-platform-and-app-store.md), [13 Android](13-android-and-google-play.md), [14 Commerce](14-payments-entitlements-and-commerce.md), [push](../connectors/push.md), [identity](../connectors/identity.md). |
-| Data/evaluation | [02 Corpus](02-corpus-benchmarks.md), [03 Premium](03-premium-openai.md), [08 T26](08-premium-question-selector-database.md), [16 Tests](16-testing-evals-and-quality-gates.md), [17 Privacy](17-security-privacy-and-abuse.md). |
+| Data/evaluation | [02 Corpus](02-corpus-benchmarks.md), [03 Premium](03-premium-openai.md), [08 T26](08-premium-question-selector-database.md), [16 Tests](16-testing-evals-and-quality-gates.md), [17 Privacy](17-security-privacy-and-abuse.md), [T03 consent/collection drafts](../privacy/README.md). |
 | Commerce | [14 Ledger](14-payments-entitlements-and-commerce.md), [payment adapters](../connectors/payments.md), [12 Apple](12-apple-platform-and-app-store.md), [13 Android](13-android-and-google-play.md). |
 | Release owner | [19 Decisions](19-provider-decision-register.md), [21 Gates](21-release-readiness-checklists.md), [release index](../release/multi-platform-signoff.md). |
 

@@ -18,7 +18,7 @@ Rate limits cover account, guest session, network signal, decoded work, storage,
 
 ## Consent, purpose and retention
 
-Implement append-only grant/withdrawal events with subject, purpose, policy version, scope, actor, effective time and evidence reference. Separate service processing, saved visual history, third-party AI image processing, reference contribution, public example sharing and partner comparison. No prechecked donation, coerced share or inferred model consent from payment alone.
+Implement append-only grant/withdrawal events with subject, purpose, policy version, scope, actor, effective time and evidence reference. The T03 draft contracts, fixtures and reference evaluator are in [docs/privacy](../privacy/README.md). Separate service processing, saved visual history, third-party AI image processing, reference contribution, public example sharing and partner comparison. No prechecked donation, coerced share or inferred model consent from payment alone.
 
 The app initially targets an owner-approved adult/non-consequential use case. Do not infer age from handwriting or use the playful brand as permission to collect children’s data. Exact age eligibility, parental requirements, controller/legal basis, region, retention and notices are human policy decisions and release gates. Engineering must support denied/unknown states rather than fabricating legal clearance.
 
