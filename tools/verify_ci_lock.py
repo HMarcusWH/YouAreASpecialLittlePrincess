@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Verify that the installed CI environment exactly matches a reviewed hash lock."""
+"""Verify that CI lock metadata and the installed environment match exactly."""
 
 from __future__ import annotations
 
@@ -22,8 +22,23 @@ def parse_exact(value: str) -> tuple[str, str]:
     return normalize(name), version
 
 
+def read_manifest(path: Path) -> dict[str, str]:
+    expected: dict[str, str] = {}
+    for raw in path.read_text(encoding="utf-8").splitlines():
+        line = raw.strip()
+        if not line or line.startswith("#"):
+            continue
+        if " " in line or "--hash=" in line:
+            raise ValueError(f"Manifest must contain one exact requirement per line: {line!r}")
+        name, version = parse_exact(line)
+        if name in expected:
+            raise ValueError(f"Duplicate manifest entry: {name}")
+        expected[name] = version
+    return expected
+
+
 def read_lock(path: Path) -> dict[str, str]:
-    expected = {}
+    expected: dict[str, str] = {}
     for raw in path.read_text(encoding="utf-8").splitlines():
         line = raw.strip()
         if not line or line.startswith("#"):
@@ -31,8 +46,8 @@ def read_lock(path: Path) -> dict[str, str]:
         parts = line.split()
         requirement = parts[0]
         hashes = [part for part in parts[1:] if part.startswith("--hash=sha256:")]
-        if not hashes:
-            raise ValueError(f"Lock entry lacks SHA-256 hash: {line!r}")
+        if len(hashes) != 1:
+            raise ValueError(f"Lock entry must contain exactly one SHA-256 hash: {line!r}")
         name, version = parse_exact(requirement)
         if name in expected:
             raise ValueError(f"Duplicate lock entry: {name}")
@@ -41,7 +56,7 @@ def read_lock(path: Path) -> dict[str, str]:
 
 
 def installed_distributions() -> dict[str, str]:
-    installed = {}
+    installed: dict[str, str] = {}
     for dist in importlib.metadata.distributions():
         name = dist.metadata.get("Name")
         if name:
@@ -49,33 +64,42 @@ def installed_distributions() -> dict[str, str]:
     return installed
 
 
+def report_mapping_diff(label: str, expected: dict[str, str], actual: dict[str, str]) -> bool:
+    missing = sorted(set(expected) - set(actual))
+    extra = sorted(set(actual) - set(expected))
+    mismatched = sorted(
+        name for name in set(expected) & set(actual) if expected[name] != actual[name]
+    )
+    if not (missing or extra or mismatched):
+        return False
+    if missing:
+        print(f"{label} missing:", ", ".join(missing))
+    if extra:
+        print(f"{label} unexpected:", ", ".join(extra))
+    for name in mismatched:
+        print(f"{label} version mismatch for {name}: expected {expected[name]}, got {actual[name]}")
+    return True
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("lock", type=Path)
+    parser.add_argument("--manifest", type=Path, required=True)
     parser.add_argument("--allow", action="append", default=[])
     args = parser.parse_args()
 
-    expected = read_lock(args.lock)
+    manifest = read_manifest(args.manifest)
+    locked = read_lock(args.lock)
+    failed = report_mapping_diff("Lock/manifest", manifest, locked)
+
+    expected_installed = dict(locked)
     for value in args.allow:
         name, version = parse_exact(value)
-        expected[name] = version
+        expected_installed[name] = version
 
     installed = installed_distributions()
-    missing = sorted(set(expected) - set(installed))
-    extra = sorted(set(installed) - set(expected))
-    mismatched = sorted(
-        name for name in set(expected) & set(installed) if expected[name] != installed[name]
-    )
-
-    if missing or extra or mismatched:
-        if missing:
-            print("Missing locked distributions:", ", ".join(missing))
-        if extra:
-            print("Unreviewed installed distributions:", ", ".join(extra))
-        for name in mismatched:
-            print(f"Version mismatch for {name}: expected {expected[name]}, got {installed[name]}")
-        return 1
-    return 0
+    failed = report_mapping_diff("Installed environment", expected_installed, installed) or failed
+    return 1 if failed else 0
 
 
 if __name__ == "__main__":

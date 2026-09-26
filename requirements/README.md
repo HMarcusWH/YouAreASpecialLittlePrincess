@@ -1,34 +1,52 @@
-# CI dependency constraints
+# CI dependency locks
 
-T00 uses exact per-interpreter constraint snapshots under this directory to make the reviewed CI baseline reproducible while `pyproject.toml` describes the supported compatibility range.
+T00 uses two reviewed files per supported interpreter:
+
+- `ci-pyXYZ.txt` is the exact name/version manifest.
+- `ci-pyXYZ.lock` repeats that complete manifest and records the SHA-256 of the one reviewed Linux x86_64 wheel used by CI.
+
+CI verifies that the manifest and lock contain the same package/version set, hash-checks every downloaded wheel, installs only from the authenticated local wheelhouse, resolves the local project and its `dev` extra with `--no-index`, and then verifies that the installed distribution set is exactly the lock plus the local project.
 
 ## Supported interpreters
 
-The reviewed package support range is Python 3.10–3.12, expressed as `requires-python = ">=3.10,<3.13"`. Python 3.13+ is intentionally not advertised until a later task adds constraint-backed matrix coverage.
+The reviewed package support range is Python 3.10–3.12, expressed as `requires-python = ">=3.10,<3.13"`. Python 3.13+ is intentionally not advertised until a later task adds its own manifest, artifact hashes and matrix coverage.
 
 ## Build toolchain
 
-Every CI snapshot pins the build toolchain as well as runtime/test dependencies:
+Every manifest and lock includes:
 
 - `pip==26.2.1`
 - `setuptools==84.0.0`
 - `wheel==0.48.0`
 
-The same setuptools/wheel versions are pinned in `[build-system].requires`. CI installs the pinned build toolchain explicitly and uses `--no-build-isolation` for editable installation and wheel construction, preventing a temporary PEP 517 build environment from resolving unreviewed tool versions.
+The same setuptools/wheel versions are exact in `[build-system].requires`. The bootstrap pip supplied by the pinned setup-python action is used only to download the reviewed wheels with hash checking. The authenticated pip/setuptools/wheel artifacts are then installed from the local wheelhouse before project installation or tests.
 
-## Current snapshots
+Editable installation and wheel construction use `--no-build-isolation`, so no temporary PEP 517 environment can resolve unreviewed tools.
 
-The Python 3.10, 3.11 and 3.12 runtime/test graphs were frozen from successful GitHub Actions run `36205458224` on 2026-09-26. That run passed 149 pytest tests, the graphology research checks, wheel build and installed-wheel smoke on all three interpreters.
+## Lock generation
 
-The build-tool pins above were added during review remediation and must pass the same full matrix before merge.
+`tools/generate_ci_lock.py` generates a candidate lock from an exact-version manifest for the active Python/Linux-x86_64 environment. Lock generation is maintenance work, not a CI mutation: generated hashes must be reviewed and committed.
+
+Example, under the matching Python minor on Linux x86_64:
+
+```bash
+python tools/generate_ci_lock.py requirements/ci-py311.txt requirements/ci-py311.lock
+```
 
 ## Update policy
 
 Dependency updates are explicit review work:
 
-1. change the relevant constraint file(s) and, for build-tool changes, `[build-system].requires`;
-2. record the newly reviewed versions in the PR;
-3. run build-tool verification, `pip check`, all validators, Ruff, pytest, research regressions, wheel build and installed-wheel smoke across all supported Python minors;
-4. merge only when the reviewed commit is green.
+1. change the exact-version manifest;
+2. regenerate the matching hashed lock under the supported Python/Linux-x86_64 environment;
+3. review the package/version and SHA-256 diff;
+4. run the full matrix, which must:
+   - hash-authenticate all wheels;
+   - install only from the local wheelhouse;
+   - resolve `.[dev]` offline;
+   - reject manifest/lock drift;
+   - reject missing, extra or version-mismatched installed distributions;
+   - pass `pip check`, validators, Ruff, pytest, research regressions, wheel build and installed-wheel smoke;
+5. merge only when the reviewed head is green.
 
-Do not silently regenerate these files on every CI run. They are a reviewed compatibility snapshot, not a claim that these are the only package versions supported by the library.
+The lock files are the CI artifact authority. The version-only manifests exist to make updates reviewable and are checked against the locks on every run.
