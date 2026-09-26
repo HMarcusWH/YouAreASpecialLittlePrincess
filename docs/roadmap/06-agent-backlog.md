@@ -33,7 +33,7 @@ Use `python docs/roadmap/plan_tools.py --ready` or `--task ID`. Edit tasks.json 
 | [T16 — Model evaluation and generation policy](#t16) | PLANNED | T06, T15 | evaluation |
 | [T17 — Interactive Free web product](#t17) | PLANNED | T02, T04, T09, T10, T28 | frontend |
 | [T18 — Deterministic pair and history comparison](#t18) | PLANNED | T08, T09 | statistics-report |
-| [T19 — Cross-platform purchase ledger entitlements and metered jobs](#t19) | PLANNED | T02, T03, T09, T27 | commerce |
+| [T19 — Cross-platform purchase ledger entitlements and metered jobs](#t19) | PLANNED | T02, T03, T09, T15, T27 | commerce |
 | [T20 — Premium and paid-pair web experience](#t20) | PLANNED | T15, T16, T17, T18, T19 | frontend-premium |
 | [T21 — Same-content PDF and share-card rendering](#t21) | PLANNED | T09, T10, T17 | report-frontend |
 | [T22 — Scoped sharing and comparison invitations](#t22) | PLANNED | T17, T18, T21 | backend-frontend |
@@ -44,8 +44,8 @@ Use `python docs/roadmap/plan_tools.py --ready` or `--task ID`. Edit tasks.json 
 | [T27 — Connector ports fakes and provider decisions](#t27) | PLANNED | T01 | application-architecture |
 | [T28 — Environment workspace and build foundation](#t28) | PLANNED | T00A, T27 | platform |
 | [T29 — Shared native foundation and compatibility spike](#t29) | PLANNED | T01, T02, T10, T27, T28 | mobile-platform |
-| [T30 — Complete iOS and iPad client integration](#t30) | PLANNED | T29, T04, T09, T15, T16, T18, T19, T21, T22 | mobile-apple |
-| [T31 — Complete Android phone and tablet client integration](#t31) | PLANNED | T29, T04, T09, T15, T16, T18, T19, T21, T22 | mobile-android |
+| [T30 — Complete iOS and iPad client integration](#t30) | PLANNED | T29, T04, T09, T15, T16, T18, T19, T21, T22, T24 | mobile-apple |
+| [T31 — Complete Android phone and tablet client integration](#t31) | PLANNED | T29, T04, T09, T15, T16, T18, T19, T21, T22, T24 | mobile-android |
 | [T32 — App Store readiness and review evidence](#t32) | PLANNED | T30, T23, T24 | apple-release-human |
 | [T33 — Google Play readiness and review evidence](#t33) | PLANNED | T31, T23, T24 | android-release-human |
 
@@ -475,8 +475,9 @@ src/princess_app/adapters/storage/
 
 1. Implement owner/quota-bound upload reservation and completion, media sniffing, bounded decode/sanitization and tested mobile-format conversion policy.
 2. Promote verified bytes to an immutable internal asset/version before scheduling; retain digest and coordinate-transform lineage.
-3. Implement PostgreSQL job/outbox, short lease/heartbeat, attempt records and fenced publication outside long transactions.
-4. Provide owner-scoped status/cancel/delete behavior and safe failure codes; restrict CPU/memory/provider egress and admission cost.
+3. Expose `POST /v1/analyses` as the explicit idempotent transition from a completed immutable sample/capture to one deterministic AnalysisRun/job; upload completion validates/promotes bytes but does not silently create a run.
+4. Implement PostgreSQL job/outbox, short lease/heartbeat, attempt records and fenced publication outside long transactions.
+5. Provide owner-scoped status/cancel/delete behavior and safe failure codes; restrict CPU/memory/provider egress and admission cost.
 
 ### Contract and integration handoff
 
@@ -1405,7 +1406,7 @@ No task-specific production gate; all repository privacy/security and scope boun
 
 **Status:** `PLANNED` · **Owner:** commerce · **Milestone:** premium
 
-**Hard predecessors:** [T02](#t02), [T03](#t03), [T09](#t09), [T27](#t27)
+**Hard predecessors:** [T02](#t02), [T03](#t03), [T09](#t09), [T15](#t15), [T27](#t27)
 **Platforms:** backend, workers
 **Connector ports:** PaymentProvider
 
@@ -2117,7 +2118,7 @@ No approval is created by this task brief. Mock/disabled implementation is not a
 
 **Status:** `PLANNED` · **Owner:** mobile-apple · **Milestone:** mobile
 
-**Hard predecessors:** [T29](#t29), [T04](#t04), [T09](#t09), [T15](#t15), [T16](#t16), [T18](#t18), [T19](#t19), [T21](#t21), [T22](#t22)
+**Hard predecessors:** [T29](#t29), [T04](#t04), [T09](#t09), [T15](#t15), [T16](#t16), [T18](#t18), [T19](#t19), [T21](#t21), [T22](#t22), [T24](#t24)
 **Platforms:** ios, ipados
 **Connector ports:** IdentityProvider, NativePurchaseClient, PushProvider, AbuseChallengeProvider
 
@@ -2185,7 +2186,7 @@ No approval is created by this task brief. Mock/disabled implementation is not a
 
 **Status:** `PLANNED` · **Owner:** mobile-android · **Milestone:** mobile
 
-**Hard predecessors:** [T29](#t29), [T04](#t04), [T09](#t09), [T15](#t15), [T16](#t16), [T18](#t18), [T19](#t19), [T21](#t21), [T22](#t22)
+**Hard predecessors:** [T29](#t29), [T04](#t04), [T09](#t09), [T15](#t15), [T16](#t16), [T18](#t18), [T19](#t19), [T21](#t21), [T22](#t22), [T24](#t24)
 **Platforms:** android
 **Connector ports:** IdentityProvider, NativePurchaseClient, PushProvider, AbuseChallengeProvider
 
