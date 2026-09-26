@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "analysis-reference.schema.json",
+  "title": "AnalysisReference",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "contract_version": {
+      "const": "1.0.0"
+    },
+    "analysis_id": {
+      "$ref": "common.schema.json#/$defs/OpaqueId"
+    },
+    "run_id": {
+      "$ref": "common.schema.json#/$defs/OpaqueId"
+    },
+    "owner_id": {
+      "$ref": "common.schema.json#/$defs/OpaqueId"
+    },
+    "input_asset_id": {
+      "$ref": "common.schema.json#/$defs/OpaqueId"
+    },
+    "input_sha256": {
+      "$ref": "common.schema.json#/$defs/Sha256"
+    },
+    "processed_sha256": {
+      "$ref": "common.schema.json#/$defs/Sha256"
+    },
+    "created_at": {
+      "$ref": "common.schema.json#/$defs/Rfc3339Utc"
+    },
+    "versions": {
+      "$ref": "common.schema.json#/$defs/VersionSet"
+    }
+  },
+  "required": [
+    "contract_version",
+    "analysis_id",
+    "run_id",
+    "owner_id",
+    "input_asset_id",
+    "input_sha256",
+    "processed_sha256",
+    "created_at",
+    "versions"
+  ]
+}

@@ -1,0 +1,866 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "common.schema.json",
+  "$defs": {
+    "OpaqueId": {
+      "type": "string",
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "Sha256": {
+      "type": "string",
+      "maxLength": 64,
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "Version": {
+      "type": "string",
+      "maxLength": 64,
+      "pattern": "^[0-9A-Za-z][0-9A-Za-z._+/:-]{0,63}$"
+    },
+    "Locale": {
+      "type": "string",
+      "maxLength": 16,
+      "pattern": "^[a-z]{2}(?:-[A-Z]{2})?$"
+    },
+    "Rfc3339Utc": {
+      "type": "string",
+      "maxLength": 32,
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,6})?Z$"
+    },
+    "Unit": {
+      "type": "string",
+      "maxLength": 64,
+      "pattern": "^[A-Za-z0-9_%./*^+-]{1,64}$"
+    },
+    "AvailabilityState": {
+      "type": "string",
+      "maxLength": 32,
+      "enum": [
+        "READY",
+        "MISSING",
+        "NOT_IMPLEMENTED",
+        "INELIGIBLE",
+        "UNCALIBRATED",
+        "LOCKED",
+        "PENDING",
+        "FAILED",
+        "REVOKED"
+      ]
+    },
+    "EvidenceClass": {
+      "type": "string",
+      "maxLength": 32,
+      "enum": [
+        "MEASURED",
+        "COMPUTATIONAL_PROXY",
+        "REFERENCE_STATISTIC",
+        "AUTHORED_CONTENT",
+        "TRADITIONAL_ASSOCIATION",
+        "AI_SYNTHESIS"
+      ]
+    },
+    "ProjectionKind": {
+      "type": "string",
+      "maxLength": 16,
+      "enum": [
+        "OWNER",
+        "FREE",
+        "PREMIUM",
+        "SHARE",
+        "EXPORT"
+      ]
+    },
+    "CanonicalValue": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "integer"
+        },
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "string",
+          "maxLength": 256
+        },
+        {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 0,
+          "maxItems": 128
+        }
+      ]
+    },
+    "NullableCanonicalValue": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/CanonicalValue"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "DigestRef": {
+      "type": "object",
+      "properties": {
+        "algorithm": {
+          "const": "sha256"
+        },
+        "value": {
+          "$ref": "common.schema.json#/$defs/Sha256"
+        }
+      },
+      "required": [
+        "algorithm",
+        "value"
+      ],
+      "additionalProperties": false
+    },
+    "Quality": {
+      "type": "object",
+      "properties": {
+        "state": {
+          "type": "string",
+          "maxLength": 24,
+          "enum": [
+            "OK",
+            "EXPERIMENTAL",
+            "MISSING",
+            "REJECTED"
+          ]
+        },
+        "missing_reason": {
+          "anyOf": [
+            {
+              "type": "string",
+              "maxLength": 256
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "n_observations": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000000
+        },
+        "confidence": {
+          "anyOf": [
+            {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "confidence_kind": {
+          "type": "string",
+          "maxLength": 24,
+          "enum": [
+            "UNCALIBRATED",
+            "EXACT_CONDITIONAL",
+            "CALIBRATED"
+          ]
+        }
+      },
+      "required": [
+        "state",
+        "missing_reason",
+        "n_observations",
+        "confidence",
+        "confidence_kind"
+      ],
+      "additionalProperties": false
+    },
+    "VersionSet": {
+      "type": "object",
+      "properties": {
+        "feature_schema": {
+          "$ref": "common.schema.json#/$defs/Version"
+        },
+        "engine": {
+          "$ref": "common.schema.json#/$defs/Version"
+        },
+        "method_manifest": {
+          "$ref": "common.schema.json#/$defs/Sha256"
+        },
+        "analysis_config": {
+          "$ref": "common.schema.json#/$defs/Sha256"
+        },
+        "quality_policy": {
+          "$ref": "common.schema.json#/$defs/Version"
+        },
+        "normalization": {
+          "anyOf": [
+            {
+              "$ref": "common.schema.json#/$defs/Version"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "feature_set": {
+          "anyOf": [
+            {
+              "$ref": "common.schema.json#/$defs/Version"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "benchmark_release": {
+          "anyOf": [
+            {
+              "$ref": "common.schema.json#/$defs/OpaqueId"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "content_schema": {
+          "$ref": "common.schema.json#/$defs/Version"
+        },
+        "template": {
+          "anyOf": [
+            {
+              "$ref": "common.schema.json#/$defs/Version"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "feature_schema",
+        "engine",
+        "method_manifest",
+        "analysis_config",
+        "quality_policy",
+        "normalization",
+        "feature_set",
+        "benchmark_release",
+        "content_schema",
+        "template"
+      ],
+      "additionalProperties": false
+    },
+    "Fact": {
+      "type": "object",
+      "properties": {
+        "fact_id": {
+          "$ref": "common.schema.json#/$defs/OpaqueId"
+        },
+        "feature_id": {
+          "$ref": "common.schema.json#/$defs/OpaqueId"
+        },
+        "availability": {
+          "$ref": "common.schema.json#/$defs/AvailabilityState"
+        },
+        "value": {
+          "$ref": "common.schema.json#/$defs/NullableCanonicalValue"
+        },
+        "unit": {
+          "anyOf": [
+            {
+              "$ref": "common.schema.json#/$defs/Unit"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "evidence_class": {
+          "$ref": "common.schema.json#/$defs/EvidenceClass"
+        },
+        "method_id": {
+          "$ref": "common.schema.json#/$defs/OpaqueId"
+        },
+        "method_version": {
+          "$ref": "common.schema.json#/$defs/Version"
+        },
+        "source_region_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "common.schema.json#/$defs/OpaqueId"
+          },
+          "minItems": 0,
+          "maxItems": 128,
+          "uniqueItems": true
+        },
+        "quality": {
+          "$ref": "common.schema.json#/$defs/Quality"
+        },
+        "formatting_key": {
+          "type": "string",
+          "maxLength": 128
+        },
+        "precision": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 12
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "fact_id",
+        "feature_id",
+        "availability",
+        "value",
+        "unit",
+        "evidence_class",
+        "method_id",
+        "method_version",
+        "source_region_ids",
+        "quality",
+        "formatting_key",
+        "precision"
+      ],
+      "additionalProperties": false
+    },
+    "ReportSection": {
+      "type": "object",
+      "properties": {
+        "section_id": {
+          "$ref": "common.schema.json#/$defs/OpaqueId"
+        },
+        "template": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "availability": {
+          "$ref": "common.schema.json#/$defs/AvailabilityState"
+        },
+        "fact_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "common.schema.json#/$defs/OpaqueId"
+          },
+          "minItems": 0,
+          "maxItems": 256,
+          "uniqueItems": true
+        },
+        "content_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "common.schema.json#/$defs/OpaqueId"
+          },
+          "minItems": 0,
+          "maxItems": 128,
+          "uniqueItems": true
+        },
+        "premium_section_id": {
+          "anyOf": [
+            {
+              "$ref": "common.schema.json#/$defs/OpaqueId"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "section_id",
+        "template",
+        "availability",
+        "fact_ids",
+        "content_ids",
+        "premium_section_id"
+      ],
+      "additionalProperties": false
+    },
+    "Notice": {
+      "type": "object",
+      "properties": {
+        "notice_id": {
+          "$ref": "common.schema.json#/$defs/OpaqueId"
+        },
+        "class": {
+          "type": "string",
+          "maxLength": 24,
+          "enum": [
+            "MEASURED",
+            "PROXY",
+            "REFERENCE",
+            "TRADITIONAL",
+            "AI",
+            "PRIVACY"
+          ]
+        },
+        "localization_key": {
+          "type": "string",
+          "maxLength": 128
+        }
+      },
+      "required": [
+        "notice_id",
+        "class",
+        "localization_key"
+      ],
+      "additionalProperties": false
+    },
+    "Action": {
+      "type": "object",
+      "properties": {
+        "action_id": {
+          "$ref": "common.schema.json#/$defs/OpaqueId"
+        },
+        "kind": {
+          "type": "string",
+          "maxLength": 32,
+          "enum": [
+            "COMPARE",
+            "EXPORT",
+            "SHARE",
+            "SAVE",
+            "DELETE",
+            "PURCHASE"
+          ]
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "type": "string",
+              "maxLength": 256
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "action_id",
+        "kind",
+        "enabled",
+        "reason"
+      ],
+      "additionalProperties": false
+    },
+    "CoordinateFrame": {
+      "type": "object",
+      "properties": {
+        "frame_id": {
+          "$ref": "common.schema.json#/$defs/OpaqueId"
+        },
+        "width": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100000
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100000
+        },
+        "unit": {
+          "type": "string",
+          "maxLength": 16,
+          "enum": [
+            "px",
+            "normalized"
+          ]
+        },
+        "parent_frame_id": {
+          "anyOf": [
+            {
+              "$ref": "common.schema.json#/$defs/OpaqueId"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "transform_to_parent": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 9,
+              "maxItems": 9
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "frame_id",
+        "width",
+        "height",
+        "unit",
+        "parent_frame_id",
+        "transform_to_parent"
+      ],
+      "additionalProperties": false
+    },
+    "RegionEvidence": {
+      "type": "object",
+      "properties": {
+        "region_id": {
+          "$ref": "common.schema.json#/$defs/OpaqueId"
+        },
+        "frame_id": {
+          "$ref": "common.schema.json#/$defs/OpaqueId"
+        },
+        "scope": {
+          "type": "string",
+          "maxLength": 32
+        },
+        "x": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100000
+        },
+        "y": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100000
+        },
+        "width": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100000
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100000
+        },
+        "parent_region_id": {
+          "anyOf": [
+            {
+              "$ref": "common.schema.json#/$defs/OpaqueId"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "region_id",
+        "frame_id",
+        "scope",
+        "x",
+        "y",
+        "width",
+        "height",
+        "parent_region_id"
+      ],
+      "additionalProperties": false
+    },
+    "Observation": {
+      "type": "object",
+      "properties": {
+        "observation_id": {
+          "$ref": "common.schema.json#/$defs/OpaqueId"
+        },
+        "feature_id": {
+          "$ref": "common.schema.json#/$defs/OpaqueId"
+        },
+        "method_id": {
+          "$ref": "common.schema.json#/$defs/OpaqueId"
+        },
+        "method_version": {
+          "$ref": "common.schema.json#/$defs/Version"
+        },
+        "region_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "common.schema.json#/$defs/OpaqueId"
+          },
+          "minItems": 0,
+          "maxItems": 64,
+          "uniqueItems": true
+        },
+        "value": {
+          "$ref": "common.schema.json#/$defs/CanonicalValue"
+        },
+        "unit": {
+          "anyOf": [
+            {
+              "$ref": "common.schema.json#/$defs/Unit"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "accepted": {
+          "type": "boolean"
+        },
+        "rejection_reason": {
+          "anyOf": [
+            {
+              "type": "string",
+              "maxLength": 256
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "observation_id",
+        "feature_id",
+        "method_id",
+        "method_version",
+        "region_ids",
+        "value",
+        "unit",
+        "accepted",
+        "rejection_reason"
+      ],
+      "additionalProperties": false
+    },
+    "ReferenceClaim": {
+      "type": "object",
+      "properties": {
+        "feature_id": {
+          "$ref": "common.schema.json#/$defs/OpaqueId"
+        },
+        "cohort_id": {
+          "$ref": "common.schema.json#/$defs/OpaqueId"
+        },
+        "benchmark_release_id": {
+          "$ref": "common.schema.json#/$defs/OpaqueId"
+        },
+        "writer_n": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100000000
+        },
+        "percentile": {
+          "anyOf": [
+            {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "uncertainty": {
+          "anyOf": [
+            {
+              "type": "string",
+              "maxLength": 256
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "methodology_key": {
+          "type": "string",
+          "maxLength": 128
+        }
+      },
+      "required": [
+        "feature_id",
+        "cohort_id",
+        "benchmark_release_id",
+        "writer_n",
+        "percentile",
+        "uncertainty",
+        "methodology_key"
+      ],
+      "additionalProperties": false
+    },
+    "PremiumQuestion": {
+      "type": "object",
+      "properties": {
+        "question_id": {
+          "$ref": "common.schema.json#/$defs/OpaqueId"
+        },
+        "selection_domain": {
+          "type": "string",
+          "maxLength": 32,
+          "enum": [
+            "FIXED",
+            "DYNAMIC"
+          ]
+        },
+        "candidate_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "common.schema.json#/$defs/OpaqueId"
+          },
+          "minItems": 0,
+          "maxItems": 128,
+          "uniqueItems": true
+        },
+        "support_fact_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "common.schema.json#/$defs/OpaqueId"
+          },
+          "minItems": 0,
+          "maxItems": 128,
+          "uniqueItems": true
+        },
+        "cardinality": {
+          "type": "string",
+          "maxLength": 32,
+          "enum": [
+            "SINGLE",
+            "MULTIPLE"
+          ]
+        }
+      },
+      "required": [
+        "question_id",
+        "selection_domain",
+        "cardinality",
+        "candidate_ids",
+        "support_fact_ids"
+      ],
+      "additionalProperties": false
+    },
+    "PremiumCandidate": {
+      "type": "object",
+      "properties": {
+        "candidate_id": {
+          "$ref": "common.schema.json#/$defs/OpaqueId"
+        },
+        "kind": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "label_key": {
+          "type": "string",
+          "maxLength": 128
+        },
+        "support_fact_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "common.schema.json#/$defs/OpaqueId"
+          },
+          "minItems": 0,
+          "maxItems": 128,
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "candidate_id",
+        "kind",
+        "label_key",
+        "support_fact_ids"
+      ],
+      "additionalProperties": false
+    },
+    "PremiumAnswer": {
+      "type": "object",
+      "properties": {
+        "question_id": {
+          "$ref": "common.schema.json#/$defs/OpaqueId"
+        },
+        "answer_state": {
+          "type": "string",
+          "maxLength": 32,
+          "enum": [
+            "ANSWERED",
+            "OBSERVED_ABSENT",
+            "NOT_ASSESSABLE",
+            "NOT_APPLICABLE",
+            "CONFLICTING_EVIDENCE",
+            "NO_ELIGIBLE_CANDIDATE"
+          ]
+        },
+        "selected_candidate_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "common.schema.json#/$defs/OpaqueId"
+          },
+          "minItems": 0,
+          "maxItems": 32,
+          "uniqueItems": true
+        },
+        "support_fact_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "common.schema.json#/$defs/OpaqueId"
+          },
+          "minItems": 0,
+          "maxItems": 128,
+          "uniqueItems": true
+        },
+        "prose": {
+          "anyOf": [
+            {
+              "type": "string",
+              "maxLength": 4000
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "question_id",
+        "answer_state",
+        "selected_candidate_ids",
+        "support_fact_ids",
+        "prose"
+      ],
+      "additionalProperties": false
+    },
+    "PremiumSoftField": {
+      "type": "object",
+      "properties": {
+        "field_id": {
+          "$ref": "common.schema.json#/$defs/OpaqueId"
+        },
+        "text": {
+          "type": "string",
+          "maxLength": 4000
+        },
+        "support_fact_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "common.schema.json#/$defs/OpaqueId"
+          },
+          "minItems": 0,
+          "maxItems": 128,
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "field_id",
+        "text",
+        "support_fact_ids"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

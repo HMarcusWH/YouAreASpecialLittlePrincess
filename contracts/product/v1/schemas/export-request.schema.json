@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "export-request.schema.json",
+  "title": "ExportRequest",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "contract_version": {
+      "const": "1.0.0"
+    },
+    "export_id": {
+      "$ref": "common.schema.json#/$defs/OpaqueId"
+    },
+    "owner_id": {
+      "$ref": "common.schema.json#/$defs/OpaqueId"
+    },
+    "report_id": {
+      "$ref": "common.schema.json#/$defs/OpaqueId"
+    },
+    "report_revision": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 1000000
+    },
+    "report_digest": {
+      "$ref": "common.schema.json#/$defs/Sha256"
+    },
+    "projection": {
+      "$ref": "common.schema.json#/$defs/ProjectionKind"
+    },
+    "format": {
+      "type": "string",
+      "maxLength": 16,
+      "enum": [
+        "PDF",
+        "PNG",
+        "JSON"
+      ]
+    },
+    "locale": {
+      "$ref": "common.schema.json#/$defs/Locale"
+    },
+    "include_handwriting": {
+      "type": "boolean"
+    },
+    "requested_at": {
+      "$ref": "common.schema.json#/$defs/Rfc3339Utc"
+    }
+  },
+  "required": [
+    "contract_version",
+    "export_id",
+    "owner_id",
+    "report_id",
+    "report_revision",
+    "report_digest",
+    "projection",
+    "format",
+    "locale",
+    "include_handwriting",
+    "requested_at"
+  ]
+}

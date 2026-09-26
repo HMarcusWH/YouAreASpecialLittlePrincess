@@ -1,0 +1,116 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "report-document.schema.json",
+  "title": "ReportDocument",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "contract_version": {
+      "const": "1.0.0"
+    },
+    "report_id": {
+      "$ref": "common.schema.json#/$defs/OpaqueId"
+    },
+    "revision": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 1000000
+    },
+    "kind": {
+      "type": "string",
+      "maxLength": 16,
+      "enum": [
+        "INDIVIDUAL",
+        "PAIR",
+        "HISTORY"
+      ]
+    },
+    "created_at": {
+      "$ref": "common.schema.json#/$defs/Rfc3339Utc"
+    },
+    "locale": {
+      "$ref": "common.schema.json#/$defs/Locale"
+    },
+    "analysis": {
+      "$ref": "analysis-reference.schema.json"
+    },
+    "evidence_bundle_id": {
+      "anyOf": [
+        {
+          "$ref": "common.schema.json#/$defs/OpaqueId"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "facts": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/Fact"
+      },
+      "minItems": 0,
+      "maxItems": 1024
+    },
+    "reference_claims": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/ReferenceClaim"
+      },
+      "minItems": 0,
+      "maxItems": 512
+    },
+    "sections": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/ReportSection"
+      },
+      "minItems": 0,
+      "maxItems": 128
+    },
+    "notices": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/Notice"
+      },
+      "minItems": 0,
+      "maxItems": 128
+    },
+    "premium_overlay_id": {
+      "anyOf": [
+        {
+          "$ref": "common.schema.json#/$defs/OpaqueId"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "document_digest": {
+      "anyOf": [
+        {
+          "$ref": "common.schema.json#/$defs/Sha256"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "required": [
+    "contract_version",
+    "report_id",
+    "revision",
+    "kind",
+    "created_at",
+    "locale",
+    "analysis",
+    "evidence_bundle_id",
+    "facts",
+    "reference_claims",
+    "sections",
+    "notices",
+    "premium_overlay_id",
+    "document_digest"
+  ]
+}

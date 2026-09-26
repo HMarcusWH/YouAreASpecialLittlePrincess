@@ -1,0 +1,10 @@
+{
+  "contract_version": "1.0.0",
+  "entitlement_id": "entitlement_001",
+  "owner_id": "owner_001",
+  "capability": "PREMIUM_REPORT",
+  "state": "AVAILABLE",
+  "remaining_uses": 1,
+  "source_purchase_id": null,
+  "updated_at": "2026-09-26T20:05:00Z"
+}

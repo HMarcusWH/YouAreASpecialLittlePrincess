@@ -102,6 +102,8 @@ jobs:
         run: python -m pip freeze --all
       - run: python tools/generate_feature_contract.py --check
       - run: python tools/compile_premium_interpretation_db.py --check
+      - run: python tools/generate_product_contracts.py --check
+      - run: python tools/validate_product_contracts.py
       - run: python tools/validate_graphology_integrity.py
       - run: python tools/validate_graphology_ontology.py
       - run: python tools/validate_graphology_selector_foundation.py
@@ -111,8 +113,10 @@ jobs:
       - run: python -m compileall -q src
       - run: ruff check src tests tools
       - run: python -m pytest -q
-      - name: Exercise invariant fault-injection controls
+      - name: Exercise consent invariant fault-injection controls
         run: python tools/test_contract_faults.py
+      - name: Exercise product-contract fault-injection controls
+        run: python tools/test_product_contract_faults.py
       - name: Verify graphology research import
         run: python tools/check_graphology_research.py
       - name: Run graphology research regression tests
@@ -124,4 +128,4 @@ jobs:
         run: |
           python -m pip install --no-index --no-deps --target "$RUNNER_TEMP/princess-installed" dist/*.whl
           cd "$RUNNER_TEMP"
-          PYTHONPATH="$RUNNER_TEMP/princess-installed" python -c 'import json; import numpy as np; from princess_graphology import GraphologyEngine; from princess_graphology.schema_validation import load_contract; assert load_contract()["feature_count"] == 272; assert len(json.loads(GraphologyEngine().analyze(np.full((40, 60), 255, np.uint8)).to_json())["measurements"]) == 64'
+          PYTHONPATH="$RUNNER_TEMP/princess-installed" python -c 'import json; import numpy as np; from princess_contracts import contract_identity, free_feature_ids; from princess_graphology import GraphologyEngine; from princess_graphology.schema_validation import load_contract; assert load_contract()["feature_count"] == 272; assert contract_identity()[0] == "1.0.0"; assert len(free_feature_ids()) == 64; assert len(json.loads(GraphologyEngine().analyze(np.full((40, 60), 255, np.uint8)).to_json())["measurements"]) == 64'

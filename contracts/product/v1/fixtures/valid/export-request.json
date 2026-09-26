@@ -1,0 +1,13 @@
+{
+  "contract_version": "1.0.0",
+  "export_id": "export_001",
+  "owner_id": "owner_001",
+  "report_id": "report_001",
+  "report_revision": 1,
+  "report_digest": "d44b67af2c7403638038d0aedb274b491ac33f001d002f883bbb82fd3afe54d5",
+  "projection": "FREE",
+  "format": "PDF",
+  "locale": "en-US",
+  "include_handwriting": false,
+  "requested_at": "2026-09-26T20:06:00Z"
+}

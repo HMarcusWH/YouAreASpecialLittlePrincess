@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "premium-output.schema.json",
+  "title": "PremiumOutput",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "contract_version": {
+      "const": "1.0.0"
+    },
+    "packet_id": {
+      "$ref": "common.schema.json#/$defs/OpaqueId"
+    },
+    "output_schema_version": {
+      "$ref": "common.schema.json#/$defs/Version"
+    },
+    "answers": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/PremiumAnswer"
+      },
+      "minItems": 0,
+      "maxItems": 256
+    },
+    "soft_fields": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/PremiumSoftField"
+      },
+      "minItems": 0,
+      "maxItems": 64
+    }
+  },
+  "required": [
+    "contract_version",
+    "packet_id",
+    "output_schema_version",
+    "answers",
+    "soft_fields"
+  ]
+}

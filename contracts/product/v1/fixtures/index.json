@@ -1,0 +1,101 @@
+{
+  "valid": [
+    {
+      "path": "valid/analysis-reference.json",
+      "schema": "AnalysisReference"
+    },
+    {
+      "path": "valid/evidence-bundle.json",
+      "schema": "EvidenceBundle"
+    },
+    {
+      "path": "valid/report-document.json",
+      "schema": "ReportDocument"
+    },
+    {
+      "path": "valid/report-view-model.json",
+      "schema": "ReportViewModel"
+    },
+    {
+      "path": "valid/comparison.json",
+      "schema": "Comparison"
+    },
+    {
+      "path": "valid/premium-packet.json",
+      "schema": "PremiumPacket"
+    },
+    {
+      "path": "valid/premium-output.json",
+      "schema": "PremiumOutput"
+    },
+    {
+      "path": "valid/grant-snapshot.json",
+      "schema": "GrantSnapshot"
+    },
+    {
+      "path": "valid/entitlement-snapshot.json",
+      "schema": "EntitlementSnapshot"
+    },
+    {
+      "path": "valid/export-request.json",
+      "schema": "ExportRequest"
+    }
+  ],
+  "invalid": [
+    {
+      "path": "invalid/boolean-as-number.json",
+      "schema": "ReportDocument",
+      "expected_code": "FEATURE_VALUE_TYPE"
+    },
+    {
+      "path": "invalid/wrong-unit.json",
+      "schema": "ReportDocument",
+      "expected_code": "WRONG_UNIT"
+    },
+    {
+      "path": "invalid/missing-as-zero.json",
+      "schema": "ReportDocument",
+      "expected_code": "UNAVAILABLE_HAS_VALUE"
+    },
+    {
+      "path": "invalid/unknown-observation-region.json",
+      "schema": "EvidenceBundle",
+      "expected_code": "UNKNOWN_OBSERVATION_REGION"
+    },
+    {
+      "path": "invalid/stale-method-manifest.json",
+      "schema": "AnalysisReference",
+      "expected_code": "METHOD_MANIFEST_DRIFT"
+    },
+    {
+      "path": "invalid/unknown-enum.json",
+      "schema": "ReportViewModel",
+      "expected_code": "ENUM"
+    },
+    {
+      "path": "invalid/incompatible-major.json",
+      "schema": "AnalysisReference",
+      "expected_code": "CONST"
+    },
+    {
+      "path": "invalid/t26-selector-drift.json",
+      "schema": "PremiumPacket",
+      "expected_code": "SELECTION_DOMAIN_DRIFT"
+    },
+    {
+      "path": "invalid/grant-backdating.json",
+      "schema": "GrantSnapshot",
+      "expected_code": "GRANT_BACKDATING"
+    }
+  ],
+  "raw_invalid": [
+    {
+      "path": "invalid/nonfinite.json",
+      "expected": "non-finite"
+    },
+    {
+      "path": "invalid/duplicate-key.json",
+      "expected": "duplicate JSON key"
+    }
+  ]
+}

@@ -1,0 +1,110 @@
+{
+  "authorities": {
+    "consent_purpose_registry": {
+      "path": "contracts/consent/v1/purposes.json",
+      "sha256": "e0486db130f1c7423afd3cb0e7908ea5f2512f318fc93cb3822158dc6cab21ec"
+    },
+    "feature_database": {
+      "path": "schema/graphology_feature_database_v1.json",
+      "sha256": "5c21dfc9f594bbb1c2e9dad77e3b0664a0f53b33b33697311539f7b6ca52b607",
+      "version": "1.0.0-draft"
+    },
+    "feature_runtime_contract": {
+      "path": "src/princess_graphology/_feature_contract.json",
+      "sha256": "bad70725574de30c5da9e377de2b13fc311ba8c5a9c4eebef16862fed1acfee9"
+    },
+    "method_capabilities": {
+      "path": "schema/method_capabilities/v1/methods.json",
+      "resolved_sha256": "a4606d9925680ff135c6dd2c332bec51e3a2cf878383275a83fa8ecb0d20c835",
+      "sha256": "0a5da01a7140634b248cece46260fc3306c82fcf7c824d35f97c119cb3ad8989"
+    },
+    "premium_interpretation_database": {
+      "path": "schema/premium_interpretation_database_v1.json",
+      "sha256": "8b2dcc79fca0f9b6f8e32385464b9d329c316b0b2d714661111a1b0f19c2b37c",
+      "version": "premium-interpretation-db/1"
+    }
+  },
+  "bundle_sha256": "48249112c398b331ef68f1aa29c573b25a57faaa25cd9c20ff7215539488a774",
+  "canonicalization": "utf8-json-sort-keys-no-nonfinite-v1",
+  "contract_id": "princess-product-contracts",
+  "contract_version": "1.0.0",
+  "root_schemas": {
+    "AnalysisReference": "analysis-reference.schema.json",
+    "Comparison": "comparison.schema.json",
+    "EntitlementSnapshot": "entitlement-snapshot.schema.json",
+    "EvidenceBundle": "evidence-bundle.schema.json",
+    "ExportRequest": "export-request.schema.json",
+    "GrantSnapshot": "grant-snapshot.schema.json",
+    "PremiumOutput": "premium-output.schema.json",
+    "PremiumPacket": "premium-packet.schema.json",
+    "ReportDocument": "report-document.schema.json",
+    "ReportViewModel": "report-view-model.schema.json"
+  },
+  "schemas": [
+    {
+      "path": "schemas/analysis-reference.schema.json",
+      "schema_id": "analysis-reference.schema.json",
+      "sha256": "0354f922c7cc7ad6a8c4bc3b2ea9e5eddd080f5a540b7d5e1f50e41925f4f3f3",
+      "title": "AnalysisReference"
+    },
+    {
+      "path": "schemas/common.schema.json",
+      "schema_id": "common.schema.json",
+      "sha256": "912f57f3a9ac461b92ac4f49acda693b06ec22bdc47a5f22707f9187ec6ea21f"
+    },
+    {
+      "path": "schemas/comparison.schema.json",
+      "schema_id": "comparison.schema.json",
+      "sha256": "8022cb1416f956e8b75e2fa3e7c382107476f02cf47cf023f0f1640bc0a40c24",
+      "title": "Comparison"
+    },
+    {
+      "path": "schemas/entitlement-snapshot.schema.json",
+      "schema_id": "entitlement-snapshot.schema.json",
+      "sha256": "e90aa0afa8da5361d9ba0e6c2946231fab3f2deeaf3a0840223a68483e499d0c",
+      "title": "EntitlementSnapshot"
+    },
+    {
+      "path": "schemas/evidence-bundle.schema.json",
+      "schema_id": "evidence-bundle.schema.json",
+      "sha256": "6304dafe64cd595e338d534e6b953fb3c1237ceeff5184808c5dcfc3cdc892c3",
+      "title": "EvidenceBundle"
+    },
+    {
+      "path": "schemas/export-request.schema.json",
+      "schema_id": "export-request.schema.json",
+      "sha256": "5dccf5ac1a305f9a01933292b1782d8070b0d8e48ba164bb5f6c8e011a90050f",
+      "title": "ExportRequest"
+    },
+    {
+      "path": "schemas/grant-snapshot.schema.json",
+      "schema_id": "grant-snapshot.schema.json",
+      "sha256": "b017ecd8f59b6bcb26e9dcdb3be7396c554e56a82fe3aa7da1e955053bb220c7",
+      "title": "GrantSnapshot"
+    },
+    {
+      "path": "schemas/premium-output.schema.json",
+      "schema_id": "premium-output.schema.json",
+      "sha256": "b6dfef44d884c8439d504102141eef9399777151d4e3e052b1dfd393c17cf5df",
+      "title": "PremiumOutput"
+    },
+    {
+      "path": "schemas/premium-packet.schema.json",
+      "schema_id": "premium-packet.schema.json",
+      "sha256": "4071b3c2bca1043e8f155e3dce1683c897f7df37ee03a77d0c4987359436e806",
+      "title": "PremiumPacket"
+    },
+    {
+      "path": "schemas/report-document.schema.json",
+      "schema_id": "report-document.schema.json",
+      "sha256": "2c175776f7e24df790044384b86d0482715b11d547e48ee3a9edbc592b62e2ff",
+      "title": "ReportDocument"
+    },
+    {
+      "path": "schemas/report-view-model.schema.json",
+      "schema_id": "report-view-model.schema.json",
+      "sha256": "89242ccb33ca62465d9bd11ff21af88864c39935032dd7e3fc15028938263635",
+      "title": "ReportViewModel"
+    }
+  ]
+}

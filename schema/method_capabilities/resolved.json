@@ -1,0 +1,1960 @@
+{
+  "contract_version": "1.0.0",
+  "features": {
+    "ANGLE_ENTROPY": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "ANGULARITY_SCORE": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "ASCENDER_HEIGHT_RATIO": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "ASCENDER_LOOP_RATE": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "AXIS_ANGULARITY": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "AXIS_BASELINE_STABILITY": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "AXIS_COMPRESSION": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "AXIS_CONNECTIVITY": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "AXIS_EXPANSION": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "AXIS_FLOW_CONTINUITY": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "AXIS_ORNAMENTATION": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "AXIS_REGULARITY": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "AXIS_SPACING_OPENNESS": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "AXIS_STROKE_UNIFORMITY": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "BASELINE_ABS_SLOPE": {
+      "free_available": true,
+      "learned_only": false,
+      "methods": [
+        "bottom_quantile_angle_v1"
+      ]
+    },
+    "BASELINE_ANGLE_MEAN": {
+      "free_available": true,
+      "learned_only": false,
+      "methods": [
+        "bottom_quantile_angle_v1"
+      ]
+    },
+    "BASELINE_ANGLE_MEDIAN": {
+      "free_available": true,
+      "learned_only": false,
+      "methods": [
+        "bottom_quantile_angle_v1"
+      ]
+    },
+    "BASELINE_ANGLE_STD": {
+      "free_available": true,
+      "learned_only": false,
+      "methods": [
+        "bottom_quantile_angle_v1"
+      ]
+    },
+    "BASELINE_CURVATURE": {
+      "free_available": true,
+      "learned_only": false,
+      "methods": [
+        "baseline_quadratic_sag_xheight_v1"
+      ]
+    },
+    "BASELINE_STABILITY": {
+      "free_available": true,
+      "learned_only": false,
+      "methods": [
+        "baseline_inverse_waviness_index_v1"
+      ]
+    },
+    "BASELINE_WAVINESS": {
+      "free_available": true,
+      "learned_only": false,
+      "methods": [
+        "baseline_residual_xheight_v1"
+      ]
+    },
+    "CAPITAL_HEIGHT_RATIO": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "CMP_ABS_ZSCORE_MEAN": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "CMP_COSINE_SIMILARITY": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "CMP_EUCLIDEAN_DISTANCE": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "CMP_FEATURE_ZSCORE": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "CMP_MAHALANOBIS_DISTANCE": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "CMP_RADAR_OVERLAP": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "CMP_TOP_DIFFERENCES": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "CMP_TOP_SIMILARITIES": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "CONNECTEDNESS_RATIO": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "CONNECTED_COMPONENTS_PER_WORD": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "CONVEXITY": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "CORNER_COUNT": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "CORNER_DENSITY": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "CROSSING_COUNTS": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "CSLBCOP_VECTOR": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "CURVATURE_MEAN": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "CURVATURE_STD": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "DESCENDER_DEPTH_RATIO": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "DESCENDER_LOOP_RATE": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "DIAGONAL_STROKE_RATIO": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "DOMINANT_ANGLE_1": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "DOMINANT_ANGLE_2": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "FLOURISH_RATE": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "FREQUENCY_HISTOGRAM": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "FULL_HEIGHT_XHEIGHT_RATIO": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "GLCM_VECTOR": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "GLYPH_ASPECT_RATIO_CV": {
+      "free_available": true,
+      "learned_only": false,
+      "methods": [
+        "component_box_size_v1"
+      ]
+    },
+    "GLYPH_ASPECT_RATIO_MEAN": {
+      "free_available": true,
+      "learned_only": false,
+      "methods": [
+        "component_box_size_v1"
+      ]
+    },
+    "GLYPH_CENTROID_X": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "GLYPH_CENTROID_Y": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "GLYPH_HEIGHT_CV": {
+      "free_available": true,
+      "learned_only": false,
+      "methods": [
+        "component_box_size_v1"
+      ]
+    },
+    "GLYPH_HEIGHT_MEAN": {
+      "free_available": true,
+      "learned_only": false,
+      "methods": [
+        "component_box_size_v1"
+      ]
+    },
+    "GLYPH_WIDTH_CV": {
+      "free_available": true,
+      "learned_only": false,
+      "methods": [
+        "component_box_size_v1"
+      ]
+    },
+    "GLYPH_WIDTH_MEAN": {
+      "free_available": true,
+      "learned_only": false,
+      "methods": [
+        "component_box_size_v1"
+      ]
+    },
+    "HIGH_CURVATURE_FRACTION": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "HOLE_AREA_RATIO": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "HORIZONTAL_COMPRESSION": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "HORIZONTAL_EXPANSION": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "HORIZONTAL_PROJECTION": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "HORIZONTAL_STROKE_RATIO": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "HU_MOMENTS_7": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "IMG_ASPECT_RATIO": {
+      "free_available": true,
+      "learned_only": false,
+      "methods": [
+        "input_dimensions_v1"
+      ]
+    },
+    "IMG_BACKGROUND_CLEANLINESS": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "IMG_BLUR_SCORE": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "IMG_CONTRAST": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "IMG_CROP_COMPLETENESS": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "IMG_GLARE_SCORE": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "IMG_HEIGHT_PX": {
+      "free_available": true,
+      "learned_only": false,
+      "methods": [
+        "input_dimensions_v1"
+      ]
+    },
+    "IMG_ILLUMINATION_UNIFORMITY": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "IMG_INK_BACKGROUND_SEPARATION": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "IMG_LOCAL_CONTRAST": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "IMG_MEGAPIXELS": {
+      "free_available": true,
+      "learned_only": false,
+      "methods": [
+        "input_dimensions_v1"
+      ]
+    },
+    "IMG_PERSPECTIVE_DISTORTION": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "IMG_QUALITY_OVERALL": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "IMG_ROTATION_DEG": {
+      "free_available": true,
+      "learned_only": false,
+      "methods": [
+        "text_skew_ccw_v1"
+      ]
+    },
+    "IMG_SHADOW_SCORE": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "IMG_USABLE_TEXT_AREA": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "IMG_WIDTH_PX": {
+      "free_available": true,
+      "learned_only": false,
+      "methods": [
+        "input_dimensions_v1"
+      ]
+    },
+    "INITIAL_STROKE_EXTENSION": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "INK_DARKNESS_CV": {
+      "free_available": true,
+      "learned_only": false,
+      "methods": [
+        "grayscale_darkness_v1"
+      ]
+    },
+    "INK_DARKNESS_MEAN": {
+      "free_available": true,
+      "learned_only": false,
+      "methods": [
+        "grayscale_darkness_v1"
+      ]
+    },
+    "INK_DARKNESS_STD": {
+      "free_available": true,
+      "learned_only": false,
+      "methods": [
+        "grayscale_darkness_v1"
+      ]
+    },
+    "INK_EDGE_SHARPNESS": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "INK_SATURATION_FRACTION": {
+      "free_available": true,
+      "learned_only": false,
+      "methods": [
+        "grayscale_darkness_v1"
+      ]
+    },
+    "INTERCOMPONENT_GAP_CV": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "INTERCOMPONENT_GAP_MEAN": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "INTERSECTION_DENSITY": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "INTER_STROKE_INTERSECTIONS": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "INTRA_STROKE_INTERSECTIONS": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "I_DOT_HORIZONTAL_OFFSET": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "I_DOT_PRESENT_RATE": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "I_DOT_SIZE_RATIO": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "I_DOT_VERTICAL_OFFSET": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "LBP_HISTOGRAM": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "LETTER_SPACING_CV": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "LETTER_SPACING_PX": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "LETTER_SPACING_REL": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "LINE_END_DRIFT": {
+      "free_available": true,
+      "learned_only": false,
+      "methods": [
+        "normalized_edge_vs_vertical_position_v1"
+      ]
+    },
+    "LINE_HEIGHT_CV": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "LINE_HEIGHT_MEAN": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "LINE_HEIGHT_REL": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "LINE_LENGTH_MEAN_REL": {
+      "free_available": true,
+      "learned_only": false,
+      "methods": [
+        "line_width_page_ratio_v1"
+      ]
+    },
+    "LINE_LENGTH_VARIABILITY": {
+      "free_available": true,
+      "learned_only": false,
+      "methods": [
+        "line_edge_population_cv_v1"
+      ]
+    },
+    "LINE_SPACING_CV": {
+      "free_available": true,
+      "learned_only": false,
+      "methods": [
+        "accepted_box_gap_cv_v1"
+      ]
+    },
+    "LINE_SPACING_PX": {
+      "free_available": true,
+      "learned_only": false,
+      "methods": [
+        "accepted_box_gap_px_v1"
+      ]
+    },
+    "LINE_SPACING_REL": {
+      "free_available": true,
+      "learned_only": false,
+      "methods": [
+        "accepted_box_gap_rel_v1"
+      ]
+    },
+    "LINE_START_DRIFT": {
+      "free_available": true,
+      "learned_only": false,
+      "methods": [
+        "normalized_edge_vs_vertical_position_v1"
+      ]
+    },
+    "LOOP_COUNT": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "LOOP_DENSITY": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "LOWER_ZONE_RATIO": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "LTP_HISTOGRAM": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "MARGIN_BOTTOM_REL": {
+      "free_available": true,
+      "learned_only": false,
+      "methods": [
+        "text_bounds_xheight_v1"
+      ]
+    },
+    "MARGIN_LEFT_REL": {
+      "free_available": true,
+      "learned_only": false,
+      "methods": [
+        "text_bounds_xheight_v1"
+      ]
+    },
+    "MARGIN_LEFT_VARIABILITY": {
+      "free_available": true,
+      "learned_only": false,
+      "methods": [
+        "line_edge_population_cv_v1"
+      ]
+    },
+    "MARGIN_RIGHT_REL": {
+      "free_available": true,
+      "learned_only": false,
+      "methods": [
+        "text_bounds_xheight_v1"
+      ]
+    },
+    "MARGIN_RIGHT_VARIABILITY": {
+      "free_available": true,
+      "learned_only": false,
+      "methods": [
+        "line_edge_population_cv_v1"
+      ]
+    },
+    "MARGIN_SYMMETRY": {
+      "free_available": true,
+      "learned_only": false,
+      "methods": [
+        "margin_balance_index_v1"
+      ]
+    },
+    "MARGIN_TOP_REL": {
+      "free_available": true,
+      "learned_only": false,
+      "methods": [
+        "text_bounds_xheight_v1"
+      ]
+    },
+    "MEAN_CONNECTED_RUN_LENGTH": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "OCR_CONFIDENCE_MEAN": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "OCR_CONFIDENCE_P10": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "OCR_LANGUAGE_CONFIDENCE": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "OCR_LEGIBILITY_PROXY": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "OCR_RECOGNIZED_CHAR_COUNT": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "OCR_RECOGNIZED_WORD_COUNT": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "ONLINE_ACCELERATION_X": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "ONLINE_ACCELERATION_XY": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "ONLINE_ACCELERATION_Y": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "ONLINE_AZIMUTH": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "ONLINE_AZIMUTH_CHANGES": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "ONLINE_INTERRUPTION_COUNT": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "ONLINE_INTERRUPTION_RELATIVE": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "ONLINE_INTER_INTERSECTIONS": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "ONLINE_INTRA_INTERSECTIONS": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "ONLINE_JERK_X": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "ONLINE_JERK_XY": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "ONLINE_JERK_Y": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "ONLINE_PRESSURE": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "ONLINE_PRESSURE_CHANGES": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "ONLINE_REL_AZIMUTH_CHANGES": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "ONLINE_REL_INTER_INTERSECTIONS": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "ONLINE_REL_INTRA_INTERSECTIONS": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "ONLINE_REL_PRESSURE_CHANGES": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "ONLINE_REL_TILT_CHANGES": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "ONLINE_REL_TOTAL_INTRA_INTERSECTIONS": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "ONLINE_REL_VELOCITY_CHANGES": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "ONLINE_REL_X_PROFILE_CHANGES": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "ONLINE_REL_Y_PROFILE_CHANGES": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "ONLINE_STROKE_DURATION": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "ONLINE_STROKE_DURATION_RATIO": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "ONLINE_STROKE_HEIGHT": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "ONLINE_STROKE_LENGTH": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "ONLINE_STROKE_WIDTH": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "ONLINE_TILT": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "ONLINE_TILT_CHANGES": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "ONLINE_TOTAL_INTRA_INTERSECTIONS": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "ONLINE_VELOCITY_PROFILE_CHANGES": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "ONLINE_VELOCITY_X": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "ONLINE_VELOCITY_XY": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "ONLINE_VELOCITY_Y": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "ONLINE_VERTICAL_PEAK_DISTANCE": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "ONLINE_VERTICAL_PEAK_DURATION": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "ONLINE_VERTICAL_PEAK_INDICES": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "ONLINE_VERTICAL_PEAK_VALUES": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "ONLINE_VERTICAL_PEAK_VELOCITY": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "ONLINE_VERTICAL_VALLEY_DISTANCE": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "ONLINE_VERTICAL_VALLEY_DURATION": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "ONLINE_VERTICAL_VALLEY_INDICES": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "ONLINE_VERTICAL_VALLEY_VALUES": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "ONLINE_VERTICAL_VALLEY_VELOCITY": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "ONLINE_WRITING_DURATION": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "ONLINE_WRITING_DURATION_OVERALL": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "ONLINE_WRITING_DURATION_RATIO": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "ONLINE_WRITING_HEIGHT": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "ONLINE_WRITING_LENGTH": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "ONLINE_WRITING_STOPS": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "ONLINE_WRITING_TEMPO": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "ONLINE_WRITING_WIDTH": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "ONLINE_X_PROFILE_CHANGES": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "ONLINE_Y_PROFILE_CHANGES": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "OPEN_OVAL_RATE": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "OUTLINE_PROFILES": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "OVAL_CLOSURE_GAP_RATIO": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "PAGE_COMPONENT_COUNT": {
+      "free_available": true,
+      "learned_only": false,
+      "methods": [
+        "accepted_segmentation_census_v1"
+      ]
+    },
+    "PAGE_HORIZONTAL_DENSITY": {
+      "free_available": true,
+      "learned_only": false,
+      "methods": [
+        "text_bounds_canvas_ratio_v1"
+      ]
+    },
+    "PAGE_INK_AREA_RATIO": {
+      "free_available": true,
+      "learned_only": false,
+      "methods": [
+        "accepted_segmentation_census_v1"
+      ]
+    },
+    "PAGE_LINE_COUNT": {
+      "free_available": true,
+      "learned_only": false,
+      "methods": [
+        "accepted_segmentation_census_v1"
+      ]
+    },
+    "PAGE_LINE_DETECTION_CONF": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "PAGE_TEXT_AREA_RATIO": {
+      "free_available": true,
+      "learned_only": false,
+      "methods": [
+        "accepted_segmentation_census_v1"
+      ]
+    },
+    "PAGE_TEXT_BLOCK_COUNT": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "PAGE_VERTICAL_DENSITY": {
+      "free_available": true,
+      "learned_only": false,
+      "methods": [
+        "text_bounds_canvas_ratio_v1"
+      ]
+    },
+    "PAGE_WORD_COUNT": {
+      "free_available": true,
+      "learned_only": false,
+      "methods": [
+        "accepted_segmentation_census_v1"
+      ]
+    },
+    "PAGE_WORD_DETECTION_CONF": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "PEN_LIFT_PROXY": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "RETRACE_RATE": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "ROUNDNESS_SCORE": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "SCRIPT_STYLE_CLASS": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "SHAPE_COMPACTNESS": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "SIG_ANGLE_ENTROPY": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "SIG_AREA_RATIO": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "SIG_ASPECT_RATIO": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "SIG_BASELINE_ANGLE": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "SIG_COMPONENT_COUNT": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "SIG_CONNECTEDNESS": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "SIG_DOMINANT_ANGLE_1": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "SIG_EMBEDDING": {
+      "free_available": false,
+      "learned_only": true,
+      "methods": [
+        "sigver_representation_v1"
+      ]
+    },
+    "SIG_FLOURISH_EXTENT": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "SIG_HEIGHT_PX": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "SIG_INK_DARKNESS_STD": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "SIG_LOOP_DENSITY": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "SIG_PEN_LIFT_PROXY": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "SIG_SLANT_MEAN": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "SIG_SLANT_STD": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "SIG_STROKE_WIDTH_MEAN": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "SIG_TEXT_CONNECTEDNESS_DELTA": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "SIG_TEXT_DARKNESS_DELTA": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "SIG_TEXT_SIZE_RATIO": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "SIG_TEXT_SLANT_DELTA": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "SIG_WIDTH_PX": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "SIMPLIFICATION_SCORE": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "SIZE_REGULARITY": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "SKELETON_ENDPOINT_COUNT": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "SKELETON_ENDPOINT_DENSITY": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "SKELETON_JUNCTION_COUNT": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "SKELETON_JUNCTION_DENSITY": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "SKELETON_LENGTH_PER_INK_AREA": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "SKELETON_LENGTH_TOTAL": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "SLANT_ANGLE_MEAN": {
+      "free_available": true,
+      "learned_only": false,
+      "methods": [
+        "oriented_component_axis_v1"
+      ]
+    },
+    "SLANT_ANGLE_MEDIAN": {
+      "free_available": true,
+      "learned_only": false,
+      "methods": [
+        "oriented_component_axis_v1"
+      ]
+    },
+    "SLANT_ANGLE_STD": {
+      "free_available": true,
+      "learned_only": false,
+      "methods": [
+        "oriented_component_axis_v1"
+      ]
+    },
+    "SLANT_CONSISTENCY": {
+      "free_available": true,
+      "learned_only": false,
+      "methods": [
+        "oriented_component_axis_v1"
+      ]
+    },
+    "SLANT_EXTREME_FRACTION": {
+      "free_available": true,
+      "learned_only": false,
+      "methods": [
+        "oriented_component_axis_v1"
+      ]
+    },
+    "SLANT_LEFT_FRACTION": {
+      "free_available": true,
+      "learned_only": false,
+      "methods": [
+        "oriented_component_axis_v1"
+      ]
+    },
+    "SLANT_P05": {
+      "free_available": true,
+      "learned_only": false,
+      "methods": [
+        "oriented_component_axis_v1"
+      ]
+    },
+    "SLANT_P95": {
+      "free_available": true,
+      "learned_only": false,
+      "methods": [
+        "oriented_component_axis_v1"
+      ]
+    },
+    "SLANT_RIGHT_FRACTION": {
+      "free_available": true,
+      "learned_only": false,
+      "methods": [
+        "oriented_component_axis_v1"
+      ]
+    },
+    "SLANT_VERTICAL_FRACTION": {
+      "free_available": true,
+      "learned_only": false,
+      "methods": [
+        "oriented_component_axis_v1"
+      ]
+    },
+    "SOLIDITY": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "SPACING_REGULARITY": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "SRS_LBP_VECTOR": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "STRAIGHT_SEGMENT_RATIO": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "STROKE_UNIFORMITY": {
+      "free_available": true,
+      "learned_only": false,
+      "methods": [
+        "medial_axis_diameter_v1"
+      ]
+    },
+    "STROKE_WIDTH_CV": {
+      "free_available": true,
+      "learned_only": false,
+      "methods": [
+        "medial_axis_diameter_v1"
+      ]
+    },
+    "STROKE_WIDTH_MEAN": {
+      "free_available": true,
+      "learned_only": false,
+      "methods": [
+        "medial_axis_diameter_v1"
+      ]
+    },
+    "STROKE_WIDTH_MEDIAN": {
+      "free_available": true,
+      "learned_only": false,
+      "methods": [
+        "medial_axis_diameter_v1"
+      ]
+    },
+    "STROKE_WIDTH_STD": {
+      "free_available": true,
+      "learned_only": false,
+      "methods": [
+        "medial_axis_diameter_v1"
+      ]
+    },
+    "TERMINAL_STROKE_EXTENSION": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "TEXTURE_ENTROPY": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "TEXT_BLOCK_HORIZONTAL_CENTER": {
+      "free_available": true,
+      "learned_only": false,
+      "methods": [
+        "text_bounds_canvas_ratio_v1"
+      ]
+    },
+    "TEXT_BLOCK_VERTICAL_CENTER": {
+      "free_available": true,
+      "learned_only": false,
+      "methods": [
+        "text_bounds_canvas_ratio_v1"
+      ]
+    },
+    "TEXT_DENSITY_CV": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "TEXT_DENSITY_LOCAL": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "T_BAR_ANGLE_MEAN": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "T_BAR_HEIGHT_RATIO": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "T_BAR_LEFT_RIGHT_BALANCE": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "T_BAR_LENGTH_RATIO": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "T_BAR_PRESENT_RATE": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "UPPER_ZONE_RATIO": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "VERTICAL_PROJECTION": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "VERTICAL_STROKE_RATIO": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "WAVELET_APPROX_ENERGY": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "WAVELET_DIAGONAL_ENERGY": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "WAVELET_HORIZONTAL_ENERGY": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "WAVELET_VERTICAL_ENERGY": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "WORD_SPACING_CV": {
+      "free_available": true,
+      "learned_only": false,
+      "methods": [
+        "accepted_box_gap_cv_v1"
+      ]
+    },
+    "WORD_SPACING_PX": {
+      "free_available": true,
+      "learned_only": false,
+      "methods": [
+        "accepted_box_gap_px_v1"
+      ]
+    },
+    "WORD_SPACING_REL": {
+      "free_available": true,
+      "learned_only": false,
+      "methods": [
+        "accepted_box_gap_rel_v1"
+      ]
+    },
+    "X_HEIGHT_CV": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    },
+    "X_HEIGHT_PX": {
+      "free_available": true,
+      "learned_only": false,
+      "methods": [
+        "component_height_mode_v1"
+      ]
+    },
+    "ZONE_DENSITY_4X4": {
+      "free_available": false,
+      "learned_only": false,
+      "methods": []
+    }
+  },
+  "manifest_sha256": "a4606d9925680ff135c6dd2c332bec51e3a2cf878383275a83fa8ecb0d20c835",
+  "methods": [
+    {
+      "dependencies": [],
+      "dependency_closure": [],
+      "feature_ids": [
+        "LINE_SPACING_CV",
+        "WORD_SPACING_CV"
+      ],
+      "free_eligible": true,
+      "input_modes": [
+        "STATIC_IMAGE"
+      ],
+      "license_review_id": null,
+      "method_id": "accepted_box_gap_cv_v1",
+      "method_version": "1.0.0",
+      "requires_external_provider": false,
+      "requires_learned_inference": false,
+      "runtime_component": "free-core",
+      "supported_cohorts": [],
+      "validation_release": null
+    },
+    {
+      "dependencies": [],
+      "dependency_closure": [],
+      "feature_ids": [
+        "LINE_SPACING_PX",
+        "WORD_SPACING_PX"
+      ],
+      "free_eligible": true,
+      "input_modes": [
+        "STATIC_IMAGE"
+      ],
+      "license_review_id": null,
+      "method_id": "accepted_box_gap_px_v1",
+      "method_version": "1.0.0",
+      "requires_external_provider": false,
+      "requires_learned_inference": false,
+      "runtime_component": "free-core",
+      "supported_cohorts": [],
+      "validation_release": null
+    },
+    {
+      "dependencies": [],
+      "dependency_closure": [],
+      "feature_ids": [
+        "LINE_SPACING_REL",
+        "WORD_SPACING_REL"
+      ],
+      "free_eligible": true,
+      "input_modes": [
+        "STATIC_IMAGE"
+      ],
+      "license_review_id": null,
+      "method_id": "accepted_box_gap_rel_v1",
+      "method_version": "1.0.0",
+      "requires_external_provider": false,
+      "requires_learned_inference": false,
+      "runtime_component": "free-core",
+      "supported_cohorts": [],
+      "validation_release": null
+    },
+    {
+      "dependencies": [],
+      "dependency_closure": [],
+      "feature_ids": [
+        "PAGE_LINE_COUNT",
+        "PAGE_WORD_COUNT",
+        "PAGE_COMPONENT_COUNT",
+        "PAGE_INK_AREA_RATIO",
+        "PAGE_TEXT_AREA_RATIO"
+      ],
+      "free_eligible": true,
+      "input_modes": [
+        "STATIC_IMAGE"
+      ],
+      "license_review_id": null,
+      "method_id": "accepted_segmentation_census_v1",
+      "method_version": "1.0.0",
+      "requires_external_provider": false,
+      "requires_learned_inference": false,
+      "runtime_component": "free-core",
+      "supported_cohorts": [],
+      "validation_release": null
+    },
+    {
+      "dependencies": [],
+      "dependency_closure": [],
+      "feature_ids": [
+        "BASELINE_STABILITY"
+      ],
+      "free_eligible": true,
+      "input_modes": [
+        "STATIC_IMAGE"
+      ],
+      "license_review_id": null,
+      "method_id": "baseline_inverse_waviness_index_v1",
+      "method_version": "1.0.0",
+      "requires_external_provider": false,
+      "requires_learned_inference": false,
+      "runtime_component": "free-core",
+      "supported_cohorts": [],
+      "validation_release": null
+    },
+    {
+      "dependencies": [],
+      "dependency_closure": [],
+      "feature_ids": [
+        "BASELINE_CURVATURE"
+      ],
+      "free_eligible": true,
+      "input_modes": [
+        "STATIC_IMAGE"
+      ],
+      "license_review_id": null,
+      "method_id": "baseline_quadratic_sag_xheight_v1",
+      "method_version": "1.0.0",
+      "requires_external_provider": false,
+      "requires_learned_inference": false,
+      "runtime_component": "free-core",
+      "supported_cohorts": [],
+      "validation_release": null
+    },
+    {
+      "dependencies": [],
+      "dependency_closure": [],
+      "feature_ids": [
+        "BASELINE_WAVINESS"
+      ],
+      "free_eligible": true,
+      "input_modes": [
+        "STATIC_IMAGE"
+      ],
+      "license_review_id": null,
+      "method_id": "baseline_residual_xheight_v1",
+      "method_version": "1.0.0",
+      "requires_external_provider": false,
+      "requires_learned_inference": false,
+      "runtime_component": "free-core",
+      "supported_cohorts": [],
+      "validation_release": null
+    },
+    {
+      "dependencies": [],
+      "dependency_closure": [],
+      "feature_ids": [
+        "BASELINE_ANGLE_MEAN",
+        "BASELINE_ANGLE_MEDIAN",
+        "BASELINE_ANGLE_STD",
+        "BASELINE_ABS_SLOPE"
+      ],
+      "free_eligible": true,
+      "input_modes": [
+        "STATIC_IMAGE"
+      ],
+      "license_review_id": null,
+      "method_id": "bottom_quantile_angle_v1",
+      "method_version": "1.0.0",
+      "requires_external_provider": false,
+      "requires_learned_inference": false,
+      "runtime_component": "free-core",
+      "supported_cohorts": [],
+      "validation_release": null
+    },
+    {
+      "dependencies": [],
+      "dependency_closure": [],
+      "feature_ids": [
+        "GLYPH_HEIGHT_MEAN",
+        "GLYPH_HEIGHT_CV",
+        "GLYPH_WIDTH_MEAN",
+        "GLYPH_WIDTH_CV",
+        "GLYPH_ASPECT_RATIO_MEAN",
+        "GLYPH_ASPECT_RATIO_CV"
+      ],
+      "free_eligible": true,
+      "input_modes": [
+        "STATIC_IMAGE"
+      ],
+      "license_review_id": null,
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "requires_external_provider": false,
+      "requires_learned_inference": false,
+      "runtime_component": "free-core",
+      "supported_cohorts": [],
+      "validation_release": null
+    },
+    {
+      "dependencies": [],
+      "dependency_closure": [],
+      "feature_ids": [
+        "X_HEIGHT_PX"
+      ],
+      "free_eligible": true,
+      "input_modes": [
+        "STATIC_IMAGE"
+      ],
+      "license_review_id": null,
+      "method_id": "component_height_mode_v1",
+      "method_version": "1.0.0",
+      "requires_external_provider": false,
+      "requires_learned_inference": false,
+      "runtime_component": "free-core",
+      "supported_cohorts": [],
+      "validation_release": null
+    },
+    {
+      "dependencies": [],
+      "dependency_closure": [],
+      "feature_ids": [
+        "INK_DARKNESS_MEAN",
+        "INK_DARKNESS_STD",
+        "INK_DARKNESS_CV",
+        "INK_SATURATION_FRACTION"
+      ],
+      "free_eligible": true,
+      "input_modes": [
+        "STATIC_IMAGE"
+      ],
+      "license_review_id": null,
+      "method_id": "grayscale_darkness_v1",
+      "method_version": "1.0.0",
+      "requires_external_provider": false,
+      "requires_learned_inference": false,
+      "runtime_component": "free-core",
+      "supported_cohorts": [],
+      "validation_release": null
+    },
+    {
+      "dependencies": [],
+      "dependency_closure": [],
+      "feature_ids": [
+        "IMG_WIDTH_PX",
+        "IMG_HEIGHT_PX",
+        "IMG_MEGAPIXELS",
+        "IMG_ASPECT_RATIO"
+      ],
+      "free_eligible": true,
+      "input_modes": [
+        "STATIC_IMAGE"
+      ],
+      "license_review_id": null,
+      "method_id": "input_dimensions_v1",
+      "method_version": "1.0.0",
+      "requires_external_provider": false,
+      "requires_learned_inference": false,
+      "runtime_component": "free-core",
+      "supported_cohorts": [],
+      "validation_release": null
+    },
+    {
+      "dependencies": [],
+      "dependency_closure": [],
+      "feature_ids": [
+        "MARGIN_LEFT_VARIABILITY",
+        "MARGIN_RIGHT_VARIABILITY",
+        "LINE_LENGTH_VARIABILITY"
+      ],
+      "free_eligible": true,
+      "input_modes": [
+        "STATIC_IMAGE"
+      ],
+      "license_review_id": null,
+      "method_id": "line_edge_population_cv_v1",
+      "method_version": "1.0.0",
+      "requires_external_provider": false,
+      "requires_learned_inference": false,
+      "runtime_component": "free-core",
+      "supported_cohorts": [],
+      "validation_release": null
+    },
+    {
+      "dependencies": [],
+      "dependency_closure": [],
+      "feature_ids": [
+        "LINE_LENGTH_MEAN_REL"
+      ],
+      "free_eligible": true,
+      "input_modes": [
+        "STATIC_IMAGE"
+      ],
+      "license_review_id": null,
+      "method_id": "line_width_page_ratio_v1",
+      "method_version": "1.0.0",
+      "requires_external_provider": false,
+      "requires_learned_inference": false,
+      "runtime_component": "free-core",
+      "supported_cohorts": [],
+      "validation_release": null
+    },
+    {
+      "dependencies": [],
+      "dependency_closure": [],
+      "feature_ids": [
+        "MARGIN_SYMMETRY"
+      ],
+      "free_eligible": true,
+      "input_modes": [
+        "STATIC_IMAGE"
+      ],
+      "license_review_id": null,
+      "method_id": "margin_balance_index_v1",
+      "method_version": "1.0.0",
+      "requires_external_provider": false,
+      "requires_learned_inference": false,
+      "runtime_component": "free-core",
+      "supported_cohorts": [],
+      "validation_release": null
+    },
+    {
+      "dependencies": [],
+      "dependency_closure": [],
+      "feature_ids": [
+        "STROKE_WIDTH_MEAN",
+        "STROKE_WIDTH_MEDIAN",
+        "STROKE_WIDTH_STD",
+        "STROKE_WIDTH_CV",
+        "STROKE_UNIFORMITY"
+      ],
+      "free_eligible": true,
+      "input_modes": [
+        "STATIC_IMAGE"
+      ],
+      "license_review_id": null,
+      "method_id": "medial_axis_diameter_v1",
+      "method_version": "1.0.0",
+      "requires_external_provider": false,
+      "requires_learned_inference": false,
+      "runtime_component": "free-core",
+      "supported_cohorts": [],
+      "validation_release": null
+    },
+    {
+      "dependencies": [],
+      "dependency_closure": [],
+      "feature_ids": [
+        "LINE_START_DRIFT",
+        "LINE_END_DRIFT"
+      ],
+      "free_eligible": true,
+      "input_modes": [
+        "STATIC_IMAGE"
+      ],
+      "license_review_id": null,
+      "method_id": "normalized_edge_vs_vertical_position_v1",
+      "method_version": "1.0.0",
+      "requires_external_provider": false,
+      "requires_learned_inference": false,
+      "runtime_component": "free-core",
+      "supported_cohorts": [],
+      "validation_release": null
+    },
+    {
+      "dependencies": [],
+      "dependency_closure": [],
+      "feature_ids": [
+        "SLANT_ANGLE_MEAN",
+        "SLANT_ANGLE_MEDIAN",
+        "SLANT_ANGLE_STD",
+        "SLANT_P05",
+        "SLANT_P95",
+        "SLANT_LEFT_FRACTION",
+        "SLANT_VERTICAL_FRACTION",
+        "SLANT_RIGHT_FRACTION",
+        "SLANT_EXTREME_FRACTION",
+        "SLANT_CONSISTENCY"
+      ],
+      "free_eligible": true,
+      "input_modes": [
+        "STATIC_IMAGE"
+      ],
+      "license_review_id": null,
+      "method_id": "oriented_component_axis_v1",
+      "method_version": "1.0.0",
+      "requires_external_provider": false,
+      "requires_learned_inference": false,
+      "runtime_component": "free-core",
+      "supported_cohorts": [],
+      "validation_release": null
+    },
+    {
+      "dependencies": [],
+      "dependency_closure": [],
+      "feature_ids": [
+        "SIG_EMBEDDING"
+      ],
+      "free_eligible": false,
+      "input_modes": [
+        "STATIC_IMAGE"
+      ],
+      "license_review_id": "sigver_bsd3_provenance",
+      "method_id": "sigver_representation_v1",
+      "method_version": "1.0.0",
+      "requires_external_provider": false,
+      "requires_learned_inference": true,
+      "runtime_component": "signature-extra",
+      "supported_cohorts": [],
+      "validation_release": null
+    },
+    {
+      "dependencies": [],
+      "dependency_closure": [],
+      "feature_ids": [
+        "TEXT_BLOCK_HORIZONTAL_CENTER",
+        "TEXT_BLOCK_VERTICAL_CENTER",
+        "PAGE_HORIZONTAL_DENSITY",
+        "PAGE_VERTICAL_DENSITY"
+      ],
+      "free_eligible": true,
+      "input_modes": [
+        "STATIC_IMAGE"
+      ],
+      "license_review_id": null,
+      "method_id": "text_bounds_canvas_ratio_v1",
+      "method_version": "1.0.0",
+      "requires_external_provider": false,
+      "requires_learned_inference": false,
+      "runtime_component": "free-core",
+      "supported_cohorts": [],
+      "validation_release": null
+    },
+    {
+      "dependencies": [],
+      "dependency_closure": [],
+      "feature_ids": [
+        "MARGIN_TOP_REL",
+        "MARGIN_BOTTOM_REL",
+        "MARGIN_LEFT_REL",
+        "MARGIN_RIGHT_REL"
+      ],
+      "free_eligible": true,
+      "input_modes": [
+        "STATIC_IMAGE"
+      ],
+      "license_review_id": null,
+      "method_id": "text_bounds_xheight_v1",
+      "method_version": "1.0.0",
+      "requires_external_provider": false,
+      "requires_learned_inference": false,
+      "runtime_component": "free-core",
+      "supported_cohorts": [],
+      "validation_release": null
+    },
+    {
+      "dependencies": [],
+      "dependency_closure": [],
+      "feature_ids": [
+        "IMG_ROTATION_DEG"
+      ],
+      "free_eligible": true,
+      "input_modes": [
+        "STATIC_IMAGE"
+      ],
+      "license_review_id": null,
+      "method_id": "text_skew_ccw_v1",
+      "method_version": "1.0.0",
+      "requires_external_provider": false,
+      "requires_learned_inference": false,
+      "runtime_component": "free-core",
+      "supported_cohorts": [],
+      "validation_release": null
+    }
+  ],
+  "source_sha256": "0a5da01a7140634b248cece46260fc3306c82fcf7c824d35f97c119cb3ad8989"
+}

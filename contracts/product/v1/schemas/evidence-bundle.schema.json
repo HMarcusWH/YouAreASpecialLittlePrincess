@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "evidence-bundle.schema.json",
+  "title": "EvidenceBundle",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "contract_version": {
+      "const": "1.0.0"
+    },
+    "bundle_id": {
+      "$ref": "common.schema.json#/$defs/OpaqueId"
+    },
+    "analysis": {
+      "$ref": "analysis-reference.schema.json"
+    },
+    "frames": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/CoordinateFrame"
+      },
+      "minItems": 1,
+      "maxItems": 64
+    },
+    "regions": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/RegionEvidence"
+      },
+      "minItems": 0,
+      "maxItems": 4096
+    },
+    "observations": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/Observation"
+      },
+      "minItems": 0,
+      "maxItems": 20000
+    },
+    "warnings": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "maxLength": 256
+      },
+      "minItems": 0,
+      "maxItems": 256
+    }
+  },
+  "required": [
+    "contract_version",
+    "bundle_id",
+    "analysis",
+    "frames",
+    "regions",
+    "observations",
+    "warnings"
+  ]
+}

@@ -1,0 +1,64 @@
+{
+  "contract_version": "1.0.0",
+  "bundle_id": "evidence_001",
+  "analysis": {
+    "contract_version": "1.0.0",
+    "analysis_id": "analysis_001",
+    "run_id": "run_001",
+    "owner_id": "owner_001",
+    "input_asset_id": "asset_001",
+    "input_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+    "processed_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+    "created_at": "2026-09-26T20:00:00Z",
+    "versions": {
+      "feature_schema": "1.0.0-draft",
+      "engine": "0.1.0",
+      "method_manifest": "a4606d9925680ff135c6dd2c332bec51e3a2cf878383275a83fa8ecb0d20c835",
+      "analysis_config": "2222222222222222222222222222222222222222222222222222222222222222",
+      "quality_policy": "quality-policy/1",
+      "normalization": null,
+      "feature_set": null,
+      "benchmark_release": null,
+      "content_schema": "1.0.0",
+      "template": null
+    }
+  },
+  "frames": [
+    {
+      "frame_id": "frame_original",
+      "width": 120,
+      "height": 80,
+      "unit": "px",
+      "parent_frame_id": null,
+      "transform_to_parent": null
+    }
+  ],
+  "regions": [
+    {
+      "region_id": "page_0",
+      "frame_id": "frame_original",
+      "scope": "PAGE",
+      "x": 0,
+      "y": 0,
+      "width": 120,
+      "height": 80,
+      "parent_region_id": null
+    }
+  ],
+  "observations": [
+    {
+      "observation_id": "obs_001",
+      "feature_id": "IMG_WIDTH_PX",
+      "method_id": "input_dimensions_v1",
+      "method_version": "1.0.0",
+      "region_ids": [
+        "missing_region"
+      ],
+      "value": 120.0,
+      "unit": "px",
+      "accepted": true,
+      "rejection_reason": null
+    }
+  ],
+  "warnings": []
+}
