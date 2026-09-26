@@ -2,7 +2,8 @@
   "fixture_id": "repeat_capture_not_earlier",
   "description": "Two photos of one page name each other as the original, leaving no root capture.",
   "expected_errors": [
-    "REPEAT_NOT_EARLIER"
+    "REPEAT_NOT_EARLIER",
+    "REPEAT_OF_INVALID_CAPTURE"
   ],
   "consent_log": {
     "notices": [
@@ -114,9 +115,9 @@
       }
     ],
     "claimed_counts": {
-      "writers": 1,
-      "specimens": 1,
-      "captures": 1
+      "writers": 0,
+      "specimens": 0,
+      "captures": 0
     }
   }
 }

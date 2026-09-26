@@ -48,9 +48,14 @@ def approve(purpose, decided_on="2025-12-01T00:00:00Z"):
     return dict(purpose, status="APPROVED", legal_basis="DECIDED", approval=approval)
 
 
-def approved_protocol(protocol, decided_on="2026-01-10T00:00:00Z"):
+def approved_protocol(protocol, decided_on="2026-01-10T00:00:00Z", *, decide_rights=True):
+    """The protocol approved in memory, with every prompt's rights decided unless told otherwise (tests only)."""
     approval = {"decision_ref": "decision:test-protocol", "decided_by_role": "owner", "decided_on": decided_on}
-    return dict(protocol, status="APPROVED", approval=approval)
+    approved = dict(copy.deepcopy(protocol), status="APPROVED", approval=approval)
+    if decide_rights:
+        for task in approved["tasks"]:
+            task["rights"].update(decision_status="DECIDED", decision_ref="decision:prompt-rights")
+    return approved
 
 
 def approved_gate(decided_on="2026-01-05T00:00:00Z"):
@@ -191,6 +196,7 @@ def expected_codes_in(paths):
         "COLLECTED_AFTER_CUTOFF",
         "REPEAT_NOT_EARLIER",
         "NO_COLLECTION_PERMISSION",
+        "REPEAT_OF_INVALID_CAPTURE",
         "PRECHECKED_GRANT",
         "INELIGIBLE_AT_GRANT",
         "DENIED",
@@ -454,6 +460,41 @@ def test_source_clearance_expires(protocol):
     register = {"contract_version": "source-rights/v1", "sources": list(sources.values())}
     assert "REVIEW_WINDOW_INVALID" in codes(vcp.check_source_rights(register))
     assert vcp.SchemaSet().validate(register, "source-rights.schema.json") == []
+
+
+def test_human_release_needs_decided_prompt_rights(registry, protocol):
+    # Codex review of #12: an APPROVED protocol with pending prompt rights still released the cohort.
+    fixture = vcp.load_json(vcp.CONSENT_DIR / "fixtures" / "collection" / "valid_pilot_lineage.json")
+    manifest = dict(copy.deepcopy(fixture["manifest"]), synthetic=False)
+    issues, summary = check_fixture_manifest(
+        fixture, approved_protocol(protocol, decide_rights=False), manifest, human_release=True, fixture_mode=False,
+        registry=approve_in(registry, "engineering_evaluation"), sources=cleared_sources("engineering_testing"),
+        notices=active_pilot_notices(), publish_at=CUTOFF, gate=approved_gate())
+    assert codes(issues) == ["COUNT_MISMATCH", "PROTOCOL_NOT_APPROVED"] and summary.specimens == 0
+
+
+def test_shared_enrollment_makes_both_writers_uncountable(protocol):
+    # Codex review of #12: two writer rows sharing an enrollment were both counted.
+    fixture = copy.deepcopy(vcp.load_json(vcp.CONSENT_DIR / "fixtures" / "collection" / "valid_pilot_lineage.json"))
+    writers = fixture["manifest"]["writers"]
+    writers[1]["enrollment_id"] = writers[0]["enrollment_id"]
+    fixture["consent_log"]["events"][1]["scope"]["id"] = writers[0]["enrollment_id"]
+    issues, summary = check_fixture_manifest(fixture, protocol)
+    assert codes(issues) == ["COUNT_MISMATCH", "DUPLICATE_ID"]
+    assert (summary.writers, summary.specimens, summary.captures) == (1, 1, 1)  # only writer 3 remains
+
+
+def test_repeat_chain_through_an_invalid_capture_is_not_counted(protocol):
+    # Codex review of #12: capture 3 repeating an invalid capture 2 was still counted.
+    fixture = vcp.load_json(vcp.CONSENT_DIR / "fixtures" / "collection" / "valid_pilot_lineage.json")
+    manifest = copy.deepcopy(fixture["manifest"])
+    manifest["captures"][1]["repeat_of_capture_id"] = None
+    manifest["captures"].append({"capture_id": "cap_0105", "specimen_id": "spc_0101", "capture_index": 3,
+                                 "content_sha256": "f" * 64, "repeat_of_capture_id": "cap_0102"})
+    issues, summary = check_fixture_manifest(fixture, protocol, manifest)
+    assert [(i.code, i.where) for i in issues if i.code != "COUNT_MISMATCH"] == [
+        ("REPEAT_WITHOUT_ORIGINAL", "cap_0102"), ("REPEAT_OF_INVALID_CAPTURE", "cap_0105")]
+    assert summary.captures == 6
 
 
 def test_collection_summary_counts_writers_not_pages(protocol):
@@ -838,10 +879,21 @@ def test_approved_purposes_need_decided_retention(registry):
     assert codes(found) == ["PURPOSE_RETENTION_UNDECIDED"] and len(found) == 4
 
     decided = copy.deepcopy(retention)
-    decided["status"] = "APPROVED"
+    decided.update(status="APPROVED", approval={"decision_ref": "decision:ret-policy", "decided_by_role": "owner",
+                                                "decided_on": "2025-11-01T00:00:00Z"})
     for c in decided["classes"]:
         c.update(decision_status="DECIDED", decision_ref="decision:ret-1234", max_retention={"value": 30, "unit": "DAYS"})
-    assert vcp.check_purpose_retention(ledger, decided) == []
+    assert vcp.check_purpose_retention(ledger, decided) == [] and vcp.check_retention(decided) == []
+
+    # Codex review of #12: a bare status edit approved the policy with no record, and
+    # a policy approved after the purpose could not have governed its approval.
+    unrecorded = dict(copy.deepcopy(decided), approval=None)
+    del unrecorded["approval"]
+    assert codes(vcp.check_retention(unrecorded)) == ["APPROVAL_WITHOUT_EVIDENCE"]
+    assert codes(vcp.check_purpose_retention(ledger, unrecorded)) == ["PURPOSE_RETENTION_UNDECIDED"]
+    late = copy.deepcopy(decided)
+    late["approval"]["decided_on"] = "2026-06-01T00:00:00Z"
+    assert codes(vcp.check_purpose_retention(ledger, late)) == ["PURPOSE_RETENTION_UNDECIDED"]
     decided["classes"][0].update(decision_status="PENDING_OWNER_DECISION", decision_ref=None,
                                  max_retention={"value": None, "unit": None})
     assert [i.message.split()[0] for i in vcp.check_purpose_retention(ledger, decided)] == [decided["classes"][0]["class_id"]]
@@ -973,7 +1025,7 @@ def test_free_writing_never_contains_a_copy_passage(registry, protocol, collecti
 
 
 def test_protocol_approval_requires_decided_prompt_rights(registry, protocol):
-    approved = approved_protocol(copy.deepcopy(protocol))
+    approved = approved_protocol(protocol, decide_rights=False)
     found = vcp.check_protocol(approved, purposes_by_key(registry))
     assert codes(found) == ["PROTOCOL_APPROVED_WITH_PENDING_RIGHTS"]
     assert len(found) == len(protocol["tasks"])

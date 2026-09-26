@@ -358,8 +358,12 @@ def check_purpose_retention(doc: dict, retention_doc: dict) -> list[Issue]:
         if p["status"] != "APPROVED":
             continue
         where = f"{p['purpose_id']}@{p['purpose_version']}"
-        if retention_doc["status"] != "APPROVED":
-            issues.append(Issue("PURPOSE_RETENTION_UNDECIDED", where, "retention.json must be APPROVED before a purpose using it"))
+        policy_approval = retention_doc.get("approval") or {}
+        purpose_approved_on = (p.get("approval") or {}).get("decided_on")
+        if (retention_doc["status"] != "APPROVED" or not policy_approval.get("decision_ref") or not purpose_approved_on
+                or parse_timestamp(policy_approval["decided_on"]) > parse_timestamp(purpose_approved_on)):
+            issues.append(Issue("PURPOSE_RETENTION_UNDECIDED", where,
+                                "retention.json must be APPROVED, with a recorded approval, before a purpose using it"))
         for class_id in p["retention_classes"]:
             retention_class = classes.get(class_id)
             if retention_class is None:
@@ -471,6 +475,8 @@ def check_retention(doc: dict) -> list[Issue]:
                 issues.append(Issue("HANDWRITING_BACKUP_UNSAFE", where, "restores must reconcile tombstones first"))
     if doc["status"] == "APPROVED" and any(c["decision_status"] != "DECIDED" for c in doc["classes"]):
         issues.append(Issue("APPROVED_WITH_PENDING_DECISIONS", "retention.json", "every class must be decided"))
+    if doc["status"] == "APPROVED" and not (doc.get("approval") or {}).get("decision_ref"):
+        issues.append(Issue("APPROVAL_WITHOUT_EVIDENCE", "retention.json", "APPROVED requires an approval record with a decision_ref"))
     return issues
 
 
@@ -770,6 +776,10 @@ def check_collection_manifest(
             issues.append(Issue("PROTOCOL_NOT_APPROVED", "protocol",
                                 f"collected under a {protocol['status']} protocol without a recorded approval"))
             releasable = False
+        elif any(not (task["rights"]["decision_status"] == "DECIDED" and task["rights"]["decision_ref"])
+                 for task in protocol["tasks"]):
+            issues.append(Issue("PROTOCOL_NOT_APPROVED", "protocol", "every prompt's rights must be decided before a human release"))
+            releasable = False
         else:
             protocol_approved_at = parse_timestamp(approval["decided_on"])
             if not gate_approved_by(gate, approval["decided_on"]):
@@ -793,6 +803,12 @@ def check_collection_manifest(
                              ("specimen", manifest["specimens"], "specimen_id"), ("capture", manifest["captures"], "capture_id")):
         for value in duplicates(row[key] for row in rows):
             issues.append(Issue("DUPLICATE_ID", label, value))
+    # Identities that are not unique cannot be counted: which row is the real writer, page or photo?
+    ambiguous_writers = set(duplicates(w["writer_id"] for w in manifest["writers"]))
+    shared_enrollments = set(duplicates(w["enrollment_id"] for w in manifest["writers"]))
+    ambiguous_writers |= {w["writer_id"] for w in manifest["writers"] if w["enrollment_id"] in shared_enrollments}
+    ambiguous_specimens = set(duplicates(s["specimen_id"] for s in manifest["specimens"]))
+    ambiguous_captures = set(duplicates(c["capture_id"] for c in manifest["captures"]))
 
     writers = {w["writer_id"]: w for w in manifest["writers"]}
     specimens = {s["specimen_id"]: s for s in manifest["specimens"]}
@@ -811,6 +827,8 @@ def check_collection_manifest(
     seen_session_task: dict[tuple[str, str, int], str] = {}
     for s in manifest["specimens"]:
         where = s["specimen_id"]
+        if where in ambiguous_specimens or s["writer_id"] in ambiguous_writers:
+            continue  # reported as DUPLICATE_ID; never counted
         writer = writers.get(s["writer_id"])
         if writer is None:
             issues.append(Issue("DANGLING_REFERENCE", where, f"unknown writer {s['writer_id']}"))
@@ -876,13 +894,12 @@ def check_collection_manifest(
         else:
             included.add(where)
 
-    by_hash: dict[str, str] = {}
-    counted: list[str] = []
+    # Pass 1: each capture's own repeat link.
+    own_link_ok: dict[str, bool] = {}
     indexes: set[tuple[str, int]] = set()
     for c in manifest["captures"]:
         where = c["capture_id"]
-        specimen = specimens.get(c["specimen_id"])
-        if specimen is None:
+        if c["specimen_id"] not in specimens:
             issues.append(Issue("DANGLING_REFERENCE", where, f"unknown specimen {c['specimen_id']}"))
             continue
         broken = []
@@ -902,6 +919,23 @@ def check_collection_manifest(
                 # Pointing only backwards keeps repeat lineage acyclic, with an original at its root.
                 broken.append(Issue("REPEAT_NOT_EARLIER", where, f"{repeat} is not an earlier capture of this page"))
         issues += broken
+        own_link_ok[where] = not broken
+
+    def rooted(capture_id: str) -> bool:
+        """Every link back to the original is valid. Valid links point to a lower index, so this terminates."""
+        if capture_id in ambiguous_captures or not own_link_ok.get(capture_id):
+            return False
+        repeat = captures[capture_id]["repeat_of_capture_id"]
+        return repeat is None or rooted(repeat)
+
+    # Pass 2: bytes, lineage and counting.
+    by_hash: dict[str, str] = {}
+    counted: list[str] = []
+    for c in manifest["captures"]:
+        where = c["capture_id"]
+        specimen = specimens.get(c["specimen_id"])
+        if specimen is None or where in ambiguous_captures:
+            continue
         first = by_hash.get(c["content_sha256"])
         if first is not None:
             other = specimens.get(captures[first]["specimen_id"])
@@ -911,8 +945,11 @@ def check_collection_manifest(
                 issues.append(Issue("DUPLICATE_CAPTURE_BYTES", where, f"identical bytes to {first}"))
             continue
         by_hash[c["content_sha256"]] = where
-        if broken:
+        if not own_link_ok[where]:
             continue  # a capture whose provenance failed validation is not evidence of anything
+        if not rooted(where):
+            issues.append(Issue("REPEAT_OF_INVALID_CAPTURE", where, "its repeat chain does not reach a valid original"))
+            continue
         if c["specimen_id"] in included:
             counted.append(c["specimen_id"])
 
@@ -1108,7 +1145,7 @@ def evaluate_permission(
     context: ConsentContext, subject: dict, purpose_ref: dict, scope: dict, at: datetime,
     covering_scopes: tuple[dict, ...] = (),
 ) -> str:
-    """Latest valid event wins. covering_scopes are broader scopes the caller vouches
+    """The most recently recorded valid event in effect at `at` wins. covering_scopes are broader scopes the caller vouches
     contain the query scope (e.g. a specimen's pilot enrollment)."""
     purpose = context.purposes.get(purpose_key(purpose_ref))
     if purpose is None or purpose["status"] not in OFFERED:
@@ -1132,10 +1169,11 @@ def evaluate_permission(
     ]
     if not candidates:
         return "NOT_ASKED"
+    # Among events already in effect, the choice recorded last wins: a scheduled grant
+    # never overrides a denial or withdrawal the subject recorded after it.
     _index, latest = max(
         candidates,
         key=lambda item: (
-            effective_time(item[1]),
             parse_timestamp(item[1]["recorded_at"]),
             RESTRICTIVENESS[item[1]["event_type"]],
             item[0],

@@ -9,6 +9,10 @@
   "properties": {
     "contract_version": {"const": "retention-policy/v1"},
     "status": {"enum": ["DRAFT_PENDING_OWNER_REVIEW", "APPROVED"]},
+    "approval": {
+      "$ref": "purpose-registry.schema.json#/$defs/approval",
+      "description": "Required when APPROVED. A purpose approved before this decision cannot rely on the policy."
+    },
     "legal_claim": {"const": false},
     "classes": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/retention_class"}}
   },
