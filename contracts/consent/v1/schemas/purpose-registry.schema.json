@@ -27,7 +27,7 @@
         "decided_on": {"$ref": "common.schema.json#/$defs/timestamp"},
         "content_sha256": {
           "$ref": "common.schema.json#/$defs/sha256",
-          "description": "What was approved: SHA-256 of the canonical JSON (sorted keys, no insignificant whitespace, UTF-8) of the approved purpose, gate, protocol, retention policy or deletion lineage without its status and approval. Required for those approvals; any later edit other than a status change voids them."
+          "description": "What was approved: SHA-256 of the canonical JSON (sorted keys, no insignificant whitespace, UTF-8) of the approved purpose, gate, protocol, retention policy or deletion lineage without its status, with this approval record minus content_sha256 (so decision_ref, decided_by_role, decided_on and gate_decisions are bound). Required for those approvals; any later edit other than a status change voids them."
         },
         "gate_decisions": {
           "type": "array",

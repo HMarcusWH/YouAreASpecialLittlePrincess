@@ -34,7 +34,7 @@
         "review": {
           "type": "object",
           "additionalProperties": false,
-          "required": ["decision_ref", "reviewer_role", "reviewed_on", "expires_on", "archive_sha256", "content_sha256"],
+          "required": ["decision_ref", "reviewer_role", "reviewed_on", "expires_on", "archive_sha256", "attribution", "content_sha256"],
           "properties": {
             "decision_ref": {"$ref": "common.schema.json#/$defs/required_decision_ref"},
             "reviewer_role": {"$ref": "common.schema.json#/$defs/text"},
@@ -47,9 +47,20 @@
               "type": ["string", "null"],
               "pattern": "^[0-9a-f]{64}$"
             },
+            "attribution": {
+              "type": "object",
+              "additionalProperties": false,
+              "description": "The attribution the reviewed terms require (for example CC BY): the exact wording and where and how it must be delivered. Both are null exactly when the terms require none; a release carries this obligation.",
+              "required": ["required", "wording", "delivery"],
+              "properties": {
+                "required": {"type": "boolean"},
+                "wording": {"type": ["string", "null"], "minLength": 1},
+                "delivery": {"type": ["string", "null"], "minLength": 1}
+              }
+            },
             "content_sha256": {
               "$ref": "common.schema.json#/$defs/sha256",
-              "description": "What the review cleared: SHA-256 of the canonical JSON of the source without review_status and review. Any later change to rights, uses, terms or restrictions needs a new review."
+              "description": "What the review cleared: SHA-256 of the canonical JSON of the source without review_status, with the review record minus this digest. Any later change to rights, uses, terms, restrictions, review dates or attribution needs a new review."
             }
           }
         },

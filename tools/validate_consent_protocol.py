@@ -11,6 +11,7 @@ express and that T02/T04 must reproduce.
 from __future__ import annotations
 
 import argparse
+import copy
 import hashlib
 import itertools
 import json
@@ -297,21 +298,34 @@ def known_gates(tasks_json: Path = TASKS_JSON) -> set[str]:
     return set(load_json(tasks_json)["gate_registry"])
 
 
-# Fields a content digest leaves out: the record of the decision itself and later lifecycle changes.
-APPROVAL_FIELDS = ("status", "approval")
-NOTICE_DECISION_FIELDS = ("status", "effective_until", "decision_ref", "content_sha256")
-SOURCE_REVIEW_FIELDS = ("review_status", "review")
+# Lifecycle fields a decision's digest leaves out. Everything else is bound, including the decision
+# record itself (reference, role, dates, gate decisions), except the digest it carries.
+APPROVAL_LIFECYCLE = ("status",)
+NOTICE_LIFECYCLE = ("status", "effective_until", "content_sha256")
+SOURCE_REVIEW_LIFECYCLE = ("review_status",)
 
 
-def content_sha256(document: dict, exclude: tuple[str, ...] = APPROVAL_FIELDS) -> str:
-    """What a decision covers: SHA-256 of the canonical JSON of the document without `exclude`.
+def content_sha256(document: dict, lifecycle: tuple[str, ...] = APPROVAL_LIFECYCLE, record: str | None = "approval") -> str:
+    """What a decision covers: SHA-256 of the canonical JSON of the document without its lifecycle fields.
 
-    Canonical means sorted keys, no insignificant whitespace and UTF-8. For an
-    approval, a later status change (such as RETIRED) keeps it; any other edit
-    needs a new approval or a new version.
+    Canonical means sorted keys, no insignificant whitespace and UTF-8. The
+    decision record named by `record` stays in, minus its own content_sha256,
+    so backdating or re-attributing a decision voids it like any content edit.
+    A later lifecycle change (such as RETIRED or a superseded notice's end)
+    keeps it.
     """
-    body = {key: value for key, value in document.items() if key not in exclude}
+    body = {key: value for key, value in document.items() if key not in lifecycle}
+    if record is not None and isinstance(body.get(record), dict):
+        body[record] = {key: value for key, value in body[record].items() if key != "content_sha256"}
     return hashlib.sha256(json.dumps(body, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")).hexdigest()
+
+
+def notice_digest(notice: dict) -> str:
+    return content_sha256(notice, NOTICE_LIFECYCLE, record=None)
+
+
+def review_digest(source: dict) -> str:
+    return content_sha256(source, SOURCE_REVIEW_LIFECYCLE, record="review")
 
 
 def approval_recorded(document: dict | None) -> bool:
@@ -334,14 +348,22 @@ def approval_issues(document: dict, where: str) -> list[Issue]:
 
 def notice_decision_bound(notice: dict) -> bool:
     """The notice's decision covers its current purposes, wording and start."""
-    return bool(notice["decision_ref"]) and notice.get("content_sha256") == content_sha256(notice, NOTICE_DECISION_FIELDS)
+    return bool(notice["decision_ref"]) and notice.get("content_sha256") == notice_digest(notice)
 
 
 def review_bound(source: dict) -> bool:
-    """The source's review covers its current rights, uses, terms and restrictions."""
+    """The source's review covers its current rights, uses, terms, restrictions, dates and attribution."""
     review = source.get("review") or {}
     return (source["review_status"] == "REVIEWED" and bool(review.get("decision_ref"))
-            and review.get("content_sha256") == content_sha256(source, SOURCE_REVIEW_FIELDS))
+            and review.get("content_sha256") == review_digest(source))
+
+
+def attribution_consistent(review: dict) -> bool:
+    """Wording and delivery are recorded exactly when the reviewed terms require attribution."""
+    attribution = review["attribution"]
+    given = attribution["wording"] is not None and attribution["delivery"] is not None
+    absent = attribution["wording"] is None and attribution["delivery"] is None
+    return given if attribution["required"] else absent
 
 
 def purpose_approval_complete(purpose: dict) -> bool:
@@ -654,7 +676,10 @@ def check_source_rights(doc: dict) -> list[Issue]:
             issues.append(Issue("REVIEW_WITHOUT_RECORD", where, "REVIEWED requires a review record"))
         elif reviewed and not review_bound(s):
             issues.append(Issue("REVIEW_CONTENT_MISMATCH", where,
-                                "review.content_sha256 does not match the rights, uses and restrictions it cleared"))
+                                "review.content_sha256 does not match the rights, uses, restrictions and review record it covers"))
+        if reviewed and not attribution_consistent(s["review"]):
+            issues.append(Issue("ATTRIBUTION_INCONSISTENT", where,
+                                "attribution wording and delivery are recorded exactly when the reviewed terms require them"))
         if "CLEARED" in statuses and not reviewed:
             issues.append(Issue("CLEARED_WITHOUT_REVIEW", where, "clearance requires a recorded review"))
         if reviewed and s["kind"] == "EXTERNAL_DATASET" and not s["review"]["archive_sha256"]:
@@ -735,9 +760,12 @@ def gate_approved_by(gate: dict | None, when: str | None) -> bool:
     """True when the pilot gate is APPROVED, with every required decision recorded and its approval at or before `when`."""
     gate = gate or {}
     approval = gate.get("approval") or {}
-    decided = {d["decision_key"] for d in gate.get("decisions", []) if d["status"] == "DECIDED" and d["decision_ref"]}
-    return (gate.get("status") == "APPROVED" and approval_recorded(gate)
-            and set(REQUIRED_PILOT_DECISIONS) <= decided and bool(when)
+    decisions = gate.get("decisions", [])
+    keys = [d["decision_key"] for d in decisions]
+    # Every row counts: an added or duplicated row that is still pending keeps the gate open.
+    all_decided = all(d["status"] == "DECIDED" and d["decision_ref"] for d in decisions)
+    return (gate.get("status") == "APPROVED" and approval_recorded(gate) and all_decided and not duplicates(keys)
+            and set(REQUIRED_PILOT_DECISIONS) <= set(keys) and bool(when)
             and parse_timestamp(approval["decided_on"]) <= parse_timestamp(when))
 
 
@@ -838,6 +866,8 @@ class CollectionSummary:
     specimens: int = 0
     captures: int = 0
     by_task: dict[str, dict[str, int]] = field(default_factory=dict)
+    # For a cleared human release: the attribution its source review requires, carried with the counts.
+    attribution: dict | None = None
 
 
 def source_clearance_issues(protocol: dict, release_purpose: dict, sources: dict[str, dict] | None,
@@ -849,7 +879,8 @@ def source_clearance_issues(protocol: dict, release_purpose: dict, sources: dict
         return [Issue("SOURCE_NOT_CLEARED", "release_purpose", f"no source-rights use is defined for {release_purpose['purpose_id']}")]
     if source is None:
         return [Issue("SOURCE_NOT_CLEARED", protocol["source_id"], "the source-rights register has no entry for this collection")]
-    if not (review_bound(source) and source["rights"]["data"]["status"] == "CLEARED" and source["allowed_uses"][use] == "CLEARED"):
+    if not (review_bound(source) and attribution_consistent(source["review"])
+            and source["rights"]["data"]["status"] == "CLEARED" and source["allowed_uses"][use] == "CLEARED"):
         bound = "a review bound to them" if review_bound(source) else "no review bound to the current rights"
         return [Issue("SOURCE_NOT_CLEARED", protocol["source_id"],
                       f"{use} is {source['allowed_uses'][use]} and data rights are {source['rights']['data']['status']} "
@@ -921,6 +952,8 @@ def check_collection_manifest(
         clearance = source_clearance_issues(protocol, manifest["release_purpose"], sources, cutoff, publish_at)
         issues += clearance
         releasable = releasable and not clearance
+        if not clearance:
+            summary.attribution = copy.deepcopy(sources[protocol["source_id"]]["review"]["attribution"])
         if publish_at is None:
             issues.append(Issue("PUBLICATION_NOT_RECHECKED", "publish_at",
                                 "a human release re-evaluates every permission immediately before publication"))
@@ -1144,8 +1177,9 @@ def check_collection_manifest(
     summary.captures = sum(1 for specimen_id in counted if specimen_id in included)
     for specimen_id in sorted(included):
         s = specimens[specimen_id]
-        cohort = summary.by_task.setdefault(s["task_id"], {"writers": 0, "specimens": 0})
+        cohort = summary.by_task.setdefault(s["task_id"], {"writers": 0, "specimens": 0, "captures": 0})
         cohort["specimens"] += 1
+        cohort["captures"] += counted.count(specimen_id)  # repeat photos stay in their page's task cohort
     for task_id, cohort in summary.by_task.items():
         cohort["writers"] = len({specimens[s]["writer_id"] for s in included if specimens[s]["task_id"] == task_id})
 

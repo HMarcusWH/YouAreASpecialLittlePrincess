@@ -29,7 +29,7 @@
         "content_sha256": {
           "type": ["string", "null"],
           "pattern": "^[0-9a-f]{64}$",
-          "description": "What the decision approved: SHA-256 of the canonical JSON of the notice without status, effective_until, decision_ref and content_sha256. Null exactly while DRAFT; changed purposes or wording need a new notice version."
+          "description": "What the decision approved: SHA-256 of the canonical JSON of the notice without status, effective_until and content_sha256, so decision_ref is bound too. Null exactly while DRAFT; changed purposes or wording need a new notice version."
         },
         "copy": {
           "type": "array",

@@ -50,13 +50,13 @@ def bind(document):
 
 def bind_notice(notice):
     """Stamp a decided notice with a digest of its current purposes, wording and start (tests only)."""
-    notice["content_sha256"] = vcp.content_sha256(notice, vcp.NOTICE_DECISION_FIELDS)
+    notice["content_sha256"] = vcp.notice_digest(notice)
     return notice
 
 
 def bind_review(source):
     """Stamp a source's review with a digest of the rights, uses and restrictions it cleared (tests only)."""
-    source["review"]["content_sha256"] = vcp.content_sha256(source, vcp.SOURCE_REVIEW_FIELDS)
+    source["review"]["content_sha256"] = vcp.review_digest(source)
     return source
 
 
@@ -97,6 +97,7 @@ def active_pilot_notices(effective_from="2026-01-01T00:00:00Z"):
 
 
 CUTOFF = vcp.parse_timestamp("2026-03-01T00:00:00Z")
+NO_ATTRIBUTION = {"required": False, "wording": None, "delivery": None}
 
 
 def approve_in(registry, purpose_id, decided_on="2025-12-01T00:00:00Z"):
@@ -111,7 +112,7 @@ def cleared_sources(*uses):
     owned = sources["owned_pilot_collection_v1"]
     owned.update(review_status="REVIEWED", review={"decision_ref": "decision:test-review", "reviewer_role": "owner",
                                                    "reviewed_on": "2025-12-01T00:00:00Z", "expires_on": None,
-                                                   "archive_sha256": None})
+                                                   "archive_sha256": None, "attribution": NO_ATTRIBUTION})
     owned["rights"]["data"]["status"] = "CLEARED"
     for use in uses:
         owned["allowed_uses"][use] = "CLEARED"
@@ -319,6 +320,7 @@ def test_release_source_use_follows_the_release_purpose(protocol):
 
     # Codex review of #12: a review dated after the cutoff cleared the release retroactively.
     sources["owned_pilot_collection_v1"]["review"]["reviewed_on"] = "2099-01-01T00:00:00Z"
+    bind_review(sources["owned_pilot_collection_v1"])
     late = vcp.source_clearance_issues(protocol, engineering, sources, CUTOFF)
     assert codes(late) == ["SOURCE_NOT_CLEARED"] and "after the release cutoff" in late[0].message
 
@@ -473,11 +475,17 @@ def test_source_clearance_expires(protocol):
     sources = cleared_sources("engineering_testing")
     review = sources["owned_pilot_collection_v1"]["review"]
     review["expires_on"] = "2026-06-01T00:00:00Z"
+    bind_review(sources["owned_pilot_collection_v1"])
     assert vcp.source_clearance_issues(protocol, engineering, sources, CUTOFF, CUTOFF) == []
     late = vcp.parse_timestamp("2026-06-02T00:00:00Z")
     expired = vcp.source_clearance_issues(protocol, engineering, sources, CUTOFF, late)
     assert codes(expired) == ["SOURCE_NOT_CLEARED"] and "expired" in expired[0].message
+    # Codex review of #12: nulling expires_on under the same decision extended the clearance.
+    review["expires_on"] = None
+    assert codes(vcp.source_clearance_issues(protocol, engineering, sources, CUTOFF, late)) == ["SOURCE_NOT_CLEARED"]
+    assert codes(vcp.check_source_rights({"sources": list(sources.values())})) == ["REVIEW_CONTENT_MISMATCH"]
     review["expires_on"] = "2025-11-01T00:00:00Z"
+    bind_review(sources["owned_pilot_collection_v1"])
     register = {"contract_version": "source-rights/v1", "sources": list(sources.values())}
     assert "REVIEW_WINDOW_INVALID" in codes(vcp.check_source_rights(register))
     assert vcp.SchemaSet().validate(register, "source-rights.schema.json") == []
@@ -755,6 +763,66 @@ def test_source_clearance_is_bound_to_the_reviewed_rights(protocol):
     assert vcp.check_source_rights({"sources": list(widened.values())}) == []
 
 
+def test_decision_records_are_bound_with_their_dates(registry, retention_ids, protocol):
+    # Codex review of #12: the digest left out the approval record, so decided_on could be backdated in place.
+    fixture = valid_lineage()
+    manifest = dict(copy.deepcopy(fixture["manifest"]), synthetic=False)
+    ledger = approve_in(registry, "engineering_evaluation")
+    late = approved_protocol(protocol, decided_on="2026-02-10T00:00:00Z")  # after the pages were written
+    assert counts_of(human_release(fixture, late, manifest, ledger)[1]) == (0, 0, 0)
+    late["approval"]["decided_on"] = "2026-01-10T00:00:00Z"
+    issues, summary = human_release(fixture, late, manifest, ledger)
+    assert "PROTOCOL_NOT_APPROVED" in codes(issues) and counts_of(summary) == (0, 0, 0)
+    assert codes(vcp.check_protocol(late, purposes_by_key(registry))) == ["APPROVAL_CONTENT_MISMATCH"]
+
+    purpose = next(p for p in ledger["purposes"] if p["purpose_id"] == "engineering_evaluation")
+    purpose["approval"]["decided_on"] = "2025-01-01T00:00:00Z"
+    assert not vcp.approved_by(purpose, "2026-01-01T00:00:00Z")
+    gate = approved_gate()
+    gate["approval"]["decision_ref"] = "decision:someone-else"
+    assert not vcp.gate_approved_by(gate, "2026-01-10T00:00:00Z")
+
+
+@pytest.mark.parametrize("extra", ["new_pending_question", "controller_and_legal_basis"], ids=["added", "duplicate"])
+def test_release_needs_every_gate_row_decided(registry, protocol, extra):
+    # Codex review of #12: a pending row added after the required ones, then rebound, still released the cohort.
+    fixture = valid_lineage()
+    manifest = dict(copy.deepcopy(fixture["manifest"]), synthetic=False)
+    gate = approved_gate()
+    gate["decisions"].append(dict(gate["decisions"][0], decision_key=extra, status="PENDING_OWNER_DECISION", decision_ref=None))
+    bind(gate)
+    issues, summary = check_fixture_manifest(fixture, approved_protocol(protocol), manifest, human_release=True,
+                                             fixture_mode=False, registry=approve_in(registry, "engineering_evaluation"),
+                                             sources=cleared_sources("engineering_testing"), notices=active_pilot_notices(),
+                                             publish_at=CUTOFF, gate=gate)
+    assert "PILOT_GATE_NOT_APPROVED" in codes(issues) and counts_of(summary) == (0, 0, 0)
+
+
+def test_source_reviews_record_attribution_and_releases_carry_it(registry, protocol):
+    # Codex review of #12: the closed source contract had nowhere to record attribution such as CC BY.
+    fixture = valid_lineage()
+    manifest = dict(copy.deepcopy(fixture["manifest"]), synthetic=False)
+    ledger = approve_in(registry, "engineering_evaluation")
+    sources = cleared_sources("engineering_testing")
+    owned = sources["owned_pilot_collection_v1"]
+    owned["review"]["attribution"] = {"required": True, "wording": "Handwriting pilot v1, CC BY 4.0", "delivery": None}
+    bind_review(owned)
+    register = {"sources": list(sources.values())}
+    assert codes(vcp.check_source_rights(register)) == ["ATTRIBUTION_INCONSISTENT"]
+    assert codes(vcp.source_clearance_issues(protocol, manifest["release_purpose"], sources, CUTOFF)) == ["SOURCE_NOT_CLEARED"]
+    owned["review"]["attribution"]["delivery"] = "Credit line in every published statistic and export"
+    bind_review(owned)
+    assert vcp.check_source_rights(register) == []
+    issues, summary = check_fixture_manifest(fixture, approved_protocol(protocol), manifest, human_release=True,
+                                             fixture_mode=False, registry=ledger, sources=sources,
+                                             notices=active_pilot_notices(), publish_at=CUTOFF, gate=approved_gate())
+    assert issues == [] and summary.attribution == owned["review"]["attribution"]
+    schema = vcp.SchemaSet()
+    del owned["review"]["attribution"]
+    assert "SCHEMA" in codes(schema.validate({"contract_version": "source-rights/v1", "sources": list(sources.values())},
+                                             "source-rights.schema.json"))
+
+
 def test_collection_summary_counts_writers_not_pages(protocol):
     fixture = vcp.load_json(vcp.CONSENT_DIR / "fixtures" / "collection" / "valid_pilot_lineage.json")
     issues, summary = check_fixture_manifest(fixture, protocol)
@@ -762,7 +830,9 @@ def test_collection_summary_counts_writers_not_pages(protocol):
     assert (summary.writers, summary.specimens, summary.captures) == (3, 6, 7)
     # Copied and free writing, and each language, stay separate cohorts.
     assert set(summary.by_task) == {"copy_sv", "free_sv", "copy_en", "free_en"}
-    assert summary.by_task["copy_sv"] == {"writers": 1, "specimens": 2}
+    assert summary.by_task["copy_sv"] == {"writers": 1, "specimens": 2, "captures": 3}
+    # Codex review of #12: captures, repeats included, stay in their page's task cohort too.
+    assert sum(cohort["captures"] for cohort in summary.by_task.values()) == summary.captures
 
 
 # ---------------------------------------------------------------- evaluation
@@ -1003,9 +1073,13 @@ def test_approved_purposes_need_every_related_gate_decided(registry, retention_i
     assert vcp.check_purposes(ledger, retention_ids, vcp.known_gates()) == []
     purpose = next(p for p in ledger["purposes"] if p["purpose_id"] == "third_party_ai_processing")
     purpose["approval"]["gate_decisions"] = purpose["approval"]["gate_decisions"][1:]
+    # The approval record is bound too: editing it afterwards is itself a mismatch.
+    assert "APPROVAL_CONTENT_MISMATCH" in codes(vcp.check_purposes(ledger, retention_ids, vcp.known_gates()))
+    bind(purpose)
     found = vcp.check_purposes(ledger, retention_ids, vcp.known_gates())
     assert [(i.code, i.message.split()[0]) for i in found] == [("GATE_NOT_APPROVED", purpose["related_gates"][0])]
     del purpose["approval"]["gate_decisions"]
+    bind(purpose)
     assert len(vcp.check_purposes(ledger, retention_ids, vcp.known_gates())) == len(purpose["related_gates"])
 
 
@@ -1289,7 +1363,8 @@ def test_code_data_and_weight_rights_are_distinct():
     source["allowed_uses"]["benchmark_statistics"] = "CLEARED"
     source["review_status"] = "REVIEWED"
     source["review"] = {"decision_ref": "decision:nist-review", "reviewer_role": "data owner",
-                        "reviewed_on": "2026-10-01T00:00:00Z", "expires_on": None, "archive_sha256": "0" * 64}
+                        "reviewed_on": "2026-10-01T00:00:00Z", "expires_on": None, "archive_sha256": "0" * 64,
+                        "attribution": NO_ATTRIBUTION}
     bind_review(source)
     assert codes(vcp.check_source_rights(nist)) == ["USE_CLEARED_WITHOUT_DATA_RIGHTS"]
 
