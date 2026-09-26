@@ -1,22 +1,26 @@
 #!/usr/bin/env python3
-"""Verify that selected project and build dependencies are reviewed before installation."""
+"""Verify that selected project, build and locked dependencies form a closed reviewed graph."""
 
 from __future__ import annotations
 
 import argparse
+import email.parser
 import re
+import zipfile
+from dataclasses import dataclass
 from pathlib import Path
 
 from packaging.markers import default_environment
 from packaging.requirements import InvalidRequirement, Requirement
-from packaging.version import Version
+from packaging.utils import InvalidWheelFilename, parse_wheel_filename
+from packaging.version import InvalidVersion, Version
 
 try:
     import tomllib
 except ModuleNotFoundError:  # Python 3.10
     import tomli as tomllib
 
-from verify_ci_lock import read_manifest
+from verify_ci_lock import read_lock, read_lock_target, read_manifest, running_target
 
 # The explicitly supported build configuration. Each backend maps to the
 # distribution that must provide it through an exact reviewed build requirement.
@@ -215,6 +219,163 @@ def validate(pyproject: Path, manifest: Path, extras: list[str]) -> list[str]:
     return errors
 
 
+def active_root_names(data: dict, extras: list[str]) -> set[str]:
+    """Names activated by the selected pyproject surfaces (rejected forms excluded)."""
+    roots: set[str] = set()
+    for raw, _source, marker_extras in dependency_records(data, extras):
+        try:
+            requirement = Requirement(raw)
+        except InvalidRequirement:
+            continue
+        if requirement.url is None and not requirement.extras and marker_matches(requirement, marker_extras):
+            roots.add(normalize(requirement.name))
+    return roots
+
+
+@dataclass(frozen=True)
+class LockedWheel:
+    filename: str
+    name: str
+    version: str
+    requires: tuple[str, ...]
+
+
+def read_wheel_metadata(path: Path):
+    """Read the single top-level .dist-info/METADATA without installing or executing anything."""
+    with zipfile.ZipFile(path) as archive:
+        candidates = [name for name in archive.namelist() if re.fullmatch(r"[^/]+\.dist-info/METADATA", name)]
+        if len(candidates) != 1:
+            raise ValueError(f"expected exactly one top-level .dist-info/METADATA, found {len(candidates)}")
+        return email.parser.BytesHeaderParser().parsebytes(archive.read(candidates[0]))
+
+
+def read_wheelhouse(wheelhouse: Path) -> tuple[dict[str, LockedWheel | None], list[str]]:
+    """Map each distribution to its single readable wheel, or None when unusable (already reported)."""
+    if not wheelhouse.is_dir():
+        return {}, [f"Wheelhouse not found: {wheelhouse}"]
+
+    found: dict[str, list[LockedWheel | None]] = {}
+    errors: list[str] = []
+    for path in sorted(wheelhouse.iterdir()):
+        if not path.is_file() or path.suffix != ".whl":
+            errors.append(f"Unexpected non-wheel artifact in wheelhouse: {path.name}")
+            continue
+        try:
+            raw_name, version, _build, _tags = parse_wheel_filename(path.name)
+        except InvalidWheelFilename as exc:
+            errors.append(f"Invalid wheel filename {path.name}: {exc}")
+            continue
+        name = normalize(raw_name)
+        entries = found.setdefault(name, [])
+        try:
+            metadata = read_wheel_metadata(path)
+            metadata_version = Version(metadata.get("Version", ""))
+        except (InvalidVersion, ValueError, zipfile.BadZipFile) as exc:
+            errors.append(f"Unreadable wheel metadata in {path.name}: {exc}")
+            entries.append(None)
+            continue
+        if normalize(metadata.get("Name", "")) != name or metadata_version != version:
+            errors.append(
+                f"Wheel METADATA identity {metadata.get('Name')}=={metadata.get('Version')} "
+                f"does not match its filename {path.name}"
+            )
+            entries.append(None)
+            continue
+        entries.append(LockedWheel(path.name, name, str(version), tuple(metadata.get_all("Requires-Dist") or ())))
+
+    wheels: dict[str, LockedWheel | None] = {}
+    for name, entries in sorted(found.items()):
+        if len(entries) > 1:
+            # Never pick one by discovery order: the other could be what pip installs.
+            filenames = ", ".join(sorted(entry.filename for entry in entries if entry is not None))
+            errors.append(f"Duplicate wheels for {name}: {filenames or 'unreadable artifacts'}")
+            wheels[name] = None
+        else:
+            wheels[name] = entries[0]
+    return wheels, errors
+
+
+def locked_graph_errors(
+    pyproject: Path, lock: Path, wheelhouse: Path, extras: list[str], roots: list[str]
+) -> tuple[list[str], int]:
+    """Walk every active Requires-Dist edge from the reviewed roots through the locked wheels.
+
+    Returns policy errors and the number of active edges inspected. Markers are
+    evaluated for the running interpreter, which must match the lock's target.
+    """
+    target = read_lock_target(lock)
+    running = running_target()
+    if target is None:
+        return [f"{lock} does not declare the interpreter/platform it was generated for"], 0
+    if target != running:
+        return [
+            f"{lock} targets Python {target[0]} {target[1]} {target[2]} but the verifier runs on "
+            f"Python {running[0]} {running[1]} {running[2]}; markers would be evaluated for the wrong environment"
+        ], 0
+
+    locked = read_lock(lock)
+    wheels, errors = read_wheelhouse(wheelhouse)
+    for name, version in sorted(locked.items()):
+        wheel = wheels.get(name)
+        if name not in wheels:
+            errors.append(f"No authenticated wheel for locked {name}=={version} in {wheelhouse}")
+        elif wheel is not None and Version(wheel.version) != Version(version):
+            errors.append(f"Wheel {wheel.filename} does not match locked {name}=={version}")
+    for name in sorted(set(wheels) - set(locked)):
+        wheel = wheels[name]
+        errors.append(f"Unexpected wheel outside the reviewed lock: {wheel.filename if wheel else name}")
+
+    start = sorted(active_root_names(load_pyproject(pyproject), extras) | {normalize(root) for root in roots})
+    for name in start:
+        if name not in locked:
+            errors.append(f"Reviewed root {name} is missing from the lock")
+
+    environment = default_environment()
+    environment["extra"] = ""  # upstream extras are never activated by the reviewed graph
+    reached: set[str] = set()
+    edges = 0
+    pending = [name for name in start if name in locked]
+    while pending:
+        name = pending.pop()
+        if name in reached:
+            continue
+        reached.add(name)
+        wheel = wheels.get(name)
+        if wheel is None:
+            continue
+        for raw in wheel.requires:
+            label = f"{wheel.filename} Requires-Dist {raw!r}"
+            try:
+                requirement = Requirement(raw)
+            except InvalidRequirement as exc:
+                errors.append(f"Invalid requirement in locked metadata: {label} ({exc})")
+                continue
+            if requirement.marker is not None and not requirement.marker.evaluate(environment=environment):
+                continue
+            edges += 1
+            if requirement.url is not None:
+                errors.append(f"Direct URL dependency is prohibited in locked metadata: {label}")
+                continue
+            if requirement.extras:
+                errors.append(
+                    f"Dependency extras are prohibited until their transitive graph is reviewed: {label}"
+                )
+                continue
+            child = normalize(requirement.name)
+            if child not in locked:
+                errors.append(f"Locked dependency edge leaves the reviewed lock: {label}")
+                continue
+            child_version = Version(locked[child])
+            if requirement.specifier and not requirement.specifier.contains(child_version, prereleases=True):
+                errors.append(f"Locked {child}=={child_version} does not satisfy {label}")
+                continue
+            pending.append(child)
+
+    for name in sorted(set(locked) - reached):
+        errors.append(f"Locked distribution is not reachable from a reviewed root: {name}=={locked[name]}")
+    return errors, edges
+
+
 def is_exact_pin(requirement: Requirement, version: Version) -> bool:
     specifiers = list(requirement.specifier)
     if len(specifiers) != 1:
@@ -228,9 +389,21 @@ def main() -> int:
     parser.add_argument("--pyproject", type=Path, default=Path("pyproject.toml"))
     parser.add_argument("--manifest", type=Path, required=True)
     parser.add_argument("--extra", action="append", default=[])
+    parser.add_argument("--lock", type=Path, help="hash lock whose active Requires-Dist graph must be closed")
+    parser.add_argument("--wheelhouse", type=Path, help="directory of the lock's authenticated wheels")
+    parser.add_argument(
+        "--root", action="append", default=[], help="additional reviewed root outside pyproject, e.g. pip"
+    )
     args = parser.parse_args()
+    if (args.lock is None) != (args.wheelhouse is None):
+        parser.error("--lock and --wheelhouse must be given together")
 
     errors = validate(args.pyproject, args.manifest, args.extra)
+    if args.lock is not None and not errors:
+        graph_errors, edges = locked_graph_errors(args.pyproject, args.lock, args.wheelhouse, args.extra, args.root)
+        errors += graph_errors
+        if not graph_errors:
+            print(f"Closed locked graph: {len(read_lock(args.lock))} distributions, {edges} active edges")
     for error in errors:
         print(error)
     return 1 if errors else 0

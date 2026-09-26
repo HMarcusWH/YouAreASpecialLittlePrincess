@@ -1,5 +1,6 @@
 """Regression tests for the T00 CI lock and dependency policy."""
 
+import zipfile
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -395,3 +396,205 @@ def test_malformed_requirement_is_reported_not_raised(tmp_path):
 
     errors = verify_project_dependency_policy.validate(pyproject, manifest, ["dev"])
     assert len(errors) == 1 and errors[0].startswith("Invalid requirement in project.dependencies")
+
+
+def write_wheel(wheelhouse, name: str, version: str, requires=(), *, filename=None, metadata_name=None, extra_dist_info=False):
+    """Write a metadata-only wheel; the verifier never installs or imports it."""
+    wheelhouse.mkdir(exist_ok=True)
+    stem = name.replace("-", "_")
+    path = wheelhouse / (filename or f"{stem}-{version}-py3-none-any.whl")
+    metadata = ["Metadata-Version: 2.1", f"Name: {metadata_name or name}", f"Version: {version}"]
+    metadata += [f"Requires-Dist: {requirement}" for requirement in requires]
+    with zipfile.ZipFile(path, "w") as archive:
+        archive.writestr(f"{stem}-{version}.dist-info/METADATA", "\n".join(metadata) + "\n\nDescription body\n")
+        if extra_dist_info:
+            archive.writestr(f"{stem}_shadow-{version}.dist-info/METADATA", "Name: shadow\nVersion: 9\n")
+    return path
+
+
+def write_graph_fixture(tmp_path, wheels: dict, dependencies=("parentpkg>=1",), target=None):
+    """Create pyproject, manifest, target-stamped lock and wheelhouse for a locked graph."""
+    toolchain = {"setuptools": ("84.0.0", ()), "wheel": ("0.48.0", ())}
+    wheels = {**toolchain, **wheels}
+    manifest = "".join(f"{name}=={version}\n" for name, (version, _requires) in wheels.items())
+    body = MINIMAL_PROJECT.replace("dependencies = []", f"dependencies = {list(dependencies)!r}".replace("'", '"'))
+    pyproject, manifest_path = write_policy_fixture(tmp_path, body, manifest)
+    python, system, machine = target or verify_ci_lock.running_target()
+    lock = tmp_path / "ci.lock"
+    lock.write_text(
+        f"# Python {python}; {system} {machine}.\n"
+        + "".join(f"{name}=={version} --hash=sha256:{'0' * 64}\n" for name, (version, _r) in wheels.items()),
+        encoding="utf-8",
+    )
+    wheelhouse = tmp_path / "wheelhouse"
+    for name, (version, requires) in wheels.items():
+        write_wheel(wheelhouse, name, version, requires)
+    return pyproject, manifest_path, lock, wheelhouse
+
+
+def graph_errors(pyproject, lock, wheelhouse, roots=()):
+    errors, _edges = verify_project_dependency_policy.locked_graph_errors(pyproject, lock, wheelhouse, ["dev"], list(roots))
+    return errors
+
+
+def test_closed_locked_graph_passes(tmp_path):
+    pyproject, manifest, lock, wheelhouse = write_graph_fixture(
+        tmp_path,
+        {
+            "parentpkg": ("1.0", ["Child_Pkg>=1,<2"]),
+            "child-pkg": ("1.5", ["wheel==0.48.0"]),
+        },
+    )
+
+    assert verify_project_dependency_policy.validate(pyproject, manifest, ["dev"]) == []
+    errors, edges = verify_project_dependency_policy.locked_graph_errors(pyproject, lock, wheelhouse, ["dev"], [])
+    assert errors == []
+    assert edges == 2
+
+
+def test_locked_requires_dist_extra_is_rejected(tmp_path):
+    # PR #10 post-merge finding 1: child[feature] activates dependencies that
+    # neither the lock, the exact-environment check nor pip check sees.
+    pyproject, _manifest, lock, wheelhouse = write_graph_fixture(
+        tmp_path,
+        {
+            "parentpkg": ("1.0", ["childpkg[feature]>=1"]),
+            "childpkg": ("1.0", ['grandchild>=1; extra == "feature"']),
+        },
+    )
+
+    errors = graph_errors(pyproject, lock, wheelhouse)
+    assert errors[0].startswith("Dependency extras are prohibited until their transitive graph is reviewed")
+    assert "childpkg[feature]>=1" in errors[0]
+    assert errors[1:] == ["Locked distribution is not reachable from a reviewed root: childpkg==1.0"]
+
+
+def test_locked_requires_dist_direct_url_is_rejected(tmp_path):
+    pyproject, _manifest, lock, wheelhouse = write_graph_fixture(
+        tmp_path,
+        {
+            "parentpkg": ("1.0", ["childpkg @ https://example.invalid/childpkg-1.0-py3-none-any.whl"]),
+            "childpkg": ("1.0", []),
+        },
+    )
+
+    errors = graph_errors(pyproject, lock, wheelhouse)
+    assert errors[0].startswith("Direct URL dependency is prohibited in locked metadata")
+
+
+def test_locked_requires_dist_outside_lock_is_rejected(tmp_path):
+    pyproject, _manifest, lock, wheelhouse = write_graph_fixture(tmp_path, {"parentpkg": ("1.0", ["unlocked-pkg"])})
+
+    assert graph_errors(pyproject, lock, wheelhouse) == [
+        "Locked dependency edge leaves the reviewed lock: parentpkg-1.0-py3-none-any.whl Requires-Dist 'unlocked-pkg'"
+    ]
+
+
+def test_locked_requires_dist_version_must_be_satisfied(tmp_path):
+    pyproject, _manifest, lock, wheelhouse = write_graph_fixture(
+        tmp_path, {"parentpkg": ("1.0", ["childpkg>=2"]), "childpkg": ("1.0", [])}
+    )
+
+    errors = graph_errors(pyproject, lock, wheelhouse)
+    assert errors[0] == (
+        "Locked childpkg==1.0 does not satisfy parentpkg-1.0-py3-none-any.whl Requires-Dist 'childpkg>=2'"
+    )
+
+
+def test_inactive_locked_markers_are_not_edges(tmp_path):
+    # Extras-only and other-interpreter edges are inactive for this lock; even
+    # URL/extra forms there cannot be activated because extras are never requested.
+    pyproject, _manifest, lock, wheelhouse = write_graph_fixture(
+        tmp_path,
+        {
+            "parentpkg": (
+                "1.0",
+                [
+                    'pytest[testing]>=9; extra == "dev"',
+                    'docs-helper @ https://example.invalid/d.whl ; extra == "docs"',
+                    'legacy-backport>=1; python_version < "3.0"',
+                ],
+            ),
+        },
+    )
+
+    errors, edges = verify_project_dependency_policy.locked_graph_errors(pyproject, lock, wheelhouse, ["dev"], [])
+    assert errors == []
+    assert edges == 0
+
+
+def test_unreachable_locked_distribution_is_rejected(tmp_path):
+    pyproject, _manifest, lock, wheelhouse = write_graph_fixture(
+        tmp_path, {"parentpkg": ("1.0", []), "stale-pkg": ("3.0", [])}
+    )
+
+    assert graph_errors(pyproject, lock, wheelhouse) == [
+        "Locked distribution is not reachable from a reviewed root: stale-pkg==3.0"
+    ]
+    assert graph_errors(pyproject, lock, wheelhouse, roots=["Stale_Pkg"]) == []
+
+
+def test_duplicate_wheels_for_one_distribution_are_rejected(tmp_path):
+    pyproject, _manifest, lock, wheelhouse = write_graph_fixture(tmp_path, {"parentpkg": ("1.0", [])})
+    write_wheel(wheelhouse, "parentpkg", "1.0", ["unreviewed"], filename="ParentPkg-1.0-py2.py3-none-any.whl",
+                metadata_name="ParentPkg")
+
+    errors = graph_errors(pyproject, lock, wheelhouse)
+    assert errors == [
+        "Duplicate wheels for parentpkg: ParentPkg-1.0-py2.py3-none-any.whl, parentpkg-1.0-py3-none-any.whl"
+    ]
+
+
+def test_wheel_with_duplicate_dist_info_metadata_is_rejected(tmp_path):
+    pyproject, _manifest, lock, wheelhouse = write_graph_fixture(tmp_path, {"parentpkg": ("1.0", [])})
+    write_wheel(wheelhouse, "parentpkg", "1.0", [], extra_dist_info=True)
+
+    errors = graph_errors(pyproject, lock, wheelhouse)
+    assert len(errors) == 1
+    assert errors[0].startswith("Unreadable wheel metadata in parentpkg-1.0-py3-none-any.whl: expected exactly one")
+
+
+def test_wheel_metadata_identity_must_match_filename(tmp_path):
+    pyproject, _manifest, lock, wheelhouse = write_graph_fixture(tmp_path, {"parentpkg": ("1.0", [])})
+    write_wheel(wheelhouse, "parentpkg", "1.0", [], metadata_name="impostor")
+
+    errors = graph_errors(pyproject, lock, wheelhouse)
+    assert errors[0] == (
+        "Wheel METADATA identity impostor==1.0 does not match its filename parentpkg-1.0-py3-none-any.whl"
+    )
+
+
+def test_wheelhouse_must_equal_lock(tmp_path):
+    pyproject, _manifest, lock, wheelhouse = write_graph_fixture(tmp_path, {"parentpkg": ("1.0", [])})
+    write_wheel(wheelhouse, "extra-pkg", "2.0", [])
+    (wheelhouse / "wheel-0.48.0-py3-none-any.whl").unlink()
+    (wheelhouse / "sneaky-1.0.tar.gz").write_bytes(b"")
+
+    errors = graph_errors(pyproject, lock, wheelhouse)
+    assert "Unexpected non-wheel artifact in wheelhouse: sneaky-1.0.tar.gz" in errors
+    assert any(error.startswith("No authenticated wheel for locked wheel==0.48.0") for error in errors)
+    assert "Unexpected wheel outside the reviewed lock: extra_pkg-2.0-py3-none-any.whl" in errors
+
+
+def test_lock_target_must_match_running_interpreter(tmp_path):
+    pyproject, _manifest, lock, wheelhouse = write_graph_fixture(
+        tmp_path, {"parentpkg": ("1.0", [])}, target=("2.7", "Plan9", "mips")
+    )
+
+    errors = graph_errors(pyproject, lock, wheelhouse)
+    assert len(errors) == 1 and "markers would be evaluated for the wrong environment" in errors[0]
+
+
+def test_lock_without_target_header_is_rejected(tmp_path):
+    pyproject, _manifest, lock, wheelhouse = write_graph_fixture(tmp_path, {"parentpkg": ("1.0", [])})
+    lock.write_text("\n".join(lock.read_text(encoding="utf-8").splitlines()[1:]) + "\n", encoding="utf-8")
+
+    errors = graph_errors(pyproject, lock, wheelhouse)
+    assert errors == [f"{lock} does not declare the interpreter/platform it was generated for"]
+
+
+@pytest.mark.parametrize("version", ["310", "311", "312"])
+def test_repository_locks_declare_their_target(version):
+    root = Path(__file__).resolve().parents[1]
+    python, system, machine = verify_ci_lock.read_lock_target(root / "requirements" / f"ci-py{version}.lock")
+    assert (python.replace(".", ""), system, machine) == (version, "Linux", "x86_64")
