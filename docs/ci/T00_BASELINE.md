@@ -1,6 +1,6 @@
 # T00 — Green baseline evidence
 
-Status: `IN_PROGRESS`
+Status: `DONE`
 
 ## Broken baseline
 
@@ -39,6 +39,21 @@ The repair did not weaken Ruff. It normalized the T26 support code, removed modu
 
 Node selection source checked on 2026-09-26: https://nodejs.org/en/download/archive/v24.21.0
 
+## Policy-locked baseline
+
+Commit `11a6657c1b1360ca41936c00c576698d06596a95` passed the complete pinned/constraint-driven matrix in GitHub Actions run `36205683287`:
+
+- `pip check`: PASS on Python 3.10 / 3.11 / 3.12
+- resolved-dependency logging: PASS
+- feature and Premium compiler freshness: PASS
+- all graphology validators: PASS
+- `compileall`: PASS
+- Ruff: PASS
+- pytest: 149 passed on each interpreter
+- graphology research import/regression checks: PASS
+- wheel build: PASS
+- installed-wheel smoke: PASS
+
 ## Closeout rule
 
-T00 is not DONE merely because this document exists. After the dependency/platform policy is committed, the complete CI matrix must pass again. Only then may `docs/roadmap/tasks.json` promote T00 to `DONE`. The closing status commit must itself pass the same matrix; its exact run is recorded on the pull request as final evidence.
+T00 is promoted to `DONE` by the closing status commit that contains this document and the task-state update. That exact closing commit must pass the same matrix before the PR is considered merge-ready. Its final GitHub Actions run is recorded on the pull request conversation as the self-referential evidence record.
