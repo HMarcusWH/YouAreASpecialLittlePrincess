@@ -185,13 +185,13 @@ def test_candidate_definition_generator_link_is_cross_checked(tmp_path):
     assert any("candidate definition generator mismatch" in e for e in selector.validate(repo))
 
 
-def test_stage_contract_cannot_self_promote(tmp_path):
+def test_stage_contract_cannot_regress_to_pending_review(tmp_path):
     repo=copy_validation_repo(tmp_path)
     path=repo/"schema/graphology_interpretation/v1/stage_contract.json"
     def mutate(d):
-        d["current_stage"]="REVIEWED_READY_FOR_T15"
+        d["current_stage"]="POPULATED_PENDING_REVIEW"
     rewrite(path,mutate)
-    assert any("current stage must remain pending review" in e for e in integrity.validate(repo))
+    assert any("current stage must remain reviewed ready for T15" in e for e in integrity.validate(repo))
 
 def test_manifest_lineage_drift_is_rejected(tmp_path):
     repo=copy_validation_repo(tmp_path)

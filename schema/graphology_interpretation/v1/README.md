@@ -4,9 +4,10 @@ This directory is the modular source database for T26. It is grounded in the imm
 
 ## Current state
 
-- Database: **POPULATED_PENDING_REVIEW**
-- T26: **IMPLEMENTED_PENDING_REVIEW**
+- Database: **REVIEWED_READY_FOR_T15**
+- T26: **DONE**
 - Runtime activation: **false**
+- Handoff: **T15 is the downstream consumer; execute T00 → T01 → T05 → T09 prerequisites first**
 - Traditional runtime-eligible associations: **0**
 
 A populated database is not an activated inference system.

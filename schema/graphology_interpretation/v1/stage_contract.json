@@ -1,6 +1,6 @@
 {
   "version": "graphology-database-stage-contract/1",
-  "current_stage": "POPULATED_PENDING_REVIEW",
+  "current_stage": "REVIEWED_READY_FOR_T15",
   "stages": {
     "POPULATED_PENDING_REVIEW": {
       "manifest_status": "POPULATED_PENDING_REVIEW",
