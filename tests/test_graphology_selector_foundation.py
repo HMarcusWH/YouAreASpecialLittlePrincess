@@ -4,6 +4,8 @@ from pathlib import Path
 import importlib.util
 import json
 
+from graphology_db_common import DOMAINS
+
 REPO = Path(__file__).resolve().parents[1]
 TOOLS = REPO / "tools"
 spec = importlib.util.spec_from_file_location("sel", TOOLS / "validate_graphology_selector_foundation.py")
@@ -17,7 +19,7 @@ def load(p):
 
 
 def concat(rel):
-    return [x for n in m.DOMAINS for x in load(f"{rel}/{n}.json")]
+    return [x for n in DOMAINS for x in load(f"{rel}/{n}.json")]
 
 
 def test_validator_passes():

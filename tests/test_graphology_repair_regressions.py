@@ -83,7 +83,7 @@ def test_missing_trace_record_is_rejected(tmp_path):
     repo = copy_validation_repo(tmp_path)
     path = repo / "schema/graphology_interpretation/v1/traceability/research_to_production.json"
     rewrite(path, lambda d: d["records"].pop())
-    assert any("foundation trace missing" in e for e in integrity.validate(repo))
+    assert any("foundation trace mapping missing" in e for e in integrity.validate(repo))
 
 
 def test_overstrong_cross_school_relation_is_rejected(tmp_path):
