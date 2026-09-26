@@ -1,0 +1,61 @@
+{
+  "contract_version": "1.0.0",
+  "source_report_id": "report_001",
+  "source_revision": 1,
+  "source_digest": "d44b67af2c7403638038d0aedb274b491ac33f001d002f883bbb82fd3afe54d5",
+  "projection": "GODMODE",
+  "generated_at": "2026-09-26T20:02:00Z",
+  "locale": "en-US",
+  "facts": [
+    {
+      "fact_id": "fact_img_width",
+      "feature_id": "IMG_WIDTH_PX",
+      "availability": "READY",
+      "value": 120.0,
+      "unit": "px",
+      "evidence_class": "MEASURED",
+      "method_id": "input_dimensions_v1",
+      "method_version": "1.0.0",
+      "source_region_ids": [
+        "page_0"
+      ],
+      "quality": {
+        "state": "OK",
+        "missing_reason": null,
+        "n_observations": 1,
+        "confidence": 1.0,
+        "confidence_kind": "EXACT_CONDITIONAL"
+      },
+      "formatting_key": "measurement.px",
+      "precision": 0
+    }
+  ],
+  "sections": [
+    {
+      "section_id": "section_dimensions",
+      "template": "METRIC_GRID",
+      "availability": "READY",
+      "fact_ids": [
+        "fact_img_width"
+      ],
+      "content_ids": [],
+      "premium_section_id": null
+    }
+  ],
+  "notices": [
+    {
+      "notice_id": "measured_notice",
+      "class": "MEASURED",
+      "localization_key": "notice.measured"
+    }
+  ],
+  "actions": [
+    {
+      "action_id": "export",
+      "kind": "EXPORT",
+      "enabled": true,
+      "reason": null
+    }
+  ],
+  "authorized_asset_ids": []
+}

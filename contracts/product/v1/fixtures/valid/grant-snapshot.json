@@ -1,0 +1,12 @@
+{
+  "contract_version": "1.0.0",
+  "grant_id": "grant_001",
+  "owner_id": "owner_001",
+  "purpose_id": "service_processing",
+  "purpose_version": 1,
+  "status": "GRANTED",
+  "scope": "analysis:analysis_001",
+  "recorded_at": "2026-09-26T19:59:00Z",
+  "effective_at": "2026-09-26T19:59:00Z",
+  "policy_sha256": "3333333333333333333333333333333333333333333333333333333333333333"
+}

@@ -1,0 +1,422 @@
+{
+  "contract_version": "1.0.0",
+  "methods": [
+    {
+      "method_id": "accepted_box_gap_cv_v1",
+      "method_version": "1.0.0",
+      "feature_ids": [
+        "LINE_SPACING_CV",
+        "WORD_SPACING_CV"
+      ],
+      "input_modes": [
+        "STATIC_IMAGE"
+      ],
+      "requires_learned_inference": false,
+      "requires_external_provider": false,
+      "dependencies": [],
+      "runtime_component": "free-core",
+      "license_review_id": null,
+      "validation_release": null,
+      "supported_cohorts": []
+    },
+    {
+      "method_id": "accepted_box_gap_px_v1",
+      "method_version": "1.0.0",
+      "feature_ids": [
+        "LINE_SPACING_PX",
+        "WORD_SPACING_PX"
+      ],
+      "input_modes": [
+        "STATIC_IMAGE"
+      ],
+      "requires_learned_inference": false,
+      "requires_external_provider": false,
+      "dependencies": [],
+      "runtime_component": "free-core",
+      "license_review_id": null,
+      "validation_release": null,
+      "supported_cohorts": []
+    },
+    {
+      "method_id": "accepted_box_gap_rel_v1",
+      "method_version": "1.0.0",
+      "feature_ids": [
+        "LINE_SPACING_REL",
+        "WORD_SPACING_REL"
+      ],
+      "input_modes": [
+        "STATIC_IMAGE"
+      ],
+      "requires_learned_inference": false,
+      "requires_external_provider": false,
+      "dependencies": [],
+      "runtime_component": "free-core",
+      "license_review_id": null,
+      "validation_release": null,
+      "supported_cohorts": []
+    },
+    {
+      "method_id": "accepted_segmentation_census_v1",
+      "method_version": "1.0.0",
+      "feature_ids": [
+        "PAGE_LINE_COUNT",
+        "PAGE_WORD_COUNT",
+        "PAGE_COMPONENT_COUNT",
+        "PAGE_INK_AREA_RATIO",
+        "PAGE_TEXT_AREA_RATIO"
+      ],
+      "input_modes": [
+        "STATIC_IMAGE"
+      ],
+      "requires_learned_inference": false,
+      "requires_external_provider": false,
+      "dependencies": [],
+      "runtime_component": "free-core",
+      "license_review_id": null,
+      "validation_release": null,
+      "supported_cohorts": []
+    },
+    {
+      "method_id": "baseline_inverse_waviness_index_v1",
+      "method_version": "1.0.0",
+      "feature_ids": [
+        "BASELINE_STABILITY"
+      ],
+      "input_modes": [
+        "STATIC_IMAGE"
+      ],
+      "requires_learned_inference": false,
+      "requires_external_provider": false,
+      "dependencies": [],
+      "runtime_component": "free-core",
+      "license_review_id": null,
+      "validation_release": null,
+      "supported_cohorts": []
+    },
+    {
+      "method_id": "baseline_quadratic_sag_xheight_v1",
+      "method_version": "1.0.0",
+      "feature_ids": [
+        "BASELINE_CURVATURE"
+      ],
+      "input_modes": [
+        "STATIC_IMAGE"
+      ],
+      "requires_learned_inference": false,
+      "requires_external_provider": false,
+      "dependencies": [],
+      "runtime_component": "free-core",
+      "license_review_id": null,
+      "validation_release": null,
+      "supported_cohorts": []
+    },
+    {
+      "method_id": "baseline_residual_xheight_v1",
+      "method_version": "1.0.0",
+      "feature_ids": [
+        "BASELINE_WAVINESS"
+      ],
+      "input_modes": [
+        "STATIC_IMAGE"
+      ],
+      "requires_learned_inference": false,
+      "requires_external_provider": false,
+      "dependencies": [],
+      "runtime_component": "free-core",
+      "license_review_id": null,
+      "validation_release": null,
+      "supported_cohorts": []
+    },
+    {
+      "method_id": "bottom_quantile_angle_v1",
+      "method_version": "1.0.0",
+      "feature_ids": [
+        "BASELINE_ANGLE_MEAN",
+        "BASELINE_ANGLE_MEDIAN",
+        "BASELINE_ANGLE_STD",
+        "BASELINE_ABS_SLOPE"
+      ],
+      "input_modes": [
+        "STATIC_IMAGE"
+      ],
+      "requires_learned_inference": false,
+      "requires_external_provider": false,
+      "dependencies": [],
+      "runtime_component": "free-core",
+      "license_review_id": null,
+      "validation_release": null,
+      "supported_cohorts": []
+    },
+    {
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "feature_ids": [
+        "GLYPH_HEIGHT_MEAN",
+        "GLYPH_HEIGHT_CV",
+        "GLYPH_WIDTH_MEAN",
+        "GLYPH_WIDTH_CV",
+        "GLYPH_ASPECT_RATIO_MEAN",
+        "GLYPH_ASPECT_RATIO_CV"
+      ],
+      "input_modes": [
+        "STATIC_IMAGE"
+      ],
+      "requires_learned_inference": false,
+      "requires_external_provider": false,
+      "dependencies": [],
+      "runtime_component": "free-core",
+      "license_review_id": null,
+      "validation_release": null,
+      "supported_cohorts": []
+    },
+    {
+      "method_id": "component_height_mode_v1",
+      "method_version": "1.0.0",
+      "feature_ids": [
+        "X_HEIGHT_PX"
+      ],
+      "input_modes": [
+        "STATIC_IMAGE"
+      ],
+      "requires_learned_inference": false,
+      "requires_external_provider": false,
+      "dependencies": [],
+      "runtime_component": "free-core",
+      "license_review_id": null,
+      "validation_release": null,
+      "supported_cohorts": []
+    },
+    {
+      "method_id": "grayscale_darkness_v1",
+      "method_version": "1.0.0",
+      "feature_ids": [
+        "INK_DARKNESS_MEAN",
+        "INK_DARKNESS_STD",
+        "INK_DARKNESS_CV",
+        "INK_SATURATION_FRACTION"
+      ],
+      "input_modes": [
+        "STATIC_IMAGE"
+      ],
+      "requires_learned_inference": false,
+      "requires_external_provider": false,
+      "dependencies": [],
+      "runtime_component": "free-core",
+      "license_review_id": null,
+      "validation_release": null,
+      "supported_cohorts": []
+    },
+    {
+      "method_id": "input_dimensions_v1",
+      "method_version": "1.0.0",
+      "feature_ids": [
+        "IMG_WIDTH_PX",
+        "IMG_HEIGHT_PX",
+        "IMG_MEGAPIXELS",
+        "IMG_ASPECT_RATIO"
+      ],
+      "input_modes": [
+        "STATIC_IMAGE"
+      ],
+      "requires_learned_inference": false,
+      "requires_external_provider": false,
+      "dependencies": [],
+      "runtime_component": "free-core",
+      "license_review_id": null,
+      "validation_release": null,
+      "supported_cohorts": []
+    },
+    {
+      "method_id": "line_edge_population_cv_v1",
+      "method_version": "1.0.0",
+      "feature_ids": [
+        "MARGIN_LEFT_VARIABILITY",
+        "MARGIN_RIGHT_VARIABILITY",
+        "LINE_LENGTH_VARIABILITY"
+      ],
+      "input_modes": [
+        "STATIC_IMAGE"
+      ],
+      "requires_learned_inference": false,
+      "requires_external_provider": false,
+      "dependencies": [],
+      "runtime_component": "free-core",
+      "license_review_id": null,
+      "validation_release": null,
+      "supported_cohorts": []
+    },
+    {
+      "method_id": "line_width_page_ratio_v1",
+      "method_version": "1.0.0",
+      "feature_ids": [
+        "LINE_LENGTH_MEAN_REL"
+      ],
+      "input_modes": [
+        "STATIC_IMAGE"
+      ],
+      "requires_learned_inference": false,
+      "requires_external_provider": false,
+      "dependencies": [],
+      "runtime_component": "free-core",
+      "license_review_id": null,
+      "validation_release": null,
+      "supported_cohorts": []
+    },
+    {
+      "method_id": "margin_balance_index_v1",
+      "method_version": "1.0.0",
+      "feature_ids": [
+        "MARGIN_SYMMETRY"
+      ],
+      "input_modes": [
+        "STATIC_IMAGE"
+      ],
+      "requires_learned_inference": false,
+      "requires_external_provider": false,
+      "dependencies": [],
+      "runtime_component": "free-core",
+      "license_review_id": null,
+      "validation_release": null,
+      "supported_cohorts": []
+    },
+    {
+      "method_id": "medial_axis_diameter_v1",
+      "method_version": "1.0.0",
+      "feature_ids": [
+        "STROKE_WIDTH_MEAN",
+        "STROKE_WIDTH_MEDIAN",
+        "STROKE_WIDTH_STD",
+        "STROKE_WIDTH_CV",
+        "STROKE_UNIFORMITY"
+      ],
+      "input_modes": [
+        "STATIC_IMAGE"
+      ],
+      "requires_learned_inference": false,
+      "requires_external_provider": false,
+      "dependencies": [],
+      "runtime_component": "free-core",
+      "license_review_id": null,
+      "validation_release": null,
+      "supported_cohorts": []
+    },
+    {
+      "method_id": "normalized_edge_vs_vertical_position_v1",
+      "method_version": "1.0.0",
+      "feature_ids": [
+        "LINE_START_DRIFT",
+        "LINE_END_DRIFT"
+      ],
+      "input_modes": [
+        "STATIC_IMAGE"
+      ],
+      "requires_learned_inference": false,
+      "requires_external_provider": false,
+      "dependencies": [],
+      "runtime_component": "free-core",
+      "license_review_id": null,
+      "validation_release": null,
+      "supported_cohorts": []
+    },
+    {
+      "method_id": "oriented_component_axis_v1",
+      "method_version": "1.0.0",
+      "feature_ids": [
+        "SLANT_ANGLE_MEAN",
+        "SLANT_ANGLE_MEDIAN",
+        "SLANT_ANGLE_STD",
+        "SLANT_P05",
+        "SLANT_P95",
+        "SLANT_LEFT_FRACTION",
+        "SLANT_VERTICAL_FRACTION",
+        "SLANT_RIGHT_FRACTION",
+        "SLANT_EXTREME_FRACTION",
+        "SLANT_CONSISTENCY"
+      ],
+      "input_modes": [
+        "STATIC_IMAGE"
+      ],
+      "requires_learned_inference": false,
+      "requires_external_provider": false,
+      "dependencies": [],
+      "runtime_component": "free-core",
+      "license_review_id": null,
+      "validation_release": null,
+      "supported_cohorts": []
+    },
+    {
+      "method_id": "text_bounds_canvas_ratio_v1",
+      "method_version": "1.0.0",
+      "feature_ids": [
+        "TEXT_BLOCK_HORIZONTAL_CENTER",
+        "TEXT_BLOCK_VERTICAL_CENTER",
+        "PAGE_HORIZONTAL_DENSITY",
+        "PAGE_VERTICAL_DENSITY"
+      ],
+      "input_modes": [
+        "STATIC_IMAGE"
+      ],
+      "requires_learned_inference": false,
+      "requires_external_provider": false,
+      "dependencies": [],
+      "runtime_component": "free-core",
+      "license_review_id": null,
+      "validation_release": null,
+      "supported_cohorts": []
+    },
+    {
+      "method_id": "text_bounds_xheight_v1",
+      "method_version": "1.0.0",
+      "feature_ids": [
+        "MARGIN_TOP_REL",
+        "MARGIN_BOTTOM_REL",
+        "MARGIN_LEFT_REL",
+        "MARGIN_RIGHT_REL"
+      ],
+      "input_modes": [
+        "STATIC_IMAGE"
+      ],
+      "requires_learned_inference": false,
+      "requires_external_provider": false,
+      "dependencies": [],
+      "runtime_component": "free-core",
+      "license_review_id": null,
+      "validation_release": null,
+      "supported_cohorts": []
+    },
+    {
+      "method_id": "text_skew_ccw_v1",
+      "method_version": "1.0.0",
+      "feature_ids": [
+        "IMG_ROTATION_DEG"
+      ],
+      "input_modes": [
+        "STATIC_IMAGE"
+      ],
+      "requires_learned_inference": false,
+      "requires_external_provider": false,
+      "dependencies": [],
+      "runtime_component": "free-core",
+      "license_review_id": null,
+      "validation_release": null,
+      "supported_cohorts": []
+    },
+    {
+      "method_id": "sigver_representation_v1",
+      "method_version": "1.0.0",
+      "feature_ids": [
+        "SIG_EMBEDDING"
+      ],
+      "input_modes": [
+        "STATIC_IMAGE"
+      ],
+      "requires_learned_inference": true,
+      "requires_external_provider": false,
+      "dependencies": [],
+      "runtime_component": "signature-extra",
+      "license_review_id": "sigver_bsd3_provenance",
+      "validation_release": null,
+      "supported_cohorts": []
+    }
+  ]
+}

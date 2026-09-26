@@ -1,0 +1,77 @@
+{
+  "contract_version": "1.0.0",
+  "report_id": "report_001",
+  "revision": 1,
+  "kind": "INDIVIDUAL",
+  "created_at": "2026-09-26T20:01:00Z",
+  "locale": "en-US",
+  "analysis": {
+    "contract_version": "1.0.0",
+    "analysis_id": "analysis_001",
+    "run_id": "run_001",
+    "owner_id": "owner_001",
+    "input_asset_id": "asset_001",
+    "input_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+    "processed_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+    "created_at": "2026-09-26T20:00:00Z",
+    "versions": {
+      "feature_schema": "1.0.0-draft",
+      "engine": "0.1.0",
+      "method_manifest": "a4606d9925680ff135c6dd2c332bec51e3a2cf878383275a83fa8ecb0d20c835",
+      "analysis_config": "2222222222222222222222222222222222222222222222222222222222222222",
+      "quality_policy": "quality-policy/1",
+      "normalization": null,
+      "feature_set": null,
+      "benchmark_release": null,
+      "content_schema": "1.0.0",
+      "template": null
+    }
+  },
+  "evidence_bundle_id": "evidence_001",
+  "facts": [
+    {
+      "fact_id": "fact_img_width",
+      "feature_id": "IMG_WIDTH_PX",
+      "availability": "READY",
+      "value": 120.0,
+      "unit": "px",
+      "evidence_class": "MEASURED",
+      "method_id": "input_dimensions_v1",
+      "method_version": "1.0.0",
+      "source_region_ids": [
+        "page_0"
+      ],
+      "quality": {
+        "state": "OK",
+        "missing_reason": null,
+        "n_observations": 1,
+        "confidence": 1.0,
+        "confidence_kind": "EXACT_CONDITIONAL"
+      },
+      "formatting_key": "measurement.px",
+      "precision": 0
+    }
+  ],
+  "reference_claims": [],
+  "sections": [
+    {
+      "section_id": "section_dimensions",
+      "template": "METRIC_GRID",
+      "availability": "READY",
+      "fact_ids": [
+        "fact_img_width"
+      ],
+      "content_ids": [],
+      "premium_section_id": null
+    }
+  ],
+  "notices": [
+    {
+      "notice_id": "measured_notice",
+      "class": "MEASURED",
+      "localization_key": "notice.measured"
+    }
+  ],
+  "premium_overlay_id": null,
+  "document_digest": "d44b67af2c7403638038d0aedb274b491ac33f001d002f883bbb82fd3afe54d5"
+}

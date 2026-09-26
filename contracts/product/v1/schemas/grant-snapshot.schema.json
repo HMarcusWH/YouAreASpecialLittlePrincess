@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "grant-snapshot.schema.json",
+  "title": "GrantSnapshot",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "contract_version": {
+      "const": "1.0.0"
+    },
+    "grant_id": {
+      "$ref": "common.schema.json#/$defs/OpaqueId"
+    },
+    "owner_id": {
+      "$ref": "common.schema.json#/$defs/OpaqueId"
+    },
+    "purpose_id": {
+      "$ref": "common.schema.json#/$defs/OpaqueId"
+    },
+    "purpose_version": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 1000
+    },
+    "status": {
+      "type": "string",
+      "maxLength": 16,
+      "enum": [
+        "GRANTED",
+        "DENIED",
+        "WITHDRAWN"
+      ]
+    },
+    "scope": {
+      "type": "string",
+      "maxLength": 128
+    },
+    "recorded_at": {
+      "$ref": "common.schema.json#/$defs/Rfc3339Utc"
+    },
+    "effective_at": {
+      "$ref": "common.schema.json#/$defs/Rfc3339Utc"
+    },
+    "policy_sha256": {
+      "$ref": "common.schema.json#/$defs/Sha256"
+    }
+  },
+  "required": [
+    "contract_version",
+    "grant_id",
+    "owner_id",
+    "purpose_id",
+    "purpose_version",
+    "status",
+    "scope",
+    "recorded_at",
+    "effective_at",
+    "policy_sha256"
+  ]
+}

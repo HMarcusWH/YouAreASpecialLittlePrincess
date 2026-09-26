@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "entitlement-snapshot.schema.json",
+  "title": "EntitlementSnapshot",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "contract_version": {
+      "const": "1.0.0"
+    },
+    "entitlement_id": {
+      "$ref": "common.schema.json#/$defs/OpaqueId"
+    },
+    "owner_id": {
+      "$ref": "common.schema.json#/$defs/OpaqueId"
+    },
+    "capability": {
+      "type": "string",
+      "maxLength": 32,
+      "enum": [
+        "PREMIUM_REPORT",
+        "PREMIUM_PAIR",
+        "EXPORT"
+      ]
+    },
+    "state": {
+      "type": "string",
+      "maxLength": 24,
+      "enum": [
+        "AVAILABLE",
+        "RESERVED",
+        "CONSUMED",
+        "REVOKED",
+        "REFUNDED"
+      ]
+    },
+    "remaining_uses": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 1000000
+    },
+    "source_purchase_id": {
+      "anyOf": [
+        {
+          "$ref": "common.schema.json#/$defs/OpaqueId"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "updated_at": {
+      "$ref": "common.schema.json#/$defs/Rfc3339Utc"
+    }
+  },
+  "required": [
+    "contract_version",
+    "entitlement_id",
+    "owner_id",
+    "capability",
+    "state",
+    "remaining_uses",
+    "source_purchase_id",
+    "updated_at"
+  ]
+}

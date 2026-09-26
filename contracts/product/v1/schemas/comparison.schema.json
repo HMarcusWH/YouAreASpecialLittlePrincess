@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "comparison.schema.json",
+  "title": "Comparison",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "contract_version": {
+      "const": "1.0.0"
+    },
+    "comparison_id": {
+      "$ref": "common.schema.json#/$defs/OpaqueId"
+    },
+    "kind": {
+      "type": "string",
+      "maxLength": 16,
+      "enum": [
+        "PAIR",
+        "HISTORY"
+      ]
+    },
+    "created_at": {
+      "$ref": "common.schema.json#/$defs/Rfc3339Utc"
+    },
+    "input_report_ids": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/OpaqueId"
+      },
+      "minItems": 2,
+      "maxItems": 16,
+      "uniqueItems": true
+    },
+    "common_feature_ids": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/OpaqueId"
+      },
+      "minItems": 0,
+      "maxItems": 512,
+      "uniqueItems": true
+    },
+    "facts": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/Fact"
+      },
+      "minItems": 0,
+      "maxItems": 1024
+    },
+    "method_version": {
+      "$ref": "common.schema.json#/$defs/Version"
+    },
+    "comparison_digest": {
+      "anyOf": [
+        {
+          "$ref": "common.schema.json#/$defs/Sha256"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "required": [
+    "contract_version",
+    "comparison_id",
+    "kind",
+    "created_at",
+    "input_report_ids",
+    "common_feature_ids",
+    "facts",
+    "method_version",
+    "comparison_digest"
+  ]
+}

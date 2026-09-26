@@ -1,0 +1,118 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "premium-packet.schema.json",
+  "title": "PremiumPacket",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "contract_version": {
+      "const": "1.0.0"
+    },
+    "packet_id": {
+      "$ref": "common.schema.json#/$defs/OpaqueId"
+    },
+    "owner_id": {
+      "$ref": "common.schema.json#/$defs/OpaqueId"
+    },
+    "report_id": {
+      "$ref": "common.schema.json#/$defs/OpaqueId"
+    },
+    "report_revision": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 1000000
+    },
+    "report_digest": {
+      "$ref": "common.schema.json#/$defs/Sha256"
+    },
+    "created_at": {
+      "$ref": "common.schema.json#/$defs/Rfc3339Utc"
+    },
+    "locale": {
+      "$ref": "common.schema.json#/$defs/Locale"
+    },
+    "interpretation_database_version": {
+      "$ref": "common.schema.json#/$defs/Version"
+    },
+    "interpretation_database_sha256": {
+      "$ref": "common.schema.json#/$defs/Sha256"
+    },
+    "question_pack_id": {
+      "$ref": "common.schema.json#/$defs/OpaqueId"
+    },
+    "candidate_policy_version": {
+      "$ref": "common.schema.json#/$defs/Version"
+    },
+    "prompt_version": {
+      "$ref": "common.schema.json#/$defs/Version"
+    },
+    "output_schema_version": {
+      "$ref": "common.schema.json#/$defs/Version"
+    },
+    "soft_field_ids": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/OpaqueId"
+      },
+      "minItems": 0,
+      "maxItems": 64,
+      "uniqueItems": true
+    },
+    "allowed_fact_ids": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/OpaqueId"
+      },
+      "minItems": 1,
+      "maxItems": 1024,
+      "uniqueItems": true
+    },
+    "questions": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/PremiumQuestion"
+      },
+      "minItems": 1,
+      "maxItems": 256
+    },
+    "candidates": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/PremiumCandidate"
+      },
+      "minItems": 0,
+      "maxItems": 1024
+    },
+    "image_asset_id": {
+      "anyOf": [
+        {
+          "$ref": "common.schema.json#/$defs/OpaqueId"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "required": [
+    "contract_version",
+    "packet_id",
+    "owner_id",
+    "report_id",
+    "report_revision",
+    "report_digest",
+    "created_at",
+    "locale",
+    "interpretation_database_version",
+    "interpretation_database_sha256",
+    "question_pack_id",
+    "candidate_policy_version",
+    "prompt_version",
+    "output_schema_version",
+    "soft_field_ids",
+    "allowed_fact_ids",
+    "questions",
+    "candidates",
+    "image_asset_id"
+  ]
+}

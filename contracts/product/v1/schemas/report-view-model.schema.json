@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "report-view-model.schema.json",
+  "title": "ReportViewModel",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "contract_version": {
+      "const": "1.0.0"
+    },
+    "source_report_id": {
+      "$ref": "common.schema.json#/$defs/OpaqueId"
+    },
+    "source_revision": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 1000000
+    },
+    "source_digest": {
+      "$ref": "common.schema.json#/$defs/Sha256"
+    },
+    "projection": {
+      "$ref": "common.schema.json#/$defs/ProjectionKind"
+    },
+    "generated_at": {
+      "$ref": "common.schema.json#/$defs/Rfc3339Utc"
+    },
+    "locale": {
+      "$ref": "common.schema.json#/$defs/Locale"
+    },
+    "facts": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/Fact"
+      },
+      "minItems": 0,
+      "maxItems": 1024
+    },
+    "sections": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/ReportSection"
+      },
+      "minItems": 0,
+      "maxItems": 128
+    },
+    "notices": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/Notice"
+      },
+      "minItems": 0,
+      "maxItems": 128
+    },
+    "actions": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/Action"
+      },
+      "minItems": 0,
+      "maxItems": 64
+    },
+    "authorized_asset_ids": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/OpaqueId"
+      },
+      "minItems": 0,
+      "maxItems": 128,
+      "uniqueItems": true
+    }
+  },
+  "required": [
+    "contract_version",
+    "source_report_id",
+    "source_revision",
+    "source_digest",
+    "projection",
+    "generated_at",
+    "locale",
+    "facts",
+    "sections",
+    "notices",
+    "actions",
+    "authorized_asset_ids"
+  ]
+}

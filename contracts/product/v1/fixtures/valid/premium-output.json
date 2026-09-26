@@ -1,0 +1,19 @@
+{
+  "contract_version": "1.0.0",
+  "packet_id": "packet_001",
+  "output_schema_version": "premium-analysis/1",
+  "answers": [
+    {
+      "question_id": "Q_CTX_TASK",
+      "answer_state": "ANSWERED",
+      "selected_candidate_ids": [
+        "candidate_task_copy"
+      ],
+      "support_fact_ids": [
+        "fact_img_width"
+      ],
+      "prose": "The supplied task is the controlled-copy context."
+    }
+  ],
+  "soft_fields": []
+}
