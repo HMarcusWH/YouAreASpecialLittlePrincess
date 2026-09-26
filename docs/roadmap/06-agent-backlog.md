@@ -15,7 +15,7 @@ Use `python docs/roadmap/plan_tools.py --ready` or `--task ID`. Edit tasks.json 
 |---|---|---|---|
 | [T00 — Green baseline and dependency policy](#t00) | DONE | — | platform |
 | [T00A — Post-merge dependency graph hardening](#t00a) | PLANNED | T00 | platform-security |
-| [T01 — Product contracts and zero-AI capability manifest](#t01) | PLANNED | T00, T00A | contracts |
+| [T01 — Product contracts and zero-AI capability manifest](#t01) | PLANNED | T00, T00A, T03 | contracts |
 | [T02 — Persistence identity authorization](#t02) | PLANNED | T01, T27, T28 | backend |
 | [T03 — Rights consent and collection protocol](#t03) | PLANNED | — | product-data |
 | [T04 — Safe intake and durable analysis jobs](#t04) | PLANNED | T02, T03, T28 | backend |
@@ -34,7 +34,7 @@ Use `python docs/roadmap/plan_tools.py --ready` or `--task ID`. Edit tasks.json 
 | [T17 — Interactive Free web product](#t17) | PLANNED | T02, T04, T09, T10, T28 | frontend |
 | [T18 — Deterministic pair and history comparison](#t18) | PLANNED | T08, T09 | statistics-report |
 | [T19 — Cross-platform purchase ledger entitlements and metered jobs](#t19) | PLANNED | T02, T03, T09, T15, T27 | commerce |
-| [T20 — Premium and paid-pair web experience](#t20) | PLANNED | T15, T16, T17, T18, T19 | frontend-premium |
+| [T20 — Premium and paid-pair web experience](#t20) | PLANNED | T15, T16, T17, T18, T19, T21 | frontend-premium |
 | [T21 — Same-content PDF and share-card rendering](#t21) | PLANNED | T09, T10, T17 | report-frontend |
 | [T22 — Scoped sharing and comparison invitations](#t22) | PLANNED | T17, T18, T21 | backend-frontend |
 | [T23 — Multi-platform end-to-end QA and threat model](#t23) | PLANNED | T00, T00A, T06, T08, T14, T18, T20, T21, T22, T24, T30, T31 | independent-review |
@@ -44,8 +44,8 @@ Use `python docs/roadmap/plan_tools.py --ready` or `--task ID`. Edit tasks.json 
 | [T27 — Connector ports fakes and provider decisions](#t27) | PLANNED | T01 | application-architecture |
 | [T28 — Environment workspace and build foundation](#t28) | PLANNED | T00A, T27 | platform |
 | [T29 — Shared native foundation and compatibility spike](#t29) | PLANNED | T01, T02, T10, T27, T28 | mobile-platform |
-| [T30 — Complete iOS and iPad client integration](#t30) | PLANNED | T29, T04, T09, T15, T16, T18, T19, T21, T22, T24 | mobile-apple |
-| [T31 — Complete Android phone and tablet client integration](#t31) | PLANNED | T29, T04, T09, T15, T16, T18, T19, T21, T22, T24 | mobile-android |
+| [T30 — Complete iOS and iPad client integration](#t30) | PLANNED | T29, T04, T09, T15, T16, T18, T19, T20, T21, T22, T24 | mobile-apple |
+| [T31 — Complete Android phone and tablet client integration](#t31) | PLANNED | T29, T04, T09, T15, T16, T18, T19, T20, T21, T22, T24 | mobile-android |
 | [T32 — App Store readiness and review evidence](#t32) | PLANNED | T30, T23, T24 | apple-release-human |
 | [T33 — Google Play readiness and review evidence](#t33) | PLANNED | T31, T23, T24 | android-release-human |
 
@@ -248,7 +248,7 @@ No task-specific production gate; all repository privacy/security and scope boun
 
 **Status:** `PLANNED` · **Owner:** contracts · **Milestone:** foundation
 
-**Hard predecessors:** [T00](#t00), [T00A](#t00a)
+**Hard predecessors:** [T00](#t00), [T00A](#t00a), [T03](#t03)
 **Platforms:** shared
 **Connector ports:** None
 
@@ -327,6 +327,7 @@ No task-specific production gate; all repository privacy/security and scope boun
 - [docs/connectors/identity.md](../connectors/identity.md)
 - [docs/adr/ADR-002-auth-provider.md](../adr/ADR-002-auth-provider.md)
 - [docs/adr/ADR-003-postgres-hosting.md](../adr/ADR-003-postgres-hosting.md)
+- [docs/roadmap/17-security-privacy-and-abuse.md](17-security-privacy-and-abuse.md)
 
 ### Owned implementation surfaces
 
@@ -339,14 +340,17 @@ src/princess_app/adapters/persistence/
 src/princess_app/adapters/identity/
 apps/api/
 migrations/
+src/princess_app/domain/permissions/
+src/princess_app/application/permissions/
 ```
 
 ### Coding sequence
 
 1. Implement initial principal/identity, asset/sample/capture, run/measurement/region, report, job/outbox and version tables with reviewed Alembic migrations; defer commerce-specific tables to T19.
-2. Map verified provider identities to internal principals; implement guest-to-account transfer and deletion/session revocation. No home-grown password system or email-only account linking.
-3. Persist canonical result JSON and relational projections atomically; enforce owner/run composite references and actual non-owner runtime roles.
-4. Publish authenticated API composition and repository/unit-of-work fakes plus PostgreSQL integration fixtures.
+2. Implement an append-only permission/consent event ledger and owner-scoped grant/withdraw lifecycle for service processing, retention, third-party AI processing, contribution and sharing, using T03 purpose/policy IDs; check effective permission at use time rather than mutating historical grants.
+3. Map verified provider identities to internal principals; implement guest-to-account transfer and deletion/session revocation. No home-grown password system or email-only account linking.
+4. Persist canonical result JSON and relational projections atomically; enforce owner/run composite references and actual non-owner runtime roles.
+5. Publish authenticated API composition and repository/unit-of-work fakes plus PostgreSQL integration fixtures.
 
 ### Contract and integration handoff
 
@@ -356,15 +360,18 @@ Stable internal ownership IDs, transaction boundaries and versioned persistence 
 
 - Cross-owner/run access and duplicate features are rejected by application and relevant database constraints.
 - Actual PostgreSQL role/RLS and migration/restore smoke pass; reference members remain service-only.
+- Permission grants/withdrawals persist as append-only purpose/policy/scope events; stale or withdrawn permission cannot authorize later processing.
 
 ### Required failure and regression cases
 
 - Guessed report IDs, forged region parent, guest-transfer race, revoked token, duplicate projection write and migration rollback with existing rows.
+- Permission replay, stale policy version, concurrent withdraw/use, contribution without authority and AI processing after withdrawal.
 
 ### Deliverables
 
 - Migrations, repositories/unit of work and identity adapter
 - Owner-scoped API and non-owner role tests
+- Permission-event schema/repository/service and grant/withdraw API lifecycle
 
 ### Rollback and compatibility
 
@@ -968,6 +975,7 @@ No approval is created by this task brief. Mock/disabled implementation is not a
 - [docs/roadmap/02-corpus-benchmarks.md](02-corpus-benchmarks.md)
 - [docs/roadmap/01-data-architecture.md](01-data-architecture.md)
 - [docs/roadmap/17-security-privacy-and-abuse.md](17-security-privacy-and-abuse.md)
+- [docs/connectors/object-storage.md](../connectors/object-storage.md)
 
 ### Owned implementation surfaces
 
@@ -1094,6 +1102,7 @@ No approval is created by this task brief. Mock/disabled implementation is not a
 - [docs/roadmap/02-corpus-benchmarks.md](02-corpus-benchmarks.md)
 - [docs/roadmap/17-security-privacy-and-abuse.md](17-security-privacy-and-abuse.md)
 - [docs/roadmap/18-observability-support-and-cost-control.md](18-observability-support-and-cost-control.md)
+- [docs/connectors/object-storage.md](../connectors/object-storage.md)
 
 ### Owned implementation surfaces
 
@@ -1223,6 +1232,7 @@ No approval is created by this task brief. Mock/disabled implementation is not a
 - [docs/roadmap/08-premium-question-selector-database.md](08-premium-question-selector-database.md)
 - [docs/roadmap/16-testing-evals-and-quality-gates.md](16-testing-evals-and-quality-gates.md)
 - [docs/roadmap/19-provider-decision-register.md](19-provider-decision-register.md)
+- [docs/connectors/premium-model.md](../connectors/premium-model.md)
 
 ### Owned implementation surfaces
 
@@ -1288,6 +1298,8 @@ No approval is created by this task brief. Mock/disabled implementation is not a
 - [docs/roadmap/10-web-client-and-api-integration.md](10-web-client-and-api-integration.md)
 - [docs/roadmap/17-security-privacy-and-abuse.md](17-security-privacy-and-abuse.md)
 - [docs/release/web.md](../release/web.md)
+- [docs/connectors/identity.md](../connectors/identity.md)
+- [docs/connectors/analytics.md](../connectors/analytics.md)
 
 ### Owned implementation surfaces
 
@@ -1475,7 +1487,7 @@ No approval is created by this task brief. Mock/disabled implementation is not a
 
 **Status:** `PLANNED` · **Owner:** frontend-premium · **Milestone:** premium
 
-**Hard predecessors:** [T15](#t15), [T16](#t16), [T17](#t17), [T18](#t18), [T19](#t19)
+**Hard predecessors:** [T15](#t15), [T16](#t16), [T17](#t17), [T18](#t18), [T19](#t19), [T21](#t21)
 **Platforms:** web, shared
 **Connector ports:** AnalyticsSink
 
@@ -1485,6 +1497,7 @@ No approval is created by this task brief. Mock/disabled implementation is not a
 - [docs/roadmap/10-web-client-and-api-integration.md](10-web-client-and-api-integration.md)
 - [docs/roadmap/14-payments-entitlements-and-commerce.md](14-payments-entitlements-and-commerce.md)
 - [docs/roadmap/17-security-privacy-and-abuse.md](17-security-privacy-and-abuse.md)
+- [docs/connectors/analytics.md](../connectors/analytics.md)
 
 ### Owned implementation surfaces
 
@@ -1549,6 +1562,7 @@ No approval is created by this task brief. Mock/disabled implementation is not a
 - [docs/roadmap/04-reports-design.md](04-reports-design.md)
 - [docs/roadmap/09-connectors-and-provider-boundaries.md](09-connectors-and-provider-boundaries.md)
 - [docs/roadmap/17-security-privacy-and-abuse.md](17-security-privacy-and-abuse.md)
+- [docs/connectors/object-storage.md](../connectors/object-storage.md)
 
 ### Owned implementation surfaces
 
@@ -1610,6 +1624,7 @@ No task-specific production gate; all repository privacy/security and scope boun
 - [docs/roadmap/04-reports-design.md](04-reports-design.md)
 - [docs/roadmap/10-web-client-and-api-integration.md](10-web-client-and-api-integration.md)
 - [docs/roadmap/17-security-privacy-and-abuse.md](17-security-privacy-and-abuse.md)
+- [docs/connectors/analytics.md](../connectors/analytics.md)
 
 ### Owned implementation surfaces
 
@@ -1737,6 +1752,9 @@ No task-specific production gate; all repository privacy/security and scope boun
 - [docs/roadmap/17-security-privacy-and-abuse.md](17-security-privacy-and-abuse.md)
 - [docs/connectors/email.md](../connectors/email.md)
 - [docs/connectors/push.md](../connectors/push.md)
+- [docs/connectors/telemetry.md](../connectors/telemetry.md)
+- [docs/connectors/analytics.md](../connectors/analytics.md)
+- [docs/connectors/object-storage.md](../connectors/object-storage.md)
 
 ### Owned implementation surfaces
 
@@ -1929,6 +1947,15 @@ Historical completion evidence: Merged T26 finalization PR #9 and current interp
 - [docs/connectors/README.md](../connectors/README.md)
 - [docs/roadmap/19-provider-decision-register.md](19-provider-decision-register.md)
 - [docs/adr/README.md](../adr/README.md)
+- [docs/connectors/identity.md](../connectors/identity.md)
+- [docs/connectors/object-storage.md](../connectors/object-storage.md)
+- [docs/connectors/premium-model.md](../connectors/premium-model.md)
+- [docs/connectors/payments.md](../connectors/payments.md)
+- [docs/connectors/email.md](../connectors/email.md)
+- [docs/connectors/push.md](../connectors/push.md)
+- [docs/connectors/abuse-challenge.md](../connectors/abuse-challenge.md)
+- [docs/connectors/analytics.md](../connectors/analytics.md)
+- [docs/connectors/telemetry.md](../connectors/telemetry.md)
 
 ### Owned implementation surfaces
 
@@ -1993,6 +2020,7 @@ No task-specific production gate; all repository privacy/security and scope boun
 - [docs/roadmap/16-testing-evals-and-quality-gates.md](16-testing-evals-and-quality-gates.md)
 - [docs/adr/ADR-001-client-architecture.md](../adr/ADR-001-client-architecture.md)
 - [docs/adr/ADR-005-mobile-framework.md](../adr/ADR-005-mobile-framework.md)
+- [docs/connectors/telemetry.md](../connectors/telemetry.md)
 
 ### Owned implementation surfaces
 
@@ -2062,6 +2090,9 @@ No approval is created by this task brief. Mock/disabled implementation is not a
 - [docs/roadmap/13-android-and-google-play.md](13-android-and-google-play.md)
 - [docs/adr/ADR-005-mobile-framework.md](../adr/ADR-005-mobile-framework.md)
 - [docs/connectors/payments.md](../connectors/payments.md)
+- [docs/connectors/identity.md](../connectors/identity.md)
+- [docs/connectors/push.md](../connectors/push.md)
+- [docs/connectors/abuse-challenge.md](../connectors/abuse-challenge.md)
 
 ### Owned implementation surfaces
 
@@ -2118,7 +2149,7 @@ No approval is created by this task brief. Mock/disabled implementation is not a
 
 **Status:** `PLANNED` · **Owner:** mobile-apple · **Milestone:** mobile
 
-**Hard predecessors:** [T29](#t29), [T04](#t04), [T09](#t09), [T15](#t15), [T16](#t16), [T18](#t18), [T19](#t19), [T21](#t21), [T22](#t22), [T24](#t24)
+**Hard predecessors:** [T29](#t29), [T04](#t04), [T09](#t09), [T15](#t15), [T16](#t16), [T18](#t18), [T19](#t19), [T20](#t20), [T21](#t21), [T22](#t22), [T24](#t24)
 **Platforms:** ios, ipados
 **Connector ports:** IdentityProvider, NativePurchaseClient, PushProvider, AbuseChallengeProvider
 
@@ -2130,6 +2161,8 @@ No approval is created by this task brief. Mock/disabled implementation is not a
 - [docs/connectors/identity.md](../connectors/identity.md)
 - [docs/connectors/push.md](../connectors/push.md)
 - [docs/release/apple.md](../release/apple.md)
+- [docs/connectors/payments.md](../connectors/payments.md)
+- [docs/connectors/abuse-challenge.md](../connectors/abuse-challenge.md)
 
 ### Owned implementation surfaces
 
@@ -2186,7 +2219,7 @@ No approval is created by this task brief. Mock/disabled implementation is not a
 
 **Status:** `PLANNED` · **Owner:** mobile-android · **Milestone:** mobile
 
-**Hard predecessors:** [T29](#t29), [T04](#t04), [T09](#t09), [T15](#t15), [T16](#t16), [T18](#t18), [T19](#t19), [T21](#t21), [T22](#t22), [T24](#t24)
+**Hard predecessors:** [T29](#t29), [T04](#t04), [T09](#t09), [T15](#t15), [T16](#t16), [T18](#t18), [T19](#t19), [T20](#t20), [T21](#t21), [T22](#t22), [T24](#t24)
 **Platforms:** android
 **Connector ports:** IdentityProvider, NativePurchaseClient, PushProvider, AbuseChallengeProvider
 
@@ -2197,6 +2230,9 @@ No approval is created by this task brief. Mock/disabled implementation is not a
 - [docs/roadmap/14-payments-entitlements-and-commerce.md](14-payments-entitlements-and-commerce.md)
 - [docs/connectors/push.md](../connectors/push.md)
 - [docs/release/android.md](../release/android.md)
+- [docs/connectors/identity.md](../connectors/identity.md)
+- [docs/connectors/payments.md](../connectors/payments.md)
+- [docs/connectors/abuse-challenge.md](../connectors/abuse-challenge.md)
 
 ### Owned implementation surfaces
 
