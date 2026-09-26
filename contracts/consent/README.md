@@ -36,7 +36,7 @@ All fixtures are synthetic. They contain opaque IDs and hashes of labels, never 
   - eligibility bound to the grant.
 
   Scenarios run in fixture mode, the only mode in which draft purposes are usable.
-- `v1/fixtures/collection/`: eight collection manifests with their expected error codes, including a duplicate specimen counted as a writer and a repeat capture filed under another writer.
+- `v1/fixtures/collection/`: eleven collection manifests, each with its own synthetic consent log and the error codes it should produce. They include a duplicate specimen counted as a writer, a repeat capture filed under another writer, a release without permission, a withdrawal before the cutoff, and session 2 without a baseline.
 
 ## Validation
 

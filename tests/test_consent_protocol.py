@@ -30,6 +30,13 @@ def registry():
     return load("purposes.json")
 
 
+def check_fixture_manifest(fixture, protocol, manifest=None, *, human_release=False, fixture_mode=True):
+    """Run check_collection_manifest with the fixture's own consent ledger."""
+    manifest = fixture["manifest"] if manifest is None else manifest
+    consent = vcp.collection_consent_context(load("purposes.json"), manifest, fixture["consent_log"], fixture_mode=fixture_mode)
+    return vcp.check_collection_manifest(manifest, protocol, consent, human_release=human_release)
+
+
 @pytest.fixture
 def retention_ids():
     return {c["class_id"] for c in load("retention.json")["classes"]}
@@ -89,7 +96,7 @@ def test_collection_fixture(path, protocol):
     fixture = vcp.load_json(path)
     assert fixture["manifest"]["synthetic"] is True
     assert vcp.SchemaSet().validate(fixture["manifest"], "collection-manifest.schema.json") == []
-    issues, summary = vcp.check_collection_manifest(fixture["manifest"], protocol, human_release=False)
+    issues, summary = check_fixture_manifest(fixture, protocol)
     assert codes(issues) == sorted(fixture["expected_errors"])
     assert summary.synthetic is True
 
@@ -112,6 +119,8 @@ def expected_codes_in(paths):
         "BLOCKED_AT_PUBLICATION",  # withdrawal during use
         "OBSOLETE_NOTICE",  # reused obsolete notice
         "DUPLICATE_COUNTED_AS_WRITER",  # duplicate specimen counted as a writer
+        "NO_RELEASE_PERMISSION",
+        "SESSION_WITHOUT_BASELINE",
         "PRECHECKED_GRANT",
         "INELIGIBLE_AT_GRANT",
         "DENIED",
@@ -126,7 +135,7 @@ def test_t03_negative_cases_have_fixtures(required):
 
 def test_human_release_rejects_synthetic_manifests(protocol):
     fixture = vcp.load_json(vcp.CONSENT_DIR / "fixtures" / "collection" / "valid_pilot_lineage.json")
-    issues, summary = vcp.check_collection_manifest(fixture["manifest"], protocol)
+    issues, summary = check_fixture_manifest(fixture, protocol, human_release=True)
     assert codes(issues) == ["SYNTHETIC_IN_HUMAN_RELEASE"]
     assert summary.synthetic is True
 
@@ -142,13 +151,36 @@ def test_collection_identity_and_session_rules(protocol, mutate, code):
     fixture = vcp.load_json(vcp.CONSENT_DIR / "fixtures" / "collection" / "valid_pilot_lineage.json")
     manifest = copy.deepcopy(fixture["manifest"])
     mutate(manifest)
-    issues, _summary = vcp.check_collection_manifest(manifest, protocol, human_release=False)
+    issues, _summary = check_fixture_manifest(fixture, protocol, manifest)
     assert code in codes(issues)
+
+
+def test_release_counts_nothing_without_approved_permission(protocol):
+    # Codex re-review of #12: a non-synthetic manifest with no consent evidence
+    # was counted. Outside fixture mode the draft purposes cannot permit anything.
+    fixture = vcp.load_json(vcp.CONSENT_DIR / "fixtures" / "collection" / "valid_pilot_lineage.json")
+    manifest = dict(copy.deepcopy(fixture["manifest"]), synthetic=False)
+    issues, summary = check_fixture_manifest(fixture, protocol, manifest, human_release=True, fixture_mode=False)
+    assert set(codes(issues)) == {"NO_RELEASE_PERMISSION", "COUNT_MISMATCH"}
+    assert (summary.writers, summary.specimens, summary.captures) == (0, 0, 0)
+    assert all("NOT_APPROVED" in i.message for i in issues if i.code == "NO_RELEASE_PERMISSION")
+
+    empty_ledger = dict(fixture, consent_log={"notices": fixture["consent_log"]["notices"], "events": []})
+    issues, summary = check_fixture_manifest(empty_ledger, protocol)
+    assert "NO_RELEASE_PERMISSION" in codes(issues) and summary.writers == 0
+
+
+def test_release_purpose_must_belong_to_the_protocol(protocol):
+    fixture = vcp.load_json(vcp.CONSENT_DIR / "fixtures" / "collection" / "valid_pilot_lineage.json")
+    manifest = copy.deepcopy(fixture["manifest"])
+    manifest["release_purpose"] = {"purpose_id": "product_analytics", "purpose_version": 1}
+    issues, summary = check_fixture_manifest(fixture, protocol, manifest)
+    assert "RELEASE_PURPOSE_NOT_IN_PROTOCOL" in codes(issues) and summary.writers == 0
 
 
 def test_collection_summary_counts_writers_not_pages(protocol):
     fixture = vcp.load_json(vcp.CONSENT_DIR / "fixtures" / "collection" / "valid_pilot_lineage.json")
-    issues, summary = vcp.check_collection_manifest(fixture["manifest"], protocol, human_release=False)
+    issues, summary = check_fixture_manifest(fixture, protocol)
     assert issues == []
     assert (summary.writers, summary.specimens, summary.captures) == (3, 6, 7)
     # Copied and free writing, and each language, stay separate cohorts.
@@ -266,6 +298,29 @@ def test_draft_purposes_never_permit_outside_fixtures(registry):
     assert vcp.evaluate_permission(fixture, subject, service, specimen, at) == "PERMITTED"
 
 
+def test_query_scope_must_be_grantable_for_the_purpose(registry):
+    # Codex re-review of #12: a subject-wide image_retention grant permitted REPORT,
+    # COMPARISON and SUPPORT_CASE queries that the purpose never offers.
+    scenario = vcp.load_json(vcp.CONSENT_DIR / "fixtures" / "scenarios" / "grant_deny_withdraw_basics.json")
+    context = vcp.build_context(registry, scenario, fixture_mode=True)
+    subject, purpose = {"kind": "WRITER", "id": "wrt_0001"}, {"purpose_id": "image_retention", "purpose_version": 1}
+    at = vcp.parse_timestamp("2026-02-05T00:00:00Z")
+    for kind in ("REPORT", "COMPARISON", "SUPPORT_CASE", "SHARE_GRANT", "PILOT_ENROLLMENT"):
+        assert vcp.evaluate_permission(context, subject, purpose, {"kind": kind, "id": "any_0001"}, at) == "SCOPE_NOT_GRANTABLE"
+    assert vcp.evaluate_permission(context, subject, purpose, {"kind": "SPECIMEN", "id": "spc_0001"}, at) == "PERMITTED"
+
+
+def test_approvals_need_a_non_null_decision_ref(registry, retention_ids):
+    # Codex re-review of #12: approval.decision_ref accepted null.
+    approval = {"decision_ref": None, "decided_by_role": "owner", "decided_on": "2026-10-01T00:00:00Z"}
+    mutated = mutate_purpose(registry, "product_analytics", status="APPROVED", legal_basis="DECIDED", approval=approval)
+    assert "SCHEMA" in codes(vcp.SchemaSet().validate(mutated, "purpose-registry.schema.json"))
+    assert "APPROVAL_WITHOUT_EVIDENCE" in codes(vcp.check_purposes(mutated, retention_ids, vcp.known_gates()))
+
+    gate = dict(load("pilot_gate.json"), status="APPROVED", approval=approval)
+    assert "SCHEMA" in codes(vcp.SchemaSet().validate(gate, "pilot-gate.schema.json"))
+
+
 def test_partner_comparison_cannot_be_folded_into_sharing(registry, retention_ids):
     mutated = copy.deepcopy(registry)
     mutated["purposes"] = [p for p in mutated["purposes"] if p["purpose_id"] != "partner_comparison"]
@@ -277,6 +332,7 @@ def test_notice_rules(registry):
     notices = load("notices.json")
     purposes = purposes_by_key(registry)
     assert vcp.check_notices(notices, purposes) == []
+    approved = {key: dict(purpose, status="APPROVED") for key, purpose in purposes.items()}
 
     missing_sv = copy.deepcopy(notices)
     missing_sv["notices"][0]["copy"] = [c for c in missing_sv["notices"][0]["copy"]
@@ -285,7 +341,17 @@ def test_notice_rules(registry):
 
     active_without_decision = copy.deepcopy(notices)
     active_without_decision["notices"][0].update(status="ACTIVE", effective_from="2026-10-01T00:00:00Z")
-    assert codes(vcp.check_notices(active_without_decision, purposes)) == ["NOTICE_ACTIVE_WITHOUT_DECISION"]
+    assert set(codes(vcp.check_notices(active_without_decision, purposes))) == {
+        "NOTICE_ACTIVE_WITHOUT_DECISION", "NOTICE_ACTIVE_FOR_UNAPPROVED_PURPOSE"}
+
+    # Codex re-review of #12: an ACTIVE notice over draft purposes passed although
+    # every grant under it would be rejected as PURPOSE_NOT_APPROVED.
+    active = copy.deepcopy(notices)
+    active["notices"][0].update(status="ACTIVE", effective_from="2026-10-01T00:00:00Z", decision_ref="decision:n-1234")
+    found = vcp.check_notices(active, purposes)
+    assert codes(found) == ["NOTICE_ACTIVE_FOR_UNAPPROVED_PURPOSE"]
+    assert len(found) == len(active["notices"][0]["purposes"])
+    assert vcp.check_notices(active, approved) == []
 
     offers_inactive = copy.deepcopy(notices)
     offers_inactive["notices"][0]["purposes"].append({"purpose_id": "model_training", "purpose_version": 1})
@@ -294,7 +360,7 @@ def test_notice_rules(registry):
     # Codex review of #12: a superseded notice without an end stayed usable forever.
     superseded = copy.deepcopy(notices)
     superseded["notices"][0].update(status="SUPERSEDED", effective_from="2026-01-01T00:00:00Z", decision_ref="decision:n-1234")
-    assert codes(vcp.check_notices(superseded, purposes)) == ["NOTICE_WINDOW_INVALID"]
+    assert codes(vcp.check_notices(superseded, approved)) == ["NOTICE_WINDOW_INVALID"]
 
     overlapping = copy.deepcopy(notices)
     second = copy.deepcopy(overlapping["notices"][0])
@@ -302,9 +368,9 @@ def test_notice_rules(registry):
                                      effective_until="2026-06-01T00:00:00Z", decision_ref="decision:n-0001")
     second.update(version=2, status="ACTIVE", effective_from="2026-05-01T00:00:00Z", decision_ref="decision:n-0002")
     overlapping["notices"].append(second)
-    assert codes(vcp.check_notices(overlapping, purposes)) == ["NOTICE_WINDOW_OVERLAP"]
+    assert codes(vcp.check_notices(overlapping, approved)) == ["NOTICE_WINDOW_OVERLAP"]
     second["effective_from"] = "2026-06-01T00:00:00Z"
-    assert vcp.check_notices(overlapping, purposes) == []
+    assert vcp.check_notices(overlapping, approved) == []
 
 
 def test_scenario_notice_windows_must_not_overlap(registry):
@@ -340,6 +406,13 @@ def test_retention_is_configuration_not_legal_claim():
     assert vcp.SchemaSet().validate(event_bound, "retention-policy.schema.json") == []
     event_bound["classes"][0]["max_retention"]["value"] = 30
     assert codes(vcp.check_retention(event_bound)) == ["RETENTION_UNIT_MISMATCH"]
+
+    # Codex re-review of #12: EVENT_BOUND with no ending events had neither a period nor a trigger.
+    endless = copy.deepcopy(retention)
+    endless["classes"][0].update(decision_status="DECIDED", decision_ref="decision:ret-1234",
+                                 max_retention={"value": None, "unit": "EVENT_BOUND"}, ends_when=[])
+    assert codes(vcp.SchemaSet().validate(endless, "retention-policy.schema.json")) == ["SCHEMA"]
+    assert codes(vcp.check_retention(endless)) == ["RETENTION_EVENT_BOUND_WITHOUT_END"]
 
     unsafe_restore = copy.deepcopy(retention)
     unsafe_restore["classes"][0]["backup_restore"] = "NOT_BACKED_UP"

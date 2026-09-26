@@ -30,13 +30,14 @@ Participant guidance: [English](../../content/collection/v1/guidance/capture-and
 - A **specimen** is one physical page written by one writer for one task in one session.
 - A **capture** is one photo of a specimen.
 
-Repeat photos are captures of the same specimen. A second session creates new specimens. Neither is ever a new writer. The [collection manifest](../../contracts/consent/v1/schemas/collection-manifest.schema.json) is the T11 handoff shape. `check_collection_manifest` recomputes counts from lineage and rejects:
+Repeat photos are captures of the same specimen. A second session creates new specimens. Neither is ever a new writer. A manifest names its `release_purpose` (normally `engineering_evaluation`) and a `release_cutoff`. Every included specimen must be `PERMITTED` for that purpose at the cutoff in the consent ledger, either directly or through its writer's pilot enrollment; otherwise it is `NO_RELEASE_PERMISSION` and excluded. The purpose must be one of the protocol's (`RELEASE_PURPOSE_NOT_IN_PROTOCOL`). Until an owner approves the purposes, no real specimen can be counted. The [collection manifest](../../contracts/consent/v1/schemas/collection-manifest.schema.json) is the T11 handoff shape. `check_collection_manifest` recomputes counts from lineage and rejects:
 
 - byte-identical captures under another writer [`DUPLICATE_COUNTED_AS_WRITER`];
 - repeated bytes [`DUPLICATE_CAPTURE_BYTES`];
 - repeats filed under another page [`REPEAT_CROSSES_SPECIMEN`];
 - two specimens for the same writer, task and session [`DUPLICATE_SPECIMEN_IN_SESSION`];
 - a session index that is not in the protocol's session plan [`UNKNOWN_SESSION`];
+- a later-session specimen without the same writer's session-1 specimen for that task in the release [`SESSION_WITHOUT_BASELINE`];
 - two writer rows sharing one enrollment [`DUPLICATE_ID`];
 - writers not declared adult [`INELIGIBLE_WRITER`];
 - context status that contradicts the declared script or language [`CONTEXT_STATUS_MISMATCH`];
@@ -57,5 +58,5 @@ Only adults who declare eligibility themselves take part; the age threshold per 
 
 1. Record all eleven gate decisions and the approval in `pilot_gate.json`, with evidence kept outside Git. The validator requires every decision key to be present; removing one fails. Approving the protocol also requires decided prompt rights for every task. Move the pilot notice to `ACTIVE` with its effective window.
 2. Implement collection tooling that writes consent events and a collection manifest in the shapes defined here. Store images and signed agreements only in protected storage.
-3. Run `python tools/validate_consent_protocol.py` and `check_collection_manifest` on every pilot release manifest before annotation or splitting.
+3. Run `python tools/validate_consent_protocol.py` on every pilot release manifest before annotation or splitting. Also run `check_collection_manifest` with the protected consent ledger (via `collection_consent_context`, never in fixture mode).
 4. Exercise withdrawal and deletion before the first corpus release.

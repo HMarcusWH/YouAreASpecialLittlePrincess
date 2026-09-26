@@ -52,14 +52,15 @@ An event is **invalid** and never changes state when any of these hold (validato
 
 1. The purpose is unknown or not offered → `NOT_OFFERED`. It is still a draft → `NOT_APPROVED`, unless the evaluator runs in fixture mode for synthetic scenarios. Draft purposes never permit a real decision.
 2. The purpose requires an adult declaration and the writer's current eligibility is not `DECLARED_ADULT` → `INELIGIBLE`. The grant must also have been captured with `DECLARED_ADULT` (see above).
-3. Among **valid** events for the same subject and purpose version, keep those effective at `at` whose scope equals the query scope, or is subject-wide for the same subject.
-4. No such event → `NOT_ASKED`. Otherwise the latest event wins: `PERMITTED`, `DENIED` or `WITHDRAWN`. Ties resolve to the more restrictive state.
+3. The query scope kind is not one the purpose grants → `SCOPE_NOT_GRANTABLE`. A broad grant never authorizes a use the purpose does not offer.
+4. Among **valid** events for the same subject and purpose version, keep those effective at `at` whose scope is one of the following: the query scope; subject-wide for the same subject; or a broader scope the caller vouches contains the query, such as a specimen's pilot enrollment.
+5. No such event → `NOT_ASKED`. Otherwise the latest event wins: `PERMITTED`, `DENIED` or `WITHDRAWN`. Ties resolve to the more restrictive state.
 
 A **use** (Premium job, benchmark build, share publication) must be `PERMITTED` both when it starts and immediately before it publishes (`BLOCKED_AT_START` / `BLOCKED_AT_PUBLICATION`). A **comparison** needs every author's `partner_comparison` permission for that comparison. The **Free report** is available when `service_processing` is permitted. It is the only purpose allowed to be `required_for_service`, and optional purposes are not consulted at all.
 
 ## Versioning and rollback
 
-A material change to what a purpose means creates a new `purpose_version`. Grants for version 1 never authorize version 2 (see the `purpose_version_change_keeps_historical_meaning` scenario), so historical grants keep their meaning. Notice wording changes create a new notice version with a non-overlapping effective window. Rolling back stops future collection under the new version; it never rewrites recorded events.
+A material change to what a purpose means creates a new `purpose_version`. Grants for version 1 never authorize version 2 (see the `purpose_version_change_keeps_historical_meaning` scenario), so historical grants keep their meaning. Notice wording changes create a new notice version with a non-overlapping effective window. A notice can only be `ACTIVE` once every purpose it lists is `APPROVED` (`NOTICE_ACTIVE_FOR_UNAPPROVED_PURPOSE`). Approvals and reviews always carry a non-null `decision_ref`. Rolling back stops future collection under the new version; it never rewrites recorded events.
 
 ## Relation to other tasks
 

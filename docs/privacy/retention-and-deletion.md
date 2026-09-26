@@ -10,7 +10,7 @@ Sixteen classes cover originals, derivatives, analysis records, exports, share r
 
 - whether it can contain handwriting;
 - what starts retention and which events end it (withdrawal of the relevant purpose, account deletion, parent deletion, maximum period);
-- the maximum period: `null` in every class, with `decision_status: PENDING_OWNER_DECISION`. A decision records either a number of `DAYS` or the explicit `EVENT_BOUND` choice (no fixed maximum; the class ends only on its listed events). The validator rejects a period without a recorded decision, and a decision without a period or `EVENT_BOUND`;
+- the maximum period: `null` in every class, with `decision_status: PENDING_OWNER_DECISION`. A decision records either a number of `DAYS` or the explicit `EVENT_BOUND` choice (no fixed maximum; the class ends only on its listed events). The validator rejects a period without a recorded decision, and a decision without a period or `EVENT_BOUND`. Every class lists at least one ending event, so `EVENT_BOUND` always has a trigger;
 - deletion actions, such as deleting every object version, purging caches, revoking before deleting, and writing a tombstone;
 - backup behaviour: handwriting-bearing classes must reconcile tombstones before a restored backup serves traffic;
 - external copies: none, governed by a processor contract, or held by recipients and therefore irrevocable. The last one must be disclosed before export or sharing.

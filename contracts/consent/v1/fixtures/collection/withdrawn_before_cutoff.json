@@ -1,8 +1,8 @@
 {
-  "fixture_id": "byte_duplicate_capture_same_writer",
-  "description": "One photo is listed twice for the same page; captures are counted once.",
+  "fixture_id": "withdrawn_before_cutoff",
+  "description": "Writer 1 withdrew one page before the release cutoff; the enrollment-level grant no longer covers it.",
   "expected_errors": [
-    "DUPLICATE_CAPTURE_BYTES"
+    "NO_RELEASE_PERMISSION"
   ],
   "consent_log": {
     "notices": [
@@ -60,6 +60,43 @@
           "status": "RECORDED"
         },
         "subject_eligibility": "DECLARED_ADULT"
+      },
+      {
+        "contract_version": "consent-event/v1",
+        "event_id": "evt_0200",
+        "event_type": "WITHDRAW",
+        "subject": {
+          "kind": "WRITER",
+          "id": "wrt_0001"
+        },
+        "purpose": {
+          "purpose_id": "engineering_evaluation",
+          "purpose_version": 1
+        },
+        "notice": {
+          "notice_id": "notice.pilot-collection",
+          "version": 1
+        },
+        "scope": {
+          "kind": "SPECIMEN",
+          "id": "spc_0102"
+        },
+        "actor": {
+          "kind": "PILOT_PARTICIPANT",
+          "id": "wrt_0001"
+        },
+        "presented_default": "NOT_PRESENTED",
+        "capture_method": "WITHDRAWAL_CONTROL",
+        "derived_from": null,
+        "surface": "PILOT_SESSION",
+        "recorded_at": "2026-02-10T09:00:00Z",
+        "effective_at": "2026-02-10T09:00:00Z",
+        "evidence": {
+          "kind": "UI_INTERACTION",
+          "ref": "evd_0200",
+          "status": "RECORDED"
+        },
+        "subject_eligibility": "DECLARED_ADULT"
       }
     ]
   },
@@ -86,6 +123,18 @@
       {
         "specimen_id": "spc_0101",
         "writer_id": "wrt_0001",
+        "task_id": "copy_en",
+        "session_index": 1,
+        "declared_language": "en",
+        "declared_script": "LATIN",
+        "declared_style": "MIXED",
+        "paper": "BLANK",
+        "instrument": "BALLPOINT",
+        "context_status": "SUPPORTED"
+      },
+      {
+        "specimen_id": "spc_0102",
+        "writer_id": "wrt_0001",
         "task_id": "free_en",
         "session_index": 1,
         "declared_language": "en",
@@ -106,9 +155,9 @@
       },
       {
         "capture_id": "cap_0102",
-        "specimen_id": "spc_0101",
-        "capture_index": 2,
-        "content_sha256": "025eb8d0359ddcd7279c388ff30c6a4c6b62db87a4e0fd5af1f7c99d9ecd349b",
+        "specimen_id": "spc_0102",
+        "capture_index": 1,
+        "content_sha256": "22871cd37babaa6ae9425861b8d3074ce01ba1fa2eb7cfcca3b3460d41975b38",
         "repeat_of_capture_id": null
       }
     ],

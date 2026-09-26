@@ -50,6 +50,11 @@
       "enum": ["PENDING_OWNER_DECISION", "DECIDED"],
       "description": "DECIDED requires a decision reference; agents never record DECIDED on their own authority."
     },
+    "required_decision_ref": {
+      "type": "string",
+      "pattern": "^decision:[a-z0-9][a-z0-9-]{3,80}$",
+      "description": "Non-null pointer to a recorded human decision; used wherever something is approved or reviewed."
+    },
     "decision_ref": {
       "type": ["string", "null"],
       "pattern": "^decision:[a-z0-9][a-z0-9-]{3,80}$",

@@ -22,7 +22,7 @@
       "additionalProperties": false,
       "required": ["decision_ref", "decided_by_role", "decided_on"],
       "properties": {
-        "decision_ref": {"$ref": "common.schema.json#/$defs/decision_ref"},
+        "decision_ref": {"$ref": "common.schema.json#/$defs/required_decision_ref"},
         "decided_by_role": {"$ref": "common.schema.json#/$defs/text"},
         "decided_on": {"$ref": "common.schema.json#/$defs/timestamp"}
       }

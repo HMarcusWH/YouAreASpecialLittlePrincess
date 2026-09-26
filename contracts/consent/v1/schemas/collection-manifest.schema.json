@@ -5,7 +5,10 @@
   "$comment": "T11 handoff shape. Holds pseudonymous IDs and hashes only; images, signed agreements and names never enter Git.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["contract_version", "protocol", "synthetic", "writers", "specimens", "captures", "claimed_counts"],
+  "required": [
+    "contract_version", "protocol", "synthetic", "release_purpose", "release_cutoff", "writers", "specimens", "captures",
+    "claimed_counts"
+  ],
   "properties": {
     "contract_version": {"const": "collection-manifest/v1"},
     "protocol": {
@@ -18,6 +21,14 @@
       }
     },
     "synthetic": {"type": "boolean"},
+    "release_purpose": {
+      "$ref": "common.schema.json#/$defs/purpose_ref",
+      "description": "The protocol purpose every included specimen must be permitted for, e.g. engineering_evaluation."
+    },
+    "release_cutoff": {
+      "$ref": "common.schema.json#/$defs/timestamp",
+      "description": "Permissions are evaluated at this instant; withdrawals before it exclude the specimen."
+    },
     "writers": {"type": "array", "items": {"$ref": "#/$defs/writer"}},
     "specimens": {"type": "array", "items": {"$ref": "#/$defs/specimen"}},
     "captures": {"type": "array", "items": {"$ref": "#/$defs/capture"}},

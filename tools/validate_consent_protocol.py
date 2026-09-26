@@ -179,8 +179,10 @@ class SchemaSet:
         return name, node
 
     def validate(self, instance, schema_name: str, where: str = "$") -> list[Issue]:
+        """Validate against a schema file, or a subschema given as "file.schema.json#/$defs/name"."""
         issues: list[Issue] = []
-        self._validate(instance, self.schemas[schema_name], schema_name, where, issues)
+        name, schema = self.resolve(schema_name.partition("#")[0], schema_name)
+        self._validate(instance, schema, name, where, issues)
         return issues
 
     def _validate(self, value, schema: dict, name: str, path: str, issues: list[Issue]) -> None:
@@ -286,8 +288,8 @@ def check_purposes(doc: dict, retention_ids: set[str], gates: set[str]) -> list[
                                 f"only {FREE_SERVICE_PURPOSE} may be (and must be) required for the service"))
         if p["affects_free_report"] and not p["required_for_service"]:
             issues.append(Issue("OPTIONAL_PURPOSE_AFFECTS_FREE", where, "declining an optional purpose must not reduce Free"))
-        if p["status"] == "APPROVED" and "approval" not in p:
-            issues.append(Issue("APPROVAL_WITHOUT_EVIDENCE", where, "APPROVED requires an approval record"))
+        if p["status"] == "APPROVED" and not (p.get("approval") or {}).get("decision_ref"):
+            issues.append(Issue("APPROVAL_WITHOUT_EVIDENCE", where, "APPROVED requires an approval record with a decision_ref"))
         if p["status"] == "APPROVED" and p["legal_basis"] != "DECIDED":
             issues.append(Issue("APPROVED_WITHOUT_LEGAL_BASIS", where, "approval requires a decided legal basis"))
         if p["legal_basis"] == "DECIDED" and p["status"] != "APPROVED":
@@ -309,7 +311,7 @@ def check_purposes(doc: dict, retention_ids: set[str], gates: set[str]) -> list[
             if retention_class not in retention_ids:
                 issues.append(Issue("UNKNOWN_RETENTION_CLASS", where, f"{retention_class} is not in retention.json"))
 
-    if doc["registry_status"] == "APPROVED" and "approval" not in doc:
+    if doc["registry_status"] == "APPROVED" and not (doc.get("approval") or {}).get("decision_ref"):
         issues.append(Issue("APPROVAL_WITHOUT_EVIDENCE", "purposes.json", "APPROVED registry requires an approval record"))
     if doc["registry_status"] == "APPROVED" and doc["legal_basis_status"] != "DECIDED":
         issues.append(Issue("APPROVED_WITHOUT_LEGAL_BASIS", "purposes.json", "approval requires decided legal bases"))
@@ -331,6 +333,9 @@ def check_notices(doc: dict, purposes: dict[tuple[str, int], dict]) -> list[Issu
                 issues.append(Issue("UNKNOWN_PURPOSE", where, f"{ref['purpose_id']}@{ref['purpose_version']}"))
             elif purpose["status"] not in OFFERED:
                 issues.append(Issue("NOTICE_OFFERS_INACTIVE_PURPOSE", where, ref["purpose_id"]))
+            elif notice["status"] != "DRAFT" and purpose["status"] != "APPROVED":
+                # Grants against unapproved purposes are rejected, so a live notice over them would be unusable.
+                issues.append(Issue("NOTICE_ACTIVE_FOR_UNAPPROVED_PURPOSE", where, ref["purpose_id"]))
             listed.add(ref["purpose_id"])
         seen = [(c["purpose_id"], c["locale"]) for c in notice["copy"]]
         for item in duplicates(seen):
@@ -391,6 +396,8 @@ def check_retention(doc: dict) -> list[Issue]:
             issues.append(Issue("RETENTION_UNIT_MISMATCH", where, "DAYS needs a value; other units carry none"))
         if unit is not None and not (c["decision_status"] == "DECIDED" and c["decision_ref"]):
             issues.append(Issue("RETENTION_WITHOUT_DECISION", where, "a retention period needs a recorded owner decision"))
+        if unit == "EVENT_BOUND" and not c["ends_when"]:
+            issues.append(Issue("RETENTION_EVENT_BOUND_WITHOUT_END", where, "EVENT_BOUND needs at least one ending event"))
         if c["decision_status"] == "DECIDED" and unit is None:
             issues.append(Issue("RETENTION_DECIDED_WITHOUT_PERIOD", where,
                                 "a decided class records DAYS or the explicit EVENT_BOUND choice"))
@@ -493,8 +500,8 @@ def check_pilot_gate(gate: dict, protocol: dict, notices: dict, purposes: dict[t
         if key not in present:
             issues.append(Issue("MISSING_GATE_DECISION", key, "required owner decision was removed from the gate"))
     if gate["status"] == "APPROVED":
-        if "approval" not in gate:
-            issues.append(Issue("APPROVAL_WITHOUT_EVIDENCE", "pilot_gate.json", "APPROVED requires an approval record"))
+        if not (gate.get("approval") or {}).get("decision_ref"):
+            issues.append(Issue("APPROVAL_WITHOUT_EVIDENCE", "pilot_gate.json", "APPROVED requires an approval record with a decision_ref"))
         if any(d["status"] != "DECIDED" for d in gate["decisions"]):
             issues.append(Issue("APPROVED_WITH_PENDING_DECISIONS", "pilot_gate.json", "every gate decision must be decided"))
         return issues
@@ -604,12 +611,17 @@ class CollectionSummary:
     by_task: dict[str, dict[str, int]] = field(default_factory=dict)
 
 
-def check_collection_manifest(manifest: dict, protocol: dict, *, human_release: bool = True) -> tuple[list[Issue], CollectionSummary]:
+def check_collection_manifest(
+    manifest: dict, protocol: dict, consent: ConsentContext, *, human_release: bool = True
+) -> tuple[list[Issue], CollectionSummary]:
     """Writer/specimen/capture lineage: pages, photos and sessions never become extra people.
 
-    By default the manifest is treated as a human release, which must not be
-    synthetic. Fixture checks pass human_release=False; their summary stays
-    marked synthetic and must never feed human statistics.
+    Every included specimen needs the manifest's release purpose to be
+    PERMITTED at the release cutoff in the consent ledger, directly or through
+    its writer's pilot enrollment. By default the manifest is treated as a human
+    release, which must not be synthetic. Fixture checks pass
+    human_release=False; their summary stays marked synthetic and must never
+    feed human statistics.
     """
     issues: list[Issue] = []
     summary = CollectionSummary(synthetic=manifest["synthetic"])
@@ -629,6 +641,12 @@ def check_collection_manifest(manifest: dict, protocol: dict, *, human_release: 
     sessions = {session["session_index"] for session in protocol["session_plan"]}
     scripts = set(protocol["supported_contexts"]["scripts"])
     languages = set(protocol["supported_contexts"]["languages"])
+    release_purpose = manifest["release_purpose"]
+    release_allowed = purpose_key(release_purpose) in {purpose_key(ref) for ref in protocol["consent_purposes"]}
+    if not release_allowed:
+        issues.append(Issue("RELEASE_PURPOSE_NOT_IN_PROTOCOL", "release_purpose",
+                            f"{release_purpose['purpose_id']}@{release_purpose['purpose_version']} is not a protocol purpose"))
+    cutoff = parse_timestamp(manifest["release_cutoff"])
 
     included: set[str] = set()
     seen_session_task: dict[tuple[str, str, int], str] = {}
@@ -662,6 +680,16 @@ def check_collection_manifest(manifest: dict, protocol: dict, *, human_release: 
             issues.append(Issue("DUPLICATE_SPECIMEN_IN_SESSION", where, f"same writer/task/session as {seen_session_task[session_key]}"))
             continue
         seen_session_task[session_key] = where
+        if not release_allowed:
+            continue
+        state = evaluate_permission(
+            consent, {"kind": "WRITER", "id": s["writer_id"]}, release_purpose, {"kind": "SPECIMEN", "id": where}, cutoff,
+            covering_scopes=({"kind": "PILOT_ENROLLMENT", "id": writer["enrollment_id"]},),
+        )
+        if state != "PERMITTED":
+            issues.append(Issue("NO_RELEASE_PERMISSION", where,
+                                f"{release_purpose['purpose_id']} is {state} at the release cutoff"))
+            continue
         included.add(where)
 
     by_hash: dict[str, str] = {}
@@ -697,9 +725,18 @@ def check_collection_manifest(manifest: dict, protocol: dict, *, human_release: 
 
     # A specimen evidenced only by someone else's bytes is not evidence of another writer.
     included &= set(counted)
+    # Later sessions estimate within-writer variation, so they need the same
+    # writer's session-1 specimen for the same task in this release.
+    baseline = {(specimens[i]["writer_id"], specimens[i]["task_id"]) for i in included if specimens[i]["session_index"] == 1}
+    for specimen_id in sorted(included):
+        s = specimens[specimen_id]
+        if s["session_index"] != 1 and (s["writer_id"], s["task_id"]) not in baseline:
+            issues.append(Issue("SESSION_WITHOUT_BASELINE", specimen_id,
+                                f"session {s['session_index']} has no included session-1 {s['task_id']} specimen"))
+            included.discard(specimen_id)
     summary.writers = len({specimens[s]["writer_id"] for s in included})
     summary.specimens = len(included)
-    summary.captures = len(counted)
+    summary.captures = sum(1 for specimen_id in counted if specimen_id in included)
     for specimen_id in sorted(included):
         s = specimens[specimen_id]
         cohort = summary.by_task.setdefault(s["task_id"], {"writers": 0, "specimens": 0})
@@ -849,18 +886,27 @@ def event_validity(event: dict, context: ConsentContext) -> list[str]:
     return sorted(set(codes))
 
 
-def scope_covers(event_scope: dict, query_scope: dict, subject: dict) -> bool:
-    if event_scope == query_scope:
+def scope_covers(event_scope: dict, query_scope: dict, subject: dict, covering_scopes: tuple[dict, ...] = ()) -> bool:
+    if event_scope == query_scope or event_scope in covering_scopes:
         return True
     return event_scope["kind"] == "SUBJECT_WIDE" and event_scope["id"] == subject["id"] and query_scope["kind"] != "SUBJECT_WIDE"
 
 
-def evaluate_permission(context: ConsentContext, subject: dict, purpose_ref: dict, scope: dict, at: datetime) -> str:
+def evaluate_permission(
+    context: ConsentContext, subject: dict, purpose_ref: dict, scope: dict, at: datetime,
+    covering_scopes: tuple[dict, ...] = (),
+) -> str:
+    """Latest valid event wins. covering_scopes are broader scopes the caller vouches
+    contain the query scope (e.g. a specimen's pilot enrollment)."""
     purpose = context.purposes.get(purpose_key(purpose_ref))
     if purpose is None or purpose["status"] not in OFFERED:
         return "NOT_OFFERED"
     if purpose["status"] not in context.usable_statuses:
         return "NOT_APPROVED"
+    if scope["kind"] not in purpose["grant_scopes"]:
+        # A use the purpose never offered cannot be authorized by any broader grant.
+        return "SCOPE_NOT_GRANTABLE"
+    covering_scopes = tuple(c for c in covering_scopes if c["kind"] in purpose["grant_scopes"])
     if purpose["requires_adult_declaration"] and subject["kind"] == "WRITER":
         writer = context.writers.get(subject["id"])
         if writer is None or writer["adult_eligibility"] != "DECLARED_ADULT":
@@ -869,7 +915,7 @@ def evaluate_permission(context: ConsentContext, subject: dict, purpose_ref: dic
         (index, event) for index, event in context.valid
         if event["subject"] == subject
         and purpose_key(event["purpose"]) == purpose_key(purpose_ref)
-        and scope_covers(event["scope"], scope, subject)
+        and scope_covers(event["scope"], scope, subject, covering_scopes)
         and parse_timestamp(event["effective_at"]) <= at
     ]
     if not candidates:
@@ -907,6 +953,16 @@ def evaluate_free_report(context: ConsentContext, writer_id: str, scope: dict, a
     ):
         return "AVAILABLE"
     return "UNAVAILABLE"
+
+
+def collection_consent_context(registry: dict, manifest: dict, consent_log: dict, *, fixture_mode: bool = False) -> ConsentContext:
+    """Consent ledger for a collection manifest: pilot writers have no accounts."""
+    writers = [
+        {"writer_id": w["writer_id"], "self_account_id": None, "adult_eligibility": w["adult_eligibility"]}
+        for w in manifest["writers"]
+    ]
+    scenario = {"notices": consent_log["notices"], "writers": writers, "events": consent_log["events"]}
+    return build_context(registry, scenario, fixture_mode=fixture_mode)
 
 
 CHECK_FIELDS = {
@@ -1034,8 +1090,16 @@ def validate_repository(consent_dir: Path = CONSENT_DIR, collection_dir: Path = 
         found = schemas.validate(fixture["manifest"], "collection-manifest.schema.json", path.name)
         if not fixture["manifest"]["synthetic"]:
             found.append(Issue("NON_SYNTHETIC_FIXTURE", path.name, "repository fixtures must be synthetic"))
+        for index, event in enumerate(fixture["consent_log"]["events"]):
+            found += schemas.validate(event, "consent-event.schema.json", f"{path.name}:consent_log.events[{index}]")
+        for index, window in enumerate(fixture["consent_log"]["notices"]):
+            found += schemas.validate(window, "consent-scenario.schema.json#/$defs/notice_window",
+                                      f"{path.name}:consent_log.notices[{index}]")
         if not found:
-            actual, _summary = check_collection_manifest(fixture["manifest"], protocol, human_release=False)
+            found += notice_window_issues(fixture["consent_log"]["notices"], path.name)
+        if not found:
+            consent = collection_consent_context(registry, fixture["manifest"], fixture["consent_log"], fixture_mode=True)
+            actual, _summary = check_collection_manifest(fixture["manifest"], protocol, consent, human_release=False)
             codes = sorted({issue.code for issue in actual})
             if codes != sorted(fixture["expected_errors"]):
                 found.append(Issue("FIXTURE_EXPECTATION", path.name, f"expected {sorted(fixture['expected_errors'])}, got {codes}"))
