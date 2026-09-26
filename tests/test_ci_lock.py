@@ -344,6 +344,33 @@ build-backend = "setuptools.build_meta"
     ]
 
 
+@pytest.mark.parametrize(
+    "requirement",
+    [
+        # Codex review of PR #12: an inactive marker skipped manifest and exact-pin
+        # checks while the raw name still counted as declaring the backend provider.
+        "setuptools>=1; python_version < '3'",
+        "setuptools==84.0.0; python_version >= '3'",
+    ],
+)
+def test_build_requirements_must_be_unconditional(tmp_path, requirement):
+    pyproject, manifest = write_policy_fixture(
+        tmp_path,
+        f"""
+[build-system]
+requires = ["{requirement}", "wheel==0.48.0"]
+build-backend = "setuptools.build_meta"
+""" + MINIMAL_PROJECT,
+        "",
+    )
+
+    errors = verify_project_dependency_policy.validate(pyproject, manifest, ["dev"])
+    assert errors == [
+        "[build-system].requires must declare the setuptools.build_meta provider setuptools",
+        f"Environment markers are prohibited in build-system.requires: {requirement}",
+    ]
+
+
 @pytest.mark.parametrize("field", ["dependencies", "optional-dependencies"])
 def test_dynamic_dependency_metadata_is_rejected(tmp_path, field):
     body = MINIMAL_PROJECT.replace('dependencies = []\n', "").replace("[project.optional-dependencies]\ndev = []\n", "")
@@ -661,11 +688,15 @@ def test_backend_reported_requirement_must_be_a_declared_reviewed_build_requirem
 
     _reported, errors = backend_errors(project)
     assert errors == [
+        # Inactive on this interpreter, but an isolated build elsewhere would install it.
+        "Backend-reported build requirement missing from reviewed manifest: "
+        "get_requires_for_build_wheel reported 'legacy; python_version < \"3\"'",
         "Backend-reported build requirement is not declared in [build-system].requires: "
-        "get_requires_for_build_editable reported 'helper>=1'"
+        "get_requires_for_build_editable reported 'helper>=1'",
     ]
-    _reported, errors = backend_errors(project, manifest={"setuptools": "84.0.0", "wheel": "0.47.0", "helper": "1.0"},
-                                       declared=("setuptools", "wheel", "helper"))
+    _reported, errors = backend_errors(project, manifest={"setuptools": "84.0.0", "wheel": "0.47.0", "helper": "1.0",
+                                                          "legacy": "1.0"},
+                                       declared=("setuptools", "wheel", "helper", "legacy"))
     assert errors == [
         "Reviewed version wheel==0.47.0 does not satisfy get_requires_for_build_wheel reported 'wheel==0.48.0'",
     ]

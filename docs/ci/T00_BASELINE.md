@@ -126,6 +126,10 @@ The same wheel locks were hash-downloaded and installed into per-interpreter vir
 
 These are local results. Exact-head GitHub Actions evidence for the PR head is recorded in the PR conversation. T00A moves to `DONE` only after that run and review.
 
+### PR #12 review follow-up
+
+The Codex review of the T00A head found that an inactive environment marker on a `build-system.requires` entry skipped the manifest and exact-pin checks, while the entry's raw name still counted as declaring the backend provider. Build requirements must now be marker-free, and the provider must be declared unconditionally. Backend-reported requirements are validated whatever their marker says. Regressions: `test_build_requirements_must_be_unconditional[*]` and the updated `test_backend_reported_requirement_must_be_a_declared_reviewed_build_requirement`.
+
 ### Supported build configuration and residual trust
 
 The supported configuration is a pyproject-only setuptools project with an explicit `setuptools.build_meta` backend, exact reviewed build pins, and static dependency metadata. See the [requirements README](../../requirements/README.md#supported-build-configuration). Residual trust remains in three places:

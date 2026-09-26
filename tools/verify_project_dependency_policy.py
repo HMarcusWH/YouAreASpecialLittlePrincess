@@ -38,8 +38,6 @@ PROHIBITED_BUILD_FILES = ("setup.py", "setup.cfg")
 
 DYNAMIC_DEPENDENCY_FIELDS = ("dependencies", "optional-dependencies")
 
-NAME = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]*")
-
 BACKEND_HOOKS = ("get_requires_for_build_wheel", "get_requires_for_build_editable", "get_requires_for_build_sdist")
 
 # Build outputs and caches never feed the backend's view of the project.
@@ -123,6 +121,19 @@ def string_list(data: dict, key: str) -> list[str]:
     return value if is_string_list(value) else []
 
 
+def unconditional_names(requirements: list[str]) -> set[str]:
+    """Names of parseable requirements without an environment marker."""
+    names = set()
+    for raw in requirements:
+        try:
+            requirement = Requirement(raw)
+        except InvalidRequirement:
+            continue  # reported by validate()
+        if requirement.marker is None:
+            names.add(normalize(requirement.name))
+    return names
+
+
 def build_configuration_errors(pyproject: Path, data: dict) -> list[str]:
     """Reject metadata/build configurations that can bypass the static policy."""
     errors: list[str] = []
@@ -155,8 +166,7 @@ def build_configuration_errors(pyproject: Path, data: dict) -> list[str]:
             errors.append(f"Unsupported build backend {backend!r}; reviewed backends: {supported}")
         elif is_string_list(requires):
             provider = SUPPORTED_BUILD_BACKENDS[backend]
-            declared = {normalize(match.group(0)) for raw in requires if (match := NAME.match(raw.strip()))}
-            if provider not in declared:
+            if provider not in unconditional_names(requires):
                 errors.append(f"[build-system].requires must declare the {backend} provider {provider}")
         if "backend-path" in build_system:
             errors.append("[build-system].backend-path is prohibited: in-tree backends are unreviewed hook code")
@@ -242,6 +252,13 @@ def validate(pyproject: Path, manifest: Path, extras: list[str]) -> list[str]:
                 f"Dependency extras are prohibited until their transitive graph is reviewed: "
                 f"{requirement.name}[{requested}] in {source}"
             )
+            continue
+
+        # Build requirements are unconditional in the supported configuration:
+        # a marker could hide a requirement from this runner's checks while an
+        # isolated build elsewhere installs it, or drop the backend provider.
+        if source == "build-system.requires" and requirement.marker is not None:
+            errors.append(f"Environment markers are prohibited in build-system.requires: {raw}")
             continue
 
         if not marker_matches(requirement, marker_extras):
@@ -477,8 +494,6 @@ def capture_backend_requirements(
 def backend_requirement_errors(reported: dict[str, list[str]], reviewed: dict[str, str], declared: set[str]) -> list[str]:
     """Backend-reported requirements must already be exact reviewed build-system requirements."""
     errors: list[str] = []
-    environment = default_environment()
-    environment["extra"] = ""
     for hook, requirements in reported.items():
         for raw in requirements:
             label = f"{hook} reported {raw!r}"
@@ -493,8 +508,8 @@ def backend_requirement_errors(reported: dict[str, list[str]], reviewed: dict[st
             if requirement.extras:
                 errors.append(f"Dependency extras are prohibited in backend-reported requirements: {label}")
                 continue
-            if requirement.marker is not None and not requirement.marker.evaluate(environment=environment):
-                continue
+            # Validated whatever the marker says: a requirement inactive on this
+            # runner can still be installed by an isolated build elsewhere.
             name = normalize(requirement.name)
             if name not in reviewed:
                 errors.append(f"Backend-reported build requirement missing from reviewed manifest: {label}")

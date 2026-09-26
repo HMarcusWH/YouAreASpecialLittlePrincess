@@ -15,10 +15,10 @@ T00A makes the build configuration explicit instead of inferring it. `tools/veri
 |---|---|---|
 | `[build-system]` | Present, with an explicit `requires` list and `build-backend` | A missing table or backend makes pip fall back to an unreviewed `setuptools>=40.8.0` legacy backend. |
 | `build-backend` | `setuptools.build_meta` only; its provider `setuptools` declared in `requires` | Other or legacy backends are unreviewed hook code. `backend-path` (in-tree backends) is prohibited. |
-| `build-system.requires` | Exact `==` pins equal to the reviewed manifest version | An isolated downstream build resolves ranges from an index without our hashes. |
+| `build-system.requires` | Exact `==` pins equal to the reviewed manifest version, with no environment markers | An isolated downstream build resolves ranges from an index without our hashes. A marker could hide a requirement, or the backend provider itself, from this runner's checks. |
 | `[project]` metadata | Static `dependencies` / `optional-dependencies` | `dynamic` dependency fields and `[tool.setuptools.dynamic]` dependency tables let the backend generate `Requires-Dist` outside the policy. |
 | `setup.py`, `setup.cfg` | Absent | Both can supply dependency metadata and `setup_requires`, which the backend reports through `get_requires_for_build_*`. |
-| Backend-reported requirements | Empty, or already exact-pinned in `build-system.requires` | pip never asks for them under `--no-build-isolation`, but an ordinary isolated build installs them. |
+| Backend-reported requirements | Empty, or already exact-pinned in `build-system.requires`; checked whatever their marker says | pip never asks for them under `--no-build-isolation`, but an ordinary isolated build installs them. |
 
 ## Locked graph and backend checks
 
