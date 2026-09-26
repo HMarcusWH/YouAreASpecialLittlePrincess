@@ -288,6 +288,43 @@
         "status": "RECORDED"
       },
       "subject_eligibility": "DECLARED_ADULT"
+    },
+    {
+      "contract_version": "consent-event/v1",
+      "event_id": "evt_1008",
+      "event_type": "GRANT",
+      "subject": {
+        "kind": "WRITER",
+        "id": "wrt_0010"
+      },
+      "purpose": {
+        "purpose_id": "engineering_evaluation",
+        "purpose_version": 1
+      },
+      "notice": {
+        "notice_id": "notice.pilot-collection",
+        "version": 1
+      },
+      "scope": {
+        "kind": "SPECIMEN",
+        "id": "spc_0013"
+      },
+      "actor": {
+        "kind": "PILOT_PARTICIPANT",
+        "id": "wrt_0010"
+      },
+      "presented_default": "UNSELECTED",
+      "capture_method": "SIGNED_PILOT_AGREEMENT",
+      "derived_from": null,
+      "surface": "PILOT_SESSION",
+      "recorded_at": "2026-02-03T09:00:00Z",
+      "effective_at": "2026-02-03T09:00:00Z",
+      "evidence": {
+        "kind": "UI_INTERACTION",
+        "ref": "evd_1008",
+        "status": "RECORDED"
+      },
+      "subject_eligibility": "DECLARED_ADULT"
     }
   ],
   "checks": [
@@ -416,6 +453,31 @@
       "at": "2026-02-05T09:00:00Z",
       "expect": "DENIED",
       "note": "A participant's later no through a session control is honoured without a new signature."
+    },
+    {
+      "kind": "EVENT_VALIDITY",
+      "event_id": "evt_1008",
+      "expect": [
+        "EVIDENCE_MISMATCH"
+      ]
+    },
+    {
+      "kind": "PERMISSION",
+      "subject": {
+        "kind": "WRITER",
+        "id": "wrt_0010"
+      },
+      "purpose": {
+        "purpose_id": "engineering_evaluation",
+        "purpose_version": 1
+      },
+      "scope": {
+        "kind": "SPECIMEN",
+        "id": "spc_0013"
+      },
+      "at": "2026-02-05T09:00:00Z",
+      "expect": "NOT_ASKED",
+      "note": "Labelling a grant as signed is not evidence of a signed agreement."
     }
   ]
 }

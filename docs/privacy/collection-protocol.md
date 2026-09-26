@@ -38,13 +38,15 @@ Repeat photos are captures of the same specimen. A second session creates new sp
 - two specimens for the same writer, task and session [`DUPLICATE_SPECIMEN_IN_SESSION`];
 - a session index that is not in the protocol's session plan [`UNKNOWN_SESSION`], or a task kind that session does not schedule [`TASK_NOT_IN_SESSION`];
 - a later-session specimen without the same writer's session-1 specimen for that task in the release [`SESSION_WITHOUT_BASELINE`];
+- a specimen written after the release cutoff [`COLLECTED_AFTER_CUTOFF`];
+- a repeat photo that does not point to an earlier capture of the same page [`REPEAT_NOT_EARLIER`];
 - two writer rows sharing one enrollment [`DUPLICATE_ID`];
 - writers not declared adult [`INELIGIBLE_WRITER`];
 - context status that contradicts the declared script or language [`CONTEXT_STATUS_MISMATCH`];
 - language/task mixing [`TASK_LANGUAGE_MISMATCH`];
 - claimed counts that the lineage does not support [`COUNT_MISMATCH`].
 
-Counts are reported per task, so copied and free writing, and Swedish and English, are never pooled. The check treats a manifest as a human release by default. A human release rejects synthetic manifests [`SYNTHETIC_IN_HUMAN_RELEASE`] and counts nothing unless the protocol is `APPROVED` [`PROTOCOL_NOT_APPROVED`] and the protocol's `source_id` entry in `source_rights.json` has reviewed, cleared data rights and a cleared use for the release purpose: `engineering_testing` for `engineering_evaluation`, `benchmark_statistics` for `reference_contribution` [`SOURCE_NOT_CLEARED`]. Participant consent alone never clears a use. Repository fixtures are checked in non-release mode, and their summary stays marked synthetic.
+Counts are reported per task, so copied and free writing, and Swedish and English, are never pooled. The check treats a manifest as a human release by default. A human release rejects synthetic manifests [`SYNTHETIC_IN_HUMAN_RELEASE`] and counts nothing unless the protocol is `APPROVED` with a recorded approval [`PROTOCOL_NOT_APPROVED`]; pages written before that approval are excluded [`COLLECTED_BEFORE_PROTOCOL_APPROVAL`]; and the protocol's `source_id` entry in `source_rights.json` has reviewed, cleared data rights and a cleared use for the release purpose: `engineering_testing` for `engineering_evaluation`, `benchmark_statistics` for `reference_contribution`, by a review dated no later than the cutoff [`SOURCE_NOT_CLEARED`]. Participant consent alone never clears a use. Notices come from `notices.json`, not from the ledger's own windows. Every permission is evaluated again at `publish_at`, immediately before publication, so a withdrawal during release construction removes the page [`NO_RELEASE_PERMISSION`]. A release without that recheck is refused [`PUBLICATION_NOT_RECHECKED`, `PUBLICATION_BEFORE_CUTOFF`]. Repository fixtures are checked in non-release mode, and their summary stays marked synthetic.
 
 ## Unsupported contexts
 

@@ -88,6 +88,7 @@
         "writer_id": "wrt_0001",
         "task_id": "copy_sv",
         "session_index": 1,
+        "collected_at": "2026-02-01T10:00:00Z",
         "declared_language": "en",
         "declared_script": "LATIN",
         "declared_style": "MIXED",

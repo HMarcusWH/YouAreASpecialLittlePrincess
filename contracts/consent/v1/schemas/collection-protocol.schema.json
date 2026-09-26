@@ -14,6 +14,10 @@
     "protocol_id": {"$ref": "common.schema.json#/$defs/stable_key"},
     "version": {"$ref": "common.schema.json#/$defs/version"},
     "status": {"enum": ["DRAFT_PENDING_OWNER_REVIEW", "APPROVED"]},
+    "approval": {
+      "$ref": "purpose-registry.schema.json#/$defs/approval",
+      "description": "Required when APPROVED. Specimens collected before approval.decided_on never enter a human release."
+    },
     "gate": {"const": "pilot_rights_consent"},
     "source_id": {
       "$ref": "common.schema.json#/$defs/stable_key",

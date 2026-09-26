@@ -24,7 +24,20 @@
       "properties": {
         "decision_ref": {"$ref": "common.schema.json#/$defs/required_decision_ref"},
         "decided_by_role": {"$ref": "common.schema.json#/$defs/text"},
-        "decided_on": {"$ref": "common.schema.json#/$defs/timestamp"}
+        "decided_on": {"$ref": "common.schema.json#/$defs/timestamp"},
+        "gate_decisions": {
+          "type": "array",
+          "description": "For an approved purpose: the recorded decision that passed each of its related_gates.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["gate", "decision_ref"],
+            "properties": {
+              "gate": {"$ref": "common.schema.json#/$defs/stable_key"},
+              "decision_ref": {"$ref": "common.schema.json#/$defs/required_decision_ref"}
+            }
+          }
+        }
       }
     },
     "purpose": {

@@ -31,18 +31,37 @@ def registry():
 
 
 def check_fixture_manifest(fixture, protocol, manifest=None, *, human_release=False, fixture_mode=True, registry=None,
-                           sources=None):
+                           sources=None, notices=None, publish_at=None):
     """Run check_collection_manifest with the fixture's own consent ledger."""
     manifest = fixture["manifest"] if manifest is None else manifest
     registry = load("purposes.json") if registry is None else registry
-    consent = vcp.collection_consent_context(registry, manifest, fixture["consent_log"], fixture_mode=fixture_mode)
-    return vcp.check_collection_manifest(manifest, protocol, consent, human_release=human_release, sources=sources)
+    consent = vcp.collection_consent_context(registry, manifest, fixture["consent_log"], fixture_mode=fixture_mode,
+                                             notices=notices)
+    return vcp.check_collection_manifest(manifest, protocol, consent, human_release=human_release, sources=sources,
+                                         publish_at=publish_at)
 
 
 def approve(purpose, decided_on="2025-12-01T00:00:00Z"):
-    """An in-memory approval for tests; the repository records none."""
-    approval = {"decision_ref": "decision:test-approval", "decided_by_role": "owner", "decided_on": decided_on}
+    """An in-memory approval for tests, with a decision for every related gate; the repository records none."""
+    approval = {"decision_ref": "decision:test-approval", "decided_by_role": "owner", "decided_on": decided_on,
+                "gate_decisions": [{"gate": gate, "decision_ref": "decision:test-gate"} for gate in purpose["related_gates"]]}
     return dict(purpose, status="APPROVED", legal_basis="DECIDED", approval=approval)
+
+
+def approved_protocol(protocol, decided_on="2026-01-10T00:00:00Z"):
+    approval = {"decision_ref": "decision:test-protocol", "decided_by_role": "owner", "decided_on": decided_on}
+    return dict(protocol, status="APPROVED", approval=approval)
+
+
+def active_pilot_notices(effective_from="2026-01-01T00:00:00Z"):
+    """notices.json with the pilot notice put in effect (tests only)."""
+    notices = copy.deepcopy(load("notices.json"))
+    pilot = next(n for n in notices["notices"] if n["notice_id"] == "notice.pilot-collection")
+    pilot.update(status="ACTIVE", effective_from=effective_from, decision_ref="decision:test-notice")
+    return notices
+
+
+CUTOFF = vcp.parse_timestamp("2026-03-01T00:00:00Z")
 
 
 def approve_in(registry, purpose_id, decided_on="2025-12-01T00:00:00Z"):
@@ -122,7 +141,8 @@ def test_collection_fixture(path, protocol):
     fixture = vcp.load_json(path)
     assert fixture["manifest"]["synthetic"] is True
     assert vcp.SchemaSet().validate(fixture["manifest"], "collection-manifest.schema.json") == []
-    issues, summary = check_fixture_manifest(fixture, protocol)
+    publish_at = vcp.parse_timestamp(fixture["publish_at"]) if "publish_at" in fixture else None
+    issues, summary = check_fixture_manifest(fixture, protocol, publish_at=publish_at)
     assert codes(issues) == sorted(fixture["expected_errors"])
     assert summary.synthetic is True
 
@@ -147,6 +167,9 @@ def expected_codes_in(paths):
         "DUPLICATE_COUNTED_AS_WRITER",  # duplicate specimen counted as a writer
         "NO_RELEASE_PERMISSION",
         "SESSION_WITHOUT_BASELINE",
+        "EVIDENCE_MISMATCH",
+        "COLLECTED_AFTER_CUTOFF",
+        "REPEAT_NOT_EARLIER",
         "PRECHECKED_GRANT",
         "INELIGIBLE_AT_GRANT",
         "DENIED",
@@ -161,8 +184,8 @@ def test_t03_negative_cases_have_fixtures(required):
 
 def test_human_release_rejects_synthetic_manifests(protocol):
     fixture = vcp.load_json(vcp.CONSENT_DIR / "fixtures" / "collection" / "valid_pilot_lineage.json")
-    approved = dict(protocol, status="APPROVED")
-    issues, summary = check_fixture_manifest(fixture, approved, human_release=True, sources=cleared_sources("engineering_testing"))
+    issues, summary = check_fixture_manifest(fixture, approved_protocol(protocol), human_release=True,
+                                             sources=cleared_sources("engineering_testing"), publish_at=CUTOFF)
     assert codes(issues) == ["SYNTHETIC_IN_HUMAN_RELEASE"]
     assert summary.synthetic is True
 
@@ -187,8 +210,9 @@ def test_release_counts_nothing_without_approved_permission(protocol):
     # was counted. Outside fixture mode the draft purposes cannot permit anything.
     fixture = vcp.load_json(vcp.CONSENT_DIR / "fixtures" / "collection" / "valid_pilot_lineage.json")
     manifest = dict(copy.deepcopy(fixture["manifest"]), synthetic=False)
-    issues, summary = check_fixture_manifest(fixture, dict(protocol, status="APPROVED"), manifest, human_release=True,
-                                             fixture_mode=False, sources=cleared_sources("engineering_testing"))
+    issues, summary = check_fixture_manifest(fixture, approved_protocol(protocol), manifest, human_release=True,
+                                             fixture_mode=False, sources=cleared_sources("engineering_testing"),
+                                             notices=active_pilot_notices(), publish_at=CUTOFF)
     assert set(codes(issues)) == {"NO_RELEASE_PERMISSION", "COUNT_MISMATCH"}
     assert (summary.writers, summary.specimens, summary.captures) == (0, 0, 0)
     assert all("NOT_APPROVED" in i.message for i in issues if i.code == "NO_RELEASE_PERMISSION")
@@ -212,15 +236,20 @@ def test_human_release_needs_an_approved_protocol_and_cleared_source(registry, p
     fixture = vcp.load_json(vcp.CONSENT_DIR / "fixtures" / "collection" / "valid_pilot_lineage.json")
     manifest = dict(copy.deepcopy(fixture["manifest"]), synthetic=False)
     ledger = approve_in(registry, "engineering_evaluation")
-    approved = dict(protocol, status="APPROVED")
+    approved = approved_protocol(protocol)
 
     def run(protocol_doc, sources):
         issues, summary = check_fixture_manifest(fixture, protocol_doc, manifest, human_release=True, fixture_mode=False,
-                                                 registry=ledger, sources=sources)
+                                                 registry=ledger, sources=sources, notices=active_pilot_notices(),
+                                                 publish_at=CUTOFF)
         return codes(issues), (summary.writers, summary.specimens, summary.captures)
 
     assert run(approved, cleared_sources("engineering_testing")) == ([], (3, 6, 7))
     assert run(protocol, cleared_sources("engineering_testing")) == (["COUNT_MISMATCH", "PROTOCOL_NOT_APPROVED"], (0, 0, 0))
+    # Codex review of #12: APPROVED without a recorded approval passed.
+    unrecorded = dict(protocol, status="APPROVED")
+    assert run(unrecorded, cleared_sources("engineering_testing")) == (["COUNT_MISMATCH", "PROTOCOL_NOT_APPROVED"], (0, 0, 0))
+    assert "APPROVAL_WITHOUT_EVIDENCE" in codes(vcp.check_protocol(unrecorded, purposes_by_key(registry)))
     pending = {s["source_id"]: s for s in load("source_rights.json")["sources"]}
     assert run(approved, pending) == (["COUNT_MISMATCH", "SOURCE_NOT_CLEARED"], (0, 0, 0))
     assert run(approved, None) == (["COUNT_MISMATCH", "SOURCE_NOT_CLEARED"], (0, 0, 0))
@@ -231,11 +260,16 @@ def test_release_source_use_follows_the_release_purpose(protocol):
     sources = cleared_sources("engineering_testing")
     engineering = {"purpose_id": "engineering_evaluation", "purpose_version": 1}
     reference = {"purpose_id": "reference_contribution", "purpose_version": 1}
-    assert vcp.source_clearance_issues(protocol, engineering, sources) == []
-    assert codes(vcp.source_clearance_issues(protocol, reference, sources)) == ["SOURCE_NOT_CLEARED"]
-    assert vcp.source_clearance_issues(protocol, reference, cleared_sources("benchmark_statistics")) == []
+    assert vcp.source_clearance_issues(protocol, engineering, sources, CUTOFF) == []
+    assert codes(vcp.source_clearance_issues(protocol, reference, sources, CUTOFF)) == ["SOURCE_NOT_CLEARED"]
+    assert vcp.source_clearance_issues(protocol, reference, cleared_sources("benchmark_statistics"), CUTOFF) == []
     analytics = {"purpose_id": "product_analytics", "purpose_version": 1}
-    assert codes(vcp.source_clearance_issues(protocol, analytics, sources)) == ["SOURCE_NOT_CLEARED"]
+    assert codes(vcp.source_clearance_issues(protocol, analytics, sources, CUTOFF)) == ["SOURCE_NOT_CLEARED"]
+
+    # Codex review of #12: a review dated after the cutoff cleared the release retroactively.
+    sources["owned_pilot_collection_v1"]["review"]["reviewed_on"] = "2099-01-01T00:00:00Z"
+    late = vcp.source_clearance_issues(protocol, engineering, sources, CUTOFF)
+    assert codes(late) == ["SOURCE_NOT_CLEARED"] and "after the release cutoff" in late[0].message
 
 
 def test_protocol_names_an_owned_source(registry, protocol):
@@ -256,6 +290,62 @@ def test_specimen_task_must_be_scheduled_in_its_session(protocol):
     issues, summary = check_fixture_manifest(fixture, plan)
     assert [(i.code, i.where) for i in issues if i.code != "COUNT_MISMATCH"] == [("TASK_NOT_IN_SESSION", "spc_0103")]
     assert summary.specimens == 5
+
+
+def test_protocol_approval_is_never_retroactive(registry, protocol):
+    # Codex review of #12: pages written while the protocol was unapproved
+    # were counted once the current document said APPROVED.
+    fixture = vcp.load_json(vcp.CONSENT_DIR / "fixtures" / "collection" / "valid_pilot_lineage.json")
+    manifest = dict(copy.deepcopy(fixture["manifest"]), synthetic=False)
+    issues, summary = check_fixture_manifest(
+        fixture, approved_protocol(protocol, decided_on="2026-02-10T00:00:00Z"), manifest, human_release=True,
+        fixture_mode=False, registry=approve_in(registry, "engineering_evaluation"),
+        sources=cleared_sources("engineering_testing"), notices=active_pilot_notices(), publish_at=CUTOFF)
+    assert codes(issues) == ["COLLECTED_BEFORE_PROTOCOL_APPROVAL", "COUNT_MISMATCH", "SESSION_WITHOUT_BASELINE"]
+    assert (summary.writers, summary.specimens, summary.captures) == (0, 0, 0)
+
+
+def test_human_release_rechecks_permission_at_publication(registry, protocol):
+    # Codex review of #12: a withdrawal after the cutoff but before publication was ignored.
+    fixture = copy.deepcopy(vcp.load_json(vcp.CONSENT_DIR / "fixtures" / "collection" / "valid_pilot_lineage.json"))
+    manifest = dict(fixture["manifest"], synthetic=False)
+    withdraw = dict(copy.deepcopy(fixture["consent_log"]["events"][0]), event_id="evt_9004", event_type="WITHDRAW",
+                    capture_method="WITHDRAWAL_CONTROL", presented_default="NOT_PRESENTED",
+                    scope={"kind": "SPECIMEN", "id": "spc_0102"},
+                    recorded_at="2026-03-02T00:00:00Z", effective_at="2026-03-02T00:00:00Z")
+    fixture["consent_log"]["events"].append(withdraw)
+    common = dict(human_release=True, fixture_mode=False, registry=approve_in(registry, "engineering_evaluation"),
+                  sources=cleared_sources("engineering_testing"), notices=active_pilot_notices())
+
+    issues, summary = check_fixture_manifest(fixture, approved_protocol(protocol), manifest,
+                                             publish_at=vcp.parse_timestamp("2026-03-05T00:00:00Z"), **common)
+    assert [(i.code, i.where) for i in issues if i.code != "COUNT_MISMATCH"] == [("NO_RELEASE_PERMISSION", "spc_0102")]
+    assert "at publication" in issues[0].message and summary.specimens == 5
+
+    issues, summary = check_fixture_manifest(fixture, approved_protocol(protocol), manifest, publish_at=None, **common)
+    assert "PUBLICATION_NOT_RECHECKED" in codes(issues) and summary.specimens == 0
+    early = vcp.parse_timestamp("2026-02-20T00:00:00Z")
+    issues, summary = check_fixture_manifest(fixture, approved_protocol(protocol), manifest, publish_at=early, **common)
+    assert "PUBLICATION_BEFORE_CUTOFF" in codes(issues) and summary.specimens == 0
+
+
+def test_collection_notices_come_from_the_registry(registry, protocol):
+    # Codex review of #12: a ledger could describe its own notice window, so a
+    # fabricated notice made grants release-authorizing.
+    fixture = copy.deepcopy(vcp.load_json(vcp.CONSENT_DIR / "fixtures" / "collection" / "valid_pilot_lineage.json"))
+    fixture["consent_log"]["notices"][0]["notice_id"] = "notice.fabricated"
+    for event in fixture["consent_log"]["events"]:
+        event["notice"]["notice_id"] = "notice.fabricated"
+    manifest = dict(fixture["manifest"], synthetic=False)
+    issues, summary = check_fixture_manifest(
+        fixture, approved_protocol(protocol), manifest, human_release=True, fixture_mode=False,
+        registry=approve_in(registry, "engineering_evaluation"), sources=cleared_sources("engineering_testing"),
+        notices=active_pilot_notices(), publish_at=CUTOFF)
+    assert codes(issues) == ["COUNT_MISMATCH", "NO_RELEASE_PERMISSION"] and summary.writers == 0
+    context = vcp.collection_consent_context(approve_in(registry, "engineering_evaluation"), manifest,
+                                             fixture["consent_log"], notices=active_pilot_notices())
+    assert all(found == ["UNKNOWN_NOTICE"] for found in context.event_issues.values())
+    assert vcp.registry_notice_windows(load("notices.json")) == []
 
 
 def test_collection_summary_counts_writers_not_pages(protocol):
@@ -455,6 +545,34 @@ def test_notice_presents_one_version_of_each_purpose(registry):
     scenario = vcp.load_json(vcp.CONSENT_DIR / "fixtures" / "scenarios" / "grant_deny_withdraw_basics.json")
     scenario["notices"][0]["purposes"].append({"purpose_id": "service_processing", "purpose_version": 2})
     assert "NOTICE_LISTS_PURPOSE_TWICE" in codes(vcp.run_scenario(registry, scenario))
+
+
+def test_grant_evidence_must_match_its_capture_method(registry):
+    # Codex review of #12: a grant labelled SIGNED_PILOT_AGREEMENT with UI evidence was accepted.
+    scenario = vcp.load_json(vcp.CONSENT_DIR / "fixtures" / "scenarios" / "pilot_participant_signed_agreement.json")
+    signed = scenario["events"][0]
+    assert vcp.build_context(registry, scenario, fixture_mode=True).event_issues[signed["event_id"]] == []
+    for change in ({"evidence": dict(signed["evidence"], kind="UI_INTERACTION")}, {"surface": "WEB"}):
+        mutated = dict(scenario, events=[dict(copy.deepcopy(signed), **change)])
+        assert vcp.build_context(registry, mutated, fixture_mode=True).event_issues[signed["event_id"]] == ["EVIDENCE_MISMATCH"]
+
+    basics = vcp.load_json(vcp.CONSENT_DIR / "fixtures" / "scenarios" / "grant_deny_withdraw_basics.json")
+    explicit = basics["events"][0]
+    mutated = dict(basics, events=[dict(copy.deepcopy(explicit), evidence=dict(explicit["evidence"], kind="SIGNED_AGREEMENT"))])
+    assert vcp.build_context(registry, mutated, fixture_mode=True).event_issues[explicit["event_id"]] == ["EVIDENCE_MISMATCH"]
+
+
+def test_approved_purposes_need_every_related_gate_decided(registry, retention_ids):
+    # Codex review of #12: only the gate names were checked, so third-party AI
+    # processing could be approved with its API, model and processor gates open.
+    ledger = approve_in(registry, "third_party_ai_processing")
+    assert vcp.check_purposes(ledger, retention_ids, vcp.known_gates()) == []
+    purpose = next(p for p in ledger["purposes"] if p["purpose_id"] == "third_party_ai_processing")
+    purpose["approval"]["gate_decisions"] = purpose["approval"]["gate_decisions"][1:]
+    found = vcp.check_purposes(ledger, retention_ids, vcp.known_gates())
+    assert [(i.code, i.message.split()[0]) for i in found] == [("GATE_NOT_APPROVED", purpose["related_gates"][0])]
+    del purpose["approval"]["gate_decisions"]
+    assert len(vcp.check_purposes(ledger, retention_ids, vcp.known_gates())) == len(purpose["related_gates"])
 
 
 def test_query_scope_must_be_grantable_for_the_purpose(registry):
@@ -705,7 +823,7 @@ def test_free_writing_never_contains_a_copy_passage(registry, protocol, collecti
 
 
 def test_protocol_approval_requires_decided_prompt_rights(registry, protocol):
-    approved = dict(copy.deepcopy(protocol), status="APPROVED")
+    approved = approved_protocol(copy.deepcopy(protocol))
     found = vcp.check_protocol(approved, purposes_by_key(registry))
     assert codes(found) == ["PROTOCOL_APPROVED_WITH_PENDING_RIGHTS"]
     assert len(found) == len(protocol["tasks"])

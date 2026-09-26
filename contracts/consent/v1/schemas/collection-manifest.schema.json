@@ -58,7 +58,7 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "specimen_id", "writer_id", "task_id", "session_index", "declared_language", "declared_script",
+        "specimen_id", "writer_id", "task_id", "session_index", "collected_at", "declared_language", "declared_script",
         "declared_style", "paper", "instrument", "context_status"
       ],
       "properties": {
@@ -66,6 +66,10 @@
         "writer_id": {"$ref": "common.schema.json#/$defs/opaque_id"},
         "task_id": {"$ref": "common.schema.json#/$defs/stable_key"},
         "session_index": {"$ref": "common.schema.json#/$defs/version"},
+        "collected_at": {
+          "$ref": "common.schema.json#/$defs/timestamp",
+          "description": "When the page was written. It must not precede the protocol approval nor follow the release cutoff."
+        },
         "declared_language": {"type": "string", "pattern": "^[a-z]{2,3}$"},
         "declared_script": {"enum": ["LATIN", "CYRILLIC", "GREEK", "ARABIC", "HEBREW", "CJK", "DEVANAGARI", "OTHER"]},
         "declared_style": {"enum": ["PRINT", "CURSIVE", "MIXED", "UNDECLARED"]},
