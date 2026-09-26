@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:princess:contracts:consent:v1:consent-scenario",
+  "title": "ConsentScenarioFixture",
+  "$comment": "Synthetic fixture format: an event log plus expected evaluations. Not a production DTO.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["contract_version", "scenario_id", "description", "synthetic", "notices", "writers", "events", "checks"],
+  "properties": {
+    "contract_version": {"const": "consent-scenario/v1"},
+    "scenario_id": {"$ref": "common.schema.json#/$defs/stable_key"},
+    "description": {"$ref": "common.schema.json#/$defs/text"},
+    "synthetic": {"const": true},
+    "extra_purposes": {
+      "type": "array",
+      "items": {"$ref": "purpose-registry.schema.json#/$defs/purpose"}
+    },
+    "notices": {"type": "array", "items": {"$ref": "#/$defs/notice_window"}},
+    "writers": {"type": "array", "items": {"$ref": "#/$defs/writer"}},
+    "events": {"type": "array", "items": {"$ref": "consent-event.schema.json"}},
+    "checks": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/check"}}
+  },
+  "$defs": {
+    "notice_window": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["notice_id", "version", "effective_from", "effective_until", "purposes"],
+      "properties": {
+        "notice_id": {"$ref": "common.schema.json#/$defs/dotted_key"},
+        "version": {"$ref": "common.schema.json#/$defs/version"},
+        "effective_from": {"$ref": "common.schema.json#/$defs/timestamp"},
+        "effective_until": {"$ref": "common.schema.json#/$defs/nullable_timestamp"},
+        "purposes": {"type": "array", "minItems": 1, "items": {"$ref": "common.schema.json#/$defs/purpose_ref"}}
+      }
+    },
+    "writer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["writer_id", "self_account_id", "adult_eligibility"],
+      "properties": {
+        "writer_id": {"$ref": "common.schema.json#/$defs/opaque_id"},
+        "self_account_id": {
+          "type": ["string", "null"],
+          "pattern": "^[a-z]{2,8}_[A-Za-z0-9]{4,64}$"
+        },
+        "adult_eligibility": {"$ref": "common.schema.json#/$defs/adult_eligibility"}
+      }
+    },
+    "check": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "expect"],
+      "properties": {
+        "kind": {"enum": ["EVENT_VALIDITY", "PERMISSION", "USE", "COMPARISON", "FREE_REPORT"]},
+        "note": {"$ref": "common.schema.json#/$defs/text"},
+        "event_id": {"$ref": "common.schema.json#/$defs/opaque_id"},
+        "subject": {"$ref": "common.schema.json#/$defs/subject"},
+        "purpose": {"$ref": "common.schema.json#/$defs/purpose_ref"},
+        "scope": {"$ref": "common.schema.json#/$defs/scope"},
+        "writers": {
+          "type": "array",
+          "minItems": 2,
+          "items": {"$ref": "common.schema.json#/$defs/opaque_id"},
+          "uniqueItems": true
+        },
+        "at": {"$ref": "common.schema.json#/$defs/timestamp"},
+        "started_at": {"$ref": "common.schema.json#/$defs/timestamp"},
+        "publish_at": {"$ref": "common.schema.json#/$defs/timestamp"},
+        "expect": {
+          "type": ["string", "array"],
+          "items": {"type": "string", "pattern": "^[A-Z][A-Z_]+$"}
+        }
+      }
+    }
+  }
+}

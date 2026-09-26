@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:princess:contracts:consent:v1:retention-policy",
+  "title": "RetentionPolicy",
+  "$comment": "A reviewed configuration, never a legal claim. Durations stay null until an owner decision is recorded.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["contract_version", "status", "legal_claim", "classes"],
+  "properties": {
+    "contract_version": {"const": "retention-policy/v1"},
+    "status": {"enum": ["DRAFT_PENDING_OWNER_REVIEW", "APPROVED"]},
+    "legal_claim": {"const": false},
+    "classes": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/retention_class"}}
+  },
+  "$defs": {
+    "retention_class": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "class_id", "summary", "contains_handwriting", "starts_when", "ends_when", "max_retention",
+        "decision_status", "decision_ref", "deletion_actions", "backup_restore", "external_copies"
+      ],
+      "properties": {
+        "class_id": {"$ref": "common.schema.json#/$defs/stable_key"},
+        "summary": {"$ref": "common.schema.json#/$defs/text"},
+        "contains_handwriting": {"type": "boolean"},
+        "starts_when": {"$ref": "common.schema.json#/$defs/text"},
+        "ends_when": {"$ref": "common.schema.json#/$defs/text_list"},
+        "max_retention": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["value", "unit"],
+          "properties": {
+            "value": {"type": ["integer", "null"], "minimum": 0},
+            "unit": {"enum": ["DAYS", null]}
+          }
+        },
+        "decision_status": {"$ref": "common.schema.json#/$defs/decision_status"},
+        "decision_ref": {"$ref": "common.schema.json#/$defs/decision_ref"},
+        "deletion_actions": {"$ref": "common.schema.json#/$defs/text_list"},
+        "backup_restore": {"enum": ["TOMBSTONE_RECONCILED_BEFORE_SERVICE", "NOT_BACKED_UP"]},
+        "external_copies": {"enum": ["NONE", "PROCESSOR_CONTRACT_GOVERNED", "RECIPIENT_HELD_IRREVOCABLE"]}
+      }
+    }
+  }
+}

@@ -1,0 +1,69 @@
+{
+  "fixture_id": "same_session_page_recorded_twice",
+  "description": "The same writer's copy task in the same session is recorded as two specimens.",
+  "expected_errors": [
+    "DUPLICATE_SPECIMEN_IN_SESSION"
+  ],
+  "manifest": {
+    "contract_version": "collection-manifest/v1",
+    "protocol": {
+      "protocol_id": "collection_protocol",
+      "version": 1
+    },
+    "synthetic": true,
+    "writers": [
+      {
+        "writer_id": "wrt_0001",
+        "adult_eligibility": "DECLARED_ADULT",
+        "enrollment_id": "enr_0001"
+      }
+    ],
+    "specimens": [
+      {
+        "specimen_id": "spc_0101",
+        "writer_id": "wrt_0001",
+        "task_id": "copy_en",
+        "session_index": 1,
+        "declared_language": "en",
+        "declared_script": "LATIN",
+        "declared_style": "MIXED",
+        "paper": "BLANK",
+        "instrument": "BALLPOINT",
+        "context_status": "SUPPORTED"
+      },
+      {
+        "specimen_id": "spc_0102",
+        "writer_id": "wrt_0001",
+        "task_id": "copy_en",
+        "session_index": 1,
+        "declared_language": "en",
+        "declared_script": "LATIN",
+        "declared_style": "MIXED",
+        "paper": "BLANK",
+        "instrument": "BALLPOINT",
+        "context_status": "SUPPORTED"
+      }
+    ],
+    "captures": [
+      {
+        "capture_id": "cap_0101",
+        "specimen_id": "spc_0101",
+        "capture_index": 1,
+        "content_sha256": "025eb8d0359ddcd7279c388ff30c6a4c6b62db87a4e0fd5af1f7c99d9ecd349b",
+        "repeat_of_capture_id": null
+      },
+      {
+        "capture_id": "cap_0102",
+        "specimen_id": "spc_0102",
+        "capture_index": 1,
+        "content_sha256": "22871cd37babaa6ae9425861b8d3074ce01ba1fa2eb7cfcca3b3460d41975b38",
+        "repeat_of_capture_id": null
+      }
+    ],
+    "claimed_counts": {
+      "writers": 1,
+      "specimens": 1,
+      "captures": 1
+    }
+  }
+}

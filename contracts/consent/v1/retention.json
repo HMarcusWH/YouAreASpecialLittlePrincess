@@ -1,0 +1,379 @@
+{
+  "contract_version": "retention-policy/v1",
+  "status": "DRAFT_PENDING_OWNER_REVIEW",
+  "legal_claim": false,
+  "classes": [
+    {
+      "class_id": "upload_original",
+      "summary": "Original uploaded photo bytes and immutable internal copies of them.",
+      "contains_handwriting": true,
+      "starts_when": "Upload completion is verified and bound to an immutable key.",
+      "ends_when": [
+        "analysis_finished_without_image_retention",
+        "image_retention_withdrawn",
+        "service_processing_withdrawn",
+        "account_deleted",
+        "max_retention_reached"
+      ],
+      "max_retention": {
+        "value": null,
+        "unit": null
+      },
+      "decision_status": "PENDING_OWNER_DECISION",
+      "decision_ref": null,
+      "deletion_actions": [
+        "delete_all_object_versions",
+        "invalidate_presigned_urls",
+        "write_deletion_tombstone"
+      ],
+      "backup_restore": "TOMBSTONE_RECONCILED_BEFORE_SERVICE",
+      "external_copies": "NONE"
+    },
+    {
+      "class_id": "derived_assets",
+      "summary": "Normalized images, crops, overlays and thumbnails. A thumbnail of private writing is still private writing.",
+      "contains_handwriting": true,
+      "starts_when": "A derivative is produced from an upload_original.",
+      "ends_when": [
+        "parent_upload_deleted",
+        "image_retention_withdrawn",
+        "account_deleted",
+        "max_retention_reached"
+      ],
+      "max_retention": {
+        "value": null,
+        "unit": null
+      },
+      "decision_status": "PENDING_OWNER_DECISION",
+      "decision_ref": null,
+      "deletion_actions": [
+        "delete_all_object_versions",
+        "purge_cdn_and_render_caches",
+        "write_deletion_tombstone"
+      ],
+      "backup_restore": "TOMBSTONE_RECONCILED_BEFORE_SERVICE",
+      "external_copies": "NONE"
+    },
+    {
+      "class_id": "analysis_record",
+      "summary": "Canonical measurements, analysis runs and immutable report revisions; immutability never defeats deletion.",
+      "contains_handwriting": false,
+      "starts_when": "An analysis run publishes results.",
+      "ends_when": [
+        "service_processing_withdrawn",
+        "account_deleted",
+        "max_retention_reached"
+      ],
+      "max_retention": {
+        "value": null,
+        "unit": null
+      },
+      "decision_status": "PENDING_OWNER_DECISION",
+      "decision_ref": null,
+      "deletion_actions": [
+        "delete_rows_and_json_snapshots",
+        "mark_report_unavailable",
+        "write_deletion_tombstone"
+      ],
+      "backup_restore": "TOMBSTONE_RECONCILED_BEFORE_SERVICE",
+      "external_copies": "NONE"
+    },
+    {
+      "class_id": "export_artifacts",
+      "summary": "Rendered PDFs and share cards held on our systems.",
+      "contains_handwriting": true,
+      "starts_when": "A user requests an export or share card.",
+      "ends_when": [
+        "parent_report_deleted",
+        "share_revoked",
+        "account_deleted",
+        "max_retention_reached"
+      ],
+      "max_retention": {
+        "value": null,
+        "unit": null
+      },
+      "decision_status": "PENDING_OWNER_DECISION",
+      "decision_ref": null,
+      "deletion_actions": [
+        "delete_all_object_versions",
+        "invalidate_asset_tickets",
+        "disclose_downloaded_copies_cannot_be_recalled"
+      ],
+      "backup_restore": "TOMBSTONE_RECONCILED_BEFORE_SERVICE",
+      "external_copies": "RECIPIENT_HELD_IRREVOCABLE"
+    },
+    {
+      "class_id": "share_routes",
+      "summary": "Hashed share tokens, allowlisted projections and comparison visibility grants.",
+      "contains_handwriting": false,
+      "starts_when": "A share or comparison grant is created.",
+      "ends_when": [
+        "share_revoked",
+        "ordinary_sharing_withdrawn",
+        "partner_comparison_withdrawn",
+        "parent_report_deleted",
+        "grant_expired"
+      ],
+      "max_retention": {
+        "value": null,
+        "unit": null
+      },
+      "decision_status": "PENDING_OWNER_DECISION",
+      "decision_ref": null,
+      "deletion_actions": [
+        "revoke_token",
+        "delete_projection",
+        "purge_cdn_and_render_caches"
+      ],
+      "backup_restore": "TOMBSTONE_RECONCILED_BEFORE_SERVICE",
+      "external_copies": "NONE"
+    },
+    {
+      "class_id": "premium_request_payload",
+      "summary": "Evidence packets, validated model outputs and provider attempt records we store.",
+      "contains_handwriting": true,
+      "starts_when": "A Premium job is reserved.",
+      "ends_when": [
+        "third_party_ai_processing_withdrawn",
+        "parent_report_deleted",
+        "account_deleted",
+        "max_retention_reached"
+      ],
+      "max_retention": {
+        "value": null,
+        "unit": null
+      },
+      "decision_status": "PENDING_OWNER_DECISION",
+      "decision_ref": null,
+      "deletion_actions": [
+        "delete_payload_and_output",
+        "keep_minimal_attempt_metadata_only_under_accounting_decision",
+        "write_deletion_tombstone"
+      ],
+      "backup_restore": "TOMBSTONE_RECONCILED_BEFORE_SERVICE",
+      "external_copies": "NONE"
+    },
+    {
+      "class_id": "provider_side_copies",
+      "summary": "Copies an external model provider may hold under its own retention terms.",
+      "contains_handwriting": true,
+      "starts_when": "A provider request is sent.",
+      "ends_when": [
+        "provider_contract_retention_elapses"
+      ],
+      "max_retention": {
+        "value": null,
+        "unit": null
+      },
+      "decision_status": "PENDING_OWNER_DECISION",
+      "decision_ref": null,
+      "deletion_actions": [
+        "request_processor_deletion_per_contract",
+        "record_request_outcome"
+      ],
+      "backup_restore": "NOT_BACKED_UP",
+      "external_copies": "PROCESSOR_CONTRACT_GOVERNED"
+    },
+    {
+      "class_id": "reference_members",
+      "summary": "Candidate and released reference-corpus membership rows, assets and derived benchmark artifacts.",
+      "contains_handwriting": true,
+      "starts_when": "A contribution-permitted specimen is admitted as a candidate.",
+      "ends_when": [
+        "reference_contribution_withdrawn",
+        "source_rights_revoked",
+        "account_deleted",
+        "release_retired"
+      ],
+      "max_retention": {
+        "value": null,
+        "unit": null
+      },
+      "decision_status": "PENDING_OWNER_DECISION",
+      "decision_ref": null,
+      "deletion_actions": [
+        "exclude_from_future_releases",
+        "rebuild_or_retire_affected_releases",
+        "delete_restricted_member_assets",
+        "write_deletion_tombstone"
+      ],
+      "backup_restore": "TOMBSTONE_RECONCILED_BEFORE_SERVICE",
+      "external_copies": "NONE"
+    },
+    {
+      "class_id": "pilot_collection_originals",
+      "summary": "Pilot page photos and declared collection context under pseudonymous writer IDs.",
+      "contains_handwriting": true,
+      "starts_when": "A consented pilot capture is received.",
+      "ends_when": [
+        "engineering_evaluation_withdrawn",
+        "pilot_protocol_ends",
+        "max_retention_reached"
+      ],
+      "max_retention": {
+        "value": null,
+        "unit": null
+      },
+      "decision_status": "PENDING_OWNER_DECISION",
+      "decision_ref": null,
+      "deletion_actions": [
+        "quarantine_specimen",
+        "delete_all_object_versions",
+        "write_deletion_tombstone"
+      ],
+      "backup_restore": "TOMBSTONE_RECONCILED_BEFORE_SERVICE",
+      "external_copies": "NONE"
+    },
+    {
+      "class_id": "annotations",
+      "summary": "Human annotation records about pilot specimens (slant, baseline, spacing, page boundary).",
+      "contains_handwriting": false,
+      "starts_when": "An authorized annotator saves an annotation.",
+      "ends_when": [
+        "parent_specimen_deleted",
+        "engineering_evaluation_withdrawn",
+        "max_retention_reached"
+      ],
+      "max_retention": {
+        "value": null,
+        "unit": null
+      },
+      "decision_status": "PENDING_OWNER_DECISION",
+      "decision_ref": null,
+      "deletion_actions": [
+        "delete_annotations",
+        "rebuild_affected_evaluation_splits"
+      ],
+      "backup_restore": "TOMBSTONE_RECONCILED_BEFORE_SERVICE",
+      "external_copies": "NONE"
+    },
+    {
+      "class_id": "support_case_material",
+      "summary": "Copies of samples or reports opened for a support case.",
+      "contains_handwriting": true,
+      "starts_when": "A support case is opened with support_human_review permission.",
+      "ends_when": [
+        "case_closed",
+        "support_human_review_withdrawn",
+        "account_deleted"
+      ],
+      "max_retention": {
+        "value": null,
+        "unit": null
+      },
+      "decision_status": "PENDING_OWNER_DECISION",
+      "decision_ref": null,
+      "deletion_actions": [
+        "end_staff_access",
+        "delete_case_copies"
+      ],
+      "backup_restore": "TOMBSTONE_RECONCILED_BEFORE_SERVICE",
+      "external_copies": "NONE"
+    },
+    {
+      "class_id": "analytics_events",
+      "summary": "Allowlisted usage events; never handwriting, report text or transcriptions.",
+      "contains_handwriting": false,
+      "starts_when": "An allowlisted event is captured with product_analytics permission.",
+      "ends_when": [
+        "product_analytics_withdrawn",
+        "account_deleted",
+        "max_retention_reached"
+      ],
+      "max_retention": {
+        "value": null,
+        "unit": null
+      },
+      "decision_status": "PENDING_OWNER_DECISION",
+      "decision_ref": null,
+      "deletion_actions": [
+        "stop_capture",
+        "request_sink_deletion_where_supported"
+      ],
+      "backup_restore": "TOMBSTONE_RECONCILED_BEFORE_SERVICE",
+      "external_copies": "PROCESSOR_CONTRACT_GOVERNED"
+    },
+    {
+      "class_id": "consent_ledger",
+      "summary": "Append-only permission events needed to prove what was permitted when.",
+      "contains_handwriting": false,
+      "starts_when": "A grant, denial or withdrawal is recorded.",
+      "ends_when": [
+        "owner_decided_retention_after_account_deletion"
+      ],
+      "max_retention": {
+        "value": null,
+        "unit": null
+      },
+      "decision_status": "PENDING_OWNER_DECISION",
+      "decision_ref": null,
+      "deletion_actions": [
+        "minimize_to_pseudonymous_ids",
+        "delete_after_decided_period"
+      ],
+      "backup_restore": "TOMBSTONE_RECONCILED_BEFORE_SERVICE",
+      "external_copies": "NONE"
+    },
+    {
+      "class_id": "accounting_records",
+      "summary": "Purchases, credits and ledger entries retained for financial obligations.",
+      "contains_handwriting": false,
+      "starts_when": "A verified purchase or ledger event is recorded.",
+      "ends_when": [
+        "owner_decided_statutory_period_elapses"
+      ],
+      "max_retention": {
+        "value": null,
+        "unit": null
+      },
+      "decision_status": "PENDING_OWNER_DECISION",
+      "decision_ref": null,
+      "deletion_actions": [
+        "delete_after_decided_period"
+      ],
+      "backup_restore": "TOMBSTONE_RECONCILED_BEFORE_SERVICE",
+      "external_copies": "NONE"
+    },
+    {
+      "class_id": "deletion_tombstones",
+      "summary": "Minimal IDs and deletion epochs that stop restored backups from resurrecting erased data.",
+      "contains_handwriting": false,
+      "starts_when": "A deletion or withdrawal is executed.",
+      "ends_when": [
+        "all_backups_older_than_tombstone_expired"
+      ],
+      "max_retention": {
+        "value": null,
+        "unit": null
+      },
+      "decision_status": "PENDING_OWNER_DECISION",
+      "decision_ref": null,
+      "deletion_actions": [
+        "delete_after_backup_window"
+      ],
+      "backup_restore": "TOMBSTONE_RECONCILED_BEFORE_SERVICE",
+      "external_copies": "NONE"
+    },
+    {
+      "class_id": "operational_logs",
+      "summary": "Structured operational logs and traces with opaque IDs only; no raw writing, crops or prompts.",
+      "contains_handwriting": false,
+      "starts_when": "An operation emits a log or trace.",
+      "ends_when": [
+        "max_retention_reached"
+      ],
+      "max_retention": {
+        "value": null,
+        "unit": null
+      },
+      "decision_status": "PENDING_OWNER_DECISION",
+      "decision_ref": null,
+      "deletion_actions": [
+        "expire_log_partitions"
+      ],
+      "backup_restore": "TOMBSTONE_RECONCILED_BEFORE_SERVICE",
+      "external_copies": "PROCESSOR_CONTRACT_GOVERNED"
+    }
+  ]
+}

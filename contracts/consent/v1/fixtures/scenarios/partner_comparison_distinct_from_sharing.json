@@ -1,0 +1,406 @@
+{
+  "contract_version": "consent-scenario/v1",
+  "scenario_id": "partner_comparison_distinct_from_sharing",
+  "description": "Each author authorizes their own input to a comparison; ordinary sharing never counts as that permission.",
+  "synthetic": true,
+  "notices": [
+    {
+      "notice_id": "notice.consent-choices",
+      "version": 1,
+      "effective_from": "2026-01-01T00:00:00Z",
+      "effective_until": null,
+      "purposes": [
+        {
+          "purpose_id": "service_processing",
+          "purpose_version": 1
+        },
+        {
+          "purpose_id": "image_retention",
+          "purpose_version": 1
+        },
+        {
+          "purpose_id": "third_party_ai_processing",
+          "purpose_version": 1
+        },
+        {
+          "purpose_id": "ordinary_sharing",
+          "purpose_version": 1
+        },
+        {
+          "purpose_id": "partner_comparison",
+          "purpose_version": 1
+        },
+        {
+          "purpose_id": "reference_contribution",
+          "purpose_version": 1
+        },
+        {
+          "purpose_id": "support_human_review",
+          "purpose_version": 1
+        },
+        {
+          "purpose_id": "product_analytics",
+          "purpose_version": 1
+        }
+      ]
+    }
+  ],
+  "writers": [
+    {
+      "writer_id": "wrt_0001",
+      "self_account_id": "acc_0001",
+      "adult_eligibility": "DECLARED_ADULT"
+    },
+    {
+      "writer_id": "wrt_0002",
+      "self_account_id": "acc_0002",
+      "adult_eligibility": "DECLARED_ADULT"
+    }
+  ],
+  "events": [
+    {
+      "contract_version": "consent-event/v1",
+      "event_id": "evt_0801",
+      "event_type": "GRANT",
+      "subject": {
+        "kind": "WRITER",
+        "id": "wrt_0001"
+      },
+      "purpose": {
+        "purpose_id": "ordinary_sharing",
+        "purpose_version": 1
+      },
+      "notice": {
+        "notice_id": "notice.consent-choices",
+        "version": 1
+      },
+      "scope": {
+        "kind": "SHARE_GRANT",
+        "id": "shr_0001"
+      },
+      "actor": {
+        "kind": "ACCOUNT",
+        "id": "acc_0001"
+      },
+      "presented_default": "UNSELECTED",
+      "capture_method": "EXPLICIT_CONTROL",
+      "derived_from": null,
+      "surface": "WEB",
+      "recorded_at": "2026-02-02T09:00:00Z",
+      "effective_at": "2026-02-02T09:00:00Z",
+      "evidence": {
+        "kind": "UI_INTERACTION",
+        "ref": "evd_0801",
+        "status": "RECORDED"
+      }
+    },
+    {
+      "contract_version": "consent-event/v1",
+      "event_id": "evt_0802",
+      "event_type": "GRANT",
+      "subject": {
+        "kind": "WRITER",
+        "id": "wrt_0001"
+      },
+      "purpose": {
+        "purpose_id": "partner_comparison",
+        "purpose_version": 1
+      },
+      "notice": {
+        "notice_id": "notice.consent-choices",
+        "version": 1
+      },
+      "scope": {
+        "kind": "COMPARISON",
+        "id": "cmp_0001"
+      },
+      "actor": {
+        "kind": "ACCOUNT",
+        "id": "acc_0001"
+      },
+      "presented_default": "UNSELECTED",
+      "capture_method": "EXPLICIT_CONTROL",
+      "derived_from": null,
+      "surface": "WEB",
+      "recorded_at": "2026-02-02T09:00:00Z",
+      "effective_at": "2026-02-02T09:00:00Z",
+      "evidence": {
+        "kind": "UI_INTERACTION",
+        "ref": "evd_0802",
+        "status": "RECORDED"
+      }
+    },
+    {
+      "contract_version": "consent-event/v1",
+      "event_id": "evt_0803",
+      "event_type": "GRANT",
+      "subject": {
+        "kind": "WRITER",
+        "id": "wrt_0002"
+      },
+      "purpose": {
+        "purpose_id": "ordinary_sharing",
+        "purpose_version": 1
+      },
+      "notice": {
+        "notice_id": "notice.consent-choices",
+        "version": 1
+      },
+      "scope": {
+        "kind": "SHARE_GRANT",
+        "id": "shr_0002"
+      },
+      "actor": {
+        "kind": "ACCOUNT",
+        "id": "acc_0002"
+      },
+      "presented_default": "UNSELECTED",
+      "capture_method": "EXPLICIT_CONTROL",
+      "derived_from": null,
+      "surface": "WEB",
+      "recorded_at": "2026-02-02T09:00:00Z",
+      "effective_at": "2026-02-02T09:00:00Z",
+      "evidence": {
+        "kind": "UI_INTERACTION",
+        "ref": "evd_0803",
+        "status": "RECORDED"
+      }
+    },
+    {
+      "contract_version": "consent-event/v1",
+      "event_id": "evt_0804",
+      "event_type": "GRANT",
+      "subject": {
+        "kind": "WRITER",
+        "id": "wrt_0002"
+      },
+      "purpose": {
+        "purpose_id": "partner_comparison",
+        "purpose_version": 1
+      },
+      "notice": {
+        "notice_id": "notice.consent-choices",
+        "version": 1
+      },
+      "scope": {
+        "kind": "COMPARISON",
+        "id": "cmp_0001"
+      },
+      "actor": {
+        "kind": "ACCOUNT",
+        "id": "acc_0001"
+      },
+      "presented_default": "UNSELECTED",
+      "capture_method": "EXPLICIT_CONTROL",
+      "derived_from": null,
+      "surface": "WEB",
+      "recorded_at": "2026-02-03T09:00:00Z",
+      "effective_at": "2026-02-03T09:00:00Z",
+      "evidence": {
+        "kind": "UI_INTERACTION",
+        "ref": "evd_0804",
+        "status": "RECORDED"
+      }
+    },
+    {
+      "contract_version": "consent-event/v1",
+      "event_id": "evt_0805",
+      "event_type": "GRANT",
+      "subject": {
+        "kind": "WRITER",
+        "id": "wrt_0002"
+      },
+      "purpose": {
+        "purpose_id": "partner_comparison",
+        "purpose_version": 1
+      },
+      "notice": {
+        "notice_id": "notice.consent-choices",
+        "version": 1
+      },
+      "scope": {
+        "kind": "SHARE_GRANT",
+        "id": "shr_0002"
+      },
+      "actor": {
+        "kind": "ACCOUNT",
+        "id": "acc_0002"
+      },
+      "presented_default": "UNSELECTED",
+      "capture_method": "EXPLICIT_CONTROL",
+      "derived_from": null,
+      "surface": "WEB",
+      "recorded_at": "2026-02-03T09:00:00Z",
+      "effective_at": "2026-02-03T09:00:00Z",
+      "evidence": {
+        "kind": "UI_INTERACTION",
+        "ref": "evd_0805",
+        "status": "RECORDED"
+      }
+    },
+    {
+      "contract_version": "consent-event/v1",
+      "event_id": "evt_0806",
+      "event_type": "GRANT",
+      "subject": {
+        "kind": "WRITER",
+        "id": "wrt_0002"
+      },
+      "purpose": {
+        "purpose_id": "partner_comparison",
+        "purpose_version": 1
+      },
+      "notice": {
+        "notice_id": "notice.consent-choices",
+        "version": 1
+      },
+      "scope": {
+        "kind": "COMPARISON",
+        "id": "cmp_0001"
+      },
+      "actor": {
+        "kind": "ACCOUNT",
+        "id": "acc_0002"
+      },
+      "presented_default": "UNSELECTED",
+      "capture_method": "EXPLICIT_CONTROL",
+      "derived_from": null,
+      "surface": "WEB",
+      "recorded_at": "2026-02-05T09:00:00Z",
+      "effective_at": "2026-02-05T09:00:00Z",
+      "evidence": {
+        "kind": "UI_INTERACTION",
+        "ref": "evd_0806",
+        "status": "RECORDED"
+      }
+    },
+    {
+      "contract_version": "consent-event/v1",
+      "event_id": "evt_0807",
+      "event_type": "WITHDRAW",
+      "subject": {
+        "kind": "WRITER",
+        "id": "wrt_0001"
+      },
+      "purpose": {
+        "purpose_id": "partner_comparison",
+        "purpose_version": 1
+      },
+      "notice": {
+        "notice_id": "notice.consent-choices",
+        "version": 1
+      },
+      "scope": {
+        "kind": "COMPARISON",
+        "id": "cmp_0001"
+      },
+      "actor": {
+        "kind": "ACCOUNT",
+        "id": "acc_0001"
+      },
+      "presented_default": "NOT_PRESENTED",
+      "capture_method": "WITHDRAWAL_CONTROL",
+      "derived_from": null,
+      "surface": "WEB",
+      "recorded_at": "2026-02-08T09:00:00Z",
+      "effective_at": "2026-02-08T09:00:00Z",
+      "evidence": {
+        "kind": "UI_INTERACTION",
+        "ref": "evd_0807",
+        "status": "RECORDED"
+      }
+    }
+  ],
+  "checks": [
+    {
+      "kind": "EVENT_VALIDITY",
+      "event_id": "evt_0804",
+      "expect": [
+        "NO_AUTHOR_AUTHORITY"
+      ]
+    },
+    {
+      "kind": "EVENT_VALIDITY",
+      "event_id": "evt_0805",
+      "expect": [
+        "SCOPE_NOT_ALLOWED"
+      ]
+    },
+    {
+      "kind": "EVENT_VALIDITY",
+      "event_id": "evt_0806",
+      "expect": []
+    },
+    {
+      "kind": "COMPARISON",
+      "writers": [
+        "wrt_0001",
+        "wrt_0002"
+      ],
+      "purpose": {
+        "purpose_id": "partner_comparison",
+        "purpose_version": 1
+      },
+      "scope": {
+        "kind": "COMPARISON",
+        "id": "cmp_0001"
+      },
+      "at": "2026-02-04T09:00:00Z",
+      "expect": "BLOCKED",
+      "note": "Writer 2 only shared a report; the inviter cannot grant for them."
+    },
+    {
+      "kind": "COMPARISON",
+      "writers": [
+        "wrt_0001",
+        "wrt_0002"
+      ],
+      "purpose": {
+        "purpose_id": "partner_comparison",
+        "purpose_version": 1
+      },
+      "scope": {
+        "kind": "COMPARISON",
+        "id": "cmp_0001"
+      },
+      "at": "2026-02-06T09:00:00Z",
+      "expect": "ALLOWED"
+    },
+    {
+      "kind": "COMPARISON",
+      "writers": [
+        "wrt_0001",
+        "wrt_0002"
+      ],
+      "purpose": {
+        "purpose_id": "partner_comparison",
+        "purpose_version": 1
+      },
+      "scope": {
+        "kind": "COMPARISON",
+        "id": "cmp_0001"
+      },
+      "at": "2026-02-09T09:00:00Z",
+      "expect": "BLOCKED",
+      "note": "Either author withdrawing ends the comparison for both."
+    },
+    {
+      "kind": "PERMISSION",
+      "subject": {
+        "kind": "WRITER",
+        "id": "wrt_0002"
+      },
+      "purpose": {
+        "purpose_id": "ordinary_sharing",
+        "purpose_version": 1
+      },
+      "scope": {
+        "kind": "SHARE_GRANT",
+        "id": "shr_0002"
+      },
+      "at": "2026-02-09T09:00:00Z",
+      "expect": "PERMITTED",
+      "note": "Comparison withdrawal does not touch ordinary sharing."
+    }
+  ]
+}

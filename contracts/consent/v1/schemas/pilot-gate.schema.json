@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:princess:contracts:consent:v1:pilot-gate",
+  "title": "PilotGateRecord",
+  "$comment": "Machine-readable state of the pilot_rights_consent human gate. T11 must refuse to collect unless status is APPROVED.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["contract_version", "gate", "status", "decisions", "blocked_until_approved"],
+  "properties": {
+    "contract_version": {"const": "pilot-gate/v1"},
+    "gate": {"const": "pilot_rights_consent"},
+    "status": {"enum": ["PENDING", "APPROVED"]},
+    "approval": {"$ref": "purpose-registry.schema.json#/$defs/approval"},
+    "decisions": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/decision"}},
+    "blocked_until_approved": {"$ref": "common.schema.json#/$defs/text_list"}
+  },
+  "$defs": {
+    "decision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["decision_key", "question", "owner_role", "status", "decision_ref"],
+      "properties": {
+        "decision_key": {"$ref": "common.schema.json#/$defs/stable_key"},
+        "question": {"$ref": "common.schema.json#/$defs/text"},
+        "owner_role": {"$ref": "common.schema.json#/$defs/text"},
+        "status": {"$ref": "common.schema.json#/$defs/decision_status"},
+        "decision_ref": {"$ref": "common.schema.json#/$defs/decision_ref"}
+      }
+    }
+  }
+}

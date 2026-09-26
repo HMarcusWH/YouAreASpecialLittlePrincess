@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:princess:contracts:consent:v1:consent-event",
+  "title": "ConsentEvent",
+  "$comment": "Append-only. A later event supersedes an earlier one for the same subject/purpose/scope; events are never edited.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract_version", "event_id", "event_type", "subject", "purpose", "notice", "scope", "actor",
+    "presented_default", "capture_method", "derived_from", "surface", "recorded_at", "effective_at", "evidence"
+  ],
+  "properties": {
+    "contract_version": {"const": "consent-event/v1"},
+    "event_id": {"$ref": "common.schema.json#/$defs/opaque_id"},
+    "event_type": {"enum": ["GRANT", "DENY", "WITHDRAW"]},
+    "subject": {"$ref": "common.schema.json#/$defs/subject"},
+    "purpose": {"$ref": "common.schema.json#/$defs/purpose_ref"},
+    "notice": {"$ref": "common.schema.json#/$defs/notice_ref"},
+    "scope": {"$ref": "common.schema.json#/$defs/scope"},
+    "actor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "id"],
+      "properties": {
+        "kind": {"enum": ["ACCOUNT", "PILOT_PARTICIPANT", "SUPPORT_STAFF", "SYSTEM"]},
+        "id": {"$ref": "common.schema.json#/$defs/opaque_id"}
+      }
+    },
+    "presented_default": {"enum": ["UNSELECTED", "SELECTED", "NOT_PRESENTED"]},
+    "capture_method": {"enum": ["EXPLICIT_CONTROL", "SIGNED_PILOT_AGREEMENT", "WITHDRAWAL_CONTROL", "VERIFIED_REQUEST"]},
+    "derived_from": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "required": ["kind", "id"],
+      "properties": {
+        "kind": {"enum": ["ACCOUNT_DELETION", "SUPPORT_REQUEST", "PURCHASE", "ENTITLEMENT", "SHARE_REVOCATION", "PURPOSE_RETIREMENT"]},
+        "id": {"$ref": "common.schema.json#/$defs/opaque_id"}
+      }
+    },
+    "surface": {"enum": ["WEB", "IOS", "ANDROID", "PILOT_SESSION", "SUPPORT_CONSOLE", "SYSTEM"]},
+    "recorded_at": {"$ref": "common.schema.json#/$defs/timestamp"},
+    "effective_at": {"$ref": "common.schema.json#/$defs/timestamp"},
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "ref", "status"],
+      "properties": {
+        "kind": {"enum": ["UI_INTERACTION", "SIGNED_AGREEMENT", "VERIFIED_REQUEST", "SYSTEM_RECORD"]},
+        "ref": {"$ref": "common.schema.json#/$defs/opaque_id"},
+        "status": {"enum": ["RECORDED", "PENDING"]}
+      },
+      "description": "Pointer only. Signed agreements and request transcripts stay in protected storage, never in Git."
+    }
+  }
+}

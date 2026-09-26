@@ -1,0 +1,329 @@
+{
+  "contract_version": "consent-scenario/v1",
+  "scenario_id": "uploader_lacks_author_authority",
+  "description": "Only the author may decide about their handwriting; another account uploading it has no authority.",
+  "synthetic": true,
+  "notices": [
+    {
+      "notice_id": "notice.consent-choices",
+      "version": 1,
+      "effective_from": "2026-01-01T00:00:00Z",
+      "effective_until": null,
+      "purposes": [
+        {
+          "purpose_id": "service_processing",
+          "purpose_version": 1
+        },
+        {
+          "purpose_id": "image_retention",
+          "purpose_version": 1
+        },
+        {
+          "purpose_id": "third_party_ai_processing",
+          "purpose_version": 1
+        },
+        {
+          "purpose_id": "ordinary_sharing",
+          "purpose_version": 1
+        },
+        {
+          "purpose_id": "partner_comparison",
+          "purpose_version": 1
+        },
+        {
+          "purpose_id": "reference_contribution",
+          "purpose_version": 1
+        },
+        {
+          "purpose_id": "support_human_review",
+          "purpose_version": 1
+        },
+        {
+          "purpose_id": "product_analytics",
+          "purpose_version": 1
+        }
+      ]
+    }
+  ],
+  "writers": [
+    {
+      "writer_id": "wrt_0001",
+      "self_account_id": "acc_0001",
+      "adult_eligibility": "DECLARED_ADULT"
+    },
+    {
+      "writer_id": "wrt_0004",
+      "self_account_id": null,
+      "adult_eligibility": "DECLARED_ADULT"
+    }
+  ],
+  "events": [
+    {
+      "contract_version": "consent-event/v1",
+      "event_id": "evt_0401",
+      "event_type": "GRANT",
+      "subject": {
+        "kind": "WRITER",
+        "id": "wrt_0001"
+      },
+      "purpose": {
+        "purpose_id": "service_processing",
+        "purpose_version": 1
+      },
+      "notice": {
+        "notice_id": "notice.consent-choices",
+        "version": 1
+      },
+      "scope": {
+        "kind": "SPECIMEN",
+        "id": "spc_0001"
+      },
+      "actor": {
+        "kind": "ACCOUNT",
+        "id": "acc_0002"
+      },
+      "presented_default": "UNSELECTED",
+      "capture_method": "EXPLICIT_CONTROL",
+      "derived_from": null,
+      "surface": "WEB",
+      "recorded_at": "2026-02-02T09:00:00Z",
+      "effective_at": "2026-02-02T09:00:00Z",
+      "evidence": {
+        "kind": "UI_INTERACTION",
+        "ref": "evd_0401",
+        "status": "RECORDED"
+      }
+    },
+    {
+      "contract_version": "consent-event/v1",
+      "event_id": "evt_0402",
+      "event_type": "GRANT",
+      "subject": {
+        "kind": "WRITER",
+        "id": "wrt_0001"
+      },
+      "purpose": {
+        "purpose_id": "reference_contribution",
+        "purpose_version": 1
+      },
+      "notice": {
+        "notice_id": "notice.consent-choices",
+        "version": 1
+      },
+      "scope": {
+        "kind": "SUBJECT_WIDE",
+        "id": "wrt_0001"
+      },
+      "actor": {
+        "kind": "ACCOUNT",
+        "id": "acc_0002"
+      },
+      "presented_default": "UNSELECTED",
+      "capture_method": "EXPLICIT_CONTROL",
+      "derived_from": null,
+      "surface": "WEB",
+      "recorded_at": "2026-02-02T09:00:00Z",
+      "effective_at": "2026-02-02T09:00:00Z",
+      "evidence": {
+        "kind": "UI_INTERACTION",
+        "ref": "evd_0402",
+        "status": "RECORDED"
+      }
+    },
+    {
+      "contract_version": "consent-event/v1",
+      "event_id": "evt_0403",
+      "event_type": "GRANT",
+      "subject": {
+        "kind": "WRITER",
+        "id": "wrt_0004"
+      },
+      "purpose": {
+        "purpose_id": "service_processing",
+        "purpose_version": 1
+      },
+      "notice": {
+        "notice_id": "notice.consent-choices",
+        "version": 1
+      },
+      "scope": {
+        "kind": "SPECIMEN",
+        "id": "spc_0004"
+      },
+      "actor": {
+        "kind": "ACCOUNT",
+        "id": "acc_0001"
+      },
+      "presented_default": "UNSELECTED",
+      "capture_method": "EXPLICIT_CONTROL",
+      "derived_from": null,
+      "surface": "WEB",
+      "recorded_at": "2026-02-02T09:00:00Z",
+      "effective_at": "2026-02-02T09:00:00Z",
+      "evidence": {
+        "kind": "UI_INTERACTION",
+        "ref": "evd_0403",
+        "status": "RECORDED"
+      }
+    },
+    {
+      "contract_version": "consent-event/v1",
+      "event_id": "evt_0404",
+      "event_type": "GRANT",
+      "subject": {
+        "kind": "WRITER",
+        "id": "wrt_0001"
+      },
+      "purpose": {
+        "purpose_id": "service_processing",
+        "purpose_version": 1
+      },
+      "notice": {
+        "notice_id": "notice.consent-choices",
+        "version": 1
+      },
+      "scope": {
+        "kind": "SPECIMEN",
+        "id": "spc_0001"
+      },
+      "actor": {
+        "kind": "SUPPORT_STAFF",
+        "id": "stf_0001"
+      },
+      "presented_default": "UNSELECTED",
+      "capture_method": "VERIFIED_REQUEST",
+      "derived_from": null,
+      "surface": "SUPPORT_CONSOLE",
+      "recorded_at": "2026-02-02T09:00:00Z",
+      "effective_at": "2026-02-02T09:00:00Z",
+      "evidence": {
+        "kind": "VERIFIED_REQUEST",
+        "ref": "evd_0404",
+        "status": "RECORDED"
+      }
+    },
+    {
+      "contract_version": "consent-event/v1",
+      "event_id": "evt_0405",
+      "event_type": "WITHDRAW",
+      "subject": {
+        "kind": "WRITER",
+        "id": "wrt_0001"
+      },
+      "purpose": {
+        "purpose_id": "reference_contribution",
+        "purpose_version": 1
+      },
+      "notice": {
+        "notice_id": "notice.consent-choices",
+        "version": 1
+      },
+      "scope": {
+        "kind": "SUBJECT_WIDE",
+        "id": "wrt_0001"
+      },
+      "actor": {
+        "kind": "ACCOUNT",
+        "id": "acc_0002"
+      },
+      "presented_default": "NOT_PRESENTED",
+      "capture_method": "WITHDRAWAL_CONTROL",
+      "derived_from": null,
+      "surface": "WEB",
+      "recorded_at": "2026-02-03T09:00:00Z",
+      "effective_at": "2026-02-03T09:00:00Z",
+      "evidence": {
+        "kind": "UI_INTERACTION",
+        "ref": "evd_0405",
+        "status": "RECORDED"
+      }
+    }
+  ],
+  "checks": [
+    {
+      "kind": "EVENT_VALIDITY",
+      "event_id": "evt_0401",
+      "expect": [
+        "NO_AUTHOR_AUTHORITY"
+      ]
+    },
+    {
+      "kind": "EVENT_VALIDITY",
+      "event_id": "evt_0402",
+      "expect": [
+        "NO_AUTHOR_AUTHORITY"
+      ]
+    },
+    {
+      "kind": "EVENT_VALIDITY",
+      "event_id": "evt_0403",
+      "expect": [
+        "NO_AUTHOR_AUTHORITY"
+      ]
+    },
+    {
+      "kind": "EVENT_VALIDITY",
+      "event_id": "evt_0404",
+      "expect": [
+        "GRANT_NOT_EXPLICIT",
+        "NO_AUTHOR_AUTHORITY"
+      ]
+    },
+    {
+      "kind": "EVENT_VALIDITY",
+      "event_id": "evt_0405",
+      "expect": [
+        "NO_AUTHORITY"
+      ]
+    },
+    {
+      "kind": "PERMISSION",
+      "subject": {
+        "kind": "WRITER",
+        "id": "wrt_0001"
+      },
+      "purpose": {
+        "purpose_id": "service_processing",
+        "purpose_version": 1
+      },
+      "scope": {
+        "kind": "SPECIMEN",
+        "id": "spc_0001"
+      },
+      "at": "2026-02-04T09:00:00Z",
+      "expect": "NOT_ASKED"
+    },
+    {
+      "kind": "FREE_REPORT",
+      "subject": {
+        "kind": "WRITER",
+        "id": "wrt_0001"
+      },
+      "scope": {
+        "kind": "SPECIMEN",
+        "id": "spc_0001"
+      },
+      "at": "2026-02-04T09:00:00Z",
+      "expect": "UNAVAILABLE",
+      "note": "An uploader's click is not the author's permission."
+    },
+    {
+      "kind": "PERMISSION",
+      "subject": {
+        "kind": "WRITER",
+        "id": "wrt_0004"
+      },
+      "purpose": {
+        "purpose_id": "service_processing",
+        "purpose_version": 1
+      },
+      "scope": {
+        "kind": "SPECIMEN",
+        "id": "spc_0004"
+      },
+      "at": "2026-02-04T09:00:00Z",
+      "expect": "NOT_ASKED",
+      "note": "A pilot-only writer without an account cannot be granted for by any account."
+    }
+  ]
+}

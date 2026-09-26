@@ -1,0 +1,34 @@
+# Consent, rights and collection contracts (T03 draft)
+
+Status: `DRAFT_PENDING_OWNER_REVIEW`. Human-readable specification: [docs/privacy](../../docs/privacy/README.md).
+
+These are versioned draft contracts. T01 owns the final product wire DTOs and code generation. It maps these schemas into `contracts/product/v1` and generated Python/TypeScript. Until then, the IDs, enums and semantics here are the source, and any change must keep the validator and fixtures green.
+
+## Layout
+
+| Path | Contents |
+|---|---|
+| `v1/schemas/*.schema.json` | JSON Schema 2020-12 documents: shared definitions; purpose, notice, retention, lineage, source-rights and pilot-gate registries; consent events; scenario fixtures; collection protocol and collection manifests. |
+| `v1/purposes.json` | Purpose registry v1: 9 draft purposes and 2 that are not offered. |
+| `v1/notices.json` | Draft notices with English and Swedish choice copy. Not legal text; no effective dates. |
+| `v1/retention.json` | Retention classes. Every period is null pending an owner decision. |
+| `v1/deletion_lineage.json` | Artifact-kind DAG and deletion actions. |
+| `v1/source_rights.json` | Code, data and model-weight rights per source; all pending review. |
+| `v1/pilot_gate.json` | `pilot_rights_consent` gate: `PENDING`, with 11 owner decisions outstanding. |
+
+<a id="fixtures"></a>
+## Fixtures
+
+All fixtures are synthetic. They contain opaque IDs and hashes of labels, never real handwriting.
+
+- `v1/fixtures/scenarios/`: ten append-only event logs with expected outcomes. They cover grant, deny and withdraw; declining keeps Free; payment is not AI consent; the uploader lacks author authority; withdrawal during use; a reused obsolete notice; a purpose version change; partner comparison versus sharing; precheck, eligibility and evidence; and a pilot signed agreement.
+- `v1/fixtures/collection/`: eight collection manifests with their expected error codes, including a duplicate specimen counted as a writer and a repeat capture filed under another writer.
+
+## Validation
+
+```bash
+python tools/validate_consent_protocol.py
+python -m pytest -q tests/test_consent_protocol.py
+```
+
+The schema validator supports a strict keyword subset and fails on anything else, so a schema can never silently lose a constraint. Objects are closed, and integers exclude booleans and floats. JSON with duplicate keys or `NaN`/`Infinity` is rejected.

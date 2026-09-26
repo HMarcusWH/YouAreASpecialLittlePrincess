@@ -1,0 +1,282 @@
+{
+  "contract_version": "consent-scenario/v1",
+  "scenario_id": "payment_is_not_ai_consent",
+  "description": "A purchase or entitlement never becomes permission to send handwriting to the AI provider.",
+  "synthetic": true,
+  "notices": [
+    {
+      "notice_id": "notice.consent-choices",
+      "version": 1,
+      "effective_from": "2026-01-01T00:00:00Z",
+      "effective_until": null,
+      "purposes": [
+        {
+          "purpose_id": "service_processing",
+          "purpose_version": 1
+        },
+        {
+          "purpose_id": "image_retention",
+          "purpose_version": 1
+        },
+        {
+          "purpose_id": "third_party_ai_processing",
+          "purpose_version": 1
+        },
+        {
+          "purpose_id": "ordinary_sharing",
+          "purpose_version": 1
+        },
+        {
+          "purpose_id": "partner_comparison",
+          "purpose_version": 1
+        },
+        {
+          "purpose_id": "reference_contribution",
+          "purpose_version": 1
+        },
+        {
+          "purpose_id": "support_human_review",
+          "purpose_version": 1
+        },
+        {
+          "purpose_id": "product_analytics",
+          "purpose_version": 1
+        }
+      ]
+    }
+  ],
+  "writers": [
+    {
+      "writer_id": "wrt_0001",
+      "self_account_id": "acc_0001",
+      "adult_eligibility": "DECLARED_ADULT"
+    }
+  ],
+  "events": [
+    {
+      "contract_version": "consent-event/v1",
+      "event_id": "evt_0301",
+      "event_type": "GRANT",
+      "subject": {
+        "kind": "WRITER",
+        "id": "wrt_0001"
+      },
+      "purpose": {
+        "purpose_id": "service_processing",
+        "purpose_version": 1
+      },
+      "notice": {
+        "notice_id": "notice.consent-choices",
+        "version": 1
+      },
+      "scope": {
+        "kind": "SPECIMEN",
+        "id": "spc_0001"
+      },
+      "actor": {
+        "kind": "ACCOUNT",
+        "id": "acc_0001"
+      },
+      "presented_default": "UNSELECTED",
+      "capture_method": "EXPLICIT_CONTROL",
+      "derived_from": null,
+      "surface": "WEB",
+      "recorded_at": "2026-02-02T09:00:00Z",
+      "effective_at": "2026-02-02T09:00:00Z",
+      "evidence": {
+        "kind": "UI_INTERACTION",
+        "ref": "evd_0301",
+        "status": "RECORDED"
+      }
+    },
+    {
+      "contract_version": "consent-event/v1",
+      "event_id": "evt_0302",
+      "event_type": "GRANT",
+      "subject": {
+        "kind": "WRITER",
+        "id": "wrt_0001"
+      },
+      "purpose": {
+        "purpose_id": "third_party_ai_processing",
+        "purpose_version": 1
+      },
+      "notice": {
+        "notice_id": "notice.consent-choices",
+        "version": 1
+      },
+      "scope": {
+        "kind": "REPORT",
+        "id": "rpt_0001"
+      },
+      "actor": {
+        "kind": "ACCOUNT",
+        "id": "acc_0001"
+      },
+      "presented_default": "UNSELECTED",
+      "capture_method": "EXPLICIT_CONTROL",
+      "derived_from": {
+        "kind": "PURCHASE",
+        "id": "pur_0001"
+      },
+      "surface": "WEB",
+      "recorded_at": "2026-02-03T09:00:00Z",
+      "effective_at": "2026-02-03T09:00:00Z",
+      "evidence": {
+        "kind": "UI_INTERACTION",
+        "ref": "evd_0302",
+        "status": "RECORDED"
+      }
+    },
+    {
+      "contract_version": "consent-event/v1",
+      "event_id": "evt_0303",
+      "event_type": "GRANT",
+      "subject": {
+        "kind": "WRITER",
+        "id": "wrt_0001"
+      },
+      "purpose": {
+        "purpose_id": "third_party_ai_processing",
+        "purpose_version": 1
+      },
+      "notice": {
+        "notice_id": "notice.consent-choices",
+        "version": 1
+      },
+      "scope": {
+        "kind": "REPORT",
+        "id": "rpt_0001"
+      },
+      "actor": {
+        "kind": "ACCOUNT",
+        "id": "acc_0001"
+      },
+      "presented_default": "UNSELECTED",
+      "capture_method": "EXPLICIT_CONTROL",
+      "derived_from": {
+        "kind": "ENTITLEMENT",
+        "id": "ent_0001"
+      },
+      "surface": "WEB",
+      "recorded_at": "2026-02-03T09:05:00Z",
+      "effective_at": "2026-02-03T09:05:00Z",
+      "evidence": {
+        "kind": "UI_INTERACTION",
+        "ref": "evd_0303",
+        "status": "RECORDED"
+      }
+    },
+    {
+      "contract_version": "consent-event/v1",
+      "event_id": "evt_0304",
+      "event_type": "GRANT",
+      "subject": {
+        "kind": "WRITER",
+        "id": "wrt_0001"
+      },
+      "purpose": {
+        "purpose_id": "third_party_ai_processing",
+        "purpose_version": 1
+      },
+      "notice": {
+        "notice_id": "notice.consent-choices",
+        "version": 1
+      },
+      "scope": {
+        "kind": "REPORT",
+        "id": "rpt_0001"
+      },
+      "actor": {
+        "kind": "ACCOUNT",
+        "id": "acc_0001"
+      },
+      "presented_default": "UNSELECTED",
+      "capture_method": "EXPLICIT_CONTROL",
+      "derived_from": null,
+      "surface": "WEB",
+      "recorded_at": "2026-02-05T09:00:00Z",
+      "effective_at": "2026-02-05T09:00:00Z",
+      "evidence": {
+        "kind": "UI_INTERACTION",
+        "ref": "evd_0304",
+        "status": "RECORDED"
+      }
+    }
+  ],
+  "checks": [
+    {
+      "kind": "EVENT_VALIDITY",
+      "event_id": "evt_0302",
+      "expect": [
+        "PAYMENT_IS_NOT_CONSENT"
+      ]
+    },
+    {
+      "kind": "EVENT_VALIDITY",
+      "event_id": "evt_0303",
+      "expect": [
+        "PAYMENT_IS_NOT_CONSENT"
+      ]
+    },
+    {
+      "kind": "EVENT_VALIDITY",
+      "event_id": "evt_0304",
+      "expect": []
+    },
+    {
+      "kind": "PERMISSION",
+      "subject": {
+        "kind": "WRITER",
+        "id": "wrt_0001"
+      },
+      "purpose": {
+        "purpose_id": "third_party_ai_processing",
+        "purpose_version": 1
+      },
+      "scope": {
+        "kind": "REPORT",
+        "id": "rpt_0001"
+      },
+      "at": "2026-02-04T09:00:00Z",
+      "expect": "NOT_ASKED",
+      "note": "Paid but not asked: Premium must not run."
+    },
+    {
+      "kind": "PERMISSION",
+      "subject": {
+        "kind": "WRITER",
+        "id": "wrt_0001"
+      },
+      "purpose": {
+        "purpose_id": "third_party_ai_processing",
+        "purpose_version": 1
+      },
+      "scope": {
+        "kind": "REPORT",
+        "id": "rpt_0001"
+      },
+      "at": "2026-02-06T09:00:00Z",
+      "expect": "PERMITTED",
+      "note": "Only the explicit choice permits it."
+    },
+    {
+      "kind": "PERMISSION",
+      "subject": {
+        "kind": "WRITER",
+        "id": "wrt_0001"
+      },
+      "purpose": {
+        "purpose_id": "third_party_ai_processing",
+        "purpose_version": 1
+      },
+      "scope": {
+        "kind": "REPORT",
+        "id": "rpt_0002"
+      },
+      "at": "2026-02-06T09:00:00Z",
+      "expect": "NOT_ASKED",
+      "note": "Permission is per report."
+    }
+  ]
+}

@@ -1,0 +1,90 @@
+{
+  "contract_version": "pilot-gate/v1",
+  "gate": "pilot_rights_consent",
+  "status": "PENDING",
+  "decisions": [
+    {
+      "decision_key": "controller_and_legal_basis",
+      "question": "Who is the controller, and what legal basis applies to each purpose in purposes.json?",
+      "owner_role": "product owner with legal/privacy counsel",
+      "status": "PENDING_OWNER_DECISION",
+      "decision_ref": null
+    },
+    {
+      "decision_key": "age_eligibility",
+      "question": "What adult age threshold applies in each recruitment region, and how is the self-declaration worded?",
+      "owner_role": "product owner with legal/privacy counsel",
+      "status": "PENDING_OWNER_DECISION",
+      "decision_ref": null
+    },
+    {
+      "decision_key": "retention_periods",
+      "question": "What maximum retention applies to each class in retention.json, including the consent ledger after account deletion?",
+      "owner_role": "product owner with legal/privacy counsel",
+      "status": "PENDING_OWNER_DECISION",
+      "decision_ref": null
+    },
+    {
+      "decision_key": "aggregate_after_withdrawal",
+      "question": "May aggregate benchmark statistics that included a withdrawn specimen be kept, or must releases be rebuilt?",
+      "owner_role": "product owner with privacy review",
+      "status": "PENDING_OWNER_DECISION",
+      "decision_ref": null
+    },
+    {
+      "decision_key": "notice_wording",
+      "question": "Approve the final participant notice and consent wording in Swedish and English (the drafts are not legal text).",
+      "owner_role": "product owner with legal/privacy counsel",
+      "status": "PENDING_OWNER_DECISION",
+      "decision_ref": null
+    },
+    {
+      "decision_key": "collection_agreement",
+      "question": "Approve the pilot collection agreement covering derived statistics, retention, deletion and withdrawal channel.",
+      "owner_role": "product owner with legal/privacy counsel",
+      "status": "PENDING_OWNER_DECISION",
+      "decision_ref": null
+    },
+    {
+      "decision_key": "compensation",
+      "question": "Decide whether and how participants are compensated, independent of sharing, contribution or results.",
+      "owner_role": "product owner",
+      "status": "PENDING_OWNER_DECISION",
+      "decision_ref": null
+    },
+    {
+      "decision_key": "recruitment_channels",
+      "question": "Approve recruitment channels that avoid relying only on the founder's network or one institution.",
+      "owner_role": "product-data owner",
+      "status": "PENDING_OWNER_DECISION",
+      "decision_ref": null
+    },
+    {
+      "decision_key": "processors_and_storage_region",
+      "question": "Approve the storage/processing providers and regions used for pilot images and annotations.",
+      "owner_role": "product owner",
+      "status": "PENDING_OWNER_DECISION",
+      "decision_ref": null
+    },
+    {
+      "decision_key": "annotator_access",
+      "question": "Decide who may annotate, under what confidentiality terms, and how access is logged and revoked.",
+      "owner_role": "product-data owner",
+      "status": "PENDING_OWNER_DECISION",
+      "decision_ref": null
+    },
+    {
+      "decision_key": "prompt_rights",
+      "question": "Confirm the project owns and may use the original collection prompts in content/collection/v1.",
+      "owner_role": "product owner",
+      "status": "PENDING_OWNER_DECISION",
+      "decision_ref": null
+    }
+  ],
+  "blocked_until_approved": [
+    "Recruiting or contacting pilot participants (T11).",
+    "Collecting, uploading or annotating any pilot handwriting.",
+    "Activating notice.pilot-collection or any consent capture UI for pilot purposes.",
+    "Admitting any specimen to a reference candidate set."
+  ]
+}

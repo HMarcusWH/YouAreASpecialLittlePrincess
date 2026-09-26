@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:princess:contracts:consent:v1:deletion-lineage",
+  "title": "DeletionLineage",
+  "$comment": "Artifact kinds derived from handwriting and what deletion or withdrawal of any upstream kind does to them.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["contract_version", "status", "roots", "nodes"],
+  "properties": {
+    "contract_version": {"const": "deletion-lineage/v1"},
+    "status": {"enum": ["DRAFT_PENDING_OWNER_REVIEW", "APPROVED"]},
+    "roots": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "common.schema.json#/$defs/stable_key"},
+      "uniqueItems": true
+    },
+    "nodes": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/node"}}
+  },
+  "$defs": {
+    "node": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["artifact_kind", "parents", "retention_class", "contains_handwriting", "on_upstream_deletion", "notes"],
+      "properties": {
+        "artifact_kind": {"$ref": "common.schema.json#/$defs/stable_key"},
+        "parents": {
+          "type": "array",
+          "items": {"$ref": "common.schema.json#/$defs/stable_key"},
+          "uniqueItems": true
+        },
+        "retention_class": {"$ref": "common.schema.json#/$defs/stable_key"},
+        "contains_handwriting": {"type": "boolean"},
+        "on_upstream_deletion": {
+          "enum": [
+            "DELETE", "REVOKE_THEN_DELETE", "EXCLUDE_AND_REBUILD_OR_RETIRE", "REQUEST_PROCESSOR_DELETION",
+            "RETAIN_UNDER_SEPARATE_OBLIGATION"
+          ]
+        },
+        "notes": {"$ref": "common.schema.json#/$defs/text"}
+      }
+    }
+  }
+}

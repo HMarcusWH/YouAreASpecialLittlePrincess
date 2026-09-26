@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:princess:contracts:consent:v1:source-rights",
+  "title": "SourceRightsRegister",
+  "$comment": "Code, data and model-weight rights are separate. A public URL or a permissive code licence clears nothing else.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["contract_version", "sources"],
+  "properties": {
+    "contract_version": {"const": "source-rights/v1"},
+    "sources": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/source"}}
+  },
+  "$defs": {
+    "right": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "observed_terms"],
+      "properties": {
+        "status": {"enum": ["NOT_APPLICABLE", "PENDING_REVIEW", "CLEARED", "NOT_CLEARED"]},
+        "observed_terms": {"type": ["string", "null"], "minLength": 1}
+      }
+    },
+    "use_status": {"enum": ["NOT_CLEARED", "PENDING_REVIEW", "CLEARED"]},
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source_id", "kind", "title", "evidence_refs", "review_status", "rights", "allowed_uses", "restrictions"],
+      "properties": {
+        "source_id": {"$ref": "common.schema.json#/$defs/stable_key"},
+        "kind": {"enum": ["EXTERNAL_DATASET", "OWNED_COLLECTION"]},
+        "title": {"$ref": "common.schema.json#/$defs/text"},
+        "evidence_refs": {"$ref": "common.schema.json#/$defs/text_list"},
+        "review_status": {"enum": ["PENDING_REVIEW", "REVIEWED"]},
+        "review": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["decision_ref", "reviewer_role", "reviewed_on", "archive_sha256"],
+          "properties": {
+            "decision_ref": {"$ref": "common.schema.json#/$defs/decision_ref"},
+            "reviewer_role": {"$ref": "common.schema.json#/$defs/text"},
+            "reviewed_on": {"$ref": "common.schema.json#/$defs/timestamp"},
+            "archive_sha256": {
+              "type": ["string", "null"],
+              "pattern": "^[0-9a-f]{64}$"
+            }
+          }
+        },
+        "rights": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["code", "data", "model_weights"],
+          "properties": {
+            "code": {"$ref": "#/$defs/right"},
+            "data": {"$ref": "#/$defs/right"},
+            "model_weights": {"$ref": "#/$defs/right"}
+          }
+        },
+        "allowed_uses": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["engineering_testing", "benchmark_statistics", "display", "redistribution", "model_training"],
+          "properties": {
+            "engineering_testing": {"$ref": "#/$defs/use_status"},
+            "benchmark_statistics": {"$ref": "#/$defs/use_status"},
+            "display": {"$ref": "#/$defs/use_status"},
+            "redistribution": {"$ref": "#/$defs/use_status"},
+            "model_training": {"$ref": "#/$defs/use_status"}
+          }
+        },
+        "restrictions": {"$ref": "common.schema.json#/$defs/text_list"}
+      }
+    }
+  }
+}

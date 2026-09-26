@@ -1,0 +1,296 @@
+{
+  "contract_version": "consent-scenario/v1",
+  "scenario_id": "pilot_participant_signed_agreement",
+  "description": "A pilot participant without an account grants each pilot purpose separately through a signed agreement.",
+  "synthetic": true,
+  "notices": [
+    {
+      "notice_id": "notice.pilot-collection",
+      "version": 1,
+      "effective_from": "2026-01-01T00:00:00Z",
+      "effective_until": null,
+      "purposes": [
+        {
+          "purpose_id": "engineering_evaluation",
+          "purpose_version": 1
+        },
+        {
+          "purpose_id": "reference_contribution",
+          "purpose_version": 1
+        }
+      ]
+    }
+  ],
+  "writers": [
+    {
+      "writer_id": "wrt_0010",
+      "self_account_id": null,
+      "adult_eligibility": "DECLARED_ADULT"
+    }
+  ],
+  "events": [
+    {
+      "contract_version": "consent-event/v1",
+      "event_id": "evt_1001",
+      "event_type": "GRANT",
+      "subject": {
+        "kind": "WRITER",
+        "id": "wrt_0010"
+      },
+      "purpose": {
+        "purpose_id": "engineering_evaluation",
+        "purpose_version": 1
+      },
+      "notice": {
+        "notice_id": "notice.pilot-collection",
+        "version": 1
+      },
+      "scope": {
+        "kind": "PILOT_ENROLLMENT",
+        "id": "enr_0010"
+      },
+      "actor": {
+        "kind": "PILOT_PARTICIPANT",
+        "id": "wrt_0010"
+      },
+      "presented_default": "UNSELECTED",
+      "capture_method": "SIGNED_PILOT_AGREEMENT",
+      "derived_from": null,
+      "surface": "PILOT_SESSION",
+      "recorded_at": "2026-02-02T09:00:00Z",
+      "effective_at": "2026-02-02T09:00:00Z",
+      "evidence": {
+        "kind": "SIGNED_AGREEMENT",
+        "ref": "evd_1001",
+        "status": "RECORDED"
+      }
+    },
+    {
+      "contract_version": "consent-event/v1",
+      "event_id": "evt_1002",
+      "event_type": "DENY",
+      "subject": {
+        "kind": "WRITER",
+        "id": "wrt_0010"
+      },
+      "purpose": {
+        "purpose_id": "reference_contribution",
+        "purpose_version": 1
+      },
+      "notice": {
+        "notice_id": "notice.pilot-collection",
+        "version": 1
+      },
+      "scope": {
+        "kind": "SUBJECT_WIDE",
+        "id": "wrt_0010"
+      },
+      "actor": {
+        "kind": "PILOT_PARTICIPANT",
+        "id": "wrt_0010"
+      },
+      "presented_default": "UNSELECTED",
+      "capture_method": "SIGNED_PILOT_AGREEMENT",
+      "derived_from": null,
+      "surface": "PILOT_SESSION",
+      "recorded_at": "2026-02-02T09:00:00Z",
+      "effective_at": "2026-02-02T09:00:00Z",
+      "evidence": {
+        "kind": "SIGNED_AGREEMENT",
+        "ref": "evd_1002",
+        "status": "RECORDED"
+      }
+    },
+    {
+      "contract_version": "consent-event/v1",
+      "event_id": "evt_1003",
+      "event_type": "GRANT",
+      "subject": {
+        "kind": "WRITER",
+        "id": "wrt_0010"
+      },
+      "purpose": {
+        "purpose_id": "engineering_evaluation",
+        "purpose_version": 1
+      },
+      "notice": {
+        "notice_id": "notice.pilot-collection",
+        "version": 1
+      },
+      "scope": {
+        "kind": "SPECIMEN",
+        "id": "spc_0010"
+      },
+      "actor": {
+        "kind": "PILOT_PARTICIPANT",
+        "id": "wrt_0010"
+      },
+      "presented_default": "UNSELECTED",
+      "capture_method": "EXPLICIT_CONTROL",
+      "derived_from": null,
+      "surface": "PILOT_SESSION",
+      "recorded_at": "2026-02-03T09:00:00Z",
+      "effective_at": "2026-02-03T09:00:00Z",
+      "evidence": {
+        "kind": "UI_INTERACTION",
+        "ref": "evd_1003",
+        "status": "RECORDED"
+      }
+    },
+    {
+      "contract_version": "consent-event/v1",
+      "event_id": "evt_1004",
+      "event_type": "GRANT",
+      "subject": {
+        "kind": "WRITER",
+        "id": "wrt_0010"
+      },
+      "purpose": {
+        "purpose_id": "reference_contribution",
+        "purpose_version": 1
+      },
+      "notice": {
+        "notice_id": "notice.pilot-collection",
+        "version": 1
+      },
+      "scope": {
+        "kind": "SUBJECT_WIDE",
+        "id": "wrt_0010"
+      },
+      "actor": {
+        "kind": "SUPPORT_STAFF",
+        "id": "stf_0002"
+      },
+      "presented_default": "UNSELECTED",
+      "capture_method": "SIGNED_PILOT_AGREEMENT",
+      "derived_from": null,
+      "surface": "PILOT_SESSION",
+      "recorded_at": "2026-02-03T09:00:00Z",
+      "effective_at": "2026-02-03T09:00:00Z",
+      "evidence": {
+        "kind": "SIGNED_AGREEMENT",
+        "ref": "evd_1004",
+        "status": "RECORDED"
+      }
+    },
+    {
+      "contract_version": "consent-event/v1",
+      "event_id": "evt_1005",
+      "event_type": "WITHDRAW",
+      "subject": {
+        "kind": "WRITER",
+        "id": "wrt_0010"
+      },
+      "purpose": {
+        "purpose_id": "engineering_evaluation",
+        "purpose_version": 1
+      },
+      "notice": {
+        "notice_id": "notice.pilot-collection",
+        "version": 1
+      },
+      "scope": {
+        "kind": "PILOT_ENROLLMENT",
+        "id": "enr_0010"
+      },
+      "actor": {
+        "kind": "PILOT_PARTICIPANT",
+        "id": "wrt_0010"
+      },
+      "presented_default": "NOT_PRESENTED",
+      "capture_method": "WITHDRAWAL_CONTROL",
+      "derived_from": null,
+      "surface": "PILOT_SESSION",
+      "recorded_at": "2026-02-20T09:00:00Z",
+      "effective_at": "2026-02-20T09:00:00Z",
+      "evidence": {
+        "kind": "UI_INTERACTION",
+        "ref": "evd_1005",
+        "status": "RECORDED"
+      }
+    }
+  ],
+  "checks": [
+    {
+      "kind": "EVENT_VALIDITY",
+      "event_id": "evt_1001",
+      "expect": []
+    },
+    {
+      "kind": "EVENT_VALIDITY",
+      "event_id": "evt_1002",
+      "expect": []
+    },
+    {
+      "kind": "EVENT_VALIDITY",
+      "event_id": "evt_1003",
+      "expect": [
+        "GRANT_NOT_EXPLICIT"
+      ]
+    },
+    {
+      "kind": "EVENT_VALIDITY",
+      "event_id": "evt_1004",
+      "expect": [
+        "NO_AUTHOR_AUTHORITY"
+      ]
+    },
+    {
+      "kind": "EVENT_VALIDITY",
+      "event_id": "evt_1005",
+      "expect": []
+    },
+    {
+      "kind": "PERMISSION",
+      "subject": {
+        "kind": "WRITER",
+        "id": "wrt_0010"
+      },
+      "purpose": {
+        "purpose_id": "engineering_evaluation",
+        "purpose_version": 1
+      },
+      "scope": {
+        "kind": "PILOT_ENROLLMENT",
+        "id": "enr_0010"
+      },
+      "at": "2026-02-05T09:00:00Z",
+      "expect": "PERMITTED"
+    },
+    {
+      "kind": "PERMISSION",
+      "subject": {
+        "kind": "WRITER",
+        "id": "wrt_0010"
+      },
+      "purpose": {
+        "purpose_id": "reference_contribution",
+        "purpose_version": 1
+      },
+      "scope": {
+        "kind": "SPECIMEN",
+        "id": "spc_0010"
+      },
+      "at": "2026-02-05T09:00:00Z",
+      "expect": "DENIED",
+      "note": "Testing the measurements does not imply joining the reference collection."
+    },
+    {
+      "kind": "PERMISSION",
+      "subject": {
+        "kind": "WRITER",
+        "id": "wrt_0010"
+      },
+      "purpose": {
+        "purpose_id": "engineering_evaluation",
+        "purpose_version": 1
+      },
+      "scope": {
+        "kind": "PILOT_ENROLLMENT",
+        "id": "enr_0010"
+      },
+      "at": "2026-02-21T09:00:00Z",
+      "expect": "WITHDRAWN"
+    }
+  ]
+}
