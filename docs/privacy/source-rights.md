@@ -14,6 +14,8 @@ A source record keeps **code**, **data** and **model-weight** rights apart, each
 
 Uses are tracked separately: engineering testing, benchmark statistics, display, redistribution and model training.
 
+The collection protocol names its source (`source_id: owned_pilot_collection_v1`), and it must be an owned collection [`UNKNOWN_SOURCE`]. A human release from that collection counts nothing until its data rights and the release's use are cleared by a recorded review [`SOURCE_NOT_CLEARED`]: `engineering_testing` for an `engineering_evaluation` release and `benchmark_statistics` for a `reference_contribution` release. Participant consent is necessary but never sufficient.
+
 ## Current entries
 
 | Source | Data rights (observed) | Uses | Why |

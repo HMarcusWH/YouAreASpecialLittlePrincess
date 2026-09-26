@@ -49,11 +49,19 @@
     {
       "writer_id": "wrt_0001",
       "self_account_id": "acc_0001",
+      "self_account_linked_at": "2026-01-01T00:00:00Z",
       "adult_eligibility": "DECLARED_ADULT"
     },
     {
       "writer_id": "wrt_0004",
       "self_account_id": null,
+      "self_account_linked_at": null,
+      "adult_eligibility": "DECLARED_ADULT"
+    },
+    {
+      "writer_id": "wrt_0008",
+      "self_account_id": "acc_0002",
+      "self_account_linked_at": "2026-02-05T09:00:00Z",
       "adult_eligibility": "DECLARED_ADULT"
     }
   ],
@@ -242,6 +250,80 @@
         "status": "RECORDED"
       },
       "subject_eligibility": "DECLARED_ADULT"
+    },
+    {
+      "contract_version": "consent-event/v1",
+      "event_id": "evt_0406",
+      "event_type": "GRANT",
+      "subject": {
+        "kind": "WRITER",
+        "id": "wrt_0008"
+      },
+      "purpose": {
+        "purpose_id": "service_processing",
+        "purpose_version": 1
+      },
+      "notice": {
+        "notice_id": "notice.consent-choices",
+        "version": 1
+      },
+      "scope": {
+        "kind": "SPECIMEN",
+        "id": "spc_0008"
+      },
+      "actor": {
+        "kind": "ACCOUNT",
+        "id": "acc_0002"
+      },
+      "presented_default": "UNSELECTED",
+      "capture_method": "EXPLICIT_CONTROL",
+      "derived_from": null,
+      "surface": "WEB",
+      "recorded_at": "2026-02-02T09:00:00Z",
+      "effective_at": "2026-02-02T09:00:00Z",
+      "evidence": {
+        "kind": "UI_INTERACTION",
+        "ref": "evd_0406",
+        "status": "RECORDED"
+      },
+      "subject_eligibility": "DECLARED_ADULT"
+    },
+    {
+      "contract_version": "consent-event/v1",
+      "event_id": "evt_0407",
+      "event_type": "GRANT",
+      "subject": {
+        "kind": "WRITER",
+        "id": "wrt_0008"
+      },
+      "purpose": {
+        "purpose_id": "service_processing",
+        "purpose_version": 1
+      },
+      "notice": {
+        "notice_id": "notice.consent-choices",
+        "version": 1
+      },
+      "scope": {
+        "kind": "SPECIMEN",
+        "id": "spc_0008"
+      },
+      "actor": {
+        "kind": "ACCOUNT",
+        "id": "acc_0002"
+      },
+      "presented_default": "UNSELECTED",
+      "capture_method": "EXPLICIT_CONTROL",
+      "derived_from": null,
+      "surface": "WEB",
+      "recorded_at": "2026-02-06T09:00:00Z",
+      "effective_at": "2026-02-06T09:00:00Z",
+      "evidence": {
+        "kind": "UI_INTERACTION",
+        "ref": "evd_0407",
+        "status": "RECORDED"
+      },
+      "subject_eligibility": "DECLARED_ADULT"
     }
   ],
   "checks": [
@@ -329,6 +411,54 @@
       "at": "2026-02-04T09:00:00Z",
       "expect": "NOT_ASKED",
       "note": "A pilot-only writer without an account cannot be granted for by any account."
+    },
+    {
+      "kind": "EVENT_VALIDITY",
+      "event_id": "evt_0406",
+      "expect": [
+        "NO_AUTHOR_AUTHORITY"
+      ]
+    },
+    {
+      "kind": "EVENT_VALIDITY",
+      "event_id": "evt_0407",
+      "expect": []
+    },
+    {
+      "kind": "PERMISSION",
+      "subject": {
+        "kind": "WRITER",
+        "id": "wrt_0008"
+      },
+      "purpose": {
+        "purpose_id": "service_processing",
+        "purpose_version": 1
+      },
+      "scope": {
+        "kind": "SPECIMEN",
+        "id": "spc_0008"
+      },
+      "at": "2026-02-05T12:00:00Z",
+      "expect": "NOT_ASKED",
+      "note": "The account was linked to the writer on day 5; linking it never revives the day-2 uploader grant."
+    },
+    {
+      "kind": "PERMISSION",
+      "subject": {
+        "kind": "WRITER",
+        "id": "wrt_0008"
+      },
+      "purpose": {
+        "purpose_id": "service_processing",
+        "purpose_version": 1
+      },
+      "scope": {
+        "kind": "SPECIMEN",
+        "id": "spc_0008"
+      },
+      "at": "2026-02-07T09:00:00Z",
+      "expect": "PERMITTED",
+      "note": "A choice made after the link is the author's own."
     }
   ]
 }

@@ -36,7 +36,7 @@ Repeat photos are captures of the same specimen. A second session creates new sp
 - repeated bytes [`DUPLICATE_CAPTURE_BYTES`];
 - repeats filed under another page [`REPEAT_CROSSES_SPECIMEN`];
 - two specimens for the same writer, task and session [`DUPLICATE_SPECIMEN_IN_SESSION`];
-- a session index that is not in the protocol's session plan [`UNKNOWN_SESSION`];
+- a session index that is not in the protocol's session plan [`UNKNOWN_SESSION`], or a task kind that session does not schedule [`TASK_NOT_IN_SESSION`];
 - a later-session specimen without the same writer's session-1 specimen for that task in the release [`SESSION_WITHOUT_BASELINE`];
 - two writer rows sharing one enrollment [`DUPLICATE_ID`];
 - writers not declared adult [`INELIGIBLE_WRITER`];
@@ -44,7 +44,7 @@ Repeat photos are captures of the same specimen. A second session creates new sp
 - language/task mixing [`TASK_LANGUAGE_MISMATCH`];
 - claimed counts that the lineage does not support [`COUNT_MISMATCH`].
 
-Counts are reported per task, so copied and free writing, and Swedish and English, are never pooled. The check treats a manifest as a human release by default and rejects synthetic manifests there [`SYNTHETIC_IN_HUMAN_RELEASE`]. Repository fixtures are checked in non-release mode, and their summary stays marked synthetic.
+Counts are reported per task, so copied and free writing, and Swedish and English, are never pooled. The check treats a manifest as a human release by default. A human release rejects synthetic manifests [`SYNTHETIC_IN_HUMAN_RELEASE`] and counts nothing unless the protocol is `APPROVED` [`PROTOCOL_NOT_APPROVED`] and the protocol's `source_id` entry in `source_rights.json` has reviewed, cleared data rights and a cleared use for the release purpose: `engineering_testing` for `engineering_evaluation`, `benchmark_statistics` for `reference_contribution` [`SOURCE_NOT_CLEARED`]. Participant consent alone never clears a use. Repository fixtures are checked in non-release mode, and their summary stays marked synthetic.
 
 ## Unsupported contexts
 

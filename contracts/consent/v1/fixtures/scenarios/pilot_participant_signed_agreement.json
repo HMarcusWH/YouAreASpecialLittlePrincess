@@ -25,6 +25,7 @@
     {
       "writer_id": "wrt_0010",
       "self_account_id": null,
+      "self_account_linked_at": null,
       "adult_eligibility": "DECLARED_ADULT"
     }
   ],
@@ -213,6 +214,80 @@
         "status": "RECORDED"
       },
       "subject_eligibility": "DECLARED_ADULT"
+    },
+    {
+      "contract_version": "consent-event/v1",
+      "event_id": "evt_1006",
+      "event_type": "GRANT",
+      "subject": {
+        "kind": "WRITER",
+        "id": "wrt_0010"
+      },
+      "purpose": {
+        "purpose_id": "engineering_evaluation",
+        "purpose_version": 1
+      },
+      "notice": {
+        "notice_id": "notice.pilot-collection",
+        "version": 1
+      },
+      "scope": {
+        "kind": "SPECIMEN",
+        "id": "spc_0012"
+      },
+      "actor": {
+        "kind": "PILOT_PARTICIPANT",
+        "id": "wrt_0010"
+      },
+      "presented_default": "UNSELECTED",
+      "capture_method": "SIGNED_PILOT_AGREEMENT",
+      "derived_from": null,
+      "surface": "PILOT_SESSION",
+      "recorded_at": "2026-02-03T09:00:00Z",
+      "effective_at": "2026-02-03T09:00:00Z",
+      "evidence": {
+        "kind": "SIGNED_AGREEMENT",
+        "ref": "evd_1006",
+        "status": "RECORDED"
+      },
+      "subject_eligibility": "DECLARED_ADULT"
+    },
+    {
+      "contract_version": "consent-event/v1",
+      "event_id": "evt_1007",
+      "event_type": "DENY",
+      "subject": {
+        "kind": "WRITER",
+        "id": "wrt_0010"
+      },
+      "purpose": {
+        "purpose_id": "engineering_evaluation",
+        "purpose_version": 1
+      },
+      "notice": {
+        "notice_id": "notice.pilot-collection",
+        "version": 1
+      },
+      "scope": {
+        "kind": "SPECIMEN",
+        "id": "spc_0012"
+      },
+      "actor": {
+        "kind": "PILOT_PARTICIPANT",
+        "id": "wrt_0010"
+      },
+      "presented_default": "UNSELECTED",
+      "capture_method": "EXPLICIT_CONTROL",
+      "derived_from": null,
+      "surface": "PILOT_SESSION",
+      "recorded_at": "2026-02-04T09:00:00Z",
+      "effective_at": "2026-02-04T09:00:00Z",
+      "evidence": {
+        "kind": "UI_INTERACTION",
+        "ref": "evd_1007",
+        "status": "RECORDED"
+      },
+      "subject_eligibility": "DECLARED_ADULT"
     }
   ],
   "checks": [
@@ -296,6 +371,51 @@
       },
       "at": "2026-02-21T09:00:00Z",
       "expect": "WITHDRAWN"
+    },
+    {
+      "kind": "EVENT_VALIDITY",
+      "event_id": "evt_1006",
+      "expect": []
+    },
+    {
+      "kind": "EVENT_VALIDITY",
+      "event_id": "evt_1007",
+      "expect": []
+    },
+    {
+      "kind": "PERMISSION",
+      "subject": {
+        "kind": "WRITER",
+        "id": "wrt_0010"
+      },
+      "purpose": {
+        "purpose_id": "engineering_evaluation",
+        "purpose_version": 1
+      },
+      "scope": {
+        "kind": "SPECIMEN",
+        "id": "spc_0012"
+      },
+      "at": "2026-02-03T12:00:00Z",
+      "expect": "PERMITTED"
+    },
+    {
+      "kind": "PERMISSION",
+      "subject": {
+        "kind": "WRITER",
+        "id": "wrt_0010"
+      },
+      "purpose": {
+        "purpose_id": "engineering_evaluation",
+        "purpose_version": 1
+      },
+      "scope": {
+        "kind": "SPECIMEN",
+        "id": "spc_0012"
+      },
+      "at": "2026-02-05T09:00:00Z",
+      "expect": "DENIED",
+      "note": "A participant's later no through a session control is honoured without a new signature."
     }
   ]
 }

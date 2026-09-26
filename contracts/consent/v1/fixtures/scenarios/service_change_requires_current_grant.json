@@ -1,20 +1,19 @@
 {
   "contract_version": "consent-scenario/v1",
-  "scenario_id": "purpose_version_change_keeps_historical_meaning",
-  "description": "A changed purpose gets a new version; grants for the old version never authorize the new one.",
+  "scenario_id": "service_change_requires_current_grant",
+  "description": "Free is evaluated against the service version the current notice presents; older versions are neither enough nor extra prerequisites.",
   "synthetic": true,
   "extra_purposes": [
     {
-      "purpose_id": "reference_contribution",
+      "purpose_id": "service_processing",
       "purpose_version": 2,
       "status": "DRAFT",
-      "summary": "Hypothetical changed contribution purpose, used only to test versioning.",
+      "summary": "Hypothetical materially changed service purpose, used only to test versioning.",
       "subject_kind": "WRITER",
-      "required_for_service": false,
-      "affects_free_report": false,
+      "required_for_service": true,
+      "affects_free_report": true,
       "presented_default": "UNSELECTED",
       "grant_scopes": [
-        "SUBJECT_WIDE",
         "SPECIMEN"
       ],
       "requires_author_authority": true,
@@ -22,32 +21,31 @@
       "data_categories": [
         "handwriting_image",
         "derived_measurements",
-        "declared_context"
+        "report_snapshot"
       ],
       "recipients": [
-        "application_reference_plane"
+        "application"
       ],
       "retention_classes": [
-        "reference_members"
+        "upload_original",
+        "derived_assets",
+        "analysis_record"
       ],
       "withdrawal": {
         "available": true,
         "effect": "PROSPECTIVE",
         "propagation": [
-          "exclude_from_future_releases",
-          "rebuild_or_retire_affected_releases",
-          "delete_restricted_member_assets"
+          "cancel_queued_jobs",
+          "block_publication_of_running_jobs",
+          "delete_per_retention_class"
         ]
       },
       "related_gates": [
-        "pilot_rights_consent",
-        "public_reference_validation",
-        "benchmark_promotion"
+        "processor_retention_contracts"
       ],
       "legal_basis": "PENDING_OWNER_DECISION",
       "not_implied_by": [
-        "service_processing",
-        "image_retention",
+        "account_creation",
         "purchase"
       ]
     }
@@ -55,9 +53,9 @@
   "notices": [
     {
       "notice_id": "notice.consent-choices",
-      "version": 2,
+      "version": 1,
       "effective_from": "2026-01-01T00:00:00Z",
-      "effective_until": "2026-06-01T00:00:00Z",
+      "effective_until": "2026-03-01T00:00:00Z",
       "purposes": [
         {
           "purpose_id": "service_processing",
@@ -95,13 +93,13 @@
     },
     {
       "notice_id": "notice.consent-choices",
-      "version": 3,
-      "effective_from": "2026-06-01T00:00:00Z",
+      "version": 2,
+      "effective_from": "2026-03-01T00:00:00Z",
       "effective_until": null,
       "purposes": [
         {
           "purpose_id": "service_processing",
-          "purpose_version": 1
+          "purpose_version": 2
         },
         {
           "purpose_id": "image_retention",
@@ -121,7 +119,7 @@
         },
         {
           "purpose_id": "reference_contribution",
-          "purpose_version": 2
+          "purpose_version": 1
         },
         {
           "purpose_id": "support_human_review",
@@ -140,28 +138,34 @@
       "self_account_id": "acc_0001",
       "self_account_linked_at": "2026-01-01T00:00:00Z",
       "adult_eligibility": "DECLARED_ADULT"
+    },
+    {
+      "writer_id": "wrt_0009",
+      "self_account_id": "acc_0009",
+      "self_account_linked_at": "2026-01-01T00:00:00Z",
+      "adult_eligibility": "DECLARED_ADULT"
     }
   ],
   "events": [
     {
       "contract_version": "consent-event/v1",
-      "event_id": "evt_0701",
+      "event_id": "evt_1301",
       "event_type": "GRANT",
       "subject": {
         "kind": "WRITER",
         "id": "wrt_0001"
       },
       "purpose": {
-        "purpose_id": "reference_contribution",
+        "purpose_id": "service_processing",
         "purpose_version": 1
       },
       "notice": {
         "notice_id": "notice.consent-choices",
-        "version": 2
+        "version": 1
       },
       "scope": {
-        "kind": "SUBJECT_WIDE",
-        "id": "wrt_0001"
+        "kind": "SPECIMEN",
+        "id": "spc_0001"
       },
       "actor": {
         "kind": "ACCOUNT",
@@ -171,25 +175,25 @@
       "capture_method": "EXPLICIT_CONTROL",
       "derived_from": null,
       "surface": "WEB",
-      "recorded_at": "2026-02-01T09:00:00Z",
-      "effective_at": "2026-02-01T09:00:00Z",
+      "recorded_at": "2026-02-02T09:00:00Z",
+      "effective_at": "2026-02-02T09:00:00Z",
       "evidence": {
         "kind": "UI_INTERACTION",
-        "ref": "evd_0701",
+        "ref": "evd_1301",
         "status": "RECORDED"
       },
       "subject_eligibility": "DECLARED_ADULT"
     },
     {
       "contract_version": "consent-event/v1",
-      "event_id": "evt_0702",
+      "event_id": "evt_1302",
       "event_type": "GRANT",
       "subject": {
         "kind": "WRITER",
-        "id": "wrt_0001"
+        "id": "wrt_0009"
       },
       "purpose": {
-        "purpose_id": "reference_contribution",
+        "purpose_id": "service_processing",
         "purpose_version": 2
       },
       "notice": {
@@ -197,45 +201,45 @@
         "version": 2
       },
       "scope": {
-        "kind": "SUBJECT_WIDE",
-        "id": "wrt_0001"
+        "kind": "SPECIMEN",
+        "id": "spc_0009"
       },
       "actor": {
         "kind": "ACCOUNT",
-        "id": "acc_0001"
+        "id": "acc_0009"
       },
       "presented_default": "UNSELECTED",
       "capture_method": "EXPLICIT_CONTROL",
       "derived_from": null,
       "surface": "WEB",
-      "recorded_at": "2026-05-01T09:00:00Z",
-      "effective_at": "2026-05-01T09:00:00Z",
+      "recorded_at": "2026-03-02T09:00:00Z",
+      "effective_at": "2026-03-02T09:00:00Z",
       "evidence": {
         "kind": "UI_INTERACTION",
-        "ref": "evd_0702",
+        "ref": "evd_1302",
         "status": "RECORDED"
       },
       "subject_eligibility": "DECLARED_ADULT"
     },
     {
       "contract_version": "consent-event/v1",
-      "event_id": "evt_0703",
+      "event_id": "evt_1303",
       "event_type": "GRANT",
       "subject": {
         "kind": "WRITER",
         "id": "wrt_0001"
       },
       "purpose": {
-        "purpose_id": "reference_contribution",
+        "purpose_id": "service_processing",
         "purpose_version": 2
       },
       "notice": {
         "notice_id": "notice.consent-choices",
-        "version": 3
+        "version": 2
       },
       "scope": {
-        "kind": "SUBJECT_WIDE",
-        "id": "wrt_0001"
+        "kind": "SPECIMEN",
+        "id": "spc_0001"
       },
       "actor": {
         "kind": "ACCOUNT",
@@ -245,11 +249,11 @@
       "capture_method": "EXPLICIT_CONTROL",
       "derived_from": null,
       "surface": "WEB",
-      "recorded_at": "2026-06-02T09:00:00Z",
-      "effective_at": "2026-06-02T09:00:00Z",
+      "recorded_at": "2026-03-10T09:00:00Z",
+      "effective_at": "2026-03-10T09:00:00Z",
       "evidence": {
         "kind": "UI_INTERACTION",
-        "ref": "evd_0703",
+        "ref": "evd_1303",
         "status": "RECORDED"
       },
       "subject_eligibility": "DECLARED_ADULT"
@@ -258,20 +262,46 @@
   "checks": [
     {
       "kind": "EVENT_VALIDITY",
-      "event_id": "evt_0701",
+      "event_id": "evt_1301",
       "expect": []
     },
     {
       "kind": "EVENT_VALIDITY",
-      "event_id": "evt_0702",
-      "expect": [
-        "NOTICE_DOES_NOT_COVER_PURPOSE"
-      ]
+      "event_id": "evt_1302",
+      "expect": []
     },
     {
       "kind": "EVENT_VALIDITY",
-      "event_id": "evt_0703",
+      "event_id": "evt_1303",
       "expect": []
+    },
+    {
+      "kind": "FREE_REPORT",
+      "subject": {
+        "kind": "WRITER",
+        "id": "wrt_0001"
+      },
+      "scope": {
+        "kind": "SPECIMEN",
+        "id": "spc_0001"
+      },
+      "at": "2026-02-20T09:00:00Z",
+      "expect": "AVAILABLE",
+      "note": "Before the change the v1 grant covers the service."
+    },
+    {
+      "kind": "FREE_REPORT",
+      "subject": {
+        "kind": "WRITER",
+        "id": "wrt_0001"
+      },
+      "scope": {
+        "kind": "SPECIMEN",
+        "id": "spc_0001"
+      },
+      "at": "2026-03-05T09:00:00Z",
+      "expect": "UNAVAILABLE",
+      "note": "After a material change the old grant does not cover new processing."
     },
     {
       "kind": "PERMISSION",
@@ -280,50 +310,43 @@
         "id": "wrt_0001"
       },
       "purpose": {
-        "purpose_id": "reference_contribution",
+        "purpose_id": "service_processing",
         "purpose_version": 1
       },
       "scope": {
         "kind": "SPECIMEN",
         "id": "spc_0001"
       },
-      "at": "2026-06-01T09:00:00Z",
-      "expect": "PERMITTED"
+      "at": "2026-03-05T09:00:00Z",
+      "expect": "PERMITTED",
+      "note": "The v1 grant keeps its historical meaning."
     },
     {
-      "kind": "PERMISSION",
+      "kind": "FREE_REPORT",
+      "subject": {
+        "kind": "WRITER",
+        "id": "wrt_0009"
+      },
+      "scope": {
+        "kind": "SPECIMEN",
+        "id": "spc_0009"
+      },
+      "at": "2026-03-05T09:00:00Z",
+      "expect": "AVAILABLE",
+      "note": "A new writer needs only the current version; v1 is not an extra prerequisite."
+    },
+    {
+      "kind": "FREE_REPORT",
       "subject": {
         "kind": "WRITER",
         "id": "wrt_0001"
-      },
-      "purpose": {
-        "purpose_id": "reference_contribution",
-        "purpose_version": 2
       },
       "scope": {
         "kind": "SPECIMEN",
         "id": "spc_0001"
       },
-      "at": "2026-06-01T09:00:00Z",
-      "expect": "NOT_ASKED",
-      "note": "The v1 grant does not silently become a v2 grant."
-    },
-    {
-      "kind": "PERMISSION",
-      "subject": {
-        "kind": "WRITER",
-        "id": "wrt_0001"
-      },
-      "purpose": {
-        "purpose_id": "reference_contribution",
-        "purpose_version": 2
-      },
-      "scope": {
-        "kind": "SPECIMEN",
-        "id": "spc_0001"
-      },
-      "at": "2026-06-03T09:00:00Z",
-      "expect": "PERMITTED"
+      "at": "2026-03-11T09:00:00Z",
+      "expect": "AVAILABLE"
     }
   ]
 }
