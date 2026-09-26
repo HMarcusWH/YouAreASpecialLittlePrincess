@@ -1,9 +1,8 @@
 {
-  "fixture_id": "duplicate_specimen_counted_as_writer",
-  "description": "Writer 2's only page is a byte-identical copy of writer 1's photo, yet the claim counts two writers; the bytes cannot show whose page they are, so neither counts.",
+  "fixture_id": "writer_in_two_language_cohorts",
+  "description": "Writer 1 copied the English passage but wrote the free task in Swedish; one participant never enters two language cohorts.",
   "expected_errors": [
-    "COUNT_MISMATCH",
-    "DUPLICATE_COUNTED_AS_WRITER"
+    "WRITER_LANGUAGE_CONFLICT"
   ],
   "consent_log": {
     "notices": [
@@ -129,7 +128,20 @@
       {
         "specimen_id": "spc_0101",
         "writer_id": "wrt_0001",
-        "task_id": "copy_sv",
+        "task_id": "copy_en",
+        "session_index": 1,
+        "collected_at": "2026-02-01T10:00:00Z",
+        "declared_language": "en",
+        "declared_script": "LATIN",
+        "declared_style": "MIXED",
+        "paper": "BLANK",
+        "instrument": "BALLPOINT",
+        "context_status": "SUPPORTED"
+      },
+      {
+        "specimen_id": "spc_0102",
+        "writer_id": "wrt_0001",
+        "task_id": "free_sv",
         "session_index": 1,
         "collected_at": "2026-02-01T10:00:00Z",
         "declared_language": "sv",
@@ -142,10 +154,23 @@
       {
         "specimen_id": "spc_0201",
         "writer_id": "wrt_0002",
-        "task_id": "copy_sv",
+        "task_id": "copy_en",
         "session_index": 1,
         "collected_at": "2026-02-01T10:00:00Z",
-        "declared_language": "sv",
+        "declared_language": "en",
+        "declared_script": "LATIN",
+        "declared_style": "MIXED",
+        "paper": "BLANK",
+        "instrument": "BALLPOINT",
+        "context_status": "SUPPORTED"
+      },
+      {
+        "specimen_id": "spc_0202",
+        "writer_id": "wrt_0002",
+        "task_id": "free_en",
+        "session_index": 1,
+        "collected_at": "2026-02-01T10:00:00Z",
+        "declared_language": "en",
         "declared_script": "LATIN",
         "declared_style": "MIXED",
         "paper": "BLANK",
@@ -162,15 +187,29 @@
         "repeat_of_capture_id": null
       },
       {
+        "capture_id": "cap_0102",
+        "specimen_id": "spc_0102",
+        "capture_index": 1,
+        "content_sha256": "22871cd37babaa6ae9425861b8d3074ce01ba1fa2eb7cfcca3b3460d41975b38",
+        "repeat_of_capture_id": null
+      },
+      {
         "capture_id": "cap_0201",
         "specimen_id": "spc_0201",
         "capture_index": 1,
-        "content_sha256": "025eb8d0359ddcd7279c388ff30c6a4c6b62db87a4e0fd5af1f7c99d9ecd349b",
+        "content_sha256": "bc4a25689e9a6c575f3d9278b37da4f49c911b0103e35966f01536f92873680c",
+        "repeat_of_capture_id": null
+      },
+      {
+        "capture_id": "cap_0202",
+        "specimen_id": "spc_0202",
+        "capture_index": 1,
+        "content_sha256": "7a88d070357baafe41650807d2310277aed34d9660dc2b7986c358ea6dde0474",
         "repeat_of_capture_id": null
       }
     ],
     "claimed_counts": {
-      "writers": 2,
+      "writers": 1,
       "specimens": 2,
       "captures": 2
     }

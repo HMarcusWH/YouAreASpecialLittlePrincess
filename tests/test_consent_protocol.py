@@ -1,6 +1,7 @@
 """Regression tests for the T03 consent, retention, source-rights and collection drafts."""
 
 import copy
+import hashlib
 import itertools
 import json
 import shutil
@@ -41,11 +42,17 @@ def check_fixture_manifest(fixture, protocol, manifest=None, *, human_release=Fa
                                          publish_at=publish_at, gate=gate)
 
 
+def bind(document):
+    """Stamp the document's approval with a digest of its current content (tests only)."""
+    document["approval"]["content_sha256"] = vcp.content_sha256(document)
+    return document
+
+
 def approve(purpose, decided_on="2025-12-01T00:00:00Z"):
     """An in-memory approval for tests, with a decision for every related gate; the repository records none."""
     approval = {"decision_ref": "decision:test-approval", "decided_by_role": "owner", "decided_on": decided_on,
                 "gate_decisions": [{"gate": gate, "decision_ref": "decision:test-gate"} for gate in purpose["related_gates"]]}
-    return dict(purpose, status="APPROVED", legal_basis="DECIDED", approval=approval)
+    return bind(dict(copy.deepcopy(purpose), status="APPROVED", legal_basis="DECIDED", approval=approval))
 
 
 def approved_protocol(protocol, decided_on="2026-01-10T00:00:00Z", *, decide_rights=True):
@@ -55,7 +62,7 @@ def approved_protocol(protocol, decided_on="2026-01-10T00:00:00Z", *, decide_rig
     if decide_rights:
         for task in approved["tasks"]:
             task["rights"].update(decision_status="DECIDED", decision_ref="decision:prompt-rights")
-    return approved
+    return bind(approved)
 
 
 def approved_gate(decided_on="2026-01-05T00:00:00Z"):
@@ -65,7 +72,7 @@ def approved_gate(decided_on="2026-01-05T00:00:00Z"):
                                              "decided_on": decided_on})
     for decision in gate["decisions"]:
         decision.update(status="DECIDED", decision_ref="decision:test-gate-item")
-    return gate
+    return bind(gate)
 
 
 def active_pilot_notices(effective_from="2026-01-01T00:00:00Z"):
@@ -497,6 +504,142 @@ def test_repeat_chain_through_an_invalid_capture_is_not_counted(protocol):
     assert summary.captures == 6
 
 
+def valid_lineage():
+    return vcp.load_json(vcp.CONSENT_DIR / "fixtures" / "collection" / "valid_pilot_lineage.json")
+
+
+def human_release(fixture, protocol, manifest, registry):
+    """A human release of `manifest` with everything but the thing under test approved and cleared."""
+    return check_fixture_manifest(fixture, protocol, manifest, human_release=True, fixture_mode=False, registry=registry,
+                                  sources=cleared_sources("engineering_testing"), notices=active_pilot_notices(),
+                                  publish_at=CUTOFF, gate=approved_gate())
+
+
+def counts_of(summary):
+    return summary.writers, summary.specimens, summary.captures
+
+
+def test_purpose_grants_need_every_related_gate_decided(registry, protocol):
+    # Codex review of #12: approved_by checked only status and decided_on, so an approved purpose
+    # without its gate decisions released the whole cohort.
+    fixture = valid_lineage()
+    manifest = dict(copy.deepcopy(fixture["manifest"]), synthetic=False)
+    ledger = approve_in(registry, "engineering_evaluation")
+    issues, summary = human_release(fixture, approved_protocol(protocol), manifest, ledger)
+    assert issues == [] and counts_of(summary) == (3, 6, 7)
+
+    purpose = next(p for p in ledger["purposes"] if p["purpose_id"] == "engineering_evaluation")
+    purpose["approval"]["gate_decisions"] = purpose["approval"]["gate_decisions"][:1]
+    assert not vcp.approved_by(purpose, "2026-02-01T00:00:00Z")
+    issues, summary = human_release(fixture, approved_protocol(protocol), manifest, ledger)
+    assert "NO_COLLECTION_PERMISSION" in codes(issues) and counts_of(summary) == (0, 0, 0)
+    consent = vcp.collection_consent_context(ledger, manifest, fixture["consent_log"], notices=active_pilot_notices())
+    assert set(itertools.chain.from_iterable(consent.event_issues.values())) == {"PURPOSE_NOT_APPROVED"}
+    subject, scope = {"kind": "WRITER", "id": "wrt_0001"}, {"kind": "SPECIMEN", "id": "spc_0101"}
+    assert vcp.evaluate_permission(consent, subject, manifest["release_purpose"], scope, CUTOFF) == "NOT_APPROVED"
+
+
+def test_approvals_bind_the_content_they_approved(registry, retention_ids, protocol, tmp_path):
+    # Codex review of #12: a prompt and its hash changed together kept the protocol's old approval.
+    base = tmp_path / "collection"
+    shutil.copytree(vcp.COLLECTION_DIR, base)
+    purposes = purposes_by_key(registry)
+    approved = approved_protocol(protocol)
+    assert vcp.check_protocol(approved, purposes, base) == []
+    task = approved["tasks"][0]
+    prompt = base / task["prompt_file"]
+    prompt.write_bytes(prompt.read_bytes() + b"\nAn instruction nobody reviewed.\n")
+    task["prompt_sha256"] = hashlib.sha256(prompt.read_bytes()).hexdigest()
+    assert codes(vcp.check_protocol(approved, purposes, base)) == ["APPROVAL_CONTENT_MISMATCH"]
+    fixture = valid_lineage()
+    manifest = dict(copy.deepcopy(fixture["manifest"]), synthetic=False)
+    issues, summary = human_release(fixture, approved, manifest, approve_in(registry, "engineering_evaluation"))
+    assert "PROTOCOL_NOT_APPROVED" in codes(issues) and counts_of(summary) == (0, 0, 0)
+    assert vcp.check_protocol(bind(approved), purposes, base) == []  # a new approval of the new wording
+
+    # Purposes and the gate alike: only a status change, such as RETIRED, keeps an approval.
+    ledger = approve_in(registry, "product_analytics")
+    purpose = next(p for p in ledger["purposes"] if p["purpose_id"] == "product_analytics")
+    purpose["status"] = "RETIRED"
+    assert vcp.approved_by(purpose, "2026-01-01T00:00:00Z")
+    purpose["status"] = "APPROVED"
+    purpose["data_categories"].append("page_images")
+    assert codes(vcp.check_purposes(ledger, retention_ids, vcp.known_gates())) == ["APPROVAL_CONTENT_MISMATCH"]
+    assert not vcp.approved_by(purpose, "2026-01-01T00:00:00Z")
+    gate = approved_gate()
+    assert vcp.gate_approved_by(gate, "2026-01-10T00:00:00Z")
+    gate["decisions"][0]["decision_ref"] = "decision:other-controller"
+    assert not vcp.gate_approved_by(gate, "2026-01-10T00:00:00Z")
+    assert codes(vcp.check_pilot_gate(gate, approved, load("notices.json"), purposes)) == [
+        "APPROVAL_CONTENT_MISMATCH", "GATE_APPROVED_AFTER_PROTOCOL"]
+
+
+def test_sessions_without_repeat_captures_reject_repeats(protocol):
+    # Codex review of #12: session 2 declares repeat_captures NONE, yet its repeats were counted.
+    fixture = valid_lineage()
+    manifest = copy.deepcopy(fixture["manifest"])
+    manifest["captures"].append({"capture_id": "cap_0105", "specimen_id": "spc_0103", "capture_index": 2,
+                                 "content_sha256": "e" * 64, "repeat_of_capture_id": "cap_0104"})
+    issues, summary = check_fixture_manifest(fixture, protocol, manifest)
+    assert [(i.code, i.where) for i in issues] == [("REPEAT_NOT_IN_SESSION_PLAN", "cap_0105")]
+    assert counts_of(summary) == (3, 6, 7)
+
+
+def test_each_writer_stays_in_one_language_cohort(protocol):
+    # Codex review of #12: a writer with an English copy page and a Swedish free page entered both cohorts.
+    fixture = valid_lineage()
+    manifest = copy.deepcopy(fixture["manifest"])
+    next(s for s in manifest["specimens"] if s["specimen_id"] == "spc_0202").update(task_id="free_sv", declared_language="sv")
+    manifest["claimed_counts"] = {"writers": 2, "specimens": 4, "captures": 5}
+    issues, summary = check_fixture_manifest(fixture, protocol, manifest)
+    assert [(i.code, i.where) for i in issues] == [("WRITER_LANGUAGE_CONFLICT", "spc_0201"), ("WRITER_LANGUAGE_CONFLICT", "spc_0202")]
+    assert "free_sv" in summary.by_task and summary.by_task["free_sv"]["writers"] == 1  # only writer 1's page
+    # An honestly recorded unsupported page (writer 3's Finnish page) is not a second cohort.
+    assert check_fixture_manifest(fixture, protocol)[0] == []
+
+
+def test_every_capture_sharing_an_index_is_excluded_in_any_order(protocol):
+    # Codex review of #12: only the later of two index-1 captures was rejected, so array order chose the original.
+    fixture = valid_lineage()
+    results = []
+    for position in (None, 0):
+        manifest = copy.deepcopy(fixture["manifest"])
+        extra = {"capture_id": "cap_0109", "specimen_id": "spc_0102", "capture_index": 1, "content_sha256": "d" * 64,
+                 "repeat_of_capture_id": None}
+        manifest["captures"].insert(len(manifest["captures"]) if position is None else position, extra)
+        manifest["claimed_counts"] = {"writers": 3, "specimens": 5, "captures": 6}
+        issues, summary = check_fixture_manifest(fixture, protocol, manifest)
+        results.append((sorted((i.code, i.where) for i in issues), counts_of(summary)))
+    assert results[0] == results[1] == (
+        [("CAPTURE_INDEX_CONFLICT", "cap_0103"), ("CAPTURE_INDEX_CONFLICT", "cap_0109")], (3, 5, 6))
+
+
+def test_captures_behind_rejected_bytes_are_not_counted(protocol):
+    # Codex review of #12: a repeat of a byte-duplicate capture still counted, since only link errors broke chains.
+    fixture = valid_lineage()
+    chain = copy.deepcopy(fixture["manifest"])
+    chain["captures"][1]["content_sha256"] = chain["captures"][0]["content_sha256"]
+    chain["captures"].append({"capture_id": "cap_0105", "specimen_id": "spc_0101", "capture_index": 3,
+                              "content_sha256": "c" * 64, "repeat_of_capture_id": "cap_0102"})
+    chain["claimed_counts"]["captures"] = 6
+    issues, summary = check_fixture_manifest(fixture, protocol, chain)
+    assert sorted((i.code, i.where) for i in issues) == [
+        ("DUPLICATE_CAPTURE_BYTES", "cap_0102"), ("REPEAT_OF_INVALID_CAPTURE", "cap_0105")]
+    assert counts_of(summary) == (3, 6, 6)
+
+    # Bytes shared across writers cannot show whose page they are: neither counts, in any order.
+    results = []
+    for reverse in (False, True):
+        shared = copy.deepcopy(fixture["manifest"])
+        shared["captures"][4]["content_sha256"] = shared["captures"][0]["content_sha256"]  # cap_0201 = cap_0101
+        if reverse:
+            shared["captures"].reverse()
+        issues, summary = check_fixture_manifest(fixture, protocol, shared)
+        results.append((sorted((i.code, i.where) for i in issues if i.code.startswith("DUPLICATE")), counts_of(summary)))
+    assert results[0] == results[1]
+    assert results[0][0] == [("DUPLICATE_COUNTED_AS_WRITER", "cap_0101"), ("DUPLICATE_COUNTED_AS_WRITER", "cap_0201")]
+
+
 def test_collection_summary_counts_writers_not_pages(protocol):
     fixture = vcp.load_json(vcp.CONSENT_DIR / "fixtures" / "collection" / "valid_pilot_lineage.json")
     issues, summary = check_fixture_manifest(fixture, protocol)
@@ -883,6 +1026,7 @@ def test_approved_purposes_need_decided_retention(registry):
                                                 "decided_on": "2025-11-01T00:00:00Z"})
     for c in decided["classes"]:
         c.update(decision_status="DECIDED", decision_ref="decision:ret-1234", max_retention={"value": 30, "unit": "DAYS"})
+    bind(decided)
     assert vcp.check_purpose_retention(ledger, decided) == [] and vcp.check_retention(decided) == []
 
     # Codex review of #12: a bare status edit approved the policy with no record, and
@@ -896,6 +1040,9 @@ def test_approved_purposes_need_decided_retention(registry):
     assert codes(vcp.check_purpose_retention(ledger, late)) == ["PURPOSE_RETENTION_UNDECIDED"]
     decided["classes"][0].update(decision_status="PENDING_OWNER_DECISION", decision_ref=None,
                                  max_retention={"value": None, "unit": None})
+    # Codex review of #12: an edit after approval keeps nothing of the old approval.
+    assert codes(vcp.check_retention(decided)) == ["APPROVAL_CONTENT_MISMATCH", "APPROVED_WITH_PENDING_DECISIONS"]
+    bind(decided)
     assert [i.message.split()[0] for i in vcp.check_purpose_retention(ledger, decided)] == [decided["classes"][0]["class_id"]]
 
 
@@ -932,11 +1079,52 @@ def test_deletion_lineage_rules():
     for kind in ("provider_copy", "normalized_image", "premium_payload", "export_artifact"):
         declassified = with_node(kind=kind, contains_handwriting=False, retention_class="accounting_records",
                                  on_upstream_deletion="RETAIN_UNDER_SEPARATE_OBLIGATION")
-        assert codes(vcp.check_lineage(declassified, retention)) == ["HANDWRITING_ARTIFACT_DECLASSIFIED"], kind
+        assert codes(vcp.check_lineage(declassified, retention)) == ["DELETION_ACTION_MISMATCH", "HANDWRITING_ARTIFACT_DECLASSIFIED"], kind
     assert codes(vcp.check_lineage(with_node(kind="export_artifact", on_upstream_deletion="RETAIN_UNDER_SEPARATE_OBLIGATION"),
-                                   retention)) == ["HANDWRITING_RETAINED"]
+                                   retention)) == ["DELETION_ACTION_MISMATCH", "HANDWRITING_RETAINED"]
     assert codes(vcp.check_lineage(with_node(kind="crop_overlay_thumbnail", retention_class="analytics_events"),
                                    retention)) == ["RETENTION_CLASS_UNDERSTATES_HANDWRITING"]
+
+
+@pytest.mark.parametrize(
+    ("kind", "changes", "expected"),
+    [
+        # Codex review of #12: only handwriting retention was checked, so revocation and processor deletion could be dropped.
+        ("share_route", {"on_upstream_deletion": "DELETE"}, [("DELETION_ACTION_MISMATCH", "share_route")]),
+        ("provider_copy", {"on_upstream_deletion": "DELETE"}, [("DELETION_ACTION_MISMATCH", "provider_copy")]),
+        ("analysis_run", {"on_upstream_deletion": "RETAIN_UNDER_SEPARATE_OBLIGATION"}, [("DELETION_ACTION_MISMATCH", "analysis_run")]),
+        ("share_route", {"parents": ["report_revision"]}, [("LINEAGE_EDGE_MISSING", "share_route")]),
+        ("comparison_report", {"parents": ["report_revision", "export_artifact"]}, []),  # adding an edge only widens deletion
+    ],
+)
+def test_deletion_lineage_pins_actions_and_edges(kind, changes, expected):
+    lineage = copy.deepcopy(load("deletion_lineage.json"))
+    retention = {c["class_id"]: c for c in load("retention.json")["classes"]}
+    next(n for n in lineage["nodes"] if n["artifact_kind"] == kind).update(changes)
+    assert [(i.code, i.where) for i in vcp.check_lineage(lineage, retention)] == expected
+
+
+def test_deletion_lineage_kinds_and_approval_are_reviewed():
+    lineage = load("deletion_lineage.json")
+    retention = {c["class_id"]: c for c in load("retention.json")["classes"]}
+    assert set(vcp.LINEAGE_PLAN) == {n["artifact_kind"] for n in lineage["nodes"]}
+    extra = copy.deepcopy(lineage)
+    extra["nodes"].append({"artifact_kind": "ocr_text", "parents": ["normalized_image"], "retention_class": "derived_assets",
+                           "contains_handwriting": False, "on_upstream_deletion": "DELETE", "notes": "Unreviewed."})
+    assert [(i.code, i.where) for i in vcp.check_lineage(extra, retention)] == [("UNREVIEWED_ARTIFACT_KIND", "ocr_text")]
+    dropped = dict(copy.deepcopy(lineage), nodes=[n for n in lineage["nodes"] if n["artifact_kind"] != "share_route"])
+    assert [(i.code, i.where) for i in vcp.check_lineage(dropped, retention)] == [("LINEAGE_ARTIFACT_MISSING", "share_route")]
+
+    # Codex review of #12: a bare status edit approved the deletion plan with no record.
+    approved = dict(copy.deepcopy(lineage), status="APPROVED")
+    assert vcp.SchemaSet().validate(approved, "deletion-lineage.schema.json") == []
+    assert codes(vcp.check_lineage(approved, retention)) == ["APPROVAL_WITHOUT_EVIDENCE"]
+    approved["approval"] = {"decision_ref": "decision:lineage", "decided_by_role": "owner", "decided_on": "2026-10-01T00:00:00Z"}
+    bind(approved)
+    assert vcp.SchemaSet().validate(approved, "deletion-lineage.schema.json") == []
+    assert vcp.check_lineage(approved, retention) == []
+    approved["nodes"][0]["notes"] = "Edited after approval."
+    assert codes(vcp.check_lineage(approved, retention)) == ["APPROVAL_CONTENT_MISMATCH"]
 
 
 # ------------------------------------------------------------- source rights
@@ -975,6 +1163,9 @@ def test_pilot_gate_blocks_activation_until_approved(registry, protocol):
     approved = copy.deepcopy(gate)
     approved["status"] = "APPROVED"
     approved["approval"] = {"decision_ref": "decision:pilot-gate", "decided_by_role": "owner", "decided_on": "2026-10-01T00:00:00Z"}
+    assert codes(vcp.check_pilot_gate(approved, protocol, notices, purposes)) == [
+        "APPROVAL_CONTENT_MISMATCH", "APPROVED_WITH_PENDING_DECISIONS"]
+    bind(approved)
     assert codes(vcp.check_pilot_gate(approved, protocol, notices, purposes)) == ["APPROVED_WITH_PENDING_DECISIONS"]
 
     active = copy.deepcopy(notices)
@@ -991,7 +1182,7 @@ def test_pilot_gate_blocks_activation_until_approved(registry, protocol):
     # Codex review of #12: deleting pending decisions let the gate approve with one decision.
     stripped = copy.deepcopy(approved)
     stripped["decisions"] = [dict(stripped["decisions"][0], status="DECIDED", decision_ref="decision:controller-1")]
-    found = vcp.check_pilot_gate(stripped, protocol, notices, purposes)
+    found = vcp.check_pilot_gate(bind(stripped), protocol, notices, purposes)
     assert codes(found) == ["MISSING_GATE_DECISION"]
     assert sorted(i.where for i in found) == sorted(vcp.REQUIRED_PILOT_DECISIONS[1:])
 
@@ -1031,7 +1222,9 @@ def test_protocol_approval_requires_decided_prompt_rights(registry, protocol):
     assert len(found) == len(protocol["tasks"])
     for task in approved["tasks"]:
         task["rights"].update(decision_status="DECIDED", decision_ref="decision:prompt-rights")
-    assert vcp.check_protocol(approved, purposes_by_key(registry)) == []
+    # Deciding the rights changes the protocol, so its approval must be recorded again.
+    assert codes(vcp.check_protocol(approved, purposes_by_key(registry))) == ["APPROVAL_CONTENT_MISMATCH"]
+    assert vcp.check_protocol(bind(approved), purposes_by_key(registry)) == []
 
 
 def test_every_language_has_one_copy_and_one_free_task(registry, protocol):

@@ -42,6 +42,27 @@ HANDWRITING_ARTIFACTS = (
     "upload_original", "pilot_capture", "normalized_image", "crop_overlay_thumbnail", "premium_payload",
     "provider_copy", "export_artifact", "reference_member", "support_case_copy",
 )
+# The reviewed deletion plan: what deletion or withdrawal upstream does to each artifact kind, and the
+# derivation edges deletion must follow. A lineage may add edges but never drop these, change an
+# action or add a kind without this table changing in the same reviewed change.
+LINEAGE_PLAN = {
+    "upload_original": ("DELETE", ()),
+    "pilot_capture": ("DELETE", ()),
+    "normalized_image": ("DELETE", ("upload_original", "pilot_capture")),
+    "crop_overlay_thumbnail": ("DELETE", ("normalized_image",)),
+    "analysis_run": ("DELETE", ("normalized_image",)),
+    "report_revision": ("DELETE", ("analysis_run",)),
+    "premium_payload": ("DELETE", ("report_revision", "crop_overlay_thumbnail")),
+    "provider_copy": ("REQUEST_PROCESSOR_DELETION", ("premium_payload",)),
+    "export_artifact": ("DELETE", ("report_revision", "crop_overlay_thumbnail")),
+    "share_route": ("REVOKE_THEN_DELETE", ("report_revision", "export_artifact")),
+    "comparison_report": ("DELETE", ("report_revision",)),
+    "reference_member": ("EXCLUDE_AND_REBUILD_OR_RETIRE", ("analysis_run", "normalized_image")),
+    "benchmark_artifact": ("EXCLUDE_AND_REBUILD_OR_RETIRE", ("reference_member",)),
+    "annotation": ("DELETE", ("pilot_capture", "normalized_image")),
+    "support_case_copy": ("DELETE", ("upload_original", "report_revision")),
+    "purchase_ledger_entry": ("RETAIN_UNDER_SEPARATE_OBLIGATION", ("report_revision",)),
+}
 FREE_SERVICE_PURPOSE = "service_processing"
 # Purposes designed to be offered. Only APPROVED ones are usable for real
 # permission decisions; DRAFT is usable solely inside synthetic fixtures.
@@ -275,11 +296,47 @@ def known_gates(tasks_json: Path = TASKS_JSON) -> set[str]:
     return set(load_json(tasks_json)["gate_registry"])
 
 
+def content_sha256(document: dict) -> str:
+    """What an approval covers: SHA-256 of the canonical JSON of the document without its status and approval.
+
+    Canonical means sorted keys, no insignificant whitespace and UTF-8. A later
+    status change (such as RETIRED) keeps the approval; any other edit needs a
+    new approval or a new version.
+    """
+    body = {key: value for key, value in document.items() if key not in {"status", "approval"}}
+    return hashlib.sha256(json.dumps(body, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")).hexdigest()
+
+
+def approval_recorded(document: dict | None) -> bool:
+    """The document carries an approval record naming its decision and binding its current content."""
+    approval = (document or {}).get("approval") or {}
+    return (bool(approval.get("decision_ref")) and bool(approval.get("decided_on"))
+            and approval.get("content_sha256") == content_sha256(document))
+
+
+def approval_issues(document: dict, where: str) -> list[Issue]:
+    """For an APPROVED document: its approval record exists and still matches what was approved."""
+    approval = document.get("approval") or {}
+    if not approval.get("decision_ref"):
+        return [Issue("APPROVAL_WITHOUT_EVIDENCE", where, "APPROVED requires an approval record with a decision_ref")]
+    if approval.get("content_sha256") != content_sha256(document):
+        return [Issue("APPROVAL_CONTENT_MISMATCH", where,
+                      "changed since approval: approval.content_sha256 does not match; record a new approval or version")]
+    return []
+
+
+def purpose_approval_complete(purpose: dict) -> bool:
+    """Approved with every piece of evidence the registry rules require, for the purpose's current content."""
+    approval = purpose.get("approval") or {}
+    passed = {d["gate"] for d in approval.get("gate_decisions", []) if d.get("decision_ref")}
+    return (purpose["status"] in {"APPROVED", "RETIRED"} and purpose["legal_basis"] == "DECIDED"
+            and set(purpose["related_gates"]) <= passed and approval_recorded(purpose))
+
+
 def approved_by(purpose: dict, when: str) -> bool:
-    """True when the purpose's recorded approval was decided at or before `when`."""
-    decided_on = (purpose.get("approval") or {}).get("decided_on")
-    return (purpose["status"] in {"APPROVED", "RETIRED"} and bool(decided_on)
-            and parse_timestamp(decided_on) <= parse_timestamp(when))
+    """True when the purpose's complete approval was decided at or before `when`."""
+    return (purpose_approval_complete(purpose)
+            and parse_timestamp(purpose["approval"]["decided_on"]) <= parse_timestamp(when))
 
 
 def decided_with_ref(status: str, ref, code: str, where: str) -> list[Issue]:
@@ -312,8 +369,8 @@ def check_purposes(doc: dict, retention_ids: set[str], gates: set[str]) -> list[
                                 f"only {FREE_SERVICE_PURPOSE} may be (and must be) required for the service"))
         if p["affects_free_report"] and not p["required_for_service"]:
             issues.append(Issue("OPTIONAL_PURPOSE_AFFECTS_FREE", where, "declining an optional purpose must not reduce Free"))
-        if p["status"] == "APPROVED" and not (p.get("approval") or {}).get("decision_ref"):
-            issues.append(Issue("APPROVAL_WITHOUT_EVIDENCE", where, "APPROVED requires an approval record with a decision_ref"))
+        if p["status"] == "APPROVED":
+            issues += approval_issues(p, where)
         if p["status"] == "APPROVED" and p["legal_basis"] != "DECIDED":
             issues.append(Issue("APPROVED_WITHOUT_LEGAL_BASIS", where, "approval requires a decided legal basis"))
         if p["status"] == "APPROVED":
@@ -358,10 +415,9 @@ def check_purpose_retention(doc: dict, retention_doc: dict) -> list[Issue]:
         if p["status"] != "APPROVED":
             continue
         where = f"{p['purpose_id']}@{p['purpose_version']}"
-        policy_approval = retention_doc.get("approval") or {}
         purpose_approved_on = (p.get("approval") or {}).get("decided_on")
-        if (retention_doc["status"] != "APPROVED" or not policy_approval.get("decision_ref") or not purpose_approved_on
-                or parse_timestamp(policy_approval["decided_on"]) > parse_timestamp(purpose_approved_on)):
+        if (retention_doc["status"] != "APPROVED" or not approval_recorded(retention_doc) or not purpose_approved_on
+                or parse_timestamp(retention_doc["approval"]["decided_on"]) > parse_timestamp(purpose_approved_on)):
             issues.append(Issue("PURPOSE_RETENTION_UNDECIDED", where,
                                 "retention.json must be APPROVED, with a recorded approval, before a purpose using it"))
         for class_id in p["retention_classes"]:
@@ -475,8 +531,8 @@ def check_retention(doc: dict) -> list[Issue]:
                 issues.append(Issue("HANDWRITING_BACKUP_UNSAFE", where, "restores must reconcile tombstones first"))
     if doc["status"] == "APPROVED" and any(c["decision_status"] != "DECIDED" for c in doc["classes"]):
         issues.append(Issue("APPROVED_WITH_PENDING_DECISIONS", "retention.json", "every class must be decided"))
-    if doc["status"] == "APPROVED" and not (doc.get("approval") or {}).get("decision_ref"):
-        issues.append(Issue("APPROVAL_WITHOUT_EVIDENCE", "retention.json", "APPROVED requires an approval record with a decision_ref"))
+    if doc["status"] == "APPROVED":
+        issues += approval_issues(doc, "retention.json")
     return issues
 
 
@@ -501,6 +557,23 @@ def check_lineage(doc: dict, retention: dict[str, dict]) -> list[Issue]:
             issues.append(Issue("HANDWRITING_ARTIFACT_DECLASSIFIED", kind, "this artifact kind always carries page pixels"))
         elif node is None:
             issues.append(Issue("HANDWRITING_ARTIFACT_MISSING", kind, "deletion lineage must track every handwriting-bearing kind"))
+    for kind, (action, parents) in LINEAGE_PLAN.items():
+        node = nodes.get(kind)
+        if node is None:
+            if kind not in HANDWRITING_ARTIFACTS:  # handwriting kinds are reported above
+                issues.append(Issue("LINEAGE_ARTIFACT_MISSING", kind, "deletion lineage must track every reviewed artifact kind"))
+            continue
+        if node["on_upstream_deletion"] != action:
+            issues.append(Issue("DELETION_ACTION_MISMATCH", kind,
+                                f"upstream deletion must {action}, not {node['on_upstream_deletion']}"))
+        for parent in parents:
+            if parent in nodes and parent not in node["parents"]:
+                issues.append(Issue("LINEAGE_EDGE_MISSING", kind, f"deleting {parent} must still reach this kind"))
+    for kind in nodes:
+        if kind not in LINEAGE_PLAN:
+            issues.append(Issue("UNREVIEWED_ARTIFACT_KIND", kind, "add the kind and its deletion action to LINEAGE_PLAN in the same change"))
+    if doc["status"] == "APPROVED":
+        issues += approval_issues(doc, "deletion_lineage.json")
     for kind, node in nodes.items():
         if not node["parents"] and kind not in doc["roots"]:
             issues.append(Issue("UNDECLARED_ROOT", kind, "a parentless kind must be a declared root"))
@@ -584,8 +657,7 @@ def check_pilot_gate(gate: dict, protocol: dict, notices: dict, purposes: dict[t
         if key not in present:
             issues.append(Issue("MISSING_GATE_DECISION", key, "required owner decision was removed from the gate"))
     if gate["status"] == "APPROVED":
-        if not (gate.get("approval") or {}).get("decision_ref"):
-            issues.append(Issue("APPROVAL_WITHOUT_EVIDENCE", "pilot_gate.json", "APPROVED requires an approval record with a decision_ref"))
+        issues += approval_issues(gate, "pilot_gate.json")
         if any(d["status"] != "DECIDED" for d in gate["decisions"]):
             issues.append(Issue("APPROVED_WITH_PENDING_DECISIONS", "pilot_gate.json", "every gate decision must be decided"))
         protocol_approval = protocol.get("approval") or {}
@@ -613,7 +685,7 @@ def gate_approved_by(gate: dict | None, when: str | None) -> bool:
     gate = gate or {}
     approval = gate.get("approval") or {}
     decided = {d["decision_key"] for d in gate.get("decisions", []) if d["status"] == "DECIDED" and d["decision_ref"]}
-    return (gate.get("status") == "APPROVED" and bool(approval.get("decision_ref")) and bool(approval.get("decided_on"))
+    return (gate.get("status") == "APPROVED" and approval_recorded(gate)
             and set(REQUIRED_PILOT_DECISIONS) <= decided and bool(when)
             and parse_timestamp(approval["decided_on"]) <= parse_timestamp(when))
 
@@ -629,8 +701,9 @@ def extract_passage(text: str) -> str | None:
 def check_protocol(protocol: dict, purposes: dict[tuple[str, int], dict], base: Path = COLLECTION_DIR, *,
                    sources: dict[str, dict] | None = None) -> list[Issue]:
     issues: list[Issue] = []
-    if protocol["status"] == "APPROVED" and not (protocol.get("approval") or {}).get("decision_ref"):
-        issues.append(Issue("APPROVAL_WITHOUT_EVIDENCE", "protocol", "APPROVED requires an approval record with a decision_ref"))
+    if protocol["status"] == "APPROVED":
+        # The approval binds the prompt and guidance hashes: new wording needs a new approval or version.
+        issues += approval_issues(protocol, "protocol")
     if sources is not None:
         source = sources.get(protocol["source_id"])
         if source is None or source["kind"] != "OWNED_COLLECTION":
@@ -772,9 +845,9 @@ def check_collection_manifest(
                                 "fixture mode treats draft purposes and self-described notices as usable"))
             releasable = False
         approval = protocol.get("approval") or {}
-        if protocol["status"] != "APPROVED" or not approval.get("decision_ref"):
+        if protocol["status"] != "APPROVED" or not approval_recorded(protocol):
             issues.append(Issue("PROTOCOL_NOT_APPROVED", "protocol",
-                                f"collected under a {protocol['status']} protocol without a recorded approval"))
+                                f"collected under a {protocol['status']} protocol without a recorded approval of its current content"))
             releasable = False
         elif any(not (task["rights"]["decision_status"] == "DECIDED" and task["rights"]["decision_ref"])
                  for task in protocol["tasks"]):
@@ -823,6 +896,13 @@ def check_collection_manifest(
         issues.append(Issue("RELEASE_PURPOSE_NOT_IN_PROTOCOL", "release_purpose",
                             f"{release_purpose['purpose_id']}@{release_purpose['purpose_version']} is not a protocol purpose"))
 
+    # Each participant writes in one chosen language, so a writer never enters two language cohorts.
+    chosen: dict[str, set[str]] = {}
+    for s in manifest["specimens"]:
+        if s["specimen_id"] not in ambiguous_specimens and s["declared_script"] in scripts and s["declared_language"] in languages:
+            chosen.setdefault(s["writer_id"], set()).add(s["declared_language"])
+    multilingual = {writer_id for writer_id, found in chosen.items() if len(found) > 1}
+
     included: set[str] = set()
     seen_session_task: dict[tuple[str, str, int], str] = {}
     for s in manifest["specimens"]:
@@ -854,6 +934,10 @@ def check_collection_manifest(
             continue
         if not supported:
             continue  # recorded honestly, never counted into a supported cohort
+        if s["writer_id"] in multilingual:
+            issues.append(Issue("WRITER_LANGUAGE_CONFLICT", where,
+                                f"{s['writer_id']} has supported pages in {', '.join(sorted(chosen[s['writer_id']]))}"))
+            continue
         if s["declared_language"] != task["language"]:
             issues.append(Issue("TASK_LANGUAGE_MISMATCH", where, f"{s['task_id']} is a {task['language']} task"))
             continue
@@ -894,21 +978,27 @@ def check_collection_manifest(
         else:
             included.add(where)
 
-    # Pass 1: each capture's own repeat link.
-    own_link_ok: dict[str, bool] = {}
-    indexes: set[tuple[str, int]] = set()
+    # A capture is evidence only when its own provenance, its bytes and its whole repeat chain hold.
+    # Array order is never provenance: every exclusion below is decided without it.
+    excluded: set[str] = set(ambiguous_captures)
     for c in manifest["captures"]:
-        where = c["capture_id"]
         if c["specimen_id"] not in specimens:
-            issues.append(Issue("DANGLING_REFERENCE", where, f"unknown specimen {c['specimen_id']}"))
-            continue
+            issues.append(Issue("DANGLING_REFERENCE", c["capture_id"], f"unknown specimen {c['specimen_id']}"))
+            excluded.add(c["capture_id"])
+    known = [c for c in manifest["captures"] if c["capture_id"] not in excluded]
+    slots = set(duplicates((c["specimen_id"], c["capture_index"]) for c in known))
+    for c in known:
+        where = c["capture_id"]
         broken = []
-        if (c["specimen_id"], c["capture_index"]) in indexes:
-            broken.append(Issue("CAPTURE_INDEX_CONFLICT", where, "capture_index repeats within a specimen"))
-        indexes.add((c["specimen_id"], c["capture_index"]))
+        if (c["specimen_id"], c["capture_index"]) in slots:
+            broken.append(Issue("CAPTURE_INDEX_CONFLICT", where, "several captures claim this capture_index, so none is the original"))
         repeat = c["repeat_of_capture_id"]
         if repeat is None and c["capture_index"] != 1:
             broken.append(Issue("REPEAT_WITHOUT_ORIGINAL", where, "every capture after the first names the earlier capture it repeats"))
+        session = sessions.get(specimens[c["specimen_id"]]["session_index"])
+        if (repeat is not None or c["capture_index"] != 1) and session is not None and session["repeat_captures"] == "NONE":
+            broken.append(Issue("REPEAT_NOT_IN_SESSION_PLAN", where,
+                                f"session {session['session_index']} takes no repeat captures"))
         if repeat is not None:
             original = captures.get(repeat)
             if original is None or repeat == where:
@@ -919,34 +1009,40 @@ def check_collection_manifest(
                 # Pointing only backwards keeps repeat lineage acyclic, with an original at its root.
                 broken.append(Issue("REPEAT_NOT_EARLIER", where, f"{repeat} is not an earlier capture of this page"))
         issues += broken
-        own_link_ok[where] = not broken
+        if broken:
+            excluded.add(where)
+
+    # Identical bytes are one photo. Recorded twice for one page, only its earliest capture stands;
+    # recorded for several pages, it cannot show which page it is, so none of them does.
+    by_hash: dict[str, list[dict]] = {}
+    for c in known:
+        by_hash.setdefault(c["content_sha256"], []).append(c)
+    for group in by_hash.values():
+        if len(group) < 2:
+            continue
+        keep = min(group, key=lambda c: (c["capture_index"], c["capture_id"]))
+        one_page = len({c["specimen_id"] for c in group}) == 1
+        writers_with_bytes = {specimens[c["specimen_id"]]["writer_id"] for c in group}
+        for c in group:
+            if one_page and c is keep:
+                continue
+            others = ", ".join(sorted(o["capture_id"] for o in group if o is not c))
+            code = "DUPLICATE_COUNTED_AS_WRITER" if len(writers_with_bytes) > 1 else "DUPLICATE_CAPTURE_BYTES"
+            issues.append(Issue(code, c["capture_id"], f"identical bytes to {others}"))
+            excluded.add(c["capture_id"])
 
     def rooted(capture_id: str) -> bool:
-        """Every link back to the original is valid. Valid links point to a lower index, so this terminates."""
-        if capture_id in ambiguous_captures or not own_link_ok.get(capture_id):
+        """Every capture back to the original stands. Links that stand point to a lower index, so this terminates."""
+        if capture_id in excluded:
             return False
         repeat = captures[capture_id]["repeat_of_capture_id"]
         return repeat is None or rooted(repeat)
 
-    # Pass 2: bytes, lineage and counting.
-    by_hash: dict[str, str] = {}
     counted: list[str] = []
-    for c in manifest["captures"]:
+    for c in known:
         where = c["capture_id"]
-        specimen = specimens.get(c["specimen_id"])
-        if specimen is None or where in ambiguous_captures:
-            continue
-        first = by_hash.get(c["content_sha256"])
-        if first is not None:
-            other = specimens.get(captures[first]["specimen_id"])
-            if other is not None and other["writer_id"] != specimen["writer_id"]:
-                issues.append(Issue("DUPLICATE_COUNTED_AS_WRITER", where, f"identical bytes to {first} under another writer"))
-            else:
-                issues.append(Issue("DUPLICATE_CAPTURE_BYTES", where, f"identical bytes to {first}"))
-            continue
-        by_hash[c["content_sha256"]] = where
-        if not own_link_ok[where]:
-            continue  # a capture whose provenance failed validation is not evidence of anything
+        if where in excluded:
+            continue  # a capture whose provenance or bytes failed validation is not evidence of anything
         if not rooted(where):
             issues.append(Issue("REPEAT_OF_INVALID_CAPTURE", where, "its repeat chain does not reach a valid original"))
             continue
@@ -1111,7 +1207,9 @@ def event_validity(event: dict, context: ConsentContext) -> list[str]:
         if event["actor"]["kind"] == "PILOT_PARTICIPANT" and event["capture_method"] != "SIGNED_PILOT_AGREEMENT":
             codes.append("GRANT_NOT_EXPLICIT")
         # Approval is never retroactive: a grant captured while the purpose was a draft stays invalid.
-        if purpose["status"] == "APPROVED" and not approved_by(purpose, event["recorded_at"]):
+        if purpose["status"] == "APPROVED" and not purpose_approval_complete(purpose):
+            codes.append("PURPOSE_NOT_APPROVED")
+        elif purpose["status"] == "APPROVED" and not approved_by(purpose, event["recorded_at"]):
             codes.append("GRANTED_BEFORE_APPROVAL")
     if kind in {"GRANT", "DENY"}:
         if not has_authority(event, context):
@@ -1152,6 +1250,8 @@ def evaluate_permission(
         return "NOT_OFFERED"
     if purpose["status"] not in context.usable_statuses:
         return "NOT_APPROVED"
+    if purpose["status"] == "APPROVED" and not purpose_approval_complete(purpose):
+        return "NOT_APPROVED"  # a status edit without its decisions, gate decisions or unchanged content
     if scope["kind"] not in purpose["grant_scopes"]:
         # A use the purpose never offered cannot be authorized by any broader grant.
         return "SCOPE_NOT_GRANTABLE"

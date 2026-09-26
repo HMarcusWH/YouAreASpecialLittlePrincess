@@ -31,6 +31,8 @@ Accounting records and the consent ledger are retained under their own decided o
 
 The validator checks that roots are declared, parents exist, the graph is acyclic, and every kind is reachable from a root. `upload_original` and `pilot_capture` must stay declared roots that contain handwriting and use a handwriting retention class [`HANDWRITING_ROOT_REQUIRED`], so page bytes cannot be declassified out of the deletion controls. Every kind that carries page pixels by construction (originals, normalized images, crops, Premium payloads, provider copies, exports, reference members and support copies) must exist and stay handwriting-bearing [`HANDWRITING_ARTIFACT_MISSING`, `HANDWRITING_ARTIFACT_DECLASSIFIED`]. It also checks that a handwriting-bearing kind is never assigned a retention class that understates handwriting. If a new kind cannot be reached from a root, deletion cannot find it.
 
+The action table above is pinned in the validator's reviewed plan (`LINEAGE_PLAN`), together with the derivation edges deletion must follow. Changing an action (for example `share_route` to plain `DELETE`, or `provider_copy` without the processor request) is `DELETION_ACTION_MISMATCH`. Dropping a pinned edge is `LINEAGE_EDGE_MISSING`. Dropping a kind is `LINEAGE_ARTIFACT_MISSING`, and adding an unreviewed kind is `UNREVIEWED_ARTIFACT_KIND`. Extra edges are allowed, because they only widen deletion. An `APPROVED` lineage needs an approval record whose `content_sha256` matches the plan [`APPROVAL_WITHOUT_EVIDENCE`, `APPROVAL_CONTENT_MISMATCH`]. Changing the plan therefore changes the validator and the approval in the same reviewed change.
+
 ## Deletion sequence (for T02/T24)
 
 1. Revoke access first: sessions, share routes, asset tickets and presigned URLs.

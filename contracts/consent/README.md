@@ -37,7 +37,7 @@ All fixtures are synthetic. They contain opaque IDs and hashes of labels, never 
   - a service purpose change requiring the current version's grant.
 
   Scenarios run in fixture mode, the only mode in which draft purposes are usable.
-- `v1/fixtures/collection/`: fifteen collection manifests, each with its own synthetic consent log and the error codes it should produce. They include a duplicate specimen counted as a writer, a repeat capture filed under another writer or pointing to a later capture, a release without permission, a withdrawal before the cutoff or before publication (`publish_at`), a page written after the cutoff or before any grant, and session 2 without a baseline.
+- `v1/fixtures/collection/`: seventeen collection manifests, each with its own synthetic consent log and the error codes it should produce. They include a duplicate specimen counted as a writer, a repeat capture filed under another writer, pointing to a later capture or taken in a session without repeats, a release without permission, a withdrawal before the cutoff or before publication (`publish_at`), a page written after the cutoff or before any grant, a writer in two language cohorts, and session 2 without a baseline.
 
 ## Validation
 
