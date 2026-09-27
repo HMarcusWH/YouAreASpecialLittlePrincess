@@ -3,8 +3,8 @@ import { readFileSync } from "node:fs";
 import { test } from "node:test";
 
 import {
-  ApiError, PayloadError, PrincessApi, SessionEpoch, parseEvidenceBundle, parseReportPage, parseReportView,
-  parseRunStatus, pollDelayMs, reportCacheKey, sha256Hex,
+  ApiError, PayloadError, PrincessApi, SessionEpoch, parseEvidenceBundle, parseNotificationPreferences,
+  parseReportPage, parseReportView, parseRunStatus, pollDelayMs, reportCacheKey, sha256Hex,
 } from "../src/index.ts";
 
 const fixture = (name: string) =>
@@ -109,4 +109,45 @@ test("the default fetch is called unbound, as browsers require", async () => {
     globalThis.fetch = original;
   }
   assert.ok(receiver === undefined || receiver === globalThis, "fetch must not be invoked on the client instance");
+});
+
+
+test("notification preferences are strictly parsed and preserve backend errors", async () => {
+  assert.deepEqual(parseNotificationPreferences({ mail_report_ready: false, locale: "en" }),
+                   { mail_report_ready: false, locale: "en" });
+  assert.deepEqual(parseNotificationPreferences({ mail_report_ready: true, locale: "sv-SE" }),
+                   { mail_report_ready: true, locale: "sv-SE" });
+  for (const bad of [
+    null,
+    {},
+    { mail_report_ready: "yes", locale: "en" },
+    { mail_report_ready: true, locale: "english" },
+    { mail_report_ready: true, locale: "sv-se" },
+    { mail_report_ready: true, locale: "en", extra: true },
+  ]) {
+    assert.throws(() => parseNotificationPreferences(bad),
+                  (error: unknown) => error instanceof ApiError && error.code === "unreadable_notification_preferences");
+  }
+
+  const calls: Array<{ url: string; init: RequestInit }> = [];
+  const fake = (async (url: string, init: RequestInit) => {
+    calls.push({ url, init });
+    if (init.method === "GET") {
+      return new Response(JSON.stringify({ mail_report_ready: false, locale: "sv-SE" }), { status: 200 });
+    }
+    if ((init.body as string).includes('"mail_report_ready":true')) {
+      return new Response(JSON.stringify({ mail_report_ready: true, locale: "sv-SE" }), { status: 200 });
+    }
+    return new Response(JSON.stringify({ error: "account_required" }), { status: 403 });
+  }) as unknown as typeof fetch;
+  const api = new PrincessApi({ baseUrl: "https://api.example.invalid", fetch: fake, token: "tok" });
+  assert.equal((await api.notificationPreferences()).locale, "sv-SE");
+  assert.equal((await api.setNotificationPreferences({ mail_report_ready: true, locale: "sv-SE" })).mail_report_ready,
+               true);
+  await assert.rejects(
+    api.setNotificationPreferences({ mail_report_ready: false, locale: "sv-SE" }),
+    (error: unknown) => error instanceof ApiError && error.status === 403 && error.code === "account_required",
+  );
+  assert.equal(calls[1]!.init.method, "PUT");
+  assert.equal((calls[1]!.init.headers as Record<string, string>)["content-type"], "application/json");
 });

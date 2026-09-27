@@ -11,6 +11,8 @@ const ROUTES: ReadonlyArray<[string, RegExp]> = [
   ["POST", /^me\/permissions$/],
   ["GET", new RegExp(`^me/permissions/${ID}$`)],
   ["POST", /^me\/logout-everywhere$/],
+  ["GET", /^me\/notification-preferences$/],
+  ["PUT", /^me\/notification-preferences$/],
   ["DELETE", /^me$/],
   ["POST", /^uploads$/],
   ["POST", new RegExp(`^uploads/${ID}/complete$`)],
