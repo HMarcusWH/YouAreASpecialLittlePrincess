@@ -3,14 +3,16 @@
 import { useEffect, useRef, useState } from "react";
 
 import { ApiError, PrincessApi, pollDelayMs, type ExportStatus } from "@princess/api-client";
-import type { ReportViewModel } from "@princess/contracts";
+import type { EvidenceBundle, ReportViewModel } from "@princess/contracts";
 import { ReportView, t, type Locale } from "@princess/report-web";
 
 type Phase = { kind: "idle" } | { kind: "preparing" } | { kind: "ready"; href: string } | { kind: "failed" };
 
 /** The owner report with its working actions. Only EXPORT has a flow here;
  * the API marks the others disabled with a reason. */
-export function ReportClient({ view, locale }: { view: ReportViewModel; locale: Locale }) {
+export function ReportClient({ view, locale, evidence, evidenceUnreadable = false }: {
+  view: ReportViewModel; locale: Locale; evidence: EvidenceBundle | null; evidenceUnreadable?: boolean;
+}) {
   const [phase, setPhase] = useState<Phase>({ kind: "idle" });
   const stopped = useRef(false);
   useEffect(() => () => { stopped.current = true; }, []);
@@ -35,7 +37,11 @@ export function ReportClient({ view, locale }: { view: ReportViewModel; locale: 
 
   return (
     <>
-      <ReportView view={view} locale={locale} onAction={(kind) => { if (kind === "EXPORT") void exportPdf(); }} />
+      <ReportView view={view} locale={locale} evidence={evidence}
+                  onAction={(kind) => { if (kind === "EXPORT") void exportPdf(); }} />
+      {evidenceUnreadable && (
+        <p role="alert" className="error">The saved evidence could not be read safely, so it is not shown.</p>
+      )}
       <div className="stack" aria-live="polite" data-export={phase.kind}>
         {phase.kind === "preparing" && <p role="status">{t(locale, "export.preparing")}</p>}
         {phase.kind === "ready" && (

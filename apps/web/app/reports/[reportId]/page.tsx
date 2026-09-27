@@ -12,8 +12,18 @@ export default async function Report({ params, searchParams }: {
   const { reportId } = await params;
   const locale = (await searchParams).locale === "sv" ? "sv" : "en";
   try {
-    const view = await (await serverApi()).report(reportId, "OWNER");
-    return <ReportClient view={view} locale={locale} />;
+    const api = await serverApi();
+    const view = await api.report(reportId, "OWNER");
+    let evidence = null;
+    let evidenceUnreadable = false;
+    try {
+      evidence = await api.reportEvidence(reportId);
+    } catch (e) {
+      if (e instanceof ApiError && e.status === 404) evidence = null;
+      else if (e instanceof PayloadError) evidenceUnreadable = true;
+      else throw e;
+    }
+    return <ReportClient view={view} locale={locale} evidence={evidence} evidenceUnreadable={evidenceUnreadable} />;
   } catch (e) {
     if (e instanceof ApiError && e.status === 404) notFound();
     if (e instanceof ApiError && e.status === 401) {

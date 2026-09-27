@@ -46,3 +46,17 @@
 .pr-card-fact dt { font-size: 34px; color: var(--color-text-muted); overflow-wrap: anywhere; }
 .pr-card-fact dd { margin: 0; font-size: 60px; font-family: var(--font-family-numeric); font-variant-numeric: tabular-nums; }
 .pr-card-fact dd.pr-card-label { font-size: 28px; font-family: var(--font-family-text); color: var(--color-evidence-proxy); }
+
+.pr-evidence { margin: var(--space-7) 0; padding-top: var(--space-5); border-top: 1px solid var(--color-border); }
+.pr-evidence > h2 { font-size: var(--font-size-xl); margin-bottom: var(--space-2); }
+.pr-evidence-block { margin: var(--space-5) 0; }
+.pr-evidence-block h3 { font-size: var(--font-size-lg); margin-bottom: var(--space-3); }
+.pr-baseline-grid { display: grid; gap: var(--space-4); grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr)); }
+.pr-baseline-figure { margin: 0; padding: var(--space-3); border: 1px solid var(--color-border); border-radius: var(--radius-md); }
+.pr-baseline-figure svg { display: block; width: 100%; min-height: 8rem; max-height: 14rem; color: var(--color-text); }
+.pr-baseline-line { stroke: currentColor; stroke-width: 1.5; vector-effect: non-scaling-stroke; }
+.pr-baseline-point { fill: currentColor; }
+.pr-baseline-figure figcaption { margin-top: var(--space-2); color: var(--color-text-muted); font-size: var(--font-size-sm); }
+.pr-evidence-table { width: 100%; border-collapse: collapse; font-size: var(--font-size-sm); }
+.pr-evidence-table th, .pr-evidence-table td { text-align: start; padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--color-border); vertical-align: top; overflow-wrap: anywhere; }

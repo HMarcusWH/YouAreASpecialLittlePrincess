@@ -1,8 +1,9 @@
 // Renders one authorized ReportViewModel. Everything shown comes from the
 // saved projection: no measurement, percentile or model text is computed here.
-import type { Action, Fact, Notice, ReportSection, ReportViewModel } from "@princess/contracts";
+import type { Action, EvidenceBundle, Fact, Notice, ReportSection, ReportViewModel } from "@princess/contracts";
 import { formatFact } from "@princess/report-core";
 
+import { EvidenceView } from "./EvidenceView.tsx";
 import { featureName, sectionTitle, t, type Locale } from "./messages.ts";
 
 const EVIDENCE_ICON: Record<Fact["evidence_class"], string> = {
@@ -107,8 +108,10 @@ export function ActionBar({ actions, locale, onAction }: { actions: readonly Act
   );
 }
 
-export function ReportView({ view, locale, onAction }: { view: ReportViewModel; locale: Locale;
-                                                         onAction?: (kind: Action["kind"]) => void }) {
+export function ReportView({ view, locale, evidence, onAction }: {
+  view: ReportViewModel; locale: Locale; evidence?: EvidenceBundle | null;
+  onAction?: (kind: Action["kind"]) => void;
+}) {
   const facts = new Map(view.facts.map((f) => [f.fact_id, f]));
   return (
     <article className="pr-report" data-projection={view.projection} lang={locale}>
@@ -118,6 +121,7 @@ export function ReportView({ view, locale, onAction }: { view: ReportViewModel; 
       </header>
       <NoticeBar notices={view.notices} locale={locale} />
       {view.sections.map((s) => <SectionBlock key={s.section_id} section={s} facts={facts} locale={locale} />)}
+      {evidence && <EvidenceView bundle={evidence} locale={locale} />}
       <ActionBar actions={view.actions} locale={locale} {...(onAction ? { onAction } : {})} />
     </article>
   );

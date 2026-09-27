@@ -54,6 +54,21 @@ const EN: Record<string, string> = {
   "report.premium_saved": "The AI-assisted section is saved with this revision.",
   "report.image_omitted": "Source image omitted.",
   "quality.observations": "observations",
+  "evidence.title": "Evidence behind the measurements",
+  "evidence.intro": "These views use the stored observations behind this report. Missing or rejected observations are never replaced with zero.",
+  "evidence.none": "No stored observations are available for this view.",
+  "evidence.baseline": "Baseline traces",
+  "evidence.baseline_line": "Line",
+  "evidence.points": "stored points",
+  "evidence.angle_missing": "angle unavailable",
+  "evidence.regions": "Regions",
+  "evidence.value": "Value",
+  "evidence.status": "Status",
+  "evidence.accepted": "Accepted",
+  "evidence.rejected": "Rejected",
+  "evidence.slant_observations": "Slant observations",
+  "evidence.observation": "Observation",
+  "evidence.no_histogram": "Raw observations are shown here because a reviewed fixed histogram scale is not defined yet.",
 };
 
 const SV: Record<string, string> = {
@@ -108,6 +123,21 @@ const SV: Record<string, string> = {
   "report.premium_saved": "Det AI-stödda avsnittet är sparat med denna version.",
   "report.image_omitted": "Källbilden är utelämnad.",
   "quality.observations": "observationer",
+  "evidence.title": "Underlag bakom mätvärdena",
+  "evidence.intro": "Dessa vyer använder de sparade observationerna bakom rapporten. Saknade eller underkända observationer ersätts aldrig med noll.",
+  "evidence.none": "Det finns inga sparade observationer för den här vyn.",
+  "evidence.baseline": "Baslinjespår",
+  "evidence.baseline_line": "Rad",
+  "evidence.points": "sparade punkter",
+  "evidence.angle_missing": "vinkel saknas",
+  "evidence.regions": "Regioner",
+  "evidence.value": "Värde",
+  "evidence.status": "Status",
+  "evidence.accepted": "Godkänd",
+  "evidence.rejected": "Underkänd",
+  "evidence.slant_observations": "Lutningsobservationer",
+  "evidence.observation": "Observation",
+  "evidence.no_histogram": "Råa observationer visas eftersom en granskad fast skala för histogram ännu inte är definierad.",
 };
 
 const CATALOGS: Record<Locale, Record<string, string>> = { en: EN, sv: SV };
