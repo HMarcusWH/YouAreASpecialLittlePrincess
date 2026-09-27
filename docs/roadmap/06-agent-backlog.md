@@ -143,7 +143,7 @@ pnpm test
 <a id="validation-web_browser"></a>
 ### web_browser
 
-State: `EXISTS`. Merged Free web Chromium fixture journeys plus the local live upload-to-report journey. This profile does not replace web_render or future automated axe coverage.
+State: `EXISTS`. Free web Chromium fixture journeys with automated axe WCAG A/AA state coverage plus the isolated live upload-to-report/export journey. Automated scans complement, but do not replace, manual accessibility and release acceptance.
 
 ```bash
 pnpm install --frozen-lockfile
@@ -156,7 +156,7 @@ tools/run_web_e2e.sh
 <a id="validation-web_render"></a>
 ### web_render
 
-State: `EXISTS`. Merged offline Chromium PDF/share-card renderer tests, export job/API tests and live PDF download journey. Automated axe/pixel-diff coverage remains future work.
+State: `EXISTS`. Offline Chromium PDF/share-card renderer tests, export job/API tests and live PDF download journey. Accessibility automation is owned by web_browser; pixel-diff coverage remains future work.
 
 ```bash
 pnpm --filter @princess/render test
@@ -1411,12 +1411,11 @@ Working Free web journey and reusable web report components tied to saved projec
 
 ### Implementation evidence
 
-PR #14 established the working deterministic Free Next.js journey and T21 export integration. This T17 slice adds canonical ReportSummary/ReportPage contracts, owner-scoped paginated report history, report-scoped EvidenceBundle reads with stored digest/lineage validation, current-principal history UI, stored baseline/spacing/slant evidence views and cross-owner/browser regression coverage.
+PR #14 established the working deterministic Free Next.js journey and T21 export integration. This T17 slice adds canonical ReportSummary/ReportPage contracts, owner-scoped paginated report history, report-scoped EvidenceBundle reads with stored digest/lineage validation, current-principal history UI, stored baseline/spacing/slant evidence views and cross-owner/browser regression coverage. PR #18 adds a reviewed pinned axe dependency and generated lockfile, automated WCAG A/AA browser-state coverage with a proven negative control, explicit fixture/live Playwright modes, and a mandatory isolated live Free upload-to-export CI journey that refreshes the queued run before deterministic worker execution.
 
 ### Remaining work
 
 - Implement production account sign-in and cross-device/account recovery after the ADR-002 identity provider decision.
-- Add a reviewed pinned axe dependency/lockfile update and automated WCAG journey coverage; existing Playwright semantic/keyboard/overflow checks remain in force until then.
 - Finish owner-accepted T10 design integration across responsive history/evidence/report states.
 
 ### Acceptance evidence

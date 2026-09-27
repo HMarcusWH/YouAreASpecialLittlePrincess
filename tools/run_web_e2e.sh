@@ -17,6 +17,8 @@ if url.scheme not in {"postgresql", "postgresql+psycopg"}:
     raise SystemExit("REFUSE: E2E admin URL must be PostgreSQL")
 if url.hostname not in {"127.0.0.1", "localhost"}:
     raise SystemExit("REFUSE: E2E database must be local/disposable")
+if (url.port or 5432) != 5432:
+    raise SystemExit("REFUSE: E2E runner currently supports only local PostgreSQL port 5432")
 if url.path != "/postgres" or url.query or url.fragment:
     raise SystemExit("REFUSE: E2E admin URL must target exactly /postgres")
 PY
