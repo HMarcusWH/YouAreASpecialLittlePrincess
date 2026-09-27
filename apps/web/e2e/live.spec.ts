@@ -19,6 +19,14 @@ test("upload, consent, job and report without any AI provider", async ({ page })
   await expect(page.getByRole("heading", { level: 1, name: "Your report" })).toBeVisible();
   expect(await page.locator("tr[data-fact-id]").count()).toBeGreaterThan(10);
   await expect(page.getByText("No reference group is available yet")).toBeVisible();
+  await expect(page.getByRole("heading", { level: 2, name: "Evidence behind the measurements" })).toBeVisible();
+  expect(await page.locator(".pr-baseline-figure").count()).toBeGreaterThan(0);
+
+  const reportUrl = page.url();
+  await page.goto("/reports");
+  await expect(page.getByRole("heading", { level: 1, name: "Your reports" })).toBeVisible();
+  await expect(page.locator(".report-list-item")).toHaveCount(1);
+  await page.goto(reportUrl);
 
   // Export: the saved projection is rendered to a PDF by the sandboxed renderer.
   await page.getByRole("button", { name: "Export PDF" }).click();
@@ -31,7 +39,6 @@ test("upload, consent, job and report without any AI provider", async ({ page })
   await expect(page.getByRole("button", { name: "Save" })).toBeDisabled();  // no flow, says why
 
   // Refresh on the job URL resumes the known run: it redirects to the same report.
-  const reportUrl = page.url();
   await page.goto(runUrl);
   await expect(page).toHaveURL(reportUrl, { timeout: 30_000 });
 
@@ -43,6 +50,9 @@ test("upload, consent, job and report without any AI provider", async ({ page })
   const response = await other.goto(reportUrl);
   expect(response!.status()).toBe(404);
   await expect(other.locator("tr[data-fact-id]")).toHaveCount(0);
+  expect((await other.request.get(`${origin}/api/v1/reports/${reportUrl.split("/").pop()}/evidence`)).status()).toBe(404);
+  await other.goto(`${origin}/reports`);
+  await expect(other.locator(".report-list-item")).toHaveCount(0);
   await stranger.close();
 
   // Without any session the report is not rendered either.

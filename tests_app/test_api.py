@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
+from sqlalchemy import text
 
 from princess_api import Services, create_app
 from princess_app.adapters.fakes import FakeClock, FakeIdentityProvider, FakePaymentProvider, SequentialIds
@@ -74,6 +75,37 @@ def test_login_me_and_owner_scoped_report_reads(client, app_db):
     assert api.get(f"/v1/reports/{rid}?projection=PREMIUM", headers=alice).status_code == 403  # no unlocked overlay
 
 
+def test_report_history_paginates_stably_and_evidence_is_owner_scoped(client, app_db):
+    api, _ = client
+    alice, bob = login(api, "alice"), login(api, "bob")
+    alice_id = api.get("/v1/me", headers=alice).json()["principal_id"]
+    bob_id = api.get("/v1/me", headers=bob).json()["principal_id"]
+    for run_id in ("run_1", "run_2", "run_3"):
+        publish_report(app_db, alice_id, run_id)
+    publish_report(app_db, bob_id, "run_9")
+
+    first = api.get("/v1/reports?limit=2", headers=alice)
+    assert first.status_code == 200
+    assert [item["report_id"] for item in first.json()["items"]] == ["report_run_3", "report_run_2"]
+    assert first.json()["next_cursor"]
+    second = api.get("/v1/reports", params={"limit": 2, "cursor": first.json()["next_cursor"]}, headers=alice)
+    assert second.status_code == 200
+    assert [item["report_id"] for item in second.json()["items"]] == ["report_run_1"]
+    assert second.json()["next_cursor"] is None
+    assert [item["report_id"] for item in api.get("/v1/reports", headers=bob).json()["items"]] == ["report_run_9"]
+    assert api.get("/v1/reports?cursor=not-base64", headers=alice).status_code == 422
+
+    evidence = api.get("/v1/reports/report_run_3/evidence", headers=alice)
+    assert evidence.status_code == 200 and compile_document("EvidenceBundle", evidence.json()).ok
+    assert evidence.json()["bundle_id"] == "evidence_run_3"
+    assert api.get("/v1/reports/report_run_3/evidence", headers=bob).status_code == 404
+
+    with app_db.session(alice_id) as conn:
+        conn.execute(text("UPDATE app.report SET deleted_at = :t WHERE report_id = 'report_run_2'"), {"t": T0})
+    assert [item["report_id"] for item in api.get("/v1/reports", headers=alice).json()["items"]] == [
+        "report_run_3", "report_run_1"]
+
+
 def test_permission_lifecycle_returns_contract_grant_snapshots(client):
     api, clock = client
     alice = login(api, "alice")
@@ -116,6 +148,9 @@ def test_guest_flow_transfer_and_deletion(client, app_db):
     again = api.post("/v1/me/guest-transfer", json={"guest_token": guest["guest_token"]}, headers=alice)
     assert again.status_code == 409
     assert api.get("/v1/reports/report_run_1", headers=alice).status_code == 200
+    transferred_evidence = api.get("/v1/reports/report_run_1/evidence", headers=alice)
+    assert transferred_evidence.status_code == 200
+    assert transferred_evidence.json()["analysis"]["owner_id"] == guest["principal_id"]
     clock.advance(1)
     assert api.delete("/v1/me", headers=alice).status_code == 202
     assert api.get("/v1/me", headers=alice).status_code == 401

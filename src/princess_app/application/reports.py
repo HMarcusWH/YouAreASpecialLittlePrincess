@@ -7,13 +7,60 @@ provider or renderer is reachable from here.
 """
 from __future__ import annotations
 
+import base64
+import binascii
 from dataclasses import dataclass, field
+from datetime import datetime, timezone
 from typing import Any, Mapping, Protocol
 
 from princess_contracts import ValidatedDocument
 
 from ..domain.reports import PremiumAuthorization, ProjectionRequest, check_revision, project_report
-from ..ports.base import Clock, Conflict, InvalidInput, NotAuthorized, NotFound, PermanentFailure
+from ..ports.base import (
+    Clock,
+    Conflict,
+    InvalidInput,
+    NotAuthorized,
+    NotFound,
+    PermanentFailure,
+    require_opaque_id,
+)
+
+
+@dataclass(frozen=True)
+class ReportHistoryEntry:
+    report_id: str
+    revision: int
+    kind: str
+    created_at: datetime
+    locale: str
+
+
+def encode_report_cursor(created_at: datetime, report_id: str) -> str:
+    stamp = created_at.astimezone(timezone.utc).isoformat().replace("+00:00", "Z")
+    payload = f"{stamp}\n{report_id}".encode("utf-8")
+    return base64.urlsafe_b64encode(payload).decode("ascii").rstrip("=")
+
+
+def decode_report_cursor(cursor: str | None) -> tuple[datetime, str] | None:
+    if cursor is None:
+        return None
+    if not cursor or len(cursor) > 512:
+        raise InvalidInput("invalid_report_cursor")
+    try:
+        padded = cursor + "=" * (-len(cursor) % 4)
+        raw = base64.b64decode(padded.encode("ascii"), altchars=b"-_", validate=True).decode("utf-8")
+        # Exactly two fields: a trailing/embedded newline is not part of an opaque ID.
+        stamp, report_id = raw.split("\n")
+        created_at = datetime.fromisoformat(stamp.replace("Z", "+00:00"))
+        # Check before conversion; astimezone() otherwise assumes the server's timezone.
+        if created_at.tzinfo is None or created_at.utcoffset() is None:
+            raise ValueError("timezone_required")
+        require_opaque_id(report_id, "report_id")
+        created_at = created_at.astimezone(timezone.utc)
+    except (ValueError, UnicodeError, binascii.Error, OverflowError, InvalidInput):
+        raise InvalidInput("invalid_report_cursor") from None
+    return created_at, report_id
 
 
 class ReportStore(Protocol):
@@ -21,11 +68,17 @@ class ReportStore(Protocol):
 
     def append(self, owner_id: str, report: ValidatedDocument) -> None: ...
 
+    def history(self, owner_id: str, *, limit: int,
+                before: tuple[datetime, str] | None) -> list[ReportHistoryEntry]: ...
+
+    def evidence(self, report_id: str) -> ValidatedDocument | None: ...
+
 
 @dataclass
 class InMemoryReportStore:
     _revisions: dict[str, list[ValidatedDocument]] = field(default_factory=dict)
     _owners: dict[str, str] = field(default_factory=dict)
+    _evidence: dict[str, ValidatedDocument] = field(default_factory=dict)
 
     def latest(self, report_id: str) -> tuple[str, ValidatedDocument] | None:
         revisions = self._revisions.get(report_id)
@@ -49,6 +102,30 @@ class InMemoryReportStore:
         if check_revision(existing[-1], report):
             raise Conflict("invalid_revision")
         existing.append(report)
+
+    def history(self, owner_id: str, *, limit: int,
+                before: tuple[datetime, str] | None) -> list[ReportHistoryEntry]:
+        rows = []
+        for report_id, revisions in self._revisions.items():
+            if self._owners.get(report_id) != owner_id or not revisions:
+                continue
+            latest = revisions[-1].data
+            created_at = datetime.fromisoformat(str(revisions[0].data["created_at"]).replace("Z", "+00:00"))
+            if before is not None and (created_at, report_id) >= before:
+                continue
+            rows.append(ReportHistoryEntry(
+                report_id, int(latest["revision"]), str(latest["kind"]), created_at,
+                str(latest["locale"])))
+        rows.sort(key=lambda row: (row.created_at, row.report_id), reverse=True)
+        return rows[:limit]
+
+    def evidence(self, report_id: str) -> ValidatedDocument | None:
+        return self._evidence.get(report_id)
+
+    def bind_evidence(self, report_id: str, evidence: ValidatedDocument) -> None:
+        if evidence.schema_name != "EvidenceBundle":
+            raise InvalidInput("not_evidence")
+        self._evidence[report_id] = evidence
 
 
 @dataclass(frozen=True)
@@ -114,6 +191,53 @@ class ReportReader:
                 raise NotAuthorized("premium_not_authorized")
             raise PermanentFailure("projection_invalid", detail=",".join(sorted(codes))[:120])
         return result.value
+
+    def history(self, *, principal_id: str, limit: int = 20, cursor: str | None = None) -> dict[str, Any]:
+        if not 1 <= limit <= 50:
+            raise InvalidInput("invalid_report_page_size")
+        before = decode_report_cursor(cursor)
+        rows = self._store.history(principal_id, limit=limit + 1, before=before)
+        page_rows = rows[:limit]
+        next_cursor = None
+        if len(rows) > limit and page_rows:
+            tail = page_rows[-1]
+            next_cursor = encode_report_cursor(tail.created_at, tail.report_id)
+        return {
+            "contract_version": "1.0.0",
+            "items": [{
+                "report_id": row.report_id,
+                "revision": row.revision,
+                "kind": row.kind,
+                "created_at": row.created_at.astimezone(timezone.utc).isoformat().replace("+00:00", "Z"),
+                "locale": row.locale,
+            } for row in page_rows],
+            "next_cursor": next_cursor,
+        }
+
+    def evidence(self, *, report_id: str, principal_id: str) -> dict[str, Any]:
+        entry = self._store.latest(report_id)
+        if entry is None or entry[0] != principal_id:
+            raise NotFound("report_not_found")
+        report = entry[1]
+        expected_bundle = report.data["evidence_bundle_id"]
+        if expected_bundle is None:
+            raise NotFound("evidence_not_available")
+        evidence = self._store.evidence(report_id)
+        if evidence is None:
+            raise NotFound("evidence_not_available")
+        data = evidence.data
+        # Immutable snapshots keep the original analysis owner after a guest
+        # transfer. Authorization is the live relational owner above; lineage
+        # is therefore bound by IDs/digests that remain immutable.
+        if (
+            data["bundle_id"] != expected_bundle
+            or data["analysis"]["run_id"] != report.data["analysis"]["run_id"]
+            or data["analysis"]["analysis_id"] != report.data["analysis"]["analysis_id"]
+            or data["analysis"]["input_sha256"] != report.data["analysis"]["input_sha256"]
+            or data["analysis"]["processed_sha256"] != report.data["analysis"]["processed_sha256"]
+        ):
+            raise PermanentFailure("evidence_lineage_invalid")
+        return evidence.to_dict()
 
     def premium_content(self, *, report_id: str, principal_id: str) -> dict[str, Any]:
         """The purchased overlay for the owner's latest revision. Served only

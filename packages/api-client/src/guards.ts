@@ -1,6 +1,8 @@
 // Runtime validation at the trust boundary. A typed API response is only as
 // good as this check: payloads are never cast into contract types.
-import type { Action, Fact, Notice, ReportSection, ReportViewModel } from "@princess/contracts";
+import type {
+  Action, EvidenceBundle, Fact, Notice, ReportPage, ReportSection, ReportSummary, ReportViewModel,
+} from "@princess/contracts";
 
 export class PayloadError extends Error {
   readonly path: string;
@@ -23,6 +25,16 @@ const OPAQUE = /^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/;
 const SUPPORTED_MAJOR = "1";
 
 type Json = Record<string, unknown>;
+
+function exactKeys(value: Json, allowed: readonly string[], path: string): void {
+  const expected = new Set(allowed);
+  for (const key of Object.keys(value)) {
+    if (!expected.has(key)) throw new PayloadError(`${path}/${key}`, "unexpected property");
+  }
+  for (const key of allowed) {
+    if (!(key in value)) throw new PayloadError(`${path}/${key}`, "required property is missing");
+  }
+}
 
 function object(value: unknown, path: string): Json {
   if (typeof value !== "object" || value === null || Array.isArray(value)) {
@@ -138,4 +150,114 @@ export function parseRunStatus(raw: unknown): RunStatus {
     report_id: (status.report_id as string | null | undefined) ?? null,
     error_code: typeof status.error_code === "string" ? status.error_code : null,
   };
+}
+
+
+const REPORT_KINDS = new Set(["INDIVIDUAL", "PAIR", "HISTORY"]);
+const FRAME_UNITS = new Set(["px", "normalized"]);
+const RFC3339 = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?Z$/;
+
+function reportSummary(raw: unknown, path: string): ReportSummary {
+  const item = object(raw, path);
+  exactKeys(item, ["report_id", "revision", "kind", "created_at", "locale"], path);
+  str(item.report_id, `${path}/report_id`, OPAQUE);
+  if (!Number.isInteger(item.revision) || (item.revision as number) < 1) {
+    throw new PayloadError(`${path}/revision`, "expected positive integer");
+  }
+  member(item.kind, REPORT_KINDS, `${path}/kind`);
+  str(item.created_at, `${path}/created_at`, RFC3339);
+  str(item.locale, `${path}/locale`, /^[a-z]{2}(?:-[A-Z]{2})?$/);
+  return item as unknown as ReportSummary;
+}
+
+export function parseReportPage(raw: unknown): ReportPage {
+  const page = object(raw, "");
+  exactKeys(page, ["contract_version", "items", "next_cursor"], "");
+  const version = str(page.contract_version, "/contract_version");
+  if (version.split(".")[0] !== SUPPORTED_MAJOR) {
+    throw new PayloadError("/contract_version", `unsupported contract major ${version}`);
+  }
+  array(page.items, "/items", 50).forEach((item, i) => reportSummary(item, `/items/${i}`));
+  if (page.next_cursor !== null) {
+    const cursor = str(page.next_cursor, "/next_cursor");
+    if (cursor.length > 512) throw new PayloadError("/next_cursor", "cursor too long");
+  }
+  return page as unknown as ReportPage;
+}
+
+function finiteNumber(value: unknown, path: string): number {
+  if (typeof value !== "number" || !Number.isFinite(value)) throw new PayloadError(path, "expected finite number");
+  return value;
+}
+
+function integer(value: unknown, path: string, min: number): number {
+  if (!Number.isInteger(value) || (value as number) < min) throw new PayloadError(path, "expected bounded integer");
+  return value as number;
+}
+
+export function parseEvidenceBundle(raw: unknown): EvidenceBundle {
+  const bundle = object(raw, "");
+  exactKeys(bundle, ["contract_version", "bundle_id", "analysis", "frames", "regions", "observations", "warnings"], "");
+  const version = str(bundle.contract_version, "/contract_version");
+  if (version.split(".")[0] !== SUPPORTED_MAJOR) {
+    throw new PayloadError("/contract_version", `unsupported contract major ${version}`);
+  }
+  str(bundle.bundle_id, "/bundle_id", OPAQUE);
+  const analysis = object(bundle.analysis, "/analysis");
+  for (const key of ["analysis_id", "run_id", "owner_id", "input_asset_id"] as const) {
+    str(analysis[key], `/analysis/${key}`, OPAQUE);
+  }
+  for (const key of ["input_sha256", "processed_sha256"] as const) {
+    str(analysis[key], `/analysis/${key}`, /^[0-9a-f]{64}$/);
+  }
+
+  const frames = array(bundle.frames, "/frames", 64);
+  if (frames.length < 1) throw new PayloadError("/frames", "at least one frame is required");
+  frames.forEach((rawFrame, i) => {
+    const frame = object(rawFrame, `/frames/${i}`);
+    str(frame.frame_id, `/frames/${i}/frame_id`, OPAQUE);
+    integer(frame.width, `/frames/${i}/width`, 1);
+    integer(frame.height, `/frames/${i}/height`, 1);
+    member(frame.unit, FRAME_UNITS, `/frames/${i}/unit`);
+    if (frame.parent_frame_id !== null) str(frame.parent_frame_id, `/frames/${i}/parent_frame_id`, OPAQUE);
+    if (frame.transform_to_parent !== null) {
+      const matrix = array(frame.transform_to_parent, `/frames/${i}/transform_to_parent`, 9);
+      if (matrix.length !== 9) throw new PayloadError(`/frames/${i}/transform_to_parent`, "expected 3x3 matrix");
+      matrix.forEach((v, j) => finiteNumber(v, `/frames/${i}/transform_to_parent/${j}`));
+    }
+  });
+
+  array(bundle.regions, "/regions", 4096).forEach((rawRegion, i) => {
+    const region = object(rawRegion, `/regions/${i}`);
+    str(region.region_id, `/regions/${i}/region_id`, OPAQUE);
+    str(region.frame_id, `/regions/${i}/frame_id`, OPAQUE);
+    str(region.scope, `/regions/${i}/scope`);
+    integer(region.x, `/regions/${i}/x`, 0);
+    integer(region.y, `/regions/${i}/y`, 0);
+    integer(region.width, `/regions/${i}/width`, 1);
+    integer(region.height, `/regions/${i}/height`, 1);
+    if (region.parent_region_id !== null) {
+      str(region.parent_region_id, `/regions/${i}/parent_region_id`, OPAQUE);
+    }
+  });
+
+  array(bundle.observations, "/observations", 20000).forEach((rawObservation, i) => {
+    const observation = object(rawObservation, `/observations/${i}`);
+    for (const key of ["observation_id", "feature_id", "method_id"] as const) {
+      str(observation[key], `/observations/${i}/${key}`, OPAQUE);
+    }
+    str(observation.method_version, `/observations/${i}/method_version`);
+    array(observation.region_ids, `/observations/${i}/region_ids`, 64)
+      .forEach((id, j) => str(id, `/observations/${i}/region_ids/${j}`, OPAQUE));
+    factValue(observation.value, `/observations/${i}/value`);
+    if (observation.unit !== null) str(observation.unit, `/observations/${i}/unit`);
+    if (typeof observation.accepted !== "boolean") {
+      throw new PayloadError(`/observations/${i}/accepted`, "expected boolean");
+    }
+    if (observation.rejection_reason !== null) {
+      str(observation.rejection_reason, `/observations/${i}/rejection_reason`);
+    }
+  });
+  array(bundle.warnings, "/warnings", 256).forEach((warning, i) => str(warning, `/warnings/${i}`));
+  return bundle as unknown as EvidenceBundle;
 }

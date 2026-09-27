@@ -18,6 +18,8 @@ const ROUTES: ReadonlyArray<[string, RegExp]> = [
   ["GET", new RegExp(`^analyses/${ID}$`)],
   ["POST", new RegExp(`^analyses/${ID}/cancel$`)],
   ["DELETE", new RegExp(`^captures/${ID}$`)],
+  ["GET", /^reports$/],
+  ["GET", new RegExp(`^reports/${ID}/evidence$`)],
   ["GET", new RegExp(`^reports/${ID}$`)],
   ["POST", /^report-exports$/],
   ["GET", new RegExp(`^report-exports/${ID}$`)],

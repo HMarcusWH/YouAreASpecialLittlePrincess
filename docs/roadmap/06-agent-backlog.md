@@ -29,7 +29,7 @@ Use `python docs/roadmap/plan_tools.py --ready`, `--active` or `--task ID`. Edit
 | [T12 — Candidate corpus ETL and deduplication](#t12) | PLANNED | T04, T06, T11 | data |
 | [T13 — Reference statistics and distinctiveness](#t13) | PLANNED | T08, T12 | statistics |
 | [T14 — Benchmark publish withdraw drift rollback](#t14) | PLANNED | T03, T13 | data-platform |
-| [T15 — Evidence-bound OpenAI adapter](#t15) | IN_PROGRESS | T01, T09, T26, T27 | premium-backend |
+| [T15 — Evidence-bound OpenAI adapter](#t15) | DONE | T01, T09, T26, T27 | premium-backend |
 | [T16 — Model evaluation and generation policy](#t16) | PLANNED | T06, T15 | evaluation |
 | [T17 — Interactive Free web product](#t17) | IN_PROGRESS | T02, T04, T09, T10, T28 | frontend |
 | [T18 — Deterministic pair and history comparison](#t18) | PLANNED | T08, T09 | statistics-report |
@@ -1236,7 +1236,7 @@ No approval is created by this task brief. Mock/disabled implementation is not a
 <a id="t15"></a>
 ## T15 — Evidence-bound OpenAI adapter
 
-**Status:** `IN_PROGRESS` · **Owner:** premium-backend · **Milestone:** premium
+**Status:** `DONE` · **Owner:** premium-backend · **Milestone:** premium
 
 **Hard predecessors:** [T01](#t01), [T09](#t09), [T26](#t26), [T27](#t27)
 **Platforms:** backend, workers
@@ -1273,16 +1273,6 @@ evaluation/premium/
 
 PremiumRequestPacket, provider attempt/result and validated saved-overlay interfaces for T16/T19/T20/native clients.
 
-### Implementation evidence
-
-PR #14 commit 3c6947e plus review repairs implemented bounded Premium packet compilation, strict per-request schemas, semantic/text validation, spend/fencing controls, an OpenAI Responses adapter behind the disabled spend gate and adversarial tests.
-
-### Remaining work
-
-- Implement deterministic candidate producers for the supported dynamic selector contracts; explicitly classify generator contracts that remain unsupported and prove their fail-closed omission behavior.
-- Review packet coverage after candidate-producer work and record which individual-pack questions are answerable for each supported input context.
-- Keep runtime_activation=false; live provider/model evaluation and activation remain T16 and the api_access_spend_before_live_calls gate.
-
 ### Acceptance evidence
 
 - Image text is untrusted, model output cannot mutate canonical measurements or invent ranks.
@@ -1307,6 +1297,8 @@ Validation profiles: [core](#validation-core), [docs](#validation-docs), [contra
 - `api_access_spend_before_live_calls`: Approved model account, data controls and spend cap before live provider calls.
 
 No approval is created by this task brief. Mock/disabled implementation is not authorization for live collection, charges, signing or release.
+
+Historical completion evidence: Merged PR #16 (merge d8280a9e3615cb2f18af5f5647d70b04009c9d70; exact head 0839e517eb5ea9de2b75bb7b97c5064591b74b72) completed the deterministic T15 candidate boundary: exhaustive dispositions for all 18 individual-pack dynamic generators, three evidence-supported producers, explicit unsupported reasons, pack-level AUTHORIZED_IMAGE enforcement, candidate-kind/support confinement and exact packet coverage. Exact-head CI run 36327429086, Application environments run 36327429015 and Roadmap integrity run 36327428968 all passed. T26 remains runtime_activation=false; live provider/model evaluation remains T16 and its owner gate.
 
 [Back to task table](#task-table) · [Documentation index](00-index.md) · [Execution sequence](20-end-to-end-build-sequence.md)
 
@@ -1419,14 +1411,13 @@ Working Free web journey and reusable web report components tied to saved projec
 
 ### Implementation evidence
 
-PR #14 commit 99c5462 plus T21 integration provides the working Free Next.js journey, guarded API client, session/proxy boundary, fixture browser journeys and live upload → analysis → report → PDF flow.
+PR #14 established the working deterministic Free Next.js journey and T21 export integration. This T17 slice adds canonical ReportSummary/ReportPage contracts, owner-scoped paginated report history, report-scoped EvidenceBundle reads with stored digest/lineage validation, current-principal history UI, stored baseline/spacing/slant evidence views and cross-owner/browser regression coverage.
 
 ### Remaining work
 
-- Implement production account sign-in UI after the ADR-002 identity provider decision.
-- Implement account-backed report/history lists and recovery UI.
-- Render EvidenceBundle interactions/charts with accessible text alternatives.
-- Add automated axe accessibility coverage and finish owner-accepted T10 design integration.
+- Implement production account sign-in and cross-device/account recovery after the ADR-002 identity provider decision.
+- Add a reviewed pinned axe dependency/lockfile update and automated WCAG journey coverage; existing Playwright semantic/keyboard/overflow checks remain in force until then.
+- Finish owner-accepted T10 design integration across responsive history/evidence/report states.
 
 ### Acceptance evidence
 

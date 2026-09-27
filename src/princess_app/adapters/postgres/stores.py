@@ -23,6 +23,7 @@ from princess_contracts import ValidatedDocument, canonical_digest, compile_docu
 
 from ...application.identity import Principal
 from ...application.permissions import replayed
+from ...application.reports import ReportHistoryEntry
 from ...domain.permissions import Decision, PermissionEvent, Scope
 from ...domain.reports import check_revision
 from ...ports.base import Conflict, InvalidInput, NotAuthorized, NotFound
@@ -412,6 +413,49 @@ class PostgresReportStore:
         if compiled.value is None or compiled.value.digest != row[2]:
             raise Conflict("stored_report_invalid")
         return row[0], compiled.value
+
+    def history(self, owner_id: str, *, limit: int,
+                before: tuple[datetime, str] | None) -> list[ReportHistoryEntry]:
+        if owner_id != self.principal_id:
+            raise NotAuthorized("owner_mismatch")
+        base = (
+            "SELECT r.report_id, rr.revision, r.kind, r.created_at, "
+            "rr.document->>'locale' AS locale "
+            "FROM app.report r "
+            "JOIN LATERAL (SELECT revision, document FROM app.report_revision x "
+            "WHERE x.report_id = r.report_id ORDER BY revision DESC LIMIT 1) rr ON true "
+            "WHERE r.deleted_at IS NULL "
+        )
+        params: dict[str, Any] = {"lim": limit}
+        if before is not None:
+            base += "AND (r.created_at, r.report_id) < (:before_at, :before_id) "
+            params.update(before_at=before[0], before_id=before[1])
+        base += "ORDER BY r.created_at DESC, r.report_id DESC LIMIT :lim"
+        with self.db.session(self.principal_id) as conn:
+            rows = conn.execute(text(base), params).mappings().all()
+        return [ReportHistoryEntry(
+            row["report_id"], int(row["revision"]), row["kind"], row["created_at"],
+            row["locale"]) for row in rows]
+
+    def evidence(self, report_id: str) -> ValidatedDocument | None:
+        latest = self.latest(report_id)
+        if latest is None:
+            return None
+        report = latest[1]
+        bundle_id = report.data["evidence_bundle_id"]
+        if bundle_id is None:
+            return None
+        with self.db.session(self.principal_id) as conn:
+            row = conn.execute(text(
+                "SELECT document, digest FROM app.evidence_bundle "
+                "WHERE bundle_id = :b AND run_id = :r"),
+                {"b": bundle_id, "r": report.data["analysis"]["run_id"]}).first()
+        if row is None:
+            return None
+        compiled = compile_document("EvidenceBundle", row[0])
+        if compiled.value is None or compiled.value.digest != row[1]:
+            raise Conflict("stored_evidence_invalid")
+        return compiled.value
 
     def append(self, owner_id: str, report: ValidatedDocument) -> None:
         if owner_id != self.principal_id:

@@ -26,3 +26,8 @@ fieldset { border: 1px solid var(--color-border); border-radius: var(--radius-md
 label { display: flex; gap: var(--space-3); align-items: flex-start; }
 input[type="checkbox"] { width: 1.25rem; height: 1.25rem; margin-top: 0.2rem; }
 @media (prefers-reduced-motion: no-preference) { .progress { transition: opacity var(--motion-duration-base) var(--motion-easing-standard); } }
+
+.report-list { list-style: none; padding: 0; margin: 0; display: grid; gap: var(--space-4); }
+.report-list-item { display: flex; flex-wrap: wrap; gap: var(--space-4); align-items: center; justify-content: space-between; }
+.report-list-item h2 { margin: 0; font-size: var(--font-size-lg); }
+.report-list-item p { margin-bottom: 0; }

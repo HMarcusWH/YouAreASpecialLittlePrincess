@@ -1051,7 +1051,7 @@
     {
       "id": "T15",
       "title": "Evidence-bound OpenAI adapter",
-      "status": "IN_PROGRESS",
+      "status": "DONE",
       "depends_on": [
         "T01",
         "T09",
@@ -1112,12 +1112,7 @@
       "rollback": [
         "Disable new Premium attempts; preserve saved valid overlays and reconcile reserved credits without changing Free."
       ],
-      "implementation_evidence": "PR #14 commit 3c6947e plus review repairs implemented bounded Premium packet compilation, strict per-request schemas, semantic/text validation, spend/fencing controls, an OpenAI Responses adapter behind the disabled spend gate and adversarial tests.",
-      "remaining_work": [
-        "Implement deterministic candidate producers for the supported dynamic selector contracts; explicitly classify generator contracts that remain unsupported and prove their fail-closed omission behavior.",
-        "Review packet coverage after candidate-producer work and record which individual-pack questions are answerable for each supported input context.",
-        "Keep runtime_activation=false; live provider/model evaluation and activation remain T16 and the api_access_spend_before_live_calls gate."
-      ]
+      "completion_evidence": "Merged PR #16 (merge d8280a9e3615cb2f18af5f5647d70b04009c9d70; exact head 0839e517eb5ea9de2b75bb7b97c5064591b74b72) completed the deterministic T15 candidate boundary: exhaustive dispositions for all 18 individual-pack dynamic generators, three evidence-supported producers, explicit unsupported reasons, pack-level AUTHORIZED_IMAGE enforcement, candidate-kind/support confinement and exact packet coverage. Exact-head CI run 36327429086, Application environments run 36327429015 and Roadmap integrity run 36327428968 all passed. T26 remains runtime_activation=false; live provider/model evaluation remains T16 and its owner gate."
     },
     {
       "id": "T16",
@@ -1246,12 +1241,11 @@
       "rollback": [
         "Deploy compatible presentation versions and clear unsafe caches; preserve API compatibility and saved reports."
       ],
-      "implementation_evidence": "PR #14 commit 99c5462 plus T21 integration provides the working Free Next.js journey, guarded API client, session/proxy boundary, fixture browser journeys and live upload → analysis → report → PDF flow.",
+      "implementation_evidence": "PR #14 established the working deterministic Free Next.js journey and T21 export integration. This T17 slice adds canonical ReportSummary/ReportPage contracts, owner-scoped paginated report history, report-scoped EvidenceBundle reads with stored digest/lineage validation, current-principal history UI, stored baseline/spacing/slant evidence views and cross-owner/browser regression coverage.",
       "remaining_work": [
-        "Implement production account sign-in UI after the ADR-002 identity provider decision.",
-        "Implement account-backed report/history lists and recovery UI.",
-        "Render EvidenceBundle interactions/charts with accessible text alternatives.",
-        "Add automated axe accessibility coverage and finish owner-accepted T10 design integration."
+        "Implement production account sign-in and cross-device/account recovery after the ADR-002 identity provider decision.",
+        "Add a reviewed pinned axe dependency/lockfile update and automated WCAG journey coverage; existing Playwright semantic/keyboard/overflow checks remain in force until then.",
+        "Finish owner-accepted T10 design integration across responsive history/evidence/report states."
       ]
     },
     {

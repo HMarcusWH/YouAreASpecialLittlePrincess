@@ -20,6 +20,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           <a href="/" className="brand">Princess</a>
           <nav aria-label="Main">
             <a href="/start">New analysis</a>
+            <a href="/reports">My reports</a>
             <a href="/settings">Settings</a>
           </nav>
         </header>
