@@ -15,8 +15,10 @@ def axis_slant(vx, vy):
     return float(np.degrees(np.arctan2(vx, -vy)))
 
 
-def measure_slant(ctx):
-    angles, regions = [], []
+def slant_candidates(ctx):
+    """(component_index, angle, rejection_reason) for every component tall enough
+    to be assessed; accepted candidates have reason ``None``."""
+    out = []
     for i, box in enumerate(ctx.components):
         if box.height < 8:
             continue
@@ -29,13 +31,23 @@ def measure_slant(ctx):
             continue
         points = contour[:, 0, :].astype(float)
         eigenvalues = np.linalg.eigvalsh(np.cov(points.T, bias=True))
-        if eigenvalues[-1] <= 0 or eigenvalues[-1] < 2 * max(eigenvalues[0], 1e-12):
-            continue
         vx, vy, _, _ = cv2.fitLine(contour, cv2.DIST_L2, 0, 0.01, 0.01).ravel()
         angle = axis_slant(float(vx), float(vy))
-        if abs(angle) <= 60:
-            angles.append(angle)
-            regions.append(f'component_{i}')
+        if eigenvalues[-1] <= 0 or eigenvalues[-1] < 2 * max(eigenvalues[0], 1e-12):
+            reason = 'not_elongated'
+        elif abs(angle) > 60:
+            reason = 'outside_accepted_range'
+        else:
+            reason = None
+        if np.isfinite(angle):
+            out.append((i, angle, reason))
+    return out
+
+
+def measure_slant(ctx):
+    accepted = [(i, angle) for i, angle, reason in slant_candidates(ctx) if reason is None]
+    angles = [angle for _, angle in accepted]
+    regions = [f'component_{i}' for i, _ in accepted]
     a = np.asarray(angles)
     spread = std(angles)
     values = (mean(angles), float(np.median(a)) if a.size else None, spread,

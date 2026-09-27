@@ -121,3 +121,21 @@ records actual deployment provenance, including selected `luizgh/sigver` and JJ
 Shay's design-reference-only role. Existing third-party notices remain intact.
 
 Method reference: [scikit-image medial_axis API](https://scikit-image.org/docs/stable/api/skimage.morphology.html#skimage.morphology.medial_axis).
+
+## Evidence payload (`evidence/1`, T05)
+
+`GraphologyEngine.analyze_with_evidence(image)` returns the unchanged `AnalysisResult` plus a separate evidence payload computed from the same measurement context. The aggregates and the payload call the same observation functions (`baseline_fits`, `slant_candidates`, `line_gaps`, `word_gaps`, the component size lists), so an evidence-derived mean, median or percentile reproduces the canonical aggregate exactly; `tests/test_evidence.py` checks this.
+
+| Observation family | Keyed feature (primary estimand) | Method | Rejections recorded |
+|---|---|---|---|
+| Per-component slant axis | `SLANT_ANGLE_MEAN` | `oriented_component_axis_v1` | `not_elongated`, `outside_accepted_range` |
+| Per-line lower-envelope fit | `BASELINE_ANGLE_MEAN` (+ up to 12 `BASELINE_POINT` regions per line) | `bottom_quantile_angle_v1` | lines with fewer than six samples are not observations |
+| Adjacent line / word box gaps | `LINE_SPACING_PX`, `WORD_SPACING_PX` | `accepted_box_gap_px_v1` | `overlapping_boxes` |
+| Filtered component boxes | `GLYPH_HEIGHT_MEAN`, `GLYPH_WIDTH_MEAN` | `component_box_size_v1` | — |
+| X-height inlier components | `X_HEIGHT_PX` | `component_height_mode_v1` | — |
+
+An observation is one sample of the population behind a feature family; it is keyed to the family's primary feature so the T01 compiler can check its canonical unit, type and method. Histograms and traces must be drawn from these observations, never from a fitted curve.
+
+Frames: `frame_input` (the image given to the engine) is the root; `frame_analysis` is its child with the `analysis_to_original` matrix as `transform_to_parent`. Upstream crop or perspective rectification is attached with `princess_app.domain.evidence.prepend_source_frame`, and `map_point` composes the chain. `page_0` is the analysis canvas, not a detected paper edge.
+
+Bounds: at most 4096 regions (page and lines, then baseline points, words, components) and 20000 observations; truncation is reported in `warnings` and observation region links are pruned to kept regions. Non-finite values are never emitted. `princess_app.domain.evidence.build_evidence_bundle` binds the payload to an `AnalysisReference`, fills method versions from the resolved capability manifest and compiles it as a T01 `EvidenceBundle`; any contract issue yields no value.

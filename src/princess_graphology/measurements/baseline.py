@@ -1,4 +1,6 @@
 """Lower-ink-envelope regression. Experimental baseline, not recognized letter feet."""
+from dataclasses import dataclass
+
 import numpy as np
 
 from ._common import emit, mean, relative, std
@@ -7,8 +9,20 @@ FEATURE_IDS = ('BASELINE_ANGLE_MEAN', 'BASELINE_ANGLE_MEDIAN', 'BASELINE_ANGLE_S
                'BASELINE_ABS_SLOPE', 'BASELINE_WAVINESS', 'BASELINE_CURVATURE', 'BASELINE_STABILITY')
 
 
-def measure_baseline(ctx):
-    angles, residuals, sags, regions = [], [], [], []
+@dataclass(frozen=True)
+class BaselineFit:
+    """One line's lower-envelope fit; sample coordinates are line-crop relative."""
+    line_index: int
+    xs: tuple
+    ys: tuple
+    angle: float
+    residual: float
+    sag: float
+
+
+def baseline_fits(ctx):
+    """Per-line fits shared by the aggregates and the evidence payload."""
+    fits = []
     for index, line in enumerate(ctx.lines):
         crop = line.crop(ctx.mask)
         xs, ys = [], []
@@ -21,12 +35,19 @@ def measure_baseline(ctx):
             continue
         x, y = np.asarray(xs, dtype=float), np.asarray(ys, dtype=float)
         slope, intercept = np.polyfit(x, y, 1)
-        angles.append(float(-np.degrees(np.arctan(slope))))
-        residuals.append(float(np.std(y - (slope * x + intercept))))
         t = (x - (x.max() + x.min()) / 2) / np.ptp(x)
         quadratic = np.polyfit(t, y, 2)[0]
-        sags.append(float(abs(quadratic) / 4))
-        regions.append(f'line_{index}')
+        fits.append(BaselineFit(index, tuple(xs), tuple(ys), float(-np.degrees(np.arctan(slope))),
+                                float(np.std(y - (slope * x + intercept))), float(abs(quadratic) / 4)))
+    return fits
+
+
+def measure_baseline(ctx):
+    fits = baseline_fits(ctx)
+    angles = [fit.angle for fit in fits]
+    residuals = [fit.residual for fit in fits]
+    sags = [fit.sag for fit in fits]
+    regions = [f'line_{fit.line_index}' for fit in fits]
     waviness = relative(mean(residuals), ctx)
     values = (mean(angles), float(np.median(angles)) if angles else None, std(angles),
               mean([abs(angle) for angle in angles]), waviness, relative(mean(sags), ctx),

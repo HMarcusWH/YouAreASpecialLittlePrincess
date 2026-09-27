@@ -19,7 +19,7 @@ Use `python docs/roadmap/plan_tools.py --ready` or `--task ID`. Edit tasks.json 
 | [T02 — Persistence identity authorization](#t02) | PLANNED | T01, T27, T28 | backend |
 | [T03 — Rights consent and collection protocol](#t03) | DONE | — | product-data |
 | [T04 — Safe intake and durable analysis jobs](#t04) | PLANNED | T02, T03, T28 | backend |
-| [T05 — Evidence payload and chart observations](#t05) | PLANNED | T01 | engine |
+| [T05 — Evidence payload and chart observations](#t05) | IMPLEMENTED_PENDING_REVIEW | T01 | engine |
 | [T06 — Calibration suitability core repair](#t06) | PLANNED | T05, T11 | evaluation |
 | [T07 — Bounded classical topology shape expansion](#t07) | PLANNED | T05, T06 | engine |
 | [T08 — Normalization and reviewed content](#t08) | PLANNED | T01, T05, T06 | content-engine |
@@ -547,7 +547,7 @@ No approval is created by this task brief. Mock/disabled implementation is not a
 <a id="t05"></a>
 ## T05 — Evidence payload and chart observations
 
-**Status:** `PLANNED` · **Owner:** engine · **Milestone:** free
+**Status:** `IMPLEMENTED_PENDING_REVIEW` · **Owner:** engine · **Milestone:** free
 
 **Hard predecessors:** [T01](#t01)
 **Platforms:** core, shared

@@ -96,7 +96,7 @@
       "artifacts": ["Safe intake routes and storage adapter", "Durable analysis worker with limits/fencing", "Failure/format compatibility fixtures"], "production_gates": ["processor_retention_contracts"], "validation_profiles": ["core", "docs", "backend", "connectors"], "rollback": ["Stop admission and drain/fence leases; preserve verified inputs only under retention and never republish tombstoned captures."]
     },
     {
-      "id": "T05", "title": "Evidence payload and chart observations", "status": "PLANNED", "depends_on": ["T01"], "owner_role": "engine", "milestone": "free", "platforms": ["core", "shared"], "connectors": [],
+      "id": "T05", "title": "Evidence payload and chart observations", "status": "IMPLEMENTED_PENDING_REVIEW", "depends_on": ["T01"], "owner_role": "engine", "milestone": "free", "platforms": ["core", "shared"], "connectors": [],
       "required_docs": ["docs/roadmap/01-data-architecture.md","docs/roadmap/04-reports-design.md","docs/measurement_methods.md"], "owned_paths": ["src/princess_graphology/", "tests/", "contracts/product/v1/"],
       "coding_steps": ["Add an explicit versioned evidence output beside existing aggregate measurements; do not overload feature dictionary keys.", "Capture actual baseline points, slant observations/bins, accepted spacing gaps and component distributions with region/frame references.", "Bound array sizes and preserve deterministic ordering, transform maps, accepted/rejected provenance and missing reasons.", "Provide report-ready fixtures and verify evidence-derived summaries against canonical aggregate calculations."],
       "contract_handoff": "EvidenceBundle tied to one run/schema/configuration, with real observations and original-to-analysis transform metadata.",
