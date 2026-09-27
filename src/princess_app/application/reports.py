@@ -16,7 +16,15 @@ from typing import Any, Mapping, Protocol
 from princess_contracts import ValidatedDocument
 
 from ..domain.reports import PremiumAuthorization, ProjectionRequest, check_revision, project_report
-from ..ports.base import Clock, Conflict, InvalidInput, NotAuthorized, NotFound, PermanentFailure
+from ..ports.base import (
+    Clock,
+    Conflict,
+    InvalidInput,
+    NotAuthorized,
+    NotFound,
+    PermanentFailure,
+    require_opaque_id,
+)
 
 
 @dataclass(frozen=True)
@@ -41,13 +49,17 @@ def decode_report_cursor(cursor: str | None) -> tuple[datetime, str] | None:
         raise InvalidInput("invalid_report_cursor")
     try:
         padded = cursor + "=" * (-len(cursor) % 4)
-        raw = base64.urlsafe_b64decode(padded.encode("ascii")).decode("utf-8")
-        stamp, report_id = raw.split("\n", 1)
-        created_at = datetime.fromisoformat(stamp.replace("Z", "+00:00")).astimezone(timezone.utc)
-    except (ValueError, UnicodeDecodeError, binascii.Error):
+        raw = base64.b64decode(padded.encode("ascii"), altchars=b"-_", validate=True).decode("utf-8")
+        # Exactly two fields: a trailing/embedded newline is not part of an opaque ID.
+        stamp, report_id = raw.split("\n")
+        created_at = datetime.fromisoformat(stamp.replace("Z", "+00:00"))
+        # Check before conversion; astimezone() otherwise assumes the server's timezone.
+        if created_at.tzinfo is None or created_at.utcoffset() is None:
+            raise ValueError("timezone_required")
+        require_opaque_id(report_id, "report_id")
+        created_at = created_at.astimezone(timezone.utc)
+    except (ValueError, UnicodeError, binascii.Error, OverflowError, InvalidInput):
         raise InvalidInput("invalid_report_cursor") from None
-    if created_at.tzinfo is None or not report_id:
-        raise InvalidInput("invalid_report_cursor")
     return created_at, report_id
 
 

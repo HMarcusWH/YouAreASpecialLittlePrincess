@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 
 import { ApiError, PayloadError } from "@princess/api-client";
+import { loadOwnerReport } from "../../../lib/report-data.ts";
 import { serverApi } from "../../../lib/session.ts";
 import { ReportClient } from "./ReportClient.tsx";
 
@@ -13,16 +14,7 @@ export default async function Report({ params, searchParams }: {
   const locale = (await searchParams).locale === "sv" ? "sv" : "en";
   try {
     const api = await serverApi();
-    const view = await api.report(reportId, "OWNER");
-    let evidence = null;
-    let evidenceUnreadable = false;
-    try {
-      evidence = await api.reportEvidence(reportId);
-    } catch (e) {
-      if (e instanceof ApiError && e.status === 404) evidence = null;
-      else if (e instanceof PayloadError) evidenceUnreadable = true;
-      else throw e;
-    }
+    const { view, evidence, evidenceUnreadable } = await loadOwnerReport(api, reportId);
     return <ReportClient view={view} locale={locale} evidence={evidence} evidenceUnreadable={evidenceUnreadable} />;
   } catch (e) {
     if (e instanceof ApiError && e.status === 404) notFound();
