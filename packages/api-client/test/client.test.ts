@@ -48,7 +48,7 @@ test("history and evidence payloads are guarded before clients use them", () => 
     next_cursor: "cursor_1",
   });
   assert.equal(page.items[0]!.revision, 2);
-  assert.equal(parseEvidenceBundle(fixture("evidence-bundle.json")).bundle_id, "evidence_1");
+  assert.equal(parseEvidenceBundle(fixture("evidence-bundle.json")).bundle_id, "evidence_fixture_1");
 
   assert.throws(() => parseReportPage({
     contract_version: "1.0.0", items: [{ report_id: "report_1", revision: 0, kind: "INDIVIDUAL",
