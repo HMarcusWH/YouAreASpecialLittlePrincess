@@ -1,8 +1,8 @@
 // Typed calls to the product API. In the browser the base URL is the web
 // app's same-origin proxy (the session cookie never reaches client code); on
 // the server it is the API with a bearer token read from the session cookie.
-import type { ReportViewModel } from "@princess/contracts";
-import { parseReportView, parseRunStatus, type RunStatus } from "./guards.ts";
+import type { EvidenceBundle, ReportPage, ReportViewModel } from "@princess/contracts";
+import { parseEvidenceBundle, parseReportPage, parseReportView, parseRunStatus, type RunStatus } from "./guards.ts";
 
 export class ApiError extends Error {
   readonly status: number;
@@ -131,9 +131,20 @@ export class PrincessApi {
     return this.call("POST", `/v1/analyses/${encodeURIComponent(runId)}/cancel`);
   }
 
+  async reports(limit = 20, cursor: string | null = null): Promise<ReportPage> {
+    const query = new URLSearchParams({ limit: String(limit) });
+    if (cursor !== null) query.set("cursor", cursor);
+    return parseReportPage(await this.call("GET", `/v1/reports?${query.toString()}`));
+  }
+
   async report(reportId: string, projection: Projection = "OWNER"): Promise<ReportViewModel> {
     const path = `/v1/reports/${encodeURIComponent(reportId)}?projection=${projection}`;
     return parseReportView(await this.call("GET", path));
+  }
+
+  async reportEvidence(reportId: string): Promise<EvidenceBundle> {
+    return parseEvidenceBundle(await this.call(
+      "GET", `/v1/reports/${encodeURIComponent(reportId)}/evidence`));
   }
 
   async requestExport(reportId: string, layout: "A4" | "LETTER" = "A4"): Promise<ExportStatus> {

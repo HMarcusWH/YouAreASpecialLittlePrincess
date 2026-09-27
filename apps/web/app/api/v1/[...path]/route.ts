@@ -17,8 +17,67 @@ const ROUTES: ReadonlyArray<[string, RegExp]> = [
   ["POST", /^analyses$/],
   ["GET", new RegExp(`^analyses/${ID}$`)],
   ["POST", new RegExp(`^analyses/${ID}/cancel$`)],
-  ["DELETE", new RegExp(`^captures/${ID}$`)],
-  ["GET", new RegExp(`^reports/${ID}$`)],
+  ["DELETE", new RegExp(`^captures/${ID}// Same-origin transport to the product API. It attaches the session credential
+// from the HttpOnly cookie, forwards only allowlisted routes and never
+// interprets business data: authorization happens in the API.
+import { NextResponse } from "next/server";
+
+import { apiBase, devLoginEnabled, sameOrigin, sessionToken } from "../../../../lib/session.ts";
+
+const ID = "[A-Za-z0-9][A-Za-z0-9._:-]{0,127}";
+const ROUTES: ReadonlyArray<[string, RegExp]> = [
+  ["GET", /^me$/],
+  ["POST", /^me\/permissions$/],
+  ["GET", new RegExp(`^me/permissions/${ID}$`)],
+  ["POST", /^me\/logout-everywhere$/],
+  ["DELETE", /^me$/],
+  ["POST", /^uploads$/],
+  ["POST", new RegExp(`^uploads/${ID}/complete$`)],
+  ["POST", /^analyses$/],
+  ["GET", new RegExp(`^analyses/${ID}$`)],
+  ["POST", new RegExp(`^analyses/${ID}/cancel$`)],
+)],
+  ["GET", /^reports$/],
+  ["GET", new RegExp(`^reports/${ID}/evidence// Same-origin transport to the product API. It attaches the session credential
+// from the HttpOnly cookie, forwards only allowlisted routes and never
+// interprets business data: authorization happens in the API.
+import { NextResponse } from "next/server";
+
+import { apiBase, devLoginEnabled, sameOrigin, sessionToken } from "../../../../lib/session.ts";
+
+const ID = "[A-Za-z0-9][A-Za-z0-9._:-]{0,127}";
+const ROUTES: ReadonlyArray<[string, RegExp]> = [
+  ["GET", /^me$/],
+  ["POST", /^me\/permissions$/],
+  ["GET", new RegExp(`^me/permissions/${ID}$`)],
+  ["POST", /^me\/logout-everywhere$/],
+  ["DELETE", /^me$/],
+  ["POST", /^uploads$/],
+  ["POST", new RegExp(`^uploads/${ID}/complete$`)],
+  ["POST", /^analyses$/],
+  ["GET", new RegExp(`^analyses/${ID}$`)],
+  ["POST", new RegExp(`^analyses/${ID}/cancel$`)],
+)],
+  ["GET", new RegExp(`^reports/${ID}// Same-origin transport to the product API. It attaches the session credential
+// from the HttpOnly cookie, forwards only allowlisted routes and never
+// interprets business data: authorization happens in the API.
+import { NextResponse } from "next/server";
+
+import { apiBase, devLoginEnabled, sameOrigin, sessionToken } from "../../../../lib/session.ts";
+
+const ID = "[A-Za-z0-9][A-Za-z0-9._:-]{0,127}";
+const ROUTES: ReadonlyArray<[string, RegExp]> = [
+  ["GET", /^me$/],
+  ["POST", /^me\/permissions$/],
+  ["GET", new RegExp(`^me/permissions/${ID}$`)],
+  ["POST", /^me\/logout-everywhere$/],
+  ["DELETE", /^me$/],
+  ["POST", /^uploads$/],
+  ["POST", new RegExp(`^uploads/${ID}/complete$`)],
+  ["POST", /^analyses$/],
+  ["GET", new RegExp(`^analyses/${ID}$`)],
+  ["POST", new RegExp(`^analyses/${ID}/cancel$`)],
+)],
   ["POST", /^report-exports$/],
   ["GET", new RegExp(`^report-exports/${ID}$`)],
   ["GET", new RegExp(`^report-exports/${ID}/file$`)],
