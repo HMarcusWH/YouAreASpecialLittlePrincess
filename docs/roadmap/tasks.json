@@ -782,7 +782,9 @@
         "docs/roadmap/04-reports-design.md",
         "docs/roadmap/10-web-client-and-api-integration.md",
         "docs/roadmap/11-mobile-architecture.md",
-        "docs/roadmap/14-payments-entitlements-and-commerce.md"
+        "docs/roadmap/14-payments-entitlements-and-commerce.md",
+        "docs/design/CLAUDE_DESIGN_HANDOFF.md",
+        "docs/design/CLAUDE_DESIGN_ACCEPTANCE.md"
       ],
       "owned_paths": [
         "docs/design/",
@@ -817,9 +819,9 @@
       "rollback": [
         "Version tokens/templates and preserve content/contract semantics during design revisions."
       ],
-      "implementation_evidence": "PR #14 commit c5463a4 added contract-driven draft design tokens generated to CSS/TypeScript/Swift/Kotlin and a complete state/component handoff. The repository explicitly keeps the tokens DRAFT_PENDING_DESIGN_ACCEPTANCE.",
+      "implementation_evidence": "PR #14 commit c5463a4 added contract-driven draft design tokens generated to CSS/TypeScript/Swift/Kotlin and a complete state/component handoff. The repository explicitly keeps the tokens DRAFT_PENDING_DESIGN_ACCEPTANCE. PR #23 packages a production-aware Claude Design handoff with an exact curated code/import manifest, complete responsive/native/print/share state matrix, synthetic fixture mapping, product-truth constraints and a pending owner acceptance record. The design tokens intentionally remain design-tokens/0.1-draft / DRAFT_PENDING_DESIGN_ACCEPTANCE.",
       "remaining_work": [
-        "Obtain explicit owner design_acceptance for the responsive/native journeys, accessibility states, Swedish/English overflow, missing/error/purchase states and report presentation."
+        "Run Claude Design against docs/design/CLAUDE_DESIGN_HANDOFF.md and the curated import manifest, compare three distinct directions, iterate the selected complete interactive responsive/native/print/share prototype, and obtain explicit owner design_acceptance recorded in docs/design/CLAUDE_DESIGN_ACCEPTANCE.md before promoting T10 or the token status."
       ]
     },
     {
