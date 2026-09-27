@@ -887,9 +887,6 @@
         },
         "locale": {
           "$ref": "common.schema.json#/$defs/Locale"
-        },
-        "has_premium": {
-          "type": "boolean"
         }
       },
       "required": [
@@ -897,8 +894,7 @@
         "revision",
         "kind",
         "created_at",
-        "locale",
-        "has_premium"
+        "locale"
       ],
       "additionalProperties": false
     },

@@ -1433,9 +1433,6 @@
           "created_at": {
             "$ref": "#/components/schemas/Rfc3339Utc"
           },
-          "has_premium": {
-            "type": "boolean"
-          },
           "kind": {
             "enum": [
               "INDIVIDUAL",
@@ -1462,8 +1459,7 @@
           "revision",
           "kind",
           "created_at",
-          "locale",
-          "has_premium"
+          "locale"
         ],
         "type": "object"
       },
