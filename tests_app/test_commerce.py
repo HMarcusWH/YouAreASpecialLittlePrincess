@@ -280,7 +280,8 @@ def test_ambiguous_outcomes_retry_once_then_release(shop, world):  # noqa: F811
     assert studio.reservation_state() == "RELEASED" and shop.credits(studio.owner).available == 1
 
 
-def test_restore_reconciliation_detects_remote_execution_without_a_second_generation(\n        shop, world, admin_engine):  # noqa: F811
+def test_restore_reconciliation_detects_remote_execution_without_a_second_generation(
+        shop, world, admin_engine):  # noqa: F811
     studio = Studio(shop, world)
     studio.model.faults.inject("generate", AmbiguousOutcome("provider_timeout"), after_effect=True)
     requested = studio.request()
