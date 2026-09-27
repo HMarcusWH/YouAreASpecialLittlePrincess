@@ -19,7 +19,12 @@ from princess_app.adapters.postgres.commerce import (
 from princess_app.adapters.postgres.stores import PostgresIdentityStore, PostgresPermissionStore, PostgresReportStore
 from princess_app.application.commerce import CommerceService
 from princess_app.application.permissions import PermissionService
-from princess_app.application.premium import InMemorySpendBudget, PremiumRunner, load_interpretation_database
+from princess_app.application.premium import (
+    InMemorySpendBudget,
+    PremiumRestoreReconciler,
+    PremiumRunner,
+    load_interpretation_database,
+)
 from princess_app.application.premium.service import AttemptRecord, Outcome
 from princess_app.application.premium.worker import PremiumWorker
 from princess_app.application.reports import ReportReader
@@ -218,13 +223,14 @@ class Studio:
         self.model = FakePremiumModel(responder, clock=env.clock)
         worker_permissions = PermissionService(PostgresPermissionStore(env.worker_db), env.clock, SequentialIds(),
                                                allow_draft_policy=True)
+        self.queue = PostgresPremiumQueue(env.worker_db)
         runner = PremiumRunner(
             reports=lambda owner: PostgresReportStore(env.worker_db, owner), permissions=worker_permissions,
             images=PostgresImageSource(env.worker_db), model=self.model, budget=InMemorySpendBudget(100_000),
-            publisher=PostgresOverlayPublisher(env.worker_db, allow_draft_policy=True), database=DB, clock=env.clock, ids=SequentialIds(),
-            context=env.ctx, allow_inactive_content=True)
-        self.worker = PremiumWorker(queue=PostgresPremiumQueue(env.worker_db), runner=runner, clock=env.clock,
-                                    worker_id="premium-1")
+            attempts=self.queue, publisher=PostgresOverlayPublisher(env.worker_db, allow_draft_policy=True),
+            database=DB, clock=env.clock, context=env.ctx, allow_inactive_content=True)
+        self.runner = runner
+        self.worker = PremiumWorker(queue=self.queue, runner=runner, clock=env.clock, worker_id="premium-1")
 
     def request(self):
         return self.shop.service.request_premium(self.owner, self.report_id, Platform.WEB)
@@ -273,6 +279,67 @@ def test_ambiguous_outcomes_retry_once_then_release(shop, world):  # noqa: F811
     assert studio.worker.run_once().job_state == "FAILED"
     assert studio.reservation_state() == "RELEASED" and shop.credits(studio.owner).available == 1
 
+
+def test_restore_reconciliation_detects_remote_execution_without_a_second_generation(shop, world):  # noqa: F811
+    studio = Studio(shop, world)
+    studio.model.faults.inject("generate", AmbiguousOutcome("provider_timeout"), after_effect=True)
+    requested = studio.request()
+    first = studio.worker.run_once()
+    assert (first.record.outcome.value, first.job_state) == ("AMBIGUOUS", "QUEUED")
+    assert len(studio.model.requests) == 1
+
+    # Simulate restoring a backup from immediately before the provider call.
+    # Remote fake state remains outside the restored PostgreSQL snapshot.
+    with studio.env.worker_db.session() as conn:
+        conn.execute(text("DELETE FROM app.provider_attempt"))
+        conn.execute(text(
+            "UPDATE app.job SET state = 'QUEUED', attempts = 0, fencing_token = 0, lease_owner = NULL, "
+            "lease_expires_at = NULL, last_error = NULL WHERE job_id = :j"
+        ), {"j": requested.job_id})
+
+    result = PremiumRestoreReconciler(
+        queue=studio.queue, runner=studio.runner, model=studio.model, attempts=studio.queue,
+        clock=studio.env.clock, context=studio.env.ctx,
+    ).run()
+    assert (result.checked, result.remote_execution_found, result.safe_to_resume, result.failed_closed) == (1, 1, 0, 0)
+    assert len(studio.model.requests) == 1 and len(studio.model.lookups) == 1
+    assert shop.service.premium_status(studio.owner, requested.job_id) == (
+        "FAILED", "restored_provider_attempt_detected",
+    )
+    assert studio.reservation_state() == "RELEASED"
+    assert studio.revision() == 1
+    with studio.env.worker_db.session() as conn:
+        row = conn.execute(text(
+            "SELECT state, packet_digest, provider_request_id FROM app.provider_attempt"
+        )).one()
+    assert row[0] == "COMPLETED" and len(row[1]) == 64 and row[2]
+    assert PremiumRestoreReconciler(
+        queue=studio.queue, runner=studio.runner, model=studio.model, attempts=studio.queue,
+        clock=studio.env.clock, context=studio.env.ctx,
+    ).run().checked == 0
+
+
+def test_restore_reconciliation_fails_closed_without_provider_lookup(shop, world):  # noqa: F811
+    studio = Studio(shop, world)
+    studio.model.profile = type(studio.model.profile)(
+        port=studio.model.profile.port, provider=studio.model.profile.provider,
+        mode=studio.model.profile.mode,
+        capabilities=frozenset(
+            capability for capability in studio.model.profile.capabilities
+            if capability != model_port.ATTEMPT_LOOKUP
+        ),
+    )
+    requested = studio.request()
+    result = PremiumRestoreReconciler(
+        queue=studio.queue, runner=studio.runner, model=studio.model, attempts=studio.queue,
+        clock=studio.env.clock, context=studio.env.ctx,
+    ).run()
+    assert (result.checked, result.failed_closed) == (1, 1)
+    assert studio.model.requests == [] and studio.model.lookups == []
+    assert shop.service.premium_status(studio.owner, requested.job_id) == (
+        "FAILED", "restore_lookup_unsupported",
+    )
+    assert studio.reservation_state() == "RELEASED"
 
 def test_a_refund_during_generation_blocks_publication(shop, world):  # noqa: F811
     holder = {}
