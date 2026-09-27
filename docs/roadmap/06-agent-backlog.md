@@ -41,7 +41,7 @@ Use `python docs/roadmap/plan_tools.py --ready` or `--task ID`. Edit tasks.json 
 | [T24 — Deployment recovery support and notifications](#t24) | PLANNED | T02, T04, T19, T28 | platform-product |
 | [T25 — Public multi-platform v1 signoff](#t25) | PLANNED | T23, T24, T32, T33 | product-owner-human |
 | [T26 — Populate premium selector/question database](#t26) | DONE | — | product-content-contracts |
-| [T27 — Connector ports fakes and provider decisions](#t27) | PLANNED | T01 | application-architecture |
+| [T27 — Connector ports fakes and provider decisions](#t27) | IMPLEMENTED_PENDING_REVIEW | T01 | application-architecture |
 | [T28 — Environment workspace and build foundation](#t28) | PLANNED | T00A, T27 | platform |
 | [T29 — Shared native foundation and compatibility spike](#t29) | PLANNED | T01, T02, T10, T27, T28 | mobile-platform |
 | [T30 — Complete iOS and iPad client integration](#t30) | PLANNED | T29, T04, T09, T15, T16, T18, T19, T20, T21, T22, T24 | mobile-apple |
@@ -106,7 +106,11 @@ State: `TO_IMPLEMENT`. Owning task adds real PostgreSQL role/migration/transacti
 <a id="validation-connectors"></a>
 ### connectors
 
-State: `TO_IMPLEMENT`. T27 adds a fake/conformance harness; each real adapter adds redacted opt-in sandbox evidence and failure cases.
+State: `EXISTS_IN_THIS_PR`. T27 adds a fake/conformance harness; each real adapter adds redacted opt-in sandbox evidence and failure cases.
+
+```bash
+python -m pytest -q tests/connector_contracts tests/test_architecture_boundaries.py
+```
 
 <a id="validation-empirical"></a>
 ### empirical
@@ -1973,7 +1977,7 @@ Historical completion evidence: Merged T26 finalization PR #9 and current interp
 <a id="t27"></a>
 ## T27 — Connector ports fakes and provider decisions
 
-**Status:** `PLANNED` · **Owner:** application-architecture · **Milestone:** foundation
+**Status:** `IMPLEMENTED_PENDING_REVIEW` · **Owner:** application-architecture · **Milestone:** foundation
 
 **Hard predecessors:** [T01](#t01)
 **Platforms:** shared, backend
