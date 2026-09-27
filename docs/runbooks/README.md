@@ -86,7 +86,7 @@ The command is idempotent. Then start the erasure worker. Byte erasure is idempo
 - **Also run:** `reconcile` and `complete-pending` (section 2), because payments made after the backup point are recovered from the provider's authoritative state rather than replayed.
 - **Known gaps:**
   - Premium jobs restored in `QUEUED` may call the model again, although customers are still charged only on publication. Durable provider-attempt reconciliation needs provider-side request lookup, which the adapter does not support yet.
-  - A single device logout (`DELETE /v1/me/push-installations/{id}`) and a feedback withdrawal are not tombstoned. A restore can bring back that binding (notices carry no private content) or that feedback (redacted, and it expires under its retention period).
+  - Single-device logout and feedback withdrawal are queued atomically to the erasure outbox and recorded in the external tombstone log before those events are dispatched. Restore replay removes only rows that existed at the recorded withdrawal time, so a later deliberate re-registration or feedback resubmission is preserved.
 - **PENDING DEPLOYMENT:** backup tooling, RPO/RTO, where the log lives in production (an append-only bucket after ADR-004), and a timed restore drill.
 
 ## 8. Mail or push outage, revoked provider key, suppression review

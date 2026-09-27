@@ -1,6 +1,7 @@
 """PostgreSQL report feedback (T24), in the owner's RLS context."""
 from __future__ import annotations
 
+import hashlib
 from datetime import datetime
 
 from sqlalchemy import text
@@ -38,10 +39,28 @@ class PostgresFeedbackRepository:
                               ":expires_at, :contract_version)"), record.__dict__)
         return record
 
-    def delete(self, owner_id: str, feedback_id: str) -> bool:
+    def delete(self, owner_id: str, feedback_id: str, at: datetime) -> bool:
         with self.db.session(owner_id) as conn:
-            return conn.execute(text("DELETE FROM app.report_feedback WHERE feedback_id = :f"),
-                                {"f": feedback_id}).rowcount == 1
+            removed = conn.execute(
+                text("DELETE FROM app.report_feedback WHERE feedback_id = :f RETURNING feedback_id"),
+                {"f": feedback_id},
+            ).scalar()
+            if removed is None:
+                return False
+            digest = hashlib.sha256(f"{owner_id}\0{feedback_id}\0{at.isoformat()}".encode()).hexdigest()[:40]
+            conn.execute(text(
+                "INSERT INTO app.outbox_event (event_id, topic, owner_id, aggregate_ref, payload, dedupe_key, created_at) "
+                "VALUES (:e, 'feedback.withdrawn', :o, :f, jsonb_build_object('at', :t), :d, :t) "
+                "ON CONFLICT (dedupe_key) DO NOTHING"
+            ), {"e": f"evt.feedback.{digest}", "o": owner_id, "f": feedback_id,
+                "d": f"feedback-withdrawn:{digest}", "t": at})
+            return True
+
+    def forget_feedback(self, owner_id: str, feedback_id: str, created_before: datetime) -> bool:
+        with self.db.session(owner_id) as conn:
+            return conn.execute(text(
+                "DELETE FROM app.report_feedback WHERE feedback_id = :f AND created_at <= :t"
+            ), {"f": feedback_id, "t": created_before}).rowcount == 1
 
     def expire(self, now: datetime, limit: int = 500) -> int:
         with self.db.session() as conn:

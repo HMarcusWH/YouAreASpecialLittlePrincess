@@ -127,7 +127,9 @@ class NotificationRepository(Protocol):
 
     def installations(self, owner_id: str) -> list[Installation]: ...
 
-    def unbind(self, owner_id: str, installation_id: str) -> bool: ...
+    def unbind(self, owner_id: str, installation_id: str, at: datetime) -> bool: ...
+
+    def forget_device(self, owner_id: str, installation_id: str, registered_before: datetime) -> bool: ...
 
     def unbind_all(self, owner_id: str, registered_before: datetime | None = None) -> int: ...
 
@@ -181,9 +183,14 @@ class NotificationService:
     def installations(self, owner_id: str) -> list[Installation]:
         return self._repo.installations(owner_id)
 
-    def unregister(self, owner_id: str, installation_id: str) -> None:
+    def unregister(self, owner_id: str, installation_id: str) -> datetime | None:
         """Logout or account switch on the device. Idempotent; queued notices go too."""
-        self._repo.unbind(owner_id, installation_id)
+        at = self._clock.now()
+        return at if self._repo.unbind(owner_id, installation_id, at) else None
+
+    def forget_device(self, owner_id: str, installation_id: str, registered_before: datetime) -> bool:
+        """Restore replay: remove only the binding that existed when it was logged out."""
+        return self._repo.forget_device(owner_id, installation_id, registered_before)
 
     def forget_devices(self, owner_id: str, registered_before: datetime | None = None) -> int:
         """Logout everywhere or account deletion: no device keeps receiving notices.

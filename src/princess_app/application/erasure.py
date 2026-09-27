@@ -38,6 +38,8 @@ from .permissions import PermissionService
 from .tombstones import (
     ACCOUNT_DELETED,
     CAPTURE_DELETED,
+    DEVICE_UNREGISTERED,
+    FEEDBACK_WITHDRAWN as FEEDBACK_TOMBSTONE,
     PERMISSION_WITHDRAWN as WITHDRAWAL_TOMBSTONE,
     SESSIONS_REVOKED,
     Tombstone,
@@ -52,8 +54,12 @@ UPLOAD_REJECTED = "upload.rejected"  # promoted bytes failed inspection; erase t
 ASSET_ERASURE = "asset.erasure_requested"  # e.g. a revoked or never-published export
 PERMISSION_WITHDRAWN = "permission.withdrawn"  # queued with the decision; re-applies its effects
 SESSIONS_REVOKED_TOPIC = "sessions.revoked"  # "log out everywhere": recorded as a tombstone only
-TOPICS = (DELETION, RETENTION_REVIEW, ACCOUNT_DELETION, UPLOAD_REJECTED, ASSET_ERASURE, PERMISSION_WITHDRAWN,
-          SESSIONS_REVOKED_TOPIC)
+DEVICE_UNREGISTERED_TOPIC = "push.unregistered"
+FEEDBACK_WITHDRAWN_TOPIC = "feedback.withdrawn"
+TOPICS = (
+    DELETION, RETENTION_REVIEW, ACCOUNT_DELETION, UPLOAD_REJECTED, ASSET_ERASURE, PERMISSION_WITHDRAWN,
+    SESSIONS_REVOKED_TOPIC, DEVICE_UNREGISTERED_TOPIC, FEEDBACK_WITHDRAWN_TOPIC,
+)
 # A completed capture with no analysis after this long is reviewed (draft, owner-pending).
 IDLE_CAPTURE_SECONDS = 24 * 3600
 
@@ -171,6 +177,12 @@ class ErasureWorker:
         elif event.topic == SESSIONS_REVOKED_TOPIC:
             entries = [Tombstone(SESSIONS_REVOKED, event.owner_id, event.owner_id,
                                  _payload_time(event.payload.get("at"), now))]
+        elif event.topic == DEVICE_UNREGISTERED_TOPIC:
+            entries = [Tombstone(DEVICE_UNREGISTERED, event.owner_id, event.aggregate_ref,
+                                 _payload_time(event.payload.get("at"), now))]
+        elif event.topic == FEEDBACK_WITHDRAWN_TOPIC:
+            entries = [Tombstone(FEEDBACK_TOMBSTONE, event.owner_id, event.aggregate_ref,
+                                 _payload_time(event.payload.get("at"), now))]
         else:
             return True
         try:
@@ -186,7 +198,7 @@ class ErasureWorker:
             return ErasureOutcome(event.event_id, "UNVERIFIED")
         if event.topic == ACCOUNT_DELETION:
             return self._erase_account(event)
-        if event.topic == SESSIONS_REVOKED_TOPIC:
+        if event.topic in (SESSIONS_REVOKED_TOPIC, DEVICE_UNREGISTERED_TOPIC, FEEDBACK_WITHDRAWN_TOPIC):
             self._outbox.dispatched(event.event_id, now)
             return ErasureOutcome(event.event_id, "RECORDED")
         if event.topic == PERMISSION_WITHDRAWN and self._propagate is not None:
@@ -246,5 +258,6 @@ class ErasureWorker:
 
 
 __all__ = ["ACCOUNT_DELETION", "ASSET_ERASURE", "CaptureAsset", "PERMISSION_WITHDRAWN", "DELETION",
-           "SESSIONS_REVOKED_TOPIC", "ErasureOutbox", "ErasureOutcome", "ErasureWorker", "OutboxEvent",
+           "DEVICE_UNREGISTERED_TOPIC", "FEEDBACK_WITHDRAWN_TOPIC", "SESSIONS_REVOKED_TOPIC",
+           "ErasureOutbox", "ErasureOutcome", "ErasureWorker", "OutboxEvent",
            "RETENTION_REVIEW", "TOPICS", "UPLOAD_REJECTED"]

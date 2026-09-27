@@ -47,10 +47,28 @@ class PostgresNotificationRepository:
             return [Installation(r.installation_id, PushPlatform(r.platform), Environment.parse(r.app_environment),
                                  r.locale, r.registered_at) for r in rows]
 
-    def unbind(self, owner_id: str, installation_id: str) -> bool:
+    def unbind(self, owner_id: str, installation_id: str, at: datetime) -> bool:
         with self.db.session(owner_id) as conn:
-            return conn.execute(text("DELETE FROM app.push_installation WHERE installation_id = :i"),
-                                {"i": installation_id}).rowcount == 1
+            removed = conn.execute(
+                text("DELETE FROM app.push_installation WHERE installation_id = :i RETURNING installation_id"),
+                {"i": installation_id},
+            ).scalar()
+            if removed is None:
+                return False
+            digest = hashlib.sha256(f"{owner_id}\0{installation_id}\0{at.isoformat()}".encode()).hexdigest()[:40]
+            conn.execute(text(
+                "INSERT INTO app.outbox_event (event_id, topic, owner_id, aggregate_ref, payload, dedupe_key, created_at) "
+                "VALUES (:e, 'push.unregistered', :o, :i, jsonb_build_object('at', :t), :d, :t) "
+                "ON CONFLICT (dedupe_key) DO NOTHING"
+            ), {"e": f"evt.push.{digest}", "o": owner_id, "i": installation_id,
+                "d": f"push-unregistered:{digest}", "t": at})
+            return True
+
+    def forget_device(self, owner_id: str, installation_id: str, registered_before: datetime) -> bool:
+        with self.db.session(owner_id) as conn:
+            return conn.execute(text(
+                "DELETE FROM app.push_installation WHERE installation_id = :i AND registered_at <= :t"
+            ), {"i": installation_id, "t": registered_before}).rowcount == 1
 
     def unbind_all(self, owner_id: str, registered_before: datetime | None = None) -> int:
         with self.db.session(owner_id) as conn:  # RLS: the owner's bindings only
