@@ -280,7 +280,7 @@ def test_ambiguous_outcomes_retry_once_then_release(shop, world):  # noqa: F811
     assert studio.reservation_state() == "RELEASED" and shop.credits(studio.owner).available == 1
 
 
-def test_restore_reconciliation_detects_remote_execution_without_a_second_generation(shop, world):  # noqa: F811
+def test_restore_reconciliation_detects_remote_execution_without_a_second_generation(\n        shop, world, admin_engine):  # noqa: F811
     studio = Studio(shop, world)
     studio.model.faults.inject("generate", AmbiguousOutcome("provider_timeout"), after_effect=True)
     requested = studio.request()
@@ -290,7 +290,7 @@ def test_restore_reconciliation_detects_remote_execution_without_a_second_genera
 
     # Simulate restoring a backup from immediately before the provider call.
     # Remote fake state remains outside the restored PostgreSQL snapshot.
-    with studio.env.worker_db.session() as conn:
+    with admin_engine.begin() as conn:
         conn.execute(text("DELETE FROM app.provider_attempt"))
         conn.execute(text(
             "UPDATE app.job SET state = 'QUEUED', attempts = 0, fencing_token = 0, lease_owner = NULL, "
