@@ -12,7 +12,9 @@ for (const error of ["stored_evidence_invalid", "evidence_lineage_invalid"]) {
     await expect(page.getByRole("heading", { level: 1, name: "Free report" })).toBeVisible();
     await expect(page.locator("tr[data-fact-id]")).toHaveCount(
       new Set(view.sections.flatMap((section: { fact_ids: string[] }) => section.fact_ids)).size);
-    await expect(page.getByRole("alert")).toHaveText(
+    const warning = page.getByRole("alert").filter({ hasText: "The saved evidence could not be read safely" });
+    await expect(warning).toBeVisible();
+    await expect(warning).toHaveText(
       "The saved evidence could not be read safely, so it is not shown.");
     await expect(page.locator(".pr-evidence-table")).toHaveCount(0);
     await expect(page.getByRole("img", { name: /Line \d/ })).toHaveCount(0);
