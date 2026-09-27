@@ -45,6 +45,12 @@ jobs:
         run: |
           python -m pip download --require-hashes --only-binary=:all: --no-deps \
             --dest "$RUNNER_TEMP/app-wheelhouse" -r requirements/app-py312.lock
+      - name: Install reviewed backend artifacts
+        shell: bash
+        run: |
+          python -m pip install --require-hashes --only-binary=:all: --no-index --no-deps --force-reinstall \
+            --find-links "$RUNNER_TEMP/app-wheelhouse" -r requirements/app-py312.lock
+      # Runs after the hash-verified install because the verifier imports the locked `packaging`.
       - name: Verify the backend lock is a closed reviewed graph
         run: >-
           python tools/verify_project_dependency_policy.py
@@ -52,11 +58,6 @@ jobs:
           --lock requirements/app-py312.lock --wheelhouse "$RUNNER_TEMP/app-wheelhouse"
           --root pip --root fastapi --root uvicorn --root sqlalchemy --root alembic --root psycopg
           --root psycopg-binary --root httpx --root pyjwt --root cryptography
-      - name: Install reviewed backend artifacts
-        shell: bash
-        run: |
-          python -m pip install --require-hashes --only-binary=:all: --no-index --no-deps --force-reinstall \
-            --find-links "$RUNNER_TEMP/app-wheelhouse" -r requirements/app-py312.lock
       - name: Install local project without dependency resolution
         run: python -m pip install --no-index --no-deps --no-build-isolation -e '.[dev]'
       - name: Verify exact backend environment
