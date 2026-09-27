@@ -163,6 +163,14 @@ class OpenAIResponsesModel:
             return port.ProviderGenerationResult(port.GenerationState.INCOMPLETE, None, **meta)
         return port.ProviderGenerationResult(port.GenerationState.COMPLETED, parsed, **meta)
 
+    def lookup_attempt(self, request: port.GenerationRequest,
+                       ctx: CallContext) -> port.ProviderGenerationResult | None:
+        # Normal operation is explicitly store=false. Until an approved live
+        # configuration proves a compatible retrieval/idempotency mechanism,
+        # restore reconciliation must fail closed rather than imply one exists.
+        self.profile.require(port.ATTEMPT_LOOKUP)
+        raise Unsupported("capability_not_supported", detail="openai-responses:attempt_lookup")
+
     def close(self) -> None:
         self._client.close()
 

@@ -84,9 +84,13 @@ The command prints four counts:
 The command is idempotent. Then start the erasure worker. Byte erasure is idempotent, so objects that are already gone verify at once.
 
 - **Also run:** `reconcile` and `complete-pending` (section 2), because payments made after the backup point are recovered from the provider's authoritative state rather than replayed.
-- **Known gaps:**
-  - Premium jobs restored in `QUEUED` may call the model again, although customers are still charged only on publication. Durable provider-attempt reconciliation needs provider-side request lookup, which the adapter does not support yet.
-  - Single-device logout and feedback withdrawal are queued atomically to the erasure outbox and recorded in the external tombstone log before those events are dispatched. Restore replay removes only rows that existed at the recorded withdrawal time, so a later deliberate re-registration or feedback resubmission is preserved.
+- **Before resuming Premium workers**, run the restored-attempt check with the Premium worker environment:
+  ```sh
+  $PREMIUM_ENV python apps/workers/premium/run_worker.py --reconcile-restored
+  ```
+  The command checks each deterministic provider-attempt identity through the configured model connector before any restored Premium job is allowed to run again. A provider-confirmed prior execution is recorded in the sanitized `provider_attempt` journal, the restored job is failed and its reserved credit is returned; no second model generation is issued. If lookup is unsupported or uncertain, the job also fails closed and its credit is returned. Only a provider that can authoritatively report every possible bounded attempt as absent leaves that job safe to resume. Run the command again to confirm it is idempotent before starting ordinary Premium workers.
+- The local/test fake advertises authoritative attempt lookup so the restore choreography is executable in CI. The current OpenAI `store=false` adapter does not advertise it and therefore cannot certify restored Premium work; live Premium remains gated until an approved provider configuration proves compatible authoritative lookup or an equivalent reviewed idempotency mechanism.
+- Single-device logout and feedback withdrawal are queued atomically to the erasure outbox and recorded in the external tombstone log before those events are dispatched. Restore replay removes only rows that existed at the recorded withdrawal time, so a later deliberate re-registration or feedback resubmission is preserved.
 - **PENDING DEPLOYMENT:** backup tooling, RPO/RTO, where the log lives in production (an append-only bucket after ADR-004), and a timed restore drill.
 
 ## 8. Mail or push outage, revoked provider key, suppression review

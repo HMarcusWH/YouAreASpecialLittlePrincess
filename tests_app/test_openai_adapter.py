@@ -156,6 +156,13 @@ def test_timeouts_after_sending_are_ambiguous_but_connect_failures_are_not():
         setup.model.generate(setup.request(), setup.ctx())
 
 
+def test_stateless_openai_adapter_does_not_claim_attempt_lookup():
+    setup = Setup(lambda r: httpx.Response(200, json=completed("{}")))
+    assert port.ATTEMPT_LOOKUP not in setup.model.profile.capabilities
+    with pytest.raises(Unsupported):
+        setup.model.lookup_attempt(setup.request(), setup.ctx())
+    assert setup.seen == []
+
 def test_cross_environment_context_is_rejected_before_anything_is_sent():
     setup = Setup(lambda r: httpx.Response(200, json=completed("{}")))
     with pytest.raises(InvalidInput):

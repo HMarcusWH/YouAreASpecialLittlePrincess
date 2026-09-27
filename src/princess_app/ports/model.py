@@ -24,6 +24,7 @@ PORT = "PremiumModelProvider"
 STRUCTURED_OUTPUT = "structured_output"
 IMAGE_INPUT = "image_input"
 NO_PROVIDER_STORAGE = "no_provider_storage"
+ATTEMPT_LOOKUP = "attempt_lookup"
 
 
 def _frozen(value: Any) -> Any:
@@ -113,5 +114,13 @@ class PremiumModelProvider(Protocol):
         """One bounded provider request; no hidden retries.
 
         A timeout after transmission raises ``AmbiguousOutcome``.
+        """
+        ...
+    def lookup_attempt(self, request: GenerationRequest, ctx: CallContext) -> ProviderGenerationResult | None:
+        """Retrieve a prior remote result for this deterministic attempt.
+
+        Providers that cannot prove this capability leave ``ATTEMPT_LOOKUP``
+        absent and raise ``Unsupported``. ``None`` means the provider can
+        authoritatively say the attempt does not exist.
         """
         ...

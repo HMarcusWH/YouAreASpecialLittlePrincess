@@ -9,6 +9,7 @@ be mistaken for an interpretation.
 """
 from __future__ import annotations
 
+import json
 import os
 import sys
 import time
@@ -27,7 +28,12 @@ from princess_app.adapters.postgres.commerce import (  # noqa: E402
 )
 from princess_app.adapters.postgres.stores import Database, PostgresPermissionStore, PostgresReportStore, make_engine  # noqa: E402,E501
 from princess_app.application.permissions import PermissionService  # noqa: E402
-from princess_app.application.premium import InMemorySpendBudget, PremiumRunner, load_interpretation_database  # noqa: E402,E501
+from princess_app.application.premium import (  # noqa: E402
+    InMemorySpendBudget,
+    PremiumRestoreReconciler,
+    PremiumRunner,
+    load_interpretation_database,
+)
 from princess_app.application.premium.worker import PremiumWorker  # noqa: E402
 from princess_app.config import load_runtime_config  # noqa: E402
 from princess_app.ports.base import CallContext, Environment, ProviderMode, SystemClock, Unsupported  # noqa: E402
@@ -65,16 +71,27 @@ def main() -> int:
     def context() -> CallContext:
         return CallContext(uuid.uuid4().hex, config.environment, clock.now() + timedelta(seconds=60))
 
+    model = FakePremiumModel(unassessed, clock=clock, environment=config.environment)
+    queue = PostgresPremiumQueue(db)
     runner = PremiumRunner(
         reports=lambda owner: PostgresReportStore(db, owner), permissions=permissions,
-        images=PostgresImageSource(db), model=FakePremiumModel(unassessed, clock=clock, environment=config.environment),
-        budget=InMemorySpendBudget(DAILY_TOKEN_BUDGET),
-        publisher=PostgresOverlayPublisher(db, allow_draft_policy=local),
-        database=load_interpretation_database(), clock=clock, ids=UuidIds(), context=context,
+        images=PostgresImageSource(db), model=model, budget=InMemorySpendBudget(DAILY_TOKEN_BUDGET),
+        attempts=queue, publisher=PostgresOverlayPublisher(db, allow_draft_policy=local),
+        database=load_interpretation_database(), clock=clock, context=context,
         # Reviewed T26 content stays inactive until its owner activation gate;
         # only local/test composition may exercise it against the fake model.
         allow_inactive_content=local)
-    worker = PremiumWorker(queue=PostgresPremiumQueue(db), runner=runner, clock=clock,
+    args = sys.argv[1:]
+    if args:
+        if args != ["--reconcile-restored"]:
+            raise SystemExit("usage: run_worker.py [--reconcile-restored]")
+        outcome = PremiumRestoreReconciler(
+            queue=queue, runner=runner, model=model, attempts=queue, clock=clock, context=context,
+        ).run()
+        print(json.dumps(outcome.__dict__, sort_keys=True))
+        return 0
+
+    worker = PremiumWorker(queue=queue, runner=runner, clock=clock,
                            worker_id=f"premium-{uuid.uuid4().hex[:8]}")
     while True:  # pragma: no cover - long-running loop
         if worker.run_once() is None:

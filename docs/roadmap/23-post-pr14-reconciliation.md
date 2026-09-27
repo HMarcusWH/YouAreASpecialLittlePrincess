@@ -39,14 +39,14 @@ Runtime activation remains false. No live model call, traditional rule activatio
 
 ## T24 residuals carried forward
 
-The following PR #14 follow-ups remain explicit T24 work unless another task is named. The single-device logout and feedback-withdrawal restore gap was closed by the subsequent T24 tombstone repair using transactionally queued outbox events plus external replay tombstones.
+The following PR #14 follow-ups remain explicit T24 work unless another task is named. Subsequent T24 slices closed the single-device logout/feedback-withdrawal restore gap and exposed the account mail-preference surface. PR #21 adds provider-neutral durable Premium attempt journaling and fail-closed restore reconciliation; live provider lookup remains an activation requirement.
 
-- reconcile restored queued Premium attempts using provider-side request lookup where supported;
+- qualify authoritative restored-Premium attempt lookup, or an equivalent reviewed idempotency mechanism, for the selected live model configuration;
 - production object/tombstone storage placement, backup tooling, RPO/RTO and a timed restore drill;
 - live transactional mail, signed bounce/complaint handling and APNs/FCM integration;
 - broader key rotation/compromise handling, account/identity recovery and store-rollout halt procedures;
 - dashboards, alert thresholds, named operational ownership and edge/global limits;
-- deployable/installable backend topology and a web mail-preference surface;
+- deployable/installable backend topology;
 - add a lease heartbeat only if measured real latency makes the current 120-second lease unsafe.
 
 ## Status semantics after reconciliation

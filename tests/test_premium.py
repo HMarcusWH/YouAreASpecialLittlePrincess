@@ -16,6 +16,7 @@ from princess_app.application.premium import (
     GENERATOR_DISPOSITIONS,
     SUPPORTED,
     Candidate,
+    InMemoryAttemptJournal,
     InMemoryOverlayPublisher,
     InMemorySpendBudget,
     NotApplicable,
@@ -23,6 +24,7 @@ from princess_app.application.premium import (
     PremiumJob,
     PremiumRunner,
     answer_support,
+    premium_attempt_id,
     compile_packet,
     load_interpretation_database,
     output_schema,
@@ -323,10 +325,11 @@ class World:
         self.store.append(OWNER, REPORT)
         self.model = FakePremiumModel(responder or (lambda request: well_behaved(request.packet)), clock=self.clock)
         self.budget = InMemorySpendBudget(limit)
+        self.attempts = InMemoryAttemptJournal()
         self.publisher = InMemoryOverlayPublisher(lambda owner: self.store, self.permissions)
         self.runner = PremiumRunner(
             reports=lambda owner: self.store, permissions=self.permissions, images=Images(image), model=self.model,
-            budget=self.budget, publisher=self.publisher, database=DB, clock=self.clock, ids=SequentialIds(),
+            budget=self.budget, attempts=self.attempts, publisher=self.publisher, database=DB, clock=self.clock,
             context=lambda: CallContext("corr-1", Environment.TEST, self.clock.now() + timedelta(seconds=60)),
             allow_inactive_content=allow_inactive)
 
@@ -343,6 +346,42 @@ class World:
     def job(self, attempt=1, revision=1):
         return PremiumJob("job_1", OWNER, "report_1", revision, self.grant(), attempt)
 
+
+def test_attempt_ids_are_deterministic_per_job_and_attempt():
+    first = premium_attempt_id("job_1", 1)
+    assert first == premium_attempt_id("job_1", 1)
+    assert first != premium_attempt_id("job_1", 2)
+    assert first != premium_attempt_id("job_2", 1)
+    with pytest.raises(InvalidInput):
+        premium_attempt_id("job_1", 0)
+
+
+def test_attempt_journal_is_written_before_provider_call_and_contains_no_packet():
+    world = World()
+    world.attempts.fail_start = True
+    with pytest.raises(RuntimeError, match="attempt_journal_unavailable"):
+        world.runner.run(world.job())
+    assert world.model.requests == []
+
+    world = World()
+    record = world.runner.run(world.job())
+    row = world.attempts.rows[record.attempt_id]
+    assert row["state"] == "COMPLETED"
+    assert row["packet_digest"] == record.packet_digest
+    assert "packet" not in row and "output" not in row
+
+
+def test_ambiguous_remote_effect_is_lookup_recoverable_by_attempt_id():
+    world = World()
+    world.model.faults.inject("generate", AmbiguousOutcome("provider_timeout"), after_effect=True)
+    job = world.job()
+    record = world.runner.run(job)
+    assert record.outcome is Outcome.AMBIGUOUS
+    request = world.runner.reconciliation_request(job, 1)
+    recovered = world.model.lookup_attempt(request, world.runner._context())
+    assert recovered is not None and recovered.state is port.GenerationState.COMPLETED
+    assert len(world.model.requests) == 1 and len(world.model.lookups) == 1
+    assert world.attempts.rows[record.attempt_id]["state"] == "AMBIGUOUS"
 
 def test_valid_output_publishes_one_overlay_revision_and_free_facts_are_unchanged():
     world = World()

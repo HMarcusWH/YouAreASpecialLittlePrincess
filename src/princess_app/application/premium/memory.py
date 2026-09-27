@@ -12,9 +12,10 @@ from typing import Callable
 from ...domain.permissions import Scope
 from ...domain.reports import revise_report
 from ...ports import model as port
+from ...ports.base import InvalidInput
 from ..permissions import PermissionService
 from ..reports import ReportStore
-from .service import PURPOSE, Fenced, PremiumJob, PremiumOverlay
+from .service import PURPOSE, Fenced, PremiumJob, PremiumOverlay, ProviderAttemptState
 
 
 @dataclass
@@ -36,6 +37,43 @@ class InMemorySpendBudget:
         if usage is not None:
             self.spent += (usage.input_tokens or 0) + (usage.output_tokens or 0)
 
+
+@dataclass
+class InMemoryAttemptJournal:
+    """Sanitized provider-attempt journal for tests and local composition."""
+
+    rows: dict[str, dict] = field(default_factory=dict)
+    fail_start: bool = False
+
+    def start_attempt(self, job: PremiumJob, request: port.GenerationRequest, at: datetime) -> None:
+        if self.fail_start:
+            raise RuntimeError("attempt_journal_unavailable")
+        expected = {
+            "attempt_id": request.attempt_id, "job_id": job.job_id,
+            "attempt_number": job.attempt_number, "packet_digest": request.packet_digest,
+            "policy_version": request.policy_version, "state": ProviderAttemptState.STARTED.value,
+            "created_at": at,
+        }
+        prior = self.rows.get(request.attempt_id)
+        if prior is not None:
+            keys = ("job_id", "attempt_number", "packet_digest", "policy_version")
+            if any(prior[k] != expected[k] for k in keys):
+                raise InvalidInput("provider_attempt_mismatch")
+            return
+        self.rows[request.attempt_id] = expected
+
+    def finish_attempt(self, attempt_id: str, state: ProviderAttemptState, error_code: str | None,
+                       result: port.ProviderGenerationResult | None, at: datetime) -> None:
+        row = self.rows[attempt_id]
+        row.update({
+            "state": state.value, "error_code": error_code,
+            "provider_request_id": result.provider_request_id if result else None,
+            "model_requested": result.model_requested if result else None,
+            "model_returned": result.model_returned if result else None,
+            "usage_input_tokens": result.usage.input_tokens if result else None,
+            "usage_output_tokens": result.usage.output_tokens if result else None,
+            "completed_at": at,
+        })
 
 @dataclass
 class InMemoryOverlayPublisher:
@@ -62,4 +100,4 @@ class InMemoryOverlayPublisher:
         return revised.value.data["revision"]
 
 
-__all__ = ["InMemoryOverlayPublisher", "InMemorySpendBudget"]
+__all__ = ["InMemoryAttemptJournal", "InMemoryOverlayPublisher", "InMemorySpendBudget"]
