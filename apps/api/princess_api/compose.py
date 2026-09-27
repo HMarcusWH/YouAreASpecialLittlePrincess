@@ -92,7 +92,8 @@ def compose(config: RuntimeConfig) -> Services:
     kill_switches = dict(config.manifest.kill_switches)
     access = PostgresReportAccess(db)
     exports = ExportService(reports=reports, access=access, repo=PostgresExportRepository(db), store=store,
-                            clock=clock, ids=UuidIds(), sharing_enabled=lambda: kill_switches.get("sharing", False))
+                            clock=clock, ids=UuidIds(), sharing_enabled=lambda: kill_switches.get("sharing", False),
+                            permissions=permissions)
     return Services(environment=config.environment, clock=clock, identity=identity, permissions=permissions,
                     report_store_for=reports, kill_switches=kill_switches,
                     dev_identity=provider, audience=audience, intake=intake, dev_store=store, commerce=commerce,

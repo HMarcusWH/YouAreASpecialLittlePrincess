@@ -72,7 +72,7 @@ def main() -> int:
     erasure = ErasureWorker(outbox=PostgresErasureOutbox(db), store=store, permissions=permissions, clock=clock,
                             context=context,
                             propagate=lambda owner, purpose, scope, decision: propagate_withdrawal(
-                                repo, owner, purpose, scope, decision, clock.now()))
+                                repo, permissions, owner, purpose, scope, decision, clock.now()))
     poll(worker, erasure)
     return 0
 

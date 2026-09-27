@@ -37,6 +37,8 @@ UPLOAD_REJECTED = "upload.rejected"  # promoted bytes failed inspection; erase t
 ASSET_ERASURE = "asset.erasure_requested"  # e.g. a revoked or never-published export
 PERMISSION_WITHDRAWN = "permission.withdrawn"  # queued with the decision; re-applies its effects
 TOPICS = (DELETION, RETENTION_REVIEW, ACCOUNT_DELETION, UPLOAD_REJECTED, ASSET_ERASURE, PERMISSION_WITHDRAWN)
+# A completed capture with no analysis after this long is reviewed (draft, owner-pending).
+IDLE_CAPTURE_SECONDS = 24 * 3600
 
 
 @dataclass(frozen=True)
@@ -79,6 +81,10 @@ class ErasureOutbox(Protocol):
         """Revoke expired or abandoned upload slots and queue erasure of their bytes."""
         ...
 
+    def review_idle_captures(self, now: datetime, idle_seconds: int, limit: int) -> int:
+        """Queue retention reviews for captures that never went on to an analysis."""
+        ...
+
     def dispatched(self, event_id: str, at: datetime) -> None: ...
 
 
@@ -104,6 +110,7 @@ class ErasureWorker:
 
     def run_once(self) -> list[ErasureOutcome]:
         self._outbox.expire_upload_slots(self._clock.now(), self._batch)
+        self._outbox.review_idle_captures(self._clock.now(), IDLE_CAPTURE_SECONDS, self._batch)
         return [self._handle(event) for event in self._outbox.pending(self._topics, self._batch)]
 
     def _handle(self, event: OutboxEvent) -> ErasureOutcome:

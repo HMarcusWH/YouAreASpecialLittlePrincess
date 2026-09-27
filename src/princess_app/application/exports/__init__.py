@@ -34,14 +34,18 @@ from ...ports.base import (
     DeadlineExceeded,
     IdGenerator,
     InvalidInput,
+    NotAuthorized,
     NotFound,
     PermanentFailure,
     PortError,
     RateLimited,
     TransientUnavailable,
     Unsupported,
+    require_opaque_id,
 )
 from ...ports.storage import ObjectStore, StoredObject
+from ...domain.permissions import Scope
+from ..permissions import PermissionService
 from ..reports import ReportAccessResolver, ReportReader, ReportStore, ShareAccess
 
 TEMPLATE_VERSION = "render-template/1"
@@ -54,6 +58,7 @@ MAX_EXPORT_BYTES = 10 * 1024 * 1024
 MAX_CARD_SECTIONS = 8
 MAX_ATTEMPTS = 2
 NOT_RECALLABLE = "downloaded_copies_cannot_be_recalled"
+SHARING_PURPOSE = "ordinary_sharing"
 
 
 @dataclass(frozen=True)
@@ -61,13 +66,14 @@ class ExportRequest:
     report_id: str
     layout: str
     sections: tuple[str, ...] = ()  # cards only: the sections the owner chose to disclose
+    share_grant_ref: str | None = None  # cards only: the ordinary_sharing grant they fall under
 
     @property
     def projection(self) -> str:
         return "SHARE" if self.layout in CARD_LAYOUTS else "EXPORT"
 
     def params(self) -> dict[str, Any]:
-        return {"sections": sorted(self.sections), "include_image": False}
+        return {"sections": sorted(self.sections), "include_image": False, "share_grant_ref": self.share_grant_ref}
 
 
 @dataclass(frozen=True)
@@ -89,8 +95,10 @@ class ExportRow:
     error_code: str | None = None
     completed_at: datetime | None = None
 
+    share_grant_ref: str | None = None
+
     def request(self) -> ExportRequest:
-        return ExportRequest(self.report_id, self.layout, self.sections)
+        return ExportRequest(self.report_id, self.layout, self.sections, self.share_grant_ref)
 
 
 @dataclass(frozen=True)
@@ -138,8 +146,15 @@ class ExportRepository(Protocol):
 
 def cache_key(view: ValidatedDocument, request: ExportRequest) -> str:
     content = {k: v for k, v in view.to_dict().items() if k != "generated_at"}
-    material = {"view": content, "layout": request.layout, "template": TEMPLATE_VERSION}
+    material = {"view": content, "layout": request.layout, "template": TEMPLATE_VERSION,
+                "share_grant_ref": request.share_grant_ref}
     return hashlib.sha256(canonical_json(material).encode("utf-8")).hexdigest()
+
+
+def render_asset_id(export_id: str, fencing_token: int) -> str:
+    """The asset an attempt writes, derivable before the write: a crashed
+    attempt's bytes can be found and erased from the job's fencing token."""
+    return "asset_" + hashlib.sha256(f"{export_id}:{fencing_token}".encode()).hexdigest()[:40]
 
 
 def check_rendered(data: bytes, media_type: str) -> None:
@@ -158,6 +173,7 @@ class ExportService:
     clock: Clock
     ids: IdGenerator
     sharing_enabled: Callable[[], bool] = field(default=lambda: False)
+    permissions: PermissionService | None = None
 
     def projection(self, owner_id: str, request: ExportRequest) -> ValidatedDocument:
         """The authorized projection an export may show, derived now."""
@@ -165,8 +181,14 @@ class ExportService:
         if request.projection == "EXPORT":
             return reader.view(report_id=request.report_id, principal_id=owner_id, projection="EXPORT",
                                include_source_image=False)
-        # A card is the owner's own share preview: ownership is checked by an
-        # owner read before the SHARE projection is compiled for their scope.
+        # A card is a share artifact: it needs a current ordinary_sharing grant,
+        # checked on every derivation (request, publication, retrieval).
+        grant = request.share_grant_ref
+        if self.permissions is None or grant is None or not self.permissions.check(
+                owner_id, SHARING_PURPOSE, Scope("SHARE_GRANT", grant)).allowed:
+            raise NotAuthorized("sharing_not_granted")
+        # Ownership is checked by an owner read before the SHARE projection is
+        # compiled for the owner's chosen scope.
         owned = reader.view(report_id=request.report_id, principal_id=owner_id, projection="OWNER")
         known = {s["section_id"] for s in owned.data["sections"]}
         if not set(request.sections) <= known:
@@ -174,7 +196,8 @@ class ExportService:
         return reader.view(report_id=request.report_id, principal_id=None, projection="SHARE",
                            share=ShareAccess(request.report_id, frozenset(request.sections)))
 
-    def request(self, owner_id: str, report_id: str, layout: str, sections: tuple[str, ...] = ()) -> ExportRow:
+    def request(self, owner_id: str, report_id: str, layout: str, sections: tuple[str, ...] = (),
+                share_grant_ref: str | None = None) -> ExportRow:
         if layout not in MEDIA_TYPES:
             raise InvalidInput("unknown_layout")
         if layout in CARD_LAYOUTS:
@@ -182,12 +205,16 @@ class ExportService:
                 raise Unsupported("sharing_disabled")
             if not sections or len(sections) > MAX_CARD_SECTIONS or len(set(sections)) != len(sections):
                 raise InvalidInput("card_sections_required")
-        elif sections:
+            if share_grant_ref is None:
+                raise InvalidInput("share_grant_required")
+            require_opaque_id(share_grant_ref, "share_grant_ref")
+        elif sections or share_grant_ref is not None:
             raise InvalidInput("sections_apply_to_cards_only")
-        request = ExportRequest(report_id, layout, tuple(sorted(sections)))
+        request = ExportRequest(report_id, layout, tuple(sorted(sections)), share_grant_ref)
         view = self.projection(owner_id, request)
         row = ExportRow(export_id=self.ids.new_id("export"), owner_id=owner_id, report_id=report_id,
                         revision=view.data["source_revision"], layout=layout, sections=request.sections,
+                        share_grant_ref=share_grant_ref,
                         cache_key=cache_key(view, request), state="QUEUED", created_at=self.clock.now())
         return self.repo.request(row, self.ids.new_id("job"))
 
@@ -204,7 +231,7 @@ class ExportService:
             raise Conflict("export_not_ready", detail=row.state)
         try:
             current = cache_key(self.projection(owner_id, row.request()), row.request())
-        except (NotFound, InvalidInput):
+        except (NotFound, InvalidInput, NotAuthorized):
             current = None  # the report or a disclosed section is gone
         if current != row.cache_key:
             self.repo.revoke(owner_id, export_id, "export_stale", self.clock.now())
@@ -250,7 +277,7 @@ class ExportWorker:
 
         try:
             view = svc.projection(row.owner_id, request)
-        except (NotFound, InvalidInput) as exc:
+        except (NotFound, InvalidInput, NotAuthorized) as exc:
             return fail(exc.code)
         if cache_key(view, request) != row.cache_key:
             return fail("projection_changed")  # e.g. image or Premium revoked since the request
@@ -263,14 +290,14 @@ class ExportWorker:
         except PortError as exc:
             return fail(exc.code)
         ctx = self._context()
-        asset_id = svc.ids.new_id("asset")
+        asset_id = render_asset_id(row.export_id, claim.fencing_token)
         try:
             stored = svc.store.write_derivative(asset_id, None, data, media_type, ctx)
         except PortError as exc:
             return fail(exc.code, retry=True, orphan=asset_id)  # a partial write may exist
         try:
             unchanged = cache_key(svc.projection(row.owner_id, request), request) == row.cache_key
-        except (NotFound, InvalidInput):
+        except (NotFound, InvalidInput, NotAuthorized):
             unchanged = False
         if unchanged and svc.repo.publish(claim, stored, svc.clock.now()):
             return ExportOutcome(row.export_id, "READY")
@@ -280,4 +307,4 @@ class ExportWorker:
 
 __all__ = ["CARD_LAYOUTS", "ClaimedExport", "DOCUMENT_LAYOUTS", "ExportOutcome", "ExportRepository", "ExportRequest",
            "ExportRow", "ExportService", "ExportWorker", "MAX_EXPORT_BYTES", "MEDIA_TYPES", "NOT_RECALLABLE",
-           "Renderer", "TEMPLATE_VERSION", "cache_key", "check_rendered"]
+           "Renderer", "SHARING_PURPOSE", "TEMPLATE_VERSION", "cache_key", "check_rendered", "render_asset_id"]

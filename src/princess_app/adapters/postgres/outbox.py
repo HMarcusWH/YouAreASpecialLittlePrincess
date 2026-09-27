@@ -74,6 +74,11 @@ class PostgresErasureOutbox:
         with self.db.session() as conn:
             return int(conn.execute(text("SELECT app.expire_upload_slots(:t, :n)"), {"t": now, "n": limit}).scalar())
 
+    def review_idle_captures(self, now: datetime, idle_seconds: int, limit: int) -> int:
+        with self.db.session() as conn:
+            return int(conn.execute(text("SELECT app.review_idle_captures(:t, :s, :n)"),
+                                    {"t": now, "s": idle_seconds, "n": limit}).scalar())
+
     def dispatched(self, event_id: str, at: datetime) -> None:
         with self.db.session() as conn:
             conn.execute(text("UPDATE app.outbox_event SET dispatched_at = :t WHERE event_id = :e "

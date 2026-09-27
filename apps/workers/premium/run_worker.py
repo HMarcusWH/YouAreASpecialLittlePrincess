@@ -68,7 +68,8 @@ def main() -> int:
     runner = PremiumRunner(
         reports=lambda owner: PostgresReportStore(db, owner), permissions=permissions,
         images=PostgresImageSource(db), model=FakePremiumModel(unassessed, clock=clock, environment=config.environment),
-        budget=InMemorySpendBudget(DAILY_TOKEN_BUDGET), publisher=PostgresOverlayPublisher(db),
+        budget=InMemorySpendBudget(DAILY_TOKEN_BUDGET),
+        publisher=PostgresOverlayPublisher(db, allow_draft_policy=local),
         database=load_interpretation_database(), clock=clock, ids=UuidIds(), context=context,
         # Reviewed T26 content stays inactive until its owner activation gate;
         # only local/test composition may exercise it against the fake model.

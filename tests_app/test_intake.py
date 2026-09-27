@@ -417,7 +417,7 @@ def erasure(env):
     return ErasureWorker(outbox=PostgresErasureOutbox(env.worker_db), store=env.store, permissions=permissions,
                          clock=env.clock, context=env.ctx,
                          propagate=lambda owner, purpose, scope, decision: propagate_withdrawal(
-                             repo, owner, purpose, scope, decision, env.clock.now()))
+                             repo, permissions, owner, purpose, scope, decision, env.clock.now()))
 
 
 def grant_retention(env, owner, capture_id, decision=Decision.GRANT):
@@ -541,6 +541,35 @@ def test_expired_and_abandoned_upload_slots_are_revoked_and_erased(env, world): 
     assert "ERASED" in {o.action for o in erasure(env).run_once()}
     assert env.repo.upload(owner, ticket.upload_id).state == "REVOKED"
     assert env.store.verify_deletion(ticket.asset_id, env.ctx())
+
+
+def test_captures_abandoned_before_any_permission_are_reviewed_and_erased(env, world):  # noqa: F811
+    owner = account(world, "sub-a").principal_id
+    capture = env.capture(owner)  # completed, then the browser closed: no permission, no analysis
+    assert erasure(env).run_once() == []
+    env.clock.advance(25 * 3600)
+    assert "ERASED" in {o.action for o in erasure(env).run_once()}
+    assert env.store.verify_deletion(capture.asset_id, env.ctx())
+
+
+def test_a_replayed_withdrawal_does_not_delete_captures_granted_since(env, world):  # noqa: F811
+    owner = account(world, "sub-a").principal_id
+    old = env.capture(owner)
+    env.grant(owner, old.capture_id)
+    env.clock.advance(1)
+    withdrawal = dict(subject_id=owner, actor_id=owner, purpose_id="service_processing", scope=SUBJECT_WIDE,
+                      decision=Decision.WITHDRAW, notice_version=NOTICE, request_id="withdraw_0001")
+    env.permissions.record(**withdrawal)
+    env.intake.apply_permission_change(owner, "service_processing", SUBJECT_WIDE, Decision.WITHDRAW)
+    env.clock.advance(1)
+    fresh = env.capture(owner)
+    env.grant(owner, fresh.capture_id)  # a new, explicitly granted capture
+    env.permissions.record(**withdrawal)  # the old request replays and returns the recorded event
+    env.intake.apply_permission_change(owner, "service_processing", SUBJECT_WIDE, Decision.WITHDRAW)
+    assert env.repo.capture(owner, fresh.capture_id).deleted is False
+    assert env.repo.capture(owner, old.capture_id).deleted is True
+    with env.app_db.session(owner) as conn:  # access ends at once; the erased marker waits for verification
+        assert conn.execute(text("SELECT count(*) FROM app.asset WHERE deleted_at IS NOT NULL")).scalar() == 0
 
 
 def test_guest_transfer_moves_completed_captures_and_ends_inflight_work(env, world):  # noqa: F811

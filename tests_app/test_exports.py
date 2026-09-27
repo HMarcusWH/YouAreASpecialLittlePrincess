@@ -14,17 +14,20 @@ from princess_app.adapters.postgres.access import PostgresReportAccess
 from princess_app.adapters.postgres.exports import PostgresExportRepository
 from princess_app.adapters.postgres.stores import PostgresReportStore
 from princess_app.adapters.render import SubprocessRenderer
-from princess_app.application.exports import ExportService, ExportWorker
+from princess_app.application.exports import ExportService, ExportWorker, render_asset_id
 from princess_app.application.reports import ReportReader
+from princess_app.domain.permissions import Decision, Scope
 from princess_app.ports.base import (
     Conflict,
     InvalidInput,
+    NotAuthorized,
     NotFound,
     PermanentFailure,
+    RateLimited,
     TransientUnavailable,
     Unsupported,
 )
-from test_intake import Env, erasure
+from test_intake import NOTICE, Env, erasure
 from test_persistence import account, world  # noqa: F401 - fixture re-export
 
 
@@ -70,7 +73,7 @@ class Exports:
             return ExportService(reports=lambda owner: PostgresReportStore(db, owner),
                                  access=PostgresReportAccess(db), repo=PostgresExportRepository(db),
                                  store=env.store, clock=env.clock, ids=ids,
-                                 sharing_enabled=lambda: self.sharing)
+                                 sharing_enabled=lambda: self.sharing, permissions=env.permissions)
 
         self.api = service(app_db)
         self.worker = ExportWorker(service=service(worker_db), renderer=self.renderer, worker_id="export-1",
@@ -111,10 +114,22 @@ def test_a_pdf_renders_the_saved_facts_and_is_retrieved_by_its_owner(ex, world):
         ex.api.request(stranger, ex.report_id, "A4")
 
 
+def share_grant(ex, ref="share_0001", decision=Decision.GRANT):
+    ex.env.clock.advance(1)
+    ex.env.permissions.record(subject_id=ex.owner, actor_id=ex.owner, purpose_id="ordinary_sharing",
+                              scope=Scope("SHARE_GRANT", ref), decision=decision, notice_version=NOTICE)
+    return ref
+
+
 def test_cards_render_only_the_disclosed_sections_and_need_sharing(ex):
     sections = [s for s in ex.owner_view()["sections"] if s["fact_ids"]]
     chosen = sections[0]["section_id"]
-    card = ex.api.request(ex.owner, ex.report_id, "CARD_SQUARE", (chosen,))
+    with pytest.raises(InvalidInput):
+        ex.api.request(ex.owner, ex.report_id, "CARD_SQUARE", (chosen,))  # no grant named
+    with pytest.raises(NotAuthorized):
+        ex.api.request(ex.owner, ex.report_id, "CARD_SQUARE", (chosen,), "share_0001")  # none recorded
+    grant = share_grant(ex)
+    card = ex.api.request(ex.owner, ex.report_id, "CARD_SQUARE", (chosen,), grant)
     assert ex.worker.run_once().state == "READY"
     view = ex.renderer.calls[-1]["view"]
     assert view["projection"] == "SHARE" and [s["section_id"] for s in view["sections"]] == [chosen]
@@ -122,16 +137,21 @@ def test_cards_render_only_the_disclosed_sections_and_need_sharing(ex):
     data, row = ex.api.download(ex.owner, card.export_id, ex.env.ctx())
     assert data.startswith(b"\x89PNG") and row.media_type == "image/png"
     with pytest.raises(InvalidInput):
-        ex.api.request(ex.owner, ex.report_id, "CARD_SQUARE", ())
+        ex.api.request(ex.owner, ex.report_id, "CARD_SQUARE", (), grant)
     with pytest.raises(InvalidInput):
-        ex.api.request(ex.owner, ex.report_id, "CARD_SQUARE", ("section.invented",))
+        ex.api.request(ex.owner, ex.report_id, "CARD_SQUARE", ("section.invented",), grant)
     with pytest.raises(InvalidInput):
         ex.api.request(ex.owner, ex.report_id, "A4", (chosen,))
     with pytest.raises(InvalidInput):
         ex.api.request(ex.owner, ex.report_id, "POSTER")
+    # Withdrawing the sharing grant ends retrieval of the card (and erases it).
+    share_grant(ex, grant, Decision.WITHDRAW)
+    with pytest.raises(NotFound):
+        ex.api.download(ex.owner, card.export_id, ex.env.ctx())
+    assert ex.api.status(ex.owner, card.export_id).state == "REVOKED"
     ex.sharing = False
     with pytest.raises(Unsupported):
-        ex.api.request(ex.owner, ex.report_id, "CARD_STORY", (chosen,))
+        ex.api.request(ex.owner, ex.report_id, "CARD_STORY", (chosen,), grant)
 
 
 def test_a_projection_change_during_rendering_is_not_published(ex):
@@ -211,3 +231,26 @@ def test_the_renderer_child_gets_only_the_projection():
             SubprocessRenderer([sys.executable, str(stub)], timeout_s=1).render({}, layout, "en", "x")
     with pytest.raises(TransientUnavailable):
         SubprocessRenderer(["/nonexistent/renderer"]).render({}, "A4", "en", "x")
+
+
+def test_a_crashed_render_is_found_from_its_fencing_token_and_erased(ex):
+    requested = ex.api.request(ex.owner, ex.report_id, "A4")
+    queue = PostgresExportRepository(ex.env.worker_db)
+    crashed = queue.claim("crashing", 30, ex.env.clock.now())
+    # The dead worker wrote bytes but never recorded them.
+    ex.env.store.write_derivative(render_asset_id(requested.export_id, crashed.fencing_token), None, b"%PDF-1.7",
+                                  "application/pdf", ex.env.ctx())
+    ex.env.clock.advance(31)
+    assert ex.worker.run_once().state == "READY"  # reclaimed; the orphan's erasure is queued on the way
+    assert "ERASED" in {o.action for o in erasure(ex.env).run_once()}
+    assert ex.env.store.verify_deletion(render_asset_id(requested.export_id, crashed.fencing_token), ex.env.ctx())
+
+
+def test_the_daily_export_budget_counts_completed_renders(ex, monkeypatch):
+    import princess_app.adapters.postgres.exports as exports_adapter
+
+    monkeypatch.setattr(exports_adapter, "MAX_EXPORTS_PER_DAY", 1)
+    ex.api.request(ex.owner, ex.report_id, "A4")
+    assert ex.worker.run_once().state == "READY"
+    with pytest.raises(RateLimited):
+        ex.api.request(ex.owner, ex.report_id, "LETTER")  # nothing pending, but the day's budget is used

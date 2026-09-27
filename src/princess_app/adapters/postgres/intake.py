@@ -225,8 +225,8 @@ class PostgresIntakeRepository:
                                       "WHERE capture_id = :c RETURNING asset_id"), {"c": capture_id, "t": at}).scalar()
             if asset is None:
                 raise NotFound("capture_not_found")
-            conn.execute(text("UPDATE app.asset SET deleted_at = coalesce(deleted_at, :t) WHERE asset_id = :a"),
-                         {"a": asset, "t": at})
+            # Access ends with the capture tombstone; asset.deleted_at is set only
+            # by the erasure worker once the bytes are verified gone.
             runs = [r[0] for r in conn.execute(text("SELECT run_id FROM app.analysis_run WHERE capture_id = :c"),
                                                {"c": capture_id}).all()]
             for run_id in runs:

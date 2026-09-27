@@ -221,7 +221,7 @@ class Studio:
         runner = PremiumRunner(
             reports=lambda owner: PostgresReportStore(env.worker_db, owner), permissions=worker_permissions,
             images=PostgresImageSource(env.worker_db), model=self.model, budget=InMemorySpendBudget(100_000),
-            publisher=PostgresOverlayPublisher(env.worker_db), database=DB, clock=env.clock, ids=SequentialIds(),
+            publisher=PostgresOverlayPublisher(env.worker_db, allow_draft_policy=True), database=DB, clock=env.clock, ids=SequentialIds(),
             context=env.ctx, allow_inactive_content=True)
         self.worker = PremiumWorker(queue=PostgresPremiumQueue(env.worker_db), runner=runner, clock=env.clock,
                                     worker_id="premium-1")
@@ -419,3 +419,12 @@ def test_account_erasure_settles_open_reservations_before_removing_jobs(shop, wo
     assert shop.entries(studio.owner)[-1] == "RELEASE"
     with studio.env.app_db.session(studio.owner) as conn:
         assert conn.execute(text("SELECT count(*) FROM app.job")).scalar() == 0
+
+
+def test_premium_publication_re_evaluates_the_grant_itself(shop, world):  # noqa: F811
+    studio = Studio(shop, world)
+    studio.request()
+    studio.worker._runner._publisher.allow_draft_policy = False  # a deployment that retired the draft notice
+    done = studio.worker.run_once()
+    assert (done.record.outcome.value, done.record.error_code) == ("FENCED", "permission_changed")
+    assert studio.revision() == 1 and studio.reservation_state() == "RELEASED"

@@ -21,11 +21,17 @@ sys.path.insert(0, str(ROOT / "src"))
 from princess_app.adapters.localfs import LocalObjectStore  # noqa: E402
 from princess_app.adapters.postgres.access import PostgresReportAccess  # noqa: E402
 from princess_app.adapters.postgres.exports import PostgresExportRepository  # noqa: E402
-from princess_app.adapters.postgres.stores import Database, PostgresReportStore, make_engine  # noqa: E402
+from princess_app.adapters.postgres.stores import (  # noqa: E402
+    Database,
+    PostgresPermissionStore,
+    PostgresReportStore,
+    make_engine,
+)
 from princess_app.adapters.render import DEFAULT_BUNDLE, SubprocessRenderer  # noqa: E402
 from princess_app.application.exports import ExportService, ExportWorker  # noqa: E402
+from princess_app.application.permissions import PermissionService  # noqa: E402
 from princess_app.config import load_runtime_config  # noqa: E402
-from princess_app.ports.base import CallContext, ProviderMode, SystemClock, Unsupported  # noqa: E402
+from princess_app.ports.base import CallContext, Environment, ProviderMode, SystemClock, Unsupported  # noqa: E402
 
 
 class UuidIds:
@@ -46,8 +52,11 @@ def main() -> int:
                              signing_key=config.secret("PRINCESS_STORAGE_READ_KEY").encode(), clock=clock,
                              environment=config.environment)
     db = Database(make_engine(config.secret("PRINCESS_DATABASE_URL")))
+    permissions = PermissionService(PostgresPermissionStore(db), clock, UuidIds(),
+                                    allow_draft_policy=config.environment in (Environment.LOCAL, Environment.TEST))
     service = ExportService(reports=lambda owner: PostgresReportStore(db, owner), access=PostgresReportAccess(db),
-                            repo=PostgresExportRepository(db), store=store, clock=clock, ids=UuidIds())
+                            repo=PostgresExportRepository(db), store=store, clock=clock, ids=UuidIds(),
+                            permissions=permissions)
     worker = ExportWorker(
         service=service, renderer=SubprocessRenderer(chromium=os.environ.get("PRINCESS_CHROMIUM")),
         worker_id=f"export-{uuid.uuid4().hex[:8]}",

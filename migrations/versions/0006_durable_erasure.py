@@ -10,6 +10,8 @@
   tombstones.
 * ``app.expire_upload_slots`` revokes reserved or abandoned upload slots past
   their expiry and queues erasure of any bytes uploaded to them.
+* ``app.review_idle_captures`` queues the retention review for completed
+  captures that never went on to an analysis.
 
 Revision ID: 0006_durable_erasure
 Revises: 0005_report_exports
@@ -107,13 +109,41 @@ BEGIN
 END
 $f$;
 
+-- A capture that never went on to an analysis (the browser closed before the
+-- permission was recorded) is reviewed like any finished one: its original is
+-- erased unless image retention covers it.
+CREATE FUNCTION app.review_idle_captures(p_now timestamptz, p_idle_seconds integer, p_limit integer)
+RETURNS integer
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = app, pg_temp AS
+$f$
+DECLARE
+  v_count integer;
+BEGIN
+  INSERT INTO app.outbox_event (event_id, topic, owner_id, aggregate_ref, payload, dedupe_key, created_at)
+    SELECT 'evt.idle_capture.' || c.capture_id, 'capture.retention_review', c.owner_id, c.capture_id,
+           '{}'::jsonb, 'idle-capture:' || c.capture_id, p_now
+    FROM app.capture c JOIN app.asset a ON a.asset_id = c.asset_id
+    WHERE c.deleted_at IS NULL AND a.deleted_at IS NULL
+      AND c.created_at < p_now - make_interval(secs => p_idle_seconds)
+      AND NOT EXISTS (SELECT 1 FROM app.analysis_run r WHERE r.capture_id = c.capture_id)
+      AND NOT EXISTS (SELECT 1 FROM app.outbox_event o WHERE o.dedupe_key = 'idle-capture:' || c.capture_id)
+    ORDER BY c.created_at LIMIT p_limit
+  ON CONFLICT (dedupe_key) DO NOTHING;
+  GET DIAGNOSTICS v_count = ROW_COUNT;
+  RETURN v_count;
+END
+$f$;
+
 REVOKE ALL ON FUNCTION app.erase_capture_records(text, text, timestamptz),
-  app.expire_upload_slots(timestamptz, integer) FROM PUBLIC;
+  app.expire_upload_slots(timestamptz, integer), app.review_idle_captures(timestamptz, integer, integer)
+  FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION app.erase_capture_records(text, text, timestamptz),
-  app.expire_upload_slots(timestamptz, integer) TO princess_worker;
+  app.expire_upload_slots(timestamptz, integer), app.review_idle_captures(timestamptz, integer, integer)
+  TO princess_worker;
 """
 
 DOWNGRADE = """
+DROP FUNCTION app.review_idle_captures(timestamptz, integer, integer);
 DROP FUNCTION app.expire_upload_slots(timestamptz, integer);
 DROP FUNCTION app.erase_capture_records(text, text, timestamptz);
 DROP TRIGGER withdrawal_propagation ON app.permission_event;

@@ -151,12 +151,16 @@ class ChallengeProof:
     token: str
 
 
-def propagate_withdrawal(repo: IntakeRepository, owner_id: str, purpose_id: str, scope: Scope,
-                         decision: Decision, at: datetime) -> None:
+def propagate_withdrawal(repo: IntakeRepository, permissions: PermissionService, owner_id: str, purpose_id: str,
+                         scope: Scope, decision: Decision, at: datetime) -> None:
     """Idempotent effects of a service-processing or image-retention
     withdrawal. The API applies them at once; the durable
     ``permission.withdrawn`` outbox event (queued with the decision) re-applies
-    them if the process died in between."""
+    them if the process died in between.
+
+    Effects follow the *current* permission, not the event: a replayed or
+    late-processed withdrawal never deletes a capture the owner has since
+    granted again. (Retention reviews re-check image retention themselves.)"""
     if decision is Decision.GRANT or purpose_id not in (SERVICE_PURPOSE, RETENTION_PURPOSE):
         return
     if scope.kind == "SUBJECT_WIDE":
@@ -167,7 +171,8 @@ def propagate_withdrawal(repo: IntakeRepository, owner_id: str, purpose_id: str,
         return
     for capture_id in targets:
         if purpose_id == SERVICE_PURPOSE:
-            repo.delete_capture(owner_id, capture_id, at)
+            if not permissions.check(owner_id, SERVICE_PURPOSE, Scope("SPECIMEN", capture_id), at).allowed:
+                repo.delete_capture(owner_id, capture_id, at)
         else:
             repo.request_retention_review(owner_id, capture_id, at)
 
@@ -300,4 +305,4 @@ class IntakeService:
         analysis record (the report is tombstoned and bytes are erased).
         Withdrawing image retention queues erasure of the original only.
         """
-        propagate_withdrawal(self._repo, owner_id, purpose_id, scope, decision, self._clock.now())
+        propagate_withdrawal(self._repo, self._permissions, owner_id, purpose_id, scope, decision, self._clock.now())

@@ -22,11 +22,18 @@ from princess_contracts import compile_document
 from ...application.commerce import AI_PURPOSE, Balance, GrantResult, PendingCompletion, PremiumRequest
 from ...application.premium.service import MAX_ATTEMPTS, AttemptRecord, Fenced, Outcome, PremiumJob, PremiumOverlay
 from ...domain.commerce import Platform
+from ...domain.permissions import Scope, evaluate
 from ...domain.reports import check_revision, revise_report
 from ...ports.base import Conflict, Environment, IdGenerator, NotAuthorized, NotFound
 from ...ports.payments import CatalogProduct, CompletionAction, NormalizedEvent, PaymentRail, TransactionObservation
 from ...ports.storage import StoredObject
-from .stores import Database, epoch_for, lock_live_owner, set_context
+from .stores import (
+    Database,
+    PostgresPermissionStore,
+    epoch_for,
+    lock_live_owner,
+    set_context,
+)
 
 PREMIUM_KIND = "premium"
 SERVER_COMPLETIONS = (CompletionAction.SERVER_CONSUME.value, CompletionAction.SERVER_ACKNOWLEDGE.value)
@@ -321,10 +328,13 @@ class PostgresPremiumQueue:
 
 
 class PostgresOverlayPublisher:
-    """Publishes a validated overlay and spends its reservation in one fenced transaction."""
+    """Publishes a validated overlay and spends its reservation in one fenced transaction.
 
-    def __init__(self, db: Database) -> None:
+    ``allow_draft_policy`` mirrors the deployment's PermissionService (local/test only)."""
+
+    def __init__(self, db: Database, *, allow_draft_policy: bool = False) -> None:
         self.db = db
+        self.allow_draft_policy = allow_draft_policy
 
     def publish(self, job: PremiumJob, overlay: PremiumOverlay, now: datetime) -> int:
         with self.db.session() as conn:
@@ -340,6 +350,12 @@ class PostgresOverlayPublisher:
             except NotFound:
                 raise Fenced("owner_deleted") from None
             if epoch_for(conn, job.owner_id, AI_PURPOSE, lock=True) != job.permission_epoch:
+                raise Fenced("permission_changed")
+            # A retired notice or purpose version changes the answer without a new
+            # event, so evaluate the report-scoped grant itself under the same lock.
+            if not evaluate(PostgresPermissionStore._rows(conn, job.owner_id, AI_PURPOSE), subject_id=job.owner_id,
+                            purpose_id=AI_PURPOSE, scope=Scope("REPORT", job.report_id), at=now,
+                            allow_draft_policy=self.allow_draft_policy).allowed:
                 raise Fenced("permission_changed")
             if conn.execute(text("SELECT 1 FROM app.report WHERE report_id = :r AND deleted_at IS NULL FOR UPDATE"),
                             {"r": job.report_id}).scalar() is None:

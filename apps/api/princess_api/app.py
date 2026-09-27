@@ -147,6 +147,8 @@ class ExportBody(_Strict):
     report_id: str = Field(pattern=r"^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$")
     layout: Literal["A4", "LETTER", "CARD_SQUARE", "CARD_STORY"]
     sections: list[str] = Field(default_factory=list, max_length=8)
+    # Cards: the ordinary_sharing grant (scope SHARE_GRANT) the card falls under.
+    share_grant_ref: str | None = Field(default=None, pattern=r"^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$")
 
 
 class FeedbackBody(_Strict):
@@ -389,7 +391,7 @@ def create_app(services: Services) -> FastAPI:
     def request_export(body: ExportBody, who: Principal = Depends(principal)) -> dict:
         """Render the authorized projection of the latest revision. Never calls a model."""
         return export_status(exports().request(who.principal_id, body.report_id, body.layout,
-                                               tuple(body.sections)))
+                                               tuple(body.sections), body.share_grant_ref))
 
     @app.get("/v1/report-exports/{export_id}")
     def read_export(export_id: str, who: Principal = Depends(principal)) -> dict:
