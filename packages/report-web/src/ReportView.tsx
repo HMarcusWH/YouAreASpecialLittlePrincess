@@ -46,7 +46,7 @@ function FactRow({ fact, locale }: { fact: Fact; locale: Locale }) {
       <th scope="row">{featureName(fact.feature_id)}</th>
       <td><FactValue fact={fact} locale={locale} /></td>
       <td><EvidenceBadge evidence={fact.evidence_class} locale={locale} /></td>
-      <td className="pr-quality">{fact.quality.n_observations} {t(locale, "quality.observations")}</td>
+      <td className="pr-quality" title={t(locale, "quality.observations")}>n = {fact.quality.n_observations}</td>
     </tr>
   );
 }
@@ -80,7 +80,12 @@ function SectionBlock({ section, facts, locale }: { section: ReportSection; fact
 export function NoticeBar({ notices, locale }: { notices: readonly Notice[]; locale: Locale }) {
   return (
     <ul className="pr-notices" aria-label="Notices">
-      {notices.map((n) => <li key={n.notice_id} data-notice={n.class}>{t(locale, n.localization_key)}</li>)}
+      {notices.map((n) => (
+        <li key={n.notice_id} data-notice={n.class}
+            {...(n.localization_key === "notice.source_image_omitted" ? { "data-image": "omitted" } : {})}>
+          {t(locale, n.localization_key)}
+        </li>
+      ))}
     </ul>
   );
 }
@@ -112,9 +117,6 @@ export function ReportView({ view, locale, onAction }: { view: ReportViewModel; 
         <p className="pr-hint">{t(locale, "report.revision")} {view.source_revision}</p>
       </header>
       <NoticeBar notices={view.notices} locale={locale} />
-      {view.authorized_asset_ids.length === 0 && view.projection !== "FREE" && (
-        <p className="pr-hint" data-image="omitted">{t(locale, "report.image_omitted")}</p>
-      )}
       {view.sections.map((s) => <SectionBlock key={s.section_id} section={s} facts={facts} locale={locale} />)}
       <ActionBar actions={view.actions} locale={locale} {...(onAction ? { onAction } : {})} />
     </article>

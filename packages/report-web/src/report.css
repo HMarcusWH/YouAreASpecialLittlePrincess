@@ -29,3 +29,20 @@
 .pr-action button:disabled { color: var(--color-text-muted); border-style: dashed; }
 .pr-visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 @media print { .pr-actions { display: none; } .pr-report { max-width: none; } }
+/* Print mode: expanded, static, paged. */
+.pr-print { font-size: 10.5pt; }
+.pr-print .pr-section { break-inside: avoid-page; }
+.pr-print .pr-facts tr { break-inside: avoid; }
+.pr-print .pr-table-wrap { overflow: visible; }
+.pr-colophon { border-top: 1px solid var(--color-border); padding-top: var(--space-4); }
+/* Share cards: fixed canvases, redacted by construction (no image, no names). */
+.pr-card { display: flex; flex-direction: column; justify-content: space-between; padding: 72px; box-sizing: border-box;
+  background: var(--color-surface-sunken); color: var(--color-text); font-family: var(--font-family-text); }
+.pr-card-square { width: 1080px; height: 1080px; }
+.pr-card-story { width: 1080px; height: 1920px; }
+.pr-card-brand { font-size: 64px; font-weight: var(--font-weight-bold); margin: 0; color: var(--color-accent); }
+.pr-card-context { font-size: 32px; margin: 0; color: var(--color-text-muted); }
+.pr-card-facts { display: grid; gap: 36px; margin: 0; }
+.pr-card-fact dt { font-size: 34px; color: var(--color-text-muted); overflow-wrap: anywhere; }
+.pr-card-fact dd { margin: 0; font-size: 60px; font-family: var(--font-family-numeric); font-variant-numeric: tabular-nums; }
+.pr-card-fact dd.pr-card-label { font-size: 28px; font-family: var(--font-family-text); color: var(--color-evidence-proxy); }

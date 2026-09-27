@@ -86,12 +86,13 @@ jobs:
       - name: Generated design tokens are current (standard-library generator)
         run: python3 tools/generate_design_tokens.py --check
       - run: pnpm typecheck
-      - run: pnpm test
+      - name: Install the pinned Playwright Chromium (renderer tests and browser journeys)
+        run: pnpm --filter @princess/web exec playwright install --with-deps chromium
+      - name: Package tests, including PDF and share-card rendering in offline Chromium
+        run: pnpm test
       - name: Build the web app
         run: pnpm --filter @princess/web build
         env:
           NEXT_TELEMETRY_DISABLED: "1"
       - name: Browser journeys over the shared report fixtures
-        run: |
-          pnpm --filter @princess/web exec playwright install --with-deps chromium
-          pnpm --filter @princess/web e2e
+        run: pnpm --filter @princess/web e2e
