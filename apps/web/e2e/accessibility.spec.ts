@@ -53,8 +53,8 @@ test("destructive settings action can be cancelled from the keyboard", async ({ 
   await expectAccessible(page, testInfo);
 });
 
-test("the accessibility gate detects a deliberately unnamed control", async ({ page }) => {
-  await page.goto("/fixtures/a11y-negative");
+test("the accessibility gate detects a deliberately unlabelled control", async ({ page }) => {
+  await page.setContent("<!doctype html><html lang=\"en\"><head><title>axe negative control</title></head><body><main><input type=\"text\"></main></body></html>");
   const results = await analyzeAccessibility(page);
   expect(results.violations.map((v) => v.id)).toContain("label");
 });
