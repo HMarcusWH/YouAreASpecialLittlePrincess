@@ -291,3 +291,20 @@ def test_commerce_routes_need_accounts_verified_events_and_open_sales(app_db):
                     headers=alice).status_code == 501
     raw, headers = stripe.signed_event("checkout.session.completed", [ref])
     assert api.post("/v1/payments/stripe/events", content=raw, headers=headers).status_code == 200
+
+
+def test_ops_commands_run_against_the_composed_stack(app_url, tmp_path, monkeypatch, capsys):
+    from princess_api import ops
+
+    monkeypatch.setenv("PRINCESS_LOCAL_STORAGE_DIR", str(tmp_path))
+    for key, value in {"PRINCESS_ENV": "test", "PRINCESS_COMPONENT": "api", "PRINCESS_DATABASE_URL": app_url,
+                       "PRINCESS_SESSION_SECRET": "session-secret-0123456789",
+                       "PRINCESS_IDENTITY_AUDIENCE": "princess-test",
+                       "PRINCESS_STORAGE_SIGNING_KEY": "signing-key-0123456789"}.items():
+        monkeypatch.setenv(key, value)
+    for argv in (["complete-pending"], ["reconcile", "--rail", "stripe", "--since-hours", "1"], ["expire-feedback"]):
+        assert ops.main(argv) == 0
+    lines = [json.loads(line) for line in capsys.readouterr().out.splitlines()]
+    assert lines == [{"command": "complete-pending", "completed": 0},
+                     {"command": "reconcile", "outcomes": {}, "rail": "stripe"},
+                     {"command": "expire-feedback", "expired": 0}]

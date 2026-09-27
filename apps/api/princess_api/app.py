@@ -21,12 +21,14 @@ from pydantic import BaseModel, ConfigDict, Field
 from princess_app.adapters.fakes import FakeIdentityProvider
 from princess_app.application.commerce import CommerceService
 from princess_app.application.exports import NOT_RECALLABLE, ExportRow, ExportService
+from princess_app.application.feedback import FeedbackService
 from princess_app.application.identity import IdentityService, Principal
 from princess_app.application.intake import ChallengeProof, IntakeService
 from princess_app.application.permissions import PermissionService
 from princess_app.application.reports import ReportAccessResolver, ReportReader, ReportStore
 from princess_app.domain.analysis import rfc3339
 from princess_app.domain.commerce import Platform
+from princess_app.domain.feedback import FeedbackSubmission
 from princess_app.domain.intake import MAX_UPLOAD_BYTES
 from princess_app.domain.permissions import Decision, Scope
 from princess_app.ports.base import (
@@ -84,6 +86,7 @@ class Services:
     # Live source-image and Premium overlay state for saved snapshots.
     report_access: ReportAccessResolver | None = None
     exports: ExportService | None = None
+    feedback: FeedbackService | None = None
 
 
 class _Strict(BaseModel):
@@ -144,6 +147,15 @@ class ExportBody(_Strict):
     report_id: str = Field(pattern=r"^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$")
     layout: Literal["A4", "LETTER", "CARD_SQUARE", "CARD_STORY"]
     sections: list[str] = Field(default_factory=list, max_length=8)
+
+
+class FeedbackBody(_Strict):
+    category: Literal["MEASUREMENT_LOOKS_WRONG", "HARD_TO_UNDERSTAND", "HARMFUL_OR_OFFENSIVE",
+                      "PREMIUM_TEXT_ISSUE", "OTHER"]
+    target_kind: Literal["REPORT", "SECTION", "FACT", "PREMIUM"]
+    target_ref: str | None = Field(default=None, pattern=r"^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$")
+    comment: str | None = Field(default=None, max_length=500)
+    request_id: str = Field(pattern=r"^[A-Za-z0-9][A-Za-z0-9._:-]{7,127}$")
 
 
 def export_status(row: ExportRow) -> dict:
@@ -390,6 +402,26 @@ def create_app(services: Services) -> FastAPI:
         return Response(content=data, media_type=row.media_type, headers={
             "Content-Disposition": f'attachment; filename="princess-{row.report_id}-r{row.revision}.{suffix}"',
             "Cache-Control": "private, no-store", "X-Content-Type-Options": "nosniff"})
+
+    def feedback() -> FeedbackService:
+        if services.feedback is None:
+            raise Unsupported("feedback_not_configured")
+        return services.feedback
+
+    @app.post("/v1/reports/{report_id}/feedback", status_code=201)
+    def submit_feedback(report_id: str, body: FeedbackBody, who: Principal = Depends(principal)) -> dict:
+        """Report-content feedback. Stored redacted and owner-bound; never sent to telemetry or analytics."""
+        record = feedback().submit(who.principal_id, FeedbackSubmission(
+            report_id=report_id, category=body.category, target_kind=body.target_kind, target_ref=body.target_ref,
+            comment=body.comment, request_id=body.request_id))
+        return {"feedback_id": record.feedback_id, "report_id": record.report_id, "revision": record.revision,
+                "category": record.category, "comment_stored": record.comment,
+                "expires_at": rfc3339(record.expires_at), "contract_version": record.contract_version}
+
+    @app.delete("/v1/feedback/{feedback_id}", status_code=204)
+    def withdraw_feedback(feedback_id: str, who: Principal = Depends(principal)) -> Response:
+        feedback().withdraw(who.principal_id, feedback_id)
+        return Response(status_code=204)
 
     @app.get("/v1/premium-jobs/{job_id}")
     def premium_job(job_id: str, who: Principal = Depends(principal)) -> dict:

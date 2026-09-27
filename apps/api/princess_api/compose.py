@@ -21,6 +21,7 @@ from princess_app.adapters.localfs import LocalObjectStore
 from princess_app.adapters.postgres.access import PostgresReportAccess
 from princess_app.adapters.postgres.commerce import PostgresLedger
 from princess_app.adapters.postgres.exports import PostgresExportRepository
+from princess_app.adapters.postgres.feedback import PostgresFeedbackRepository
 from princess_app.adapters.postgres.intake import PostgresIntakeRepository
 from princess_app.adapters.postgres.stores import (
     Database,
@@ -31,6 +32,7 @@ from princess_app.adapters.postgres.stores import (
 )
 from princess_app.application.commerce import CommerceService
 from princess_app.application.exports import ExportService
+from princess_app.application.feedback import FeedbackService
 from princess_app.application.identity import GuestAdmission, IdentityService
 from princess_app.application.intake import IntakeService
 from princess_app.application.permissions import PermissionService
@@ -94,7 +96,8 @@ def compose(config: RuntimeConfig) -> Services:
     return Services(environment=config.environment, clock=clock, identity=identity, permissions=permissions,
                     report_store_for=reports, kill_switches=kill_switches,
                     dev_identity=provider, audience=audience, intake=intake, dev_store=store, commerce=commerce,
-                    report_access=access, exports=exports)
+                    report_access=access, exports=exports,
+                    feedback=FeedbackService(reports=reports, repo=PostgresFeedbackRepository(db), clock=clock))
 
 
 def local_store(config: RuntimeConfig, clock) -> LocalObjectStore:

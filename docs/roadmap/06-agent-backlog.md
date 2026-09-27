@@ -38,7 +38,7 @@ Use `python docs/roadmap/plan_tools.py --ready` or `--task ID`. Edit tasks.json 
 | [T21 — Same-content PDF and share-card rendering](#t21) | IMPLEMENTED_PENDING_REVIEW | T09, T10, T17 | report-frontend |
 | [T22 — Scoped sharing and comparison invitations](#t22) | PLANNED | T17, T18, T21 | backend-frontend |
 | [T23 — Multi-platform end-to-end QA and threat model](#t23) | PLANNED | T00, T00A, T06, T08, T14, T18, T20, T21, T22, T24, T30, T31 | independent-review |
-| [T24 — Deployment recovery support and notifications](#t24) | PLANNED | T02, T04, T19, T28 | platform-product |
+| [T24 — Deployment recovery support and notifications](#t24) | IN_PROGRESS | T02, T04, T19, T28 | platform-product |
 | [T25 — Public multi-platform v1 signoff](#t25) | PLANNED | T23, T24, T32, T33 | product-owner-human |
 | [T26 — Populate premium selector/question database](#t26) | DONE | — | product-content-contracts |
 | [T27 — Connector ports fakes and provider decisions](#t27) | IMPLEMENTED_PENDING_REVIEW | T01 | application-architecture |
@@ -1809,7 +1809,7 @@ No approval is created by this task brief. Mock/disabled implementation is not a
 <a id="t24"></a>
 ## T24 — Deployment recovery support and notifications
 
-**Status:** `PLANNED` · **Owner:** platform-product · **Milestone:** release
+**Status:** `IN_PROGRESS` · **Owner:** platform-product · **Milestone:** release
 
 **Hard predecessors:** [T02](#t02), [T04](#t04), [T19](#t19), [T28](#t28)
 **Platforms:** backend, workers, operations
