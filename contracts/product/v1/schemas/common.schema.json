@@ -861,6 +861,79 @@
         "support_fact_ids"
       ],
       "additionalProperties": false
+    },
+    "ReportSummary": {
+      "type": "object",
+      "properties": {
+        "report_id": {
+          "$ref": "common.schema.json#/$defs/OpaqueId"
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000000
+        },
+        "kind": {
+          "type": "string",
+          "maxLength": 16,
+          "enum": [
+            "INDIVIDUAL",
+            "PAIR",
+            "HISTORY"
+          ]
+        },
+        "created_at": {
+          "$ref": "common.schema.json#/$defs/Rfc3339Utc"
+        },
+        "locale": {
+          "$ref": "common.schema.json#/$defs/Locale"
+        },
+        "has_premium": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "report_id",
+        "revision",
+        "kind",
+        "created_at",
+        "locale",
+        "has_premium"
+      ],
+      "additionalProperties": false
+    },
+    "ReportPage": {
+      "type": "object",
+      "properties": {
+        "contract_version": {
+          "const": "1.0.0"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "common.schema.json#/$defs/ReportSummary"
+          },
+          "minItems": 0,
+          "maxItems": 50
+        },
+        "next_cursor": {
+          "anyOf": [
+            {
+              "type": "string",
+              "maxLength": 512
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "contract_version",
+        "items",
+        "next_cursor"
+      ],
+      "additionalProperties": false
     }
   }
 }

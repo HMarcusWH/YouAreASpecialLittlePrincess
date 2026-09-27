@@ -1342,6 +1342,39 @@
         "title": "ReportDocument",
         "type": "object"
       },
+      "ReportPage": {
+        "additionalProperties": false,
+        "properties": {
+          "contract_version": {
+            "const": "1.0.0"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ReportSummary"
+            },
+            "maxItems": 50,
+            "minItems": 0,
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "maxLength": 512,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "contract_version",
+          "items",
+          "next_cursor"
+        ],
+        "type": "object"
+      },
       "ReportSection": {
         "additionalProperties": false,
         "properties": {
@@ -1391,6 +1424,46 @@
           "fact_ids",
           "content_ids",
           "premium_section_id"
+        ],
+        "type": "object"
+      },
+      "ReportSummary": {
+        "additionalProperties": false,
+        "properties": {
+          "created_at": {
+            "$ref": "#/components/schemas/Rfc3339Utc"
+          },
+          "has_premium": {
+            "type": "boolean"
+          },
+          "kind": {
+            "enum": [
+              "INDIVIDUAL",
+              "PAIR",
+              "HISTORY"
+            ],
+            "maxLength": 16,
+            "type": "string"
+          },
+          "locale": {
+            "$ref": "#/components/schemas/Locale"
+          },
+          "report_id": {
+            "$ref": "#/components/schemas/OpaqueId"
+          },
+          "revision": {
+            "maximum": 1000000,
+            "minimum": 1,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "report_id",
+          "revision",
+          "kind",
+          "created_at",
+          "locale",
+          "has_premium"
         ],
         "type": "object"
       },
