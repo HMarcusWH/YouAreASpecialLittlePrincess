@@ -10,7 +10,7 @@ from port_harness import ctx
 from princess_app.adapters.fakes import FakeClock
 from princess_app.adapters.localfs import LocalObjectStore
 from princess_app.ports import storage
-from princess_app.ports.base import Conflict, Environment, InvalidInput, NotFound, Unauthenticated
+from princess_app.ports.base import Conflict, Environment, InvalidInput, NotFound, Unauthenticated, Unsupported
 
 POLICY = storage.UploadPolicy(frozenset({"image/png"}), max_bytes=1024, expires_in_s=300)
 KEY = b"local-signing-key-0123456789"
@@ -75,3 +75,11 @@ def test_delete_revokes_slots_and_versions(local):
 def test_filesystem_store_never_composes_into_production(tmp_path):
     with pytest.raises(InvalidInput):
         LocalObjectStore(tmp_path, signing_key=KEY, clock=FakeClock(), environment=Environment.PRODUCTION)
+
+
+def test_download_tickets_are_not_advertised_without_a_route(local):
+    clock, store = local
+    assert storage.DOWNLOAD_TICKETS not in store.profile.capabilities
+    stored = store.write_derivative("export_1", None, b"%PDF-", "application/pdf", ctx(clock))
+    with pytest.raises(Unsupported):
+        store.issue_download_ticket(stored, 60, ctx(clock))

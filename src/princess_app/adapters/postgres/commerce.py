@@ -77,6 +77,7 @@ class PostgresLedger:
                       at: datetime) -> None:
         try:
             with self.db.session(owner_id) as conn:
+                lock_live_owner(conn, owner_id)  # a deleted account starts no checkout
                 conn.execute(text("INSERT INTO app.purchase_intent (intent_ref, owner_id, rail, product_id, "
                                   "created_at) VALUES (:i, :o, :r, :p, :t) ON CONFLICT (intent_ref) DO NOTHING"),
                              {"i": intent_ref, "o": owner_id, "r": rail.value, "p": product_id, "t": at})
@@ -208,8 +209,9 @@ class PostgresLedger:
             available = conn.execute(text("SELECT coalesce(sum(available), 0) FROM app.credit_lot "
                                           "WHERE state = 'ACTIVE' AND origin_rail = ANY(:r)"),
                                      {"r": [r.value for r in rails]}).scalar()
-            reserved = conn.execute(text("SELECT count(*) FROM app.credit_reservation WHERE state = 'RESERVED'")
-                                    ).scalar()
+            reserved = conn.execute(text("SELECT count(*) FROM app.credit_reservation r JOIN app.credit_lot l "
+                                         "ON l.lot_id = r.lot_id WHERE r.state = 'RESERVED' "
+                                         "AND l.origin_rail = ANY(:r)"), {"r": [r.value for r in rails]}).scalar()
         return Balance(int(available), int(reserved))
 
     def reserve_and_enqueue(self, owner_id: str, *, operation_key: str, rails: Sequence[PaymentRail],
@@ -218,11 +220,18 @@ class PostgresLedger:
         with self.db.session(owner_id) as conn:
             _owner_lock(conn, owner_id)
             lock_live_owner(conn, owner_id)
-            existing = conn.execute(text("SELECT r.reservation_id, j.job_id FROM app.credit_reservation r "
-                                         "JOIN app.job j ON j.dedupe_key = r.operation_key "
+            existing = conn.execute(text("SELECT r.reservation_id, j.job_id, r.state, j.state FROM "
+                                         "app.credit_reservation r JOIN app.job j ON j.dedupe_key = r.operation_key "
                                          "WHERE r.operation_key = :k"), {"k": operation_key}).first()
             if existing is not None:
-                return PremiumRequest(existing[1], existing[0], False)
+                if not (existing[2] in ("RELEASED", "REVOKED") and existing[3] in ("FAILED", "CANCELLED")):
+                    return PremiumRequest(existing[1], existing[0], False)  # active or published: converge
+                # The earlier operation ended without a deliverable and its credit
+                # was returned: retire its keys (history stays) and start afresh.
+                conn.execute(text("UPDATE app.credit_reservation SET operation_key = operation_key || '#' || "
+                                  "reservation_id WHERE reservation_id = :r"), {"r": existing[0]})
+                conn.execute(text("UPDATE app.job SET dedupe_key = dedupe_key || '#' || job_id WHERE job_id = :j"),
+                             {"j": existing[1]})
             lot_id = conn.execute(text(
                 "SELECT lot_id FROM app.credit_lot WHERE state = 'ACTIVE' AND available > 0 "
                 "AND origin_rail = ANY(:r) ORDER BY created_at, lot_id LIMIT 1 FOR UPDATE"),

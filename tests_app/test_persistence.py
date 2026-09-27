@@ -103,7 +103,7 @@ def publish_report(app_db, owner_id, run_id="run_1"):
     return report
 
 
-HEAD = "0005_report_exports"
+HEAD = "0006_durable_erasure"
 
 
 def version(admin_engine):

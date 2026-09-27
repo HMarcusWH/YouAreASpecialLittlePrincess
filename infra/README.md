@@ -110,6 +110,9 @@ Retention (T03 `retention.json`, still a draft pending owner review) is applied 
 - When an analysis finishes, the original is erased unless an `image_retention` grant covers the capture. Withdrawing `image_retention` queues the same check. The report and its measurements are kept.
 - Erasure is verified before an outbox event is marked dispatched; an unverified erasure is retried.
 - Bytes that fail inspection at completion move the upload to `REJECTED` and queue an `upload.rejected` erasure in the same transaction, so a failed delete is retried rather than stranded.
+- Withdrawing or denying `service_processing` or `image_retention` queues `permission.withdrawn` in the same transaction as the decision. The API applies the effects at once, and the erasure worker re-applies them (idempotently) if the process died in between.
+- A deleted capture's bytes are erased and verified first; then `app.erase_capture_records` (migration `0006_durable_erasure`) removes its runs, measurements, regions, evidence, reports, exports and Premium overlays, and releases any open Premium reservation. The capture row stays as the tombstone.
+- Cancelling an analysis queues the same retention review as every other terminal path. Upload slots that expire unused, or whose completion crashed, are revoked and their bytes erased (`app.expire_upload_slots`, swept by the erasure worker).
 - Account deletion (`account.deletion_requested`) erases every remaining asset of the account and verifies it. Only then does `app.erase_deleted_account` (migration `0004_erasure_admission`) delete its uploads, captures, runs, measurements, reports and Premium overlays. Consent history, the financial ledger and the principal tombstone stay as accountability and accounting records.
 
 Guest creation is capped globally per minute (`PRINCESS_GUEST_ADMISSIONS_PER_MINUTE`, default 300; over the cap the API answers 429 with `Retry-After`). Per-network limits belong at the edge. Request bodies for payment webhooks (256 KiB) and the local upload route (20 MB) are refused with 413 before they are buffered.
@@ -152,8 +155,9 @@ Reconciliation runbook (fakes today; the same calls apply to real adapters):
 
 1. Missed or delayed webhooks: run `CommerceService.reconcile(rail, since, ctx)`. It re-reads authoritative provider state and applies it idempotently, so refunds and settled pending purchases converge.
 2. Grants whose store completion is outstanding: run `complete_pending` with the worker login. Alert on the age of the oldest `financial_transaction` with `completed_at IS NULL`.
-3. A Premium job whose final permitted attempt lost its lease (a crashed worker) is failed by the worker's `reap` step and its credit is released; it is never claimed again.
-4. Reservations stuck in `RESERVED` belong to live Premium jobs. Check the job state before releasing anything by hand, and use `release_reservation` so the ledger entry is written.
+3. A payment that arrives after account deletion grants nothing and triggers `request_refund_if_supported`; the provider event outcome is `owner_deleted_refund_requested`, or `owner_deleted_refund_pending` when the refund request failed and needs an operator.
+4. A Premium job whose final permitted attempt lost its lease (a crashed worker) is failed by the worker's `reap` step and its credit is released; it is never claimed again.
+5. Reservations stuck in `RESERVED` belong to live Premium jobs. Check the job state before releasing anything by hand, and use `release_reservation` so the ledger entry is written.
 4. Never delete ledger rows. Corrections are compensating entries.
 
 Scheduling these loops (which process, how often, alerts) belongs to T24. Real Stripe, App Store Server API and Play Developer API adapters, sandbox evidence, prices, tax and refund terms are blocked on `price_account_terms_before_charges` and `processor_retention_contracts`. Composition refuses non-fake payment providers until then.

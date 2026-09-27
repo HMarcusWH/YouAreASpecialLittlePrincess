@@ -132,6 +132,14 @@ def test_logout_everywhere_revokes_outstanding_tokens(client):
     assert api.get("/v1/me", headers=login(api, "alice")).status_code == 200
 
 
+def test_guest_logout_everywhere_ends_the_capability(client):
+    api, clock = client
+    guest = {"Authorization": f"Bearer {api.post('/v1/guest-sessions').json()['guest_token']}"}
+    assert api.get("/v1/me", headers=guest).status_code == 200
+    assert api.post("/v1/me/logout-everywhere", headers=guest).status_code == 204
+    assert api.get("/v1/me", headers=guest).status_code == 401
+
+
 def test_dev_token_route_only_exists_in_local_and_test(app_db):
     clock = FakeClock(T0)
     provider = FakeIdentityProvider(clock=clock, environment=Environment.PREVIEW)
@@ -213,7 +221,7 @@ def test_composed_local_stack_upload_to_report(app_url, worker_db, tmp_path, mon
     clock = SystemClock()
     worker_store = LocalObjectStore(tmp_path, signing_key=b"worker-read-key-0123456789", clock=clock,
                                     environment=services.environment)
-    worker = AnalysisWorker(queue=PostgresJobQueue(worker_db), store=worker_store, decode=decode_image,
+    worker = AnalysisWorker(queue=PostgresJobQueue(worker_db, allow_draft_policy=True), store=worker_store, decode=decode_image,
                             engine=GraphologyEngine(), clock=clock,
                             context=lambda: CallContext("w", services.environment, clock.now() + timedelta(seconds=60)),
                             worker_id="stack-worker", engine_version=__version__)

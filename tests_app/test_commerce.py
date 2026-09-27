@@ -183,9 +183,12 @@ def test_a_deleted_account_is_not_resurrected_by_a_late_purchase(shop, world):  
     session = shop.service.start_web_checkout(owner, PREMIUM_SINGLE, "intent_0001", shop.env.ctx())
     ref = shop.providers[STRIPE].simulate_checkout_paid(session.provider_session_ref)
     PostgresIdentityStore(shop.env.app_db).mark_deleted(owner, shop.env.clock.now())
-    assert shop.webhook(STRIPE, [ref]) == ["owner_deleted"]
+    assert shop.webhook(STRIPE, [ref]) == ["owner_deleted_refund_requested"]
+    assert shop.providers[STRIPE].retrieve_authoritative_purchase(ref, "", shop.env.ctx()).state.value == "REFUNDED"
     with shop.env.app_db.session(owner) as conn:
         assert conn.execute(text("SELECT count(*) FROM app.credit_lot")).scalar() == 0
+    with pytest.raises(NotFound):  # and a deleted account cannot start another checkout
+        shop.service.start_web_checkout(owner, PREMIUM_SINGLE, "intent_0002", shop.env.ctx())
 
 
 # --- metered Premium --------------------------------------------------------
@@ -249,13 +252,17 @@ def test_premium_spends_exactly_one_credit_when_the_overlay_publishes(shop, worl
     assert studio.worker.run_once() is None
 
 
-def test_failed_generation_releases_the_credit(shop, world):  # noqa: F811
+def test_failed_generation_releases_the_credit_and_allows_a_new_attempt(shop, world):  # noqa: F811
     studio = Studio(shop, world, responder=lambda request: model_port.GenerationState.REFUSED)
-    studio.request()
+    first = studio.request()
     done = studio.worker.run_once()
     assert (done.record.outcome.value, done.job_state) == ("REFUSED", "FAILED")
     assert studio.reservation_state() == "RELEASED" and shop.credits(studio.owner).available == 1
     assert studio.revision() == 1
+    again = studio.request()  # the returned credit can be spent on a fresh attempt
+    assert again.created and again.job_id != first.job_id and shop.credits(studio.owner).available == 0
+    assert studio.request() == type(again)(again.job_id, again.reservation_id, False)
+    assert shop.service.premium_status(studio.owner, first.job_id)[0] == "FAILED"  # history is kept
 
 
 def test_ambiguous_outcomes_retry_once_then_release(shop, world):  # noqa: F811
@@ -284,6 +291,13 @@ def test_a_refund_during_generation_blocks_publication(shop, world):  # noqa: F8
     assert shop.service.premium_status(studio.owner, requested.job_id) == ("CANCELLED", "credit_refunded")
     assert studio.revision() == 1 and studio.reservation_state() == "REVOKED"
     assert shop.credits(studio.owner).available == 0
+
+
+def test_reserved_credits_are_counted_per_platform(shop, world):  # noqa: F811
+    studio = Studio(shop, world)
+    studio.request()
+    assert shop.credits(studio.owner).reserved == 1
+    assert shop.credits(studio.owner, Platform.IOS).reserved == 0  # a web reservation is not an iOS one
 
 
 def test_premium_needs_permission_and_an_eligible_credit(shop, world):  # noqa: F811
@@ -394,3 +408,14 @@ def test_reads_disclose_an_erased_source_image(shop, world):  # noqa: F811
     assert "notice.source_image_unavailable" in {n["localization_key"] for n in view["notices"]}
     with pytest.raises(NotFound):
         reader.premium_content(report_id="report_missing", principal_id=studio.owner)
+
+
+def test_account_erasure_settles_open_reservations_before_removing_jobs(shop, world):  # noqa: F811
+    studio = Studio(shop, world)
+    studio.request()
+    PostgresIdentityStore(studio.env.app_db).mark_deleted(studio.owner, studio.env.clock.now())
+    assert "ERASED" in {o.action for o in erasure(studio.env).run_once()}
+    assert studio.reservation_state() == "RELEASED"
+    assert shop.entries(studio.owner)[-1] == "RELEASE"
+    with studio.env.app_db.session(studio.owner) as conn:
+        assert conn.execute(text("SELECT count(*) FROM app.job")).scalar() == 0

@@ -37,6 +37,13 @@ BEGIN
     RAISE EXCEPTION 'assets_not_erased' USING ERRCODE = '55000';
   END IF;
   SET CONSTRAINTS ALL DEFERRED;
+  -- Settle open reservations before their jobs go: the retained ledger must
+  -- not claim an active reservation that no job can spend or release.
+  WITH released AS (
+    UPDATE app.credit_reservation SET state = 'RELEASED', settled_at = p_at
+    WHERE owner_id = p_owner AND state = 'RESERVED' RETURNING reservation_id, lot_id)
+  INSERT INTO app.ledger_entry (owner_id, lot_id, reservation_id, kind, delta, reason, recorded_at)
+    SELECT p_owner, lot_id, reservation_id, 'RELEASE', 0, 'account_deleted', p_at FROM released;
   DELETE FROM app.premium_overlay WHERE owner_id = p_owner;
   DELETE FROM app.report WHERE owner_id = p_owner;  -- cascades to every revision
   GET DIAGNOSTICS v_reports = ROW_COUNT;

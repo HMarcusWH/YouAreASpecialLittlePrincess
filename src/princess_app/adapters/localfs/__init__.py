@@ -27,6 +27,7 @@ from ...ports.base import (
     NotFound,
     ProviderMode,
     Unauthenticated,
+    Unsupported,
     check_mode_allowed,
     require_opaque_id,
 )
@@ -51,8 +52,7 @@ class LocalObjectStore:
         self.environment = Environment.parse(environment)
         self.profile = CapabilityProfile(port=port.PORT, provider="local-filesystem", mode=ProviderMode.FAKE,
                                          capabilities=frozenset({port.PRESIGNED_PUT, port.IMMUTABLE_VERSIONS,
-                                                                 port.SERVER_SIDE_COPY, port.HARD_DELETE_VERSIONS,
-                                                                 port.DOWNLOAD_TICKETS}))
+                                                                 port.SERVER_SIDE_COPY, port.HARD_DELETE_VERSIONS}))
 
     # --- helpers --------------------------------------------------------
     def _meta_path(self, upload_id: str) -> Path:
@@ -169,10 +169,9 @@ class LocalObjectStore:
 
     def issue_download_ticket(self, stored: port.StoredObject, expires_in_s: int,
                               ctx: CallContext) -> port.DownloadTicket:
-        self._check(ctx)
-        self.read_object(stored, ctx)
-        expires = self._clock.now() + timedelta(seconds=expires_in_s)
-        return port.DownloadTicket(f"{self._base}/v1/dev/objects/{stored.asset_id}/{stored.version_ref}", expires)
+        """Not offered: nothing serves such a URL locally. Downloads go through
+        API routes that re-authorize every request (for example export files)."""
+        raise Unsupported("download_tickets_not_supported")
 
     def write_derivative(self, asset_id: str, parent: port.StoredObject | None, data: bytes, media_type: str,
                          ctx: CallContext) -> port.StoredObject:

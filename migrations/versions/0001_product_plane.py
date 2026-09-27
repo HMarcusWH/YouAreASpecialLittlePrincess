@@ -256,9 +256,10 @@ GRANT EXECUTE ON FUNCTION app.current_principal() TO princess_app;
 
 -- Guest capability lookup without exposing other principals.
 CREATE FUNCTION app.resolve_guest(p_capability_sha256 text)
-RETURNS TABLE (principal_id text, created_at timestamptz, guest_expires_at timestamptz, deleted_at timestamptz)
+RETURNS TABLE (principal_id text, created_at timestamptz, guest_expires_at timestamptz, deleted_at timestamptz,
+               revoked_before timestamptz)
 LANGUAGE sql STABLE SECURITY DEFINER SET search_path = app, pg_temp AS
-$f$ SELECT p.principal_id, p.created_at, p.guest_expires_at, p.deleted_at FROM app.principal p
+$f$ SELECT p.principal_id, p.created_at, p.guest_expires_at, p.deleted_at, p.revoked_before FROM app.principal p
     WHERE p.kind = 'GUEST' AND p.transferred_to IS NULL AND p.guest_capability_sha256 = p_capability_sha256 $f$;
 
 -- Atomic guest-to-account transfer. The caller must already act as the

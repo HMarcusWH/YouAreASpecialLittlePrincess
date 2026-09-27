@@ -112,7 +112,7 @@ class PostgresIdentityStore:
         if row is None:
             return None
         return Principal(row["principal_id"], "GUEST", row["created_at"], deleted_at=row["deleted_at"],
-                         guest_expires_at=row["guest_expires_at"])
+                         revoked_before=row["revoked_before"], guest_expires_at=row["guest_expires_at"])
 
     def transfer_guest(self, token_hash: str, account_id: str, at: datetime) -> str:
         try:

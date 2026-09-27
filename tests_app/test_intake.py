@@ -17,9 +17,9 @@ from princess_app.adapters.imaging import decode_image, inspect_header
 from princess_app.adapters.postgres.intake import PostgresIntakeRepository, PostgresJobQueue
 from princess_app.adapters.postgres.outbox import PostgresErasureOutbox
 from princess_app.adapters.postgres.stores import PostgresIdentityStore, PostgresPermissionStore, PostgresReportStore
-from princess_app.application.analysis_worker import AnalysisWorker
+from princess_app.application.analysis_worker import MAX_ATTEMPTS, AnalysisWorker
 from princess_app.application.erasure import ErasureWorker
-from princess_app.application.intake import ChallengeProof, IntakeService
+from princess_app.application.intake import ChallengeProof, IntakeService, propagate_withdrawal
 from princess_app.application.permissions import PermissionService
 from princess_app.application.reports import ReportReader
 from princess_app.domain.permissions import SUBJECT_WIDE, Decision, Scope
@@ -76,7 +76,7 @@ class Env:
         self.intake = IntakeService(repo=self.repo, store=self.store, permissions=self.permissions,
                                     challenge=self.challenge, inspect=inspect_header, clock=self.clock,
                                     ids=SequentialIds(), challenge_site="app.test")
-        self.queue = PostgresJobQueue(worker_db)
+        self.queue = PostgresJobQueue(worker_db, allow_draft_policy=True)
         self.app_db = app_db
         self.worker_db = worker_db
 
@@ -336,20 +336,51 @@ def test_interruptions_during_a_run_block_publication(env, world, interruption, 
         assert conn.execute(text("SELECT count(*) FROM app.measurement")).scalar() == 0
         attempts = conn.execute(text("SELECT outcome, error_code FROM app.job_attempt")).all()
     assert attempts == [("FENCED", reason)]
-    assert env.intake.status(owner, run_id).state == state
+    if interruption in ("delete", "tombstone"):
+        with pytest.raises(NotFound):  # the capture's runs went with it
+            env.intake.status(owner, run_id)
+    else:
+        assert env.intake.status(owner, run_id).state == state
     env.clock.advance(3600)
     assert env.queue.claim("later", 60, env.clock.now()) is None  # never reclaimed after a terminal fence
+
+
+def test_cancelling_reviews_the_original_and_deleted_runs_read_as_not_found(env, world):  # noqa: F811
+    owner = account(world, "sub-a").principal_id
+    capture, run_id = env.analysis(owner)
+    assert env.intake.cancel(owner, run_id).state == "CANCELLED"
+    assert [o.action for o in erasure(env).run_once()] == ["ERASED"]  # no image-retention grant
+    assert env.store.verify_deletion(capture.asset_id, env.ctx())
+
+    done, done_run = env.analysis(owner)
+    assert env.worker().run_once().outcome == "SUCCEEDED"
+    env.intake.delete_capture(owner, done.capture_id)
+    with pytest.raises(NotFound):
+        env.intake.status(owner, done_run)  # never SUCCEEDED without a report
+
+
+def test_publication_re_evaluates_the_permission_not_only_its_epoch(env, world):  # noqa: F811
+    owner = account(world, "sub-a").principal_id
+    _, run_id = env.analysis(owner)  # granted under a draft notice
+    # A deployment that no longer accepts draft notices changes no epoch.
+    env.queue.allow_draft_policy = False
+    outcome = env.worker().run_once()
+    assert (outcome.outcome, outcome.detail) == ("FENCED", "permission_changed")
+    with env.app_db.session(owner) as conn:
+        assert conn.execute(text("SELECT count(*) FROM app.report")).scalar() == 0
 
 
 def test_repeatedly_crashing_workers_cannot_reclaim_forever(env, world):  # noqa: F811
     owner = account(world, "sub-a").principal_id
     _, run_id = env.analysis(owner)
-    for i in range(4):
+    for i in range(MAX_ATTEMPTS):  # at most the declared number of executions, crashes included
         assert env.queue.claim(f"crash-{i}", 30, env.clock.now()) is not None
         env.clock.advance(31)
     assert env.queue.claim("next", 30, env.clock.now()) is None
     with env.app_db.session(owner) as conn:
         assert conn.execute(text("SELECT state, last_error FROM app.job")).one() == ("FAILED", "attempts_exhausted")
+        assert conn.execute(text("SELECT count(*) FROM app.outbox_event "
+                                 "WHERE topic = 'capture.retention_review'")).scalar() == 1
     status = env.intake.status(owner, run_id)  # the run is terminal too, so clients stop polling
     assert (status.state, status.error_code) == ("FAILED", "attempts_exhausted")
 
@@ -357,12 +388,12 @@ def test_repeatedly_crashing_workers_cannot_reclaim_forever(env, world):  # noqa
 def test_crashed_worker_lease_expires_and_attempts_are_bounded(env, world):  # noqa: F811
     owner = account(world, "sub-a").principal_id
     _, run_id = env.analysis(owner)
-    for i in range(3):
+    for i in range(MAX_ATTEMPTS - 1):
         job = env.queue.claim(f"crashy-{i}", 30, env.clock.now())
         assert job is not None and job.fencing_token == i + 1
         env.clock.advance(31)  # worker died without heartbeat or failure report
     job = env.queue.claim("final", 30, env.clock.now())
-    env.queue.fail(job, "analysis_error", retry=True, now=env.clock.now())
+    env.queue.fail(job, "analysis_error", retry=True, now=env.clock.now())  # the last attempt is final
     assert env.intake.status(owner, run_id).state == "FAILED"
     assert env.queue.claim("after", 30, env.clock.now()) is None
 
@@ -382,8 +413,11 @@ def test_upload_quota_depends_on_challenge(env, world):  # noqa: F811
 def erasure(env):
     permissions = PermissionService(PostgresPermissionStore(env.worker_db), env.clock, SequentialIds(),
                                     allow_draft_policy=True)
+    repo = PostgresIntakeRepository(env.worker_db, engine_version=__version__)
     return ErasureWorker(outbox=PostgresErasureOutbox(env.worker_db), store=env.store, permissions=permissions,
-                         clock=env.clock, context=env.ctx)
+                         clock=env.clock, context=env.ctx,
+                         propagate=lambda owner, purpose, scope, decision: propagate_withdrawal(
+                             repo, owner, purpose, scope, decision, env.clock.now()))
 
 
 def grant_retention(env, owner, capture_id, decision=Decision.GRANT):
@@ -395,7 +429,7 @@ def test_originals_are_erased_after_analysis_unless_retention_is_granted(env, wo
     owner = account(world, "sub-a").principal_id
     capture, run_id = env.analysis(owner)
     env.repo.request_retention_review(owner, capture.capture_id, env.clock.now())
-    assert [o.action for o in erasure(env).run_once()] == ["WAITING"]  # the run still needs the original
+    assert erasure(env).run_once() == []  # not even fetched while the run still needs the original
     assert env.worker().run_once().outcome == "SUCCEEDED"
     assert {o.action for o in erasure(env).run_once()} == {"ERASED"}
     assert env.store.verify_deletion(capture.asset_id, env.ctx())
@@ -414,7 +448,20 @@ def test_originals_are_erased_after_analysis_unless_retention_is_granted(env, wo
     grant_retention(env, kept, capture.capture_id, Decision.WITHDRAW)
     env.intake.apply_permission_change(kept, "image_retention", Scope("SPECIMEN", capture.capture_id),
                                        Decision.WITHDRAW)
+    # The durable withdrawal event re-applies the same (idempotent) effect.
+    assert sorted(o.action for o in erasure(env).run_once()) == ["ERASED", "PROPAGATED"]
+
+
+def test_waiting_reviews_cannot_starve_a_deletion(env, world):  # noqa: F811
+    owner = account(world, "sub-a").principal_id
+    busy, _ = env.analysis(owner)  # stays queued: its reviews must wait
+    for _ in range(25):
+        env.clock.advance(1)
+        env.repo.request_retention_review(owner, busy.capture_id, env.clock.now())
+    doomed = env.capture(owner)
+    env.intake.delete_capture(owner, doomed.capture_id)
     assert [o.action for o in erasure(env).run_once()] == ["ERASED"]
+    assert env.store.verify_deletion(doomed.asset_id, env.ctx())
 
 
 def test_service_withdrawal_ends_the_report_and_erases_bytes(env, world):  # noqa: F811
@@ -452,6 +499,48 @@ def test_account_deletion_erases_assets_then_records(env, world):  # noqa: F811
         assert conn.execute(text("SELECT count(*) FROM app.asset WHERE deleted_at IS NULL")).scalar() == 0
         assert conn.execute(text("SELECT count(*) FROM app.permission_event")).scalar() > 0  # consent history kept
     assert erasure(env).run_once() == []
+
+
+def test_a_withdrawal_takes_effect_even_if_the_api_died_before_propagating(env, world):  # noqa: F811
+    owner = account(world, "sub-a").principal_id
+    capture, run_id = env.analysis(owner)
+    assert env.worker().run_once().outcome == "SUCCEEDED"
+    report_id = env.intake.status(owner, run_id).report_id
+    # Only the decision commits; the process dies before apply_permission_change.
+    env.permissions.record(subject_id=owner, actor_id=owner, purpose_id="service_processing",
+                           scope=Scope("SPECIMEN", capture.capture_id), decision=Decision.WITHDRAW,
+                           notice_version=NOTICE)
+    assert PostgresReportStore(env.app_db, owner).latest(report_id) is not None
+    actions = [o.action for o in erasure(env).run_once()]
+    assert "PROPAGATED" in actions
+    assert PostgresReportStore(env.app_db, owner).latest(report_id) is None
+    assert "ERASED" in {o.action for o in erasure(env).run_once()}
+    assert env.store.verify_deletion(capture.asset_id, env.ctx())
+
+
+def test_deleting_a_capture_erases_its_derived_records_after_its_bytes(env, world):  # noqa: F811
+    owner = account(world, "sub-a").principal_id
+    capture, run_id = env.analysis(owner)
+    assert env.worker().run_once().outcome == "SUCCEEDED"
+    env.intake.delete_capture(owner, capture.capture_id)
+    with env.app_db.session(owner) as conn:  # tombstoned first, rows still present until bytes are gone
+        assert conn.execute(text("SELECT count(*) FROM app.measurement")).scalar() == 64
+    assert "ERASED" in {o.action for o in erasure(env).run_once()}
+    with env.app_db.session(owner) as conn:
+        for table in ("report", "report_revision", "analysis_run", "measurement", "region", "evidence_bundle"):
+            assert conn.execute(text(f"SELECT count(*) FROM app.{table}")).scalar() == 0, table
+        assert conn.execute(text("SELECT deleted_at IS NOT NULL FROM app.capture")).scalar()  # the tombstone
+
+
+def test_expired_and_abandoned_upload_slots_are_revoked_and_erased(env, world):  # noqa: F811
+    owner = account(world, "sub-a").principal_id
+    ticket = env.upload(owner, handwriting_png())  # uploaded, never completed
+    env.clock.advance(3600)
+    with pytest.raises(Conflict):
+        env.intake.complete_upload(owner, ticket.upload_id, sha(b"x"), env.ctx())
+    assert "ERASED" in {o.action for o in erasure(env).run_once()}
+    assert env.repo.upload(owner, ticket.upload_id).state == "REVOKED"
+    assert env.store.verify_deletion(ticket.asset_id, env.ctx())
 
 
 def test_guest_transfer_moves_completed_captures_and_ends_inflight_work(env, world):  # noqa: F811

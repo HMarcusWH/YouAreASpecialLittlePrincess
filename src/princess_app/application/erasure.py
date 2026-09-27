@@ -24,7 +24,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Callable, Mapping, Protocol
 
-from ..domain.permissions import Scope
+from ..domain.permissions import Decision, Scope
 from ..ports.base import CallContext, Clock, PortError
 from ..ports.storage import ObjectStore
 from .intake import RETENTION_PURPOSE
@@ -35,7 +35,8 @@ RETENTION_REVIEW = "capture.retention_review"
 ACCOUNT_DELETION = "account.deletion_requested"
 UPLOAD_REJECTED = "upload.rejected"  # promoted bytes failed inspection; erase them
 ASSET_ERASURE = "asset.erasure_requested"  # e.g. a revoked or never-published export
-TOPICS = (DELETION, RETENTION_REVIEW, ACCOUNT_DELETION, UPLOAD_REJECTED, ASSET_ERASURE)
+PERMISSION_WITHDRAWN = "permission.withdrawn"  # queued with the decision; re-applies its effects
+TOPICS = (DELETION, RETENTION_REVIEW, ACCOUNT_DELETION, UPLOAD_REJECTED, ASSET_ERASURE, PERMISSION_WITHDRAWN)
 
 
 @dataclass(frozen=True)
@@ -70,32 +71,51 @@ class ErasureOutbox(Protocol):
         """Delete a deleted account's rows once all its assets are erased."""
         ...
 
+    def erase_capture_records(self, owner_id: str, capture_id: str, at: datetime) -> None:
+        """Delete a deleted capture's analysis records once its bytes are erased."""
+        ...
+
+    def expire_upload_slots(self, now: datetime, limit: int) -> int:
+        """Revoke expired or abandoned upload slots and queue erasure of their bytes."""
+        ...
+
     def dispatched(self, event_id: str, at: datetime) -> None: ...
 
 
 @dataclass(frozen=True)
 class ErasureOutcome:
     event_id: str
-    action: str  # ERASED | KEPT | WAITING | UNVERIFIED | SKIPPED
+    action: str  # ERASED | KEPT | WAITING | UNVERIFIED | SKIPPED | PROPAGATED
 
 
 class ErasureWorker:
     def __init__(self, *, outbox: ErasureOutbox, store: ObjectStore, permissions: PermissionService, clock: Clock,
-                 context: Callable[[], CallContext], batch: int = 20) -> None:
+                 context: Callable[[], CallContext], batch: int = 20,
+                 propagate: Callable[[str, str, Scope, Decision], None] | None = None) -> None:
         self._outbox = outbox
         self._store = store
         self._permissions = permissions
         self._clock = clock
         self._context = context
         self._batch = batch
+        self._propagate = propagate
+        # Withdrawal events wait until a propagation is composed; they are never dropped.
+        self._topics = TOPICS if propagate else tuple(t for t in TOPICS if t != PERMISSION_WITHDRAWN)
 
     def run_once(self) -> list[ErasureOutcome]:
-        return [self._handle(event) for event in self._outbox.pending(TOPICS, self._batch)]
+        self._outbox.expire_upload_slots(self._clock.now(), self._batch)
+        return [self._handle(event) for event in self._outbox.pending(self._topics, self._batch)]
 
     def _handle(self, event: OutboxEvent) -> ErasureOutcome:
         now = self._clock.now()
         if event.topic == ACCOUNT_DELETION:
             return self._erase_account(event)
+        if event.topic == PERMISSION_WITHDRAWN and self._propagate is not None:
+            p = event.payload
+            self._propagate(event.owner_id, str(p.get("purpose_id")), Scope(str(p.get("scope_kind")),
+                            p.get("scope_ref")), Decision(str(p.get("decision"))))
+            self._outbox.dispatched(event.event_id, now)
+            return ErasureOutcome(event.event_id, "PROPAGATED")
         if event.topic in (DELETION, UPLOAD_REJECTED, ASSET_ERASURE):
             asset_id = event.payload.get("asset_id")
             if not isinstance(asset_id, str):
@@ -128,7 +148,12 @@ class ErasureWorker:
     def _erase(self, event: OutboxEvent, asset_id: str) -> ErasureOutcome:
         if not self._erase_object(event.owner_id, asset_id):
             return ErasureOutcome(event.event_id, "UNVERIFIED")
-        self._outbox.dispatched(event.event_id, self._clock.now())
+        now = self._clock.now()
+        if event.topic == DELETION:
+            # The bytes are gone; the capture's derived records go next (the
+            # capture row stays as the tombstone).
+            self._outbox.erase_capture_records(event.owner_id, event.aggregate_ref, now)
+        self._outbox.dispatched(event.event_id, now)
         return ErasureOutcome(event.event_id, "ERASED")
 
     def _erase_account(self, event: OutboxEvent) -> ErasureOutcome:
@@ -141,5 +166,5 @@ class ErasureWorker:
         return ErasureOutcome(event.event_id, "ERASED")
 
 
-__all__ = ["ACCOUNT_DELETION", "ASSET_ERASURE", "CaptureAsset", "DELETION", "ErasureOutbox", "ErasureOutcome", "ErasureWorker", "OutboxEvent",
+__all__ = ["ACCOUNT_DELETION", "ASSET_ERASURE", "CaptureAsset", "PERMISSION_WITHDRAWN", "DELETION", "ErasureOutbox", "ErasureOutcome", "ErasureWorker", "OutboxEvent",
            "RETENTION_REVIEW", "TOPICS", "UPLOAD_REJECTED"]

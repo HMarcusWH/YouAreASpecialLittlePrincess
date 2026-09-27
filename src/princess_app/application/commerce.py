@@ -231,7 +231,13 @@ class CommerceService:
         try:
             result = self._ledger.grant(owner, observation, assessment.product, self._clock.now())
         except NotFound:
-            return "owner_deleted"  # a late notification cannot resurrect a deleted account
+            # A late payment cannot resurrect a deleted account, and must not
+            # leave the customer charged without a credit: ask for a refund.
+            try:
+                self._provider(observation.rail).request_refund_if_supported(observation.transaction_ref, ctx)
+            except PortError:
+                return "owner_deleted_refund_pending"  # the provider event outcome records it for ops
+            return "owner_deleted_refund_requested"
         if result.completion_due:
             self._complete(owner, result.txn_id, observation.rail, observation.transaction_ref,
                            observation.completion_action, ctx)

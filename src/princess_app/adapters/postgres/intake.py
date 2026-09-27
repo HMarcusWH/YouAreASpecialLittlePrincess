@@ -29,8 +29,10 @@ from ...application.intake import (
     UploadRow,
 )
 from ...ports.base import Conflict, NotFound, RateLimited
+from ...domain.permissions import Scope, evaluate
 from .stores import (
     Database,
+    PostgresPermissionStore,
     epoch_for,
     insert_first_revision,
     lock_live_owner,
@@ -189,7 +191,10 @@ class PostgresIntakeRepository:
                 "SELECT r.run_id, r.status, r.error_code, j.state AS job_state, "
                 "(SELECT report_id FROM app.report WHERE run_id = r.run_id AND deleted_at IS NULL) AS report_id "
                 "FROM app.analysis_run r LEFT JOIN app.job j ON j.subject_ref = r.run_id AND j.kind = :k "
-                "WHERE r.run_id = :r"), {"r": run_id, "k": ANALYSIS_KIND}).mappings().first()
+                # A deleted capture takes its runs with it: they read as not found,
+                # never as a success without a report.
+                "WHERE r.run_id = :r AND NOT EXISTS (SELECT 1 FROM app.capture c WHERE c.capture_id = r.capture_id "
+                "AND c.deleted_at IS NOT NULL)"), {"r": run_id, "k": ANALYSIS_KIND}).mappings().first()
         if row is None:
             return None
         state = row["status"]
@@ -199,15 +204,19 @@ class PostgresIntakeRepository:
 
     def cancel_run(self, owner_id: str, run_id: str, at: datetime) -> bool:
         with self.db.session(owner_id) as conn:
-            found = conn.execute(text("SELECT 1 FROM app.analysis_run WHERE run_id = :r FOR UPDATE"),
-                                 {"r": run_id}).scalar()
+            found = conn.execute(text("SELECT capture_id FROM app.analysis_run WHERE run_id = :r FOR UPDATE"),
+                                 {"r": run_id}).first()
             if found is None:
                 return False
             conn.execute(text("UPDATE app.job SET state = 'CANCELLED', lease_owner = NULL, lease_expires_at = NULL, "
                               "updated_at = :t WHERE subject_ref = :r AND state IN ('QUEUED', 'LEASED')"),
                          {"r": run_id, "t": at})
-            conn.execute(text("UPDATE app.analysis_run SET status = 'CANCELLED', completed_at = :t "
-                              "WHERE run_id = :r AND status IN ('QUEUED', 'RUNNING')"), {"r": run_id, "t": at})
+            cancelled = conn.execute(text("UPDATE app.analysis_run SET status = 'CANCELLED', completed_at = :t "
+                                          "WHERE run_id = :r AND status IN ('QUEUED', 'RUNNING') RETURNING 1"),
+                                     {"r": run_id, "t": at}).scalar()
+            if cancelled and found[0] is not None:
+                # Cancellation is a terminal path too: the original is reviewed for erasure.
+                request_retention_review(conn, owner_id, found[0], at)
         return True
 
     def delete_capture(self, owner_id: str, capture_id: str, at: datetime) -> None:
@@ -264,10 +273,14 @@ def request_retention_review(conn: Connection, owner_id: str, capture_id: str, a
 
 
 class PostgresJobQueue:
-    """Worker-side queue; ``db`` must connect as a ``princess_worker`` member."""
+    """Worker-side queue; ``db`` must connect as a ``princess_worker`` member.
 
-    def __init__(self, db: Database) -> None:
+    ``allow_draft_policy`` mirrors the PermissionService composition: only
+    local/test deployments count grants recorded under draft notices."""
+
+    def __init__(self, db: Database, *, allow_draft_policy: bool = False) -> None:
         self.db = db
+        self.allow_draft_policy = allow_draft_policy
 
     def claim(self, worker_id: str, lease_seconds: int, now: datetime) -> ClaimedJob | None:
         with self.db.session() as conn:
@@ -276,23 +289,27 @@ class PostgresJobQueue:
                 "UPDATE app.job SET state = 'FAILED', lease_owner = NULL, lease_expires_at = NULL, "
                 "last_error = 'attempts_exhausted', updated_at = :now WHERE kind = :k "
                 "AND state = 'LEASED' AND lease_expires_at < :now AND attempts >= :max "
-                "RETURNING owner_id, subject_ref"), {"now": now, "k": ANALYSIS_KIND, "max": MAX_ATTEMPTS + 1}).all()
-            for owner_id, run_id in exhausted:
-                # Terminalize the run too, so clients stop polling a QUEUED run.
+                "RETURNING owner_id, subject_ref, payload"), {"now": now, "k": ANALYSIS_KIND, "max": MAX_ATTEMPTS}).all()
+            for owner_id, run_id, payload in exhausted:
+                # Terminalize the run too, so clients stop polling a QUEUED run,
+                # and review the original like every other terminal path.
                 set_context(conn, owner_id)
                 conn.execute(text("UPDATE app.analysis_run SET status = 'FAILED', error_code = 'attempts_exhausted', "
                                   "completed_at = :now WHERE run_id = :r AND status IN ('QUEUED', 'RUNNING')"),
                              {"now": now, "r": run_id})
+                request_retention_review(conn, owner_id, payload["capture_id"], now)
             set_context(conn, None)
+            # The same cap as the normal failure path: a job that used its last
+            # attempt is never leased again, even if that worker died.
             row = conn.execute(text(
                 "UPDATE app.job SET state = 'LEASED', lease_owner = :w, lease_expires_at = :exp, "
                 "fencing_token = fencing_token + 1, attempts = attempts + 1, updated_at = :now "
-                "WHERE job_id = (SELECT job_id FROM app.job WHERE kind = :k AND (state = 'QUEUED' OR "
-                "(state = 'LEASED' AND lease_expires_at < :now)) ORDER BY created_at "
+                "WHERE job_id = (SELECT job_id FROM app.job WHERE kind = :k AND attempts < :max AND (state = 'QUEUED' "
+                "OR (state = 'LEASED' AND lease_expires_at < :now)) ORDER BY created_at "
                 "FOR UPDATE SKIP LOCKED LIMIT 1) "
                 "RETURNING job_id, owner_id, subject_ref, fencing_token, attempts, payload"),
                 {"w": worker_id, "exp": now + timedelta(seconds=lease_seconds), "now": now,
-                 "k": ANALYSIS_KIND}).mappings().first()
+                 "k": ANALYSIS_KIND, "max": MAX_ATTEMPTS}).mappings().first()
             if row is None:
                 return None
             conn.execute(text("INSERT INTO app.job_attempt (job_id, fencing_token, worker_id, started_at) "
@@ -358,6 +375,15 @@ class PostgresJobQueue:
                 if deleted is None or deleted:
                     raise Fenced("capture_deleted")
                 if epoch_for(conn, job.owner_id, SERVICE_PURPOSE, lock=True) != job.permission_epoch:
+                    raise Fenced("permission_changed")
+                # The epoch only moves with new decisions. A deployment that
+                # retires a purpose version or a notice's approval changes the
+                # answer without one, so evaluate the permission itself too.
+                current = evaluate(PostgresPermissionStore._rows(conn, job.owner_id, SERVICE_PURPOSE),
+                                   subject_id=job.owner_id, purpose_id=SERVICE_PURPOSE,
+                                   scope=Scope("SPECIMEN", job.capture_id), at=now,
+                                   allow_draft_policy=self.allow_draft_policy)
+                if not current.allowed:
                     raise Fenced("permission_changed")
                 write_result(conn, job.owner_id, job.run_id, result=result, processed_sha256=processed_sha256,
                              at=now, evidence=evidence)

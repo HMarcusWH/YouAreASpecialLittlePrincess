@@ -20,11 +20,12 @@ sys.path.insert(0, str(ROOT / "src"))
 
 from princess_app.adapters.imaging import decode_image  # noqa: E402
 from princess_app.adapters.localfs import LocalObjectStore  # noqa: E402
-from princess_app.adapters.postgres.intake import PostgresJobQueue  # noqa: E402
+from princess_app.adapters.postgres.intake import PostgresIntakeRepository, PostgresJobQueue  # noqa: E402
 from princess_app.adapters.postgres.outbox import PostgresErasureOutbox  # noqa: E402
 from princess_app.adapters.postgres.stores import Database, PostgresPermissionStore, make_engine  # noqa: E402
 from princess_app.application.analysis_worker import AnalysisWorker  # noqa: E402
 from princess_app.application.erasure import ErasureWorker  # noqa: E402
+from princess_app.application.intake import propagate_withdrawal  # noqa: E402
 from princess_app.application.permissions import PermissionService  # noqa: E402
 from princess_app.config import load_runtime_config  # noqa: E402
 from princess_app.ports.base import CallContext, Environment, ProviderMode, SystemClock, Unsupported  # noqa: E402
@@ -62,13 +63,16 @@ def main() -> int:
     def context() -> CallContext:
         return CallContext(uuid.uuid4().hex, config.environment, clock.now() + timedelta(seconds=60))
 
+    local = config.environment in (Environment.LOCAL, Environment.TEST)
     worker = AnalysisWorker(
-        queue=PostgresJobQueue(db), store=store, decode=decode_image, engine=GraphologyEngine(), clock=clock,
+        queue=PostgresJobQueue(db, allow_draft_policy=local), store=store, decode=decode_image, engine=GraphologyEngine(), clock=clock,
         context=context, worker_id=f"analysis-{uuid.uuid4().hex[:8]}", engine_version=__version__)
-    permissions = PermissionService(PostgresPermissionStore(db), clock, UuidIds(),
-                                    allow_draft_policy=config.environment in (Environment.LOCAL, Environment.TEST))
+    permissions = PermissionService(PostgresPermissionStore(db), clock, UuidIds(), allow_draft_policy=local)
+    repo = PostgresIntakeRepository(db, engine_version=__version__)
     erasure = ErasureWorker(outbox=PostgresErasureOutbox(db), store=store, permissions=permissions, clock=clock,
-                            context=context)
+                            context=context,
+                            propagate=lambda owner, purpose, scope, decision: propagate_withdrawal(
+                                repo, owner, purpose, scope, decision, clock.now()))
     poll(worker, erasure)
     return 0
 
