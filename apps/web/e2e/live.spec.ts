@@ -1,65 +1,82 @@
-// Live Free journey through the real stack (API, PostgreSQL, analysis and
-// export workers, offline renderer, local object store). Runs only when PRINCESS_E2E_API and PRINCESS_E2E_SAMPLE are
-// set, e.g. by tools/run_web_e2e.sh; CI runs the fixture journeys.
+import { writeFileSync } from "node:fs";
+
 import { expect, test } from "@playwright/test";
 
-const api = process.env.PRINCESS_E2E_API;
-const sample = process.env.PRINCESS_E2E_SAMPLE;
+import { expectAccessible } from "./support/accessibility.ts";
 
-test.skip(!api || !sample, "live stack not configured");
+function required(name: string): string {
+  const value = process.env[name];
+  if (!value) throw new Error(name + " is required for the live web qualification");
+  return value;
+}
 
-test("upload, consent, job and report without any AI provider", async ({ page }) => {
+const api = required("PRINCESS_E2E_API");
+const sample = required("PRINCESS_E2E_SAMPLE");
+const workerGate = required("PRINCESS_E2E_WORKER_GATE");
+
+test("upload, refresh queued work, report, history and export without any AI provider", async ({ page }, testInfo) => {
+  expect((await page.goto("/fixtures/free"))!.status()).toBe(404);
+
   await page.goto("/start");
-  await page.setInputFiles("#photo", sample!);
+  await expectAccessible(page, testInfo);
+  await page.setInputFiles("#photo", sample);
   await page.getByRole("checkbox").check();
   await page.getByRole("button", { name: "Analyse my handwriting" }).click();
   await expect(page).toHaveURL(/\/analyses\/run_/, { timeout: 30_000 });
   const runUrl = page.url();
+
+  await page.reload();
+  await expect(page).toHaveURL(runUrl);
+  await expectAccessible(page, testInfo);
+  writeFileSync(workerGate, "start\n", { encoding: "utf8", flag: "wx" });
+
   await expect(page).toHaveURL(/\/reports\/report_/, { timeout: 60_000 });
   await expect(page.getByRole("heading", { level: 1, name: "Your report" })).toBeVisible();
   expect(await page.locator("tr[data-fact-id]").count()).toBeGreaterThan(10);
   await expect(page.getByText("No reference group is available yet")).toBeVisible();
   await expect(page.getByRole("heading", { level: 2, name: "Evidence behind the measurements" })).toBeVisible();
   expect(await page.locator(".pr-baseline-figure").count()).toBeGreaterThan(0);
+  await expectAccessible(page, testInfo);
 
   const reportUrl = page.url();
   await page.goto("/reports");
   await expect(page.getByRole("heading", { level: 1, name: "Your reports" })).toBeVisible();
   await expect(page.locator(".report-list-item")).toHaveCount(1);
+  await expectAccessible(page, testInfo);
   await page.goto(reportUrl);
 
-  // Export: the saved projection is rendered to a PDF by the sandboxed renderer.
   await page.getByRole("button", { name: "Export PDF" }).click();
   const download = page.getByRole("link", { name: "Download PDF" });
   await expect(download).toBeVisible({ timeout: 60_000 });
+  await expectAccessible(page, testInfo);
   const pdf = await page.request.get(new URL((await download.getAttribute("href"))!, page.url()).toString());
   expect(pdf.status()).toBe(200);
   expect(pdf.headers()["content-type"]).toBe("application/pdf");
   expect((await pdf.body()).subarray(0, 5).toString()).toBe("%PDF-");
-  await expect(page.getByRole("button", { name: "Save" })).toBeDisabled();  // no flow, says why
+  await expect(page.getByRole("button", { name: "Save" })).toBeDisabled();
 
-  // Refresh on the job URL resumes the known run: it redirects to the same report.
   await page.goto(runUrl);
   await expect(page).toHaveURL(reportUrl, { timeout: 30_000 });
 
-  // A different guest cannot open this report, and nothing of it is rendered.
   const stranger = await page.context().browser()!.newContext();
   const other = await stranger.newPage();
   const origin = new URL(reportUrl).origin;
-  expect((await other.request.post(`${origin}/api/session/guest`, { headers: { origin } })).status()).toBe(201);
+  expect((await other.request.post(origin + "/api/session/guest", { headers: { origin } })).status()).toBe(201);
   const response = await other.goto(reportUrl);
   expect(response!.status()).toBe(404);
   await expect(other.locator("tr[data-fact-id]")).toHaveCount(0);
-  expect((await other.request.get(`${origin}/api/v1/reports/${reportUrl.split("/").pop()}/evidence`)).status()).toBe(404);
-  await other.goto(`${origin}/reports`);
+  const reportId = reportUrl.split("/").pop();
+  expect((await other.request.get(origin + "/api/v1/reports/" + reportId + "/evidence")).status()).toBe(404);
+  await other.goto(origin + "/reports");
   await expect(other.locator(".report-list-item")).toHaveCount(0);
   await stranger.close();
 
-  // Without any session the report is not rendered either.
   const anonymous = await page.context().browser()!.newContext();
   const nobody = await anonymous.newPage();
   await nobody.goto(reportUrl);
   await expect(nobody.locator("main [role=alert]")).toContainText("session has ended");
   await expect(nobody.locator("tr[data-fact-id]")).toHaveCount(0);
   await anonymous.close();
+
+  expect(api).toMatch(/^http:\/\/127\.0\.0\.1:\d+$/);
 });

@@ -50,7 +50,6 @@ jobs:
         run: |
           python -m pip install --require-hashes --only-binary=:all: --no-index --no-deps --force-reinstall \
             --find-links "$RUNNER_TEMP/app-wheelhouse" -r requirements/app-py312.lock
-      # Runs after the hash-verified install because the verifier imports the locked `packaging`.
       - name: Verify the backend lock is a closed reviewed graph
         run: >-
           python tools/verify_project_dependency_policy.py
@@ -94,5 +93,67 @@ jobs:
         run: pnpm --filter @princess/web build
         env:
           NEXT_TELEMETRY_DISABLED: "1"
-      - name: Browser journeys over the shared report fixtures
+      - name: Fixture browser and accessibility journeys
         run: pnpm --filter @princess/web e2e
+
+  live-web:
+    runs-on: ubuntu-24.04
+    services:
+      postgres:
+        image: postgres@sha256:5d143123fdf80462d1778cd4f24b9f7ca13c87174bca19141fb194c5a1ebca59
+        env:
+          POSTGRES_USER: princess_admin
+          POSTGRES_PASSWORD: ci-only-admin
+          POSTGRES_DB: princess_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U princess_admin -d princess_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      PIP_DISABLE_PIP_VERSION_CHECK: '1'
+      PIP_NO_INPUT: '1'
+      PRINCESS_E2E_ADMIN_URL: postgresql://princess_admin:ci-only-admin@127.0.0.1:5432/postgres
+      PRINCESS_E2E_ALLOW_RESET: '1'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.12'
+      - name: Download reviewed backend artifacts
+        run: >-
+          python -m pip download --require-hashes --only-binary=:all: --no-deps
+          --dest "$RUNNER_TEMP/app-wheelhouse" -r requirements/app-py312.lock
+      - name: Install reviewed backend artifacts
+        run: >-
+          python -m pip install --require-hashes --only-binary=:all: --no-index --no-deps --force-reinstall
+          --find-links "$RUNNER_TEMP/app-wheelhouse" -r requirements/app-py312.lock
+      - name: Install local project without dependency resolution
+        run: python -m pip install --no-index --no-deps --no-build-isolation -e '.[dev]'
+      - name: Verify exact backend environment
+        run: >-
+          python tools/verify_ci_lock.py requirements/app-py312.lock
+          --manifest requirements/app-py312.txt
+          --allow "special-little-princess-graphology==0.1.0"
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version: '22.22.2'
+      - run: corepack enable && corepack install
+      - run: pnpm install --frozen-lockfile
+      - name: Install the pinned Playwright Chromium
+        run: pnpm --filter @princess/web exec playwright install --with-deps chromium
+      - name: Destructive runner fails closed without explicit reset opt-in
+        shell: bash
+        run: |
+          if PRINCESS_E2E_ALLOW_RESET=0 tools/run_web_e2e.sh >/tmp/e2e-refusal.log 2>&1; then
+            cat /tmp/e2e-refusal.log
+            echo "runner accepted a destructive reset without opt-in" >&2
+            exit 1
+          fi
+          grep -q "REFUSE" /tmp/e2e-refusal.log
+      - name: Real Free upload-to-export journey with accessibility checkpoints
+        run: PYTHON=python tools/run_web_e2e.sh
