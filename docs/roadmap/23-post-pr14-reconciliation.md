@@ -39,9 +39,8 @@ Runtime activation remains false. No live model call, traditional rule activatio
 
 ## T24 residuals carried forward
 
-The following PR #14 follow-ups remain explicit T24 work unless another task is named:
+The following PR #14 follow-ups remain explicit T24 work unless another task is named. The single-device logout and feedback-withdrawal restore gap was closed by the subsequent T24 tombstone repair using transactionally queued outbox events plus external replay tombstones.
 
-- tombstone single-device logout and feedback withdrawal so restore cannot resurrect them;
 - reconcile restored queued Premium attempts using provider-side request lookup where supported;
 - production object/tombstone storage placement, backup tooling, RPO/RTO and a timed restore drill;
 - live transactional mail, signed bounce/complaint handling and APNs/FCM integration;
