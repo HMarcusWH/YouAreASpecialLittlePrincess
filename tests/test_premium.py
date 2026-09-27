@@ -411,7 +411,7 @@ def test_budget_reserves_input_and_image_tokens_not_only_output():
 def test_no_image_is_not_applicable_and_never_calls_or_reserves():
     world = World(image=None)
     record = world.runner.run(world.job())
-    assert (record.outcome, record.error_code) == (Outcome.NOT_APPLICABLE, "no_applicable_questions")
+    assert (record.outcome, record.error_code) == (Outcome.NOT_APPLICABLE, "authorized_image_unavailable")
     assert world.model.requests == [] and world.budget.reserved == {} and world.budget.spent == 0
 
 
