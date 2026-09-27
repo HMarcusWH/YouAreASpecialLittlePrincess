@@ -921,6 +921,8 @@ Historical completion evidence: PR #14 commit 4a70fef implemented immutable self
 - [docs/roadmap/10-web-client-and-api-integration.md](10-web-client-and-api-integration.md)
 - [docs/roadmap/11-mobile-architecture.md](11-mobile-architecture.md)
 - [docs/roadmap/14-payments-entitlements-and-commerce.md](14-payments-entitlements-and-commerce.md)
+- [docs/design/CLAUDE_DESIGN_HANDOFF.md](../design/CLAUDE_DESIGN_HANDOFF.md)
+- [docs/design/CLAUDE_DESIGN_ACCEPTANCE.md](../design/CLAUDE_DESIGN_ACCEPTANCE.md)
 
 ### Owned implementation surfaces
 
@@ -945,11 +947,11 @@ Owner-reviewed design tokens, reusable component boundaries and fixture/property
 
 ### Implementation evidence
 
-PR #14 commit c5463a4 added contract-driven draft design tokens generated to CSS/TypeScript/Swift/Kotlin and a complete state/component handoff. The repository explicitly keeps the tokens DRAFT_PENDING_DESIGN_ACCEPTANCE.
+PR #14 commit c5463a4 added contract-driven draft design tokens generated to CSS/TypeScript/Swift/Kotlin and a complete state/component handoff. The repository explicitly keeps the tokens DRAFT_PENDING_DESIGN_ACCEPTANCE. PR #23 packages a production-aware Claude Design handoff with an exact curated code/import manifest, complete responsive/native/print/share state matrix, synthetic fixture mapping, product-truth constraints and a pending owner acceptance record. The design tokens intentionally remain design-tokens/0.1-draft / DRAFT_PENDING_DESIGN_ACCEPTANCE.
 
 ### Remaining work
 
-- Obtain explicit owner design_acceptance for the responsive/native journeys, accessibility states, Swedish/English overflow, missing/error/purchase states and report presentation.
+- Run Claude Design against docs/design/CLAUDE_DESIGN_HANDOFF.md and the curated import manifest, compare three distinct directions, iterate the selected complete interactive responsive/native/print/share prototype, and obtain explicit owner design_acceptance recorded in docs/design/CLAUDE_DESIGN_ACCEPTANCE.md before promoting T10 or the token status.
 
 ### Acceptance evidence
 
