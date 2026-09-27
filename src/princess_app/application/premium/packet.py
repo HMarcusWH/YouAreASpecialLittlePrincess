@@ -3,9 +3,10 @@
 Only questions the model is meant to answer (``model_call_role == ANSWER``)
 and whose required inputs exist for this report enter the packet; every other
 question in the pack is recorded as an explicit omission with a reason.
-FIXED questions offer their reviewed value set. DYNAMIC questions need a
-registered deterministic candidate producer; none is implemented yet, so they
-are omitted rather than offered an empty or invented candidate list.
+FIXED questions offer their reviewed value set. DYNAMIC questions use the
+application-owned deterministic producer registry where the present evidence can
+support the T26 contract. Unsupported generators are explicit omissions; values
+are never bucketed or invented merely to increase coverage.
 
 The model input carries the report's present facts, question text, candidate
 labels, soft-field limits and deterministic limitations, but no owner, report
@@ -16,13 +17,14 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Callable, Mapping, Sequence
+from typing import Any, Mapping
 
 from princess_contracts import ValidatedDocument, canonical_digest, compile_document
 from princess_contracts import generated as g
 
 from ...domain.analysis import rfc3339
 from ...ports.base import InvalidInput, Unsupported, require_opaque_id
+from .candidates import Candidate, CandidateProducer, DEFAULT_CANDIDATE_PRODUCERS, GENERATOR_DISPOSITIONS, SUPPORTED
 from .database import InterpretationDatabase
 from .prompt import PROMPT_VERSION
 
@@ -32,20 +34,6 @@ ANSWER_STATES = ("ANSWERED", "OBSERVED_ABSENT", "NOT_ASSESSABLE", "NOT_APPLICABL
                  "NO_ELIGIBLE_CANDIDATE")
 # Produced by the compiler itself when the question's producer yields candidates.
 CANDIDATE_INPUT = "CURRENT_REPORT_CANDIDATES"
-
-
-@dataclass(frozen=True)
-class Candidate:
-    candidate_id: str
-    kind: str
-    label_key: str
-    label_en: str
-    support_fact_ids: tuple[str, ...] = ()
-
-
-# A deterministic producer receives the report's present facts by fact ID and
-# returns eligible candidates (possibly none). Registered per T26 generator ID.
-CandidateProducer = Callable[[Mapping[str, Mapping[str, Any]]], Sequence[Candidate]]
 
 
 @dataclass(frozen=True)
@@ -115,13 +103,20 @@ def compile_packet(report: ValidatedDocument, db: InterpretationDatabase, *, pac
         raise InvalidInput("unknown_question_pack")
     if not allow_inactive and not (db.runtime_activation and pack["runtime_activation"]):
         raise Unsupported("interpretation_pack_inactive")
-    producers = producers or {}
+    overrides = producers or {}
     doc = report.to_dict()
     facts = {f["fact_id"]: f for f in doc["facts"] if f["availability"] in PRESENT}
     if not facts:
         raise NotApplicable("no_present_facts")
     present_features = {f["feature_id"]: f["fact_id"] for f in facts.values()}
     inputs = available_inputs(doc, image_asset_id)
+    for precondition in pack.get("preconditions", ()):
+        if precondition == "APPLICABLE_QUESTIONS_COMPILED":
+            continue
+        if precondition not in inputs:
+            if precondition == "AUTHORIZED_IMAGE":
+                raise NotApplicable("authorized_image_unavailable")
+            raise NotApplicable("pack_precondition_unavailable")
 
     omissions: list[Omission] = []
     questions: list[dict[str, Any]] = []
@@ -139,12 +134,21 @@ def compile_packet(report: ValidatedDocument, db: InterpretationDatabase, *, pac
             offered = [Candidate(f"{spec.value_set_id}.{c.value_id}", "FIXED_VALUE", c.label_key, c.label_en)
                        for c in db.value_sets[spec.value_set_id]]
         else:
-            producer = producers.get(spec.generator_id or "")
+            generator_id = spec.generator_id or ""
+            producer = overrides.get(generator_id)
             if producer is None:
-                omissions.append(Omission(question_id, "candidate_generator_not_implemented", spec.generator_id))
-                continue
+                disposition = GENERATOR_DISPOSITIONS.get(generator_id)
+                if disposition is None:
+                    omissions.append(Omission(question_id, "candidate_generator_not_implemented", generator_id))
+                    continue
+                if disposition.state != SUPPORTED or disposition.producer is None:
+                    omissions.append(Omission(question_id, "candidate_generator_unsupported", disposition.reason))
+                    continue
+                producer = DEFAULT_CANDIDATE_PRODUCERS[generator_id]
             offered = list(producer(facts))
             for candidate in offered:
+                if spec.candidate_kind is not None and candidate.kind != spec.candidate_kind:
+                    raise InvalidInput("candidate_kind_mismatch")
                 if not set(candidate.support_fact_ids) <= set(facts):
                     raise InvalidInput("candidate_support_outside_report")
         if not offered:

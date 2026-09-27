@@ -30,6 +30,23 @@ Do not send the whole database to the provider. Send the frozen applicable batte
 
 No-reference is a normal state: reference-based questions and candidates must use their defined unavailable/fallback behavior. Likewise, blocked traditional associations remain blocked even when the database itself is reviewed. Premium can deliver permitted visual/mechanical synthesis without pretending a rule pack is active.
 
+## Current T15 candidate-support boundary
+
+The application now maintains an exhaustive disposition for the 18 unique
+dynamic generator contracts used by `PREMIUM_INDIVIDUAL_GRAPHIC_V1`. Three
+are currently supportable from canonical deterministic facts without inventing
+thresholds: line-edge trend, ink-darkness variation and stroke-thickness
+profile. The remaining generators stay explicitly unavailable for reasons such
+as missing page-boundary authority, glyph/signature context, conflict detection
+or inactive traditional content. See [the T15 evaluation handoff](../../evaluation/premium/README.md#deterministic-dynamic-candidate-support).
+
+This support registry does **not** mutate T26 source JSON or set
+`runtime_activation=true`. A generator contract may exist in the reviewed
+database while its runtime producer remains unavailable. A future T26 change
+that adds a dynamic generator to the individual pack must receive an explicit
+T15 disposition and regression coverage before packet compilation can claim
+support.
+
 ## Tests and change control
 
 Existing checks include compiler freshness, all graphology validators and research-integrity tests. Keep their execution in CI. Add packet-specific tests for unknown IDs, cross-report references, absent generators, empty candidate sets, incompatible versions, excessive selections, refusal, truncation, unsupported claims and consent revocation during generation.

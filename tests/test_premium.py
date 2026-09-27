@@ -12,6 +12,9 @@ import generate_report_fixtures as fixtures
 from princess_app.adapters.fakes import FakeClock, FakePremiumModel, SequentialIds
 from princess_app.application.permissions import InMemoryPermissionStore, PermissionService
 from princess_app.application.premium import (
+    DEFAULT_CANDIDATE_PRODUCERS,
+    GENERATOR_DISPOSITIONS,
+    SUPPORTED,
     Candidate,
     InMemoryOverlayPublisher,
     InMemorySpendBudget,
@@ -99,7 +102,12 @@ def test_packet_includes_only_answerable_questions_and_explains_every_omission()
     assert sorted(included + omitted) == sorted(pack["question_ids"]) and not set(included) & set(omitted)
     reasons = {o.item_id: (o.reason, o.detail) for o in c.omissions}
     assert reasons["Q_CTX_TASK"] == ("not_model_answered", "USER_OR_REVIEWER")
-    assert reasons["Q_GLOBAL_EVIDENCE_CONFLICT"][0] == "candidate_generator_not_implemented"
+    assert reasons["Q_GLOBAL_EVIDENCE_CONFLICT"] == (
+        "candidate_generator_unsupported", "conflict_detector_unavailable")
+    assert reasons["Q_SPACE_MARGINS"] == ("missing_input", "VERIFIED_PAGE_BOUNDARIES")
+    assert reasons["Q_FORM_ORNAMENT"] == ("candidate_generator_unsupported", "glyph_feature_not_implemented")
+    assert reasons["Q_HIERARCHY_MAIN"] == (
+        "candidate_generator_unsupported", "graphic_sign_detector_unavailable")
     assert reasons["Q_FORM_LOOPS"] == ("missing_input", "IDENTIFIED_LOOP_EXAMPLES")
     assert reasons["SOFT_GRAPHIC_PORTRAIT"] == ("missing_support", "SUPPLIED_GRAPHIC_SIGNS")
     assert all(DB.questions[q].model_call_role == "ANSWER" for q in included)
@@ -121,22 +129,90 @@ def test_packet_is_deterministic_and_the_model_input_is_minimized():
 def test_without_an_authorized_image_nothing_is_asked():
     with pytest.raises(NotApplicable) as err:
         compilation(image=None)
-    assert err.value.reason == "no_applicable_questions"
+    assert err.value.reason == "authorized_image_unavailable"
+    assert "AUTHORIZED_IMAGE" in DB.packs["PREMIUM_INDIVIDUAL_GRAPHIC_V1"]["preconditions"]
+
+
+def test_default_dynamic_registry_is_exhaustive_for_the_individual_pack():
+    pack = DB.packs["PREMIUM_INDIVIDUAL_GRAPHIC_V1"]
+    expected = {}
+    for question_id in pack["question_ids"]:
+        spec = DB.questions[question_id]
+        if spec.model_call_role == "ANSWER" and spec.selection_domain == "DYNAMIC":
+            if spec.generator_id in expected:
+                assert expected[spec.generator_id] == spec.candidate_kind
+            expected[spec.generator_id] = spec.candidate_kind
+    assert set(expected) == set(GENERATOR_DISPOSITIONS)
+    for generator_id, candidate_kind in expected.items():
+        assert GENERATOR_DISPOSITIONS[generator_id].candidate_kind == candidate_kind
+    assert {generator_id for generator_id, disposition in GENERATOR_DISPOSITIONS.items()
+            if disposition.state == SUPPORTED} == {
+                "GEN_LINE_EDGE_TREND_V1", "GEN_INK_APPEARANCE_FACT_V1", "GEN_THICKNESS_FACT_V1"}
+
+
+def test_supported_fact_producers_are_deterministic_zero_safe_and_fail_closed():
+    facts = {
+        "fact.start": {"feature_id": "LINE_START_DRIFT", "value": 0.0},
+        "fact.end": {"feature_id": "LINE_END_DRIFT", "value": -0.2},
+        "fact.darkness_cv": {"feature_id": "INK_DARKNESS_CV", "value": 0.0},
+        "fact.darkness_mean": {"feature_id": "INK_DARKNESS_MEAN", "value": 0.7},
+        "fact.width_mean": {"feature_id": "STROKE_WIDTH_MEAN", "value": 0.0},
+        "fact.width_cv": {"feature_id": "STROKE_WIDTH_CV", "value": 0.1},
+    }
+    line = tuple(DEFAULT_CANDIDATE_PRODUCERS["GEN_LINE_EDGE_TREND_V1"](facts))
+    assert [(c.candidate_id, c.kind, c.support_fact_ids) for c in line] == [
+        ("GEN_LINE_EDGE_TREND_V1:LINE_START_DRIFT", "LINE_EDGE_TREND", ("fact.start",)),
+        ("GEN_LINE_EDGE_TREND_V1:LINE_END_DRIFT", "LINE_EDGE_TREND", ("fact.end",)),
+    ]
+    darkness = tuple(DEFAULT_CANDIDATE_PRODUCERS["GEN_INK_APPEARANCE_FACT_V1"](facts))
+    assert [(c.candidate_id, c.kind, c.support_fact_ids) for c in darkness] == [
+        ("GEN_INK_APPEARANCE_FACT_V1:INK_DARKNESS_VARIATION", "INK_APPEARANCE_FACT",
+         ("fact.darkness_cv", "fact.darkness_mean")),
+    ]
+    width = tuple(DEFAULT_CANDIDATE_PRODUCERS["GEN_THICKNESS_FACT_V1"](facts))
+    assert [(c.candidate_id, c.kind, c.support_fact_ids) for c in width] == [
+        ("GEN_THICKNESS_FACT_V1:STROKE_WIDTH_PROFILE", "THICKNESS_FACT",
+         ("fact.width_mean", "fact.width_cv")),
+    ]
+    assert not DEFAULT_CANDIDATE_PRODUCERS["GEN_INK_APPEARANCE_FACT_V1"]({
+        "fact.mean": {"feature_id": "INK_DARKNESS_MEAN", "value": 0.0}})
+    assert not DEFAULT_CANDIDATE_PRODUCERS["GEN_THICKNESS_FACT_V1"]({
+        "fact.cv": {"feature_id": "STROKE_WIDTH_CV", "value": 0.0}})
+    assert line == tuple(DEFAULT_CANDIDATE_PRODUCERS["GEN_LINE_EDGE_TREND_V1"](facts))
+
+
+def test_default_packet_adds_only_the_three_supported_dynamic_questions():
+    c = compilation()
+    packet = c.packet.to_dict()
+    dynamic = {q["question_id"]: q for q in packet["questions"] if q["selection_domain"] == "DYNAMIC"}
+    assert set(dynamic) == {"Q_SPACE_MARGIN_TREND", "Q_STROKE_DARKNESS", "Q_STROKE_WIDTH"}
+    assert len(packet["questions"]) == 14
+    assert dynamic["Q_SPACE_MARGIN_TREND"]["candidate_ids"] == [
+        "GEN_LINE_EDGE_TREND_V1:LINE_START_DRIFT", "GEN_LINE_EDGE_TREND_V1:LINE_END_DRIFT"]
+    assert dynamic["Q_STROKE_DARKNESS"]["candidate_ids"] == [
+        "GEN_INK_APPEARANCE_FACT_V1:INK_DARKNESS_VARIATION"]
+    assert dynamic["Q_STROKE_WIDTH"]["candidate_ids"] == [
+        "GEN_THICKNESS_FACT_V1:STROKE_WIDTH_PROFILE"]
 
 
 def test_dynamic_questions_need_a_registered_producer_and_empty_candidates_are_omitted():
     fact = REPORT.data["facts"][0]["fact_id"]
-    conflict = Candidate("conflict.slant_vs_visual", "MEASUREMENT_CONFLICT", "candidate.conflict", "Slant conflict",
-                         (fact,))
+    conflict = Candidate("conflict.slant_vs_visual", "MEASUREMENT_CONFLICT_CANDIDATE",
+                         "candidate.conflict", "Slant conflict", (fact,))
     with_candidate = compilation(producers={"GEN_MEASUREMENT_CONFLICT_CANDIDATE_V1": lambda facts: [conflict]})
     question = next(q for q in with_candidate.packet.to_dict()["questions"]
                     if q["question_id"] == "Q_GLOBAL_EVIDENCE_CONFLICT")
     assert question["candidate_ids"] == ["conflict.slant_vs_visual"]
     empty = compilation(producers={"GEN_MEASUREMENT_CONFLICT_CANDIDATE_V1": lambda facts: []})
     assert ("Q_GLOBAL_EVIDENCE_CONFLICT", "no_eligible_candidate") in {(o.item_id, o.reason) for o in empty.omissions}
-    forged = Candidate("conflict.x", "MEASUREMENT_CONFLICT", "k", "x", ("fact.NOT_IN_REPORT",))
-    with pytest.raises(InvalidInput):
+    forged = Candidate("conflict.x", "MEASUREMENT_CONFLICT_CANDIDATE", "k", "x", ("fact.NOT_IN_REPORT",))
+    with pytest.raises(InvalidInput) as outside:
         compilation(producers={"GEN_MEASUREMENT_CONFLICT_CANDIDATE_V1": lambda facts: [forged]})
+    assert outside.value.code == "candidate_support_outside_report"
+    wrong_kind = Candidate("conflict.wrong", "THICKNESS_FACT", "k", "x", (fact,))
+    with pytest.raises(InvalidInput) as mismatch:
+        compilation(producers={"GEN_MEASUREMENT_CONFLICT_CANDIDATE_V1": lambda facts: [wrong_kind]})
+    assert mismatch.value.code == "candidate_kind_mismatch"
 
 
 def test_a_drifted_interpretation_database_is_refused(tmp_path):
@@ -335,7 +411,7 @@ def test_budget_reserves_input_and_image_tokens_not_only_output():
 def test_no_image_is_not_applicable_and_never_calls_or_reserves():
     world = World(image=None)
     record = world.runner.run(world.job())
-    assert (record.outcome, record.error_code) == (Outcome.NOT_APPLICABLE, "no_applicable_questions")
+    assert (record.outcome, record.error_code) == (Outcome.NOT_APPLICABLE, "authorized_image_unavailable")
     assert world.model.requests == [] and world.budget.reserved == {} and world.budget.spent == 0
 
 

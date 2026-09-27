@@ -57,6 +57,22 @@ Do not include names, email addresses, unrelated account data, file paths, unbou
 
 The selector/question/soft-field source of truth is specified in [08](08-premium-question-selector-database.md) and scaffolded at `schema/premium_interpretation_database_v1.json`. Exact pick values are populated in T26 before T15 compiles production schemas/prompts.
 
+### Current deterministic dynamic candidates
+
+The initial T15 runtime supports only dynamic candidates that can be exposed
+directly from existing canonical facts without a new classification rubric:
+line-start/line-end trend, ink-darkness variation and stroke-thickness profile.
+These candidates carry stable IDs plus support fact IDs; the model selects or
+summarizes supplied evidence but does not create numerical buckets. Other
+dynamic generator contracts are explicit unavailable states. The exhaustive
+support matrix is maintained in [evaluation/premium/README.md](../../evaluation/premium/README.md#deterministic-dynamic-candidate-support).
+
+The individual pack's `AUTHORIZED_IMAGE` precondition is enforced before
+question compilation, so fact-only dynamic candidates cannot cause a provider
+call after image access has been revoked. Candidate kind is also checked
+against the T26 selector contract in addition to ordinary support-ID
+confinement.
+
 ## 3. Output contract: PremiumAnalysis v1
 
 Premium output is primarily **selection from predetermined values**, with a smaller set of bounded free-text fields.

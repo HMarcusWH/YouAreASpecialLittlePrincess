@@ -40,6 +40,7 @@ class QuestionSpec:
     required_inputs: tuple[str, ...]
     value_set_id: str | None
     generator_id: str | None
+    candidate_kind: str | None
     mapped_feature_ids: tuple[str, ...]
 
 
@@ -75,7 +76,7 @@ class InterpretationDatabase:
                 answer_owner=q["answer_owner"], model_call_role=q["model_call_role"],
                 selection_domain=s["selection_domain"], cardinality=s["cardinality"],
                 required_inputs=tuple(q["required_inputs"]), value_set_id=s["value_set_id"],
-                generator_id=generator,
+                generator_id=generator, candidate_kind=s.get("candidate_kind"),
                 mapped_feature_ids=tuple(mappings.get(s["selector_id"], ())))
         self.questions: Mapping[str, QuestionSpec] = MappingProxyType(questions)
         self.value_sets: Mapping[str, tuple[Choice, ...]] = MappingProxyType(value_sets)
@@ -87,6 +88,7 @@ class InterpretationDatabase:
         self.packs: Mapping[str, Mapping[str, Any]] = MappingProxyType(
             {p["pack_id"]: MappingProxyType({"question_ids": tuple(p["question_ids"]),
                                              "soft_field_ids": tuple(p["soft_field_ids"]),
+                                             "preconditions": tuple(p.get("preconditions", ())),
                                              "output_schema_version": p["output_schema_version"],
                                              "runtime_activation": bool(p["runtime_activation"])})
              for p in data["question_packs"]})
