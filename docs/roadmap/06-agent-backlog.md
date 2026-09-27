@@ -23,7 +23,7 @@ Use `python docs/roadmap/plan_tools.py --ready` or `--task ID`. Edit tasks.json 
 | [T06 — Calibration suitability core repair](#t06) | PLANNED | T05, T11 | evaluation |
 | [T07 — Bounded classical topology shape expansion](#t07) | PLANNED | T05, T06 | engine |
 | [T08 — Normalization and reviewed content](#t08) | PLANNED | T01, T05, T06 | content-engine |
-| [T09 — Report assembly and authorized projections](#t09) | PLANNED | T01, T05 | report-backend |
+| [T09 — Report assembly and authorized projections](#t09) | IMPLEMENTED_PENDING_REVIEW | T01, T05 | report-backend |
 | [T10 — Contract-driven multi-platform design handoff](#t10) | PLANNED | T01 | design |
 | [T11 — Owned pilot recruitment and annotation](#t11) | PLANNED | T03, T04 | product-data-human |
 | [T12 — Candidate corpus ETL and deduplication](#t12) | PLANNED | T04, T06, T11 | data |
@@ -798,7 +798,7 @@ No approval is created by this task brief. Mock/disabled implementation is not a
 <a id="t09"></a>
 ## T09 — Report assembly and authorized projections
 
-**Status:** `PLANNED` · **Owner:** report-backend · **Milestone:** free
+**Status:** `IMPLEMENTED_PENDING_REVIEW` · **Owner:** report-backend · **Milestone:** free
 
 **Hard predecessors:** [T01](#t01), [T05](#t05)
 **Platforms:** shared, backend

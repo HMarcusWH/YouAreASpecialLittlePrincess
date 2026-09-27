@@ -1,0 +1,3079 @@
+{
+  "height": 316,
+  "measurements": {
+    "BASELINE_ABS_SLOPE": {
+      "confidence": null,
+      "confidence_kind": "UNCALIBRATED",
+      "evidence_status": "COMPUTATIONAL_PROXY",
+      "feature_id": "BASELINE_ABS_SLOPE",
+      "method_metadata": {
+        "bottom_quantile": 82,
+        "curvature_formula": "abs(quadratic coefficient)/4/xheight; x scaled to [-0.5,0.5]",
+        "ddof": 0,
+        "positive_angle": "baseline rises to the right",
+        "stability_formula": "1/(1+waviness); engineering index, not confidence"
+      },
+      "method_version": "bottom_quantile_angle_v1",
+      "missing_reason": null,
+      "n_observations": 3,
+      "normalized_value": null,
+      "notes": [],
+      "quality_flag": "EXPERIMENTAL",
+      "raw_value": 0.41668234220405803,
+      "source_regions": [
+        "line_0",
+        "line_1",
+        "line_2"
+      ],
+      "std_dev": null,
+      "unit": "degrees"
+    },
+    "BASELINE_ANGLE_MEAN": {
+      "confidence": null,
+      "confidence_kind": "UNCALIBRATED",
+      "evidence_status": "COMPUTATIONAL_PROXY",
+      "feature_id": "BASELINE_ANGLE_MEAN",
+      "method_metadata": {
+        "bottom_quantile": 82,
+        "curvature_formula": "abs(quadratic coefficient)/4/xheight; x scaled to [-0.5,0.5]",
+        "ddof": 0,
+        "positive_angle": "baseline rises to the right",
+        "stability_formula": "1/(1+waviness); engineering index, not confidence"
+      },
+      "method_version": "bottom_quantile_angle_v1",
+      "missing_reason": null,
+      "n_observations": 3,
+      "normalized_value": null,
+      "notes": [],
+      "quality_flag": "EXPERIMENTAL",
+      "raw_value": -0.41668234220405803,
+      "source_regions": [
+        "line_0",
+        "line_1",
+        "line_2"
+      ],
+      "std_dev": 0.23757000882255241,
+      "unit": "degrees"
+    },
+    "BASELINE_ANGLE_MEDIAN": {
+      "confidence": null,
+      "confidence_kind": "UNCALIBRATED",
+      "evidence_status": "COMPUTATIONAL_PROXY",
+      "feature_id": "BASELINE_ANGLE_MEDIAN",
+      "method_metadata": {
+        "bottom_quantile": 82,
+        "curvature_formula": "abs(quadratic coefficient)/4/xheight; x scaled to [-0.5,0.5]",
+        "ddof": 0,
+        "positive_angle": "baseline rises to the right",
+        "stability_formula": "1/(1+waviness); engineering index, not confidence"
+      },
+      "method_version": "bottom_quantile_angle_v1",
+      "missing_reason": null,
+      "n_observations": 3,
+      "normalized_value": null,
+      "notes": [],
+      "quality_flag": "EXPERIMENTAL",
+      "raw_value": -0.30099849734013334,
+      "source_regions": [
+        "line_0",
+        "line_1",
+        "line_2"
+      ],
+      "std_dev": null,
+      "unit": "degrees"
+    },
+    "BASELINE_ANGLE_STD": {
+      "confidence": null,
+      "confidence_kind": "UNCALIBRATED",
+      "evidence_status": "COMPUTATIONAL_PROXY",
+      "feature_id": "BASELINE_ANGLE_STD",
+      "method_metadata": {
+        "bottom_quantile": 82,
+        "curvature_formula": "abs(quadratic coefficient)/4/xheight; x scaled to [-0.5,0.5]",
+        "ddof": 0,
+        "positive_angle": "baseline rises to the right",
+        "stability_formula": "1/(1+waviness); engineering index, not confidence"
+      },
+      "method_version": "bottom_quantile_angle_v1",
+      "missing_reason": null,
+      "n_observations": 3,
+      "normalized_value": null,
+      "notes": [],
+      "quality_flag": "EXPERIMENTAL",
+      "raw_value": 0.23757000882255241,
+      "source_regions": [
+        "line_0",
+        "line_1",
+        "line_2"
+      ],
+      "std_dev": null,
+      "unit": "degrees"
+    },
+    "BASELINE_CURVATURE": {
+      "confidence": null,
+      "confidence_kind": "UNCALIBRATED",
+      "evidence_status": "COMPUTATIONAL_PROXY",
+      "feature_id": "BASELINE_CURVATURE",
+      "method_metadata": {
+        "bottom_quantile": 82,
+        "curvature_formula": "abs(quadratic coefficient)/4/xheight; x scaled to [-0.5,0.5]",
+        "ddof": 0,
+        "positive_angle": "baseline rises to the right",
+        "stability_formula": "1/(1+waviness); engineering index, not confidence"
+      },
+      "method_version": "baseline_quadratic_sag_xheight_v1",
+      "missing_reason": null,
+      "n_observations": 3,
+      "normalized_value": null,
+      "notes": [],
+      "quality_flag": "EXPERIMENTAL",
+      "raw_value": 0.16540083580869946,
+      "source_regions": [
+        "line_0",
+        "line_1",
+        "line_2"
+      ],
+      "std_dev": null,
+      "unit": "normalized"
+    },
+    "BASELINE_STABILITY": {
+      "confidence": null,
+      "confidence_kind": "UNCALIBRATED",
+      "evidence_status": "COMPUTATIONAL_PROXY",
+      "feature_id": "BASELINE_STABILITY",
+      "method_metadata": {
+        "bottom_quantile": 82,
+        "curvature_formula": "abs(quadratic coefficient)/4/xheight; x scaled to [-0.5,0.5]",
+        "ddof": 0,
+        "positive_angle": "baseline rises to the right",
+        "stability_formula": "1/(1+waviness); engineering index, not confidence"
+      },
+      "method_version": "baseline_inverse_waviness_index_v1",
+      "missing_reason": null,
+      "n_observations": 3,
+      "normalized_value": null,
+      "notes": [],
+      "quality_flag": "EXPERIMENTAL",
+      "raw_value": 0.7778330977796106,
+      "source_regions": [
+        "line_0",
+        "line_1",
+        "line_2"
+      ],
+      "std_dev": null,
+      "unit": "score_0_1"
+    },
+    "BASELINE_WAVINESS": {
+      "confidence": null,
+      "confidence_kind": "UNCALIBRATED",
+      "evidence_status": "COMPUTATIONAL_PROXY",
+      "feature_id": "BASELINE_WAVINESS",
+      "method_metadata": {
+        "bottom_quantile": 82,
+        "curvature_formula": "abs(quadratic coefficient)/4/xheight; x scaled to [-0.5,0.5]",
+        "ddof": 0,
+        "positive_angle": "baseline rises to the right",
+        "stability_formula": "1/(1+waviness); engineering index, not confidence"
+      },
+      "method_version": "baseline_residual_xheight_v1",
+      "missing_reason": null,
+      "n_observations": 3,
+      "normalized_value": null,
+      "notes": [],
+      "quality_flag": "EXPERIMENTAL",
+      "raw_value": 0.28562284486811274,
+      "source_regions": [
+        "line_0",
+        "line_1",
+        "line_2"
+      ],
+      "std_dev": null,
+      "unit": "normalized"
+    },
+    "GLYPH_ASPECT_RATIO_CV": {
+      "confidence": null,
+      "confidence_kind": "UNCALIBRATED",
+      "evidence_status": "COMPUTATIONAL_PROXY",
+      "feature_id": "GLYPH_ASPECT_RATIO_CV",
+      "method_metadata": {
+        "ddof": 0,
+        "observation_unit": "filtered connected component, not recognized glyph"
+      },
+      "method_version": "component_box_size_v1",
+      "missing_reason": null,
+      "n_observations": 56,
+      "normalized_value": null,
+      "notes": [],
+      "quality_flag": "EXPERIMENTAL",
+      "raw_value": 0.31157217121132835,
+      "source_regions": [
+        "component_0",
+        "component_1",
+        "component_2",
+        "component_4",
+        "component_5",
+        "component_7",
+        "component_8",
+        "component_9",
+        "component_10",
+        "component_11",
+        "component_12",
+        "component_13",
+        "component_14",
+        "component_15",
+        "component_16",
+        "component_17",
+        "component_18",
+        "component_19",
+        "component_20",
+        "component_21",
+        "component_22",
+        "component_23",
+        "component_24",
+        "component_25",
+        "component_26",
+        "component_27",
+        "component_28",
+        "component_29",
+        "component_30",
+        "component_31",
+        "component_32",
+        "component_33",
+        "component_34",
+        "component_35",
+        "component_36",
+        "component_37",
+        "component_40",
+        "component_42",
+        "component_43",
+        "component_44",
+        "component_45",
+        "component_46",
+        "component_47",
+        "component_48",
+        "component_49",
+        "component_50",
+        "component_51",
+        "component_52",
+        "component_53",
+        "component_54",
+        "component_55",
+        "component_56",
+        "component_57",
+        "component_58",
+        "component_59",
+        "component_60"
+      ],
+      "std_dev": null,
+      "unit": "cv"
+    },
+    "GLYPH_ASPECT_RATIO_MEAN": {
+      "confidence": null,
+      "confidence_kind": "UNCALIBRATED",
+      "evidence_status": "COMPUTATIONAL_PROXY",
+      "feature_id": "GLYPH_ASPECT_RATIO_MEAN",
+      "method_metadata": {
+        "ddof": 0,
+        "observation_unit": "filtered connected component, not recognized glyph"
+      },
+      "method_version": "component_box_size_v1",
+      "missing_reason": null,
+      "n_observations": 56,
+      "normalized_value": null,
+      "notes": [],
+      "quality_flag": "EXPERIMENTAL",
+      "raw_value": 0.881054302155645,
+      "source_regions": [
+        "component_0",
+        "component_1",
+        "component_2",
+        "component_4",
+        "component_5",
+        "component_7",
+        "component_8",
+        "component_9",
+        "component_10",
+        "component_11",
+        "component_12",
+        "component_13",
+        "component_14",
+        "component_15",
+        "component_16",
+        "component_17",
+        "component_18",
+        "component_19",
+        "component_20",
+        "component_21",
+        "component_22",
+        "component_23",
+        "component_24",
+        "component_25",
+        "component_26",
+        "component_27",
+        "component_28",
+        "component_29",
+        "component_30",
+        "component_31",
+        "component_32",
+        "component_33",
+        "component_34",
+        "component_35",
+        "component_36",
+        "component_37",
+        "component_40",
+        "component_42",
+        "component_43",
+        "component_44",
+        "component_45",
+        "component_46",
+        "component_47",
+        "component_48",
+        "component_49",
+        "component_50",
+        "component_51",
+        "component_52",
+        "component_53",
+        "component_54",
+        "component_55",
+        "component_56",
+        "component_57",
+        "component_58",
+        "component_59",
+        "component_60"
+      ],
+      "std_dev": 0.274512001877716,
+      "unit": "ratio"
+    },
+    "GLYPH_HEIGHT_CV": {
+      "confidence": null,
+      "confidence_kind": "UNCALIBRATED",
+      "evidence_status": "COMPUTATIONAL_PROXY",
+      "feature_id": "GLYPH_HEIGHT_CV",
+      "method_metadata": {
+        "ddof": 0,
+        "observation_unit": "filtered connected component, not recognized glyph"
+      },
+      "method_version": "component_box_size_v1",
+      "missing_reason": null,
+      "n_observations": 56,
+      "normalized_value": null,
+      "notes": [],
+      "quality_flag": "EXPERIMENTAL",
+      "raw_value": 0.15117040917710878,
+      "source_regions": [
+        "component_0",
+        "component_1",
+        "component_2",
+        "component_4",
+        "component_5",
+        "component_7",
+        "component_8",
+        "component_9",
+        "component_10",
+        "component_11",
+        "component_12",
+        "component_13",
+        "component_14",
+        "component_15",
+        "component_16",
+        "component_17",
+        "component_18",
+        "component_19",
+        "component_20",
+        "component_21",
+        "component_22",
+        "component_23",
+        "component_24",
+        "component_25",
+        "component_26",
+        "component_27",
+        "component_28",
+        "component_29",
+        "component_30",
+        "component_31",
+        "component_32",
+        "component_33",
+        "component_34",
+        "component_35",
+        "component_36",
+        "component_37",
+        "component_40",
+        "component_42",
+        "component_43",
+        "component_44",
+        "component_45",
+        "component_46",
+        "component_47",
+        "component_48",
+        "component_49",
+        "component_50",
+        "component_51",
+        "component_52",
+        "component_53",
+        "component_54",
+        "component_55",
+        "component_56",
+        "component_57",
+        "component_58",
+        "component_59",
+        "component_60"
+      ],
+      "std_dev": null,
+      "unit": "cv"
+    },
+    "GLYPH_HEIGHT_MEAN": {
+      "confidence": null,
+      "confidence_kind": "UNCALIBRATED",
+      "evidence_status": "COMPUTATIONAL_PROXY",
+      "feature_id": "GLYPH_HEIGHT_MEAN",
+      "method_metadata": {
+        "ddof": 0,
+        "observation_unit": "filtered connected component, not recognized glyph"
+      },
+      "method_version": "component_box_size_v1",
+      "missing_reason": null,
+      "n_observations": 56,
+      "normalized_value": null,
+      "notes": [],
+      "quality_flag": "EXPERIMENTAL",
+      "raw_value": 19.982142857142858,
+      "source_regions": [
+        "component_0",
+        "component_1",
+        "component_2",
+        "component_4",
+        "component_5",
+        "component_7",
+        "component_8",
+        "component_9",
+        "component_10",
+        "component_11",
+        "component_12",
+        "component_13",
+        "component_14",
+        "component_15",
+        "component_16",
+        "component_17",
+        "component_18",
+        "component_19",
+        "component_20",
+        "component_21",
+        "component_22",
+        "component_23",
+        "component_24",
+        "component_25",
+        "component_26",
+        "component_27",
+        "component_28",
+        "component_29",
+        "component_30",
+        "component_31",
+        "component_32",
+        "component_33",
+        "component_34",
+        "component_35",
+        "component_36",
+        "component_37",
+        "component_40",
+        "component_42",
+        "component_43",
+        "component_44",
+        "component_45",
+        "component_46",
+        "component_47",
+        "component_48",
+        "component_49",
+        "component_50",
+        "component_51",
+        "component_52",
+        "component_53",
+        "component_54",
+        "component_55",
+        "component_56",
+        "component_57",
+        "component_58",
+        "component_59",
+        "component_60"
+      ],
+      "std_dev": 3.020708711949727,
+      "unit": "px"
+    },
+    "GLYPH_WIDTH_CV": {
+      "confidence": null,
+      "confidence_kind": "UNCALIBRATED",
+      "evidence_status": "COMPUTATIONAL_PROXY",
+      "feature_id": "GLYPH_WIDTH_CV",
+      "method_metadata": {
+        "ddof": 0,
+        "observation_unit": "filtered connected component, not recognized glyph"
+      },
+      "method_version": "component_box_size_v1",
+      "missing_reason": null,
+      "n_observations": 56,
+      "normalized_value": null,
+      "notes": [],
+      "quality_flag": "EXPERIMENTAL",
+      "raw_value": 0.2789528749360222,
+      "source_regions": [
+        "component_0",
+        "component_1",
+        "component_2",
+        "component_4",
+        "component_5",
+        "component_7",
+        "component_8",
+        "component_9",
+        "component_10",
+        "component_11",
+        "component_12",
+        "component_13",
+        "component_14",
+        "component_15",
+        "component_16",
+        "component_17",
+        "component_18",
+        "component_19",
+        "component_20",
+        "component_21",
+        "component_22",
+        "component_23",
+        "component_24",
+        "component_25",
+        "component_26",
+        "component_27",
+        "component_28",
+        "component_29",
+        "component_30",
+        "component_31",
+        "component_32",
+        "component_33",
+        "component_34",
+        "component_35",
+        "component_36",
+        "component_37",
+        "component_40",
+        "component_42",
+        "component_43",
+        "component_44",
+        "component_45",
+        "component_46",
+        "component_47",
+        "component_48",
+        "component_49",
+        "component_50",
+        "component_51",
+        "component_52",
+        "component_53",
+        "component_54",
+        "component_55",
+        "component_56",
+        "component_57",
+        "component_58",
+        "component_59",
+        "component_60"
+      ],
+      "std_dev": null,
+      "unit": "cv"
+    },
+    "GLYPH_WIDTH_MEAN": {
+      "confidence": null,
+      "confidence_kind": "UNCALIBRATED",
+      "evidence_status": "COMPUTATIONAL_PROXY",
+      "feature_id": "GLYPH_WIDTH_MEAN",
+      "method_metadata": {
+        "ddof": 0,
+        "observation_unit": "filtered connected component, not recognized glyph"
+      },
+      "method_version": "component_box_size_v1",
+      "missing_reason": null,
+      "n_observations": 56,
+      "normalized_value": null,
+      "notes": [],
+      "quality_flag": "EXPERIMENTAL",
+      "raw_value": 17.232142857142858,
+      "source_regions": [
+        "component_0",
+        "component_1",
+        "component_2",
+        "component_4",
+        "component_5",
+        "component_7",
+        "component_8",
+        "component_9",
+        "component_10",
+        "component_11",
+        "component_12",
+        "component_13",
+        "component_14",
+        "component_15",
+        "component_16",
+        "component_17",
+        "component_18",
+        "component_19",
+        "component_20",
+        "component_21",
+        "component_22",
+        "component_23",
+        "component_24",
+        "component_25",
+        "component_26",
+        "component_27",
+        "component_28",
+        "component_29",
+        "component_30",
+        "component_31",
+        "component_32",
+        "component_33",
+        "component_34",
+        "component_35",
+        "component_36",
+        "component_37",
+        "component_40",
+        "component_42",
+        "component_43",
+        "component_44",
+        "component_45",
+        "component_46",
+        "component_47",
+        "component_48",
+        "component_49",
+        "component_50",
+        "component_51",
+        "component_52",
+        "component_53",
+        "component_54",
+        "component_55",
+        "component_56",
+        "component_57",
+        "component_58",
+        "component_59",
+        "component_60"
+      ],
+      "std_dev": 4.806955791308241,
+      "unit": "px"
+    },
+    "IMG_ASPECT_RATIO": {
+      "confidence": 1.0,
+      "confidence_kind": "EXACT_CONDITIONAL",
+      "evidence_status": "MEASURED_VISUAL_FEATURE",
+      "feature_id": "IMG_ASPECT_RATIO",
+      "method_metadata": {
+        "coordinate_frame": "original_image"
+      },
+      "method_version": "input_dimensions_v1",
+      "missing_reason": null,
+      "n_observations": 1,
+      "normalized_value": null,
+      "notes": [],
+      "quality_flag": "OK",
+      "raw_value": 2.5,
+      "source_regions": [
+        "page_0"
+      ],
+      "std_dev": null,
+      "unit": "ratio"
+    },
+    "IMG_HEIGHT_PX": {
+      "confidence": 1.0,
+      "confidence_kind": "EXACT_CONDITIONAL",
+      "evidence_status": "MEASURED_VISUAL_FEATURE",
+      "feature_id": "IMG_HEIGHT_PX",
+      "method_metadata": {
+        "coordinate_frame": "original_image"
+      },
+      "method_version": "input_dimensions_v1",
+      "missing_reason": null,
+      "n_observations": 1,
+      "normalized_value": null,
+      "notes": [],
+      "quality_flag": "OK",
+      "raw_value": 360,
+      "source_regions": [
+        "page_0"
+      ],
+      "std_dev": null,
+      "unit": "px"
+    },
+    "IMG_MEGAPIXELS": {
+      "confidence": 1.0,
+      "confidence_kind": "EXACT_CONDITIONAL",
+      "evidence_status": "MEASURED_VISUAL_FEATURE",
+      "feature_id": "IMG_MEGAPIXELS",
+      "method_metadata": {
+        "coordinate_frame": "original_image"
+      },
+      "method_version": "input_dimensions_v1",
+      "missing_reason": null,
+      "n_observations": 1,
+      "normalized_value": null,
+      "notes": [],
+      "quality_flag": "OK",
+      "raw_value": 0.324,
+      "source_regions": [
+        "page_0"
+      ],
+      "std_dev": null,
+      "unit": "MP"
+    },
+    "IMG_ROTATION_DEG": {
+      "confidence": null,
+      "confidence_kind": "UNCALIBRATED",
+      "evidence_status": "COMPUTATIONAL_PROXY",
+      "feature_id": "IMG_ROTATION_DEG",
+      "method_metadata": {
+        "correction_deg": -3.0000000000000426,
+        "limitation": "text tilt is not independently identified paper rotation",
+        "positive": "counterclockwise input text rotation"
+      },
+      "method_version": "text_skew_ccw_v1",
+      "missing_reason": null,
+      "n_observations": 1,
+      "normalized_value": null,
+      "notes": [],
+      "quality_flag": "EXPERIMENTAL",
+      "raw_value": 3.0000000000000426,
+      "source_regions": [
+        "page_0"
+      ],
+      "std_dev": null,
+      "unit": "degrees"
+    },
+    "IMG_WIDTH_PX": {
+      "confidence": 1.0,
+      "confidence_kind": "EXACT_CONDITIONAL",
+      "evidence_status": "MEASURED_VISUAL_FEATURE",
+      "feature_id": "IMG_WIDTH_PX",
+      "method_metadata": {
+        "coordinate_frame": "original_image"
+      },
+      "method_version": "input_dimensions_v1",
+      "missing_reason": null,
+      "n_observations": 1,
+      "normalized_value": null,
+      "notes": [],
+      "quality_flag": "OK",
+      "raw_value": 900,
+      "source_regions": [
+        "page_0"
+      ],
+      "std_dev": null,
+      "unit": "px"
+    },
+    "INK_DARKNESS_CV": {
+      "confidence": null,
+      "confidence_kind": "UNCALIBRATED",
+      "evidence_status": "COMPUTATIONAL_PROXY",
+      "feature_id": "INK_DARKNESS_CV",
+      "method_metadata": {
+        "darkness_formula": "1-gray/255",
+        "ddof": 0,
+        "limitation": "image proxy, not physical pressure; widths have pixel-grid bias",
+        "observation_unit": "foreground pixels",
+        "saturation_grayscale_max": 5,
+        "uniformity_formula": "1/(1+width_cv)"
+      },
+      "method_version": "grayscale_darkness_v1",
+      "missing_reason": null,
+      "n_observations": 9994,
+      "normalized_value": null,
+      "notes": [],
+      "quality_flag": "EXPERIMENTAL",
+      "raw_value": 0.1962262092572844,
+      "source_regions": [
+        "page_0"
+      ],
+      "std_dev": null,
+      "unit": "cv"
+    },
+    "INK_DARKNESS_MEAN": {
+      "confidence": null,
+      "confidence_kind": "UNCALIBRATED",
+      "evidence_status": "COMPUTATIONAL_PROXY",
+      "feature_id": "INK_DARKNESS_MEAN",
+      "method_metadata": {
+        "darkness_formula": "1-gray/255",
+        "ddof": 0,
+        "limitation": "image proxy, not physical pressure; widths have pixel-grid bias",
+        "observation_unit": "foreground pixels",
+        "saturation_grayscale_max": 5,
+        "uniformity_formula": "1/(1+width_cv)"
+      },
+      "method_version": "grayscale_darkness_v1",
+      "missing_reason": null,
+      "n_observations": 9994,
+      "normalized_value": null,
+      "notes": [],
+      "quality_flag": "EXPERIMENTAL",
+      "raw_value": 0.7882968997084526,
+      "source_regions": [
+        "page_0"
+      ],
+      "std_dev": 0.15468451239905937,
+      "unit": "normalized"
+    },
+    "INK_DARKNESS_STD": {
+      "confidence": null,
+      "confidence_kind": "UNCALIBRATED",
+      "evidence_status": "COMPUTATIONAL_PROXY",
+      "feature_id": "INK_DARKNESS_STD",
+      "method_metadata": {
+        "darkness_formula": "1-gray/255",
+        "ddof": 0,
+        "limitation": "image proxy, not physical pressure; widths have pixel-grid bias",
+        "observation_unit": "foreground pixels",
+        "saturation_grayscale_max": 5,
+        "uniformity_formula": "1/(1+width_cv)"
+      },
+      "method_version": "grayscale_darkness_v1",
+      "missing_reason": null,
+      "n_observations": 9994,
+      "normalized_value": null,
+      "notes": [],
+      "quality_flag": "EXPERIMENTAL",
+      "raw_value": 0.15468451239905937,
+      "source_regions": [
+        "page_0"
+      ],
+      "std_dev": null,
+      "unit": "normalized"
+    },
+    "INK_SATURATION_FRACTION": {
+      "confidence": null,
+      "confidence_kind": "UNCALIBRATED",
+      "evidence_status": "COMPUTATIONAL_PROXY",
+      "feature_id": "INK_SATURATION_FRACTION",
+      "method_metadata": {
+        "darkness_formula": "1-gray/255",
+        "ddof": 0,
+        "limitation": "image proxy, not physical pressure; widths have pixel-grid bias",
+        "observation_unit": "foreground pixels",
+        "saturation_grayscale_max": 5,
+        "uniformity_formula": "1/(1+width_cv)"
+      },
+      "method_version": "grayscale_darkness_v1",
+      "missing_reason": null,
+      "n_observations": 9994,
+      "normalized_value": null,
+      "notes": [],
+      "quality_flag": "EXPERIMENTAL",
+      "raw_value": 0.0015009005403241946,
+      "source_regions": [
+        "page_0"
+      ],
+      "std_dev": null,
+      "unit": "ratio"
+    },
+    "LINE_END_DRIFT": {
+      "confidence": null,
+      "confidence_kind": "UNCALIBRATED",
+      "evidence_status": "COMPUTATIONAL_PROXY",
+      "feature_id": "LINE_END_DRIFT",
+      "method_metadata": {
+        "formula": "slope(x_edge/canvas_width ~ y_center/canvas_height)"
+      },
+      "method_version": "normalized_edge_vs_vertical_position_v1",
+      "missing_reason": null,
+      "n_observations": 3,
+      "normalized_value": null,
+      "notes": [],
+      "quality_flag": "EXPERIMENTAL",
+      "raw_value": -0.20254068851278242,
+      "source_regions": [
+        "line_0",
+        "line_1",
+        "line_2"
+      ],
+      "std_dev": null,
+      "unit": "normalized_slope"
+    },
+    "LINE_LENGTH_MEAN_REL": {
+      "confidence": null,
+      "confidence_kind": "UNCALIBRATED",
+      "evidence_status": "COMPUTATIONAL_PROXY",
+      "feature_id": "LINE_LENGTH_MEAN_REL",
+      "method_metadata": {
+        "normalizer": "analysis_canvas_width; NOT x-height"
+      },
+      "method_version": "line_width_page_ratio_v1",
+      "missing_reason": null,
+      "n_observations": 3,
+      "normalized_value": null,
+      "notes": [],
+      "quality_flag": "EXPERIMENTAL",
+      "raw_value": 0.5053763440860215,
+      "source_regions": [
+        "line_0",
+        "line_1",
+        "line_2"
+      ],
+      "std_dev": 0.060998621525199005,
+      "unit": "ratio"
+    },
+    "LINE_LENGTH_VARIABILITY": {
+      "confidence": null,
+      "confidence_kind": "UNCALIBRATED",
+      "evidence_status": "COMPUTATIONAL_PROXY",
+      "feature_id": "LINE_LENGTH_VARIABILITY",
+      "method_metadata": {
+        "ddof": 0
+      },
+      "method_version": "line_edge_population_cv_v1",
+      "missing_reason": null,
+      "n_observations": 3,
+      "normalized_value": null,
+      "notes": [],
+      "quality_flag": "EXPERIMENTAL",
+      "raw_value": 0.12069940003922362,
+      "source_regions": [
+        "line_0",
+        "line_1",
+        "line_2"
+      ],
+      "std_dev": null,
+      "unit": "cv"
+    },
+    "LINE_SPACING_CV": {
+      "confidence": null,
+      "confidence_kind": "UNCALIBRATED",
+      "evidence_status": "COMPUTATIONAL_PROXY",
+      "feature_id": "LINE_SPACING_CV",
+      "method_metadata": {
+        "ddof": 0,
+        "excluded_overlapping_pairs": 0,
+        "observation_unit": "non-overlapping adjacent box gap"
+      },
+      "method_version": "accepted_box_gap_cv_v1",
+      "missing_reason": null,
+      "n_observations": 2,
+      "normalized_value": null,
+      "notes": [],
+      "quality_flag": "EXPERIMENTAL",
+      "raw_value": 0.02127659574468085,
+      "source_regions": [
+        "line_0",
+        "line_1",
+        "line_2"
+      ],
+      "std_dev": null,
+      "unit": "cv"
+    },
+    "LINE_SPACING_PX": {
+      "confidence": null,
+      "confidence_kind": "UNCALIBRATED",
+      "evidence_status": "COMPUTATIONAL_PROXY",
+      "feature_id": "LINE_SPACING_PX",
+      "method_metadata": {
+        "ddof": 0,
+        "excluded_overlapping_pairs": 0,
+        "observation_unit": "non-overlapping adjacent box gap"
+      },
+      "method_version": "accepted_box_gap_px_v1",
+      "missing_reason": null,
+      "n_observations": 2,
+      "normalized_value": null,
+      "notes": [],
+      "quality_flag": "EXPERIMENTAL",
+      "raw_value": 47.0,
+      "source_regions": [
+        "line_0",
+        "line_1",
+        "line_2"
+      ],
+      "std_dev": 1.0,
+      "unit": "px"
+    },
+    "LINE_SPACING_REL": {
+      "confidence": null,
+      "confidence_kind": "UNCALIBRATED",
+      "evidence_status": "COMPUTATIONAL_PROXY",
+      "feature_id": "LINE_SPACING_REL",
+      "method_metadata": {
+        "ddof": 0,
+        "excluded_overlapping_pairs": 0,
+        "observation_unit": "non-overlapping adjacent box gap"
+      },
+      "method_version": "accepted_box_gap_rel_v1",
+      "missing_reason": null,
+      "n_observations": 2,
+      "normalized_value": null,
+      "notes": [],
+      "quality_flag": "EXPERIMENTAL",
+      "raw_value": 2.611111111111111,
+      "source_regions": [
+        "line_0",
+        "line_1",
+        "line_2"
+      ],
+      "std_dev": 0.05555555555555555,
+      "unit": "xheight_ratio"
+    },
+    "LINE_START_DRIFT": {
+      "confidence": null,
+      "confidence_kind": "UNCALIBRATED",
+      "evidence_status": "COMPUTATIONAL_PROXY",
+      "feature_id": "LINE_START_DRIFT",
+      "method_metadata": {
+        "formula": "slope(x_edge/canvas_width ~ y_center/canvas_height)"
+      },
+      "method_version": "normalized_edge_vs_vertical_position_v1",
+      "missing_reason": null,
+      "n_observations": 3,
+      "normalized_value": null,
+      "notes": [],
+      "quality_flag": "EXPERIMENTAL",
+      "raw_value": 0.0028349018892692987,
+      "source_regions": [
+        "line_0",
+        "line_1",
+        "line_2"
+      ],
+      "std_dev": null,
+      "unit": "normalized_slope"
+    },
+    "MARGIN_BOTTOM_REL": {
+      "confidence": null,
+      "confidence_kind": "UNCALIBRATED",
+      "evidence_status": "COMPUTATIONAL_PROXY",
+      "feature_id": "MARGIN_BOTTOM_REL",
+      "method_metadata": {
+        "coordinate_frame": "analysis_canvas",
+        "normalizer": "X_HEIGHT_PX"
+      },
+      "method_version": "text_bounds_xheight_v1",
+      "missing_reason": null,
+      "n_observations": 3,
+      "normalized_value": null,
+      "notes": [],
+      "quality_flag": "EXPERIMENTAL",
+      "raw_value": 3.611111111111111,
+      "source_regions": [
+        "line_0",
+        "line_1",
+        "line_2"
+      ],
+      "std_dev": null,
+      "unit": "xheight_ratio"
+    },
+    "MARGIN_LEFT_REL": {
+      "confidence": null,
+      "confidence_kind": "UNCALIBRATED",
+      "evidence_status": "COMPUTATIONAL_PROXY",
+      "feature_id": "MARGIN_LEFT_REL",
+      "method_metadata": {
+        "coordinate_frame": "analysis_canvas",
+        "normalizer": "X_HEIGHT_PX"
+      },
+      "method_version": "text_bounds_xheight_v1",
+      "missing_reason": null,
+      "n_observations": 3,
+      "normalized_value": null,
+      "notes": [],
+      "quality_flag": "EXPERIMENTAL",
+      "raw_value": 1.7222222222222223,
+      "source_regions": [
+        "line_0",
+        "line_1",
+        "line_2"
+      ],
+      "std_dev": null,
+      "unit": "xheight_ratio"
+    },
+    "MARGIN_LEFT_VARIABILITY": {
+      "confidence": null,
+      "confidence_kind": "UNCALIBRATED",
+      "evidence_status": "COMPUTATIONAL_PROXY",
+      "feature_id": "MARGIN_LEFT_VARIABILITY",
+      "method_metadata": {
+        "ddof": 0
+      },
+      "method_version": "line_edge_population_cv_v1",
+      "missing_reason": null,
+      "n_observations": 3,
+      "normalized_value": null,
+      "notes": [],
+      "quality_flag": "EXPERIMENTAL",
+      "raw_value": 0.015044825131628671,
+      "source_regions": [
+        "line_0",
+        "line_1",
+        "line_2"
+      ],
+      "std_dev": null,
+      "unit": "cv"
+    },
+    "MARGIN_RIGHT_REL": {
+      "confidence": null,
+      "confidence_kind": "UNCALIBRATED",
+      "evidence_status": "COMPUTATIONAL_PROXY",
+      "feature_id": "MARGIN_RIGHT_REL",
+      "method_metadata": {
+        "coordinate_frame": "analysis_canvas",
+        "normalizer": "X_HEIGHT_PX"
+      },
+      "method_version": "text_bounds_xheight_v1",
+      "missing_reason": null,
+      "n_observations": 3,
+      "normalized_value": null,
+      "notes": [],
+      "quality_flag": "EXPERIMENTAL",
+      "raw_value": 14.61111111111111,
+      "source_regions": [
+        "line_0",
+        "line_1",
+        "line_2"
+      ],
+      "std_dev": null,
+      "unit": "xheight_ratio"
+    },
+    "MARGIN_RIGHT_VARIABILITY": {
+      "confidence": null,
+      "confidence_kind": "UNCALIBRATED",
+      "evidence_status": "COMPUTATIONAL_PROXY",
+      "feature_id": "MARGIN_RIGHT_VARIABILITY",
+      "method_metadata": {
+        "ddof": 0
+      },
+      "method_version": "line_edge_population_cv_v1",
+      "missing_reason": null,
+      "n_observations": 3,
+      "normalized_value": null,
+      "notes": [],
+      "quality_flag": "EXPERIMENTAL",
+      "raw_value": 0.13503817722930328,
+      "source_regions": [
+        "line_0",
+        "line_1",
+        "line_2"
+      ],
+      "std_dev": null,
+      "unit": "cv"
+    },
+    "MARGIN_SYMMETRY": {
+      "confidence": null,
+      "confidence_kind": "UNCALIBRATED",
+      "evidence_status": "COMPUTATIONAL_PROXY",
+      "feature_id": "MARGIN_SYMMETRY",
+      "method_metadata": {
+        "formula": "1 - abs(left-right)/(left+right)"
+      },
+      "method_version": "margin_balance_index_v1",
+      "missing_reason": null,
+      "n_observations": 3,
+      "normalized_value": null,
+      "notes": [],
+      "quality_flag": "EXPERIMENTAL",
+      "raw_value": 0.2108843537414966,
+      "source_regions": [
+        "line_0",
+        "line_1",
+        "line_2"
+      ],
+      "std_dev": null,
+      "unit": "score_0_1"
+    },
+    "MARGIN_TOP_REL": {
+      "confidence": null,
+      "confidence_kind": "UNCALIBRATED",
+      "evidence_status": "COMPUTATIONAL_PROXY",
+      "feature_id": "MARGIN_TOP_REL",
+      "method_metadata": {
+        "coordinate_frame": "analysis_canvas",
+        "normalizer": "X_HEIGHT_PX"
+      },
+      "method_version": "text_bounds_xheight_v1",
+      "missing_reason": null,
+      "n_observations": 3,
+      "normalized_value": null,
+      "notes": [],
+      "quality_flag": "EXPERIMENTAL",
+      "raw_value": 3.5555555555555554,
+      "source_regions": [
+        "line_0",
+        "line_1",
+        "line_2"
+      ],
+      "std_dev": null,
+      "unit": "xheight_ratio"
+    },
+    "PAGE_COMPONENT_COUNT": {
+      "confidence": null,
+      "confidence_kind": "UNCALIBRATED",
+      "evidence_status": "COMPUTATIONAL_PROXY",
+      "feature_id": "PAGE_COMPONENT_COUNT",
+      "method_metadata": {
+        "confidence": "detector accuracy is uncalibrated",
+        "observation_unit": "one page",
+        "text_area": "enclosing detected-line bounding rectangle; not summed boxes"
+      },
+      "method_version": "accepted_segmentation_census_v1",
+      "missing_reason": null,
+      "n_observations": 1,
+      "normalized_value": null,
+      "notes": [],
+      "quality_flag": "EXPERIMENTAL",
+      "raw_value": 61,
+      "source_regions": [
+        "page_0"
+      ],
+      "std_dev": null,
+      "unit": "count"
+    },
+    "PAGE_HORIZONTAL_DENSITY": {
+      "confidence": null,
+      "confidence_kind": "UNCALIBRATED",
+      "evidence_status": "COMPUTATIONAL_PROXY",
+      "feature_id": "PAGE_HORIZONTAL_DENSITY",
+      "method_metadata": {},
+      "method_version": "text_bounds_canvas_ratio_v1",
+      "missing_reason": null,
+      "n_observations": 3,
+      "normalized_value": null,
+      "notes": [],
+      "quality_flag": "EXPERIMENTAL",
+      "raw_value": 0.5876577840112202,
+      "source_regions": [
+        "line_0",
+        "line_1",
+        "line_2"
+      ],
+      "std_dev": null,
+      "unit": "ratio"
+    },
+    "PAGE_INK_AREA_RATIO": {
+      "confidence": null,
+      "confidence_kind": "UNCALIBRATED",
+      "evidence_status": "COMPUTATIONAL_PROXY",
+      "feature_id": "PAGE_INK_AREA_RATIO",
+      "method_metadata": {
+        "confidence": "detector accuracy is uncalibrated",
+        "observation_unit": "one page",
+        "text_area": "enclosing detected-line bounding rectangle; not summed boxes"
+      },
+      "method_version": "accepted_segmentation_census_v1",
+      "missing_reason": null,
+      "n_observations": 1,
+      "normalized_value": null,
+      "notes": [],
+      "quality_flag": "EXPERIMENTAL",
+      "raw_value": 0.044357057894082765,
+      "source_regions": [
+        "page_0"
+      ],
+      "std_dev": null,
+      "unit": "ratio"
+    },
+    "PAGE_LINE_COUNT": {
+      "confidence": null,
+      "confidence_kind": "UNCALIBRATED",
+      "evidence_status": "COMPUTATIONAL_PROXY",
+      "feature_id": "PAGE_LINE_COUNT",
+      "method_metadata": {
+        "confidence": "detector accuracy is uncalibrated",
+        "observation_unit": "one page",
+        "text_area": "enclosing detected-line bounding rectangle; not summed boxes"
+      },
+      "method_version": "accepted_segmentation_census_v1",
+      "missing_reason": null,
+      "n_observations": 1,
+      "normalized_value": null,
+      "notes": [],
+      "quality_flag": "EXPERIMENTAL",
+      "raw_value": 3,
+      "source_regions": [
+        "page_0"
+      ],
+      "std_dev": null,
+      "unit": "count"
+    },
+    "PAGE_TEXT_AREA_RATIO": {
+      "confidence": null,
+      "confidence_kind": "UNCALIBRATED",
+      "evidence_status": "COMPUTATIONAL_PROXY",
+      "feature_id": "PAGE_TEXT_AREA_RATIO",
+      "method_metadata": {
+        "confidence": "detector accuracy is uncalibrated",
+        "observation_unit": "one page",
+        "text_area": "enclosing detected-line bounding rectangle; not summed boxes"
+      },
+      "method_version": "accepted_segmentation_census_v1",
+      "missing_reason": null,
+      "n_observations": 1,
+      "normalized_value": null,
+      "notes": [],
+      "quality_flag": "EXPERIMENTAL",
+      "raw_value": 0.34775951142436135,
+      "source_regions": [
+        "page_0"
+      ],
+      "std_dev": null,
+      "unit": "ratio"
+    },
+    "PAGE_VERTICAL_DENSITY": {
+      "confidence": null,
+      "confidence_kind": "UNCALIBRATED",
+      "evidence_status": "COMPUTATIONAL_PROXY",
+      "feature_id": "PAGE_VERTICAL_DENSITY",
+      "method_metadata": {},
+      "method_version": "text_bounds_canvas_ratio_v1",
+      "missing_reason": null,
+      "n_observations": 3,
+      "normalized_value": null,
+      "notes": [],
+      "quality_flag": "EXPERIMENTAL",
+      "raw_value": 0.5917721518987342,
+      "source_regions": [
+        "line_0",
+        "line_1",
+        "line_2"
+      ],
+      "std_dev": null,
+      "unit": "ratio"
+    },
+    "PAGE_WORD_COUNT": {
+      "confidence": null,
+      "confidence_kind": "UNCALIBRATED",
+      "evidence_status": "COMPUTATIONAL_PROXY",
+      "feature_id": "PAGE_WORD_COUNT",
+      "method_metadata": {
+        "confidence": "detector accuracy is uncalibrated",
+        "observation_unit": "one page",
+        "text_area": "enclosing detected-line bounding rectangle; not summed boxes"
+      },
+      "method_version": "accepted_segmentation_census_v1",
+      "missing_reason": null,
+      "n_observations": 1,
+      "normalized_value": null,
+      "notes": [],
+      "quality_flag": "EXPERIMENTAL",
+      "raw_value": 3,
+      "source_regions": [
+        "page_0"
+      ],
+      "std_dev": null,
+      "unit": "count"
+    },
+    "SLANT_ANGLE_MEAN": {
+      "confidence": null,
+      "confidence_kind": "UNCALIBRATED",
+      "evidence_status": "COMPUTATIONAL_PROXY",
+      "feature_id": "SLANT_ANGLE_MEAN",
+      "method_metadata": {
+        "accepted_abs_deg_max": 60,
+        "consistency_formula": "max(0, 1-population_std_degrees/60)",
+        "extreme_abs_deg": 30,
+        "minimum_axis_eigenvalue_ratio": 2,
+        "observation_unit": "elongated connected-component contour axis",
+        "positive": "top leans right relative to vertical",
+        "vertical_band_deg": [
+          -5,
+          5
+        ]
+      },
+      "method_version": "oriented_component_axis_v1",
+      "missing_reason": null,
+      "n_observations": 26,
+      "normalized_value": null,
+      "notes": [],
+      "quality_flag": "EXPERIMENTAL",
+      "raw_value": 20.075050431612258,
+      "source_regions": [
+        "component_0",
+        "component_1",
+        "component_4",
+        "component_10",
+        "component_12",
+        "component_18",
+        "component_21",
+        "component_22",
+        "component_23",
+        "component_24",
+        "component_28",
+        "component_34",
+        "component_35",
+        "component_37",
+        "component_40",
+        "component_42",
+        "component_43",
+        "component_44",
+        "component_46",
+        "component_47",
+        "component_48",
+        "component_50",
+        "component_51",
+        "component_54",
+        "component_56",
+        "component_59"
+      ],
+      "std_dev": 9.637173095693731,
+      "unit": "degrees"
+    },
+    "SLANT_ANGLE_MEDIAN": {
+      "confidence": null,
+      "confidence_kind": "UNCALIBRATED",
+      "evidence_status": "COMPUTATIONAL_PROXY",
+      "feature_id": "SLANT_ANGLE_MEDIAN",
+      "method_metadata": {
+        "accepted_abs_deg_max": 60,
+        "consistency_formula": "max(0, 1-population_std_degrees/60)",
+        "extreme_abs_deg": 30,
+        "minimum_axis_eigenvalue_ratio": 2,
+        "observation_unit": "elongated connected-component contour axis",
+        "positive": "top leans right relative to vertical",
+        "vertical_band_deg": [
+          -5,
+          5
+        ]
+      },
+      "method_version": "oriented_component_axis_v1",
+      "missing_reason": null,
+      "n_observations": 26,
+      "normalized_value": null,
+      "notes": [],
+      "quality_flag": "EXPERIMENTAL",
+      "raw_value": 20.71525089687971,
+      "source_regions": [
+        "component_0",
+        "component_1",
+        "component_4",
+        "component_10",
+        "component_12",
+        "component_18",
+        "component_21",
+        "component_22",
+        "component_23",
+        "component_24",
+        "component_28",
+        "component_34",
+        "component_35",
+        "component_37",
+        "component_40",
+        "component_42",
+        "component_43",
+        "component_44",
+        "component_46",
+        "component_47",
+        "component_48",
+        "component_50",
+        "component_51",
+        "component_54",
+        "component_56",
+        "component_59"
+      ],
+      "std_dev": null,
+      "unit": "degrees"
+    },
+    "SLANT_ANGLE_STD": {
+      "confidence": null,
+      "confidence_kind": "UNCALIBRATED",
+      "evidence_status": "COMPUTATIONAL_PROXY",
+      "feature_id": "SLANT_ANGLE_STD",
+      "method_metadata": {
+        "accepted_abs_deg_max": 60,
+        "consistency_formula": "max(0, 1-population_std_degrees/60)",
+        "extreme_abs_deg": 30,
+        "minimum_axis_eigenvalue_ratio": 2,
+        "observation_unit": "elongated connected-component contour axis",
+        "positive": "top leans right relative to vertical",
+        "vertical_band_deg": [
+          -5,
+          5
+        ]
+      },
+      "method_version": "oriented_component_axis_v1",
+      "missing_reason": null,
+      "n_observations": 26,
+      "normalized_value": null,
+      "notes": [],
+      "quality_flag": "EXPERIMENTAL",
+      "raw_value": 9.637173095693731,
+      "source_regions": [
+        "component_0",
+        "component_1",
+        "component_4",
+        "component_10",
+        "component_12",
+        "component_18",
+        "component_21",
+        "component_22",
+        "component_23",
+        "component_24",
+        "component_28",
+        "component_34",
+        "component_35",
+        "component_37",
+        "component_40",
+        "component_42",
+        "component_43",
+        "component_44",
+        "component_46",
+        "component_47",
+        "component_48",
+        "component_50",
+        "component_51",
+        "component_54",
+        "component_56",
+        "component_59"
+      ],
+      "std_dev": null,
+      "unit": "degrees"
+    },
+    "SLANT_CONSISTENCY": {
+      "confidence": null,
+      "confidence_kind": "UNCALIBRATED",
+      "evidence_status": "COMPUTATIONAL_PROXY",
+      "feature_id": "SLANT_CONSISTENCY",
+      "method_metadata": {
+        "accepted_abs_deg_max": 60,
+        "consistency_formula": "max(0, 1-population_std_degrees/60)",
+        "extreme_abs_deg": 30,
+        "minimum_axis_eigenvalue_ratio": 2,
+        "observation_unit": "elongated connected-component contour axis",
+        "positive": "top leans right relative to vertical",
+        "vertical_band_deg": [
+          -5,
+          5
+        ]
+      },
+      "method_version": "oriented_component_axis_v1",
+      "missing_reason": null,
+      "n_observations": 26,
+      "normalized_value": null,
+      "notes": [],
+      "quality_flag": "EXPERIMENTAL",
+      "raw_value": 0.8393804484051045,
+      "source_regions": [
+        "component_0",
+        "component_1",
+        "component_4",
+        "component_10",
+        "component_12",
+        "component_18",
+        "component_21",
+        "component_22",
+        "component_23",
+        "component_24",
+        "component_28",
+        "component_34",
+        "component_35",
+        "component_37",
+        "component_40",
+        "component_42",
+        "component_43",
+        "component_44",
+        "component_46",
+        "component_47",
+        "component_48",
+        "component_50",
+        "component_51",
+        "component_54",
+        "component_56",
+        "component_59"
+      ],
+      "std_dev": null,
+      "unit": "score_0_1"
+    },
+    "SLANT_EXTREME_FRACTION": {
+      "confidence": null,
+      "confidence_kind": "UNCALIBRATED",
+      "evidence_status": "COMPUTATIONAL_PROXY",
+      "feature_id": "SLANT_EXTREME_FRACTION",
+      "method_metadata": {
+        "accepted_abs_deg_max": 60,
+        "consistency_formula": "max(0, 1-population_std_degrees/60)",
+        "extreme_abs_deg": 30,
+        "minimum_axis_eigenvalue_ratio": 2,
+        "observation_unit": "elongated connected-component contour axis",
+        "positive": "top leans right relative to vertical",
+        "vertical_band_deg": [
+          -5,
+          5
+        ]
+      },
+      "method_version": "oriented_component_axis_v1",
+      "missing_reason": null,
+      "n_observations": 26,
+      "normalized_value": null,
+      "notes": [],
+      "quality_flag": "EXPERIMENTAL",
+      "raw_value": 0.2692307692307692,
+      "source_regions": [
+        "component_0",
+        "component_1",
+        "component_4",
+        "component_10",
+        "component_12",
+        "component_18",
+        "component_21",
+        "component_22",
+        "component_23",
+        "component_24",
+        "component_28",
+        "component_34",
+        "component_35",
+        "component_37",
+        "component_40",
+        "component_42",
+        "component_43",
+        "component_44",
+        "component_46",
+        "component_47",
+        "component_48",
+        "component_50",
+        "component_51",
+        "component_54",
+        "component_56",
+        "component_59"
+      ],
+      "std_dev": null,
+      "unit": "ratio"
+    },
+    "SLANT_LEFT_FRACTION": {
+      "confidence": null,
+      "confidence_kind": "UNCALIBRATED",
+      "evidence_status": "COMPUTATIONAL_PROXY",
+      "feature_id": "SLANT_LEFT_FRACTION",
+      "method_metadata": {
+        "accepted_abs_deg_max": 60,
+        "consistency_formula": "max(0, 1-population_std_degrees/60)",
+        "extreme_abs_deg": 30,
+        "minimum_axis_eigenvalue_ratio": 2,
+        "observation_unit": "elongated connected-component contour axis",
+        "positive": "top leans right relative to vertical",
+        "vertical_band_deg": [
+          -5,
+          5
+        ]
+      },
+      "method_version": "oriented_component_axis_v1",
+      "missing_reason": null,
+      "n_observations": 26,
+      "normalized_value": null,
+      "notes": [],
+      "quality_flag": "EXPERIMENTAL",
+      "raw_value": 0.0,
+      "source_regions": [
+        "component_0",
+        "component_1",
+        "component_4",
+        "component_10",
+        "component_12",
+        "component_18",
+        "component_21",
+        "component_22",
+        "component_23",
+        "component_24",
+        "component_28",
+        "component_34",
+        "component_35",
+        "component_37",
+        "component_40",
+        "component_42",
+        "component_43",
+        "component_44",
+        "component_46",
+        "component_47",
+        "component_48",
+        "component_50",
+        "component_51",
+        "component_54",
+        "component_56",
+        "component_59"
+      ],
+      "std_dev": null,
+      "unit": "ratio"
+    },
+    "SLANT_P05": {
+      "confidence": null,
+      "confidence_kind": "UNCALIBRATED",
+      "evidence_status": "COMPUTATIONAL_PROXY",
+      "feature_id": "SLANT_P05",
+      "method_metadata": {
+        "accepted_abs_deg_max": 60,
+        "consistency_formula": "max(0, 1-population_std_degrees/60)",
+        "extreme_abs_deg": 30,
+        "minimum_axis_eigenvalue_ratio": 2,
+        "observation_unit": "elongated connected-component contour axis",
+        "positive": "top leans right relative to vertical",
+        "vertical_band_deg": [
+          -5,
+          5
+        ]
+      },
+      "method_version": "oriented_component_axis_v1",
+      "missing_reason": null,
+      "n_observations": 26,
+      "normalized_value": null,
+      "notes": [],
+      "quality_flag": "EXPERIMENTAL",
+      "raw_value": 5.07681240002939,
+      "source_regions": [
+        "component_0",
+        "component_1",
+        "component_4",
+        "component_10",
+        "component_12",
+        "component_18",
+        "component_21",
+        "component_22",
+        "component_23",
+        "component_24",
+        "component_28",
+        "component_34",
+        "component_35",
+        "component_37",
+        "component_40",
+        "component_42",
+        "component_43",
+        "component_44",
+        "component_46",
+        "component_47",
+        "component_48",
+        "component_50",
+        "component_51",
+        "component_54",
+        "component_56",
+        "component_59"
+      ],
+      "std_dev": null,
+      "unit": "degrees"
+    },
+    "SLANT_P95": {
+      "confidence": null,
+      "confidence_kind": "UNCALIBRATED",
+      "evidence_status": "COMPUTATIONAL_PROXY",
+      "feature_id": "SLANT_P95",
+      "method_metadata": {
+        "accepted_abs_deg_max": 60,
+        "consistency_formula": "max(0, 1-population_std_degrees/60)",
+        "extreme_abs_deg": 30,
+        "minimum_axis_eigenvalue_ratio": 2,
+        "observation_unit": "elongated connected-component contour axis",
+        "positive": "top leans right relative to vertical",
+        "vertical_band_deg": [
+          -5,
+          5
+        ]
+      },
+      "method_version": "oriented_component_axis_v1",
+      "missing_reason": null,
+      "n_observations": 26,
+      "normalized_value": null,
+      "notes": [],
+      "quality_flag": "EXPERIMENTAL",
+      "raw_value": 34.60893307811425,
+      "source_regions": [
+        "component_0",
+        "component_1",
+        "component_4",
+        "component_10",
+        "component_12",
+        "component_18",
+        "component_21",
+        "component_22",
+        "component_23",
+        "component_24",
+        "component_28",
+        "component_34",
+        "component_35",
+        "component_37",
+        "component_40",
+        "component_42",
+        "component_43",
+        "component_44",
+        "component_46",
+        "component_47",
+        "component_48",
+        "component_50",
+        "component_51",
+        "component_54",
+        "component_56",
+        "component_59"
+      ],
+      "std_dev": null,
+      "unit": "degrees"
+    },
+    "SLANT_RIGHT_FRACTION": {
+      "confidence": null,
+      "confidence_kind": "UNCALIBRATED",
+      "evidence_status": "COMPUTATIONAL_PROXY",
+      "feature_id": "SLANT_RIGHT_FRACTION",
+      "method_metadata": {
+        "accepted_abs_deg_max": 60,
+        "consistency_formula": "max(0, 1-population_std_degrees/60)",
+        "extreme_abs_deg": 30,
+        "minimum_axis_eigenvalue_ratio": 2,
+        "observation_unit": "elongated connected-component contour axis",
+        "positive": "top leans right relative to vertical",
+        "vertical_band_deg": [
+          -5,
+          5
+        ]
+      },
+      "method_version": "oriented_component_axis_v1",
+      "missing_reason": null,
+      "n_observations": 26,
+      "normalized_value": null,
+      "notes": [],
+      "quality_flag": "EXPERIMENTAL",
+      "raw_value": 0.9615384615384616,
+      "source_regions": [
+        "component_0",
+        "component_1",
+        "component_4",
+        "component_10",
+        "component_12",
+        "component_18",
+        "component_21",
+        "component_22",
+        "component_23",
+        "component_24",
+        "component_28",
+        "component_34",
+        "component_35",
+        "component_37",
+        "component_40",
+        "component_42",
+        "component_43",
+        "component_44",
+        "component_46",
+        "component_47",
+        "component_48",
+        "component_50",
+        "component_51",
+        "component_54",
+        "component_56",
+        "component_59"
+      ],
+      "std_dev": null,
+      "unit": "ratio"
+    },
+    "SLANT_VERTICAL_FRACTION": {
+      "confidence": null,
+      "confidence_kind": "UNCALIBRATED",
+      "evidence_status": "COMPUTATIONAL_PROXY",
+      "feature_id": "SLANT_VERTICAL_FRACTION",
+      "method_metadata": {
+        "accepted_abs_deg_max": 60,
+        "consistency_formula": "max(0, 1-population_std_degrees/60)",
+        "extreme_abs_deg": 30,
+        "minimum_axis_eigenvalue_ratio": 2,
+        "observation_unit": "elongated connected-component contour axis",
+        "positive": "top leans right relative to vertical",
+        "vertical_band_deg": [
+          -5,
+          5
+        ]
+      },
+      "method_version": "oriented_component_axis_v1",
+      "missing_reason": null,
+      "n_observations": 26,
+      "normalized_value": null,
+      "notes": [],
+      "quality_flag": "EXPERIMENTAL",
+      "raw_value": 0.038461538461538464,
+      "source_regions": [
+        "component_0",
+        "component_1",
+        "component_4",
+        "component_10",
+        "component_12",
+        "component_18",
+        "component_21",
+        "component_22",
+        "component_23",
+        "component_24",
+        "component_28",
+        "component_34",
+        "component_35",
+        "component_37",
+        "component_40",
+        "component_42",
+        "component_43",
+        "component_44",
+        "component_46",
+        "component_47",
+        "component_48",
+        "component_50",
+        "component_51",
+        "component_54",
+        "component_56",
+        "component_59"
+      ],
+      "std_dev": null,
+      "unit": "ratio"
+    },
+    "STROKE_UNIFORMITY": {
+      "confidence": null,
+      "confidence_kind": "UNCALIBRATED",
+      "evidence_status": "COMPUTATIONAL_PROXY",
+      "feature_id": "STROKE_UNIFORMITY",
+      "method_metadata": {
+        "darkness_formula": "1-gray/255",
+        "ddof": 0,
+        "limitation": "image proxy, not physical pressure; widths have pixel-grid bias",
+        "observation_unit": "medial-axis pixels",
+        "saturation_grayscale_max": 5,
+        "uniformity_formula": "1/(1+width_cv)"
+      },
+      "method_version": "medial_axis_diameter_v1",
+      "missing_reason": null,
+      "n_observations": 2300,
+      "normalized_value": null,
+      "notes": [],
+      "quality_flag": "EXPERIMENTAL",
+      "raw_value": 0.8128064635741235,
+      "source_regions": [
+        "page_0"
+      ],
+      "std_dev": null,
+      "unit": "score_0_1"
+    },
+    "STROKE_WIDTH_CV": {
+      "confidence": null,
+      "confidence_kind": "UNCALIBRATED",
+      "evidence_status": "COMPUTATIONAL_PROXY",
+      "feature_id": "STROKE_WIDTH_CV",
+      "method_metadata": {
+        "darkness_formula": "1-gray/255",
+        "ddof": 0,
+        "limitation": "image proxy, not physical pressure; widths have pixel-grid bias",
+        "observation_unit": "medial-axis pixels",
+        "saturation_grayscale_max": 5,
+        "uniformity_formula": "1/(1+width_cv)"
+      },
+      "method_version": "medial_axis_diameter_v1",
+      "missing_reason": null,
+      "n_observations": 2300,
+      "normalized_value": null,
+      "notes": [],
+      "quality_flag": "EXPERIMENTAL",
+      "raw_value": 0.23030517695779304,
+      "source_regions": [
+        "page_0"
+      ],
+      "std_dev": null,
+      "unit": "cv"
+    },
+    "STROKE_WIDTH_MEAN": {
+      "confidence": null,
+      "confidence_kind": "UNCALIBRATED",
+      "evidence_status": "COMPUTATIONAL_PROXY",
+      "feature_id": "STROKE_WIDTH_MEAN",
+      "method_metadata": {
+        "darkness_formula": "1-gray/255",
+        "ddof": 0,
+        "limitation": "image proxy, not physical pressure; widths have pixel-grid bias",
+        "observation_unit": "medial-axis pixels",
+        "saturation_grayscale_max": 5,
+        "uniformity_formula": "1/(1+width_cv)"
+      },
+      "method_version": "medial_axis_diameter_v1",
+      "missing_reason": null,
+      "n_observations": 2300,
+      "normalized_value": null,
+      "notes": [],
+      "quality_flag": "EXPERIMENTAL",
+      "raw_value": 4.3125289637480755,
+      "source_regions": [
+        "page_0"
+      ],
+      "std_dev": 0.9931977461316084,
+      "unit": "px"
+    },
+    "STROKE_WIDTH_MEDIAN": {
+      "confidence": null,
+      "confidence_kind": "UNCALIBRATED",
+      "evidence_status": "COMPUTATIONAL_PROXY",
+      "feature_id": "STROKE_WIDTH_MEDIAN",
+      "method_metadata": {
+        "darkness_formula": "1-gray/255",
+        "ddof": 0,
+        "limitation": "image proxy, not physical pressure; widths have pixel-grid bias",
+        "observation_unit": "medial-axis pixels",
+        "saturation_grayscale_max": 5,
+        "uniformity_formula": "1/(1+width_cv)"
+      },
+      "method_version": "medial_axis_diameter_v1",
+      "missing_reason": null,
+      "n_observations": 2300,
+      "normalized_value": null,
+      "notes": [],
+      "quality_flag": "EXPERIMENTAL",
+      "raw_value": 4.47213595499958,
+      "source_regions": [
+        "page_0"
+      ],
+      "std_dev": null,
+      "unit": "px"
+    },
+    "STROKE_WIDTH_STD": {
+      "confidence": null,
+      "confidence_kind": "UNCALIBRATED",
+      "evidence_status": "COMPUTATIONAL_PROXY",
+      "feature_id": "STROKE_WIDTH_STD",
+      "method_metadata": {
+        "darkness_formula": "1-gray/255",
+        "ddof": 0,
+        "limitation": "image proxy, not physical pressure; widths have pixel-grid bias",
+        "observation_unit": "medial-axis pixels",
+        "saturation_grayscale_max": 5,
+        "uniformity_formula": "1/(1+width_cv)"
+      },
+      "method_version": "medial_axis_diameter_v1",
+      "missing_reason": null,
+      "n_observations": 2300,
+      "normalized_value": null,
+      "notes": [],
+      "quality_flag": "EXPERIMENTAL",
+      "raw_value": 0.9931977461316084,
+      "source_regions": [
+        "page_0"
+      ],
+      "std_dev": null,
+      "unit": "px"
+    },
+    "TEXT_BLOCK_HORIZONTAL_CENTER": {
+      "confidence": null,
+      "confidence_kind": "UNCALIBRATED",
+      "evidence_status": "COMPUTATIONAL_PROXY",
+      "feature_id": "TEXT_BLOCK_HORIZONTAL_CENTER",
+      "method_metadata": {},
+      "method_version": "text_bounds_canvas_ratio_v1",
+      "missing_reason": null,
+      "n_observations": 3,
+      "normalized_value": null,
+      "notes": [],
+      "quality_flag": "EXPERIMENTAL",
+      "raw_value": 0.3373071528751753,
+      "source_regions": [
+        "line_0",
+        "line_1",
+        "line_2"
+      ],
+      "std_dev": null,
+      "unit": "normalized_x"
+    },
+    "TEXT_BLOCK_VERTICAL_CENTER": {
+      "confidence": null,
+      "confidence_kind": "UNCALIBRATED",
+      "evidence_status": "COMPUTATIONAL_PROXY",
+      "feature_id": "TEXT_BLOCK_VERTICAL_CENTER",
+      "method_metadata": {},
+      "method_version": "text_bounds_canvas_ratio_v1",
+      "missing_reason": null,
+      "n_observations": 3,
+      "normalized_value": null,
+      "notes": [],
+      "quality_flag": "EXPERIMENTAL",
+      "raw_value": 0.49841772151898733,
+      "source_regions": [
+        "line_0",
+        "line_1",
+        "line_2"
+      ],
+      "std_dev": null,
+      "unit": "normalized_y"
+    },
+    "WORD_SPACING_CV": {
+      "confidence": null,
+      "confidence_kind": "UNCALIBRATED",
+      "evidence_status": "COMPUTATIONAL_PROXY",
+      "feature_id": "WORD_SPACING_CV",
+      "method_metadata": {
+        "ddof": 0,
+        "excluded_overlapping_pairs": 0,
+        "observation_unit": "non-overlapping adjacent box gap"
+      },
+      "method_version": "accepted_box_gap_cv_v1",
+      "missing_reason": "cv_requires_two_observations_and_positive_mean",
+      "n_observations": 0,
+      "normalized_value": null,
+      "notes": [],
+      "quality_flag": "MISSING",
+      "raw_value": null,
+      "source_regions": [],
+      "std_dev": null,
+      "unit": "cv"
+    },
+    "WORD_SPACING_PX": {
+      "confidence": null,
+      "confidence_kind": "UNCALIBRATED",
+      "evidence_status": "COMPUTATIONAL_PROXY",
+      "feature_id": "WORD_SPACING_PX",
+      "method_metadata": {
+        "ddof": 0,
+        "excluded_overlapping_pairs": 0,
+        "observation_unit": "non-overlapping adjacent box gap"
+      },
+      "method_version": "accepted_box_gap_px_v1",
+      "missing_reason": "no_valid_gaps_or_xheight_unavailable",
+      "n_observations": 0,
+      "normalized_value": null,
+      "notes": [],
+      "quality_flag": "MISSING",
+      "raw_value": null,
+      "source_regions": [],
+      "std_dev": null,
+      "unit": "px"
+    },
+    "WORD_SPACING_REL": {
+      "confidence": null,
+      "confidence_kind": "UNCALIBRATED",
+      "evidence_status": "COMPUTATIONAL_PROXY",
+      "feature_id": "WORD_SPACING_REL",
+      "method_metadata": {
+        "ddof": 0,
+        "excluded_overlapping_pairs": 0,
+        "observation_unit": "non-overlapping adjacent box gap"
+      },
+      "method_version": "accepted_box_gap_rel_v1",
+      "missing_reason": "no_valid_gaps_or_xheight_unavailable",
+      "n_observations": 0,
+      "normalized_value": null,
+      "notes": [],
+      "quality_flag": "MISSING",
+      "raw_value": null,
+      "source_regions": [],
+      "std_dev": null,
+      "unit": "xheight_ratio"
+    },
+    "X_HEIGHT_PX": {
+      "confidence": null,
+      "confidence_kind": "UNCALIBRATED",
+      "evidence_status": "COMPUTATIONAL_PROXY",
+      "feature_id": "X_HEIGHT_PX",
+      "method_metadata": {
+        "limitation": "not recognized lowercase; all-capital and cursive text can mislead",
+        "minimum_inliers": 6,
+        "relative_height_tolerance": 0.15
+      },
+      "method_version": "component_height_mode_v1",
+      "missing_reason": null,
+      "n_observations": 37,
+      "normalized_value": null,
+      "notes": [],
+      "quality_flag": "EXPERIMENTAL",
+      "raw_value": 18.0,
+      "source_regions": [
+        "component_7",
+        "component_9",
+        "component_10",
+        "component_11",
+        "component_12",
+        "component_13",
+        "component_14",
+        "component_15",
+        "component_16",
+        "component_17",
+        "component_19",
+        "component_20",
+        "component_22",
+        "component_25",
+        "component_26",
+        "component_27",
+        "component_28",
+        "component_29",
+        "component_30",
+        "component_31",
+        "component_33",
+        "component_34",
+        "component_36",
+        "component_45",
+        "component_46",
+        "component_47",
+        "component_48",
+        "component_49",
+        "component_51",
+        "component_52",
+        "component_53",
+        "component_55",
+        "component_56",
+        "component_57",
+        "component_58",
+        "component_59",
+        "component_60"
+      ],
+      "std_dev": null,
+      "unit": "px"
+    }
+  },
+  "metadata": {
+    "analysis_to_original": [
+      [
+        1.2839522589701664,
+        0.06728908659807159,
+        -18.21779886250248
+      ],
+      [
+        -0.06728908659807159,
+        1.2839522589701662,
+        1.2669595977833847
+      ],
+      [
+        0.0,
+        0.0,
+        1.0
+      ]
+    ],
+    "binarize_method": "otsu (auto, uniformity 0.96)",
+    "confidence_policy": "null means uncalibrated, not zero confidence",
+    "coordinate_frame": "analysis_canvas",
+    "defined_feature_count": 272,
+    "denoise_removed_pixels": 0,
+    "deskew_applied_deg": -3.0000000000000426,
+    "empirically_validated_feature_count": 0,
+    "implemented_feature_count": 64,
+    "layout_assumption": "single_column; margins relative to image canvas, not detected paper edges",
+    "original_height": 360,
+    "original_to_analysis": [
+      [
+        0.7767118603646685,
+        -0.04070574374451245,
+        14.201552978965664
+      ],
+      [
+        0.04070574374451245,
+        0.7767118603646685,
+        -0.2424934941151088
+      ],
+      [
+        0.0,
+        0.0,
+        1.0
+      ]
+    ],
+    "original_width": 900,
+    "resize_scale_xy": [
+      0.7777777777777778,
+      0.7777777777777778
+    ],
+    "rotation_caveat": "text skew cannot distinguish page rotation from intentional baseline tilt",
+    "schema_source_sha256": "5c21dfc9f594bbb1c2e9dad77e3b0664a0f53b33b33697311539f7b6ca52b607",
+    "schema_version": "1.0.0-draft",
+    "skew_method": "projection-variance"
+  },
+  "regions": [
+    {
+      "box": [
+        0,
+        0,
+        713,
+        316
+      ],
+      "confidence": null,
+      "parent_id": null,
+      "region_id": "page_0",
+      "scope": "PAGE"
+    },
+    {
+      "box": [
+        31,
+        64,
+        419,
+        30
+      ],
+      "confidence": null,
+      "parent_id": "page_0",
+      "region_id": "line_0",
+      "scope": "LINE"
+    },
+    {
+      "box": [
+        31,
+        142,
+        315,
+        31
+      ],
+      "confidence": null,
+      "parent_id": "page_0",
+      "region_id": "line_1",
+      "scope": "LINE"
+    },
+    {
+      "box": [
+        32,
+        219,
+        347,
+        32
+      ],
+      "confidence": null,
+      "parent_id": "page_0",
+      "region_id": "line_2",
+      "scope": "LINE"
+    },
+    {
+      "box": [
+        31,
+        64,
+        419,
+        29
+      ],
+      "confidence": null,
+      "parent_id": "line_0",
+      "region_id": "word_0",
+      "scope": "WORD"
+    },
+    {
+      "box": [
+        31,
+        144,
+        315,
+        29
+      ],
+      "confidence": null,
+      "parent_id": "line_1",
+      "region_id": "word_1",
+      "scope": "WORD"
+    },
+    {
+      "box": [
+        32,
+        219,
+        347,
+        32
+      ],
+      "confidence": null,
+      "parent_id": "line_2",
+      "region_id": "word_2",
+      "scope": "WORD"
+    },
+    {
+      "box": [
+        296,
+        63,
+        15,
+        25
+      ],
+      "confidence": null,
+      "parent_id": "page_0",
+      "region_id": "component_0",
+      "scope": "COMPONENT"
+    },
+    {
+      "box": [
+        31,
+        64,
+        13,
+        24
+      ],
+      "confidence": null,
+      "parent_id": "page_0",
+      "region_id": "component_1",
+      "scope": "COMPONENT"
+    },
+    {
+      "box": [
+        44,
+        64,
+        19,
+        24
+      ],
+      "confidence": null,
+      "parent_id": "page_0",
+      "region_id": "component_2",
+      "scope": "COMPONENT"
+    },
+    {
+      "box": [
+        136,
+        64,
+        5,
+        4
+      ],
+      "confidence": null,
+      "parent_id": "page_0",
+      "region_id": "component_3",
+      "scope": "COMPONENT"
+    },
+    {
+      "box": [
+        159,
+        64,
+        18,
+        24
+      ],
+      "confidence": null,
+      "parent_id": "page_0",
+      "region_id": "component_4",
+      "scope": "COMPONENT"
+    },
+    {
+      "box": [
+        186,
+        64,
+        18,
+        24
+      ],
+      "confidence": null,
+      "parent_id": "page_0",
+      "region_id": "component_5",
+      "scope": "COMPONENT"
+    },
+    {
+      "box": [
+        359,
+        64,
+        5,
+        4
+      ],
+      "confidence": null,
+      "parent_id": "page_0",
+      "region_id": "component_6",
+      "scope": "COMPONENT"
+    },
+    {
+      "box": [
+        65,
+        70,
+        17,
+        18
+      ],
+      "confidence": null,
+      "parent_id": "page_0",
+      "region_id": "component_7",
+      "scope": "COMPONENT"
+    },
+    {
+      "box": [
+        92,
+        70,
+        19,
+        24
+      ],
+      "confidence": null,
+      "parent_id": "page_0",
+      "region_id": "component_8",
+      "scope": "COMPONENT"
+    },
+    {
+      "box": [
+        113,
+        71,
+        18,
+        17
+      ],
+      "confidence": null,
+      "parent_id": "page_0",
+      "region_id": "component_9",
+      "scope": "COMPONENT"
+    },
+    {
+      "box": [
+        132,
+        71,
+        8,
+        17
+      ],
+      "confidence": null,
+      "parent_id": "page_0",
+      "region_id": "component_10",
+      "scope": "COMPONENT"
+    },
+    {
+      "box": [
+        141,
+        70,
+        17,
+        18
+      ],
+      "confidence": null,
+      "parent_id": "page_0",
+      "region_id": "component_11",
+      "scope": "COMPONENT"
+    },
+    {
+      "box": [
+        206,
+        71,
+        14,
+        17
+      ],
+      "confidence": null,
+      "parent_id": "page_0",
+      "region_id": "component_12",
+      "scope": "COMPONENT"
+    },
+    {
+      "box": [
+        220,
+        70,
+        17,
+        18
+      ],
+      "confidence": null,
+      "parent_id": "page_0",
+      "region_id": "component_13",
+      "scope": "COMPONENT"
+    },
+    {
+      "box": [
+        241,
+        71,
+        25,
+        17
+      ],
+      "confidence": null,
+      "parent_id": "page_0",
+      "region_id": "component_14",
+      "scope": "COMPONENT"
+    },
+    {
+      "box": [
+        266,
+        70,
+        19,
+        18
+      ],
+      "confidence": null,
+      "parent_id": "page_0",
+      "region_id": "component_15",
+      "scope": "COMPONENT"
+    },
+    {
+      "box": [
+        308,
+        70,
+        18,
+        18
+      ],
+      "confidence": null,
+      "parent_id": "page_0",
+      "region_id": "component_16",
+      "scope": "COMPONENT"
+    },
+    {
+      "box": [
+        326,
+        71,
+        20,
+        17
+      ],
+      "confidence": null,
+      "parent_id": "page_0",
+      "region_id": "component_17",
+      "scope": "COMPONENT"
+    },
+    {
+      "box": [
+        350,
+        71,
+        13,
+        23
+      ],
+      "confidence": null,
+      "parent_id": "page_0",
+      "region_id": "component_18",
+      "scope": "COMPONENT"
+    },
+    {
+      "box": [
+        364,
+        71,
+        18,
+        17
+      ],
+      "confidence": null,
+      "parent_id": "page_0",
+      "region_id": "component_19",
+      "scope": "COMPONENT"
+    },
+    {
+      "box": [
+        383,
+        70,
+        28,
+        18
+      ],
+      "confidence": null,
+      "parent_id": "page_0",
+      "region_id": "component_20",
+      "scope": "COMPONENT"
+    },
+    {
+      "box": [
+        412,
+        70,
+        19,
+        24
+      ],
+      "confidence": null,
+      "parent_id": "page_0",
+      "region_id": "component_21",
+      "scope": "COMPONENT"
+    },
+    {
+      "box": [
+        433,
+        70,
+        17,
+        18
+      ],
+      "confidence": null,
+      "parent_id": "page_0",
+      "region_id": "component_22",
+      "scope": "COMPONENT"
+    },
+    {
+      "box": [
+        214,
+        142,
+        9,
+        24
+      ],
+      "confidence": null,
+      "parent_id": "page_0",
+      "region_id": "component_23",
+      "scope": "COMPONENT"
+    },
+    {
+      "box": [
+        287,
+        142,
+        20,
+        24
+      ],
+      "confidence": null,
+      "parent_id": "page_0",
+      "region_id": "component_24",
+      "scope": "COMPONENT"
+    },
+    {
+      "box": [
+        31,
+        148,
+        17,
+        18
+      ],
+      "confidence": null,
+      "parent_id": "page_0",
+      "region_id": "component_25",
+      "scope": "COMPONENT"
+    },
+    {
+      "box": [
+        52,
+        148,
+        17,
+        18
+      ],
+      "confidence": null,
+      "parent_id": "page_0",
+      "region_id": "component_26",
+      "scope": "COMPONENT"
+    },
+    {
+      "box": [
+        69,
+        148,
+        17,
+        18
+      ],
+      "confidence": null,
+      "parent_id": "page_0",
+      "region_id": "component_27",
+      "scope": "COMPONENT"
+    },
+    {
+      "box": [
+        87,
+        148,
+        15,
+        18
+      ],
+      "confidence": null,
+      "parent_id": "page_0",
+      "region_id": "component_28",
+      "scope": "COMPONENT"
+    },
+    {
+      "box": [
+        109,
+        148,
+        19,
+        18
+      ],
+      "confidence": null,
+      "parent_id": "page_0",
+      "region_id": "component_29",
+      "scope": "COMPONENT"
+    },
+    {
+      "box": [
+        139,
+        148,
+        17,
+        18
+      ],
+      "confidence": null,
+      "parent_id": "page_0",
+      "region_id": "component_30",
+      "scope": "COMPONENT"
+    },
+    {
+      "box": [
+        156,
+        148,
+        17,
+        18
+      ],
+      "confidence": null,
+      "parent_id": "page_0",
+      "region_id": "component_31",
+      "scope": "COMPONENT"
+    },
+    {
+      "box": [
+        174,
+        148,
+        33,
+        24
+      ],
+      "confidence": null,
+      "parent_id": "page_0",
+      "region_id": "component_32",
+      "scope": "COMPONENT"
+    },
+    {
+      "box": [
+        223,
+        148,
+        19,
+        18
+      ],
+      "confidence": null,
+      "parent_id": "page_0",
+      "region_id": "component_33",
+      "scope": "COMPONENT"
+    },
+    {
+      "box": [
+        242,
+        148,
+        17,
+        18
+      ],
+      "confidence": null,
+      "parent_id": "page_0",
+      "region_id": "component_34",
+      "scope": "COMPONENT"
+    },
+    {
+      "box": [
+        261,
+        148,
+        18,
+        24
+      ],
+      "confidence": null,
+      "parent_id": "page_0",
+      "region_id": "component_35",
+      "scope": "COMPONENT"
+    },
+    {
+      "box": [
+        307,
+        148,
+        18,
+        18
+      ],
+      "confidence": null,
+      "parent_id": "page_0",
+      "region_id": "component_36",
+      "scope": "COMPONENT"
+    },
+    {
+      "box": [
+        325,
+        148,
+        21,
+        25
+      ],
+      "confidence": null,
+      "parent_id": "page_0",
+      "region_id": "component_37",
+      "scope": "COMPONENT"
+    },
+    {
+      "box": [
+        75,
+        219,
+        5,
+        5
+      ],
+      "confidence": null,
+      "parent_id": "page_0",
+      "region_id": "component_38",
+      "scope": "COMPONENT"
+    },
+    {
+      "box": [
+        97,
+        219,
+        5,
+        5
+      ],
+      "confidence": null,
+      "parent_id": "page_0",
+      "region_id": "component_39",
+      "scope": "COMPONENT"
+    },
+    {
+      "box": [
+        274,
+        219,
+        15,
+        25
+      ],
+      "confidence": null,
+      "parent_id": "page_0",
+      "region_id": "component_40",
+      "scope": "COMPONENT"
+    },
+    {
+      "box": [
+        290,
+        219,
+        5,
+        5
+      ],
+      "confidence": null,
+      "parent_id": "page_0",
+      "region_id": "component_41",
+      "scope": "COMPONENT"
+    },
+    {
+      "box": [
+        80,
+        220,
+        13,
+        24
+      ],
+      "confidence": null,
+      "parent_id": "page_0",
+      "region_id": "component_42",
+      "scope": "COMPONENT"
+    },
+    {
+      "box": [
+        237,
+        220,
+        9,
+        24
+      ],
+      "confidence": null,
+      "parent_id": "page_0",
+      "region_id": "component_43",
+      "scope": "COMPONENT"
+    },
+    {
+      "box": [
+        314,
+        220,
+        13,
+        24
+      ],
+      "confidence": null,
+      "parent_id": "page_0",
+      "region_id": "component_44",
+      "scope": "COMPONENT"
+    },
+    {
+      "box": [
+        32,
+        226,
+        25,
+        18
+      ],
+      "confidence": null,
+      "parent_id": "page_0",
+      "region_id": "component_45",
+      "scope": "COMPONENT"
+    },
+    {
+      "box": [
+        57,
+        226,
+        15,
+        18
+      ],
+      "confidence": null,
+      "parent_id": "page_0",
+      "region_id": "component_46",
+      "scope": "COMPONENT"
+    },
+    {
+      "box": [
+        71,
+        226,
+        7,
+        18
+      ],
+      "confidence": null,
+      "parent_id": "page_0",
+      "region_id": "component_47",
+      "scope": "COMPONENT"
+    },
+    {
+      "box": [
+        93,
+        226,
+        8,
+        18
+      ],
+      "confidence": null,
+      "parent_id": "page_0",
+      "region_id": "component_48",
+      "scope": "COMPONENT"
+    },
+    {
+      "box": [
+        102,
+        226,
+        18,
+        18
+      ],
+      "confidence": null,
+      "parent_id": "page_0",
+      "region_id": "component_49",
+      "scope": "COMPONENT"
+    },
+    {
+      "box": [
+        121,
+        226,
+        20,
+        25
+      ],
+      "confidence": null,
+      "parent_id": "page_0",
+      "region_id": "component_50",
+      "scope": "COMPONENT"
+    },
+    {
+      "box": [
+        151,
+        226,
+        16,
+        18
+      ],
+      "confidence": null,
+      "parent_id": "page_0",
+      "region_id": "component_51",
+      "scope": "COMPONENT"
+    },
+    {
+      "box": [
+        168,
+        226,
+        19,
+        18
+      ],
+      "confidence": null,
+      "parent_id": "page_0",
+      "region_id": "component_52",
+      "scope": "COMPONENT"
+    },
+    {
+      "box": [
+        187,
+        226,
+        28,
+        18
+      ],
+      "confidence": null,
+      "parent_id": "page_0",
+      "region_id": "component_53",
+      "scope": "COMPONENT"
+    },
+    {
+      "box": [
+        215,
+        226,
+        20,
+        24
+      ],
+      "confidence": null,
+      "parent_id": "page_0",
+      "region_id": "component_54",
+      "scope": "COMPONENT"
+    },
+    {
+      "box": [
+        247,
+        226,
+        17,
+        18
+      ],
+      "confidence": null,
+      "parent_id": "page_0",
+      "region_id": "component_55",
+      "scope": "COMPONENT"
+    },
+    {
+      "box": [
+        286,
+        226,
+        8,
+        18
+      ],
+      "confidence": null,
+      "parent_id": "page_0",
+      "region_id": "component_56",
+      "scope": "COMPONENT"
+    },
+    {
+      "box": [
+        293,
+        226,
+        20,
+        18
+      ],
+      "confidence": null,
+      "parent_id": "page_0",
+      "region_id": "component_57",
+      "scope": "COMPONENT"
+    },
+    {
+      "box": [
+        328,
+        226,
+        19,
+        18
+      ],
+      "confidence": null,
+      "parent_id": "page_0",
+      "region_id": "component_58",
+      "scope": "COMPONENT"
+    },
+    {
+      "box": [
+        348,
+        226,
+        14,
+        18
+      ],
+      "confidence": null,
+      "parent_id": "page_0",
+      "region_id": "component_59",
+      "scope": "COMPONENT"
+    },
+    {
+      "box": [
+        362,
+        226,
+        17,
+        18
+      ],
+      "confidence": null,
+      "parent_id": "page_0",
+      "region_id": "component_60",
+      "scope": "COMPONENT"
+    }
+  ],
+  "source": "synthetic-fixture",
+  "warnings": [
+    "X-height is an experimental component-height proxy, not recognized lowercase height.",
+    "Segmentation, baseline, slant and thickness estimates lack corpus-level accuracy calibration."
+  ],
+  "width": 713
+}

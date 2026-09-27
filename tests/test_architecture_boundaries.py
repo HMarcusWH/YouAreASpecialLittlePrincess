@@ -120,6 +120,14 @@ def test_provider_sdks_only_appear_under_named_adapters():
     assert offenders == []
 
 
+def test_report_read_paths_never_reach_the_model_port():
+    """Viewing, projecting and exporting a saved report never imports a model port."""
+    for package in ("princess_app.domain.reports", "princess_app.application.reports"):
+        paths = files(package) or [SRC.joinpath(*package.split(".")).with_suffix(".py")]
+        for path in paths:
+            assert not any(within(n, "princess_app.ports.model", "princess_app.adapters") for n in imports(path)), path
+
+
 def test_learned_extra_is_isolated_and_imports_only_its_declared_runtime():
     learned = files(LEARNED_EXTRA)
     assert learned, "signature extra moved; update the Free isolation rule"

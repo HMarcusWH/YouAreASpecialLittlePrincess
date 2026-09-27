@@ -1,0 +1,226 @@
+"""Pure, deterministic ReportDocument assembly (T09).
+
+Input is the canonical ``AnalysisResult`` JSON, its ``AnalysisReference`` and
+optionally a compiled ``EvidenceBundle``. Output is a compiled, self-digested
+``ReportDocument`` or contract issues with no value. Nothing here calls a
+model, reads storage or consults entitlements.
+"""
+from __future__ import annotations
+
+from datetime import datetime
+from typing import Any, Mapping, Sequence
+
+from princess_contracts import (
+    ContractIssue,
+    ValidatedDocument,
+    ValidationResult,
+    canonical_digest,
+    compile_document,
+    free_method_ids,
+)
+from princess_contracts import generated as g
+
+from ..analysis import method_versions, rfc3339
+from .template import FACT_SECTIONS, PREMIUM_SECTION, REFERENCE_SECTION, formatting_for
+
+MAX_SOURCE_REGIONS = 128
+EVIDENCE_CLASS = {"MEASURED_VISUAL_FEATURE": "MEASURED", "COMPUTATIONAL_PROXY": "COMPUTATIONAL_PROXY"}
+PRESENT = {"READY", "UNCALIBRATED"}
+
+
+def _fail(code: str, path: str, message: str) -> ValidationResult[ValidatedDocument]:
+    return ValidationResult(None, (ContractIssue(code, path, message),))
+
+
+def _nearest_kept(region_id: str, parents: Mapping[str, str | None], kept: set[str]) -> str | None:
+    seen: set[str] = set()
+    current: str | None = region_id
+    while current is not None and current not in kept and current not in seen:
+        seen.add(current)
+        current = parents.get(current)
+    return current if current in kept else None
+
+
+def _source_regions(ids: Sequence[str], parents: Mapping[str, str | None], kept: set[str] | None) -> list[str]:
+    out = list(dict.fromkeys(ids))
+    if kept is not None:
+        out = list(dict.fromkeys(r for r in (_nearest_kept(i, parents, kept) for i in out) if r is not None))
+    while len(out) > MAX_SOURCE_REGIONS:
+        coarser = list(dict.fromkeys(parents.get(r) or r for r in out))
+        if coarser == out:
+            return out[:0]
+        out = coarser
+    return out
+
+
+def facts_from_result(result: Mapping[str, Any], *,
+                      evidence_region_ids: set[str] | None = None) -> tuple[list[dict[str, Any]], list[ContractIssue]]:
+    """Map canonical measurements to report facts; missing stays missing."""
+    versions = method_versions()
+    free = set(free_method_ids())
+    parents = {r["region_id"]: r.get("parent_id") for r in result.get("regions", ())}
+    measurements = result.get("measurements", {})
+    order = [f for _, _, ids in FACT_SECTIONS for f in ids]
+    ordered = [f for f in order if f in measurements] + sorted(set(measurements) - set(order))
+    facts, issues = [], []
+    for feature_id in ordered:
+        m = measurements[feature_id]
+        method_id = m.get("method_version")
+        if method_id not in versions:
+            issues.append(ContractIssue("UNKNOWN_METHOD", f"/measurements/{feature_id}", str(method_id)))
+            continue
+        if method_id not in free:
+            issues.append(ContractIssue("NON_FREE_METHOD", f"/measurements/{feature_id}", str(method_id)))
+            continue
+        missing = m.get("quality_flag") == "MISSING" or m.get("raw_value") is None
+        availability = "MISSING" if missing else (
+            "UNCALIBRATED" if m.get("confidence_kind") == "UNCALIBRATED" else "READY")
+        formatting_key, precision = formatting_for(m.get("unit"))
+        facts.append({
+            "fact_id": f"fact.{feature_id}",
+            "feature_id": feature_id,
+            "availability": availability,
+            "value": None if missing else m.get("raw_value"),
+            "unit": m.get("unit"),
+            "evidence_class": EVIDENCE_CLASS.get(m.get("evidence_status"), "COMPUTATIONAL_PROXY"),
+            "method_id": method_id,
+            "method_version": versions[method_id],
+            "source_region_ids": _source_regions(m.get("source_regions", ()), parents, evidence_region_ids),
+            "quality": {
+                "state": m.get("quality_flag"),
+                "missing_reason": m.get("missing_reason") if missing else None,
+                "n_observations": m.get("n_observations"),
+                "confidence": m.get("confidence"),
+                "confidence_kind": m.get("confidence_kind"),
+            },
+            "formatting_key": formatting_key,
+            "precision": precision,
+        })
+    return facts, issues
+
+
+def _section_availability(facts: Sequence[Mapping[str, Any]]) -> str:
+    states = {f["availability"] for f in facts}
+    if not states or states == {"MISSING"}:
+        return "MISSING"
+    return "READY" if "READY" in states else "UNCALIBRATED"
+
+
+def build_sections(facts: Sequence[Mapping[str, Any]], *, reference_claims: Sequence[Mapping[str, Any]],
+                   premium_overlay_id: str | None) -> list[dict[str, Any]]:
+    by_feature = {f["feature_id"]: f for f in facts}
+    sections = []
+    for section_id, template, feature_ids in FACT_SECTIONS:
+        members = [by_feature[f] for f in feature_ids if f in by_feature]
+        if members:
+            sections.append({"section_id": section_id, "template": template,
+                             "availability": _section_availability(members),
+                             "fact_ids": [f["fact_id"] for f in members], "content_ids": [],
+                             "premium_section_id": None})
+    claimed = [by_feature[c["feature_id"]]["fact_id"] for c in reference_claims if c["feature_id"] in by_feature]
+    sections.append({"section_id": REFERENCE_SECTION[0], "template": REFERENCE_SECTION[1],
+                     "availability": "READY" if claimed else "INELIGIBLE", "fact_ids": list(dict.fromkeys(claimed)),
+                     "content_ids": [], "premium_section_id": None})
+    sections.append({"section_id": PREMIUM_SECTION[0], "template": PREMIUM_SECTION[1],
+                     "availability": "READY" if premium_overlay_id else "LOCKED", "fact_ids": [],
+                     "content_ids": [],
+                     "premium_section_id": f"premium.{premium_overlay_id}" if premium_overlay_id else None})
+    return sections
+
+
+def build_notices(facts: Sequence[Mapping[str, Any]], *, has_reference: bool,
+                  premium_overlay_id: str | None) -> list[dict[str, str]]:
+    classes = {f["evidence_class"] for f in facts if f["availability"] in PRESENT}
+    notices = []
+    if "MEASURED" in classes:
+        notices.append({"notice_id": "notice.measured", "class": "MEASURED", "localization_key": "notice.measured"})
+    if "COMPUTATIONAL_PROXY" in classes:
+        notices.append({"notice_id": "notice.proxy", "class": "PROXY",
+                        "localization_key": "notice.proxy_uncalibrated"})
+    notices.append({"notice_id": "notice.reference", "class": "REFERENCE",
+                    "localization_key": "notice.reference_named_cohort" if has_reference
+                    else "notice.reference_unavailable"})
+    notices.append({"notice_id": "notice.traditional", "class": "TRADITIONAL",
+                    "localization_key": "notice.traditional_not_included"})
+    if premium_overlay_id:
+        notices.append({"notice_id": "notice.ai", "class": "AI", "localization_key": "notice.ai_synthesis"})
+    notices.append({"notice_id": "notice.privacy", "class": "PRIVACY", "localization_key": "notice.private_report"})
+    return notices
+
+
+def _finish(document: dict[str, Any]) -> ValidationResult[ValidatedDocument]:
+    document["document_digest"] = None
+    document["document_digest"] = canonical_digest(document)
+    return compile_document("ReportDocument", document)
+
+
+def assemble_report(*, report_id: str, analysis: Mapping[str, Any], result: Mapping[str, Any],
+                    created_at: datetime, locale: str, evidence: ValidatedDocument | None = None,
+                    reference_claims: Sequence[Mapping[str, Any]] = (),
+                    premium_overlay_id: str | None = None) -> ValidationResult[ValidatedDocument]:
+    """Assemble revision 1 of an individual report."""
+    schema = result.get("metadata", {}).get("schema_version")
+    if schema != g.FEATURE_SCHEMA_VERSION:
+        return _fail("RESULT_SCHEMA_DRIFT", "/metadata/schema_version", "result was produced for another schema")
+    kept = None
+    if evidence is not None:
+        if evidence.schema_name != "EvidenceBundle":
+            return _fail("WRONG_DOCUMENT_KIND", "/evidence", "expected an EvidenceBundle")
+        if evidence.to_dict()["analysis"] != dict(analysis):
+            return _fail("EVIDENCE_ANALYSIS_MISMATCH", "/evidence", "evidence belongs to another analysis/run")
+        kept = {r["region_id"] for r in evidence.data["regions"]}
+    facts, issues = facts_from_result(result, evidence_region_ids=kept)
+    if issues:
+        return ValidationResult(None, tuple(issues))
+    claims = [dict(c) for c in reference_claims]
+    document = {
+        "contract_version": g.CONTRACT_VERSION,
+        "report_id": report_id,
+        "revision": 1,
+        "kind": "INDIVIDUAL",
+        "created_at": rfc3339(created_at),
+        "locale": locale,
+        "analysis": dict(analysis),
+        "evidence_bundle_id": evidence.data["bundle_id"] if evidence is not None else None,
+        "facts": facts,
+        "reference_claims": claims,
+        "sections": build_sections(facts, reference_claims=claims, premium_overlay_id=premium_overlay_id),
+        "notices": build_notices(facts, has_reference=bool(claims), premium_overlay_id=premium_overlay_id),
+        "premium_overlay_id": premium_overlay_id,
+    }
+    return _finish(document)
+
+
+def revise_report(previous: ValidatedDocument, *, created_at: datetime,
+                  premium_overlay_id: str | None) -> ValidationResult[ValidatedDocument]:
+    """Create the next revision with a (new) Premium overlay attached.
+
+    Facts, analysis, evidence and reference claims are carried over unchanged;
+    a different benchmark or analysis is a new report, never a revision.
+    """
+    if previous.schema_name != "ReportDocument":
+        return _fail("WRONG_DOCUMENT_KIND", "", "expected a ReportDocument")
+    old = previous.to_dict()
+    if created_at < datetime.fromisoformat(old["created_at"].replace("Z", "+00:00")):
+        return _fail("REVISION_BEFORE_PREVIOUS", "/created_at", "a revision cannot predate its predecessor")
+    document = {**old, "revision": old["revision"] + 1, "created_at": rfc3339(created_at),
+                "premium_overlay_id": premium_overlay_id,
+                "sections": build_sections(old["facts"], reference_claims=old["reference_claims"],
+                                           premium_overlay_id=premium_overlay_id),
+                "notices": build_notices(old["facts"], has_reference=bool(old["reference_claims"]),
+                                         premium_overlay_id=premium_overlay_id)}
+    return _finish(document)
+
+
+IMMUTABLE_ACROSS_REVISIONS = ("report_id", "kind", "analysis", "evidence_bundle_id", "facts", "reference_claims")
+
+
+def check_revision(previous: ValidatedDocument, candidate: ValidatedDocument) -> tuple[ContractIssue, ...]:
+    """Persistence-side guard: a stored revision may only extend its predecessor."""
+    old, new = previous.to_dict(), candidate.to_dict()
+    issues = [ContractIssue("REVISION_MUTATES_" + field.upper(), f"/{field}",
+                            f"{field} is immutable across revisions")
+              for field in IMMUTABLE_ACROSS_REVISIONS if old[field] != new[field]]
+    if new["revision"] != old["revision"] + 1:
+        issues.append(ContractIssue("REVISION_NOT_SEQUENTIAL", "/revision", "revisions increase by one"))
+    return tuple(issues)
