@@ -24,6 +24,7 @@ from princess_app.adapters.postgres.commerce import PostgresLedger
 from princess_app.adapters.postgres.exports import PostgresExportRepository
 from princess_app.adapters.postgres.feedback import PostgresFeedbackRepository
 from princess_app.adapters.postgres.intake import PostgresIntakeRepository
+from princess_app.adapters.postgres.notifications import PostgresNotificationRepository
 from princess_app.adapters.postgres.stores import (
     Database,
     PostgresIdentityStore,
@@ -36,6 +37,7 @@ from princess_app.application.exports import ExportService
 from princess_app.application.feedback import FeedbackService
 from princess_app.application.identity import GuestAdmission, IdentityService
 from princess_app.application.intake import IntakeService
+from princess_app.application.notifications import NotificationService
 from princess_app.application.permissions import PermissionService
 from princess_app.config import RuntimeConfig, load_runtime_config
 from princess_app.domain.commerce import CATALOG
@@ -100,7 +102,10 @@ def compose(config: RuntimeConfig) -> Services:
                     dev_identity=provider, audience=audience, intake=intake, dev_store=store, commerce=commerce,
                     report_access=access, exports=exports,
                     feedback=FeedbackService(reports=reports, repo=PostgresFeedbackRepository(db), clock=clock),
-                    tombstones=tombstone_log())
+                    tombstones=tombstone_log(),
+                    # Registration and preferences only; delivery is the notification worker's.
+                    notifications=NotificationService(repo=PostgresNotificationRepository(db), clock=clock,
+                                                      ids=UuidIds(), environment=config.environment))
 
 
 def local_store(config: RuntimeConfig, clock) -> LocalObjectStore:

@@ -171,7 +171,7 @@ def test_every_api_route_is_a_registered_telemetry_template(client):
     assert paths and paths <= ROUTE_TEMPLATES
 
 
-def test_composed_local_stack_upload_to_report(app_url, worker_db, tmp_path, monkeypatch):
+def test_composed_local_stack_upload_to_report(app_url, worker_db, tmp_path, monkeypatch, capsys):
     """compose() from a validated local config, then a separately built worker
     sharing only the database and the filesystem store."""
     import hashlib
@@ -231,6 +231,14 @@ def test_composed_local_stack_upload_to_report(app_url, worker_db, tmp_path, mon
     report = api.get(f"/v1/reports/{status['report_id']}?projection=FREE", headers=auth)
     assert report.status_code == 200 and len(report.json()["facts"]) == 64
     assert api.get(f"/v1/reports/{status['report_id']}/premium", headers=auth).status_code == 403  # nothing bought
+    device = {"device_token": "e" * 64, "platform": "fcm", "app_environment": "test", "locale": "en"}
+    assert api.post("/v1/me/push-installations", json=device, headers=auth).status_code == 201
+    notifier = _load_script(root / "apps" / "workers" / "notifications" / "run_worker.py")
+    worker_env = {"PRINCESS_ENV": "test", "PRINCESS_COMPONENT": "notification_worker",
+                  "PRINCESS_DATABASE_URL": worker_db.engine.url.render_as_string(hide_password=False)}
+    monkeypatch.setattr(notifier.os, "environ", worker_env)
+    assert notifier.main(["once"]) == 0
+    assert json.loads(capsys.readouterr().out) == {"command": "once", "outcomes": {"PUSH:ACCEPTED": 1}}
     export = api.post("/v1/report-exports", json={"report_id": status["report_id"], "layout": "A4"}, headers=auth)
     assert export.status_code == 202 and export.json()["state"] == "QUEUED"
     assert export.json()["downloaded_copies"] == "downloaded_copies_cannot_be_recalled"
@@ -243,6 +251,15 @@ def test_composed_local_stack_upload_to_report(app_url, worker_db, tmp_path, mon
     assert api.get(f"/v1/reports/{status['report_id']}", headers=auth).status_code == 404
     tombstones = (tmp_path / "tombstones" / "tombstones.jsonl").read_text()  # outside the database
     assert capture["capture_id"] in tombstones and "CAPTURE_DELETED" in tombstones
+
+
+def _load_script(path: Path):
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location(f"script_{path.parent.name}", path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
 
 
 def commerce_client(app_db, *, selling):  # noqa: D103
@@ -312,3 +329,46 @@ def test_ops_commands_run_against_the_composed_stack(app_url, tmp_path, monkeypa
                      {"command": "reconcile", "outcomes": {}, "rail": "stripe"},
                      {"command": "expire-feedback", "expired": 0},
                      {"command": "replay-tombstones", "already": 0, "reapplied": 0, "unknown": 0}]
+
+
+
+def test_push_bindings_and_mail_preferences_over_http(client, app_db):
+    from princess_app.adapters.postgres.notifications import PostgresNotificationRepository
+    from princess_app.application.notifications import NotificationService
+
+    _, clock = client
+    provider = FakeIdentityProvider(clock=clock)
+    api = TestClient(create_app(Services(
+        environment=Environment.TEST, clock=clock,
+        identity=IdentityService(provider, PostgresIdentityStore(app_db), clock, SequentialIds(), "princess-api"),
+        permissions=PermissionService(PostgresPermissionStore(app_db), clock, SequentialIds(),
+                                      allow_draft_policy=True),
+        report_store_for=lambda pid: PostgresReportStore(app_db, pid), dev_identity=provider,
+        notifications=NotificationService(repo=PostgresNotificationRepository(app_db), clock=clock,
+                                          ids=SequentialIds(), environment=Environment.TEST))))
+    alice = login(api, "alice-n")
+    guest = {"Authorization": "Bearer " + api.post("/v1/guest-sessions").json()["guest_token"]}
+    body = {"device_token": "d" * 64, "platform": "apns", "app_environment": "test", "locale": "sv-SE"}
+    created = api.post("/v1/me/push-installations", json=body, headers=alice)
+    assert created.status_code == 201
+    installation_id = created.json()["installation_id"]
+    listed = api.get("/v1/me/push-installations", headers=alice).json()["installations"]
+    assert [i["installation_id"] for i in listed] == [installation_id] and "device_token" not in listed[0]
+    for bad in ({**body, "app_environment": "production"}, {**body, "extra": 1}, {**body, "device_token": "x y z 1"}):
+        assert api.post("/v1/me/push-installations", json=bad, headers=alice).status_code == 422
+    assert api.get("/v1/me/notification-preferences", headers=alice).json() == {"mail_report_ready": False,
+                                                                               "locale": "en"}
+    assert api.put("/v1/me/notification-preferences", json={"mail_report_ready": True, "locale": "sv-SE"},
+                   headers=alice).json() == {"mail_report_ready": True, "locale": "sv-SE"}
+    refused = api.put("/v1/me/notification-preferences", json={"mail_report_ready": True}, headers=guest)
+    assert (refused.status_code, refused.json()) == (403, {"error": "account_required"})
+    assert api.delete(f"/v1/me/push-installations/{installation_id}", headers=guest).status_code == 204
+    assert len(api.get("/v1/me/push-installations", headers=alice).json()["installations"]) == 1  # not the guest's
+    assert api.delete(f"/v1/me/push-installations/{installation_id}", headers=alice).status_code == 204
+    assert api.get("/v1/me/push-installations", headers=alice).json()["installations"] == []
+    for token in ("f" * 64, "g" * 64):
+        api.post("/v1/me/push-installations", json={**body, "device_token": token}, headers=alice)
+    assert api.post("/v1/me/logout-everywhere", headers=alice).status_code == 204  # e.g. a lost phone
+    clock.advance(1)
+    alice = login(api, "alice-n")
+    assert api.get("/v1/me/push-installations", headers=alice).json()["installations"] == []

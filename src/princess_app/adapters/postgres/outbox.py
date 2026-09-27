@@ -64,6 +64,7 @@ class PostgresErasureOutbox:
     def erase_account_records(self, owner_id: str, at: datetime) -> None:
         with self.db.session() as conn:
             conn.execute(text("SELECT app.erase_deleted_account(:o, :t)"), {"o": owner_id, "t": at})
+            conn.execute(text("SELECT app.erase_account_notifications(:o)"), {"o": owner_id})
 
     def erase_capture_records(self, owner_id: str, capture_id: str, at: datetime) -> None:
         with self.db.session() as conn:

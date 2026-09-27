@@ -46,26 +46,29 @@ def test_mail_invalid_recipient_suppression_and_idempotency_window():
     assert len(mailer.sent) == 2  # provider dedupe expired: the application must dedupe durably
 
 
-def test_push_rotation_logout_environment_and_duplicates():
+def test_push_is_stateless_best_effort_and_environment_bound():
     clock = FakeClock()
     push = FakePushProvider(clock=clock)
-    inst = push.register_installation("device-token-1", messaging.PushPlatform.APNS, ENV, "principal_1", ctx(clock))
+    target = messaging.PushTarget("device-token-1", messaging.PushPlatform.APNS, ENV)
     message = messaging.PushMessage("report_ready", "report_1", "en")
-    push.send(inst.installation_ref, message, "k1", ctx(clock))
-    push.send(inst.installation_ref, message, "k1", ctx(clock))
+    push.send(target, message, "k1", ctx(clock))
+    push.send(target, message, "k1", ctx(clock))
     assert len(push.delivered) == 2  # best effort; no exactly-once promise
     push.invalidate_token("device-token-1")
     with pytest.raises(PermanentFailure) as err:
-        push.send(inst.installation_ref, message, "k2", ctx(clock))
+        push.send(target, message, "k2", ctx(clock))
     assert err.value.code == "unregistered"
-    prod_inst = push.register_installation("device-token-2", messaging.PushPlatform.FCM, Environment.PRODUCTION,
-                                           "principal_1", ctx(clock))
-    with pytest.raises(PermanentFailure):
-        push.send(prod_inst.installation_ref, message, "k3", ctx(clock))
-    inst2 = push.register_installation("device-token-3", messaging.PushPlatform.FCM, ENV, "principal_1", ctx(clock))
-    push.revoke_installation(inst2.installation_ref, ctx(clock))
-    with pytest.raises(PermanentFailure):
-        push.send(inst2.installation_ref, message, "k4", ctx(clock))
+    production = messaging.PushTarget("device-token-2", messaging.PushPlatform.FCM, Environment.PRODUCTION)
+    with pytest.raises(PermanentFailure) as err:
+        push.send(production, message, "k3", ctx(clock))
+    assert err.value.code == "environment_mismatch"
+    assert "device-token" not in repr(target)  # tokens never reach logs through repr
+
+
+@pytest.mark.parametrize("token", ["short", "has space in it", "x" * 4097, "tok\nen-12345", 12345678])
+def test_push_target_rejects_malformed_tokens(token):
+    with pytest.raises(InvalidInput):
+        messaging.PushTarget(token, messaging.PushPlatform.FCM, ENV)
 
 
 @pytest.mark.parametrize("kind,ref", [("balance_changed", "r1"), ("report_ready", "https://x/y")])

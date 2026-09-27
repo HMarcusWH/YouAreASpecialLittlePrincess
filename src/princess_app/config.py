@@ -85,7 +85,7 @@ COMPONENT_EGRESS: Mapping[str, frozenset[str]] = {
     "web_public": frozenset({"api"}),
     "native_public": frozenset({"api"}),
 }
-KILL_SWITCHES = ("premium_generation", "commerce", "uploads", "sharing")
+KILL_SWITCHES = ("premium_generation", "commerce", "uploads", "sharing", "notifications")
 _DB_NAME = re.compile(r"^princess_(local|test|preview(?:_[a-z0-9]{1,24})?|staging|production)$")
 _LIVE_LOOKING = re.compile(r"(?i)(^sk_live_|^rk_live_|_live_|\blive\b)")
 _TEST_LOOKING = re.compile(r"(?i)(^sk_test_|^rk_test_|_test_|\btest\b|fake|dummy|changeme|example)")

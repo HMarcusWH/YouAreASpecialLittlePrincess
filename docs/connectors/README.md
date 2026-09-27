@@ -49,7 +49,7 @@ The ports, fakes and conformance harness now exist. Real adapters remain the own
 | PaymentProvider | `src/princess_app/ports/payments.py` | `FakePaymentProvider` (Stripe-, Apple-, Google-shaped rails) | per rail: web checkout/refund (Stripe), proof verification (stores), server consume/acknowledge (Google only), signed events, lookup, reconcile |
 | NativePurchaseClient | `src/princess_app/ports/payments.py` | `FakeNativePurchaseClient` | returns store proofs; Apple finish is client-side after the server grant |
 | TransactionalMailer | `src/princess_app/ports/messaging.py` | `FakeMailer` | template/variable allowlist, bounded provider idempotency window, suppression |
-| PushProvider | `src/princess_app/ports/messaging.py` | `FakePushProvider` | generic payloads, token invalidation, environment mismatch, duplicate delivery |
+| PushProvider | `src/princess_app/ports/messaging.py` | `FakePushProvider` | stateless targets, generic payloads, token invalidation, environment mismatch, duplicate delivery |
 | AbuseChallengeProvider | `src/princess_app/ports/abuse.py` | `FakeAbuseChallenge` | action/site binding, expiry, replay, outage → `UNAVAILABLE` |
 | AnalyticsSink | `src/princess_app/ports/analytics.py` | `FakeAnalyticsSink` | versioned event/property allowlist (`analytics-events/1`), consent and disable switch |
 | TelemetryExporter | `src/princess_app/ports/telemetry.py` | `FakeTelemetryExporter` | attribute allowlist and redaction; `BufferedTelemetry` drops rather than blocks |

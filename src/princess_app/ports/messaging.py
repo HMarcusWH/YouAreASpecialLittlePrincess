@@ -7,7 +7,7 @@ Delivery is best effort; business state never waits on it.
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 from typing import Mapping, Protocol
 
@@ -78,12 +78,31 @@ class PushPlatform(str, Enum):
     FCM = "fcm"
 
 
+_DEVICE_TOKEN = re.compile(r"^[A-Za-z0-9_:.-]{8,4096}$")
+
+
+def validate_device_token(device_token: object) -> str:
+    """APNs tokens are hex; FCM registration tokens use a URL-safe alphabet."""
+    if not isinstance(device_token, str) or not _DEVICE_TOKEN.match(device_token):
+        raise InvalidInput("invalid_device_token")
+    return device_token
+
+
 @dataclass(frozen=True)
-class PushInstallation:
-    installation_ref: str
+class PushTarget:
+    """Where one notification goes. The application owns installation
+    bindings (account, rotation, logout, retirement); adapters are stateless
+    and only translate a target into an APNs/FCM request. The token never
+    appears in ``repr`` and so not in logs."""
+
+    device_token: str = field(repr=False)
     platform: PushPlatform
     app_environment: Environment
-    principal_ref: str
+
+    def __post_init__(self) -> None:
+        validate_device_token(self.device_token)
+        object.__setattr__(self, "platform", PushPlatform(self.platform))
+        object.__setattr__(self, "app_environment", Environment.parse(self.app_environment))
 
 
 @dataclass(frozen=True)
@@ -103,14 +122,9 @@ class PushMessage:
 class PushProvider(Protocol):
     profile: CapabilityProfile
 
-    def register_installation(self, device_token: str, platform: PushPlatform,
-                              app_environment: Environment, principal_ref: str,
-                              ctx: CallContext) -> PushInstallation: ...
-
-    def revoke_installation(self, installation_ref: str, ctx: CallContext) -> None: ...
-
-    def send(self, installation_ref: str, message: PushMessage, delivery_key: str,
+    def send(self, target: PushTarget, message: PushMessage, delivery_key: str,
              ctx: CallContext) -> DeliveryObservation:
-        """Raises ``PermanentFailure('unregistered')`` when the token is gone; the
-        application then retires the binding."""
+        """Raises ``PermanentFailure('unregistered')`` when the token is gone and
+        ``PermanentFailure('environment_mismatch')`` for a sandbox token sent to
+        production (or the reverse); the application then retires the binding."""
         ...

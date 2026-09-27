@@ -81,10 +81,24 @@ The command prints `reapplied` (deletions the restored database had forgotten, n
 - **Known gap:** Premium jobs restored in `QUEUED` may call the model again, although customers are still charged only on publication. Durable provider-attempt reconciliation needs provider-side request lookup, which the adapter does not support yet.
 - **PENDING DEPLOYMENT:** backup tooling, RPO/RTO, where the log lives in production (an append-only bucket after ADR-004), and a timed restore drill.
 
-## 8. Not yet covered (T24 later slices)
+## 8. Mail or push outage, revoked provider key, suppression review
 
-- Mail and push delivery (ADR-007, token storage).
-- Key rotation and compromise.
+Notices never carry business state, so an outage only delays or drops them.
+```sh
+$NOTIFY_ENV python apps/workers/notifications/run_worker.py once     # one pass; counts by channel and state
+$NOTIFY_ENV python apps/workers/notifications/run_worker.py suppress --recipient <principal_id> --reason COMPLAINT
+$NOTIFY_ENV python apps/workers/notifications/run_worker.py unsuppress --recipient <principal_id>
+```
+(`$NOTIFY_ENV` = the `notification_worker` component's environment.)
+
+- **Provider outage:** failures back off and give up after 5 attempts. Notices older than 24 h are dropped rather than sent late. No action is needed beyond watching the `notification.delivery` metric (`outcome=retry`/`failed`, `error_code`).
+- **Revoked or rotated provider key:** sends fail as `provider_auth` and back off. Set the `notifications` kill switch off (pending events are consumed without sending, so no backlog floods out later), rotate the secret, redeploy only the notification worker and switch back on.
+- **Bounces and complaints:** a provider-reported suppression is recorded automatically. Record others with `suppress`, and lift one only after support review. Signed bounce/complaint webhooks arrive with the ADR-007 provider.
+- **PENDING DEPLOYMENT:** live mail/APNs/FCM adapters, alert thresholds and the named on-call owner.
+
+## 9. Not yet covered (T24 later slices)
+
+- Key rotation and compromise beyond the notification worker.
 - Store rollout halt.
 - Account and identity recovery (ADR-002).
 

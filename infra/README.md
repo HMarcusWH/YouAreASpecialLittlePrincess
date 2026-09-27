@@ -8,12 +8,12 @@
 
 - the provider mode of every server-side connector port (`fake`, `sandbox` or `live`);
 - the environment's database name (`princess_<environment>`);
-- kill switches (`premium_generation`, `commerce`, `uploads`, `sharing`);
+- kill switches (`premium_generation`, `commerce`, `uploads`, `sharing`, `notifications`);
 - for every deployable component, the secret names it may read and the egress destinations it may reach.
 
 `princess_app.config.parse_manifest` rejects fakes in production, live adapters in local/test/preview, a secret or egress destination outside the reviewed component matrix (for example a model key on the analysis worker or any secret in a public web/native bundle), and a database name belonging to another environment. `load_runtime_config` also rejects missing secrets, test-looking credentials in production, live-looking credentials elsewhere, and a database URL naming another environment's database.
 
-Staging and production reference `sandbox`/`live` adapters that later tasks implement; their kill switches keep uploads, Premium, commerce and sharing off until those adapters and the owner gates exist.
+Staging and production reference `sandbox`/`live` adapters that later tasks implement; their kill switches keep uploads, Premium, commerce, sharing and notifications off until those adapters and the owner gates exist.
 
 ```bash
 python tools/check_environments.py          # validate every manifest
@@ -134,6 +134,18 @@ Migration `0005_report_exports` adds `report_export`. Components:
 Share cards also need a current `ordinary_sharing` grant (scope `SHARE_GRANT`). It is named in the request and re-checked at publication and on every retrieval, so withdrawing it revokes and erases the card. Each render attempt writes to an asset ID derived from the export and the job's fencing token, so bytes left by a crashed worker are found and erased when the job is reclaimed or gives up. An owner can start at most 20 renders per rolling day, completed ones included.
 
 The cache key is the digest of the authorized projection (without its generation time), the layout, the template and, for cards, the grant. Anything that changes what may be shown yields a new key: an erased original, an erased Premium payload or a new revision. Retrieval re-derives the key, and a stale export is revoked and its bytes queued for erasure (`asset.erasure_requested`). Deleting a capture revokes its reports' exports, and account erasure removes them with the other assets. A file the owner already downloaded cannot be recalled; the status DTO says so. The source image is not embedded yet, so every export carries the "source image omitted" notice.
+
+## Notifications: push and mail (T24)
+
+Migration `0008_notifications` adds `push_installation`, `notification_preference`, `notification_delivery` and `mail_suppression`.
+
+- `POST /v1/me/push-installations` (`device_token`, `platform` `apns`/`fcm`, `app_environment`, `locale`) binds a device to the signed-in principal. A build for another backend environment is refused. Registering the same token again returns the same binding. A token registered by another account moves to that account, and anything still queued for the previous one is dropped. Each principal keeps at most 10 bindings (oldest dropped). `GET` lists bindings without tokens, and `DELETE /v1/me/push-installations/{id}` is the logout/account-switch call.
+- `GET`/`PUT /v1/me/notification-preferences` (`mail_report_ready`, `locale`). Mail is opt-in and needs an account; guests get push only.
+- The API role can register and delete bindings but can never read a token back. Only the notification worker's role reads tokens.
+- `apps/workers/notifications/run_worker.py` (component `notification_worker`: database plus mail/push providers, nothing else) turns each `report.ready` outbox event into delivery records and marks the event dispatched in the same transaction. Its delivery key, derived from the event and target, is also the provider delivery key, so a replayed event or a second worker plans nothing new. Before each send it re-reads the account, report, binding, opt-in and suppression. Notices carry a generic kind, an opaque report ID and an `app://` link only. Transient failures and refused provider credentials back off (30 s doubling, at most 5 attempts). Notices older than 24 h are dropped. `unregistered` or `environment_mismatch` retires the binding. An ambiguous mail send is retried on the same key only when the provider deduplicates on it; an ambiguous push is not retried. With the `notifications` switch off, events are consumed without sending. Delivery records are kept 30 days (draft).
+- Account erasure removes bindings, preferences, delivery records and suppressions. Capture erasure removes its report's delivery records.
+
+Only fake mail and push adapters compose today. Live mail waits on the ADR-007 provider decision, and APNs/FCM on native signing accounts (T29–T31). The API never calls a provider.
 
 ## Commerce ledger and metered Premium (T19)
 

@@ -19,7 +19,8 @@
     "premium_generation": false,
     "commerce": false,
     "uploads": false,
-    "sharing": false
+    "sharing": false,
+    "notifications": false
   },
   "components": {
     "api": {

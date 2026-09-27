@@ -24,6 +24,7 @@ from princess_app.application.exports import NOT_RECALLABLE, ExportRow, ExportSe
 from princess_app.application.feedback import FeedbackService
 from princess_app.application.identity import IdentityService, Principal
 from princess_app.application.intake import ChallengeProof, IntakeService
+from princess_app.application.notifications import NotificationService
 from princess_app.application.permissions import PermissionService
 from princess_app.application.reports import ReportAccessResolver, ReportReader, ReportStore
 from princess_app.application.tombstones import ACCOUNT_DELETED, CAPTURE_DELETED, Tombstone, TombstoneLog
@@ -90,6 +91,7 @@ class Services:
     feedback: FeedbackService | None = None
     # Deletions recorded outside the database, replayed after a restore.
     tombstones: TombstoneLog | None = None
+    notifications: NotificationService | None = None
 
 
 class _Strict(BaseModel):
@@ -163,6 +165,20 @@ class FeedbackBody(_Strict):
     request_id: str = Field(pattern=r"^[A-Za-z0-9][A-Za-z0-9._:-]{7,127}$")
 
 
+class PushInstallationBody(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_max_length=4096)
+    device_token: str = Field(min_length=8, max_length=4096)
+    platform: Literal["apns", "fcm"]
+    # The backend environment the build targets; a mismatch is refused.
+    app_environment: str = Field(max_length=16)
+    locale: str = Field(default="en", max_length=5)
+
+
+class NotificationPreferencesBody(_Strict):
+    mail_report_ready: bool
+    locale: str = Field(default="en", max_length=5)
+
+
 def export_status(row: ExportRow) -> dict:
     return {"export_id": row.export_id, "report_id": row.report_id, "revision": row.revision,
             "layout": row.layout, "sections": list(row.sections), "state": row.state,
@@ -227,7 +243,12 @@ def create_app(services: Services) -> FastAPI:
     @app.post("/v1/me/logout-everywhere", status_code=204)
     def logout_everywhere(request: Request, who: Principal = Depends(principal)) -> Response:
         services.identity.logout_everywhere(who, call_context(request))
+        forget_devices(who.principal_id)
         return Response(status_code=204)
+
+    def forget_devices(owner_id: str) -> None:
+        if services.notifications is not None:
+            services.notifications.forget_devices(owner_id)
 
     def tombstone(kind: str, owner_id: str, ref: str) -> None:
         """Fast path after the commit. Best effort: the erasure worker writes
@@ -241,6 +262,7 @@ def create_app(services: Services) -> FastAPI:
     @app.delete("/v1/me", status_code=202)
     def delete_me(request: Request, who: Principal = Depends(principal)) -> dict:
         services.identity.delete_account(who, call_context(request))
+        forget_devices(who.principal_id)
         tombstone(ACCOUNT_DELETED, who.principal_id, who.principal_id)
         return {"state": "DELETION_REQUESTED"}
 
@@ -438,6 +460,42 @@ def create_app(services: Services) -> FastAPI:
     def withdraw_feedback(feedback_id: str, who: Principal = Depends(principal)) -> Response:
         feedback().withdraw(who.principal_id, feedback_id)
         return Response(status_code=204)
+
+    def notifications() -> NotificationService:
+        if services.notifications is None:
+            raise Unsupported("notifications_not_configured")
+        return services.notifications
+
+    @app.post("/v1/me/push-installations", status_code=201)
+    def register_push(body: PushInstallationBody, who: Principal = Depends(principal)) -> dict:
+        """Bind this device to the signed-in principal (moves it from any other account)."""
+        installation_id = notifications().register(who, body.device_token, body.platform, body.app_environment,
+                                                   body.locale)
+        return {"installation_id": installation_id}
+
+    @app.get("/v1/me/push-installations")
+    def list_push(who: Principal = Depends(principal)) -> dict:
+        return {"installations": [
+            {"installation_id": i.installation_id, "platform": i.platform.value,
+             "app_environment": i.app_environment.value, "registered_at": rfc3339(i.registered_at)}
+            for i in notifications().installations(who.principal_id)]}
+
+    @app.delete("/v1/me/push-installations/{installation_id}", status_code=204)
+    def unregister_push(installation_id: str, who: Principal = Depends(principal)) -> Response:
+        """Logout or account switch on a device; notices still queued for it are dropped."""
+        notifications().unregister(who.principal_id, installation_id)
+        return Response(status_code=204)
+
+    @app.get("/v1/me/notification-preferences")
+    def read_notification_preferences(who: Principal = Depends(principal)) -> dict:
+        prefs = notifications().preferences(who.principal_id)
+        return {"mail_report_ready": prefs.mail_report_ready, "locale": prefs.locale}
+
+    @app.put("/v1/me/notification-preferences")
+    def write_notification_preferences(body: NotificationPreferencesBody,
+                                       who: Principal = Depends(principal)) -> dict:
+        prefs = notifications().set_preferences(who, body.mail_report_ready, body.locale)
+        return {"mail_report_ready": prefs.mail_report_ready, "locale": prefs.locale}
 
     @app.get("/v1/premium-jobs/{job_id}")
     def premium_job(job_id: str, who: Principal = Depends(principal)) -> dict:
