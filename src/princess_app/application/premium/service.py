@@ -12,6 +12,7 @@ Nothing here is reachable from report read, export or share paths.
 """
 from __future__ import annotations
 
+import hashlib
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
@@ -26,11 +27,12 @@ from ...ports.base import (
     CallContext,
     Clock,
     DeadlineExceeded,
-    IdGenerator,
+    InvalidInput,
     PortError,
     RateLimited,
     TransientUnavailable,
     Unsupported,
+    require_opaque_id,
 )
 from ...ports.storage import StoredObject
 from ..permissions import PermissionService
@@ -55,6 +57,23 @@ def billable_token_bound(compilation: PacketCompilation, image: StoredObject | N
     return len(text.encode("utf-8")) + (IMAGE_INPUT_TOKEN_BOUND if image else 0) + MAX_OUTPUT_TOKENS
 
 
+def premium_attempt_id(job_id: str, attempt_number: int) -> str:
+    """Stable provider-attempt identity that survives process/database restore."""
+    require_opaque_id(job_id, "job_id")
+    if type(attempt_number) is not int or not 1 <= attempt_number <= MAX_ATTEMPTS:
+        raise InvalidInput("invalid_attempt_number")
+    digest = hashlib.sha256(f"{job_id}\\0{attempt_number}".encode()).hexdigest()[:40]
+    return f"attempt_{digest}"
+
+
+class ProviderAttemptState(str, Enum):
+    STARTED = "STARTED"
+    COMPLETED = "COMPLETED"
+    REFUSED = "REFUSED"
+    INCOMPLETE = "INCOMPLETE"
+    AMBIGUOUS = "AMBIGUOUS"
+    FAILED = "FAILED"
+
 class Outcome(str, Enum):
     SUCCEEDED = "SUCCEEDED"
     NOT_APPLICABLE = "NOT_APPLICABLE"      # nothing to ask; no provider call, nothing to charge
@@ -76,6 +95,7 @@ class PremiumJob:
     attempt_number: int = 1
     fencing_token: int = 0            # lease fence for durable publication
     reservation_id: str | None = None  # the credit this deliverable spends
+    created_at: datetime | None = None   # stable packet timestamp for restore reconstruction
 
 
 @dataclass(frozen=True)
@@ -125,6 +145,16 @@ class SpendBudget(Protocol):
         ...
 
 
+class AttemptJournal(Protocol):
+    def start_attempt(self, job: PremiumJob, request: port.GenerationRequest, at: datetime) -> None:
+        """Durably record intent before any provider transmission."""
+        ...
+
+    def finish_attempt(self, attempt_id: str, state: ProviderAttemptState, error_code: str | None,
+                       result: port.ProviderGenerationResult | None, at: datetime) -> None:
+        """Durably record the provider-side outcome without storing private output."""
+        ...
+
 class OverlayPublisher(Protocol):
     def publish(self, job: PremiumJob, overlay: PremiumOverlay, now: datetime) -> int:
         """Atomically re-check permission epoch, deletion and report revision,
@@ -135,8 +165,8 @@ class OverlayPublisher(Protocol):
 class PremiumRunner:
     def __init__(self, *, reports: Callable[[str], ReportStore], permissions: PermissionService,
                  images: ImageSource, model: port.PremiumModelProvider, budget: SpendBudget,
-                 publisher: OverlayPublisher, database: InterpretationDatabase, clock: Clock, ids: IdGenerator,
-                 context: Callable[[], CallContext],
+                 attempts: AttemptJournal, publisher: OverlayPublisher, database: InterpretationDatabase,
+                 clock: Clock, context: Callable[[], CallContext],
                  producers: Mapping[str, CandidateProducer] | None = None,
                  allow_inactive_content: bool = False) -> None:
         self._reports = reports
@@ -144,16 +174,16 @@ class PremiumRunner:
         self._images = images
         self._model = model
         self._budget = budget
+        self._attempts = attempts
         self._publisher = publisher
         self._db = database
         self._clock = clock
-        self._ids = ids
         self._context = context
         self._producers = producers or {}
         self._allow_inactive = allow_inactive_content  # local/test composition only
 
     def run(self, job: PremiumJob) -> AttemptRecord:
-        attempt_id = self._ids.new_id("attempt")
+        attempt_id = premium_attempt_id(job.job_id, job.attempt_number)
 
         def record(outcome: Outcome, code: str | None = None, **extra) -> AttemptRecord:
             return AttemptRecord(attempt_id, job.job_id, outcome, code, **extra)
@@ -165,7 +195,7 @@ class PremiumRunner:
         image = self._images.authorized_image(job.owner_id, report)
         try:
             compilation = compile_packet(report, self._db, packet_id=f"packet_{attempt_id}",
-                                         created_at=self._clock.now(),
+                                         created_at=job.created_at or self._clock.now(),
                                          image_asset_id=image.asset_id if image else None,
                                          producers=self._producers, owner_id=job.owner_id,
                                          allow_inactive=self._allow_inactive)
@@ -188,6 +218,32 @@ class PremiumRunner:
             return result
         return self._finish(job, attempt_id, compilation, result, record)
 
+    def reconciliation_request(self, job: PremiumJob, attempt_number: int) -> port.GenerationRequest:
+        """Rebuild the exact bounded request for provider-side restore lookup.
+
+        No budget is reserved, no provider is called and no attempt row is
+        created here. A changed permission/report/image fails closed.
+        """
+        probe = PremiumJob(
+            job.job_id, job.owner_id, job.report_id, job.report_revision, job.permission_epoch,
+            attempt_number=attempt_number, fencing_token=job.fencing_token,
+            reservation_id=job.reservation_id, created_at=job.created_at,
+        )
+        fence = self._fence(probe)
+        if isinstance(fence, str):
+            raise Fenced(fence)
+        report = fence
+        image = self._images.authorized_image(probe.owner_id, report)
+        attempt_id = premium_attempt_id(probe.job_id, attempt_number)
+        compilation = compile_packet(
+            report, self._db, packet_id=f"packet_{attempt_id}",
+            created_at=probe.created_at or self._clock.now(),
+            image_asset_id=image.asset_id if image else None,
+            producers=self._producers, owner_id=probe.owner_id,
+            allow_inactive=self._allow_inactive,
+        )
+        return self._request(attempt_id, compilation, image)
+
     def _fence(self, job: PremiumJob) -> ValidatedDocument | str:
         """The current report if the job may still run, else the fence reason."""
         check = self._permissions.check(job.owner_id, PURPOSE, Scope("REPORT", job.report_id))
@@ -200,24 +256,41 @@ class PremiumRunner:
             return "report_revised"
         return latest[1]
 
+    @staticmethod
+    def _request(attempt_id: str, compilation: PacketCompilation, image) -> port.GenerationRequest:
+        return port.GenerationRequest(
+            attempt_id=attempt_id, packet=compilation.model_input,
+            packet_digest=compilation.model_input_digest,
+            output_schema=output_schema(compilation), policy_version=POLICY_ID,
+            image=image, max_output_tokens=MAX_OUTPUT_TOKENS,
+        )
+
     def _call(self, job, attempt_id, compilation: PacketCompilation, image, record):
-        request = port.GenerationRequest(attempt_id=attempt_id, packet=compilation.model_input,
-                                         packet_digest=compilation.model_input_digest,
-                                         output_schema=output_schema(compilation), policy_version=POLICY_ID,
-                                         image=image, max_output_tokens=MAX_OUTPUT_TOKENS)
+        request = self._request(attempt_id, compilation, image)
         digest = compilation.model_input_digest
+        # If this write fails, no private data is transmitted.
+        self._attempts.start_attempt(job, request, self._clock.now())
         try:
-            return self._model.generate(request, self._context())
+            result = self._model.generate(request, self._context())
         except AmbiguousOutcome as exc:
+            self._attempts.finish_attempt(
+                attempt_id, ProviderAttemptState.AMBIGUOUS, exc.code, None, self._clock.now())
             # Keep the reservation: the provider may have executed and billed.
             return record(Outcome.AMBIGUOUS, exc.code, packet_digest=digest)
         except (RateLimited, TransientUnavailable, DeadlineExceeded) as exc:
+            self._attempts.finish_attempt(
+                attempt_id, ProviderAttemptState.FAILED, exc.code, None, self._clock.now())
             self._budget.settle(attempt_id, None)
             outcome = Outcome.RETRYABLE if job.attempt_number < MAX_ATTEMPTS else Outcome.FAILED
             return record(outcome, exc.code, packet_digest=digest)
         except PortError as exc:
+            self._attempts.finish_attempt(
+                attempt_id, ProviderAttemptState.FAILED, exc.code, None, self._clock.now())
             self._budget.settle(attempt_id, None)
             return record(Outcome.FAILED, exc.code, packet_digest=digest)
+        self._attempts.finish_attempt(
+            attempt_id, ProviderAttemptState(result.state.value), None, result, self._clock.now())
+        return result
 
     def _finish(self, job, attempt_id, compilation: PacketCompilation, result: port.ProviderGenerationResult,
                 record) -> AttemptRecord:
@@ -242,5 +315,8 @@ class PremiumRunner:
         return record(Outcome.SUCCEEDED, revision=revision, **meta)
 
 
-__all__ = ["AttemptRecord", "Fenced", "IMAGE_INPUT_TOKEN_BOUND", "ImageSource", "MAX_ATTEMPTS", "Outcome", "OverlayPublisher",
-           "PremiumJob", "PremiumOverlay", "PremiumRunner", "SpendBudget", "billable_token_bound"]
+__all__ = [
+    "AttemptJournal", "AttemptRecord", "Fenced", "IMAGE_INPUT_TOKEN_BOUND", "ImageSource", "MAX_ATTEMPTS",
+    "Outcome", "OverlayPublisher", "PremiumJob", "PremiumOverlay", "PremiumRunner", "ProviderAttemptState",
+    "SpendBudget", "billable_token_bound", "premium_attempt_id",
+]
