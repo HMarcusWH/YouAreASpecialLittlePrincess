@@ -25,7 +25,7 @@ Use `python docs/roadmap/plan_tools.py --ready`, `--active` or `--task ID`. Edit
 | [T08 — Normalization and reviewed content](#t08) | PLANNED | T01, T05, T06 | content-engine |
 | [T09 — Report assembly and authorized projections](#t09) | DONE | T01, T05 | report-backend |
 | [T10 — Contract-driven multi-platform design handoff](#t10) | IMPLEMENTED_PENDING_REVIEW | T01 | design |
-| [T11 — Owned pilot recruitment and annotation](#t11) | PLANNED | T03, T04 | product-data-human |
+| [T11 — Owned pilot recruitment and annotation](#t11) | IN_PROGRESS | T03, T04 | product-data-human |
 | [T12 — Candidate corpus ETL and deduplication](#t12) | PLANNED | T04, T06, T11 | data |
 | [T13 — Reference statistics and distinctiveness](#t13) | PLANNED | T08, T12 | statistics |
 | [T14 — Benchmark publish withdraw drift rollback](#t14) | PLANNED | T03, T13 | data-platform |
@@ -982,7 +982,7 @@ No approval is created by this task brief. Mock/disabled implementation is not a
 <a id="t11"></a>
 ## T11 — Owned pilot recruitment and annotation
 
-**Status:** `PLANNED` · **Owner:** product-data-human · **Milestone:** reference
+**Status:** `IN_PROGRESS` · **Owner:** product-data-human · **Milestone:** reference
 
 **Hard predecessors:** [T03](#t03), [T04](#t04)
 **Platforms:** data, evaluation
@@ -993,6 +993,9 @@ No approval is created by this task brief. Mock/disabled implementation is not a
 - [docs/roadmap/02-corpus-benchmarks.md](02-corpus-benchmarks.md)
 - [docs/roadmap/17-security-privacy-and-abuse.md](17-security-privacy-and-abuse.md)
 - [docs/roadmap/16-testing-evals-and-quality-gates.md](16-testing-evals-and-quality-gates.md)
+- [docs/privacy/collection-protocol.md](../privacy/collection-protocol.md)
+- [docs/privacy/validated-release-boundary.md](../privacy/validated-release-boundary.md)
+- [docs/data/pilot-tooling.md](../data/pilot-tooling.md)
 
 ### Owned implementation surfaces
 
@@ -1013,6 +1016,18 @@ docs/data/
 ### Contract and integration handoff
 
 A real rights-cleared pilot release with writer/specimen/capture lineage and annotation provenance, not synthetic recruitment counts.
+
+### Implementation evidence
+
+PR #22 adds metadata-only T11 pilot tooling: canonical collection-manifest/v1 compilation, local capture hashing with path/PII exclusion, synthetic semantic qualification through the existing consent validator, deterministic writer-disjoint split planning, metadata-only annotation worklists and descriptive recruitment summaries. Human mode remains fail-closed behind the real pilot gate with no override; all checked-in pilot bytes are explicitly synthetic.
+
+### Remaining work
+
+- Obtain explicit pilot_rights_consent approval with all required owner/legal/privacy decisions, approved protocol/prompt rights and active participant notice; do not treat tooling as approval.
+- Recruit actual eligible writers through approved channels and obtain inspectable participant permissions/evidence under the approved collection agreement.
+- Collect protected controlled/free specimens, repeat captures and later-session specimens without committing handwriting, names, agreements or private evidence to Git/CI artifacts.
+- Run authorized protected annotation, record annotation provenance and inter-annotator disagreement, and freeze real writer-disjoint evaluation evidence from the approved human release boundary.
+- Exercise actual participant withdrawal/deletion before corpus release and record real recruitment-bias, counts, exclusions and protected audit evidence.
 
 ### Acceptance evidence
 

@@ -1,0 +1,133 @@
+{
+  "notices": [
+    {
+      "notice_id": "notice.pilot-collection",
+      "version": 1,
+      "effective_from": "2026-01-01T00:00:00Z",
+      "effective_until": null,
+      "purposes": [
+        {
+          "purpose_id": "engineering_evaluation",
+          "purpose_version": 1
+        },
+        {
+          "purpose_id": "reference_contribution",
+          "purpose_version": 1
+        }
+      ]
+    }
+  ],
+  "events": [
+    {
+      "contract_version": "consent-event/v1",
+      "event_id": "evt_syn1",
+      "event_type": "GRANT",
+      "subject": {
+        "kind": "WRITER",
+        "id": "wrt_syn1"
+      },
+      "purpose": {
+        "purpose_id": "engineering_evaluation",
+        "purpose_version": 1
+      },
+      "notice": {
+        "notice_id": "notice.pilot-collection",
+        "version": 1
+      },
+      "scope": {
+        "kind": "PILOT_ENROLLMENT",
+        "id": "enr_syn1"
+      },
+      "actor": {
+        "kind": "PILOT_PARTICIPANT",
+        "id": "wrt_syn1"
+      },
+      "presented_default": "UNSELECTED",
+      "capture_method": "SIGNED_PILOT_AGREEMENT",
+      "derived_from": null,
+      "surface": "PILOT_SESSION",
+      "recorded_at": "2026-01-15T10:00:00Z",
+      "effective_at": "2026-01-15T10:00:00Z",
+      "evidence": {
+        "kind": "SIGNED_AGREEMENT",
+        "ref": "evd_syn1",
+        "status": "RECORDED"
+      },
+      "subject_eligibility": "DECLARED_ADULT"
+    },
+    {
+      "contract_version": "consent-event/v1",
+      "event_id": "evt_syn2",
+      "event_type": "GRANT",
+      "subject": {
+        "kind": "WRITER",
+        "id": "wrt_syn2"
+      },
+      "purpose": {
+        "purpose_id": "engineering_evaluation",
+        "purpose_version": 1
+      },
+      "notice": {
+        "notice_id": "notice.pilot-collection",
+        "version": 1
+      },
+      "scope": {
+        "kind": "PILOT_ENROLLMENT",
+        "id": "enr_syn2"
+      },
+      "actor": {
+        "kind": "PILOT_PARTICIPANT",
+        "id": "wrt_syn2"
+      },
+      "presented_default": "UNSELECTED",
+      "capture_method": "SIGNED_PILOT_AGREEMENT",
+      "derived_from": null,
+      "surface": "PILOT_SESSION",
+      "recorded_at": "2026-01-15T10:00:00Z",
+      "effective_at": "2026-01-15T10:00:00Z",
+      "evidence": {
+        "kind": "SIGNED_AGREEMENT",
+        "ref": "evd_syn2",
+        "status": "RECORDED"
+      },
+      "subject_eligibility": "DECLARED_ADULT"
+    },
+    {
+      "contract_version": "consent-event/v1",
+      "event_id": "evt_syn3",
+      "event_type": "GRANT",
+      "subject": {
+        "kind": "WRITER",
+        "id": "wrt_syn3"
+      },
+      "purpose": {
+        "purpose_id": "engineering_evaluation",
+        "purpose_version": 1
+      },
+      "notice": {
+        "notice_id": "notice.pilot-collection",
+        "version": 1
+      },
+      "scope": {
+        "kind": "PILOT_ENROLLMENT",
+        "id": "enr_syn3"
+      },
+      "actor": {
+        "kind": "PILOT_PARTICIPANT",
+        "id": "wrt_syn3"
+      },
+      "presented_default": "UNSELECTED",
+      "capture_method": "SIGNED_PILOT_AGREEMENT",
+      "derived_from": null,
+      "surface": "PILOT_SESSION",
+      "recorded_at": "2026-01-15T10:00:00Z",
+      "effective_at": "2026-01-15T10:00:00Z",
+      "evidence": {
+        "kind": "SIGNED_AGREEMENT",
+        "ref": "evd_syn3",
+        "status": "RECORDED"
+      },
+      "subject_eligibility": "DECLARED_ADULT"
+    }
+  ]
+}
