@@ -20,11 +20,20 @@ from sqlalchemy.exc import IntegrityError
 from princess_contracts import compile_document
 
 from ...application.commerce import AI_PURPOSE, Balance, GrantResult, PendingCompletion, PremiumRequest
-from ...application.premium.service import MAX_ATTEMPTS, AttemptRecord, Fenced, Outcome, PremiumJob, PremiumOverlay
+from ...application.premium.service import (
+    MAX_ATTEMPTS,
+    AttemptRecord,
+    Fenced,
+    Outcome,
+    PremiumJob,
+    PremiumOverlay,
+    ProviderAttemptState,
+)
 from ...domain.commerce import Platform
 from ...domain.permissions import Scope, evaluate
 from ...domain.reports import check_revision, revise_report
 from ...ports.base import Conflict, Environment, IdGenerator, NotAuthorized, NotFound
+from ...ports import model as model_port
 from ...ports.payments import CatalogProduct, CompletionAction, NormalizedEvent, PaymentRail, TransactionObservation
 from ...ports.storage import StoredObject
 from .stores import (
@@ -279,15 +288,90 @@ class PostgresPremiumQueue:
                 "WHERE job_id = (SELECT job_id FROM app.job WHERE kind = :k AND attempts < :max AND "
                 "(state = 'QUEUED' OR (state = 'LEASED' AND lease_expires_at < :now)) "
                 "ORDER BY created_at FOR UPDATE SKIP LOCKED LIMIT 1) "
-                "RETURNING job_id, owner_id, subject_ref, fencing_token, attempts, payload"),
+                "RETURNING job_id, owner_id, subject_ref, fencing_token, attempts, payload, created_at"),
                 {"w": worker_id, "exp": now + timedelta(seconds=lease_seconds), "now": now,
                  "k": PREMIUM_KIND, "max": MAX_ATTEMPTS}).mappings().first()
         if row is None:
             return None
         payload = row["payload"]
-        return PremiumJob(row["job_id"], row["owner_id"], row["subject_ref"], int(payload["report_revision"]),
-                          int(payload["permission_epoch"]), int(row["attempts"]),
-                          fencing_token=int(row["fencing_token"]), reservation_id=payload["reservation_id"])
+        return PremiumJob(
+            row["job_id"], row["owner_id"], row["subject_ref"], int(payload["report_revision"]),
+            int(payload["permission_epoch"]), int(row["attempts"]),
+            fencing_token=int(row["fencing_token"]), reservation_id=payload["reservation_id"],
+            created_at=row["created_at"],
+        )
+
+    def start_attempt(self, job: PremiumJob, request: model_port.GenerationRequest, at: datetime) -> None:
+        with self.db.session() as conn:
+            prior = conn.execute(text(
+                "SELECT job_id, attempt_number, packet_digest, policy_version FROM app.provider_attempt "
+                "WHERE attempt_id = :a FOR UPDATE"
+            ), {"a": request.attempt_id}).first()
+            expected = (job.job_id, job.attempt_number, request.packet_digest, request.policy_version)
+            if prior is not None:
+                if tuple(prior) != expected:
+                    raise Conflict("provider_attempt_mismatch")
+                return
+            conn.execute(text(
+                "INSERT INTO app.provider_attempt "
+                "(attempt_id, job_id, attempt_number, packet_digest, policy_version, state, created_at) "
+                "VALUES (:a, :j, :n, :d, :p, 'STARTED', :t)"
+            ), {"a": request.attempt_id, "j": job.job_id, "n": job.attempt_number,
+                "d": request.packet_digest, "p": request.policy_version, "t": at})
+
+    def finish_attempt(self, attempt_id: str, state: ProviderAttemptState, error_code: str | None,
+                       result: model_port.ProviderGenerationResult | None, at: datetime) -> None:
+        with self.db.session() as conn:
+            changed = conn.execute(text(
+                "UPDATE app.provider_attempt SET state = :s, error_code = :e, provider_request_id = :pr, "
+                "model_requested = :mr, model_returned = :ret, usage_input_tokens = :ui, "
+                "usage_output_tokens = :uo, completed_at = :t WHERE attempt_id = :a"
+            ), {
+                "s": state.value, "e": error_code,
+                "pr": result.provider_request_id if result else None,
+                "mr": result.model_requested if result else None,
+                "ret": result.model_returned if result else None,
+                "ui": result.usage.input_tokens if result else None,
+                "uo": result.usage.output_tokens if result else None,
+                "t": at, "a": attempt_id,
+            }).rowcount
+            if changed != 1:
+                raise NotFound("provider_attempt_not_found")
+
+    def pending_restore(self, now: datetime, limit: int = 100) -> list[PremiumJob]:
+        """Open Premium work that must be certified before workers resume after restore."""
+        with self.db.session() as conn:
+            rows = conn.execute(text(
+                "SELECT job_id, owner_id, subject_ref, fencing_token, attempts, payload, created_at "
+                "FROM app.job WHERE kind = :k AND state IN ('QUEUED', 'LEASED') "
+                "ORDER BY created_at LIMIT :n"
+            ), {"k": PREMIUM_KIND, "n": limit}).mappings().all()
+        jobs = []
+        for row in rows:
+            payload = row["payload"]
+            jobs.append(PremiumJob(
+                row["job_id"], row["owner_id"], row["subject_ref"], int(payload["report_revision"]),
+                int(payload["permission_epoch"]), max(1, int(row["attempts"]) or 1),
+                fencing_token=int(row["fencing_token"]), reservation_id=payload["reservation_id"],
+                created_at=row["created_at"],
+            ))
+        return jobs
+
+    def fail_restored(self, job: PremiumJob, reason: str, now: datetime) -> bool:
+        """Fail one open restored job and return its reserved credit."""
+        with self.db.session() as conn:
+            row = conn.execute(text(
+                "UPDATE app.job SET state = 'FAILED', lease_owner = NULL, lease_expires_at = NULL, "
+                "last_error = :c, updated_at = :t WHERE job_id = :j AND kind = :k "
+                "AND state IN ('QUEUED', 'LEASED') RETURNING owner_id, payload"
+            ), {"c": reason, "t": now, "j": job.job_id, "k": PREMIUM_KIND}).first()
+            if row is None:
+                return False
+            owner_id, payload = row
+            set_context(conn, owner_id)
+            release_reservation(conn, owner_id, payload["reservation_id"], reason, now)
+            set_context(conn, None)
+        return True
 
     def reap(self, now: datetime, limit: int = 20) -> int:
         """Terminalize jobs whose last permitted attempt lost its lease (a
