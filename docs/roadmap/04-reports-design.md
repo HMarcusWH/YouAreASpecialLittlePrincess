@@ -1,10 +1,10 @@
 <!-- roadmap-v2-navigation -->
 > **Roadmap v2 navigation and scope:** [index](00-index.md) · [task briefs](06-agent-backlog.md) · [machine graph](tasks.json) · [build sequence](20-end-to-end-build-sequence.md).
-> This chapter's technical content is retained. Its historical status/scope examples are superseded where explicitly listed in [v2 authority amendments](00-index.md): web, iOS and Android/native payments are main-programme scope; T00 and T26 are historically DONE; T00A is pending follow-up. T26 is reviewed but inactive, not an empty scaffold. Earlier model aliases/prices/API examples are dated research, not approved configuration; see [current source refresh](22-research-and-source-refresh.md). Required release/owner gates are not completed by this documentation.
+> This chapter's technical content is retained. Historical implementation/status examples are superseded by [tasks.json](tasks.json) and the [v2 authority amendments](00-index.md): web, iOS and Android/native payments are main-programme scope; T00, T00A and T26 are DONE; T26 remains reviewed but runtime-inactive. Earlier model aliases/prices/API examples are dated research, not approved configuration; see [current source refresh](22-research-and-source-refresh.md). Required release/owner gates are not completed by this documentation.
 
 # 04 — Reports, comparison UX, and Claude Design
 
-Status: product/renderer contract and design brief, not a completed interface. References resolve in [07](07-evidence-register.md).
+Status: implemented report/projection/render contract plus draft multi-platform design brief. Free web and PDF/share rendering exist; final responsive/native design remains pending owner `design_acceptance` through the Claude Design handoff. References resolve in [07](07-evidence-register.md).
 
 ## 1. One content model, three presentations
 

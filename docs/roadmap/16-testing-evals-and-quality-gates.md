@@ -10,7 +10,7 @@ The repository's existing Python CI is retained. This roadmap adds a documentati
 
 ## Existing checks
 
-Use the complete current `.github/workflows/ci.yml`: hash-authenticated dependency installation, project/build dependency policy, closed locked `Requires-Dist` graph, sandboxed backend-reported build requirements, exact installed environment, `pip check`, feature/Premium compiler drift, all graphology validators, compile, Ruff, pytest, research checks, offline wheel build and installed-wheel smoke. T00A closes the four post-merge findings without relaxing these checks.
+Use the complete current `.github/workflows/ci.yml`: hash-authenticated dependency installation, project/build dependency policy, closed locked `Requires-Dist` graph, sandboxed backend-reported build requirements, exact installed environment, `pip check`, feature/Premium compiler drift, all graphology validators, compile, Ruff, pytest, research checks, offline wheel build and installed-wheel smoke. T00A closed the four recorded post-merge findings without relaxing these checks.
 
 Documentation commands introduced here:
 

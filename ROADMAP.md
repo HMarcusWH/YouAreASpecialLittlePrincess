@@ -1,6 +1,6 @@
 # Product roadmap — Web, iOS and Android
 
-**Plan version:** 2.1 · **Research reviewed:** 2026-09-26 · **Current documentation baseline:** `fa3082a53b2821032d5f2fc19d4c391ebe2c1cfe` (post-PR #23). The machine task graph remains the status authority.
+**Plan version:** 2.1 · **Research reviewed:** 2026-09-26 · **Implementation baseline reconciled here:** `fa3082a53b2821032d5f2fc19d4c391ebe2c1cfe` (post-PR #23). Documentation-only commits after that SHA do not change task implementation evidence; the machine task graph remains the status authority.
 
 [Agent instructions](AGENTS.md) · [Documentation map](docs/roadmap/00-index.md) · [Detailed task briefs](docs/roadmap/06-agent-backlog.md) · [Machine task graph](docs/roadmap/tasks.json) · [Execution sequence](docs/roadmap/20-end-to-end-build-sequence.md) · [Release gates](docs/roadmap/21-release-readiness-checklists.md).
 
