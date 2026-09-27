@@ -76,3 +76,27 @@ PRINCESS_TEST_DATABASE_URL=postgresql://princess_admin:local-only-admin@127.0.0.
 ```
 
 The API factory is `princess_api.compose:app_from_environment` (`uvicorn --factory`). Identity is fake-only until the ADR-002 vendor decision. The OIDC verifier in `princess_app.adapters.oidc` is implemented and tested, but no production issuer is configured.
+
+## Intake and the analysis worker (T04)
+
+The upload flow runs in this order:
+
+1. `POST /v1/uploads` reserves an upload slot and returns the upload URL (presigned or signed).
+2. The client PUTs the bytes to that URL.
+3. `POST /v1/uploads/{id}/complete` sends the SHA-256. The server promotes the bytes to an immutable version, sniffs the real format, rejects pixel bombs or animated files from the header, and records a **capture**. It does not start a run.
+4. `POST /v1/me/permissions` records a `service_processing` grant for that capture.
+5. `POST /v1/analyses` idempotently creates one run and job per capture and configuration.
+
+The worker then claims a leased job, decodes within limits, runs the zero-AI engine, and builds the evidence and report outside any transaction. It publishes in one short transaction only if all of these still hold:
+
+- its fencing token is current;
+- the lease has not expired;
+- the job was not cancelled;
+- the capture was not deleted;
+- the `service_processing` permission epoch has not changed.
+
+Deletion or withdrawal ends the job. Repeatedly crashing workers exhaust after a bounded number of attempts.
+
+Only JPEG and PNG are accepted (≤ 20 MB, ≤ 24 MP, ≤ 12 000 px per side). HEIC, GIF, WebP, SVG and archives are rejected with explicit codes, and mobile clients convert HEIC to JPEG before upload.
+
+Local runs use the filesystem object store (`PRINCESS_LOCAL_STORAGE_DIR`, default `.local-storage/`), which is shared by the API and `apps/workers/analysis/run_worker.py`. Its upload URLs are HMAC-signed paths served by the local/test-only `PUT /v1/dev/uploads/{id}`. A real S3-compatible adapter waits on the ADR-004 provider decision, and composition refuses non-fake storage until it exists.

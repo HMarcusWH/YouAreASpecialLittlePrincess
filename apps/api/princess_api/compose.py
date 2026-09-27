@@ -15,7 +15,10 @@ from pathlib import Path
 
 from fastapi import FastAPI
 
-from princess_app.adapters.fakes import FakeIdentityProvider
+from princess_app.adapters.fakes import FakeAbuseChallenge, FakeIdentityProvider
+from princess_app.adapters.imaging import inspect_header
+from princess_app.adapters.localfs import LocalObjectStore
+from princess_app.adapters.postgres.intake import PostgresIntakeRepository
 from princess_app.adapters.postgres.stores import (
     Database,
     PostgresIdentityStore,
@@ -24,9 +27,11 @@ from princess_app.adapters.postgres.stores import (
     make_engine,
 )
 from princess_app.application.identity import IdentityService
+from princess_app.application.intake import IntakeService
 from princess_app.application.permissions import PermissionService
 from princess_app.config import RuntimeConfig, load_runtime_config
 from princess_app.ports.base import ProviderMode, SystemClock, Unsupported
+from princess_graphology import __version__ as ENGINE_VERSION
 
 from .app import Services, create_app
 
@@ -51,9 +56,26 @@ def compose(config: RuntimeConfig) -> Services:
     provider = FakeIdentityProvider(clock=clock, environment=config.environment)
     identity = IdentityService(provider, PostgresIdentityStore(db), clock, UuidIds(), audience)
     permissions = PermissionService(PostgresPermissionStore(db), clock, UuidIds())
+    if config.provider_mode("ObjectStore") is not ProviderMode.FAKE:
+        raise Unsupported("object_store_adapter_not_configured", detail="ADR-004 provider pending")
+    store = local_store(config, clock)
+    intake = IntakeService(repo=PostgresIntakeRepository(db, engine_version=ENGINE_VERSION), store=store,
+                           permissions=permissions, challenge=FakeAbuseChallenge(clock=clock,
+                                                                                   environment=config.environment),
+                           inspect=inspect_header, clock=clock, ids=UuidIds(),
+                           uploads_enabled=lambda: config.enabled("uploads"))
     return Services(environment=config.environment, clock=clock, identity=identity, permissions=permissions,
                     report_store_for=lambda principal_id: PostgresReportStore(db, principal_id),
-                    kill_switches=dict(config.manifest.kill_switches), dev_identity=provider, audience=audience)
+                    kill_switches=dict(config.manifest.kill_switches), dev_identity=provider, audience=audience,
+                    intake=intake, dev_store=store)
+
+
+def local_store(config: RuntimeConfig, clock) -> LocalObjectStore:
+    root = Path(os.environ.get("PRINCESS_LOCAL_STORAGE_DIR", str(ROOT / ".local-storage")))
+    key_name = "PRINCESS_STORAGE_SIGNING_KEY" if config.component == "api" else "PRINCESS_STORAGE_READ_KEY"
+    return LocalObjectStore(root, signing_key=config.secret(key_name).encode(), clock=clock,
+                            environment=config.environment,
+                            public_base=os.environ.get("PRINCESS_PUBLIC_API_BASE", "http://127.0.0.1:8000"))
 
 
 def app_from_environment() -> FastAPI:

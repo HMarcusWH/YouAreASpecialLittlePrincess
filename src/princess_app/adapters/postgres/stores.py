@@ -233,47 +233,9 @@ class PostgresAnalysisStore:
 
     def complete_run(self, owner_id: str, run_id: str, *, result: Mapping[str, Any], processed_sha256: str,
                      at: datetime, evidence: ValidatedDocument | None = None) -> str:
-        measurements = result.get("measurements", {})
-        regions = _parent_first(result.get("regions", []))
-        digest = canonical_digest(dict(result))
         with self.db.session(owner_id) as conn:
-            status = conn.execute(text("SELECT status FROM app.analysis_run WHERE run_id = :r FOR UPDATE"),
-                                  {"r": run_id}).scalar()
-            if status is None:
-                raise NotFound("run_not_found")
-            if status not in ("QUEUED", "RUNNING"):
-                raise Conflict("run_not_open")
-            for region in regions:
-                x, y, w, h = region["box"]
-                conn.execute(text("INSERT INTO app.region (owner_id, run_id, region_id, scope, x, y, width, height, "
-                                  "parent_region_id) VALUES (:o, :r, :id, :s, :x, :y, :w, :h, :p)"),
-                             {"o": owner_id, "r": run_id, "id": region["region_id"], "s": region["scope"], "x": x,
-                              "y": y, "w": w, "h": h, "p": region.get("parent_id")})
-            for feature_id, m in measurements.items():
-                conn.execute(text("INSERT INTO app.measurement (owner_id, run_id, feature_id, value_float, value_json, "
-                                  "unit, quality, missing_reason, n_observations, method_id, confidence, "
-                                  "confidence_kind) VALUES (:o, :r, :f, :vf, CAST(:vj AS jsonb), :u, :q, :mr, :n, "
-                                  ":mid, :c, :ck)"), {"o": owner_id, "r": run_id, "f": feature_id,
-                                                      **_value_columns(m.get("raw_value")), "u": m.get("unit"),
-                                                      "q": m.get("quality_flag"), "mr": m.get("missing_reason"),
-                                                      "n": m.get("n_observations"), "mid": m.get("method_version"),
-                                                      "c": m.get("confidence"), "ck": m.get("confidence_kind")})
-            stored = conn.execute(text("SELECT count(*) FROM app.measurement WHERE run_id = :r"), {"r": run_id}).scalar()
-            if stored != len(measurements):
-                raise Conflict("projection_count_mismatch")
-            if evidence is not None:
-                data = evidence.data
-                if data["analysis"]["run_id"] != run_id or data["analysis"]["owner_id"] != owner_id:
-                    raise InvalidInput("evidence_for_another_run")
-                conn.execute(text("INSERT INTO app.evidence_bundle (bundle_id, owner_id, run_id, digest, document, "
-                                  "created_at) VALUES (:b, :o, :r, :d, CAST(:doc AS jsonb), :t)"),
-                             {"b": data["bundle_id"], "o": owner_id, "r": run_id, "d": evidence.digest,
-                              "doc": json.dumps(evidence.to_dict()), "t": at})
-            conn.execute(text("UPDATE app.analysis_run SET status = 'SUCCEEDED', result = CAST(:res AS jsonb), "
-                              "result_digest = :d, processed_sha256 = :ph, completed_at = :t WHERE run_id = :r"),
-                         {"res": json.dumps(result, allow_nan=False), "d": digest, "ph": processed_sha256, "t": at,
-                          "r": run_id})
-        return digest
+            return write_result(conn, owner_id, run_id, result=result, processed_sha256=processed_sha256, at=at,
+                                evidence=evidence)
 
     def result(self, owner_id: str, run_id: str) -> dict[str, Any] | None:
         with self.db.session(owner_id) as conn:
@@ -284,6 +246,66 @@ class PostgresAnalysisStore:
         if canonical_digest(row[0]) != row[1]:
             raise Conflict("stored_result_digest_mismatch")
         return row[0]
+
+
+def write_result(conn: Connection, owner_id: str, run_id: str, *, result: Mapping[str, Any], processed_sha256: str,
+                 at: datetime, evidence: ValidatedDocument | None = None) -> str:
+    """Persist canonical result JSON and its projections in the caller's transaction."""
+    measurements = result.get("measurements", {})
+    regions = _parent_first(result.get("regions", []))
+    digest = canonical_digest(dict(result))
+    status = conn.execute(text("SELECT status FROM app.analysis_run WHERE run_id = :r FOR UPDATE"),
+                          {"r": run_id}).scalar()
+    if status is None:
+        raise NotFound("run_not_found")
+    if status not in ("QUEUED", "RUNNING"):
+        raise Conflict("run_not_open")
+    for region in regions:
+        x, y, w, h = region["box"]
+        conn.execute(text("INSERT INTO app.region (owner_id, run_id, region_id, scope, x, y, width, height, "
+                          "parent_region_id) VALUES (:o, :r, :id, :s, :x, :y, :w, :h, :p)"),
+                     {"o": owner_id, "r": run_id, "id": region["region_id"], "s": region["scope"], "x": x,
+                      "y": y, "w": w, "h": h, "p": region.get("parent_id")})
+    for feature_id, m in measurements.items():
+        conn.execute(text("INSERT INTO app.measurement (owner_id, run_id, feature_id, value_float, value_json, "
+                          "unit, quality, missing_reason, n_observations, method_id, confidence, "
+                          "confidence_kind) VALUES (:o, :r, :f, :vf, CAST(:vj AS jsonb), :u, :q, :mr, :n, "
+                          ":mid, :c, :ck)"), {"o": owner_id, "r": run_id, "f": feature_id,
+                                              **_value_columns(m.get("raw_value")), "u": m.get("unit"),
+                                              "q": m.get("quality_flag"), "mr": m.get("missing_reason"),
+                                              "n": m.get("n_observations"), "mid": m.get("method_version"),
+                                              "c": m.get("confidence"), "ck": m.get("confidence_kind")})
+    stored = conn.execute(text("SELECT count(*) FROM app.measurement WHERE run_id = :r"), {"r": run_id}).scalar()
+    if stored != len(measurements):
+        raise Conflict("projection_count_mismatch")
+    if evidence is not None:
+        data = evidence.data
+        if data["analysis"]["run_id"] != run_id or data["analysis"]["owner_id"] != owner_id:
+            raise InvalidInput("evidence_for_another_run")
+        conn.execute(text("INSERT INTO app.evidence_bundle (bundle_id, owner_id, run_id, digest, document, "
+                          "created_at) VALUES (:b, :o, :r, :d, CAST(:doc AS jsonb), :t)"),
+                     {"b": data["bundle_id"], "o": owner_id, "r": run_id, "d": evidence.digest,
+                      "doc": json.dumps(evidence.to_dict()), "t": at})
+    conn.execute(text("UPDATE app.analysis_run SET status = 'SUCCEEDED', result = CAST(:res AS jsonb), "
+                      "result_digest = :d, processed_sha256 = :ph, completed_at = :t, error_code = NULL "
+                      "WHERE run_id = :r"),
+                 {"res": json.dumps(result, allow_nan=False), "d": digest, "ph": processed_sha256, "t": at,
+                  "r": run_id})
+    return digest
+
+
+def insert_first_revision(conn: Connection, owner_id: str, report: ValidatedDocument) -> None:
+    data = report.data
+    if data["revision"] != 1 or data["analysis"]["owner_id"] != owner_id:
+        raise Conflict("not_a_first_revision_for_owner")
+    conn.execute(text("INSERT INTO app.report (report_id, owner_id, run_id, kind, created_at) "
+                      "VALUES (:r, :o, :run, :k, :t)"),
+                 {"r": data["report_id"], "o": owner_id, "run": data["analysis"]["run_id"], "k": data["kind"],
+                  "t": data["created_at"]})
+    conn.execute(text("INSERT INTO app.report_revision (report_id, revision, owner_id, digest, document, created_at) "
+                      "VALUES (:r, 1, :o, :d, CAST(:doc AS jsonb), :t)"),
+                 {"r": data["report_id"], "o": owner_id, "d": report.digest, "doc": json.dumps(report.to_dict()),
+                  "t": data["created_at"]})
 
 
 def _value_columns(value: Any) -> dict[str, Any]:
@@ -323,8 +345,10 @@ class PostgresReportStore:
 
     def latest(self, report_id: str) -> tuple[str, ValidatedDocument] | None:
         with self.db.session(self.principal_id) as conn:
-            row = conn.execute(text("SELECT owner_id, document, digest FROM app.report_revision WHERE report_id = :r "
-                                    "ORDER BY revision DESC LIMIT 1"), {"r": report_id}).first()
+            row = conn.execute(text("SELECT rr.owner_id, rr.document, rr.digest FROM app.report_revision rr "
+                                    "JOIN app.report r ON r.report_id = rr.report_id "
+                                    "WHERE rr.report_id = :r AND r.deleted_at IS NULL "
+                                    "ORDER BY rr.revision DESC LIMIT 1"), {"r": report_id}).first()
         if row is None:
             return None
         compiled = compile_document("ReportDocument", row[1])

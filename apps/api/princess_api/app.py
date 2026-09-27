@@ -11,7 +11,7 @@ import re
 import uuid
 from dataclasses import dataclass, field
 from datetime import timedelta
-from typing import Callable, Literal
+from typing import Any, Callable, Literal
 
 from fastapi import Depends, FastAPI, Request
 from fastapi.responses import JSONResponse, Response
@@ -19,6 +19,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from princess_app.adapters.fakes import FakeIdentityProvider
 from princess_app.application.identity import IdentityService, Principal
+from princess_app.application.intake import ChallengeProof, IntakeService
 from princess_app.application.permissions import PermissionService
 from princess_app.application.reports import ReportReader, ReportStore
 from princess_app.domain.analysis import rfc3339
@@ -62,6 +63,10 @@ class Services:
     # Present only when the identity provider is a fake (never in production).
     dev_identity: FakeIdentityProvider | None = None
     audience: str = "princess-api"
+    intake: IntakeService | None = None
+    # Local/test only: a fake/filesystem store exposing ``accept_signed_put``
+    # in place of a provider's presigned PUT endpoint.
+    dev_store: Any = None
 
 
 class _Strict(BaseModel):
@@ -82,6 +87,25 @@ class PermissionBody(_Strict):
 
 class DevTokenBody(_Strict):
     subject: str = Field(min_length=1, max_length=128)
+
+
+class ChallengeBody(_Strict):
+    token: str = Field(min_length=1)
+    action: str = Field(min_length=1, max_length=64)
+    site: str = Field(min_length=1, max_length=253)
+
+
+class UploadBody(_Strict):
+    media_type: Literal["image/jpeg", "image/png"]
+    challenge: ChallengeBody | None = None
+
+
+class CompleteBody(_Strict):
+    sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+
+
+class AnalysisBody(_Strict):
+    capture_id: str = Field(pattern=r"^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$")
 
 
 def create_app(services: Services) -> FastAPI:
@@ -165,6 +189,59 @@ def create_app(services: Services) -> FastAPI:
         view = reader.view(report_id=report_id, principal_id=who.principal_id, projection=projection,
                            actions=actions)
         return view.to_dict()
+
+    def intake() -> IntakeService:
+        if services.intake is None:
+            raise Unsupported("uploads_not_configured")
+        return services.intake
+
+    @app.post("/v1/uploads", status_code=201)
+    def reserve_upload(body: UploadBody, request: Request, who: Principal = Depends(principal)) -> dict:
+        proof = ChallengeProof(body.challenge.token, body.challenge.action, body.challenge.site) \
+            if body.challenge else None
+        ticket = intake().reserve_upload(who.principal_id, body.media_type, proof, call_context(request))
+        return {"upload_id": ticket.upload_id, "method": ticket.method, "url": ticket.url,
+                "expires_at": rfc3339(ticket.expires_at), "max_bytes": ticket.max_bytes}
+
+    @app.post("/v1/uploads/{upload_id}/complete")
+    def complete_upload(upload_id: str, body: CompleteBody, request: Request,
+                        who: Principal = Depends(principal)) -> dict:
+        capture = intake().complete_upload(who.principal_id, upload_id, body.sha256, call_context(request))
+        return {"capture_id": capture.capture_id, "width": capture.width, "height": capture.height,
+                "media_type": capture.media_type}
+
+    @app.post("/v1/analyses", status_code=202)
+    def start_analysis(body: AnalysisBody, who: Principal = Depends(principal)) -> dict:
+        run_id = intake().start_analysis(who.principal_id, body.capture_id)
+        status = intake().status(who.principal_id, run_id)
+        return {"run_id": run_id, "state": status.state}
+
+    @app.get("/v1/analyses/{run_id}")
+    def analysis_status(run_id: str, who: Principal = Depends(principal)) -> dict:
+        status = intake().status(who.principal_id, run_id)
+        return {"run_id": status.run_id, "state": status.state, "report_id": status.report_id,
+                "error_code": status.error_code}
+
+    @app.post("/v1/analyses/{run_id}/cancel")
+    def cancel_analysis(run_id: str, who: Principal = Depends(principal)) -> dict:
+        status = intake().cancel(who.principal_id, run_id)
+        return {"run_id": status.run_id, "state": status.state}
+
+    @app.delete("/v1/captures/{capture_id}", status_code=202)
+    def delete_capture(capture_id: str, who: Principal = Depends(principal)) -> dict:
+        intake().delete_capture(who.principal_id, capture_id)
+        return {"state": "DELETION_REQUESTED"}
+
+    if services.dev_store is not None and services.environment in (Environment.LOCAL, Environment.TEST):
+        store = services.dev_store
+
+        @app.put("/v1/dev/uploads/{upload_id}", status_code=204)
+        async def dev_upload(upload_id: str, request: Request) -> Response:
+            """Local/test only: stands in for a provider's presigned PUT."""
+            data = await request.body()
+            store.accept_signed_put(upload_id, request.query_params.get("sig"), data,
+                                    request.headers.get("content-type"))
+            return Response(status_code=204)
 
     if services.dev_identity is not None and services.environment in (Environment.LOCAL, Environment.TEST):
         dev = services.dev_identity

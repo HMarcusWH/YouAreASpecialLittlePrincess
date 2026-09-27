@@ -34,6 +34,8 @@ _CODE_VALUE = re.compile(r"^[A-Za-z0-9_.:-]{1,64}$")
 ROUTE_TEMPLATES = frozenset({
     "/v1/guest-sessions", "/v1/me", "/v1/me/guest-transfer", "/v1/me/logout-everywhere", "/v1/me/permissions",
     "/v1/me/permissions/{purpose_id}", "/v1/reports/{report_id}", "/v1/dev/id-tokens",
+    "/v1/uploads", "/v1/uploads/{upload_id}/complete", "/v1/analyses", "/v1/analyses/{run_id}",
+    "/v1/analyses/{run_id}/cancel", "/v1/captures/{capture_id}", "/v1/dev/uploads/{upload_id}",
 })
 
 

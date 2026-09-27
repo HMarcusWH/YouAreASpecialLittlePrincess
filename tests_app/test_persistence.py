@@ -92,18 +92,36 @@ def publish_report(app_db, owner_id, run_id="run_1"):
     return report
 
 
-def test_migration_refuses_to_drop_populated_schema_and_round_trips_empty(admin_engine, app_db, world):
-    account(world, "sub-a")
+HEAD = "0002_intake_and_jobs"
+
+
+def version(admin_engine):
+    with admin_engine.begin() as conn:
+        return conn.execute(text("SELECT version_num FROM public.alembic_version")).scalar()
+
+
+def test_migrations_refuse_to_drop_populated_tables_and_round_trip_empty(admin_engine, app_db, world):
+    principal = account(world, "sub-a")
     url = admin_engine.url.render_as_string(hide_password=False)
+    assert version(admin_engine) == HEAD
+    with admin_engine.begin() as conn:
+        conn.execute(text("INSERT INTO app.upload (upload_id, owner_id, asset_id, media_type, max_bytes, state, "
+                          "created_at, expires_at) VALUES ('upl_1', :p, 'asset_x', 'image/png', 10, 'RESERVED', now(), "
+                          "now() + interval '1 hour')"), {"p": principal.principal_id})
     with pytest.raises(DBAPIError):
-        migrate.downgrade(url, "base")
+        migrate.downgrade(url, "0001_product_plane")  # intake rows exist
+    assert version(admin_engine) == HEAD
+    with admin_engine.begin() as conn:
+        conn.execute(text("DELETE FROM app.upload"))
+    migrate.downgrade(url, "0001_product_plane")
+    with pytest.raises(DBAPIError):
+        migrate.downgrade(url, "base")  # principals exist
     with admin_engine.begin() as conn:
         assert conn.execute(text("SELECT count(*) FROM app.principal")).scalar() == 1
         conn.execute(text("TRUNCATE app.principal CASCADE"))
     migrate.downgrade(url, "base")
     migrate.upgrade(url)
-    with admin_engine.begin() as conn:
-        assert conn.execute(text("SELECT version_num FROM public.alembic_version")).scalar() == "0001_product_plane"
+    assert version(admin_engine) == HEAD
 
 
 def test_runtime_role_is_not_privileged(app_db):

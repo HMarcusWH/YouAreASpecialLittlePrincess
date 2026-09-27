@@ -67,6 +67,14 @@ class FakeObjectStore(FakeAdapter):
         upload.data = data if truncate_to is None else data[:truncate_to]
         upload.writes += 1
 
+    def accept_signed_put(self, upload_id: str, signature: str | None, data: bytes, content_type: str | None) -> None:
+        """Same entry point as the filesystem store's local upload route."""
+        upload = self._uploads.get(upload_id)
+        if upload is None or signature != "fake":
+            raise NotFound("upload_not_found")
+        self.client_put(port.UploadTicket(upload_id, upload.asset_id, "PUT", "", upload.expires_at,
+                                          upload.policy.max_bytes), data, media_type=content_type)
+
     # --- port -----------------------------------------------------------
     def issue_upload_ticket(self, asset_id: str, media_type: str, policy: port.UploadPolicy,
                             ctx: CallContext) -> port.UploadTicket:

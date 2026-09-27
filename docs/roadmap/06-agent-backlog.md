@@ -18,7 +18,7 @@ Use `python docs/roadmap/plan_tools.py --ready` or `--task ID`. Edit tasks.json 
 | [T01 — Product contracts and zero-AI capability manifest](#t01) | DONE | T00, T00A, T03 | contracts |
 | [T02 — Persistence identity authorization](#t02) | IMPLEMENTED_PENDING_REVIEW | T01, T27, T28 | backend |
 | [T03 — Rights consent and collection protocol](#t03) | DONE | — | product-data |
-| [T04 — Safe intake and durable analysis jobs](#t04) | PLANNED | T02, T03, T28 | backend |
+| [T04 — Safe intake and durable analysis jobs](#t04) | IMPLEMENTED_PENDING_REVIEW | T02, T03, T28 | backend |
 | [T05 — Evidence payload and chart observations](#t05) | IMPLEMENTED_PENDING_REVIEW | T01 | engine |
 | [T06 — Calibration suitability core repair](#t06) | PLANNED | T05, T11 | evaluation |
 | [T07 — Bounded classical topology shape expansion](#t07) | PLANNED | T05, T06 | engine |
@@ -495,7 +495,7 @@ Historical completion evidence: Merged PR #12 with T00A at the same exact head a
 <a id="t04"></a>
 ## T04 — Safe intake and durable analysis jobs
 
-**Status:** `PLANNED` · **Owner:** backend · **Milestone:** free
+**Status:** `IMPLEMENTED_PENDING_REVIEW` · **Owner:** backend · **Milestone:** free
 
 **Hard predecessors:** [T02](#t02), [T03](#t03), [T28](#t28)
 **Platforms:** backend, workers

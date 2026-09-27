@@ -2,7 +2,8 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
+from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
@@ -154,3 +155,61 @@ def test_every_api_route_is_a_registered_telemetry_template(client):
     api, _ = client
     paths = {route.path for route in api.app.routes if route.path.startswith("/v1/")}
     assert paths and paths <= ROUTE_TEMPLATES
+
+
+def test_composed_local_stack_upload_to_report(app_url, worker_db, tmp_path, monkeypatch):
+    """compose() from a validated local config, then a separately built worker
+    sharing only the database and the filesystem store."""
+    import hashlib
+    from urllib.parse import urlsplit
+
+    from princess_api.compose import compose
+    from princess_app.adapters.imaging import decode_image
+    from princess_app.adapters.localfs import LocalObjectStore
+    from princess_app.adapters.postgres.intake import PostgresJobQueue
+    from princess_app.application.analysis_worker import AnalysisWorker
+    from princess_app.config import load_runtime_config
+    from princess_app.ports.base import CallContext, SystemClock
+    from princess_graphology import GraphologyEngine, __version__
+    from test_intake import handwriting_png
+
+    root = Path(__file__).resolve().parents[1]
+    monkeypatch.setenv("PRINCESS_LOCAL_STORAGE_DIR", str(tmp_path))
+    # The integration database is princess_test, so compose with the reviewed "test" manifest.
+    env = {"PRINCESS_ENV": "test", "PRINCESS_COMPONENT": "api", "PRINCESS_DATABASE_URL": app_url,
+           "PRINCESS_SESSION_SECRET": "session-secret-0123456789", "PRINCESS_IDENTITY_AUDIENCE": "princess-test",
+           "PRINCESS_STORAGE_SIGNING_KEY": "signing-key-0123456789"}
+    services = compose(load_runtime_config(env, root))
+    api = TestClient(create_app(services))
+    token = api.post("/v1/dev/id-tokens", json={"subject": "stack-user"}).json()["id_token"]
+    auth = {"Authorization": f"Bearer {token}"}
+    data = handwriting_png()
+    ticket = api.post("/v1/uploads", json={"media_type": "image/png"}, headers=auth).json()
+    path = urlsplit(ticket["url"])
+    assert api.put(path.path + "?" + path.query, content=data, headers={"content-type": "image/png"}).status_code == 204
+    bad_sig = api.put(path.path + "?sig=" + "0" * 64, content=data, headers={"content-type": "image/png"})
+    assert bad_sig.status_code == 401
+    capture = api.post(f"/v1/uploads/{ticket['upload_id']}/complete",
+                       json={"sha256": hashlib.sha256(data).hexdigest()}, headers=auth).json()
+    assert api.post("/v1/analyses", json={"capture_id": capture["capture_id"]}, headers=auth).status_code == 403
+    grant = {"purpose_id": "service_processing", "scope_kind": "SPECIMEN", "scope_ref": capture["capture_id"],
+             "decision": "GRANT", "notice_version": "notice_2026_09"}
+    assert api.post("/v1/me/permissions", json=grant, headers=auth).status_code == 201
+    started = api.post("/v1/analyses", json={"capture_id": capture["capture_id"]}, headers=auth)
+    assert started.status_code == 202 and started.json()["state"] == "QUEUED"
+    run_id = started.json()["run_id"]
+    assert api.post("/v1/analyses", json={"capture_id": capture["capture_id"]}, headers=auth).json()["run_id"] == run_id
+    clock = SystemClock()
+    worker_store = LocalObjectStore(tmp_path, signing_key=b"worker-read-key-0123456789", clock=clock,
+                                    environment=services.environment)
+    worker = AnalysisWorker(queue=PostgresJobQueue(worker_db), store=worker_store, decode=decode_image,
+                            engine=GraphologyEngine(max_dimension=700), clock=clock,
+                            context=lambda: CallContext("w", services.environment, clock.now() + timedelta(seconds=60)),
+                            worker_id="stack-worker", engine_version=__version__)
+    assert worker.run_once().outcome == "SUCCEEDED"
+    status = api.get(f"/v1/analyses/{run_id}", headers=auth).json()
+    assert status["state"] == "SUCCEEDED" and status["report_id"]
+    report = api.get(f"/v1/reports/{status['report_id']}?projection=FREE", headers=auth)
+    assert report.status_code == 200 and len(report.json()["facts"]) == 64
+    assert api.delete(f"/v1/captures/{capture['capture_id']}", headers=auth).status_code == 202
+    assert api.get(f"/v1/reports/{status['report_id']}", headers=auth).status_code == 404
