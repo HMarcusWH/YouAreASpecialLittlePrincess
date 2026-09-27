@@ -4,6 +4,8 @@ Status: **DRAFT, pending the `design_acceptance` owner gate.** This file and `pa
 
 Sources: [report design](../roadmap/04-reports-design.md), [web client](../roadmap/10-web-client-and-api-integration.md), [mobile](../roadmap/11-mobile-architecture.md), [commerce](../roadmap/14-payments-entitlements-and-commerce.md) and the generated contracts in `contracts/product/v1/`.
 
+Claude Design review package: [handoff brief](CLAUDE_DESIGN_HANDOFF.md) · [owner acceptance record](CLAUDE_DESIGN_ACCEPTANCE.md) · [`claude-design-import.json`](claude-design-import.json) · [`claude-design-state-matrix.json`](claude-design-state-matrix.json). The handoff prepares the design session only; it does not satisfy `design_acceptance` by itself.
+
 ## 1. Rules that shape every screen
 
 1. **Everything is designed from the contract.** Screens render a `ReportViewModel` (facts, sections, notices, actions, authorized assets) or an API status DTO. A layout must never need a field the contract does not have.

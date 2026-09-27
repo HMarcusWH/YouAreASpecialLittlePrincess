@@ -1,0 +1,233 @@
+{
+  "contract_version": "claude-design-state-matrix/v1",
+  "status": "REVIEW_INPUT_NOT_ACCEPTANCE",
+  "platforms": [
+    "web_desktop",
+    "web_320",
+    "ios_phone",
+    "ipad",
+    "android_phone",
+    "android_tablet",
+    "print_a4",
+    "print_letter",
+    "share_square",
+    "share_story"
+  ],
+  "screens": [
+    {
+      "id": "landing",
+      "states": [
+        "signed_out",
+        "returning_account",
+        "guest_unfinished_analysis"
+      ]
+    },
+    {
+      "id": "permission_upload",
+      "states": [
+        "consent_unselected",
+        "service_processing_required",
+        "image_retention_optional",
+        "ai_processing_optional",
+        "challenge_required",
+        "quota_exceeded"
+      ]
+    },
+    {
+      "id": "crop_orientation_preview",
+      "states": [
+        "ready",
+        "exif_rotated",
+        "unsupported_format",
+        "too_large",
+        "too_small",
+        "pixel_bomb",
+        "completion_in_progress",
+        "bytes_changed"
+      ]
+    },
+    {
+      "id": "processing",
+      "states": [
+        "QUEUED",
+        "RUNNING",
+        "SUCCEEDED",
+        "FAILED",
+        "CANCELLED",
+        "owner_transferred",
+        "resume_after_refresh"
+      ]
+    },
+    {
+      "id": "free_report",
+      "states": [
+        "complete",
+        "partial_missing",
+        "uncalibrated",
+        "reference_unavailable",
+        "image_revoked",
+        "original_not_retained"
+      ]
+    },
+    {
+      "id": "premium_offer_consent",
+      "states": [
+        "offer",
+        "no_credit",
+        "cross_platform_credit_not_spendable",
+        "commerce_disabled"
+      ]
+    },
+    {
+      "id": "purchase",
+      "states": [
+        "ready",
+        "pending",
+        "ask_to_buy",
+        "cancelled",
+        "failed",
+        "restored",
+        "account_mismatch"
+      ]
+    },
+    {
+      "id": "premium_generation",
+      "states": [
+        "queued",
+        "running",
+        "succeeded",
+        "refused",
+        "failed_credit_released",
+        "not_applicable_no_authorized_image"
+      ]
+    },
+    {
+      "id": "premium_report",
+      "states": [
+        "saved_overlay",
+        "omitted_questions_explained",
+        "refund_after_spend_owner_decision_pending"
+      ]
+    },
+    {
+      "id": "pair_invitation_comparison",
+      "states": [
+        "planned_invitation_sent",
+        "planned_accepted",
+        "planned_declined",
+        "planned_insufficient_common_coverage",
+        "planned_revoked"
+      ]
+    },
+    {
+      "id": "history",
+      "states": [
+        "empty",
+        "several_revisions",
+        "deleted_capture"
+      ]
+    },
+    {
+      "id": "share_preview_revocation",
+      "states": [
+        "exact_disclosure_preview",
+        "sharing_disabled",
+        "link_revoked"
+      ]
+    },
+    {
+      "id": "export_preview",
+      "states": [
+        "a4",
+        "letter",
+        "source_image_omitted",
+        "rendering",
+        "failed"
+      ]
+    },
+    {
+      "id": "settings",
+      "states": [
+        "permissions",
+        "mail_preference_account",
+        "mail_preference_guest",
+        "logout_device",
+        "logout_everywhere",
+        "delete_requested",
+        "delete_completed"
+      ]
+    }
+  ],
+  "evidence_classes": [
+    "MEASURED",
+    "COMPUTATIONAL_PROXY",
+    "REFERENCE_STATISTIC",
+    "AUTHORED_CONTENT",
+    "TRADITIONAL_ASSOCIATION",
+    "AI_SYNTHESIS"
+  ],
+  "availability_states": [
+    "READY",
+    "UNCALIBRATED",
+    "MISSING",
+    "NOT_IMPLEMENTED",
+    "INELIGIBLE",
+    "LOCKED",
+    "PENDING",
+    "FAILED",
+    "REVOKED"
+  ],
+  "review_controls": {
+    "themes": [
+      "light",
+      "dark"
+    ],
+    "locales": [
+      "en",
+      "sv"
+    ],
+    "text_scale_percent": [
+      100,
+      200
+    ],
+    "reduced_motion": [
+      false,
+      true
+    ],
+    "narrow_width_px": 320
+  },
+  "overflow_torture_strings": [
+    "Bokstavsavståndsvariation",
+    "Tredjepartsbehandling av bilden"
+  ],
+  "required_fixture_mapping": {
+    "free_report": "fixtures/reports/view.free.json",
+    "premium_report": "fixtures/reports/view.owner-premium.json",
+    "revoked_image": "fixtures/reports/view.owner-image-revoked.json",
+    "share": "fixtures/reports/view.share.json",
+    "export_no_image": "fixtures/reports/view.export-no-image.json",
+    "evidence": "fixtures/reports/evidence-bundle.json"
+  },
+  "planned_owners": {
+    "pair_invitation_comparison": [
+      "T18",
+      "T22"
+    ],
+    "premium_web": [
+      "T20"
+    ],
+    "native_implementation": [
+      "T29",
+      "T30",
+      "T31"
+    ]
+  },
+  "prohibited_patterns": [
+    "blurred personalized-looking Premium teaser text",
+    "unsupported percentile or rarity claims",
+    "missing values rendered as zero",
+    "colour-only evidence classification",
+    "diagnostic, intelligence, honesty, employability or compatibility claims",
+    "client-side measurement or entitlement authority"
+  ]
+}
