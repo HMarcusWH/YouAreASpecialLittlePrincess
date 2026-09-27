@@ -418,19 +418,22 @@ class PostgresReportStore:
                 before: tuple[datetime, str] | None) -> list[ReportHistoryEntry]:
         if owner_id != self.principal_id:
             raise NotAuthorized("owner_mismatch")
-        before_at, before_id = before if before is not None else (None, None)
+        base = (
+            "SELECT r.report_id, rr.revision, r.kind, r.created_at, "
+            "rr.document->>'locale' AS locale, "
+            "(rr.document->>'premium_overlay_id') IS NOT NULL AS has_premium "
+            "FROM app.report r "
+            "JOIN LATERAL (SELECT revision, document FROM app.report_revision x "
+            "WHERE x.report_id = r.report_id ORDER BY revision DESC LIMIT 1) rr ON true "
+            "WHERE r.deleted_at IS NULL "
+        )
+        params: dict[str, Any] = {"lim": limit}
+        if before is not None:
+            base += "AND (r.created_at, r.report_id) < (:before_at, :before_id) "
+            params.update(before_at=before[0], before_id=before[1])
+        base += "ORDER BY r.created_at DESC, r.report_id DESC LIMIT :lim"
         with self.db.session(self.principal_id) as conn:
-            rows = conn.execute(text(
-                "SELECT r.report_id, rr.revision, r.kind, r.created_at, "
-                "rr.document->>'locale' AS locale, "
-                "(rr.document->>'premium_overlay_id') IS NOT NULL AS has_premium "
-                "FROM app.report r "
-                "JOIN LATERAL (SELECT revision, document FROM app.report_revision x "
-                "WHERE x.report_id = r.report_id ORDER BY revision DESC LIMIT 1) rr ON true "
-                "WHERE r.deleted_at IS NULL "
-                "AND (:before_at IS NULL OR (r.created_at, r.report_id) < (:before_at, :before_id)) "
-                "ORDER BY r.created_at DESC, r.report_id DESC LIMIT :lim"),
-                {"before_at": before_at, "before_id": before_id, "lim": limit}).mappings().all()
+            rows = conn.execute(text(base), params).mappings().all()
         return [ReportHistoryEntry(
             row["report_id"], int(row["revision"]), row["kind"], row["created_at"],
             row["locale"], bool(row["has_premium"])) for row in rows]
