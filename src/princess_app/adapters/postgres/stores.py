@@ -248,9 +248,22 @@ class PostgresAnalysisStore:
         return row[0]
 
 
+def lock_live_owner(conn: Connection, owner_id: str) -> None:
+    """Deletion fence for owner writes: hold the principal row FOR SHARE so a
+    concurrent account deletion waits for this transaction, and refuse once a
+    deletion has committed. Background writers cannot rely on session revocation."""
+    deleted = conn.execute(text("SELECT deleted_at IS NOT NULL FROM app.principal WHERE principal_id = :p FOR SHARE"),
+                           {"p": owner_id}).scalar()
+    if deleted is None or deleted:
+        raise NotFound("owner_deleted")
+
+
 def write_result(conn: Connection, owner_id: str, run_id: str, *, result: Mapping[str, Any], processed_sha256: str,
                  at: datetime, evidence: ValidatedDocument | None = None) -> str:
     """Persist canonical result JSON and its projections in the caller's transaction."""
+    if (result.get("metadata") or {}).get("input_pixels_sha256") != processed_sha256:
+        raise InvalidInput("processed_digest_mismatch")
+    lock_live_owner(conn, owner_id)
     measurements = result.get("measurements", {})
     regions = _parent_first(result.get("regions", []))
     digest = canonical_digest(dict(result))
@@ -298,6 +311,7 @@ def insert_first_revision(conn: Connection, owner_id: str, report: ValidatedDocu
     data = report.data
     if data["revision"] != 1 or data["analysis"]["owner_id"] != owner_id:
         raise Conflict("not_a_first_revision_for_owner")
+    lock_live_owner(conn, owner_id)
     conn.execute(text("INSERT INTO app.report (report_id, owner_id, run_id, kind, created_at) "
                       "VALUES (:r, :o, :run, :k, :t)"),
                  {"r": data["report_id"], "o": owner_id, "run": data["analysis"]["run_id"], "k": data["kind"],
@@ -364,6 +378,7 @@ class PostgresReportStore:
             raise NotAuthorized("owner_mismatch")
         try:
             with self.db.session(owner_id) as conn:
+                lock_live_owner(conn, owner_id)
                 if data["revision"] == 1:
                     conn.execute(text("INSERT INTO app.report (report_id, owner_id, run_id, kind, created_at) "
                                       "VALUES (:r, :o, :run, :k, :t)"),

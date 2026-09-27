@@ -151,3 +151,11 @@ def test_es256_keys_and_mode_rules_and_unsupported_operations():
     with pytest.raises(ValueError):
         OidcIdentityProvider(issuer=ISS, jwks_source=Jwks(), clock=clock, environment=Environment.STAGING,
                              mode=ProviderMode.SANDBOX, allowed_algorithms=frozenset({"HS256"}))
+
+
+def test_cross_environment_calls_are_rejected_before_reading_keys(setup):
+    clock, key, source, provider = setup
+    production = CallContext("corr-2", Environment.PRODUCTION, clock.now() + timedelta(seconds=30))
+    with pytest.raises(InvalidInput):
+        provider.verify_credential(token(clock, key), AUD, production)
+    assert source.calls == 0

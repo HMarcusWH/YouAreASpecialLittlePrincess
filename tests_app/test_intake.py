@@ -15,7 +15,7 @@ from sqlalchemy import text
 from princess_app.adapters.fakes import FakeAbuseChallenge, FakeClock, FakeObjectStore, SequentialIds
 from princess_app.adapters.imaging import decode_image, inspect_header
 from princess_app.adapters.postgres.intake import PostgresIntakeRepository, PostgresJobQueue
-from princess_app.adapters.postgres.stores import PostgresPermissionStore, PostgresReportStore
+from princess_app.adapters.postgres.stores import PostgresIdentityStore, PostgresPermissionStore, PostgresReportStore
 from princess_app.application.analysis_worker import AnalysisWorker
 from princess_app.application.intake import ChallengeProof, IntakeService
 from princess_app.application.permissions import PermissionService
@@ -34,6 +34,7 @@ from princess_graphology import GraphologyEngine, __version__
 from test_persistence import account, world  # noqa: F401 - fixture re-export
 
 T0 = datetime(2026, 9, 27, 12, 0, tzinfo=timezone.utc)
+NOTICE = "notice.consent-choices:1"
 
 
 def handwriting_png(width=900, height=360, angle=3.0) -> bytes:
@@ -64,7 +65,8 @@ class Env:
         self.clock = FakeClock(T0)
         self.store = FakeObjectStore(clock=self.clock)
         self.challenge = FakeAbuseChallenge(clock=self.clock)
-        self.permissions = PermissionService(PostgresPermissionStore(app_db), self.clock, SequentialIds())
+        self.permissions = PermissionService(PostgresPermissionStore(app_db), self.clock, SequentialIds(),
+                                             allow_draft_policy=True)
         self.repo = PostgresIntakeRepository(app_db, engine_version=__version__)
         self.intake = IntakeService(repo=self.repo, store=self.store, permissions=self.permissions,
                                     challenge=self.challenge, inspect=inspect_header, clock=self.clock,
@@ -92,7 +94,7 @@ class Env:
 
     def grant(self, owner, capture_id):
         self.permissions.record(subject_id=owner, actor_id=owner, purpose_id="service_processing",
-                                scope=Scope("SPECIMEN", capture_id), decision=Decision.GRANT, notice_version="n1")
+                                scope=Scope("SPECIMEN", capture_id), decision=Decision.GRANT, notice_version=NOTICE)
 
     def analysis(self, owner):
         capture = self.capture(owner)
@@ -249,6 +251,7 @@ def test_stale_lease_cannot_publish_after_reclaim(env, world):  # noqa: F811
 
 @pytest.mark.parametrize("interruption,reason,state", [
     ("delete", "job_cancelled", "CANCELLED"),         # deletion also cancels queued/leased work
+    ("account", "owner_deleted", "CANCELLED"),        # account deletion fences background publication
     ("tombstone", "capture_deleted", "CANCELLED"),    # a tombstone alone still blocks publication
     ("withdraw", "permission_changed", "CANCELLED"),
     ("cancel", "job_cancelled", "CANCELLED"),
@@ -262,12 +265,14 @@ def test_interruptions_during_a_run_block_publication(env, world, interruption, 
     def interrupt_then_publish(job, **kwargs):
         if interruption == "delete":
             env.intake.delete_capture(owner, capture.capture_id)
+        elif interruption == "account":
+            PostgresIdentityStore(env.app_db).mark_deleted(owner, env.clock.now())
         elif interruption == "tombstone":
             with env.app_db.session(owner) as conn:
                 conn.execute(text("UPDATE app.capture SET deleted_at = now()"))
         elif interruption == "withdraw":
             env.permissions.record(subject_id=owner, actor_id=owner, purpose_id="service_processing",
-                                   scope=SUBJECT_WIDE, decision=Decision.WITHDRAW, notice_version="n1")
+                                   scope=SUBJECT_WIDE, decision=Decision.WITHDRAW, notice_version=NOTICE)
         else:
             env.intake.cancel(owner, run_id)
         return original(job, **kwargs)

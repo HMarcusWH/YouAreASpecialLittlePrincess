@@ -251,6 +251,29 @@ def test_result_must_come_from_this_analysis_and_be_complete():
                                  locale="en")) == {"TEMPLATE_VERSION_MISMATCH"}
 
 
+def test_persistence_guard_rejects_revisions_that_hide_facts_or_change_locale():
+    from princess_contracts import canonical_digest
+    first = report()
+    base = revise_report(first, created_at=T0, premium_overlay_id="o").value.to_dict()
+    hidden = copy.deepcopy(base)
+    hidden["sections"][0]["fact_ids"] = []
+    relocale = copy.deepcopy(base)
+    relocale["locale"] = "sv"
+    for doc, code in ((hidden, "REVISION_SECTIONS_NOT_DERIVED"), (relocale, "REVISION_MUTATES_LOCALE")):
+        doc["document_digest"] = None
+        doc["document_digest"] = canonical_digest(doc)
+        candidate = compile_document("ReportDocument", doc)
+        assert candidate.ok, candidate.issues[:3]
+        assert code in {i.code for i in check_revision(first, candidate.value)}
+
+
+def test_traditional_or_unsupported_statuses_are_never_relabelled():
+    traditional = copy.deepcopy(RESULT)
+    traditional["measurements"]["SLANT_ANGLE_MEAN"]["evidence_status"] = "TRADITIONAL_GRAPHOLOGY"
+    assert "UNSUPPORTED_EVIDENCE_STATUS" in codes(assemble_report(
+        report_id="r", analysis=REFERENCE, result=traditional, created_at=T0, locale="en"))
+
+
 def test_persistence_guard_rejects_reordered_revision_times():
     first = report()
     earlier = copy.deepcopy(revise_report(first, created_at=T0, premium_overlay_id="o").value.to_dict())

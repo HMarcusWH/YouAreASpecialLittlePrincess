@@ -73,6 +73,11 @@ def facts_from_result(result: Mapping[str, Any], *,
         if method_id not in free:
             issues.append(ContractIssue("NON_FREE_METHOD", f"/measurements/{feature_id}", str(method_id)))
             continue
+        if m.get("evidence_status") not in EVIDENCE_CLASS:
+            # Traditional, contested or unsupported classes are never relabelled as proxies.
+            issues.append(ContractIssue("UNSUPPORTED_EVIDENCE_STATUS", f"/measurements/{feature_id}",
+                                        str(m.get("evidence_status"))))
+            continue
         missing = m.get("quality_flag") == "MISSING" or m.get("raw_value") is None
         availability = "MISSING" if missing else (
             "UNCALIBRATED" if m.get("confidence_kind") == "UNCALIBRATED" else "READY")
@@ -83,7 +88,7 @@ def facts_from_result(result: Mapping[str, Any], *,
             "availability": availability,
             "value": None if missing else m.get("raw_value"),
             "unit": m.get("unit"),
-            "evidence_class": EVIDENCE_CLASS.get(m.get("evidence_status"), "COMPUTATIONAL_PROXY"),
+            "evidence_class": EVIDENCE_CLASS[m["evidence_status"]],
             "method_id": method_id,
             "method_version": versions[method_id],
             "source_region_ids": _source_regions(m.get("source_regions", ()), parents, evidence_region_ids),
@@ -223,7 +228,8 @@ def revise_report(previous: ValidatedDocument, *, created_at: datetime,
     return _finish(document)
 
 
-IMMUTABLE_ACROSS_REVISIONS = ("report_id", "kind", "analysis", "evidence_bundle_id", "facts", "reference_claims")
+IMMUTABLE_ACROSS_REVISIONS = ("report_id", "kind", "locale", "analysis", "evidence_bundle_id", "facts",
+                              "reference_claims")
 
 
 def check_revision(previous: ValidatedDocument, candidate: ValidatedDocument) -> tuple[ContractIssue, ...]:
@@ -234,6 +240,15 @@ def check_revision(previous: ValidatedDocument, candidate: ValidatedDocument) ->
               for field in IMMUTABLE_ACROSS_REVISIONS if old[field] != new[field]]
     if new["revision"] != old["revision"] + 1:
         issues.append(ContractIssue("REVISION_NOT_SEQUENTIAL", "/revision", "revisions increase by one"))
+    # Sections and notices are derived, never authored: a revision cannot hide
+    # facts or reword notices by recompiling a self-consistent document.
+    overlay = new.get("premium_overlay_id")
+    if new["sections"] != build_sections(new["facts"], reference_claims=new["reference_claims"],
+                                         premium_overlay_id=overlay):
+        issues.append(ContractIssue("REVISION_SECTIONS_NOT_DERIVED", "/sections", "sections must be derived"))
+    if new["notices"] != build_notices(new["facts"], has_reference=bool(new["reference_claims"]),
+                                       premium_overlay_id=overlay):
+        issues.append(ContractIssue("REVISION_NOTICES_NOT_DERIVED", "/notices", "notices must be derived"))
     if _parse_time(new["created_at"]) < _parse_time(old["created_at"]):
         issues.append(ContractIssue("REVISION_BEFORE_PREVIOUS", "/created_at", "a revision cannot predate its predecessor"))
     return tuple(issues)

@@ -29,9 +29,9 @@ from ...application.intake import (
     UploadRow,
 )
 from ...ports.base import Conflict, NotFound
-from .stores import Database, epoch_for, insert_first_revision, set_context, write_result
+from .stores import Database, epoch_for, insert_first_revision, lock_live_owner, set_context, write_result
 
-TERMINAL_FENCES = frozenset({"capture_deleted", "permission_changed"})
+TERMINAL_FENCES = frozenset({"capture_deleted", "permission_changed", "owner_deleted"})
 CAPTURE_SELECT = ("SELECT c.capture_id, c.owner_id, c.upload_id, c.asset_id, c.media_type, c.width, c.height, "
                   "c.exif_orientation, c.sha256, a.version_ref, a.size_bytes, (c.deleted_at IS NOT NULL) AS deleted "
                   "FROM app.capture c JOIN app.asset a ON a.asset_id = c.asset_id ")
@@ -263,6 +263,10 @@ class PostgresJobQueue:
             with self.db.session() as conn:
                 self._lock(conn, job, now)
                 set_context(conn, job.owner_id)
+                try:
+                    lock_live_owner(conn, job.owner_id)
+                except NotFound:
+                    raise Fenced("owner_deleted") from None
                 deleted = conn.execute(text("SELECT deleted_at IS NOT NULL FROM app.capture WHERE capture_id = :c "
                                             "FOR SHARE"), {"c": job.capture_id}).scalar()
                 if deleted is None or deleted:

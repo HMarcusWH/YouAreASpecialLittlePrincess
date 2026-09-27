@@ -97,8 +97,14 @@ class IdentityService:
             # account; anything older is refused. Deleted data is never reattached.
             if identity.auth_time is None or identity.auth_time <= principal.deleted_at:
                 raise Unauthenticated("account_deleted")
-            principal = self._store.rebind_after_deletion(identity.issuer, identity.subject,
-                                                          self._ids.new_id("prn"), self._clock.now())
+            try:
+                principal = self._store.rebind_after_deletion(identity.issuer, identity.subject,
+                                                              self._ids.new_id("prn"), self._clock.now())
+            except Conflict:
+                # A concurrent fresh login already rebound the subject; converge on it.
+                principal = self._store.principal_for_binding(identity.issuer, identity.subject)
+                if principal is None or principal.deleted_at is not None:
+                    raise Unauthenticated("binding_unavailable") from None
         self._check_live(principal, identity.auth_time)
         return principal
 
@@ -120,7 +126,8 @@ class IdentityService:
     def _check_live(self, principal: Principal, auth_time: datetime | None) -> None:
         if principal.deleted_at is not None:
             raise Unauthenticated("account_deleted")
-        if principal.revoked_before is not None and principal.kind == "ACCOUNT":
+        # Guests carry no auth_time, so any revocation ends the capability.
+        if principal.revoked_before is not None:
             if auth_time is None or auth_time <= principal.revoked_before:
                 raise Unauthenticated("session_revoked")
 

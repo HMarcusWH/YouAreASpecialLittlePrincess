@@ -31,7 +31,8 @@ def client(app_db):
     services = Services(
         environment=Environment.TEST, clock=clock,
         identity=IdentityService(provider, PostgresIdentityStore(app_db), clock, SequentialIds(), "princess-api"),
-        permissions=PermissionService(PostgresPermissionStore(app_db), clock, SequentialIds()),
+        permissions=PermissionService(PostgresPermissionStore(app_db), clock, SequentialIds(),
+                                      allow_draft_policy=True),
         report_store_for=lambda pid: PostgresReportStore(app_db, pid),
         kill_switches={"commerce": False, "sharing": True}, dev_identity=provider)
     return TestClient(create_app(services)), clock
@@ -73,7 +74,7 @@ def test_permission_lifecycle_returns_contract_grant_snapshots(client):
     api, clock = client
     alice = login(api, "alice")
     body = {"purpose_id": "third_party_ai_processing", "scope_kind": "REPORT", "scope_ref": "report_1",
-            "decision": "GRANT", "notice_version": "notice_2026_09"}
+            "decision": "GRANT", "notice_version": "notice.consent-choices:1"}
     granted = api.post("/v1/me/permissions", json=body, headers=alice)
     assert granted.status_code == 201 and compile_document("GrantSnapshot", granted.json()).ok
     assert granted.json()["status"] == "GRANTED" and granted.json()["scope"] == "REPORT:report_1"
@@ -133,7 +134,8 @@ def test_dev_token_route_only_exists_in_local_and_test(app_db):
     services = Services(
         environment=Environment.PREVIEW, clock=clock,
         identity=IdentityService(provider, PostgresIdentityStore(app_db), clock, SequentialIds(), "princess-api"),
-        permissions=PermissionService(PostgresPermissionStore(app_db), clock, SequentialIds()),
+        permissions=PermissionService(PostgresPermissionStore(app_db), clock, SequentialIds(),
+                                      allow_draft_policy=True),
         report_store_for=lambda pid: PostgresReportStore(app_db, pid), dev_identity=provider)
     assert TestClient(create_app(services)).post("/v1/dev/id-tokens", json={"subject": "x"}).status_code == 404
 
@@ -193,7 +195,7 @@ def test_composed_local_stack_upload_to_report(app_url, worker_db, tmp_path, mon
                        json={"sha256": hashlib.sha256(data).hexdigest()}, headers=auth).json()
     assert api.post("/v1/analyses", json={"capture_id": capture["capture_id"]}, headers=auth).status_code == 403
     grant = {"purpose_id": "service_processing", "scope_kind": "SPECIMEN", "scope_ref": capture["capture_id"],
-             "decision": "GRANT", "notice_version": "notice_2026_09"}
+             "decision": "GRANT", "notice_version": "notice.consent-choices:1"}
     assert api.post("/v1/me/permissions", json=grant, headers=auth).status_code == 201
     started = api.post("/v1/analyses", json={"capture_id": capture["capture_id"]}, headers=auth)
     assert started.status_code == 202 and started.json()["state"] == "QUEUED"

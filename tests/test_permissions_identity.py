@@ -11,27 +11,70 @@ import pytest
 from princess_app.adapters.fakes import FakeClock, FakeIdentityProvider, SequentialIds
 from princess_app.application.identity import IdentityService, InMemoryIdentityStore
 from princess_app.application.permissions import InMemoryPermissionStore, PermissionService
-from princess_app.domain.permissions import GRANT_SCOPES, SUBJECT_WIDE, Decision, PermissionEvent, Scope, evaluate
+from princess_app.domain.permissions import (
+    APPROVED_NOTICES,
+    GRANT_SCOPES,
+    NOTICE_COVERAGE,
+    SUBJECT_WIDE,
+    Decision,
+    PermissionEvent,
+    Scope,
+    evaluate,
+)
 from princess_app.ports.base import CallContext, Conflict, Environment, InvalidInput, NotAuthorized, Unauthenticated
 
 ROOT = Path(__file__).resolve().parents[1]
 SPECIMEN = Scope("SPECIMEN", "capture_1")
 OTHER_SPECIMEN = Scope("SPECIMEN", "capture_2")
+NOTICE = "notice.consent-choices:1"
 
 
 def service():
     clock = FakeClock()
-    return clock, PermissionService(InMemoryPermissionStore(), clock, SequentialIds())
+    return clock, PermissionService(InMemoryPermissionStore(), clock, SequentialIds(), allow_draft_policy=True)
 
 
 def record(svc, purpose, scope, decision, subject="writer_1"):
     return svc.record(subject_id=subject, actor_id=subject, purpose_id=purpose, scope=scope, decision=decision,
-                      notice_version="notice_v1")
+                      notice_version=NOTICE)
 
 
 def test_grant_scopes_mirror_the_t03_registry():
     registry = json.loads((ROOT / "contracts" / "consent" / "v1" / "purposes.json").read_text())
     assert {p["purpose_id"]: frozenset(p["grant_scopes"]) for p in registry["purposes"]} == GRANT_SCOPES
+
+
+def test_notice_coverage_mirrors_the_t03_registry():
+    registry = json.loads((ROOT / "contracts" / "consent" / "v1" / "notices.json").read_text())
+    purposes = json.loads((ROOT / "contracts" / "consent" / "v1" / "purposes.json").read_text())
+    assert {f"{n['notice_id']}:{n['version']}": frozenset((p["purpose_id"], p["purpose_version"]) for p in n["purposes"])
+            for n in registry["notices"]} == NOTICE_COVERAGE
+    approved_purposes = {(p["purpose_id"], p["purpose_version"]) for p in purposes["purposes"]
+                         if p["status"] == "APPROVED"}
+    approved = {f"{n['notice_id']}:{n['version']}" for n in registry["notices"]
+                if n["status"] == "APPROVED" and NOTICE_COVERAGE[f"{n['notice_id']}:{n['version']}"] <= approved_purposes}
+    assert approved == APPROVED_NOTICES
+
+
+def test_grants_under_draft_policy_or_foreign_notices_fail_closed():
+    clock = FakeClock()
+    store = InMemoryPermissionStore()
+    production_like = PermissionService(store, clock, SequentialIds())
+    production_like.record(subject_id="w", actor_id="w", purpose_id="service_processing", scope=SPECIMEN,
+                           decision=Decision.GRANT, notice_version=NOTICE)
+    assert production_like.check("w", "service_processing", SPECIMEN).reason == "policy_not_approved"
+    for notice in ("notice.pilot-collection:1", "notice_2026_09", "notice.consent-choices:2"):
+        with pytest.raises(InvalidInput):
+            production_like.record(subject_id="w", actor_id="w", purpose_id="service_processing", scope=SPECIMEN,
+                                   decision=Decision.GRANT, notice_version=notice)
+    # Withdrawal is never blocked by notice bookkeeping.
+    production_like.record(subject_id="w", actor_id="w", purpose_id="service_processing", scope=SUBJECT_WIDE,
+                           decision=Decision.WITHDRAW, notice_version="settings_screen")
+    # A replayed grant carrying an uncovered notice never authorizes.
+    forged = PermissionEvent("e9", "w2", "service_processing", 1, SPECIMEN, Decision.GRANT, clock.now(),
+                             clock.now(), "w2", "notice.pilot-collection:1")
+    assert evaluate([forged], subject_id="w2", purpose_id="service_processing", scope=SPECIMEN, at=clock.now(),
+                    allow_draft_policy=True).reason == "notice_invalid"
 
 
 def test_grant_withdraw_and_regrant_follow_the_latest_recorded_decision():
@@ -95,13 +138,13 @@ def test_ungrantable_scopes_are_rejected(purpose, scope):
 def test_future_effective_grant_and_no_backdating():
     clock, svc = service()
     svc.record(subject_id="w", actor_id="w", purpose_id="product_analytics", scope=SUBJECT_WIDE,
-               decision=Decision.GRANT, notice_version="n1", effective_at=clock.now() + timedelta(hours=1))
+               decision=Decision.GRANT, notice_version=NOTICE, effective_at=clock.now() + timedelta(hours=1))
     assert not svc.check("w", "product_analytics", SUBJECT_WIDE).allowed
     clock.advance(3601)
     assert svc.check("w", "product_analytics", SUBJECT_WIDE).allowed
     with pytest.raises(InvalidInput):
         svc.record(subject_id="w", actor_id="w", purpose_id="product_analytics", scope=SUBJECT_WIDE,
-                   decision=Decision.GRANT, notice_version="n1", effective_at=clock.now() - timedelta(seconds=1))
+                   decision=Decision.GRANT, notice_version=NOTICE, effective_at=clock.now() - timedelta(seconds=1))
 
 
 def test_stale_purpose_version_does_not_authorize(monkeypatch):
@@ -207,3 +250,33 @@ def test_expired_or_forged_guest_capabilities_fail():
     clock.advance(31 * 86400)
     with pytest.raises(Unauthenticated):
         svc.authenticate(token, ctx(clock))
+
+
+def test_guest_logout_everywhere_retires_the_guest_capability():
+    clock, provider, store, svc = identity()
+    guest, token = svc.create_guest()
+    svc.logout_everywhere(svc.authenticate(token, ctx(clock)), ctx(clock))
+    with pytest.raises(Unauthenticated) as err:
+        svc.authenticate(token, ctx(clock))
+    assert err.value.code == "session_revoked"
+
+
+def test_concurrent_fresh_logins_after_deletion_converge_on_one_new_account():
+    clock, provider, store, svc = identity()
+    principal = svc.authenticate(provider.issue_token("sub-a", AUD), ctx(clock))
+    svc.delete_account(principal, ctx(clock))
+    clock.advance(1)
+    first, second = provider.issue_token("sub-a", AUD), provider.issue_token("sub-a", AUD)
+    real_lookup = store.principal_for_binding
+    # Simulate the race: the second request read the tombstone before the first rebound it.
+    tombstone = store.principals[principal.principal_id]
+    calls = {"n": 0}
+
+    def racing_lookup(issuer, subject):
+        calls["n"] += 1
+        return tombstone if calls["n"] == 1 else real_lookup(issuer, subject)
+
+    winner = svc.authenticate(first, ctx(clock))
+    store.principal_for_binding = racing_lookup
+    loser = svc.authenticate(second, ctx(clock))
+    assert loser.principal_id == winner.principal_id != principal.principal_id

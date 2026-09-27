@@ -19,6 +19,7 @@ from ...ports.base import (
     CapabilityProfile,
     Clock,
     Environment,
+    InvalidInput,
     ProviderMode,
     Unauthenticated,
     Unsupported,
@@ -36,7 +37,8 @@ class OidcIdentityProvider:
     def __init__(self, *, issuer: str, jwks_source: JwksSource, clock: Clock, environment: Environment,
                  mode: ProviderMode, allowed_algorithms: frozenset[str] = frozenset({"RS256", "ES256"}),
                  leeway_s: int = 30, min_refresh_interval_s: int = 60) -> None:
-        check_mode_allowed(environment, mode)
+        self.environment = Environment.parse(environment)
+        check_mode_allowed(self.environment, mode)
         if not allowed_algorithms or not allowed_algorithms <= ASYMMETRIC:
             raise ValueError("only asymmetric JWS algorithms may be configured")
         self.issuer = issuer
@@ -82,6 +84,8 @@ class OidcIdentityProvider:
 
     def verify_credential(self, credential: str, expected_audience: str, ctx: CallContext) -> port.VerifiedIdentity:
         self.profile.require(port.VERIFY_ID_TOKEN)
+        if ctx.environment is not self.environment:
+            raise InvalidInput("environment_mismatch")
         ctx.check_deadline(self._clock)
         try:
             header = jwt.get_unverified_header(credential)

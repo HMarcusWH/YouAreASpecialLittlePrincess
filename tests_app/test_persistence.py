@@ -28,11 +28,12 @@ from princess_app.domain.analysis import analysis_reference
 from princess_app.domain.evidence import build_evidence_bundle
 from princess_app.domain.permissions import SUBJECT_WIDE, Decision, Scope
 from princess_app.domain.reports import assemble_report, revise_report
-from princess_app.ports.base import CallContext, Conflict, Environment, NotFound, Unauthenticated
+from princess_app.ports.base import CallContext, Conflict, Environment, InvalidInput, NotFound, Unauthenticated
 
 ROOT = Path(__file__).resolve().parents[1]
 FIXTURES = ROOT / "fixtures" / "reports" / "source"
 T0 = datetime(2026, 9, 27, 12, 0, tzinfo=timezone.utc)
+NOTICE = "notice.consent-choices:1"
 AUD = "princess-api"
 
 
@@ -170,9 +171,10 @@ def test_result_and_projections_commit_atomically_and_reject_duplicates(app_db, 
         missing = conn.execute(text("SELECT count(*) FROM app.measurement WHERE quality = 'MISSING' "
                                     "AND value_float IS NOT NULL")).scalar()
         assert missing == 0
+    again = load("engine-result.synthetic.json")
     with pytest.raises(Conflict):
-        store.complete_run(alice.principal_id, "run_1", result=load("engine-result.synthetic.json"),
-                           processed_sha256="1" * 64, at=T0)
+        store.complete_run(alice.principal_id, "run_1", result=again,
+                           processed_sha256=again["metadata"]["input_pixels_sha256"], at=T0)
     with pytest.raises(IntegrityError):
         with app_db.session(alice.principal_id) as conn:
             conn.execute(text("INSERT INTO app.measurement (owner_id, run_id, feature_id, value_float, quality, "
@@ -187,8 +189,11 @@ def test_failed_projection_leaves_no_partial_rows(app_db, world):
     bad["measurements"]["SLANT_ANGLE_MEAN"]["raw_value"] = 1.0
     bad["measurements"]["SLANT_ANGLE_MEAN"]["quality_flag"] = "MISSING"  # value with MISSING violates a CHECK
     bad["measurements"]["SLANT_ANGLE_MEAN"]["missing_reason"] = "x"
-    with pytest.raises(IntegrityError):
+    with pytest.raises(InvalidInput):  # another run's result is refused before anything is written
         store.complete_run(alice.principal_id, "run_1", result=bad, processed_sha256="1" * 64, at=T0)
+    with pytest.raises(IntegrityError):
+        store.complete_run(alice.principal_id, "run_1", result=bad,
+                           processed_sha256=bad["metadata"]["input_pixels_sha256"], at=T0)
     with app_db.session(alice.principal_id) as conn:
         assert conn.execute(text("SELECT count(*) FROM app.measurement")).scalar() == 0
         assert conn.execute(text("SELECT count(*) FROM app.region")).scalar() == 0
@@ -220,9 +225,10 @@ def test_run_cannot_reference_another_owners_asset(app_db, world):
 def test_immutable_rows_cannot_be_updated_by_the_runtime_role(app_db, world):
     alice = account(world, "sub-a")
     publish_report(app_db, alice.principal_id)
-    PermissionService(PostgresPermissionStore(app_db), FakeClock(T0), SequentialIds()).record(
+    PermissionService(PostgresPermissionStore(app_db), FakeClock(T0), SequentialIds(),
+                      allow_draft_policy=True).record(
         subject_id=alice.principal_id, actor_id=alice.principal_id, purpose_id="product_analytics",
-        scope=SUBJECT_WIDE, decision=Decision.GRANT, notice_version="n1")
+        scope=SUBJECT_WIDE, decision=Decision.GRANT, notice_version=NOTICE)
     for statement in ("UPDATE app.report_revision SET digest = digest", "UPDATE app.permission_event SET actor_id = 'x'",
                       "UPDATE app.measurement SET value_float = 0", "DELETE FROM app.permission_event"):
         with pytest.raises(ProgrammingError):
@@ -282,9 +288,10 @@ def test_guest_transfer_moves_ownership_once_under_concurrency(world, app_db):
     clock, provider, identity = world
     guest, token = identity.create_guest()
     publish_report(app_db, guest.principal_id)
-    PermissionService(PostgresPermissionStore(app_db), clock, SequentialIds()).record(
+    PermissionService(PostgresPermissionStore(app_db), clock, SequentialIds(),
+                      allow_draft_policy=True).record(
         subject_id=guest.principal_id, actor_id=guest.principal_id, purpose_id="service_processing",
-        scope=Scope("SPECIMEN", "asset_run_1"), decision=Decision.GRANT, notice_version="n1")
+        scope=Scope("SPECIMEN", "asset_run_1"), decision=Decision.GRANT, notice_version=NOTICE)
     accounts = [account(world, f"sub-{i}") for i in range(4)]
     outcomes = []
 
@@ -305,9 +312,12 @@ def test_guest_transfer_moves_ownership_once_under_concurrency(world, app_db):
     with app_db.session(winner) as conn:
         assert conn.execute(text("SELECT count(*) FROM app.report_revision")).scalar() == 1
         assert conn.execute(text("SELECT count(*) FROM app.measurement")).scalar() == 64
-        assert conn.execute(text("SELECT count(*) FROM app.permission_event")).scalar() == 1
+        # Guest choices are not rewritten onto the account; its epoch moved instead.
+        assert conn.execute(text("SELECT count(*) FROM app.permission_event")).scalar() == 0
+        assert epoch_for(conn, winner, "service_processing") == 1
     with app_db.session(guest.principal_id) as conn:
         assert conn.execute(text("SELECT count(*) FROM app.report")).scalar() == 0
+        assert conn.execute(text("SELECT subject_id FROM app.permission_event")).scalar() == guest.principal_id
     with pytest.raises(Unauthenticated):
         identity.authenticate(token, ctx(clock))
 
@@ -315,10 +325,10 @@ def test_guest_transfer_moves_ownership_once_under_concurrency(world, app_db):
 def test_permission_ledger_and_publication_fence_on_postgres(app_db, world):
     alice = account(world, "sub-a")
     clock = FakeClock(T0)
-    svc = PermissionService(PostgresPermissionStore(app_db), clock, SequentialIds())
+    svc = PermissionService(PostgresPermissionStore(app_db), clock, SequentialIds(), allow_draft_policy=True)
     scope = Scope("REPORT", "report_1")
     svc.record(subject_id=alice.principal_id, actor_id=alice.principal_id, purpose_id="third_party_ai_processing",
-               scope=scope, decision=Decision.GRANT, notice_version="n1")
+               scope=scope, decision=Decision.GRANT, notice_version=NOTICE)
     epoch = svc.require(alice.principal_id, "third_party_ai_processing", scope)
     # A publisher holds the epoch row; a concurrent withdrawal must wait for it.
     publisher = app_db.engine.connect()
@@ -332,7 +342,7 @@ def test_permission_ledger_and_publication_fence_on_postgres(app_db, world):
         clock.advance(1)
         svc.record(subject_id=alice.principal_id, actor_id=alice.principal_id,
                    purpose_id="third_party_ai_processing", scope=SUBJECT_WIDE, decision=Decision.WITHDRAW,
-                   notice_version="n1")
+                   notice_version=NOTICE)
         done.set()
 
     worker = threading.Thread(target=withdraw)

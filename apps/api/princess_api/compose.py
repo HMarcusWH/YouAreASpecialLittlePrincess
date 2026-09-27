@@ -30,7 +30,7 @@ from princess_app.application.identity import IdentityService
 from princess_app.application.intake import IntakeService
 from princess_app.application.permissions import PermissionService
 from princess_app.config import RuntimeConfig, load_runtime_config
-from princess_app.ports.base import ProviderMode, SystemClock, Unsupported
+from princess_app.ports.base import Environment, ProviderMode, SystemClock, Unsupported
 from princess_graphology import __version__ as ENGINE_VERSION
 
 from .app import Services, create_app
@@ -55,7 +55,10 @@ def compose(config: RuntimeConfig) -> Services:
         raise Unsupported("identity_adapter_not_configured", detail="ADR-002 vendor pending")
     provider = FakeIdentityProvider(clock=clock, environment=config.environment)
     identity = IdentityService(provider, PostgresIdentityStore(db), clock, UuidIds(), audience)
-    permissions = PermissionService(PostgresPermissionStore(db), clock, UuidIds())
+    permissions = PermissionService(
+        PostgresPermissionStore(db), clock, UuidIds(),
+        # Draft T03 notices authorize nothing outside synthetic local/test data.
+        allow_draft_policy=config.environment in (Environment.LOCAL, Environment.TEST))
     if config.provider_mode("ObjectStore") is not ProviderMode.FAKE:
         raise Unsupported("object_store_adapter_not_configured", detail="ADR-004 provider pending")
     store = local_store(config, clock)

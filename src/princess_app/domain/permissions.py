@@ -38,6 +38,20 @@ GRANT_SCOPES: Mapping[str, frozenset[str]] = {
     "model_training": frozenset(),
     "public_example": frozenset(),
 }
+# Mirror of contracts/consent/v1/notices.json (checked by tests). A grant cites
+# the notice that presented the choice as "<notice_id>:<version>" and must be
+# covered by it; deny/withdraw never need a notice so they cannot be blocked.
+NOTICE_COVERAGE: Mapping[str, frozenset[tuple[str, int]]] = {
+    "notice.consent-choices:1": frozenset({
+        ("service_processing", 1), ("image_retention", 1), ("third_party_ai_processing", 1),
+        ("ordinary_sharing", 1), ("partner_comparison", 1), ("reference_contribution", 1),
+        ("support_human_review", 1), ("product_analytics", 1)}),
+    "notice.pilot-collection:1": frozenset({("engineering_evaluation", 1), ("reference_contribution", 1)}),
+}
+# Notices whose owner approval is recorded in T03 and whose purposes are
+# approved. Empty while the registry is DRAFT: grants under draft policy
+# authorize nothing unless the service runs with synthetic data only.
+APPROVED_NOTICES: frozenset[str] = frozenset()
 SCOPE_KINDS = frozenset({"SUBJECT_WIDE", "SPECIMEN", "REPORT", "SHARE_GRANT", "COMPARISON", "PILOT_ENROLLMENT",
                          "SUPPORT_CASE"})
 
@@ -107,6 +121,11 @@ class PermissionEvent:
             raise InvalidInput("scope_not_applicable")
 
 
+def require_covering_notice(notice_version: str, purpose_id: str, purpose_version: int) -> None:
+    if (purpose_id, purpose_version) not in NOTICE_COVERAGE.get(notice_version, frozenset()):
+        raise InvalidInput("notice_does_not_cover_purpose")
+
+
 @dataclass(frozen=True)
 class Effective:
     allowed: bool
@@ -115,8 +134,12 @@ class Effective:
 
 
 def evaluate(events: Iterable[PermissionEvent], *, subject_id: str, purpose_id: str, scope: Scope,
-             at: datetime) -> Effective:
-    """Effective permission for one use, evaluated from the full history."""
+             at: datetime, allow_draft_policy: bool = False) -> Effective:
+    """Effective permission for one use, evaluated from the full history.
+
+    ``allow_draft_policy`` lets grants under unapproved (DRAFT) notices count;
+    composition enables it only in synthetic local/test environments.
+    """
     require_utc(at, "at")
     current = current_version(purpose_id)
     relevant = [e for e in events
@@ -131,4 +154,8 @@ def evaluate(events: Iterable[PermissionEvent], *, subject_id: str, purpose_id: 
         return Effective(False, latest.decision.value.lower(), latest.event_id)
     if latest.purpose_version != current:
         return Effective(False, "stale_purpose_version", latest.event_id)
+    if (purpose_id, latest.purpose_version) not in NOTICE_COVERAGE.get(latest.notice_version, frozenset()):
+        return Effective(False, "notice_invalid", latest.event_id)
+    if latest.notice_version not in APPROVED_NOTICES and not allow_draft_policy:
+        return Effective(False, "policy_not_approved", latest.event_id)
     return Effective(True, "granted", latest.event_id)

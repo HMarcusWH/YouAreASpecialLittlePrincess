@@ -118,11 +118,12 @@ BEGIN
   UPDATE app.report SET owner_id = v_account WHERE owner_id = v_guest.principal_id;
   UPDATE app.job SET owner_id = v_account WHERE owner_id = v_guest.principal_id;
   UPDATE app.outbox_event SET owner_id = v_account WHERE owner_id = v_guest.principal_id;
-  UPDATE app.permission_event SET subject_id = v_account WHERE subject_id = v_guest.principal_id;
+  -- Permission history is append-only and stays with the principal that
+  -- recorded it; the account must decide for itself. Moving the account's
+  -- epochs fences in-flight work that started under the guest's grants.
   INSERT INTO app.permission_epoch (subject_id, purpose_id, epoch)
-    SELECT v_account, purpose_id, epoch + 1 FROM app.permission_epoch WHERE subject_id = v_guest.principal_id
-    ON CONFLICT (subject_id, purpose_id) DO UPDATE SET epoch = app.permission_epoch.epoch + EXCLUDED.epoch;
-  DELETE FROM app.permission_epoch WHERE subject_id = v_guest.principal_id;
+    SELECT DISTINCT v_account, purpose_id, 1 FROM app.permission_event WHERE subject_id = v_guest.principal_id
+    ON CONFLICT (subject_id, purpose_id) DO UPDATE SET epoch = app.permission_epoch.epoch + 1;
   UPDATE app.principal SET transferred_to = v_account, guest_capability_sha256 = NULL
     WHERE principal_id = v_guest.principal_id;
   RETURN v_guest.principal_id;

@@ -12,7 +12,14 @@ from dataclasses import dataclass, field, replace
 from datetime import datetime
 from typing import Protocol
 
-from ..domain.permissions import Decision, PermissionEvent, Scope, current_version, evaluate
+from ..domain.permissions import (
+    Decision,
+    PermissionEvent,
+    Scope,
+    current_version,
+    evaluate,
+    require_covering_notice,
+)
 from ..ports.base import Clock, IdGenerator, NotAuthorized
 
 
@@ -32,24 +39,30 @@ class PermissionStore(Protocol):
 
 
 class PermissionService:
-    def __init__(self, store: PermissionStore, clock: Clock, ids: IdGenerator) -> None:
+    def __init__(self, store: PermissionStore, clock: Clock, ids: IdGenerator, *,
+                 allow_draft_policy: bool = False) -> None:
         self._store = store
         self._clock = clock
         self._ids = ids
+        self._allow_draft = allow_draft_policy
 
     def record(self, *, subject_id: str, actor_id: str, purpose_id: str, scope: Scope, decision: Decision,
                notice_version: str, effective_at: datetime | None = None) -> PermissionEvent:
         now = self._clock.now()
+        version = current_version(purpose_id)
+        if decision is Decision.GRANT:
+            require_covering_notice(notice_version, purpose_id, version)
         event = PermissionEvent(
             event_id=self._ids.new_id("perm"), subject_id=subject_id, purpose_id=purpose_id,
-            purpose_version=current_version(purpose_id), scope=scope, decision=decision, recorded_at=now,
+            purpose_version=version, scope=scope, decision=decision, recorded_at=now,
             effective_at=effective_at or now, actor_id=actor_id, notice_version=notice_version)
         return self._store.append(event)
 
     def check(self, subject_id: str, purpose_id: str, scope: Scope, at: datetime | None = None) -> PermissionCheck:
         epoch = self._store.epoch(subject_id, purpose_id)
         result = evaluate(self._store.events(subject_id, purpose_id), subject_id=subject_id,
-                          purpose_id=purpose_id, scope=scope, at=at or self._clock.now())
+                          purpose_id=purpose_id, scope=scope, at=at or self._clock.now(),
+                          allow_draft_policy=self._allow_draft)
         return PermissionCheck(result.allowed, result.reason, epoch)
 
     def require(self, subject_id: str, purpose_id: str, scope: Scope) -> int:
@@ -59,6 +72,9 @@ class PermissionService:
         return check.epoch
 
     def still_valid(self, subject_id: str, purpose_id: str, scope: Scope, epoch: int) -> bool:
+        """Advisory pre-check only. Durable publication must re-check the epoch
+        inside its own transaction under the epoch row lock (see
+        ``PostgresJobQueue.publish``); this boolean cannot fence a later commit."""
         check = self.check(subject_id, purpose_id, scope)
         return check.allowed and check.epoch == epoch
 
