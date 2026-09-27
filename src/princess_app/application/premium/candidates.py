@@ -84,7 +84,7 @@ def _ink_appearance(facts: Mapping[str, Mapping[str, Any]]) -> tuple[Candidate, 
         "GEN_INK_APPEARANCE_FACT_V1:INK_DARKNESS_VARIATION",
         "INK_APPEARANCE_FACT",
         "candidate.ink_appearance.variation",
-        "Verified ink-darkness variation (image proxy)",
+        "Computed ink-darkness variation (image proxy)",
         tuple(support),
     ),)
 
@@ -102,7 +102,7 @@ def _thickness_fact(facts: Mapping[str, Mapping[str, Any]]) -> tuple[Candidate, 
         "GEN_THICKNESS_FACT_V1:STROKE_WIDTH_PROFILE",
         "THICKNESS_FACT",
         "candidate.stroke_width.profile",
-        "Measured stroke-thickness profile (image proxy)",
+        "Computed stroke-thickness profile (image proxy)",
         tuple(support),
     ),)
 
