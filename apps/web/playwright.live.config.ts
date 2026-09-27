@@ -1,10 +1,13 @@
 import { defineConfig, devices } from "@playwright/test";
 
 const executablePath = process.env.PRINCESS_CHROMIUM;
+for (const name of ["PRINCESS_E2E_API", "PRINCESS_E2E_SAMPLE", "PRINCESS_E2E_WORKER_GATE"]) {
+  if (!process.env[name]) throw new Error(name + " is required for the live web qualification");
+}
 
 export default defineConfig({
   testDir: "e2e",
-  testIgnore: ["live.spec.ts"],
+  testMatch: ["live.spec.ts"],
   forbidOnly: true,
   fullyParallel: false,
   workers: 1,
@@ -12,7 +15,7 @@ export default defineConfig({
   reporter: [["list"]],
   use: {
     baseURL: "http://127.0.0.1:3100",
-    trace: "off",
+    trace: "retain-on-failure",
     ...devices["Desktop Chrome"],
     ...(executablePath ? { launchOptions: { executablePath } } : {}),
   },
@@ -22,9 +25,9 @@ export default defineConfig({
     reuseExistingServer: false,
     timeout: 120_000,
     env: {
-      PRINCESS_WEB_FIXTURES: "1",
-      PRINCESS_ENVIRONMENT: process.env.PRINCESS_ENVIRONMENT ?? "test",
-      PRINCESS_API_BASE: "http://127.0.0.1:9",
+      PRINCESS_WEB_FIXTURES: "0",
+      PRINCESS_ENVIRONMENT: "test",
+      PRINCESS_API_BASE: process.env.PRINCESS_E2E_API!,
       NEXT_TELEMETRY_DISABLED: "1",
     },
   },
