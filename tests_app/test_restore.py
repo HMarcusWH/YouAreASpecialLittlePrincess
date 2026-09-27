@@ -6,19 +6,24 @@ from sqlalchemy import text
 
 from princess_app.adapters.fakes import SequentialIds
 from princess_app.adapters.localfs.tombstones import JsonlTombstoneLog
+from princess_app.adapters.postgres.feedback import PostgresFeedbackRepository
 from princess_app.adapters.postgres.notifications import PostgresNotificationRepository
 from princess_app.adapters.postgres.stores import PostgresIdentityStore, PostgresReportStore
 from princess_app.application.erasure import ErasureWorker
+from princess_app.application.feedback import FeedbackService
 from princess_app.application.notifications import NotificationService
 from princess_app.application.tombstones import (
     ACCOUNT_DELETED,
     CAPTURE_DELETED,
+    DEVICE_UNREGISTERED,
+    FEEDBACK_WITHDRAWN,
     PERMISSION_WITHDRAWN,
     SESSIONS_REVOKED,
     Tombstone,
     merged_expansion,
     replay,
 )
+from princess_app.domain.feedback import FeedbackSubmission
 from princess_app.domain.permissions import Decision, Scope
 from princess_app.ports.base import Environment
 from test_intake import NOTICE, Env, erasure
@@ -203,3 +208,78 @@ def test_log_out_everywhere_survives_a_restore(env, world, admin_engine, tmp_pat
     assert result.reapplied == 1 and store.principal(who.principal_id).revoked_before == t.recorded_at
     assert [i.platform.value for i in devices.installations(who.principal_id)] == ["fcm"]
     assert replay(log, store, env.repo, env.permissions, devices).reapplied == 0
+
+
+def test_single_device_logout_survives_restore(env, world, admin_engine, tmp_path):  # noqa: F811
+    log = JsonlTombstoneLog(tmp_path)
+    store = PostgresIdentityStore(env.app_db)
+    devices = NotificationService(repo=PostgresNotificationRepository(env.app_db), clock=env.clock,
+                                  ids=SequentialIds(), environment=Environment.TEST)
+    who = account(world, "sub-device-restore")
+    token = "restore-device-" + "a" * 48
+    installation_id = devices.register(who, token, "apns", "test", "en")
+    with admin_engine.begin() as conn:
+        saved = dict(conn.execute(text(
+            "SELECT installation_id, owner_id, platform, app_environment, device_token, token_sha256, locale, "
+            "registered_at FROM app.push_installation WHERE installation_id = :i"
+        ), {"i": installation_id}).mappings().one())
+
+    env.clock.advance(1)
+    withdrawn_at = devices.unregister(who.principal_id, installation_id)
+    assert withdrawn_at == env.clock.now()
+    assert "RECORDED" in {o.action for o in recording(env, log).run_once()}
+    [t] = [t for t in log.read().tombstones if t.kind == DEVICE_UNREGISTERED]
+    assert (t.owner_id, t.ref, t.recorded_at) == (who.principal_id, installation_id, withdrawn_at)
+
+    with admin_engine.begin() as conn:
+        conn.execute(text(
+            "INSERT INTO app.push_installation (installation_id, owner_id, platform, app_environment, device_token, "
+            "token_sha256, locale, registered_at) VALUES (:installation_id, :owner_id, :platform, :app_environment, "
+            ":device_token, :token_sha256, :locale, :registered_at)"
+        ), saved)
+    result = replay(log, store, env.repo, env.permissions, devices)
+    assert result.reapplied == 1
+    assert devices.installations(who.principal_id) == []
+    assert replay(log, store, env.repo, env.permissions, devices).reapplied == 0
+
+
+def test_feedback_withdrawal_survives_restore_and_preserves_newer_resubmission(
+        env, world, admin_engine, tmp_path):  # noqa: F811
+    log = JsonlTombstoneLog(tmp_path)
+    store = PostgresIdentityStore(env.app_db)
+    owner = account(world, "sub-feedback-restore").principal_id
+    _, run_id = env.analysis(owner)
+    assert env.worker().run_once().outcome == "SUCCEEDED"
+    report_id = env.intake.status(owner, run_id).report_id
+    feedback = FeedbackService(reports=lambda pid: PostgresReportStore(env.app_db, pid),
+                               repo=PostgresFeedbackRepository(env.app_db), clock=env.clock)
+    submission = FeedbackSubmission(report_id=report_id, category="OTHER", target_kind="REPORT",
+                                    target_ref=None, comment="restore test", request_id="req_restore_feedback")
+    record = feedback.submit(owner, submission)
+    env.clock.advance(1)
+    withdrawn_at = feedback.withdraw(owner, record.feedback_id)
+    assert withdrawn_at == env.clock.now()
+    assert "RECORDED" in {o.action for o in recording(env, log).run_once()}
+    [t] = [t for t in log.read().tombstones if t.kind == FEEDBACK_WITHDRAWN]
+    assert (t.owner_id, t.ref, t.recorded_at) == (owner, record.feedback_id, withdrawn_at)
+
+    with admin_engine.begin() as conn:
+        conn.execute(text(
+            "INSERT INTO app.report_feedback (feedback_id, owner_id, report_id, revision, category, target_kind, "
+            "target_ref, comment, created_at, expires_at, contract_version) VALUES (:feedback_id, :owner_id, "
+            ":report_id, :revision, :category, :target_kind, :target_ref, :comment, :created_at, :expires_at, "
+            ":contract_version)"
+        ), record.__dict__)
+    result = replay(log, store, env.repo, env.permissions, feedback=feedback)
+    assert result.reapplied == 1
+    with env.app_db.session(owner) as conn:
+        assert conn.execute(text("SELECT 1 FROM app.report_feedback WHERE feedback_id = :f"),
+                            {"f": record.feedback_id}).first() is None
+
+    env.clock.advance(5)
+    newer = feedback.submit(owner, submission)
+    assert newer.feedback_id == record.feedback_id and newer.created_at > withdrawn_at
+    assert replay(log, store, env.repo, env.permissions, feedback=feedback).reapplied == 0
+    with env.app_db.session(owner) as conn:
+        assert conn.execute(text("SELECT 1 FROM app.report_feedback WHERE feedback_id = :f"),
+                            {"f": record.feedback_id}).first() is not None

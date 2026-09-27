@@ -32,7 +32,13 @@ ACCOUNT_DELETED = "ACCOUNT_DELETED"
 CAPTURE_DELETED = "CAPTURE_DELETED"
 PERMISSION_WITHDRAWN = "PERMISSION_WITHDRAWN"  # ref: the withdrawing permission event
 SESSIONS_REVOKED = "SESSIONS_REVOKED"  # ref: the principal; "log out everywhere"
-KINDS = frozenset({ACCOUNT_DELETED, CAPTURE_DELETED, PERMISSION_WITHDRAWN, SESSIONS_REVOKED})
+DEVICE_UNREGISTERED = "DEVICE_UNREGISTERED"  # ref: one push installation
+FEEDBACK_WITHDRAWN = "FEEDBACK_WITHDRAWN"  # ref: one report-feedback row
+KINDS = frozenset({
+    ACCOUNT_DELETED, CAPTURE_DELETED, PERMISSION_WITHDRAWN, SESSIONS_REVOKED,
+    DEVICE_UNREGISTERED, FEEDBACK_WITHDRAWN,
+})
+TEMPORAL_KINDS = frozenset({SESSIONS_REVOKED, DEVICE_UNREGISTERED, FEEDBACK_WITHDRAWN})
 
 
 @dataclass(frozen=True)
@@ -92,6 +98,12 @@ class TombstoneLog(Protocol):
 class DeviceBindings(Protocol):
     def forget_devices(self, owner_id: str, registered_before: datetime | None = None) -> int: ...
 
+    def forget_device(self, owner_id: str, installation_id: str, registered_before: datetime) -> bool: ...
+
+
+class WithdrawnFeedback(Protocol):
+    def forget_feedback(self, owner_id: str, feedback_id: str, created_before: datetime) -> bool: ...
+
 
 @dataclass(frozen=True)
 class ReplayResult:
@@ -102,23 +114,25 @@ class ReplayResult:
 
 
 def replay(log: TombstoneLog, identities: IdentityStore, captures: IntakeRepository,
-           permissions: PermissionService, devices: DeviceBindings | None = None) -> ReplayResult:
+           permissions: PermissionService, devices: DeviceBindings | None = None,
+           feedback: WithdrawnFeedback | None = None) -> ReplayResult:
     """Re-apply the changes a restore has undone. Idempotent. Run it before the
     restored environment serves traffic, then let the erasure worker run."""
     counts = {"reapplied": 0, "already": 0, "unknown": 0}
     contents = log.read()
     seen: set[tuple] = set()
     for t in contents.tombstones:
-        key = (t.kind, t.owner_id, t.ref) + ((t.recorded_at,) if t.kind == SESSIONS_REVOKED else ())
+        key = (t.kind, t.owner_id, t.ref) + ((t.recorded_at,) if t.kind in TEMPORAL_KINDS else ())
         if key in seen:
             continue
         seen.add(key)
-        counts[_replay_one(t, identities, captures, permissions, devices)] += 1
+        counts[_replay_one(t, identities, captures, permissions, devices, feedback)] += 1
     return ReplayResult(counts["reapplied"], counts["already"], counts["unknown"], contents.unreadable)
 
 
 def _replay_one(t: Tombstone, identities: IdentityStore, captures: IntakeRepository,
-                permissions: PermissionService, devices: DeviceBindings | None) -> str:
+                permissions: PermissionService, devices: DeviceBindings | None,
+                feedback: WithdrawnFeedback | None) -> str:
     if t.kind == CAPTURE_DELETED:
         capture = captures.capture(t.owner_id, t.ref)
         if capture is None:
@@ -135,6 +149,14 @@ def _replay_one(t: Tombstone, identities: IdentityStore, captures: IntakeReposit
         return "unknown"
     if principal.deleted_at is not None:
         return "already"  # deletion supersedes withdrawals and revocations
+    if t.kind == DEVICE_UNREGISTERED:
+        if devices is None:
+            raise InvalidInput("device_replay_not_configured")
+        return "reapplied" if devices.forget_device(t.owner_id, t.ref, t.recorded_at) else "already"
+    if t.kind == FEEDBACK_WITHDRAWN:
+        if feedback is None:
+            raise InvalidInput("feedback_replay_not_configured")
+        return "reapplied" if feedback.forget_feedback(t.owner_id, t.ref, t.recorded_at) else "already"
     if t.kind == ACCOUNT_DELETED:
         if principal.transferred_to is not None:
             return "already"  # a merged guest: its data lives with the account
@@ -171,5 +193,6 @@ def merged_expansion(kind: str, owner_id: str, ref: str, at: datetime, guests: I
     return tombstones
 
 
-__all__ = ["ACCOUNT_DELETED", "CAPTURE_DELETED", "DeviceBindings", "LogContents", "PERMISSION_WITHDRAWN",
-           "ReplayResult", "SESSIONS_REVOKED", "Tombstone", "TombstoneLog", "merged_expansion", "replay"]
+__all__ = ["ACCOUNT_DELETED", "CAPTURE_DELETED", "DEVICE_UNREGISTERED", "DeviceBindings",
+           "FEEDBACK_WITHDRAWN", "LogContents", "PERMISSION_WITHDRAWN", "ReplayResult",
+           "SESSIONS_REVOKED", "Tombstone", "TombstoneLog", "WithdrawnFeedback", "merged_expansion", "replay"]

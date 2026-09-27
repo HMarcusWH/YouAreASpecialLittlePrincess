@@ -30,6 +30,8 @@ from princess_app.application.reports import ReportAccessResolver, ReportReader,
 from princess_app.application.tombstones import (
     ACCOUNT_DELETED,
     CAPTURE_DELETED,
+    DEVICE_UNREGISTERED,
+    FEEDBACK_WITHDRAWN,
     PERMISSION_WITHDRAWN,
     SESSIONS_REVOKED,
     Tombstone,
@@ -481,7 +483,8 @@ def create_app(services: Services) -> FastAPI:
 
     @app.delete("/v1/feedback/{feedback_id}", status_code=204)
     def withdraw_feedback(feedback_id: str, who: Principal = Depends(principal)) -> Response:
-        feedback().withdraw(who.principal_id, feedback_id)
+        at = feedback().withdraw(who.principal_id, feedback_id)
+        tombstone(FEEDBACK_WITHDRAWN, who.principal_id, feedback_id, at=at)
         return Response(status_code=204)
 
     def notifications() -> NotificationService:
@@ -506,7 +509,9 @@ def create_app(services: Services) -> FastAPI:
     @app.delete("/v1/me/push-installations/{installation_id}", status_code=204)
     def unregister_push(installation_id: str, who: Principal = Depends(principal)) -> Response:
         """Logout or account switch on a device; notices still queued for it are dropped."""
-        notifications().unregister(who.principal_id, installation_id)
+        at = notifications().unregister(who.principal_id, installation_id)
+        if at is not None:
+            tombstone(DEVICE_UNREGISTERED, who.principal_id, installation_id, at=at)
         return Response(status_code=204)
 
     @app.get("/v1/me/notification-preferences")

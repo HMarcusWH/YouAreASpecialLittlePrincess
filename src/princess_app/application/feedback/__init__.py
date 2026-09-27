@@ -47,7 +47,9 @@ class FeedbackRepository(Protocol):
         ``RateLimited`` when the report already has ``max_per_report`` items."""
         ...
 
-    def delete(self, owner_id: str, feedback_id: str) -> bool: ...
+    def delete(self, owner_id: str, feedback_id: str, at: datetime) -> bool: ...
+
+    def forget_feedback(self, owner_id: str, feedback_id: str, created_before: datetime) -> bool: ...
 
 
 def feedback_id(owner_id: str, request_id: str) -> str:
@@ -76,9 +78,15 @@ class FeedbackService:
             comment=screen_comment(submission.comment), created_at=now, expires_at=now + self._retention)
         return self._repo.submit(record, MAX_PER_REPORT)
 
-    def withdraw(self, owner_id: str, feedback_id: str) -> None:
-        if not self._repo.delete(owner_id, feedback_id):
+    def withdraw(self, owner_id: str, feedback_id: str) -> datetime:
+        at = self._clock.now()
+        if not self._repo.delete(owner_id, feedback_id, at):
             raise NotFound("feedback_not_found")
+        return at
+
+    def forget_feedback(self, owner_id: str, feedback_id: str, created_before: datetime) -> bool:
+        """Restore replay removes only feedback that existed at withdrawal time."""
+        return self._repo.forget_feedback(owner_id, feedback_id, created_before)
 
 
 __all__ = ["DRAFT_RETENTION", "FeedbackRecord", "FeedbackRepository", "FeedbackService", "feedback_id"]

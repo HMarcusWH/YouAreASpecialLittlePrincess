@@ -61,7 +61,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         db = Database(make_engine(config.secret("PRINCESS_DATABASE_URL")))
         replayed = replay(tombstone_log(), PostgresIdentityStore(db),
                           PostgresIntakeRepository(db, engine_version=ENGINE_VERSION), services.permissions,
-                          services.notifications)
+                          services.notifications, services.feedback)
         result = {"reapplied": replayed.reapplied, "already": replayed.already, "unknown": replayed.unknown,
                   "unreadable": replayed.unreadable}
     else:

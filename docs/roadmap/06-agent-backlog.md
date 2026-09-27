@@ -1907,11 +1907,10 @@ Operable staged infrastructure and recovery/notification/support evidence, not p
 
 ### Implementation evidence
 
-PR #14 slices 19b00a0, 3b2087e, 5a22ba4 and final repair d2e1063 implemented redacted report feedback, ops commands/runbooks, append-only restore tombstones for deletions/withdrawals/logout-everywhere, and an outbox-driven notification state machine with kill switch and fake mail/push adapters.
+PR #14 slices 19b00a0, 3b2087e, 5a22ba4 and final repair d2e1063 implemented redacted report feedback, ops commands/runbooks, append-only restore tombstones for deletions/withdrawals/logout-everywhere, and an outbox-driven notification state machine with kill switch and fake mail/push adapters. This repair adds transactionally queued outbox events plus external restore tombstones for single-device logout and feedback withdrawal, with temporal replay guards that preserve newer re-registration/resubmission.
 
 ### Remaining work
 
-- Tombstone single-device logout and feedback withdrawal so a database restore cannot resurrect either.
 - Add durable reconciliation for restored queued Premium attempts using provider-side request lookup where the selected provider supports it.
 - Choose/implement production object and tombstone storage, backup tooling, RPO/RTO and execute a timed restore drill.
 - Implement live transactional mail plus signed bounce/complaint handling; integrate APNs/FCM with T29–T31 once native signing/accounts exist.
