@@ -93,7 +93,7 @@ def test_report_history_paginates_stably_and_evidence_is_owner_scoped(client, ap
     assert [item["report_id"] for item in second.json()["items"]] == ["report_run_1"]
     assert second.json()["next_cursor"] is None
     assert [item["report_id"] for item in api.get("/v1/reports", headers=bob).json()["items"]] == ["report_run_9"]
-    assert api.get("/v1/reports?cursor=not-base64", headers=alice).status_code == 400
+    assert api.get("/v1/reports?cursor=not-base64", headers=alice).status_code == 422
 
     evidence = api.get("/v1/reports/report_run_3/evidence", headers=alice)
     assert evidence.status_code == 200 and compile_document("EvidenceBundle", evidence.json()).ok

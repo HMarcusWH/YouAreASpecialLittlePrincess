@@ -16,7 +16,7 @@ export default async function Reports({ searchParams }: {
     if (e instanceof ApiError && e.status === 401) {
       return <p role="alert">Your session has ended. Start a new analysis or sign in again to see your reports.</p>;
     }
-    if (e instanceof ApiError && e.status === 400) {
+    if (e instanceof ApiError && e.status === 422) {
       return (
         <div className="stack">
           <p role="alert">This report-history page link is not valid.</p>
