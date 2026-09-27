@@ -2,8 +2,10 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
 
-import { ApiError, PayloadError, PrincessApi, SessionEpoch, parseReportView, parseRunStatus, pollDelayMs,
-         reportCacheKey, sha256Hex } from "../src/index.ts";
+import {
+  ApiError, PayloadError, PrincessApi, SessionEpoch, parseEvidenceBundle, parseReportPage, parseReportView,
+  parseRunStatus, pollDelayMs, reportCacheKey, sha256Hex,
+} from "../src/index.ts";
 
 const fixture = (name: string) =>
   JSON.parse(readFileSync(new URL(`../../../fixtures/reports/${name}`, import.meta.url), "utf8"));
@@ -36,6 +38,25 @@ test("corrupt, future-major and smuggled payloads are rejected", () => {
   }
   assert.throws(() => parseRunStatus({ run_id: "run_1", state: "SUCCEEDED", report_id: null }), PayloadError);
   assert.equal(parseRunStatus({ run_id: "run_1", state: "QUEUED", report_id: null, error_code: null }).state, "QUEUED");
+});
+
+test("history and evidence payloads are guarded before clients use them", () => {
+  const page = parseReportPage({
+    contract_version: "1.0.0",
+    items: [{ report_id: "report_1", revision: 2, kind: "INDIVIDUAL",
+              created_at: "2026-09-27T12:00:00Z", locale: "en", has_premium: false }],
+    next_cursor: "cursor_1",
+  });
+  assert.equal(page.items[0]!.revision, 2);
+  assert.equal(parseEvidenceBundle(fixture("evidence-bundle.json")).bundle_id, "evidence_1");
+
+  assert.throws(() => parseReportPage({
+    contract_version: "1.0.0", items: [{ report_id: "report_1", revision: 0, kind: "INDIVIDUAL",
+      created_at: "2026-09-27T12:00:00Z", locale: "en", has_premium: false }], next_cursor: null,
+  }), PayloadError);
+  const corrupt = structuredClone(fixture("evidence-bundle.json"));
+  corrupt.frames[0].width = 0;
+  assert.throws(() => parseEvidenceBundle(corrupt), PayloadError);
 });
 
 test("errors expose only safe codes and bearer tokens are sent only when configured", async () => {

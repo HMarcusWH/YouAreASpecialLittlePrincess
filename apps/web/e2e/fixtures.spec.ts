@@ -90,3 +90,37 @@ test("security headers are set and unknown proxy routes are refused", async ({ p
                                                              headers: { origin: "https://evil.example" } });
   expect(crossSite.status()).toBe(403);
 });
+
+
+test("stored evidence renders baseline geometry, spacing rows and raw slant observations accessibly", async ({ page }) => {
+  await page.goto("/fixtures/free");
+  await expect(page.getByRole("heading", { level: 2, name: "Evidence behind the measurements" })).toBeVisible();
+  const graphics = page.getByRole("img", { name: /Line \d/ });
+  expect(await graphics.count()).toBeGreaterThan(0);
+  for (let i = 0; i < await graphics.count(); i += 1) {
+    const graphic = graphics.nth(i);
+    await expect(graphic.locator("title")).not.toBeEmpty();
+    await expect(graphic.locator("desc")).not.toBeEmpty();
+  }
+  await expect(page.getByRole("heading", { name: "Line spacing px" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Slant observations" })).toBeVisible();
+  await expect(page.getByText("Raw observations are shown here because a reviewed fixed histogram scale is not defined yet."))
+    .toBeVisible();
+  expect(await page.locator(".pr-evidence-table tbody tr").count()).toBeGreaterThan(0);
+});
+
+test("report history has populated, empty and long Swedish states without horizontal overflow", async ({ page }) => {
+  await page.goto("/fixtures/history");
+  await expect(page.getByRole("heading", { level: 1, name: "Your reports" })).toBeVisible();
+  await expect(page.locator(".report-list-item")).toHaveCount(3);
+  await expect(page.getByRole("link", { name: "Older reports" })).toBeVisible();
+
+  await page.goto("/fixtures/history?empty=1");
+  await expect(page.getByText("You do not have any saved reports yet.")).toBeVisible();
+
+  await page.setViewportSize({ width: 320, height: 800 });
+  await page.goto("/fixtures/history?locale=sv");
+  await expect(page.getByRole("heading", { level: 1, name: "Dina rapporter" })).toBeVisible();
+  const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+  expect(overflow).toBeLessThanOrEqual(0);
+});
