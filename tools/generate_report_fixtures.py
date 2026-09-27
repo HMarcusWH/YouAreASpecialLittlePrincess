@@ -20,7 +20,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
 from princess_app.domain.analysis import analysis_reference  # noqa: E402
-from princess_app.domain.evidence import build_evidence_bundle  # noqa: E402
+from princess_app.domain.evidence import build_evidence_bundle, map_point, prepend_source_frame  # noqa: E402
 from princess_app.domain.reports import (  # noqa: E402
     PremiumAccess,
     ProjectionRequest,
@@ -95,7 +95,18 @@ def build() -> dict[str, str]:
         "view.owner-image-revoked.json": (report, ProjectionRequest(
             "OWNER", CREATED, source_image_available=False, actions=OWNER_ACTIONS)),
     }
+    homography = [1.02, 0.03, 15.0, -0.01, 0.98, 40.0, 0.00002, 0.00001, 1.0]
+    frames = prepend_source_frame(evidence.to_dict()["frames"], frame_id="frame_upload", width=1600, height=900,
+                                  root_to_new_parent=homography)
+    probes = [[0.0, 0.0], [123.0, 77.0], [650.5, 20.25]]
+    parity = {
+        "frames": frames,
+        "cases": [{"from": "frame_analysis", "to": to, "point": point,
+                   "expected": list(map_point(frames, "frame_analysis", to, *point))}
+                  for to in ("frame_input", "frame_upload") for point in probes],
+    }
     outputs = {
+        "frame-parity.json": dump(parity),
         "evidence-bundle.json": dump(evidence.to_dict()),
         "report-document.json": dump(report.to_dict()),
         "report-document.premium.json": dump(premium.to_dict()),

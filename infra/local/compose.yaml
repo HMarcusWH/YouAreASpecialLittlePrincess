@@ -1,0 +1,15 @@
+# Local development database only. Synthetic data; no production dumps.
+# Image pinned by digest (postgres:16.13, resolved 2026-09-27); refresh deliberately.
+services:
+  postgres:
+    image: postgres@sha256:5d143123fdf80462d1778cd4f24b9f7ca13c87174bca19141fb194c5a1ebca59
+    environment:
+      POSTGRES_USER: princess_admin
+      POSTGRES_PASSWORD: local-only-admin
+      POSTGRES_DB: princess_local
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - princess-local-pg:/var/lib/postgresql/data
+volumes:
+  princess-local-pg:

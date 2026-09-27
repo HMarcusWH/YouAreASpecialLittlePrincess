@@ -1,0 +1,104 @@
+{
+  "version": 1,
+  "environment": "local",
+  "database": {
+    "name": "princess_local"
+  },
+  "providers": {
+    "IdentityProvider": "fake",
+    "ObjectStore": "fake",
+    "PremiumModelProvider": "fake",
+    "PaymentProvider": "fake",
+    "TransactionalMailer": "fake",
+    "PushProvider": "fake",
+    "AbuseChallengeProvider": "fake",
+    "AnalyticsSink": "fake",
+    "TelemetryExporter": "fake"
+  },
+  "kill_switches": {
+    "premium_generation": false,
+    "commerce": false,
+    "uploads": true,
+    "sharing": true
+  },
+  "components": {
+    "api": {
+      "secrets": [
+        "PRINCESS_DATABASE_URL",
+        "PRINCESS_SESSION_SECRET",
+        "PRINCESS_IDENTITY_AUDIENCE",
+        "PRINCESS_STORAGE_SIGNING_KEY"
+      ],
+      "egress": [
+        "database",
+        "object_store",
+        "identity_provider",
+        "telemetry"
+      ]
+    },
+    "analysis_worker": {
+      "secrets": [
+        "PRINCESS_DATABASE_URL",
+        "PRINCESS_STORAGE_READ_KEY"
+      ],
+      "egress": [
+        "database",
+        "object_store"
+      ]
+    },
+    "premium_worker": {
+      "secrets": [
+        "PRINCESS_DATABASE_URL",
+        "PRINCESS_STORAGE_READ_KEY"
+      ],
+      "egress": [
+        "database",
+        "object_store"
+      ]
+    },
+    "render_worker": {
+      "secrets": [
+        "PRINCESS_STORAGE_READ_KEY"
+      ],
+      "egress": [
+        "object_store"
+      ]
+    },
+    "notification_worker": {
+      "secrets": [
+        "PRINCESS_DATABASE_URL"
+      ],
+      "egress": [
+        "database"
+      ]
+    },
+    "migrations": {
+      "secrets": [
+        "PRINCESS_MIGRATION_DATABASE_URL"
+      ],
+      "egress": [
+        "database"
+      ]
+    },
+    "web_server": {
+      "secrets": [
+        "PRINCESS_SESSION_SECRET"
+      ],
+      "egress": [
+        "api"
+      ]
+    },
+    "web_public": {
+      "secrets": [],
+      "egress": [
+        "api"
+      ]
+    },
+    "native_public": {
+      "secrets": [],
+      "egress": [
+        "api"
+      ]
+    }
+  }
+}

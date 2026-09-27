@@ -1,0 +1,79 @@
+# Application environments (T28). The numerical-library matrix stays in the
+# canonical ci.yml; this workflow covers the backend lock with PostgreSQL and
+# the JavaScript workspace. No provider credentials, signing keys or paid calls.
+name: Application environments
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    runs-on: ubuntu-24.04
+    services:
+      postgres:
+        # postgres:16.13, resolved 2026-09-27
+        image: postgres@sha256:5d143123fdf80462d1778cd4f24b9f7ca13c87174bca19141fb194c5a1ebca59
+        env:
+          POSTGRES_USER: princess_admin
+          POSTGRES_PASSWORD: ci-only-admin
+          POSTGRES_DB: princess_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U princess_admin -d princess_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      PIP_DISABLE_PIP_VERSION_CHECK: '1'
+      PIP_NO_INPUT: '1'
+      PRINCESS_TEST_DATABASE_URL: postgresql://princess_admin:ci-only-admin@127.0.0.1:5432/princess_test
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.12'
+      - name: Download reviewed backend artifacts
+        shell: bash
+        run: |
+          python -m pip download --require-hashes --only-binary=:all: --no-deps \
+            --dest "$RUNNER_TEMP/app-wheelhouse" -r requirements/app-py312.lock
+      - name: Install reviewed backend artifacts
+        shell: bash
+        run: |
+          python -m pip install --require-hashes --only-binary=:all: --no-index --no-deps --force-reinstall \
+            --find-links "$RUNNER_TEMP/app-wheelhouse" -r requirements/app-py312.lock
+      - name: Install local project without dependency resolution
+        run: python -m pip install --no-index --no-deps --no-build-isolation -e '.[dev]'
+      - name: Verify exact backend environment
+        run: >-
+          python tools/verify_ci_lock.py requirements/app-py312.lock
+          --manifest requirements/app-py312.txt
+          --allow "special-little-princess-graphology==0.1.0"
+      - run: python -m pip check
+      - run: python tools/check_environments.py
+      - run: ruff check tests_app
+      - name: Backend and PostgreSQL integration tests
+        run: python -m pytest -q tests_app
+
+  web:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version: '22.22.2'
+      - name: Install the pnpm version pinned (with SHA-512) in packageManager
+        run: corepack enable && corepack install
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
+      - run: pnpm test

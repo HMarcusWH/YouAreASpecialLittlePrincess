@@ -46,7 +46,16 @@ Matrix = Sequence[float]
 
 
 def _matmul(a: Matrix, b: Matrix) -> list[float]:
-    return [sum(a[3 * r + k] * b[3 * k + c] for k in range(3)) for r in range(3) for c in range(3)]
+    # Explicit left-to-right accumulation: ``sum()`` became compensated in
+    # Python 3.12, and fixtures/TypeScript parity need identical bits everywhere.
+    out = []
+    for r in range(3):
+        for c in range(3):
+            acc = 0.0
+            for k in range(3):
+                acc += a[3 * r + k] * b[3 * k + c]
+            out.append(acc)
+    return out
 
 
 def _apply(m: Matrix, x: float, y: float) -> tuple[float, float]:

@@ -42,7 +42,7 @@ Use `python docs/roadmap/plan_tools.py --ready` or `--task ID`. Edit tasks.json 
 | [T25 — Public multi-platform v1 signoff](#t25) | PLANNED | T23, T24, T32, T33 | product-owner-human |
 | [T26 — Populate premium selector/question database](#t26) | DONE | — | product-content-contracts |
 | [T27 — Connector ports fakes and provider decisions](#t27) | IMPLEMENTED_PENDING_REVIEW | T01 | application-architecture |
-| [T28 — Environment workspace and build foundation](#t28) | PLANNED | T00A, T27 | platform |
+| [T28 — Environment workspace and build foundation](#t28) | IMPLEMENTED_PENDING_REVIEW | T00A, T27 | platform |
 | [T29 — Shared native foundation and compatibility spike](#t29) | PLANNED | T01, T02, T10, T27, T28 | mobile-platform |
 | [T30 — Complete iOS and iPad client integration](#t30) | PLANNED | T29, T04, T09, T15, T16, T18, T19, T20, T21, T22, T24 | mobile-apple |
 | [T31 — Complete Android phone and tablet client integration](#t31) | PLANNED | T29, T04, T09, T15, T16, T18, T19, T20, T21, T22, T24 | mobile-android |
@@ -101,7 +101,12 @@ State: `TO_IMPLEMENT`. T01 must add reproducible Python/TypeScript generation, J
 <a id="validation-backend"></a>
 ### backend
 
-State: `TO_IMPLEMENT`. Owning task adds real PostgreSQL role/migration/transaction integration tests and application API/port tests.
+State: `EXISTS_IN_THIS_PR`. Owning task adds real PostgreSQL role/migration/transaction integration tests and application API/port tests.
+
+```bash
+python tools/check_environments.py
+python -m pytest -q tests_app
+```
 
 <a id="validation-connectors"></a>
 ### connectors
@@ -120,7 +125,13 @@ State: `TO_IMPLEMENT`. Protected rights-cleared writer-disjoint evaluation; reco
 <a id="validation-web_render"></a>
 ### web_render
 
-State: `TO_IMPLEMENT`. Owning task adds generated-client/type tests, browser journeys, accessibility and report/PDF/card fact parity.
+State: `EXISTS_IN_THIS_PR`. Owning task adds generated-client/type tests, browser journeys, accessibility and report/PDF/card fact parity.
+
+```bash
+pnpm install --frozen-lockfile
+pnpm typecheck
+pnpm test
+```
 
 <a id="validation-native"></a>
 ### native
@@ -2049,7 +2060,7 @@ No task-specific production gate; all repository privacy/security and scope boun
 <a id="t28"></a>
 ## T28 — Environment workspace and build foundation
 
-**Status:** `PLANNED` · **Owner:** platform · **Milestone:** foundation
+**Status:** `IMPLEMENTED_PENDING_REVIEW` · **Owner:** platform · **Milestone:** foundation
 
 **Hard predecessors:** [T00A](#t00a), [T27](#t27)
 **Platforms:** ci, backend, web, ios, android

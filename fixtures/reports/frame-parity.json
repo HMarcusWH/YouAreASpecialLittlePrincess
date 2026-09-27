@@ -1,0 +1,122 @@
+{
+  "cases": [
+    {
+      "expected": [
+        -18.21779886250248,
+        1.2669595977833847
+      ],
+      "from": "frame_analysis",
+      "point": [
+        0.0,
+        0.0
+      ],
+      "to": "frame_input"
+    },
+    {
+      "expected": [
+        144.8895886588795,
+        91.85472588692336
+      ],
+      "from": "frame_analysis",
+      "point": [
+        123.0,
+        77.0
+      ],
+      "to": "frame_input"
+    },
+    {
+      "expected": [
+        818.3557496012018,
+        -16.50455799011632
+      ],
+      "from": "frame_analysis",
+      "point": [
+        650.5,
+        20.25
+      ],
+      "to": "frame_input"
+    },
+    {
+      "expected": [
+        -3.5453929182246258,
+        41.43837170544364
+      ],
+      "from": "frame_analysis",
+      "point": [
+        0.0,
+        0.0
+      ],
+      "to": "frame_upload"
+    },
+    {
+      "expected": [
+        164.91365578716673,
+        128.079939012122
+      ],
+      "from": "frame_analysis",
+      "point": [
+        123.0,
+        77.0
+      ],
+      "to": "frame_upload"
+    },
+    {
+      "expected": [
+        835.6878552164376,
+        15.392583959923376
+      ],
+      "from": "frame_analysis",
+      "point": [
+        650.5,
+        20.25
+      ],
+      "to": "frame_upload"
+    }
+  ],
+  "frames": [
+    {
+      "frame_id": "frame_upload",
+      "height": 900,
+      "parent_frame_id": null,
+      "transform_to_parent": null,
+      "unit": "px",
+      "width": 1600
+    },
+    {
+      "frame_id": "frame_input",
+      "height": 360,
+      "parent_frame_id": "frame_upload",
+      "transform_to_parent": [
+        1.02,
+        0.03,
+        15.0,
+        -0.01,
+        0.98,
+        40.0,
+        2e-05,
+        1e-05,
+        1.0
+      ],
+      "unit": "px",
+      "width": 900
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 316,
+      "parent_frame_id": "frame_input",
+      "transform_to_parent": [
+        1.2839522589701664,
+        0.06728908659807159,
+        -18.21779886250248,
+        -0.06728908659807159,
+        1.2839522589701662,
+        1.2669595977833847,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "unit": "px",
+      "width": 713
+    }
+  ]
+}
