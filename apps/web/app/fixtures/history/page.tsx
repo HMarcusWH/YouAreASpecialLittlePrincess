@@ -1,3 +1,5 @@
+import { notFound } from "next/navigation";
+
 import { ReportHistory } from "../../reports/ReportHistory.tsx";
 
 export const dynamic = "force-dynamic";
@@ -12,7 +14,7 @@ const ITEMS = [
 ];
 
 export default async function HistoryFixture({ searchParams }: { searchParams: Promise<{ locale?: string; empty?: string }> }) {
-  if (process.env.PRINCESS_WEB_FIXTURES !== "1") return null;
+  if (process.env.PRINCESS_WEB_FIXTURES !== "1") notFound();
   const params = await searchParams;
   const locale = params.locale === "sv" ? "sv" : "en";
   const items = params.empty === "1" ? [] : ITEMS;

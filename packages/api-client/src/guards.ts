@@ -26,6 +26,16 @@ const SUPPORTED_MAJOR = "1";
 
 type Json = Record<string, unknown>;
 
+function exactKeys(value: Json, allowed: readonly string[], path: string): void {
+  const expected = new Set(allowed);
+  for (const key of Object.keys(value)) {
+    if (!expected.has(key)) throw new PayloadError(`${path}/${key}`, "unexpected property");
+  }
+  for (const key of allowed) {
+    if (!(key in value)) throw new PayloadError(`${path}/${key}`, "required property is missing");
+  }
+}
+
 function object(value: unknown, path: string): Json {
   if (typeof value !== "object" || value === null || Array.isArray(value)) {
     throw new PayloadError(path, "expected an object");
@@ -149,6 +159,7 @@ const RFC3339 = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?Z$/;
 
 function reportSummary(raw: unknown, path: string): ReportSummary {
   const item = object(raw, path);
+  exactKeys(item, ["report_id", "revision", "kind", "created_at", "locale", "has_premium"], path);
   str(item.report_id, `${path}/report_id`, OPAQUE);
   if (!Number.isInteger(item.revision) || (item.revision as number) < 1) {
     throw new PayloadError(`${path}/revision`, "expected positive integer");
@@ -162,6 +173,7 @@ function reportSummary(raw: unknown, path: string): ReportSummary {
 
 export function parseReportPage(raw: unknown): ReportPage {
   const page = object(raw, "");
+  exactKeys(page, ["contract_version", "items", "next_cursor"], "");
   const version = str(page.contract_version, "/contract_version");
   if (version.split(".")[0] !== SUPPORTED_MAJOR) {
     throw new PayloadError("/contract_version", `unsupported contract major ${version}`);
@@ -186,6 +198,7 @@ function integer(value: unknown, path: string, min: number): number {
 
 export function parseEvidenceBundle(raw: unknown): EvidenceBundle {
   const bundle = object(raw, "");
+  exactKeys(bundle, ["contract_version", "bundle_id", "analysis", "frames", "regions", "observations", "warnings"], "");
   const version = str(bundle.contract_version, "/contract_version");
   if (version.split(".")[0] !== SUPPORTED_MAJOR) {
     throw new PayloadError("/contract_version", `unsupported contract major ${version}`);

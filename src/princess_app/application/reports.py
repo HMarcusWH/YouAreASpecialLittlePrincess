@@ -10,7 +10,7 @@ from __future__ import annotations
 import base64
 import binascii
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Mapping, Protocol
 
 from princess_contracts import ValidatedDocument
@@ -30,7 +30,8 @@ class ReportHistoryEntry:
 
 
 def encode_report_cursor(created_at: datetime, report_id: str) -> str:
-    payload = f"{created_at.isoformat()}\n{report_id}".encode("utf-8")
+    stamp = created_at.astimezone(timezone.utc).isoformat().replace("+00:00", "Z")
+    payload = f"{stamp}\n{report_id}".encode("utf-8")
     return base64.urlsafe_b64encode(payload).decode("ascii").rstrip("=")
 
 
@@ -43,7 +44,7 @@ def decode_report_cursor(cursor: str | None) -> tuple[datetime, str] | None:
         padded = cursor + "=" * (-len(cursor) % 4)
         raw = base64.urlsafe_b64decode(padded.encode("ascii")).decode("utf-8")
         stamp, report_id = raw.split("\n", 1)
-        created_at = datetime.fromisoformat(stamp)
+        created_at = datetime.fromisoformat(stamp.replace("Z", "+00:00")).astimezone(timezone.utc)
     except (ValueError, UnicodeDecodeError, binascii.Error):
         raise InvalidInput("invalid_report_cursor") from None
     if created_at.tzinfo is None or not report_id:
@@ -196,7 +197,7 @@ class ReportReader:
                 "report_id": row.report_id,
                 "revision": row.revision,
                 "kind": row.kind,
-                "created_at": row.created_at.isoformat().replace("+00:00", "Z"),
+                "created_at": row.created_at.astimezone(timezone.utc).isoformat().replace("+00:00", "Z"),
                 "locale": row.locale,
                 "has_premium": row.has_premium,
             } for row in page_rows],
