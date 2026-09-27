@@ -103,6 +103,12 @@ def test_analytics_allowlist_rejects_unknown_or_private_values(event, props):
         FakeAnalyticsSink(clock=clock).capture(event, props, analytics.AnalyticsConsent(True), "e1", ctx(clock))
 
 
+def test_denied_analytics_consent_never_raises_even_for_unknown_events():
+    clock = FakeClock()
+    sink = FakeAnalyticsSink(clock=clock)
+    assert sink.capture("future_event_v2", {"x": 1}, analytics.AnalyticsConsent(False), "e1", ctx(clock)) is False
+
+
 def test_analytics_consent_disabled_and_dedupe():
     clock = FakeClock()
     sink = FakeAnalyticsSink(clock=clock)
@@ -123,6 +129,20 @@ def test_telemetry_redacts_and_drops_unknown_attributes():
     })
     assert record.attributes == {"route": "https://api.example/v1/reports", "error_code": telemetry.REDACTED,
                                  "operation": telemetry.REDACTED, "correlation_id": "corr-1", "latency_ms": 12}
+
+
+@pytest.mark.parametrize("key,value", [
+    ("error_code", "dear diary, today I wrote"), ("operation", "user typed <b>this</b>"),
+    ("route", "/reports/../../etc?x=1 plus text"), ("correlation_id", "asset handwriting text"),
+])
+def test_telemetry_redacts_free_text_in_allowlisted_keys(key, value):
+    record = telemetry.TelemetryRecord(telemetry.RecordKind.LOG, "x.y", {key: value})
+    assert record.attributes[key] == telemetry.REDACTED
+
+
+def test_telemetry_fake_cannot_be_composed_into_production():
+    with pytest.raises(InvalidInput):
+        FakeTelemetryExporter(environment=Environment.PRODUCTION)
 
 
 def test_buffered_telemetry_survives_outage_and_bounds_memory():

@@ -9,7 +9,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Mapping, Protocol, Sequence
+from typing import Callable, Mapping, Protocol, Sequence
 
 from .base import CallContext, CapabilityProfile, Environment, InvalidInput, require_opaque_id, require_utc
 
@@ -192,6 +192,12 @@ class NativePurchaseClient(Protocol):
     def list_products(self, store_product_ids: Sequence[str]) -> Sequence[StoreListing]: ...
 
     def begin_purchase(self, store_product_id: str, account_token: str) -> NativePurchaseOutcome: ...
+
+    def observe_transaction_updates(self, listener: Callable[[StoreProof], None]) -> Callable[[], None]:
+        """Register for asynchronous store updates (pending→purchased, purchases
+        from another device, refunds/revocations surfaced by the store). Returns
+        an unsubscribe function. Every update is sent to the API for verification."""
+        ...
 
     def recover_pending_transactions(self) -> Sequence[StoreProof]: ...
 

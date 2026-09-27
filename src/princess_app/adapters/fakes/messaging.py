@@ -26,7 +26,7 @@ class FakeMailer(FakeAdapter):
 
     port_name = port.MAIL_PORT
     provider = "fake-mail"
-    default_capabilities = frozenset({port.PROVIDER_IDEMPOTENCY, port.SIGNED_DELIVERY_EVENTS})
+    default_capabilities = frozenset({port.PROVIDER_IDEMPOTENCY})
 
     def __init__(self, *, recipients: set[str] | None = None, idempotency_window_s: int = 86400, **kwargs) -> None:
         super().__init__(**kwargs)

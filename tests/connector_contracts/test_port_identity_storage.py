@@ -8,7 +8,7 @@ from port_harness import ctx
 
 from princess_app.adapters.fakes import FakeClock, FakeIdentityProvider, FakeObjectStore
 from princess_app.ports import storage
-from princess_app.ports.base import Conflict, InvalidInput, NotFound, Unauthenticated
+from princess_app.ports.base import Conflict, InvalidInput, NotFound, Unauthenticated, Unsupported
 
 AUD = "princess-api"
 
@@ -47,6 +47,14 @@ def test_identity_rejections(case, code):
     with pytest.raises(Unauthenticated) as err:
         provider.verify_credential(token, AUD, ctx(clock))
     assert err.value.code == code
+
+
+def test_provider_deletion_requires_matching_issuer():
+    clock, provider = idp()
+    token = provider.issue_token("user-1", AUD)
+    with pytest.raises(InvalidInput):
+        provider.delete_provider_account("https://other-issuer.invalid", "user-1", ctx(clock))
+    assert provider.verify_credential(token, AUD, ctx(clock)).subject == "user-1"
 
 
 def test_unverified_email_is_reported_as_supplied():
@@ -113,8 +121,17 @@ def test_partial_upload_and_expired_ticket_and_oversize():
         s.client_put(ticket, b"late")
 
 
+def test_promotion_requires_immutable_copy_capabilities():
+    clock, s = store(capabilities={storage.PRESIGNED_PUT})
+    ticket = s.issue_upload_ticket("asset_1", "image/png", POLICY, ctx(clock))
+    s.client_put(ticket, b"bytes")
+    with pytest.raises(Unsupported):
+        s.promote_verified_input(ticket.upload_id, sha(b"bytes"), ctx(clock))
+
+
 def test_size_enforced_at_upload_only_when_capability_says_so():
-    clock, s = store(capabilities={storage.PRESIGNED_PUT, storage.ENFORCE_MAX_BYTES_AT_UPLOAD})
+    clock, s = store(capabilities={storage.PRESIGNED_PUT, storage.ENFORCE_MAX_BYTES_AT_UPLOAD,
+                                   storage.SERVER_SIDE_COPY, storage.IMMUTABLE_VERSIONS})
     ticket = s.issue_upload_ticket("asset_1", "image/png", POLICY, ctx(clock))
     with pytest.raises(InvalidInput):
         s.client_put(ticket, b"x" * 2048)

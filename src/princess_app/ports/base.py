@@ -15,14 +15,18 @@ from enum import Enum
 from typing import Callable, Iterator, Mapping, Protocol
 
 _SAFE_CODE = re.compile(r"^[a-z0-9_.:-]{1,64}$")
+_SAFE_DETAIL = re.compile(r"^[A-Za-z0-9_.:=!,/ -]{0,120}$")
+REDACTED_DETAIL = "[redacted]"
 _OPAQUE_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$")
 
 
 class PortError(Exception):
     """Base class for typed connector failures.
 
-    ``code`` is a short, safe, low-cardinality reason. Messages never contain
-    credentials, raw provider payloads, URLs or user content.
+    ``code`` is a short, safe, low-cardinality reason. ``detail`` is kept only
+    when it is a short identifier-like string; anything else (quotes, URLs with
+    queries, payload fragments, long text) is replaced by ``[redacted]`` so an
+    exception message cannot carry credentials or user content.
     """
 
     retryable = False
@@ -30,6 +34,8 @@ class PortError(Exception):
     def __init__(self, code: str, *, detail: str | None = None) -> None:
         if not _SAFE_CODE.match(code):
             raise ValueError(f"unsafe port error code: {code!r}")
+        if detail is not None and (not isinstance(detail, str) or not _SAFE_DETAIL.match(detail)):
+            detail = REDACTED_DETAIL
         self.code = code
         self.detail = detail
         super().__init__(code if detail is None else f"{code}: {detail}")

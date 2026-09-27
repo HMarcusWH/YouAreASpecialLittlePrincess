@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from datetime import timedelta
 
 from ...ports import identity as port
-from ...ports.base import CallContext, Unauthenticated
+from ...ports.base import CallContext, InvalidInput, Unauthenticated
 from .base import FakeAdapter, SequentialIds
 
 
@@ -82,4 +82,6 @@ class FakeIdentityProvider(FakeAdapter):
 
     def delete_provider_account(self, issuer: str, subject: str, ctx: CallContext) -> None:
         self.profile.require(port.DELETE_PROVIDER_ACCOUNT)
+        if issuer != self.issuer:
+            raise InvalidInput("issuer_mismatch")
         self._run("delete_provider_account", ctx, lambda: self._deleted_subjects.add(subject))

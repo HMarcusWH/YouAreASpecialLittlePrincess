@@ -7,9 +7,13 @@ A :class:`ProviderGenerationResult` is not a published analysis.
 """
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass, field
 from enum import Enum
+from types import MappingProxyType
 from typing import Any, Mapping, Protocol
+
+from princess_contracts import canonical_digest
 
 from .base import CallContext, CapabilityProfile, InvalidInput, require_opaque_id
 from .storage import StoredObject, require_sha256
@@ -20,6 +24,27 @@ PORT = "PremiumModelProvider"
 STRUCTURED_OUTPUT = "structured_output"
 IMAGE_INPUT = "image_input"
 NO_PROVIDER_STORAGE = "no_provider_storage"
+
+
+def _frozen(value: Any) -> Any:
+    if isinstance(value, dict):
+        return MappingProxyType({k: _frozen(v) for k, v in value.items()})
+    if isinstance(value, list):
+        return tuple(_frozen(v) for v in value)
+    return value
+
+
+def _snapshot(value: Mapping[str, Any], name: str) -> Mapping[str, Any]:
+    """Deep, immutable copy via a JSON round trip (rejects non-JSON values)."""
+    try:
+        copied = json.loads(json.dumps(value, allow_nan=False, default=_reject))
+    except (TypeError, ValueError):
+        raise InvalidInput("invalid_generation_request", detail=name) from None
+    return _frozen(copied)
+
+
+def _reject(value: Any) -> Any:
+    raise TypeError("not JSON")
 
 
 class GenerationState(str, Enum):
@@ -41,6 +66,12 @@ class GenerationRequest:
     def __post_init__(self) -> None:
         require_opaque_id(self.attempt_id, "attempt_id")
         require_sha256(self.packet_digest, "packet_digest")
+        # Snapshot at construction so later mutation of the caller's dicts cannot
+        # change what is sent under the recorded digest.
+        object.__setattr__(self, "packet", _snapshot(self.packet, "packet"))
+        object.__setattr__(self, "output_schema", _snapshot(self.output_schema, "output_schema"))
+        if canonical_digest(json.loads(json.dumps(self.packet, default=dict))) != self.packet_digest:
+            raise InvalidInput("packet_digest_mismatch")
         require_opaque_id(self.policy_version, "policy_version")
         if type(self.max_output_tokens) is not int or not 0 < self.max_output_tokens <= 32000:
             raise InvalidInput("invalid_generation_request", detail="max_output_tokens")

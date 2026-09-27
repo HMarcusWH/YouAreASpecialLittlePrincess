@@ -12,7 +12,7 @@ import hmac
 import json
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Mapping, Sequence
+from typing import Callable, Mapping, Sequence
 
 from ...ports import payments as port
 from ...ports.base import (
@@ -70,6 +70,7 @@ class FakePaymentProvider(FakeAdapter):
         self._ids = SequentialIds()
         self._txns: dict[str, _Txn] = {}
         self._sessions: dict[str, str] = {}
+        self._intents: dict[str, port.CheckoutSession] = {}
         self._products = {p.store_product_id: p for p in catalog if p.rail is rail}
 
     # --- simulated provider world ----------------------------------------
@@ -122,14 +123,19 @@ class FakePaymentProvider(FakeAdapter):
             raise InvalidInput("product_not_on_rail")
 
         def effect() -> port.CheckoutSession:
+            existing = self._intents.get(intent_ref)
+            if existing is not None:
+                return existing  # same intent (retry/double click) -> same chargeable session
             session_ref = self._ids.new_id("cs")
             ref = self._ids.new_id("pi")
             now = self.clock.now()
             self._txns[ref] = _Txn(ref, product.store_product_id, account_ref, self.environment,
                                    port.PurchaseState.PENDING, 1, now, session_ref=session_ref)
             self._sessions[session_ref] = ref
-            return port.CheckoutSession(session_ref, f"https://checkout.fake.invalid/{session_ref}",
-                                        now + timedelta(minutes=30))
+            session = port.CheckoutSession(session_ref, f"https://checkout.fake.invalid/{session_ref}",
+                                           now + timedelta(minutes=30))
+            self._intents[intent_ref] = session
+            return session
 
         return self._run("create_web_checkout", ctx, effect)
 
@@ -153,11 +159,15 @@ class FakePaymentProvider(FakeAdapter):
                 raise Unauthenticated("stale_signature")
             try:
                 payload = json.loads(raw_body)
-                env = Environment.parse(payload["environment"])
-                refs = tuple(str(r) for r in payload["transactions"])
-                event_id, event_type = str(payload["id"]), str(payload["type"])
-            except (ValueError, KeyError, TypeError):
+            except ValueError:
                 raise InvalidInput("malformed_event") from None
+            refs = payload.get("transactions") if isinstance(payload, dict) else None
+            if (not isinstance(refs, list) or not refs or not all(isinstance(r, str) and r for r in refs)
+                    or not isinstance(payload.get("id"), str) or not isinstance(payload.get("type"), str)
+                    or not isinstance(payload.get("environment"), str)):
+                raise InvalidInput("malformed_event")
+            env = Environment.parse(payload["environment"])
+            refs, event_id, event_type = tuple(refs), payload["id"], payload["type"]
             return port.NormalizedEvent(self.rail, env, event_id, event_type, refs, self.clock.now())
 
         return self._run("verify_and_normalize_event", ctx, effect)
@@ -226,10 +236,13 @@ class FakePaymentProvider(FakeAdapter):
         product = self._products.get(txn.store_product_id)
         binding = (port.AccountBinding.MATCHED if txn.account_ref == expected_account_ref
                    else port.AccountBinding.MISMATCHED)
+        action = _COMPLETION[self.rail]
+        if action is port.CompletionAction.SERVER_CONSUME and product is not None and not product.consumable:
+            action = port.CompletionAction.SERVER_ACKNOWLEDGE
         return port.TransactionObservation(
             rail=self.rail, environment=txn.environment, transaction_ref=txn.ref,
             product_id=product.product_id if product else "unknown_product", quantity=txn.quantity,
-            state=txn.state, account_binding=binding, completion_action=_COMPLETION[self.rail],
+            state=txn.state, account_binding=binding, completion_action=action,
             purchased_at=txn.purchased_at, refunded_at=txn.refunded_at, completed=txn.completed)
 
 
@@ -243,6 +256,19 @@ class FakeNativePurchaseClient:
         self.account_ref = account_ref
         self.unfinished: dict[str, port.StoreProof] = {}
         self.finished: set[str] = set()
+        self._listeners: list[Callable[[port.StoreProof], None]] = []
+
+    def observe_transaction_updates(self, listener: Callable[[port.StoreProof], None]) -> Callable[[], None]:
+        self._listeners.append(listener)
+        return lambda: self._listeners.remove(listener) if listener in self._listeners else None
+
+    def settle_pending(self, proof: port.StoreProof, *, success: bool = True) -> None:
+        """The store completes a pending purchase later; listeners get the update."""
+        self.provider.simulate_settle_pending(self.provider.transaction_ref_from_proof(proof.proof), success=success)
+        updated = port.StoreProof(proof.rail, proof.proof, proof.store_product_id, pending=False)
+        self.unfinished[proof.proof] = updated
+        for listener in list(self._listeners):
+            listener(updated)
 
     def list_products(self, store_product_ids: Sequence[str]) -> Sequence[port.StoreListing]:
         return [port.StoreListing(pid, "9.99 SEK", pid in self.provider._products) for pid in store_product_ids]

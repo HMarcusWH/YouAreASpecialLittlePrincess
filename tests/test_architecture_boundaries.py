@@ -91,9 +91,9 @@ RULES = {
     "princess_app.domain": lambda n: top(n) in STDLIB or within(
         n, "princess_contracts", "princess_app.domain", "princess_app.ports"),
     # Use cases never reach into adapters or SDKs.
-    "princess_app.application": lambda n: top(n) in STDLIB or within(
+    "princess_app.application": lambda n: (top(n) in STDLIB or within(
         n, "princess_contracts", "princess_graphology", "princess_app.domain", "princess_app.ports",
-        "princess_app.application"),
+        "princess_app.application")) and not within(n, LEARNED_EXTRA),
     # Fakes are standard-library only so local/test composition needs no network or secret.
     "princess_app.adapters.fakes": lambda n: top(n) in STDLIB or within(
         n, "princess_contracts", "princess_app.ports", "princess_app.adapters.fakes"),

@@ -7,12 +7,15 @@ from port_harness import ctx
 from princess_app.adapters.fakes import FakeClock, FakeNativePurchaseClient, FakePaymentProvider, FakePremiumModel
 from princess_app.ports import model, payments
 from princess_app.ports.base import AmbiguousOutcome, Environment, InvalidInput, RateLimited, Unauthenticated
+from princess_contracts import canonical_digest
 
-DIGEST = "a" * 64
+PACKET = {"questions": []}
+DIGEST = canonical_digest(PACKET)
 
 
-def request(attempt="att_1"):
-    return model.GenerationRequest(attempt_id=attempt, packet={"questions": []}, packet_digest=DIGEST,
+def request(attempt="att_1", packet=None):
+    packet = PACKET if packet is None else packet
+    return model.GenerationRequest(attempt_id=attempt, packet=packet, packet_digest=canonical_digest(packet),
                                    output_schema={"type": "object"}, policy_version="policy-1")
 
 
@@ -44,6 +47,20 @@ def test_rate_limit_and_timeout_after_acceptance():
     assert len(fake.requests) == 1  # the provider did receive (and may bill) the request
 
 
+def test_generation_request_snapshots_mappings_and_binds_digest():
+    packet = {"questions": [{"id": "q1"}]}
+    schema = {"type": "object"}
+    req = request(packet=packet)
+    packet["questions"].append({"id": "injected"})
+    schema["type"] = "array"
+    assert len(req.packet["questions"]) == 1 and req.output_schema["type"] == "object"
+    with pytest.raises(TypeError):
+        req.packet["questions"] = []  # type: ignore[index]
+    with pytest.raises(InvalidInput) as err:
+        model.GenerationRequest("att_1", {"questions": []}, "a" * 64, {}, "policy-1")
+    assert err.value.code == "packet_digest_mismatch"
+
+
 def test_generation_request_validation():
     with pytest.raises(InvalidInput):
         model.GenerationRequest("att_1", {}, "not-a-digest", {}, "policy-1")
@@ -53,6 +70,7 @@ def test_generation_request_validation():
 
 CATALOG = [
     payments.CatalogProduct("credits_1", payments.PaymentRail.GOOGLE_PLAY, "g.credits.1", 1),
+    payments.CatalogProduct("unlock_forever", payments.PaymentRail.GOOGLE_PLAY, "g.unlock", 0, consumable=False),
     payments.CatalogProduct("credits_1_ios", payments.PaymentRail.APPLE_APP_STORE, "a.credits.1", 1),
     payments.CatalogProduct("credits_1_web", payments.PaymentRail.STRIPE, "price_1", 1),
 ]
@@ -75,6 +93,29 @@ def test_google_proof_verifies_with_account_binding_and_consume_is_idempotent():
     google.complete_store_purchase(obs.transaction_ref, payments.CompletionAction.SERVER_CONSUME, ctx(clock))
     google.complete_store_purchase(obs.transaction_ref, payments.CompletionAction.SERVER_CONSUME, ctx(clock))
     assert google.retrieve_authoritative_purchase(obs.transaction_ref, "acct_1", ctx(clock)).completed
+
+
+def test_google_non_consumable_is_acknowledged_not_consumed():
+    clock, google = rail(payments.PaymentRail.GOOGLE_PLAY)
+    obs = google.verify_purchase(google.simulate_purchase("acct_1", "g.unlock"), "acct_1", ctx(clock))
+    assert obs.completion_action is payments.CompletionAction.SERVER_ACKNOWLEDGE
+
+
+@pytest.mark.parametrize("body", [
+    b'{"id": "e1", "type": "t", "environment": "test", "transactions": "pi_000001"}',
+    b'{"id": "e1", "type": "t", "environment": "test", "transactions": [1, 2]}',
+    b'{"id": 5, "type": "t", "environment": "test", "transactions": ["pi_1"]}',
+    b'["not", "an", "object"]',
+])
+def test_signed_but_malformed_events_are_rejected(body):
+    import hashlib
+    import hmac
+
+    clock, stripe = rail(payments.PaymentRail.STRIPE)
+    ts = str(int(clock.now().timestamp()))
+    mac = hmac.new(b"fake-webhook-secret", ts.encode() + b"." + body, hashlib.sha256).hexdigest()
+    with pytest.raises(InvalidInput):
+        stripe.verify_and_normalize_event(body, {"x-fake-signature": f"t={ts},v1={mac}"}, ctx(clock))
 
 
 def test_consume_timeout_after_acceptance_is_ambiguous_then_reconcilable():
@@ -130,10 +171,12 @@ def test_signed_events_verify_raw_body_and_reject_tampering_replay_window():
 
 def test_web_checkout_redirect_is_not_payment_until_provider_says_so():
     clock, stripe = rail(payments.PaymentRail.STRIPE)
-    session = stripe.create_web_checkout("intent_1", CATALOG[2], "acct_1", ctx(clock))
+    session = stripe.create_web_checkout("intent_1", CATALOG[3], "acct_1", ctx(clock))
+    assert stripe.create_web_checkout("intent_1", CATALOG[3], "acct_1", ctx(clock)) == session  # retry
     assert "checkout" not in repr(session)
     ref = stripe.reconcile(clock.now(), ctx(clock))[0].transaction_ref
     assert stripe.retrieve_authoritative_purchase(ref, "acct_1", ctx(clock)).state is payments.PurchaseState.PENDING
+    assert len(stripe.reconcile(clock.now(), ctx(clock))) == 1  # one chargeable intent, not two
     stripe.simulate_checkout_paid(session.provider_session_ref)
     assert stripe.retrieve_authoritative_purchase(ref, "acct_1", ctx(clock)).state is payments.PurchaseState.PURCHASED
     with pytest.raises(InvalidInput):
@@ -151,5 +194,14 @@ def test_native_client_returns_proofs_and_apple_finish_is_client_side():
     assert client.recover_pending_transactions() == []
     assert apple.verify_purchase(outcome.proof.proof, "acct_1", ctx(clock)).completed is True
     assert client.begin_purchase("a.credits.1", "t", cancel=True).proof is None
+    updates = []
+    unsubscribe = client.observe_transaction_updates(updates.append)
+    pending = client.begin_purchase("a.credits.1", "t", pending=True).proof
+    client.settle_pending(pending)
+    assert [u.pending for u in updates] == [False]
+    assert apple.verify_purchase(pending.proof, "acct_1", ctx(clock)).state is payments.PurchaseState.PURCHASED
+    unsubscribe()
+    client.settle_pending(pending)
+    assert len(updates) == 1
     with pytest.raises(InvalidInput):
         FakeNativePurchaseClient(rail(payments.PaymentRail.STRIPE)[1], "acct_1")

@@ -29,6 +29,11 @@ _SECRETISH = re.compile(
 _URL = re.compile(r"(?i)\b[a-z][a-z0-9+.-]*://[^\s?#]*(\?[^\s#]*)?")
 REDACTED = "[redacted]"
 MAX_VALUE_LENGTH = 128
+# String attributes must look like low-cardinality codes, route templates or
+# opaque IDs; any other free text (exception messages, user input) is redacted.
+_CODE_VALUE = re.compile(r"^[A-Za-z0-9_.:-]{1,64}$")
+_ROUTE_VALUE = re.compile(r"^(?:[a-z][a-z0-9+.-]*://[A-Za-z0-9.-]+(?::\d+)?)?/[A-Za-z0-9_./{}-]{0,120}$")
+_VALUE_SHAPES = {"route": _ROUTE_VALUE}
 
 
 class RecordKind(str, Enum):
@@ -37,21 +42,20 @@ class RecordKind(str, Enum):
     LOG = "log"
 
 
-def redact_value(value: AttrValue) -> AttrValue:
+def redact_value(value: AttrValue, key: str | None = None) -> AttrValue:
     if isinstance(value, bool) or isinstance(value, (int, float)):
         return value
-    if not isinstance(value, str):
-        return REDACTED
-    if _SECRETISH.search(value):
+    if not isinstance(value, str) or _SECRETISH.search(value):
         return REDACTED
     # Keep scheme/host/path of a URL, drop any query string.
     value = _URL.sub(lambda m: m.group(0).split("?", 1)[0], value)
-    return value[:MAX_VALUE_LENGTH]
+    shape = _VALUE_SHAPES.get(key or "", _CODE_VALUE)
+    return value if shape.match(value) else REDACTED
 
 
 def sanitize_attributes(attributes: Mapping[str, AttrValue]) -> dict[str, AttrValue]:
-    """Drop non-allowlisted keys and redact suspicious values."""
-    return {key: redact_value(value) for key, value in attributes.items() if key in ALLOWED_ATTRIBUTES}
+    """Drop non-allowlisted keys and redact values that are not code/route shaped."""
+    return {key: redact_value(value, key) for key, value in attributes.items() if key in ALLOWED_ATTRIBUTES}
 
 
 @dataclass(frozen=True)

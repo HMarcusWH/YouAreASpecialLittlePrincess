@@ -16,9 +16,8 @@ from .base import CallContext, CapabilityProfile, Environment, InvalidInput, req
 MAIL_PORT = "TransactionalMailer"
 PUSH_PORT = "PushProvider"
 
-# Capability names.
+# Capability names. Signed bounce/delivery events arrive with T24's operation.
 PROVIDER_IDEMPOTENCY = "provider_idempotency"
-SIGNED_DELIVERY_EVENTS = "signed_delivery_events"
 
 MAIL_TEMPLATES: Mapping[str, frozenset[str]] = {
     # template_id -> allowed safe variable names

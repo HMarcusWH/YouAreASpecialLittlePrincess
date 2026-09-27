@@ -98,6 +98,8 @@ class FakeObjectStore(FakeAdapter):
         return self._run("inspect_upload", ctx, effect)
 
     def promote_verified_input(self, upload_id: str, expected_sha256: str, ctx: CallContext) -> port.StoredObject:
+        self.profile.require(port.SERVER_SIDE_COPY)
+        self.profile.require(port.IMMUTABLE_VERSIONS)
         port.require_sha256(expected_sha256, "expected_sha256")
 
         def effect() -> port.StoredObject:

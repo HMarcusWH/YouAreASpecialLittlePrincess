@@ -6,7 +6,15 @@ from datetime import datetime, timedelta
 from typing import Mapping, Sequence
 
 from ...ports import abuse, analytics, telemetry
-from ...ports.base import CallContext, TransientUnavailable, require_opaque_id
+from ...ports.base import (
+    CallContext,
+    CapabilityProfile,
+    Environment,
+    ProviderMode,
+    TransientUnavailable,
+    check_mode_allowed,
+    require_opaque_id,
+)
 from .base import FakeAdapter, SequentialIds
 
 
@@ -75,10 +83,10 @@ class FakeAnalyticsSink(FakeAdapter):
 
     def capture(self, event_name: str, properties: Mapping[str, analytics.PropertyValue],
                 consent: analytics.AnalyticsConsent, dedupe_key: str, ctx: CallContext) -> bool:
+        if not self.enabled or not consent.granted:
+            return False  # dropped before validation: optional analytics never fails a caller
         analytics.validate_event(event_name, properties)
         require_opaque_id(dedupe_key, "dedupe_key")
-        if not self.enabled or not consent.granted:
-            return False
 
         def effect() -> bool:
             if dedupe_key not in self._dedupe:
@@ -92,9 +100,8 @@ class FakeAnalyticsSink(FakeAdapter):
 class FakeTelemetryExporter:
     """Records sanitized records; ``outage`` makes every export fail."""
 
-    def __init__(self) -> None:
-        from ...ports.base import CapabilityProfile, ProviderMode
-
+    def __init__(self, *, environment: Environment = Environment.TEST) -> None:
+        check_mode_allowed(Environment.parse(environment), ProviderMode.FAKE)
         self.profile = CapabilityProfile(port=telemetry.PORT, provider="fake-telemetry", mode=ProviderMode.FAKE,
                                          capabilities=frozenset())
         self.exported: list[telemetry.TelemetryRecord] = []
