@@ -123,9 +123,23 @@ def _validate_json_value(value: Any, *, depth: int = 0) -> None:
     raise TypeError(f"not a canonical JSON value: {type(value).__name__}")
 
 
+def _without_negative_zero(value: Any) -> Any:
+    # JSON does not distinguish -0 from 0 in practice: PostgreSQL jsonb, JavaScript
+    # JSON.stringify and RFC 8785 all emit 0. Canonicalize it so a document keeps
+    # its digest after a storage or cross-client round trip.
+    if type(value) is float:
+        return 0.0 if value == 0.0 else value
+    if type(value) is list:
+        return [_without_negative_zero(item) for item in value]
+    if type(value) is dict:
+        return {key: _without_negative_zero(item) for key, item in value.items()}
+    return value
+
+
 def canonical_json(value: Any) -> str:
     _validate_json_value(value)
-    return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"), allow_nan=False)
+    return json.dumps(_without_negative_zero(value), ensure_ascii=False, sort_keys=True, separators=(",", ":"),
+                      allow_nan=False)
 
 
 def canonical_digest(value: Any) -> str:

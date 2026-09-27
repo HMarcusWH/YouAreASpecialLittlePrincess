@@ -394,3 +394,19 @@ def test_permission_request_replay_is_idempotent_on_postgres(app_db, world):
     with pytest.raises(Conflict):
         svc.record(subject_id=alice, actor_id=alice, purpose_id="service_processing", scope=scope,
                    decision=Decision.DENY, notice_version=NOTICE, request_id="req-grant-1")
+
+
+def test_reports_with_negative_zero_values_read_back_intact(app_db, world):
+    alice = account(world, "sub-a").principal_id
+    store = seed_run(app_db, alice)
+    result = load("engine-result.synthetic.json")
+    feature = next(k for k, m in result["measurements"].items() if isinstance(m["raw_value"], float))
+    result["measurements"][feature]["raw_value"] = -0.0  # engines can emit a negative zero
+    reference = reference_for(alice)
+    store.complete_run(alice, "run_1", result=result, processed_sha256=reference["processed_sha256"], at=T0)
+    report = assemble_report(report_id="report_nz", analysis=reference, result=result, created_at=T0,
+                             locale="en").value
+    reports = PostgresReportStore(app_db, alice)
+    reports.append(alice, report)
+    _, stored = reports.latest("report_nz")  # jsonb drops the sign; the digest must still match
+    assert stored.digest == report.digest
