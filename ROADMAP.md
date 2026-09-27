@@ -1,6 +1,6 @@
 # Product roadmap — Web, iOS and Android
 
-**Plan version:** 2.0 · **Research reviewed:** 2026-09-26 · **Code baseline:** `251668a521150668b90c3551530daab694a5c739`.
+**Plan version:** 2.1 · **Research reviewed:** 2026-09-26 · **Reconciled:** 2026-09-27 · **Code baseline:** `e8e174a2311f8d4327850218405819de8f87277e`.
 
 [Agent instructions](AGENTS.md) · [Documentation map](docs/roadmap/00-index.md) · [Detailed task briefs](docs/roadmap/06-agent-backlog.md) · [Machine task graph](docs/roadmap/tasks.json) · [Execution sequence](docs/roadmap/20-end-to-end-build-sequence.md) · [Release gates](docs/roadmap/21-release-readiness-checklists.md).
 
@@ -10,13 +10,15 @@ A consumer handwriting app with a useful deterministic Free report and an option
 
 The report is the product: an attractive, interactive personal dossier with real visual evidence, bounded explanations and playful branding. A PDF and a share card are authorized presentations of the same saved report, not independent analyses. The brand is not a scientific claim about personality or population rarity.
 
-## Verified starting point, not a completion percentage
+## Verified current baseline, not a completion percentage
 
-The repository contains the pure Python measurement core, 272 canonical feature definitions, 64 registered core measurements, provenance/research material, and the reviewed T26 interpretation database. The remaining definitions are not promised outputs. Most measured estimates remain experimental rather than empirically calibrated. See the [engine README](README.md), [measurement methods](docs/measurement_methods.md) and [interpretation manifest](schema/graphology_interpretation/v1/manifest.json).
+The numerical core still has **272 canonical feature definitions and 64 registered core measurements**; the remaining definitions are not promised outputs and most estimates remain experimental until T06 supplies real calibration. The reviewed T26 interpretation database remains structurally complete but runtime-inactive. See the [engine README](README.md), [measurement methods](docs/measurement_methods.md), [interpretation manifest](schema/graphology_interpretation/v1/manifest.json) and the [post-PR14 reconciliation](docs/roadmap/23-post-pr14-reconciliation.md).
 
-T00 and T26 remain `DONE` as historical task completions. PR #10 merged the CI/dependency baseline. Its final code review produced four follow-up dependency-policy findings; these were assigned to **T00A**, which is now `DONE`: PR #12 recorded failing-before/passing-after regressions in the [T00 evidence](docs/ci/T00_BASELINE.md#t00a-post-merge-follow-up), exact-head CI and a clean review. T03 (draft consent protocol, pilot gate still pending) and T01 (product contracts, PR #13) are also `DONE`. The [T00 evidence](docs/ci/T00_BASELINE.md) and [review follow-up](docs/roadmap/06-agent-backlog.md#t00a) remain linked.
+PR #14 is merged at `e8e174a2311f8d4327850218405819de8f87277e`. The repository now contains the product contracts, connector/fake architecture, PostgreSQL/RLS product plane, append-only permission ledger, OIDC verification seam, safe upload/intake, durable analysis workers, EvidenceBundle, immutable report/projection layer, a working deterministic Free web journey, offline PDF/share-card rendering, the bounded Premium runtime skeleton, the internal commerce ledger, redacted report feedback, deletion/restore tombstones and the notification delivery state machine.
 
-There is no production API, application database, consumer client, store billing implementation, production reference corpus or live Premium service established by this baseline. Paths in the build specifications are planned unless identified as existing. Documentation, mock completion, human approval, store approval and production activation are distinct.
+After reconciliation, **T00, T00A, T01, T02, T03, T04, T05, T09, T26, T27 and T28 are `DONE`**. T10 and T21 are implemented pending review/owner acceptance. T15, T17, T19 and T24 remain `IN_PROGRESS` with explicit `remaining_work` in the machine graph.
+
+This baseline still does **not** establish a validated reference cohort/statistics release, live Premium/model approval, real payment rails, production identity/object-storage/mail/push providers, native iOS/Android clients, deployed production recovery evidence, store approval or public release. Those are downstream tasks and human/provider gates, not gaps to conceal by changing status.
 
 ## Non-negotiable product boundaries
 
@@ -65,12 +67,13 @@ The task graph is authoritative in [tasks.json](docs/roadmap/tasks.json); the hu
 ```bash
 python docs/roadmap/plan_tools.py --check
 python docs/roadmap/plan_tools.py --ready
-python docs/roadmap/plan_tools.py --task T01
+python docs/roadmap/plan_tools.py --active
+python docs/roadmap/plan_tools.py --task T11
 ```
 
-These documentation commands are provided by this PR. Product test commands marked `TO_IMPLEMENT` in task briefs are not executable claims. After changing task data, run `--write` to regenerate the human backlog, then `--check`.
+These documentation commands are repository tooling. Product test commands marked `TO_IMPLEMENT` in task briefs are not executable claims. After changing task data, run `--write` to regenerate the human backlog, then `--check`.
 
-The foundation contracts (T00A, T01, T03) are merged; run `plan_tools.py --ready` for the next unblocked tasks. Follow [20](docs/roadmap/20-end-to-end-build-sequence.md) for safe parallel work. Maintain one contract steward for shared DTOs, one owner of each provider adapter and a documented handoff for stacked PRs.
+At the reconciled baseline, `--ready` yields **T11** as the only new planned task whose hard predecessors are DONE. `--active` surfaces T10, T15, T17, T19, T21 and T24. T29 remains unready until the T10 `design_acceptance` predecessor is actually completed. Follow [20](docs/roadmap/20-end-to-end-build-sequence.md) for parallel work and [23](docs/roadmap/23-post-pr14-reconciliation.md) for the evidence behind these dispositions.
 
 ## Definition of ready
 

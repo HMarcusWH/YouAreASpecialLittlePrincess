@@ -4,9 +4,9 @@
 
 [Documentation index](00-index.md) · [Machine authority](tasks.json) · [Build sequence](20-end-to-end-build-sequence.md) · [Release gates](21-release-readiness-checklists.md)
 
-Plan 2.0; code baseline `251668a521150668b90c3551530daab694a5c739`. Statuses are implementation/history records, not production approvals. READY is computed from completed hard predecessors.
+Plan 2.1; code baseline `e8e174a2311f8d4327850218405819de8f87277e`. Statuses are implementation/history records, not production approvals. READY is computed from completed hard predecessors.
 
-Use `python docs/roadmap/plan_tools.py --ready` or `--task ID`. Edit tasks.json and run `--write` then `--check` when maintaining the plan.
+Use `python docs/roadmap/plan_tools.py --ready`, `--active` or `--task ID`. Edit tasks.json and run `--write` then `--check` when maintaining the plan.
 
 <a id="task-table"></a>
 ## Task table
@@ -16,24 +16,24 @@ Use `python docs/roadmap/plan_tools.py --ready` or `--task ID`. Edit tasks.json 
 | [T00 — Green baseline and dependency policy](#t00) | DONE | — | platform |
 | [T00A — Post-merge dependency graph hardening](#t00a) | DONE | T00 | platform-security |
 | [T01 — Product contracts and zero-AI capability manifest](#t01) | DONE | T00, T00A, T03 | contracts |
-| [T02 — Persistence identity authorization](#t02) | IMPLEMENTED_PENDING_REVIEW | T01, T27, T28 | backend |
+| [T02 — Persistence identity authorization](#t02) | DONE | T01, T27, T28 | backend |
 | [T03 — Rights consent and collection protocol](#t03) | DONE | — | product-data |
-| [T04 — Safe intake and durable analysis jobs](#t04) | IMPLEMENTED_PENDING_REVIEW | T02, T03, T28 | backend |
-| [T05 — Evidence payload and chart observations](#t05) | IMPLEMENTED_PENDING_REVIEW | T01 | engine |
+| [T04 — Safe intake and durable analysis jobs](#t04) | DONE | T02, T03, T28 | backend |
+| [T05 — Evidence payload and chart observations](#t05) | DONE | T01 | engine |
 | [T06 — Calibration suitability core repair](#t06) | PLANNED | T05, T11 | evaluation |
 | [T07 — Bounded classical topology shape expansion](#t07) | PLANNED | T05, T06 | engine |
 | [T08 — Normalization and reviewed content](#t08) | PLANNED | T01, T05, T06 | content-engine |
-| [T09 — Report assembly and authorized projections](#t09) | IMPLEMENTED_PENDING_REVIEW | T01, T05 | report-backend |
+| [T09 — Report assembly and authorized projections](#t09) | DONE | T01, T05 | report-backend |
 | [T10 — Contract-driven multi-platform design handoff](#t10) | IMPLEMENTED_PENDING_REVIEW | T01 | design |
 | [T11 — Owned pilot recruitment and annotation](#t11) | PLANNED | T03, T04 | product-data-human |
 | [T12 — Candidate corpus ETL and deduplication](#t12) | PLANNED | T04, T06, T11 | data |
 | [T13 — Reference statistics and distinctiveness](#t13) | PLANNED | T08, T12 | statistics |
 | [T14 — Benchmark publish withdraw drift rollback](#t14) | PLANNED | T03, T13 | data-platform |
-| [T15 — Evidence-bound OpenAI adapter](#t15) | IMPLEMENTED_PENDING_REVIEW | T01, T09, T26, T27 | premium-backend |
+| [T15 — Evidence-bound OpenAI adapter](#t15) | IN_PROGRESS | T01, T09, T26, T27 | premium-backend |
 | [T16 — Model evaluation and generation policy](#t16) | PLANNED | T06, T15 | evaluation |
-| [T17 — Interactive Free web product](#t17) | IMPLEMENTED_PENDING_REVIEW | T02, T04, T09, T10, T28 | frontend |
+| [T17 — Interactive Free web product](#t17) | IN_PROGRESS | T02, T04, T09, T10, T28 | frontend |
 | [T18 — Deterministic pair and history comparison](#t18) | PLANNED | T08, T09 | statistics-report |
-| [T19 — Cross-platform purchase ledger entitlements and metered jobs](#t19) | IMPLEMENTED_PENDING_REVIEW | T02, T03, T09, T15, T27 | commerce |
+| [T19 — Cross-platform purchase ledger entitlements and metered jobs](#t19) | IN_PROGRESS | T02, T03, T09, T15, T27 | commerce |
 | [T20 — Premium and paid-pair web experience](#t20) | PLANNED | T15, T16, T17, T18, T19, T21, T24 | frontend-premium |
 | [T21 — Same-content PDF and share-card rendering](#t21) | IMPLEMENTED_PENDING_REVIEW | T09, T10, T17 | report-frontend |
 | [T22 — Scoped sharing and comparison invitations](#t22) | PLANNED | T17, T18, T21 | backend-frontend |
@@ -41,8 +41,8 @@ Use `python docs/roadmap/plan_tools.py --ready` or `--task ID`. Edit tasks.json 
 | [T24 — Deployment recovery support and notifications](#t24) | IN_PROGRESS | T02, T04, T19, T28 | platform-product |
 | [T25 — Public multi-platform v1 signoff](#t25) | PLANNED | T23, T24, T32, T33 | product-owner-human |
 | [T26 — Populate premium selector/question database](#t26) | DONE | — | product-content-contracts |
-| [T27 — Connector ports fakes and provider decisions](#t27) | IMPLEMENTED_PENDING_REVIEW | T01 | application-architecture |
-| [T28 — Environment workspace and build foundation](#t28) | IMPLEMENTED_PENDING_REVIEW | T00A, T27 | platform |
+| [T27 — Connector ports fakes and provider decisions](#t27) | DONE | T01 | application-architecture |
+| [T28 — Environment workspace and build foundation](#t28) | DONE | T00A, T27 | platform |
 | [T29 — Shared native foundation and compatibility spike](#t29) | PLANNED | T01, T02, T10, T27, T28 | mobile-platform |
 | [T30 — Complete iOS and iPad client integration](#t30) | PLANNED | T29, T04, T09, T15, T16, T18, T19, T20, T21, T22, T24 | mobile-apple |
 | [T31 — Complete Android phone and tablet client integration](#t31) | PLANNED | T29, T04, T09, T15, T16, T18, T19, T20, T21, T22, T24 | mobile-android |
@@ -56,7 +56,7 @@ Run only commands that actually exist. TO_IMPLEMENT profiles name required futur
 <a id="validation-docs"></a>
 ### docs
 
-State: `EXISTS_IN_THIS_PR`. Task graph, generated backlog, references and local documentation navigation.
+State: `EXISTS`. Merged task-graph, generated-backlog, reference and local-link validation on main.
 
 ```bash
 python docs/roadmap/plan_tools.py --check
@@ -86,7 +86,7 @@ python -m pytest -q
 <a id="validation-consent"></a>
 ### consent
 
-State: `EXISTS_IN_THIS_PR`. T03 draft consent/retention/source-rights/collection contracts: strict schema subset, semantic rules, reference permission evaluator, scenario and collection fixtures. Validates drafts; approves nothing.
+State: `EXISTS`. Merged T03 draft consent/retention/source-rights/collection contract validators and scenario fixtures. Validates drafts; approves nothing.
 
 ```bash
 python tools/validate_consent_protocol.py
@@ -96,12 +96,19 @@ python -m pytest -q tests/test_consent_protocol.py
 <a id="validation-contracts"></a>
 ### contracts
 
-State: `TO_IMPLEMENT`. T01 must add reproducible Python/TypeScript generation, JSON Schema/OpenAPI semantic fixtures and zero-AI import/egress tests.
+State: `EXISTS`. Merged T01 reproducible product-contract generation, semantic validation, negative fault injection and runtime contract tests.
+
+```bash
+python tools/generate_product_contracts.py --check
+python tools/validate_product_contracts.py
+python tools/test_product_contract_faults.py
+python -m pytest -q tests/test_product_contracts.py
+```
 
 <a id="validation-backend"></a>
 ### backend
 
-State: `EXISTS_IN_THIS_PR`. PostgreSQL migration, non-owner RLS role, constraint, identity, permission-fencing, OIDC and API tests (T02); later tasks extend it.
+State: `EXISTS`. Merged PostgreSQL 16 integration suite covering migrations, non-owner RLS, persistence, identity/permissions, intake, commerce, Premium, exports, feedback, notifications, restore and API composition.
 
 ```bash
 python tools/check_environments.py
@@ -111,7 +118,7 @@ python -m pytest -q tests_app
 <a id="validation-connectors"></a>
 ### connectors
 
-State: `EXISTS_IN_THIS_PR`. T27 adds a fake/conformance harness; each real adapter adds redacted opt-in sandbox evidence and failure cases.
+State: `EXISTS`. Merged T27 fake/conformance harness and architecture-boundary checks; real adapters add their own sandbox evidence in owning tasks.
 
 ```bash
 python -m pytest -q tests/connector_contracts tests/test_architecture_boundaries.py
@@ -125,7 +132,7 @@ State: `TO_IMPLEMENT`. Protected rights-cleared writer-disjoint evaluation; reco
 <a id="validation-js_packages"></a>
 ### js_packages
 
-State: `EXISTS_IN_THIS_PR`. Shared TypeScript packages only (generated contracts type-check, report-core formatting/chart/frame parity against shared fixtures). Not browser, accessibility or PDF coverage.
+State: `EXISTS`. Merged shared TypeScript packages: generated contracts, API client, report-core/web, design tokens and offline renderer package tests.
 
 ```bash
 pnpm install --frozen-lockfile
@@ -136,7 +143,7 @@ pnpm test
 <a id="validation-web_browser"></a>
 ### web_browser
 
-State: `EXISTS_IN_THIS_PR`. Free web journeys in Chromium: fixture-backed report views (projection parity, missing-not-zero, evidence labels, keyboard focus, 320px Swedish overflow, dark mode, security headers, proxy allowlist and CSRF) in CI; the live upload-to-report journey (resume on refresh, cross-owner 404) runs locally against PostgreSQL via tools/run_web_e2e.sh. Not PDF, share-card or automated axe coverage.
+State: `EXISTS`. Merged Free web Chromium fixture journeys plus the local live upload-to-report journey. This profile does not replace web_render or future automated axe coverage.
 
 ```bash
 pnpm install --frozen-lockfile
@@ -149,7 +156,7 @@ tools/run_web_e2e.sh
 <a id="validation-web_render"></a>
 ### web_render
 
-State: `EXISTS_IN_THIS_PR`. Offline Chromium renderer tests (EXPORT-only documents as tagged A4/Letter PDF, SHARE-only 1080x1080/1080x1920 PNG cards, projection/layout mismatch and bad-input codes), export job/API tests with a recording renderer (fact parity with the OWNER projection, disclosed-section cards, projection change mid-render, stale retrieval revoked and erased, capture deletion, bounded renderer failures, scrubbed child environment) and the live journey downloading a real PDF. Not automated axe or pixel-diff coverage.
+State: `EXISTS`. Merged offline Chromium PDF/share-card renderer tests, export job/API tests and live PDF download journey. Automated axe/pixel-diff coverage remains future work.
 
 ```bash
 pnpm --filter @princess/render test
@@ -368,7 +375,7 @@ Historical completion evidence: Merged PR #13 (merge 48d4e033d576211766d1d98a650
 <a id="t02"></a>
 ## T02 — Persistence identity authorization
 
-**Status:** `IMPLEMENTED_PENDING_REVIEW` · **Owner:** backend · **Milestone:** foundation
+**Status:** `DONE` · **Owner:** backend · **Milestone:** foundation
 
 **Hard predecessors:** [T01](#t01), [T27](#t27), [T28](#t28)
 **Platforms:** backend
@@ -390,12 +397,10 @@ Planned targets unless present in the code tree:
 ```text
 src/princess_app/domain/
 src/princess_app/application/
-src/princess_app/adapters/persistence/
-src/princess_app/adapters/identity/
+src/princess_app/adapters/postgres/
+src/princess_app/adapters/oidc/
 apps/api/
 migrations/
-src/princess_app/domain/permissions/
-src/princess_app/application/permissions/
 ```
 
 ### Coding sequence
@@ -440,6 +445,8 @@ Validation profiles: [core](#validation-core), [docs](#validation-docs), [contra
 - `processor_retention_contracts`: Approved providers, regions, purposes, retention/deletion and support obligations.
 
 No approval is created by this task brief. Mock/disabled implementation is not authorization for live collection, charges, signing or release.
+
+Historical completion evidence: PR #14 commit e1e6164 plus review repairs implemented the PostgreSQL product plane, non-owner RLS, append-only permission ledger, identity bindings/OIDC verifier, guest transfer/session revocation and FastAPI persistence composition. Production identity/hosting activation remains provider-gated, not unfinished T02 implementation. Merged PR #14 (merge e8e174a2311f8d4327850218405819de8f87277e; final head d2e106325c549f91c177d5cfd8277b032526ecff). Final-head CI, Roadmap integrity and Application environments passed; see docs/roadmap/23-post-pr14-reconciliation.md.
 
 [Back to task table](#task-table) · [Documentation index](00-index.md) · [Execution sequence](20-end-to-end-build-sequence.md)
 
@@ -514,7 +521,7 @@ Historical completion evidence: Merged PR #12 with T00A at the same exact head a
 <a id="t04"></a>
 ## T04 — Safe intake and durable analysis jobs
 
-**Status:** `IMPLEMENTED_PENDING_REVIEW` · **Owner:** backend · **Milestone:** free
+**Status:** `DONE` · **Owner:** backend · **Milestone:** free
 
 **Hard predecessors:** [T02](#t02), [T03](#t03), [T28](#t28)
 **Platforms:** backend, workers
@@ -543,7 +550,7 @@ src/princess_app/adapters/storage/
 1. Implement owner/quota-bound upload reservation and completion, media sniffing, bounded decode/sanitization and tested mobile-format conversion policy.
 2. Promote verified bytes to an immutable internal asset/version before scheduling; retain digest and coordinate-transform lineage.
 3. Expose `POST /v1/analyses` as the explicit idempotent transition from a completed immutable sample/capture to one deterministic AnalysisRun/job; upload completion validates/promotes bytes but does not silently create a run.
-4. Implement PostgreSQL job/outbox, short lease/heartbeat, attempt records and fenced publication outside long transactions.
+4. Implement PostgreSQL job/outbox, short leases, attempt records and fenced publication outside long transactions. Add a heartbeat only if measured real latency approaches the lease budget.
 5. Provide owner-scoped status/cancel/delete behavior and safe failure codes; restrict CPU/memory/provider egress and admission cost.
 
 ### Contract and integration handoff
@@ -577,12 +584,14 @@ Validation profiles: [core](#validation-core), [docs](#validation-docs), [backen
 
 No approval is created by this task brief. Mock/disabled implementation is not authorization for live collection, charges, signing or release.
 
+Historical completion evidence: PR #14 commit 6d746c4 plus review repairs implemented safe bounded intake, immutable captures, idempotent analysis jobs, fenced leases, admission/attempt limits, cancellation and durable erasure paths. Measured work remained far below the 120-second lease; a heartbeat is deferred to T24 only if real latency warrants it. Merged PR #14 (merge e8e174a2311f8d4327850218405819de8f87277e; final head d2e106325c549f91c177d5cfd8277b032526ecff). Final-head CI, Roadmap integrity and Application environments passed; see docs/roadmap/23-post-pr14-reconciliation.md.
+
 [Back to task table](#task-table) · [Documentation index](00-index.md) · [Execution sequence](20-end-to-end-build-sequence.md)
 
 <a id="t05"></a>
 ## T05 — Evidence payload and chart observations
 
-**Status:** `IMPLEMENTED_PENDING_REVIEW` · **Owner:** engine · **Milestone:** free
+**Status:** `DONE` · **Owner:** engine · **Milestone:** free
 
 **Hard predecessors:** [T01](#t01)
 **Platforms:** core, shared
@@ -637,6 +646,8 @@ EvidenceBundle tied to one run/schema/configuration, with real observations and 
 Validation profiles: [core](#validation-core), [docs](#validation-docs), [contracts](#validation-contracts). Planned suites must be implemented and their actual command documented by the owning task; they are not passing tests today.
 
 No task-specific production gate; all repository privacy/security and scope boundaries still apply.
+
+Historical completion evidence: PR #14 commit 8878bdc implemented the versioned evidence/1 payload, EvidenceBundle builder, bounded report fixtures and coordinate-frame composition without changing canonical aggregates. Merged PR #14 (merge e8e174a2311f8d4327850218405819de8f87277e; final head d2e106325c549f91c177d5cfd8277b032526ecff). Final-head CI, Roadmap integrity and Application environments passed; see docs/roadmap/23-post-pr14-reconciliation.md.
 
 [Back to task table](#task-table) · [Documentation index](00-index.md) · [Execution sequence](20-end-to-end-build-sequence.md)
 
@@ -833,7 +844,7 @@ No approval is created by this task brief. Mock/disabled implementation is not a
 <a id="t09"></a>
 ## T09 — Report assembly and authorized projections
 
-**Status:** `IMPLEMENTED_PENDING_REVIEW` · **Owner:** report-backend · **Milestone:** free
+**Status:** `DONE` · **Owner:** report-backend · **Milestone:** free
 
 **Hard predecessors:** [T01](#t01), [T05](#t05)
 **Platforms:** shared, backend
@@ -891,6 +902,8 @@ Validation profiles: [core](#validation-core), [docs](#validation-docs), [contra
 
 No task-specific production gate; all repository privacy/security and scope boundaries still apply.
 
+Historical completion evidence: PR #14 commit 4a70fef implemented immutable self-digested ReportDocument assembly, revision rules and authorization-filtered FREE/OWNER/PREMIUM/SHARE/EXPORT projections. Reference-view extensions remain T13 scope. Merged PR #14 (merge e8e174a2311f8d4327850218405819de8f87277e; final head d2e106325c549f91c177d5cfd8277b032526ecff). Final-head CI, Roadmap integrity and Application environments passed; see docs/roadmap/23-post-pr14-reconciliation.md.
+
 [Back to task table](#task-table) · [Documentation index](00-index.md) · [Execution sequence](20-end-to-end-build-sequence.md)
 
 <a id="t10"></a>
@@ -929,6 +942,14 @@ fixtures/reports/
 ### Contract and integration handoff
 
 Owner-reviewed design tokens, reusable component boundaries and fixture/property mapping for T17/T21/T29–T31.
+
+### Implementation evidence
+
+PR #14 commit c5463a4 added contract-driven draft design tokens generated to CSS/TypeScript/Swift/Kotlin and a complete state/component handoff. The repository explicitly keeps the tokens DRAFT_PENDING_DESIGN_ACCEPTANCE.
+
+### Remaining work
+
+- Obtain explicit owner design_acceptance for the responsive/native journeys, accessibility states, Swedish/English overflow, missing/error/purchase states and report presentation.
 
 ### Acceptance evidence
 
@@ -1215,7 +1236,7 @@ No approval is created by this task brief. Mock/disabled implementation is not a
 <a id="t15"></a>
 ## T15 — Evidence-bound OpenAI adapter
 
-**Status:** `IMPLEMENTED_PENDING_REVIEW` · **Owner:** premium-backend · **Milestone:** premium
+**Status:** `IN_PROGRESS` · **Owner:** premium-backend · **Milestone:** premium
 
 **Hard predecessors:** [T01](#t01), [T09](#t09), [T26](#t26), [T27](#t27)
 **Platforms:** backend, workers
@@ -1251,6 +1272,16 @@ evaluation/premium/
 ### Contract and integration handoff
 
 PremiumRequestPacket, provider attempt/result and validated saved-overlay interfaces for T16/T19/T20/native clients.
+
+### Implementation evidence
+
+PR #14 commit 3c6947e plus review repairs implemented bounded Premium packet compilation, strict per-request schemas, semantic/text validation, spend/fencing controls, an OpenAI Responses adapter behind the disabled spend gate and adversarial tests.
+
+### Remaining work
+
+- Implement deterministic candidate producers for the supported dynamic selector contracts; explicitly classify generator contracts that remain unsupported and prove their fail-closed omission behavior.
+- Review packet coverage after candidate-producer work and record which individual-pack questions are answerable for each supported input context.
+- Keep runtime_activation=false; live provider/model evaluation and activation remain T16 and the api_access_spend_before_live_calls gate.
 
 ### Acceptance evidence
 
@@ -1348,7 +1379,7 @@ No approval is created by this task brief. Mock/disabled implementation is not a
 <a id="t17"></a>
 ## T17 — Interactive Free web product
 
-**Status:** `IMPLEMENTED_PENDING_REVIEW` · **Owner:** frontend · **Milestone:** free
+**Status:** `IN_PROGRESS` · **Owner:** frontend · **Milestone:** free
 
 **Hard predecessors:** [T02](#t02), [T04](#t04), [T09](#t09), [T10](#t10), [T28](#t28)
 **Platforms:** web
@@ -1385,6 +1416,17 @@ packages/design-tokens/
 ### Contract and integration handoff
 
 Working Free web journey and reusable web report components tied to saved projections.
+
+### Implementation evidence
+
+PR #14 commit 99c5462 plus T21 integration provides the working Free Next.js journey, guarded API client, session/proxy boundary, fixture browser journeys and live upload → analysis → report → PDF flow.
+
+### Remaining work
+
+- Implement production account sign-in UI after the ADR-002 identity provider decision.
+- Implement account-backed report/history lists and recovery UI.
+- Render EvidenceBundle interactions/charts with accessible text alternatives.
+- Add automated axe accessibility coverage and finish owner-accepted T10 design integration.
 
 ### Acceptance evidence
 
@@ -1478,7 +1520,7 @@ No task-specific production gate; all repository privacy/security and scope boun
 <a id="t19"></a>
 ## T19 — Cross-platform purchase ledger entitlements and metered jobs
 
-**Status:** `IMPLEMENTED_PENDING_REVIEW` · **Owner:** commerce · **Milestone:** premium
+**Status:** `IN_PROGRESS` · **Owner:** commerce · **Milestone:** premium
 
 **Hard predecessors:** [T02](#t02), [T03](#t03), [T09](#t09), [T15](#t15), [T27](#t27)
 **Platforms:** backend, workers
@@ -1515,6 +1557,17 @@ migrations/
 ### Contract and integration handoff
 
 Server-owned catalog, purchase claims/status, credit/fulfilment APIs and reconciliation workers for web/iOS/Android.
+
+### Implementation evidence
+
+PR #14 commit 6d7fc25 plus review repairs implemented the server-owned catalog draft, verified event inbox, immutable financial ledger, origin-rail credit lots, reservations, metered Premium publication/spend and reconciliation semantics using fake rails.
+
+### Remaining work
+
+- Implement and test real/sandbox Stripe checkout and signed webhook verification.
+- Implement App Store server purchase/notification verification and Google Play token/RTDN verification with environment/account binding.
+- Record sandbox grant/completion/refund/replay reconciliation evidence for all approved rails.
+- Resolve approved products/prices/tax/refund/storefront/credit-portability policy, including the owner decision for refund-after-spend Premium access, without inventing approvals.
 
 ### Acceptance evidence
 
@@ -1647,9 +1700,18 @@ src/princess_app/application/exports/
 
 Export request/status and scoped artifact retrieval APIs with fact-equivalent print/card assets.
 
+### Implementation evidence
+
+PR #14 commits 7a39bcf/ddb06bf plus review repairs implemented the offline Chromium PDF/PNG renderer, bounded export jobs, projection re-derivation/fencing, authorized storage/retrieval, share-card grants and a real live PDF download.
+
+### Remaining work
+
+- Complete final design/integration review against the owner-accepted T10 design, including actual rendered-page inspection, clipping/reading-order and accessibility evidence.
+- When T18/T20 add comparison/history/Premium content, add their parity fixtures before those owning tasks claim export parity; do not generate missing content inside T21.
+
 ### Acceptance evidence
 
-- Free/Premium/pair/history facts, units, labels and qualifications match web/native projections.
+- For every report kind/projection currently supported by its owning task, facts, units, labels and qualifications match the saved web/native projection; T18/T20 add their own parity fixtures when those contents exist.
 - Revoked access blocks new issuance and protected retrieval; downloaded copies are not falsely claimed recallable.
 
 ### Required failure and regression cases
@@ -1853,6 +1915,20 @@ migrations/
 
 Operable staged infrastructure and recovery/notification/support evidence, not public release approval.
 
+### Implementation evidence
+
+PR #14 slices 19b00a0, 3b2087e, 5a22ba4 and final repair d2e1063 implemented redacted report feedback, ops commands/runbooks, append-only restore tombstones for deletions/withdrawals/logout-everywhere, and an outbox-driven notification state machine with kill switch and fake mail/push adapters.
+
+### Remaining work
+
+- Tombstone single-device logout and feedback withdrawal so a database restore cannot resurrect either.
+- Add durable reconciliation for restored queued Premium attempts using provider-side request lookup where the selected provider supports it.
+- Choose/implement production object and tombstone storage, backup tooling, RPO/RTO and execute a timed restore drill.
+- Implement live transactional mail plus signed bounce/complaint handling; integrate APNs/FCM with T29–T31 once native signing/accounts exist.
+- Implement broader key rotation/compromise handling, account/identity recovery and store-rollout halt procedures.
+- Add deployed dashboards/alert thresholds/named operational ownership, edge/global rate limits and the production deployment/installable backend topology.
+- Expose the web mail-preference surface and add a lease heartbeat only if measured production latency makes the current lease unsafe.
+
 ### Acceptance evidence
 
 - A restore cannot resurrect erased data or duplicate credits/provider calls.
@@ -2012,7 +2088,7 @@ Historical completion evidence: Merged T26 finalization PR #9 and current interp
 <a id="t27"></a>
 ## T27 — Connector ports fakes and provider decisions
 
-**Status:** `IMPLEMENTED_PENDING_REVIEW` · **Owner:** application-architecture · **Milestone:** foundation
+**Status:** `DONE` · **Owner:** application-architecture · **Milestone:** foundation
 
 **Hard predecessors:** [T01](#t01)
 **Platforms:** shared, backend
@@ -2079,15 +2155,17 @@ Validation profiles: [core](#validation-core), [docs](#validation-docs), [contra
 
 No task-specific production gate; all repository privacy/security and scope boundaries still apply.
 
+Historical completion evidence: PR #14 commits 1415c9e/064406c implemented all ten application-owned connector ports, deterministic production-refusing fakes, common conformance tests and import-boundary enforcement. Merged PR #14 (merge e8e174a2311f8d4327850218405819de8f87277e; final head d2e106325c549f91c177d5cfd8277b032526ecff). Final-head CI, Roadmap integrity and Application environments passed; see docs/roadmap/23-post-pr14-reconciliation.md.
+
 [Back to task table](#task-table) · [Documentation index](00-index.md) · [Execution sequence](20-end-to-end-build-sequence.md)
 
 <a id="t28"></a>
 ## T28 — Environment workspace and build foundation
 
-**Status:** `IMPLEMENTED_PENDING_REVIEW` · **Owner:** platform · **Milestone:** foundation
+**Status:** `DONE` · **Owner:** platform · **Milestone:** foundation
 
 **Hard predecessors:** [T00A](#t00a), [T27](#t27)
-**Platforms:** ci, backend, web, ios, android
+**Platforms:** ci, backend, web, shared
 **Connector ports:** TelemetryExporter
 
 ### Required reading
@@ -2117,7 +2195,7 @@ packages/
 1. Create local/test/preview/staging configuration schemas with synthetic fakes and startup rejection of invalid live/test mixes.
 2. Establish planned Python application packaging and pinned pnpm workspace without contaminating the numerical Free installation; verify inherited Node and compatible framework versions.
 3. Provide local PostgreSQL, restricted worker/resource profiles, safe telemetry seams and per-component secrets/egress contracts.
-4. Add reproducible clean-build, schema/codegen, backend/web/native scaffold jobs and protected release promotion profiles; no production credentials on untrusted PRs.
+4. Add reproducible clean-build, schema/codegen, backend and web workspace jobs plus protected promotion profiles; T29 owns creation and exact-version validation of the native scaffold/build matrix. No production credentials run on untrusted PRs.
 
 ### Contract and integration handoff
 
@@ -2134,7 +2212,7 @@ Documented setup/teardown, exact dependency/build matrix and isolated environmen
 
 ### Deliverables
 
-- Workspace/environment manifests, local setup and CI matrix
+- Workspace/environment manifests, local setup and backend/web CI matrix; native project/build validation is handed to T29.
 
 ### Rollback and compatibility
 
@@ -2142,12 +2220,13 @@ Documented setup/teardown, exact dependency/build matrix and isolated environmen
 
 ### Validation and human gates
 
-Validation profiles: [core](#validation-core), [docs](#validation-docs), [contracts](#validation-contracts), [backend](#validation-backend), [web_render](#validation-web_render), [native](#validation-native), [js_packages](#validation-js_packages). Planned suites must be implemented and their actual command documented by the owning task; they are not passing tests today.
+Validation profiles: [core](#validation-core), [docs](#validation-docs), [contracts](#validation-contracts), [backend](#validation-backend), [connectors](#validation-connectors), [js_packages](#validation-js_packages). Planned suites must be implemented and their actual command documented by the owning task; they are not passing tests today.
 
 - `processor_retention_contracts`: Approved providers, regions, purposes, retention/deletion and support obligations.
-- `native_signing_accounts`: Owner-authorized developer accounts, identifiers, signing custody and protected release credentials.
 
 No approval is created by this task brief. Mock/disabled implementation is not authorization for live collection, charges, signing or release.
+
+Historical completion evidence: PR #14 commits 6fc9579/991069e implemented reviewed environment manifests, secret/egress matrices, the hash-locked backend environment, pnpm workspace, local PostgreSQL and backend/web CI. Reconciliation assigns native scaffold/build validation to T29 and deployed packaging/topology to T24. Merged PR #14 (merge e8e174a2311f8d4327850218405819de8f87277e; final head d2e106325c549f91c177d5cfd8277b032526ecff). Final-head CI, Roadmap integrity and Application environments passed; see docs/roadmap/23-post-pr14-reconciliation.md.
 
 [Back to task table](#task-table) · [Documentation index](00-index.md) · [Execution sequence](20-end-to-end-build-sequence.md)
 
