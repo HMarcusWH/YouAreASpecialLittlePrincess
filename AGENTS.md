@@ -10,7 +10,7 @@ Read [ROADMAP.md](ROADMAP.md), then the [documentation map](docs/roadmap/00-inde
 4. Coordinate shared schema, DTO generation, migrations, ledger and worker state-machine edits. Another PR's proposal is not a merged dependency. A mock or frozen fixture can unblock only work explicitly scoped to mocks.
 5. Finish with positive and adversarial tests, actual executed command results, resolved versions, migration/recovery evidence and a limitation statement. Never merge or weaken protection/checks to bypass failure.
 
-`docs/roadmap/tasks.json` is the task/dependency/status authority. The [human backlog](docs/roadmap/06-agent-backlog.md) is generated; edit the JSON then run `python docs/roadmap/plan_tools.py --write`. `--check` rejects cycles, missing references, stale generated text and broken local document links. Readiness is computed, not a hand-maintained READY flag. Owner gates may allow mock implementation, never unapproved activation.
+`docs/roadmap/tasks.json` is the task/dependency/status authority. The [human backlog](docs/roadmap/06-agent-backlog.md) is generated; edit the JSON then run `python docs/roadmap/plan_tools.py --write`. `--check` rejects cycles, missing references, stale generated text and broken local document links. `--ready` shows unopened planned work whose hard predecessors are DONE; `--active` shows `IN_PROGRESS` and `IMPLEMENTED_PENDING_REVIEW` work. Partial tasks record `implementation_evidence` and explicit `remaining_work`; a merged PR never implies `DONE`. Owner gates may allow mock implementation, never unapproved activation.
 
 ## Where code belongs
 
@@ -33,11 +33,11 @@ Follow [module boundaries](docs/roadmap/09-connectors-and-provider-boundaries.md
 
 ## Canonical sources and precedence
 
-Product scope and execution order: [v2 index](docs/roadmap/00-index.md) and tasks. Numerical definitions: [feature database](schema/graphology_feature_database_v1.json). Interpretation semantics: [T26 handoff](schema/graphology_interpretation/v1/README.md), source JSON and compiler, not prose examples in an older roadmap. T26 is reviewed and inactive; do not rebuild it or activate traditional packs as part of another task.
+Product scope and execution order: the [current index](docs/roadmap/00-index.md), [post-PR14 reconciliation](docs/roadmap/23-post-pr14-reconciliation.md) and tasks. Numerical definitions: [feature database](schema/graphology_feature_database_v1.json). Interpretation semantics: [T26 handoff](schema/graphology_interpretation/v1/README.md), source JSON and compiler, not prose examples in an older roadmap. T26 is reviewed and inactive; do not rebuild it or activate traditional packs as part of another task.
 
 Before content work read [research index](research/graphology/README.md) and [research handoff](research/graphology/DATABASE_HANDOFF.md). Preserve the frozen `research/graphology/foundations-v0.1/` bytes. Source fidelity, empirical validity, feasibility, within-sample salience and rarity stay separate. A roadmap schema/prompt sketch does not override reviewed production fields.
 
-T00 is historically DONE. [T00A](docs/roadmap/06-agent-backlog.md#t00a) implements the four post-merge dependency-graph repairs and stays `IMPLEMENTED_PENDING_REVIEW` until exact-head CI and review are recorded. Do not treat it as DONE earlier, and do not weaken its supported build configuration (see [requirements](requirements/README.md#supported-build-configuration)) to make a new dependency pass.
+T00 and [T00A](docs/roadmap/06-agent-backlog.md#t00a) are historically DONE with their recorded PR #10/#12 evidence. Preserve the supported dependency/build configuration (see [requirements](requirements/README.md#supported-build-configuration)); a new dependency finding creates new scoped evidence or reopens the affected task rather than rewriting the old completion record.
 
 ## Testing and completion
 

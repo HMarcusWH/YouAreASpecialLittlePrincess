@@ -8,11 +8,23 @@ Task IDs T00–T26 are preserved. T00A records the post-merge hardening follow-u
 
 ```bash
 python docs/roadmap/plan_tools.py --ready
-python docs/roadmap/plan_tools.py --task T00A
-python docs/roadmap/plan_tools.py --task T01
+python docs/roadmap/plan_tools.py --active
+python docs/roadmap/plan_tools.py --task T11
 ```
 
-Initial code-ready work at the recorded baseline is T00A and T03 protocol/schema drafting. Human recruitment, accounts, live calls, real charges and store publication remain gated. Editing this roadmap is separately authorized planning work, not an assertion that downstream implementation is ready.
+At the reconciled PR #14 baseline, `--ready` yields **T11**. `--active` yields **T10, T15, T17, T19, T21 and T24**. T29 is the next native unlock but remains unready until T10 is actually accepted. Human recruitment, provider accounts/live calls, real charges, signing and store publication remain separately gated.
+
+## Current handoff after PR #14
+
+The [post-PR14 reconciliation](23-post-pr14-reconciliation.md) is the evidence bridge between the merged implementation series and the machine statuses.
+
+- **READY planned work:** T11 — owned pilot recruitment and annotation. Starting real recruitment still requires the `pilot_rights_consent` and actual-participant permissions gates.
+- **Active incomplete work:** T15 (dynamic Premium candidate producers/coverage), T17 (identity/history/evidence/a11y web work), T19 (real payment rails/sandbox evidence), T24 (deployment/recovery/providers).
+- **Implemented pending review:** T10 (owner design acceptance) and T21 (final design/integration/render review).
+- **Next native unlock:** T10 DONE makes T29 ready because T01/T02/T27/T28 are already DONE.
+- **Optional enhancement:** T07 remains non-blocking if omitted from the approved marketed scope.
+
+Do not collapse this into a single percentage. `--ready` answers what new planned task may start; `--active` answers what already-started tasks still need work.
 
 ## Phases and parallel lanes
 
@@ -34,7 +46,7 @@ Before implementation include: task ID, base commit, predecessor evidence, selec
 
 ## Completion protocol
 
-`DONE` requires all implementation acceptance, actual exact-head tests and review disposition recorded. Human-only deliverables need real evidence. For an implementation that is deliberately disabled pending a human gate, record the disabled state and outstanding gate separately. A new review finding creates a linked follow-up task or reopens the affected task; it is not erased by a merge.
+`DONE` requires all implementation acceptance, actual exact-head tests and review disposition recorded. `IN_PROGRESS` and `IMPLEMENTED_PENDING_REVIEW` record `implementation_evidence` where available and explicit `remaining_work`; a merge never erases residuals. Human-only deliverables need real evidence. For an implementation that is deliberately disabled pending a human gate, record the disabled state and outstanding gate separately. A new review finding creates a linked follow-up task or reopens the affected task; it is not erased by a merge.
 
 When a task changes schemas, update JSON source, generated DTOs, fixtures, codegen drift checks, consumers and migration notes in the same scoped series. When it changes data/claims, version engine/content/reference/model policy independently. When it changes mobile/native dependencies, rebuild and retest the native binary rather than relying on an OTA-only update.
 
