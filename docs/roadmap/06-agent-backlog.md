@@ -29,7 +29,7 @@ Use `python docs/roadmap/plan_tools.py --ready` or `--task ID`. Edit tasks.json 
 | [T12 — Candidate corpus ETL and deduplication](#t12) | PLANNED | T04, T06, T11 | data |
 | [T13 — Reference statistics and distinctiveness](#t13) | PLANNED | T08, T12 | statistics |
 | [T14 — Benchmark publish withdraw drift rollback](#t14) | PLANNED | T03, T13 | data-platform |
-| [T15 — Evidence-bound OpenAI adapter](#t15) | PLANNED | T01, T09, T26, T27 | premium-backend |
+| [T15 — Evidence-bound OpenAI adapter](#t15) | IMPLEMENTED_PENDING_REVIEW | T01, T09, T26, T27 | premium-backend |
 | [T16 — Model evaluation and generation policy](#t16) | PLANNED | T06, T15 | evaluation |
 | [T17 — Interactive Free web product](#t17) | PLANNED | T02, T04, T09, T10, T28 | frontend |
 | [T18 — Deterministic pair and history comparison](#t18) | PLANNED | T08, T09 | statistics-report |
@@ -1196,7 +1196,7 @@ No approval is created by this task brief. Mock/disabled implementation is not a
 <a id="t15"></a>
 ## T15 — Evidence-bound OpenAI adapter
 
-**Status:** `PLANNED` · **Owner:** premium-backend · **Milestone:** premium
+**Status:** `IMPLEMENTED_PENDING_REVIEW` · **Owner:** premium-backend · **Milestone:** premium
 
 **Hard predecessors:** [T01](#t01), [T09](#t09), [T26](#t26), [T27](#t27)
 **Platforms:** backend, workers
