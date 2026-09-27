@@ -121,6 +121,12 @@ export function ReportView({ view, locale, evidence, onAction }: {
       </header>
       <NoticeBar notices={view.notices} locale={locale} />
       {view.sections.map((s) => <SectionBlock key={s.section_id} section={s} facts={facts} locale={locale} />)}
+      {evidence === null && (
+        <section className="pr-evidence" aria-labelledby="evidence-unavailable-title">
+          <h2 id="evidence-unavailable-title">{t(locale, "evidence.title")}</h2>
+          <p className="pr-unavailable">{t(locale, "evidence.unavailable")}</p>
+        </section>
+      )}
       {evidence && <EvidenceView bundle={evidence} locale={locale} />}
       <ActionBar actions={view.actions} locale={locale} {...(onAction ? { onAction } : {})} />
     </article>
