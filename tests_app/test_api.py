@@ -205,7 +205,7 @@ def test_composed_local_stack_upload_to_report(app_url, worker_db, tmp_path, mon
     worker_store = LocalObjectStore(tmp_path, signing_key=b"worker-read-key-0123456789", clock=clock,
                                     environment=services.environment)
     worker = AnalysisWorker(queue=PostgresJobQueue(worker_db), store=worker_store, decode=decode_image,
-                            engine=GraphologyEngine(max_dimension=700), clock=clock,
+                            engine=GraphologyEngine(), clock=clock,
                             context=lambda: CallContext("w", services.environment, clock.now() + timedelta(seconds=60)),
                             worker_id="stack-worker", engine_version=__version__)
     assert worker.run_once().outcome == "SUCCEEDED"

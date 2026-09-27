@@ -31,6 +31,11 @@ ASYMMETRIC = frozenset({"RS256", "RS384", "RS512", "PS256", "PS384", "PS512", "E
 JwksSource = Callable[[], Mapping[str, Any]]
 
 
+# A token without ``auth_time`` keeps it unknown: substituting ``iat`` would let
+# a refreshed ID token pass the logout/deletion fence without a new sign-in.
+ACCESS_TOKEN_TYPES = frozenset({"at+jwt", "application/at+jwt"})
+
+
 class OidcIdentityProvider:
     port_name = port.PORT
 
@@ -92,6 +97,8 @@ class OidcIdentityProvider:
         except jwt.InvalidTokenError:
             raise Unauthenticated("malformed_token") from None
         alg, kid = header.get("alg"), header.get("kid")
+        if str(header.get("typ", "")).lower() in ACCESS_TOKEN_TYPES:
+            raise Unauthenticated("not_an_id_token")  # RFC 9068 access tokens never authenticate a session
         if alg not in self._algorithms or not isinstance(kid, str):
             raise Unauthenticated("unsupported_token_algorithm")
         key = self._key(kid)
@@ -123,7 +130,7 @@ class OidcIdentityProvider:
         return port.VerifiedIdentity(issuer=self.issuer, subject=subject, audience=expected_audience,
                                      expires_at=expires, session_id=claims.get("sid") if isinstance(
                                          claims.get("sid"), str) else None, email=email, email_verified=verified,
-                                     auth_time=_time(claims.get("auth_time")) or issued)
+                                     auth_time=_time(claims.get("auth_time")))
 
     def revoke_session(self, session_id: str, ctx: CallContext) -> None:
         raise Unsupported("capability_not_supported", detail="oidc:revoke_session")

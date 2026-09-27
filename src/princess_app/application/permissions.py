@@ -8,6 +8,7 @@ withdrawal recorded meanwhile blocks publication.
 """
 from __future__ import annotations
 
+import hashlib
 from dataclasses import dataclass, field, replace
 from datetime import datetime
 from typing import Protocol
@@ -20,7 +21,7 @@ from ..domain.permissions import (
     evaluate,
     require_covering_notice,
 )
-from ..ports.base import Clock, IdGenerator, NotAuthorized
+from ..ports.base import Clock, Conflict, IdGenerator, NotAuthorized, require_opaque_id
 
 
 @dataclass(frozen=True)
@@ -47,13 +48,18 @@ class PermissionService:
         self._allow_draft = allow_draft_policy
 
     def record(self, *, subject_id: str, actor_id: str, purpose_id: str, scope: Scope, decision: Decision,
-               notice_version: str, effective_at: datetime | None = None) -> PermissionEvent:
+               notice_version: str, effective_at: datetime | None = None,
+               request_id: str | None = None) -> PermissionEvent:
+        """Append one decision. With ``request_id`` the event ID is derived from
+        (subject, request), so a replayed request returns the recorded event
+        and can never land after, and override, a newer decision."""
         now = self._clock.now()
         version = current_version(purpose_id)
         if decision is Decision.GRANT:
             require_covering_notice(notice_version, purpose_id, version)
         event = PermissionEvent(
-            event_id=self._ids.new_id("perm"), subject_id=subject_id, purpose_id=purpose_id,
+            event_id=self._ids.new_id("perm") if request_id is None else _request_event_id(subject_id, request_id),
+            subject_id=subject_id, purpose_id=purpose_id,
             purpose_version=version, scope=scope, decision=decision, recorded_at=now,
             effective_at=effective_at or now, actor_id=actor_id, notice_version=notice_version)
         return self._store.append(event)
@@ -79,12 +85,29 @@ class PermissionService:
         return check.allowed and check.epoch == epoch
 
 
+def _request_event_id(subject_id: str, request_id: str) -> str:
+    require_opaque_id(request_id, "request_id")
+    return "perm_" + hashlib.sha256(f"{subject_id}\0{request_id}".encode()).hexdigest()[:40]
+
+
+def replayed(existing: PermissionEvent, candidate: PermissionEvent) -> PermissionEvent:
+    """A replay must repeat the same decision; a reused request ID for another one is refused."""
+    same = (existing.subject_id, existing.purpose_id, existing.scope, existing.decision, existing.notice_version) == \
+        (candidate.subject_id, candidate.purpose_id, candidate.scope, candidate.decision, candidate.notice_version)
+    if not same:
+        raise Conflict("request_id_reused")
+    return existing
+
+
 @dataclass
 class InMemoryPermissionStore:
     history: list[PermissionEvent] = field(default_factory=list)
     epochs: dict[tuple[str, str], int] = field(default_factory=dict)
 
     def append(self, event: PermissionEvent) -> PermissionEvent:
+        for existing in self.history:
+            if existing.event_id == event.event_id:
+                return replayed(existing, event)
         stored = replace(event, sequence=len(self.history) + 1)
         self.history.append(stored)
         if event.decision is not Decision.GRANT:

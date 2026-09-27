@@ -22,6 +22,7 @@ from sqlalchemy.exc import DBAPIError, IntegrityError
 from princess_contracts import ValidatedDocument, canonical_digest, compile_document
 
 from ...application.identity import Principal
+from ...application.permissions import replayed
 from ...domain.permissions import Decision, PermissionEvent, Scope
 from ...domain.reports import check_revision
 from ...ports.base import Conflict, InvalidInput, NotAuthorized, NotFound
@@ -172,10 +173,16 @@ class PostgresPermissionStore:
             sequence = conn.execute(text(
                 "INSERT INTO app.permission_event (event_id, subject_id, actor_id, purpose_id, purpose_version, "
                 "scope_kind, scope_ref, decision, recorded_at, effective_at, notice_version) VALUES "
-                "(:e, :s, :a, :p, :v, :k, :r, :d, :rec, :eff, :n) RETURNING sequence"),
+                "(:e, :s, :a, :p, :v, :k, :r, :d, :rec, :eff, :n) ON CONFLICT (event_id) DO NOTHING "
+                "RETURNING sequence"),
                 {"e": event.event_id, "s": event.subject_id, "a": event.actor_id, "p": event.purpose_id,
                  "v": event.purpose_version, "k": event.scope.kind, "r": event.scope.ref, "d": event.decision.value,
-                 "rec": event.recorded_at, "eff": event.effective_at, "n": event.notice_version}).scalar_one()
+                 "rec": event.recorded_at, "eff": event.effective_at, "n": event.notice_version}).scalar()
+            if sequence is None:  # replayed request: return the recorded event, move no epoch
+                prior = [e for e in self._rows(conn, event.subject_id, event.purpose_id) if e.event_id == event.event_id]
+                if not prior:
+                    raise Conflict("request_id_reused")
+                return replayed(prior[0], event)
             if event.decision is not Decision.GRANT:
                 conn.execute(text("INSERT INTO app.permission_epoch (subject_id, purpose_id, epoch) VALUES (:s, :p, 1) "
                                   "ON CONFLICT (subject_id, purpose_id) DO UPDATE SET epoch = "
@@ -184,8 +191,12 @@ class PostgresPermissionStore:
 
     def events(self, subject_id: str, purpose_id: str) -> list[PermissionEvent]:
         with self.db.session(subject_id) as conn:
-            rows = conn.execute(text("SELECT * FROM app.permission_event WHERE subject_id = :s AND purpose_id = :p "
-                                     "ORDER BY sequence"), {"s": subject_id, "p": purpose_id}).mappings().all()
+            return self._rows(conn, subject_id, purpose_id)
+
+    @staticmethod
+    def _rows(conn: Connection, subject_id: str, purpose_id: str) -> list[PermissionEvent]:
+        rows = conn.execute(text("SELECT * FROM app.permission_event WHERE subject_id = :s AND purpose_id = :p "
+                                 "ORDER BY sequence"), {"s": subject_id, "p": purpose_id}).mappings().all()
         return [PermissionEvent(event_id=r["event_id"], subject_id=r["subject_id"], purpose_id=r["purpose_id"],
                                 purpose_version=r["purpose_version"], scope=Scope(r["scope_kind"], r["scope_ref"]),
                                 decision=Decision(r["decision"]), recorded_at=r["recorded_at"],
@@ -374,7 +385,10 @@ class PostgresReportStore:
         if owner_id != self.principal_id:
             raise NotAuthorized("owner_mismatch")
         data = report.data
-        if data["analysis"]["owner_id"] != owner_id:
+        # The snapshot keeps the owner it was produced for; after a guest
+        # transfer later revisions are authorized by the relational owner (RLS)
+        # and check_revision keeps the analysis block unchanged.
+        if data["revision"] == 1 and data["analysis"]["owner_id"] != owner_id:
             raise NotAuthorized("owner_mismatch")
         try:
             with self.db.session(owner_id) as conn:
@@ -386,7 +400,8 @@ class PostgresReportStore:
                                   "k": data["kind"], "t": data["created_at"]})
                 else:
                     # Serialize appends on the parent row; revisions themselves are append-only.
-                    locked = conn.execute(text("SELECT 1 FROM app.report WHERE report_id = :r FOR UPDATE"),
+                    locked = conn.execute(text("SELECT 1 FROM app.report WHERE report_id = :r "
+                                               "AND deleted_at IS NULL FOR UPDATE"),
                                           {"r": data["report_id"]}).scalar()
                     if locked is None:
                         raise NotFound("report_not_found")

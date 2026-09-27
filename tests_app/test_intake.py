@@ -15,12 +15,15 @@ from sqlalchemy import text
 from princess_app.adapters.fakes import FakeAbuseChallenge, FakeClock, FakeObjectStore, SequentialIds
 from princess_app.adapters.imaging import decode_image, inspect_header
 from princess_app.adapters.postgres.intake import PostgresIntakeRepository, PostgresJobQueue
+from princess_app.adapters.postgres.outbox import PostgresErasureOutbox
 from princess_app.adapters.postgres.stores import PostgresIdentityStore, PostgresPermissionStore, PostgresReportStore
 from princess_app.application.analysis_worker import AnalysisWorker
+from princess_app.application.erasure import ErasureWorker
 from princess_app.application.intake import ChallengeProof, IntakeService
 from princess_app.application.permissions import PermissionService
 from princess_app.application.reports import ReportReader
 from princess_app.domain.permissions import SUBJECT_WIDE, Decision, Scope
+from princess_app.domain.reports import revise_report
 from princess_app.ports.base import (
     CallContext,
     Conflict,
@@ -70,16 +73,17 @@ class Env:
         self.repo = PostgresIntakeRepository(app_db, engine_version=__version__)
         self.intake = IntakeService(repo=self.repo, store=self.store, permissions=self.permissions,
                                     challenge=self.challenge, inspect=inspect_header, clock=self.clock,
-                                    ids=SequentialIds())
+                                    ids=SequentialIds(), challenge_site="app.test")
         self.queue = PostgresJobQueue(worker_db)
         self.app_db = app_db
+        self.worker_db = worker_db
 
     def ctx(self):
         return CallContext("corr-1", Environment.TEST, self.clock.now() + timedelta(seconds=30))
 
     def worker(self, name="w1"):
         return AnalysisWorker(queue=self.queue, store=self.store, decode=decode_image,
-                              engine=GraphologyEngine(max_dimension=700), clock=self.clock, context=self.ctx,
+                              engine=GraphologyEngine(), clock=self.clock, context=self.ctx,
                               worker_id=name, engine_version=__version__, lease_seconds=60)
 
     def upload(self, owner, data, media_type="image/png", proof=None):
@@ -299,6 +303,8 @@ def test_repeatedly_crashing_workers_cannot_reclaim_forever(env, world):  # noqa
     assert env.queue.claim("next", 30, env.clock.now()) is None
     with env.app_db.session(owner) as conn:
         assert conn.execute(text("SELECT state, last_error FROM app.job")).one() == ("FAILED", "attempts_exhausted")
+    status = env.intake.status(owner, run_id)  # the run is terminal too, so clients stop polling
+    assert (status.state, status.error_code) == ("FAILED", "attempts_exhausted")
 
 
 def test_crashed_worker_lease_expires_and_attempts_are_bounded(env, world):  # noqa: F811
@@ -321,6 +327,156 @@ def test_upload_quota_depends_on_challenge(env, world):  # noqa: F811
     with pytest.raises(RateLimited):
         env.upload(owner, b"x")
     token = env.challenge.issue_token("upload", "app.test")
-    env.upload(owner, b"x", proof=ChallengeProof(token, "upload", "app.test"))
+    env.upload(owner, b"x", proof=ChallengeProof(token))
     with pytest.raises(NotAuthorized):
-        env.upload(owner, b"x", proof=ChallengeProof(token, "upload", "app.test"))  # replayed challenge
+        env.upload(owner, b"x", proof=ChallengeProof(token))  # replayed challenge
+
+
+def erasure(env):
+    permissions = PermissionService(PostgresPermissionStore(env.worker_db), env.clock, SequentialIds(),
+                                    allow_draft_policy=True)
+    return ErasureWorker(outbox=PostgresErasureOutbox(env.worker_db), store=env.store, permissions=permissions,
+                         clock=env.clock, context=env.ctx)
+
+
+def grant_retention(env, owner, capture_id, decision=Decision.GRANT):
+    env.permissions.record(subject_id=owner, actor_id=owner, purpose_id="image_retention",
+                           scope=Scope("SPECIMEN", capture_id), decision=decision, notice_version=NOTICE)
+
+
+def test_originals_are_erased_after_analysis_unless_retention_is_granted(env, world):  # noqa: F811
+    owner = account(world, "sub-a").principal_id
+    capture, run_id = env.analysis(owner)
+    env.repo.request_retention_review(owner, capture.capture_id, env.clock.now())
+    assert [o.action for o in erasure(env).run_once()] == ["WAITING"]  # the run still needs the original
+    assert env.worker().run_once().outcome == "SUCCEEDED"
+    assert {o.action for o in erasure(env).run_once()} == {"ERASED"}
+    assert env.store.verify_deletion(capture.asset_id, env.ctx())
+    with pytest.raises(Conflict):
+        env.intake.start_analysis(owner, capture.capture_id)  # nothing left to analyse
+    report_id = env.intake.status(owner, run_id).report_id
+    assert PostgresReportStore(env.app_db, owner).latest(report_id) is not None  # the report is not the original
+    assert erasure(env).run_once() == []
+
+    kept = account(world, "sub-b").principal_id
+    capture, _ = env.analysis(kept)
+    grant_retention(env, kept, capture.capture_id)
+    assert env.worker().run_once().outcome == "SUCCEEDED"
+    assert [o.action for o in erasure(env).run_once()] == ["KEPT"]
+    env.clock.advance(1)
+    grant_retention(env, kept, capture.capture_id, Decision.WITHDRAW)
+    env.intake.apply_permission_change(kept, "image_retention", Scope("SPECIMEN", capture.capture_id),
+                                       Decision.WITHDRAW)
+    assert [o.action for o in erasure(env).run_once()] == ["ERASED"]
+
+
+def test_service_withdrawal_ends_the_report_and_erases_bytes(env, world):  # noqa: F811
+    owner = account(world, "sub-a").principal_id
+    capture, run_id = env.analysis(owner)
+    assert env.worker().run_once().outcome == "SUCCEEDED"
+    report_id = env.intake.status(owner, run_id).report_id
+    scope = Scope("SPECIMEN", capture.capture_id)
+    env.permissions.record(subject_id=owner, actor_id=owner, purpose_id="service_processing", scope=scope,
+                           decision=Decision.WITHDRAW, notice_version=NOTICE)
+    env.intake.apply_permission_change(owner, "service_processing", scope, Decision.WITHDRAW)
+    assert PostgresReportStore(env.app_db, owner).latest(report_id) is None
+    assert "ERASED" in {o.action for o in erasure(env).run_once()}
+    assert env.store.verify_deletion(capture.asset_id, env.ctx())
+
+
+def test_guest_transfer_moves_completed_captures_and_ends_inflight_work(env, world):  # noqa: F811
+    clock, provider, identity = world
+    guest, token = identity.create_guest()
+    capture, run_id = env.analysis(guest.principal_id)
+    leased = env.queue.claim("w1", 60, env.clock.now())
+    assert leased is not None
+    other = env.capture(guest.principal_id)  # a completed capture with no run
+    acct = account(world, "sub-b")
+    identity.transfer_guest(acct, token)
+    owner = acct.principal_id
+    assert env.repo.capture(owner, other.capture_id) is not None and env.repo.capture(owner, capture.capture_id)
+    status = env.intake.status(owner, run_id)
+    assert (status.state, status.error_code) == ("CANCELLED", "owner_transferred")
+    result = env.worker().run_once()
+    assert result is None  # nothing claimable; the stale lease cannot publish either
+
+
+def test_revisions_follow_transfers_and_stop_at_tombstones(env, world):  # noqa: F811
+    clock, provider, identity = world
+    guest, token = identity.create_guest()
+    capture, run_id = env.analysis(guest.principal_id)
+    assert env.worker().run_once().outcome == "SUCCEEDED"
+    acct = account(world, "sub-b")
+    identity.transfer_guest(acct, token)
+    store = PostgresReportStore(env.app_db, acct.principal_id)
+    report_id = env.intake.status(acct.principal_id, run_id).report_id
+    _, first = store.latest(report_id)
+    second = revise_report(first, created_at=env.clock.now(), premium_overlay_id="overlay_1").value
+    store.append(acct.principal_id, second)  # snapshot keeps the guest owner; the row owner authorizes
+    env.intake.delete_capture(acct.principal_id, capture.capture_id)
+    third = revise_report(second, created_at=env.clock.now(), premium_overlay_id="overlay_2").value
+    with pytest.raises(NotFound):
+        store.append(acct.principal_id, third)
+
+
+def test_completion_is_serialized_and_bound_to_the_declared_bytes(env, world):  # noqa: F811
+    owner = account(world, "sub-a").principal_id
+    data = handwriting_png()
+    ticket = env.upload(owner, data)
+    assert env.repo.begin_completion(owner, ticket.upload_id)  # a concurrent completion holds the slot
+    with pytest.raises(Conflict) as err:
+        env.intake.complete_upload(owner, ticket.upload_id, sha(data), env.ctx())
+    assert err.value.code == "completion_in_progress"
+    env.repo.release_completion(owner, ticket.upload_id)
+    with pytest.raises(Conflict):
+        env.intake.complete_upload(owner, ticket.upload_id, "0" * 64, env.ctx())  # wrong digest: slot stays open
+    capture = env.intake.complete_upload(owner, ticket.upload_id, sha(data), env.ctx())
+    with pytest.raises(Conflict) as err:
+        env.intake.complete_upload(owner, ticket.upload_id, "1" * 64, env.ctx())
+    assert err.value.code == "upload_completed_with_different_bytes"
+    assert env.intake.complete_upload(owner, ticket.upload_id, sha(data), env.ctx()) == capture
+
+
+def test_concurrent_reservations_cannot_exceed_the_quota(env, world):  # noqa: F811
+    owner = account(world, "sub-a").principal_id
+    results = []
+
+    def reserve():
+        try:
+            env.intake.reserve_upload(owner, "image/png", None, env.ctx())
+            results.append("ok")
+        except RateLimited:
+            results.append("limited")
+
+    threads = [threading.Thread(target=reserve) for _ in range(8)]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+    assert results.count("ok") == 3 and results.count("limited") == 5
+
+
+def test_a_retried_submission_recovers_its_run_at_capacity(env, world):  # noqa: F811
+    owner = account(world, "sub-a").principal_id
+    runs = [env.analysis(owner) for _ in range(3)]
+    capture, run_id = runs[-1]
+    assert env.intake.start_analysis(owner, capture.capture_id) == run_id
+    with pytest.raises(RateLimited):
+        env.analysis(owner)
+
+
+def test_workers_refuse_runs_requested_under_other_engine_settings(env, world):  # noqa: F811
+    owner = account(world, "sub-a").principal_id
+    _, run_id = env.analysis(owner)
+    odd = AnalysisWorker(queue=env.queue, store=env.store, decode=decode_image,
+                         engine=GraphologyEngine(max_dimension=700), clock=env.clock, context=env.ctx,
+                         worker_id="odd", engine_version=__version__, lease_seconds=60)
+    assert (odd.run_once().outcome, env.intake.status(owner, run_id).error_code) == \
+        ("FAILED", "analysis_config_mismatch")
+
+
+def test_challenges_are_bound_to_the_server_owned_action_and_site(env, world):  # noqa: F811
+    owner = account(world, "sub-a").principal_id
+    for action, site in (("login", "app.test"), ("upload", "elsewhere.test")):
+        with pytest.raises(NotAuthorized):
+            env.upload(owner, b"x", proof=ChallengeProof(env.challenge.issue_token(action, site)))

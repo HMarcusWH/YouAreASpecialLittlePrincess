@@ -19,7 +19,7 @@ from ..domain.evidence import build_evidence_bundle
 from ..domain.reports import assemble_report
 from ..ports.base import CallContext, Clock, Conflict, InvalidInput, PortError
 from ..ports.storage import ObjectStore
-from .intake import ANALYSIS_CONFIG_SHA256, CaptureRow
+from .intake import CaptureRow, engine_config_sha256
 
 MAX_ATTEMPTS = 3
 
@@ -33,6 +33,7 @@ class ClaimedJob:
     fencing_token: int
     attempts: int
     permission_epoch: int
+    analysis_config: str  # engine settings the run was requested under
 
 
 class Fenced(Exception):
@@ -76,6 +77,7 @@ class AnalysisWorker:
         self._store = store
         self._decode = decode
         self._engine = engine
+        self._config = engine_config_sha256(engine)
         self._clock = clock
         self._context = context
         self._worker_id = worker_id
@@ -100,6 +102,9 @@ class AnalysisWorker:
             return WorkOutcome(job.job_id, "RETRY" if retry else "FAILED", code)
 
     def _process(self, job: ClaimedJob) -> WorkOutcome:
+        if job.analysis_config != self._config:
+            # Never publish results computed under settings other than the run's.
+            raise InvalidInput("analysis_config_mismatch")
         capture = self._queue.capture(job)
         if capture is None or capture.deleted:
             raise Fenced("capture_deleted")
@@ -112,7 +117,7 @@ class AnalysisWorker:
         reference = analysis_reference(
             analysis_id=f"analysis_{job.run_id}", run_id=job.run_id, owner_id=job.owner_id,
             input_asset_id=capture.asset_id, input_sha256=capture.sha256, processed_sha256=processed,
-            created_at=now, engine_version=self._engine_version, analysis_config_sha256=ANALYSIS_CONFIG_SHA256)
+            created_at=now, engine_version=self._engine_version, analysis_config_sha256=self._config)
         evidence = build_evidence_bundle(payload, reference, f"evidence_{job.run_id}")
         if evidence.value is None:
             raise Conflict("evidence_contract_rejected")

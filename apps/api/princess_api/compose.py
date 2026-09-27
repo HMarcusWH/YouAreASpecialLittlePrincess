@@ -66,6 +66,7 @@ def compose(config: RuntimeConfig) -> Services:
                            permissions=permissions, challenge=FakeAbuseChallenge(clock=clock,
                                                                                    environment=config.environment),
                            inspect=inspect_header, clock=clock, ids=UuidIds(),
+                           challenge_site=os.environ.get("PRINCESS_CHALLENGE_SITE", "localhost"),
                            uploads_enabled=lambda: config.enabled("uploads"))
     return Services(environment=config.environment, clock=clock, identity=identity, permissions=permissions,
                     report_store_for=lambda principal_id: PostgresReportStore(db, principal_id),

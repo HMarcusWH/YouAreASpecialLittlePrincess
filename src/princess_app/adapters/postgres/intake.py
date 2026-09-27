@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import json
 from datetime import datetime, timedelta
-from typing import Any, Mapping
+from typing import Any, Callable, Mapping
 
 from sqlalchemy import text
 from sqlalchemy.engine import Connection
@@ -28,12 +28,13 @@ from ...application.intake import (
     RunStatus,
     UploadRow,
 )
-from ...ports.base import Conflict, NotFound
+from ...ports.base import Conflict, NotFound, RateLimited
 from .stores import Database, epoch_for, insert_first_revision, lock_live_owner, set_context, write_result
 
 TERMINAL_FENCES = frozenset({"capture_deleted", "permission_changed", "owner_deleted"})
 CAPTURE_SELECT = ("SELECT c.capture_id, c.owner_id, c.upload_id, c.asset_id, c.media_type, c.width, c.height, "
-                  "c.exif_orientation, c.sha256, a.version_ref, a.size_bytes, (c.deleted_at IS NOT NULL) AS deleted "
+                  "c.exif_orientation, c.sha256, a.version_ref, a.size_bytes, (c.deleted_at IS NOT NULL) AS deleted, "
+                  "(a.deleted_at IS NOT NULL) AS original_erased "
                   "FROM app.capture c JOIN app.asset a ON a.asset_id = c.asset_id ")
 
 
@@ -46,17 +47,37 @@ class PostgresIntakeRepository:
         self.db = db
         self.engine_version = engine_version
 
-    def count_uploads_since(self, owner_id: str, since: datetime) -> int:
+    def admit_upload(self, owner_id: str, *, since: datetime, limit: int, created_at: datetime,
+                     issue: Callable[[], UploadRow]) -> UploadRow:
         with self.db.session(owner_id) as conn:
-            return int(conn.execute(text("SELECT count(*) FROM app.upload WHERE created_at >= :s"),
-                                    {"s": since}).scalar())
-
-    def create_upload(self, row: UploadRow, created_at: datetime) -> None:
-        with self.db.session(row.owner_id) as conn:
+            # Concurrent reservations for one owner serialize on this lock, so
+            # they cannot all observe the same count below the quota.
+            conn.execute(text("SELECT pg_advisory_xact_lock(hashtextextended(:k, 0))"),
+                         {"k": f"upload-admission:{owner_id}"})
+            count = conn.execute(text("SELECT count(*) FROM app.upload WHERE created_at >= :s"),
+                                 {"s": since}).scalar()
+            if count >= limit:
+                raise RateLimited("upload_quota_exceeded", retry_after_s=3600)
+            row = issue()
             conn.execute(text("INSERT INTO app.upload (upload_id, owner_id, asset_id, media_type, max_bytes, state, "
                               "created_at, expires_at) VALUES (:u, :o, :a, :m, :b, 'RESERVED', :c, :e)"),
                          {"u": row.upload_id, "o": row.owner_id, "a": row.asset_id, "m": row.media_type,
                           "b": row.max_bytes, "c": created_at, "e": row.expires_at})
+        return row
+
+    def _transition(self, owner_id: str, upload_id: str, source: str, target: str) -> bool:
+        with self.db.session(owner_id) as conn:
+            return conn.execute(text("UPDATE app.upload SET state = :t WHERE upload_id = :u AND state = :s "
+                                     "RETURNING 1"), {"t": target, "u": upload_id, "s": source}).scalar() is not None
+
+    def begin_completion(self, owner_id: str, upload_id: str) -> bool:
+        return self._transition(owner_id, upload_id, "RESERVED", "COMPLETING")
+
+    def release_completion(self, owner_id: str, upload_id: str) -> None:
+        self._transition(owner_id, upload_id, "COMPLETING", "RESERVED")
+
+    def reject_upload(self, owner_id: str, upload_id: str) -> None:
+        self._transition(owner_id, upload_id, "COMPLETING", "REJECTED")
 
     def upload(self, owner_id: str, upload_id: str) -> UploadRow | None:
         with self.db.session(owner_id) as conn:
@@ -78,8 +99,10 @@ class PostgresIntakeRepository:
             existing = _capture(conn.execute(text(CAPTURE_SELECT + "WHERE c.upload_id = :u"),
                                              {"u": capture.upload_id}).mappings().first())
             if existing is not None:
+                if existing.sha256 != capture.sha256:
+                    raise Conflict("upload_completed_with_different_bytes")
                 return existing
-            if state != "RESERVED":
+            if state != "COMPLETING":
                 raise Conflict("upload_not_open")
             conn.execute(text("INSERT INTO app.asset (asset_id, owner_id, kind, sha256, media_type, size_bytes, "
                               "version_ref, created_at) VALUES (:a, :o, 'ORIGINAL', :h, :m, :s, :v, :t)"),
@@ -104,8 +127,13 @@ class PostgresIntakeRepository:
         with self.db.session(owner_id) as conn:
             return int(conn.execute(text("SELECT count(*) FROM app.job WHERE state IN ('QUEUED', 'LEASED')")).scalar())
 
+    def find_analysis(self, owner_id: str, dedupe_key: str) -> str | None:
+        with self.db.session(owner_id) as conn:
+            return conn.execute(text("SELECT subject_ref FROM app.job WHERE dedupe_key = :k"),
+                                {"k": dedupe_key}).scalar()
+
     def create_analysis(self, capture: CaptureRow, *, run_id: str, job_id: str, dedupe_key: str,
-                        permission_epoch: int, at: datetime) -> str:
+                        permission_epoch: int, analysis_config: str, at: datetime) -> str:
         owner = capture.owner_id
         try:
             with self.db.session(owner) as conn:
@@ -118,13 +146,14 @@ class PostgresIntakeRepository:
                     "feature_schema, method_manifest, analysis_config_sha256, input_sha256, created_at) VALUES "
                     "(:r, :o, :a, :c, 'QUEUED', :e, :f, :m, :cfg, :h, :t)"),
                     {"r": run_id, "o": owner, "a": capture.asset_id, "c": capture.capture_id, "e": self.engine_version,
-                     "f": g.FEATURE_SCHEMA_VERSION, "m": g.METHOD_MANIFEST_SHA256, "cfg": ANALYSIS_CONFIG_SHA256,
+                     "f": g.FEATURE_SCHEMA_VERSION, "m": g.METHOD_MANIFEST_SHA256, "cfg": analysis_config,
                      "h": capture.sha256, "t": at})
                 conn.execute(text(
                     "INSERT INTO app.job (job_id, kind, owner_id, subject_ref, state, dedupe_key, payload, created_at, "
                     "updated_at) VALUES (:j, :k, :o, :r, 'QUEUED', :d, CAST(:p AS jsonb), :t, :t)"),
                     {"j": job_id, "k": ANALYSIS_KIND, "o": owner, "r": run_id, "d": dedupe_key, "t": at,
-                     "p": json.dumps({"capture_id": capture.capture_id, "permission_epoch": permission_epoch})})
+                     "p": json.dumps({"capture_id": capture.capture_id, "permission_epoch": permission_epoch,
+                                      "analysis_config": analysis_config})})
             return run_id
         except IntegrityError:
             # A concurrent submission won the unique dedupe key; converge on its run.
@@ -187,6 +216,26 @@ class PostgresIntakeRepository:
                           "p": json.dumps({"asset_id": asset}), "d": f"capture-deletion:{capture_id}"})
 
 
+    def captures(self, owner_id: str) -> list[str]:
+        with self.db.session(owner_id) as conn:
+            return [r[0] for r in conn.execute(text("SELECT capture_id FROM app.capture WHERE deleted_at IS NULL "
+                                                    "ORDER BY created_at")).all()]
+
+    def request_retention_review(self, owner_id: str, capture_id: str, at: datetime) -> None:
+        with self.db.session(owner_id) as conn:
+            request_retention_review(conn, owner_id, capture_id, at)
+
+
+def request_retention_review(conn: Connection, owner_id: str, capture_id: str, at: datetime) -> None:
+    """Queue the T03 check that erases an original unless image retention covers it."""
+    stamp = f"{capture_id}.{int(at.timestamp() * 1_000_000)}"
+    conn.execute(text("INSERT INTO app.outbox_event (event_id, topic, owner_id, aggregate_ref, payload, dedupe_key, "
+                      "created_at) VALUES (:e, 'capture.retention_review', :o, :c, '{}'::jsonb, :d, :t) "
+                      "ON CONFLICT (dedupe_key) DO NOTHING"),
+                 {"e": f"evt.retention.{stamp}"[:128], "o": owner_id, "c": capture_id,
+                  "d": f"retention-review:{stamp}", "t": at})
+
+
 class PostgresJobQueue:
     """Worker-side queue; ``db`` must connect as a ``princess_worker`` member."""
 
@@ -196,10 +245,18 @@ class PostgresJobQueue:
     def claim(self, worker_id: str, lease_seconds: int, now: datetime) -> ClaimedJob | None:
         with self.db.session() as conn:
             # Workers that crash repeatedly must not reclaim a poison job forever.
-            conn.execute(text("UPDATE app.job SET state = 'FAILED', lease_owner = NULL, lease_expires_at = NULL, "
-                              "last_error = 'attempts_exhausted', updated_at = :now WHERE kind = :k "
-                              "AND state = 'LEASED' AND lease_expires_at < :now AND attempts >= :max"),
-                         {"now": now, "k": ANALYSIS_KIND, "max": MAX_ATTEMPTS + 1})
+            exhausted = conn.execute(text(
+                "UPDATE app.job SET state = 'FAILED', lease_owner = NULL, lease_expires_at = NULL, "
+                "last_error = 'attempts_exhausted', updated_at = :now WHERE kind = :k "
+                "AND state = 'LEASED' AND lease_expires_at < :now AND attempts >= :max "
+                "RETURNING owner_id, subject_ref"), {"now": now, "k": ANALYSIS_KIND, "max": MAX_ATTEMPTS + 1}).all()
+            for owner_id, run_id in exhausted:
+                # Terminalize the run too, so clients stop polling a QUEUED run.
+                set_context(conn, owner_id)
+                conn.execute(text("UPDATE app.analysis_run SET status = 'FAILED', error_code = 'attempts_exhausted', "
+                                  "completed_at = :now WHERE run_id = :r AND status IN ('QUEUED', 'RUNNING')"),
+                             {"now": now, "r": run_id})
+            set_context(conn, None)
             row = conn.execute(text(
                 "UPDATE app.job SET state = 'LEASED', lease_owner = :w, lease_expires_at = :exp, "
                 "fencing_token = fencing_token + 1, attempts = attempts + 1, updated_at = :now "
@@ -216,7 +273,8 @@ class PostgresJobQueue:
                          {"j": row["job_id"], "f": row["fencing_token"], "w": worker_id, "t": now})
         payload = row["payload"]
         return ClaimedJob(row["job_id"], row["owner_id"], row["subject_ref"], payload["capture_id"],
-                          int(row["fencing_token"]), int(row["attempts"]), int(payload["permission_epoch"]))
+                          int(row["fencing_token"]), int(row["attempts"]), int(payload["permission_epoch"]),
+                          payload.get("analysis_config", ANALYSIS_CONFIG_SHA256))
 
     def capture(self, job: ClaimedJob) -> CaptureRow | None:
         with self.db.session(job.owner_id) as conn:
@@ -256,6 +314,7 @@ class PostgresJobQueue:
                 conn.execute(text("UPDATE app.analysis_run SET status = 'FAILED', error_code = :c, completed_at = :t "
                                   "WHERE run_id = :r AND status IN ('QUEUED', 'RUNNING')"),
                              {"c": error_code, "t": now, "r": job.run_id})
+                request_retention_review(conn, job.owner_id, job.capture_id, now)
 
     def publish(self, job: ClaimedJob, *, result: Mapping[str, Any], evidence: ValidatedDocument,
                 report: ValidatedDocument, processed_sha256: str, now: datetime) -> None:
@@ -281,6 +340,8 @@ class PostgresJobQueue:
                                   "dedupe_key, created_at) VALUES (:e, 'report.ready', :o, :r, '{}'::jsonb, :d, :t)"),
                              {"e": f"evt.report_ready.{report_id}", "o": job.owner_id, "r": report_id,
                               "d": f"report-ready:{report_id}", "t": now})
+                # Analysis finished: the original is erased unless image retention covers it.
+                request_retention_review(conn, job.owner_id, job.capture_id, now)
                 set_context(conn, None)
                 conn.execute(text("UPDATE app.job SET state = 'SUCCEEDED', lease_owner = NULL, lease_expires_at = NULL, "
                                   "updated_at = :t WHERE job_id = :j"), {"t": now, "j": job.job_id})

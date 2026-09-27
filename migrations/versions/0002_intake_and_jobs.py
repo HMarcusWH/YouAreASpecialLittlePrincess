@@ -5,6 +5,8 @@ Revises: 0001_product_plane
 """
 from __future__ import annotations
 
+from pathlib import Path
+
 from alembic import op
 
 revision = "0002_intake_and_jobs"
@@ -31,7 +33,8 @@ CREATE TABLE app.upload (
   asset_id text NOT NULL UNIQUE CHECK (asset_id ~ {OPAQUE}),
   media_type text NOT NULL CHECK (media_type IN ('image/jpeg', 'image/png')),
   max_bytes bigint NOT NULL CHECK (max_bytes > 0),
-  state text NOT NULL CHECK (state IN ('RESERVED', 'COMPLETED', 'REVOKED')),
+  -- COMPLETING serializes completion: one request promotes and inspects bytes.
+  state text NOT NULL CHECK (state IN ('RESERVED', 'COMPLETING', 'COMPLETED', 'REJECTED', 'REVOKED')),
   created_at timestamptz NOT NULL,
   expires_at timestamptz NOT NULL,
   completed_at timestamptz,
@@ -91,6 +94,19 @@ GRANT SELECT, INSERT, UPDATE ON app.upload, app.capture TO princess_app;
 GRANT SELECT ON app.job_attempt TO princess_app;
 GRANT SELECT, INSERT, UPDATE ON app.job_attempt TO princess_worker;
 
+-- Erasure/retention consumers read every outbox row and mark it dispatched.
+CREATE POLICY worker_outbox ON app.outbox_event TO princess_worker USING (true) WITH CHECK (true);
+GRANT UPDATE (dispatched_at) ON app.outbox_event TO princess_worker;
+
+-- Owner changes cascade through overlapping composite (owner_id, id) keys, so
+-- guest transfer checks them at commit instead of after each statement.
+DO $$ DECLARE r record; BEGIN
+  FOR r IN SELECT conrelid::regclass AS tbl, conname FROM pg_constraint
+           WHERE contype = 'f' AND connamespace = 'app'::regnamespace LOOP
+    EXECUTE format('ALTER TABLE %s ALTER CONSTRAINT %I DEFERRABLE INITIALLY IMMEDIATE', r.tbl, r.conname);
+  END LOOP;
+END $$;
+
 -- Guest transfer must also move the new owner-scoped rows.
 CREATE OR REPLACE FUNCTION app.transfer_guest(p_capability_sha256 text, p_at timestamptz) RETURNS text
 LANGUAGE plpgsql SECURITY DEFINER SET search_path = app, pg_temp AS
@@ -111,6 +127,16 @@ BEGIN
   IF v_guest.guest_expires_at <= p_at OR v_guest.deleted_at IS NOT NULL THEN
     RAISE EXCEPTION 'guest_not_transferable' USING ERRCODE = 'P0002';
   END IF;
+  SET CONSTRAINTS ALL DEFERRED;
+  -- Work started under the guest's permissions cannot publish for the account:
+  -- end it explicitly instead of leaving a stale worker to fence it later.
+  WITH ended AS (
+    UPDATE app.job SET state = 'CANCELLED', lease_owner = NULL, lease_expires_at = NULL,
+      last_error = 'owner_transferred', updated_at = p_at
+    WHERE owner_id = v_guest.principal_id AND state IN ('QUEUED', 'LEASED') RETURNING subject_ref)
+  UPDATE app.analysis_run SET status = 'CANCELLED', error_code = 'owner_transferred', completed_at = p_at
+    WHERE owner_id = v_guest.principal_id AND run_id IN (SELECT subject_ref FROM ended)
+      AND status IN ('QUEUED', 'RUNNING');
   UPDATE app.upload SET owner_id = v_account WHERE owner_id = v_guest.principal_id;
   UPDATE app.asset SET owner_id = v_account WHERE owner_id = v_guest.principal_id;
   UPDATE app.capture SET owner_id = v_account WHERE owner_id = v_guest.principal_id;
@@ -138,6 +164,14 @@ DO $$ BEGIN
   END IF;
 END $$;
 DROP POLICY IF EXISTS worker_claim ON app.job;
+DROP POLICY IF EXISTS worker_outbox ON app.outbox_event;
+REVOKE UPDATE (dispatched_at) ON app.outbox_event FROM princess_worker;
+DO $$ DECLARE r record; BEGIN
+  FOR r IN SELECT conrelid::regclass AS tbl, conname FROM pg_constraint
+           WHERE contype = 'f' AND connamespace = 'app'::regnamespace LOOP
+    EXECUTE format('ALTER TABLE %s ALTER CONSTRAINT %I NOT DEFERRABLE', r.tbl, r.conname);
+  END LOOP;
+END $$;
 DROP TABLE app.job_attempt;
 ALTER TABLE app.analysis_run DROP COLUMN capture_id;
 DROP TABLE app.capture;
@@ -150,5 +184,14 @@ def upgrade() -> None:
     op.execute(UPGRADE)
 
 
+def _transfer_guest_v1() -> str:
+    """The 0001 function, restored on downgrade so it never references dropped tables."""
+    source = Path(__file__).with_name("0001_product_plane.py").read_text(encoding="utf-8")
+    start = source.index("CREATE FUNCTION app.transfer_guest")
+    end = source.index("$f$;", start) + len("$f$;")
+    return source[start:end].replace("CREATE FUNCTION", "CREATE OR REPLACE FUNCTION", 1)
+
+
 def downgrade() -> None:
+    op.execute(_transfer_guest_v1())
     op.execute(DOWNGRADE)

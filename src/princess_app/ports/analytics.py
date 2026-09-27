@@ -63,6 +63,10 @@ def validate_event(event_name: str, properties: Mapping[str, PropertyValue]) -> 
         raise InvalidInput("unknown_event", detail=str(event_name)[:64])
     if len(properties) > MAX_PROPERTIES:
         raise InvalidInput("too_many_properties")
+    missing = set(schema) - set(properties)
+    if missing:
+        # Every declared property is required so event populations stay comparable.
+        raise InvalidInput("property_missing", detail=f"{event_name}.{sorted(missing)[0]}")
     for key, value in properties.items():
         check = schema.get(key)
         if check is None:

@@ -115,6 +115,9 @@ def test_migrations_refuse_to_drop_populated_tables_and_round_trip_empty(admin_e
     with admin_engine.begin() as conn:
         conn.execute(text("DELETE FROM app.upload"))
     migrate.downgrade(url, "0001_product_plane")
+    with admin_engine.begin() as conn:  # the 0001 transfer function is restored, not left pointing at dropped tables
+        body = conn.execute(text("SELECT prosrc FROM pg_proc WHERE proname = 'transfer_guest'")).scalar()
+    assert "app.asset" in body and "app.upload" not in body
     with pytest.raises(DBAPIError):
         migrate.downgrade(url, "base")  # principals exist
     with admin_engine.begin() as conn:
@@ -362,3 +365,25 @@ def test_guest_capability_is_stored_only_as_a_hash(world, admin_engine):
         stored = conn.execute(text("SELECT guest_capability_sha256 FROM app.principal WHERE principal_id = :p"),
                               {"p": guest.principal_id}).scalar()
     assert stored == hashlib.sha256(token.encode()).hexdigest() and token not in stored
+
+
+def test_permission_request_replay_is_idempotent_on_postgres(app_db, world):
+    alice = account(world, "sub-a").principal_id
+    clock = FakeClock(T0)
+    svc = PermissionService(PostgresPermissionStore(app_db), clock, SequentialIds(), allow_draft_policy=True)
+    scope = Scope("SPECIMEN", "capture_1")
+    first = svc.record(subject_id=alice, actor_id=alice, purpose_id="service_processing", scope=scope,
+                       decision=Decision.GRANT, notice_version=NOTICE, request_id="req-grant-1")
+    clock.advance(1)
+    svc.record(subject_id=alice, actor_id=alice, purpose_id="service_processing", scope=scope,
+               decision=Decision.WITHDRAW, notice_version=NOTICE, request_id="req-withdraw-1")
+    epoch = svc.check(alice, "service_processing", scope).epoch
+    clock.advance(1)
+    again = svc.record(subject_id=alice, actor_id=alice, purpose_id="service_processing", scope=scope,
+                       decision=Decision.GRANT, notice_version=NOTICE, request_id="req-grant-1")
+    assert again.event_id == first.event_id and again.sequence == first.sequence
+    check = svc.check(alice, "service_processing", scope)
+    assert (check.allowed, check.epoch) == (False, epoch)
+    with pytest.raises(Conflict):
+        svc.record(subject_id=alice, actor_id=alice, purpose_id="service_processing", scope=scope,
+                   decision=Decision.DENY, notice_version=NOTICE, request_id="req-grant-1")

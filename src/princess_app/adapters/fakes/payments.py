@@ -70,7 +70,7 @@ class FakePaymentProvider(FakeAdapter):
         self._ids = SequentialIds()
         self._txns: dict[str, _Txn] = {}
         self._sessions: dict[str, str] = {}
-        self._intents: dict[str, port.CheckoutSession] = {}
+        self._intents: dict[str, tuple[port.CheckoutSession, tuple[str, str]]] = {}
         self._products = {p.store_product_id: p for p in catalog if p.rail is rail}
 
     # --- simulated provider world ----------------------------------------
@@ -125,7 +125,10 @@ class FakePaymentProvider(FakeAdapter):
         def effect() -> port.CheckoutSession:
             existing = self._intents.get(intent_ref)
             if existing is not None:
-                return existing  # same intent (retry/double click) -> same chargeable session
+                session, bound = existing
+                if bound != (account_ref, product.product_id):
+                    raise Conflict("intent_reused_for_different_request")
+                return session  # same intent (retry/double click) -> same chargeable session
             session_ref = self._ids.new_id("cs")
             ref = self._ids.new_id("pi")
             now = self.clock.now()
@@ -134,7 +137,7 @@ class FakePaymentProvider(FakeAdapter):
             self._sessions[session_ref] = ref
             session = port.CheckoutSession(session_ref, f"https://checkout.fake.invalid/{session_ref}",
                                            now + timedelta(minutes=30))
-            self._intents[intent_ref] = session
+            self._intents[intent_ref] = (session, (account_ref, product.product_id))
             return session
 
         return self._run("create_web_checkout", ctx, effect)

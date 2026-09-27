@@ -83,6 +83,9 @@ class PermissionBody(_Strict):
     scope_ref: str | None = None
     decision: Literal["GRANT", "DENY", "WITHDRAW"]
     notice_version: str
+    # Client-generated per decision; a replayed request returns the recorded
+    # event instead of appending a later duplicate that could reverse a newer choice.
+    request_id: str | None = Field(default=None, pattern=r"^[A-Za-z0-9][A-Za-z0-9._:-]{7,127}$")
 
 
 class DevTokenBody(_Strict):
@@ -91,8 +94,6 @@ class DevTokenBody(_Strict):
 
 class ChallengeBody(_Strict):
     token: str = Field(min_length=1)
-    action: str = Field(min_length=1, max_length=64)
-    site: str = Field(min_length=1, max_length=253)
 
 
 class UploadBody(_Strict):
@@ -156,10 +157,14 @@ def create_app(services: Services) -> FastAPI:
 
     @app.post("/v1/me/permissions", status_code=201)
     def record_permission(body: PermissionBody, who: Principal = Depends(principal)) -> dict:
+        scope = Scope(body.scope_kind, body.scope_ref)
         event = services.permissions.record(
             subject_id=who.principal_id, actor_id=who.principal_id, purpose_id=body.purpose_id,
-            scope=Scope(body.scope_kind, body.scope_ref), decision=Decision(body.decision),
-            notice_version=body.notice_version)
+            scope=scope, decision=Decision(body.decision), notice_version=body.notice_version,
+            request_id=body.request_id)
+        if services.intake is not None:
+            # T03 withdrawal propagation to intake-owned retention classes.
+            services.intake.apply_permission_change(who.principal_id, event.purpose_id, event.scope, event.decision)
         snapshot = compile_document("GrantSnapshot", {
             "contract_version": g.CONTRACT_VERSION, "grant_id": event.event_id, "owner_id": event.subject_id,
             "purpose_id": event.purpose_id, "purpose_version": event.purpose_version,
@@ -197,8 +202,7 @@ def create_app(services: Services) -> FastAPI:
 
     @app.post("/v1/uploads", status_code=201)
     def reserve_upload(body: UploadBody, request: Request, who: Principal = Depends(principal)) -> dict:
-        proof = ChallengeProof(body.challenge.token, body.challenge.action, body.challenge.site) \
-            if body.challenge else None
+        proof = ChallengeProof(body.challenge.token) if body.challenge else None
         ticket = intake().reserve_upload(who.principal_id, body.media_type, proof, call_context(request))
         return {"upload_id": ticket.upload_id, "method": ticket.method, "url": ticket.url,
                 "expires_at": rfc3339(ticket.expires_at), "max_bytes": ticket.max_bytes}
@@ -232,7 +236,10 @@ def create_app(services: Services) -> FastAPI:
         intake().delete_capture(who.principal_id, capture_id)
         return {"state": "DELETION_REQUESTED"}
 
-    if services.dev_store is not None and services.environment in (Environment.LOCAL, Environment.TEST):
+    # The filesystem store's HMAC-signed PUT stands in for a provider's presigned
+    # URL wherever that fake store is composed (never staging or production).
+    if services.dev_store is not None and services.environment in (Environment.LOCAL, Environment.TEST,
+                                                                   Environment.PREVIEW):
         store = services.dev_store
 
         @app.put("/v1/dev/uploads/{upload_id}", status_code=204)

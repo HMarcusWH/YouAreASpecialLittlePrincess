@@ -280,3 +280,19 @@ def test_concurrent_fresh_logins_after_deletion_converge_on_one_new_account():
     store.principal_for_binding = racing_lookup
     loser = svc.authenticate(second, ctx(clock))
     assert loser.principal_id == winner.principal_id != principal.principal_id
+
+
+def test_replayed_requests_cannot_reverse_a_newer_decision():
+    clock, svc = service()
+    grant = svc.record(subject_id="w", actor_id="w", purpose_id="service_processing", scope=SPECIMEN,
+                       decision=Decision.GRANT, notice_version=NOTICE, request_id="req-grant-1")
+    clock.advance(1)
+    svc.record(subject_id="w", actor_id="w", purpose_id="service_processing", scope=SPECIMEN,
+               decision=Decision.WITHDRAW, notice_version=NOTICE, request_id="req-withdraw-1")
+    clock.advance(1)
+    replay = svc.record(subject_id="w", actor_id="w", purpose_id="service_processing", scope=SPECIMEN,
+                        decision=Decision.GRANT, notice_version=NOTICE, request_id="req-grant-1")
+    assert replay == grant and svc.check("w", "service_processing", SPECIMEN).reason == "withdraw"
+    with pytest.raises(Conflict):
+        svc.record(subject_id="w", actor_id="w", purpose_id="service_processing", scope=SPECIMEN,
+                   decision=Decision.DENY, notice_version=NOTICE, request_id="req-grant-1")

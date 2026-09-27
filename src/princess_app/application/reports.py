@@ -35,10 +35,10 @@ class InMemoryReportStore:
         if report.schema_name != "ReportDocument":
             raise InvalidInput("not_a_report")
         data = report.data
-        if data["analysis"]["owner_id"] != owner_id:
-            raise NotAuthorized("owner_mismatch")
         existing = self._revisions.get(data["report_id"])
         if existing is None:
+            if data["analysis"]["owner_id"] != owner_id:
+                raise NotAuthorized("owner_mismatch")
             if data["revision"] != 1:
                 raise Conflict("first_revision_must_be_1")
             self._revisions[data["report_id"]] = [report]

@@ -96,6 +96,8 @@ def test_challenge_verdicts_never_raise_for_outage_and_bind_action_site():
     ("analysis_completed", {"available_feature_count": 9999}),
     ("report_opened", {"report_kind": "individual", "platform": "windows"}),
     ("report_opened", {"platform": True}),
+    ("analysis_completed", {"platform": "web"}),  # declared properties are required
+    ("report_opened", {}),
 ])
 def test_analytics_allowlist_rejects_unknown_or_private_values(event, props):
     clock = FakeClock()

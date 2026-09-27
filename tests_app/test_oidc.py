@@ -62,7 +62,22 @@ def test_valid_token_maps_only_supplied_claims(setup):
     clock, key, _, provider = setup
     identity = provider.verify_credential(token(clock, key), AUD, ctx(clock))
     assert identity.binding_key == (ISS, "user-1") and identity.session_id == "s1"
-    assert identity.email is None and identity.email_verified is None and identity.auth_time is not None
+    # No auth_time claim means the sign-in time is unknown (never iat), so the
+    # logout/deletion fence fails closed for such tokens.
+    assert identity.email is None and identity.email_verified is None and identity.auth_time is None
+    signed_in = int(clock.now().timestamp()) - 60
+    assert provider.verify_credential(token(clock, key, auth_time=signed_in), AUD, ctx(clock)).auth_time is not None
+
+
+@pytest.mark.parametrize("typ", ["at+jwt", "application/at+jwt", "AT+JWT"])
+def test_access_tokens_are_not_id_tokens(setup, typ):
+    clock, key, _, provider = setup
+    now = int(clock.now().timestamp())
+    claims = {"iss": ISS, "aud": AUD, "sub": "user-1", "iat": now, "exp": now + 600}
+    access = jwt.encode(claims, key, algorithm="RS256", headers={"kid": "k1", "typ": typ})
+    with pytest.raises(Unauthenticated) as err:
+        provider.verify_credential(access, AUD, ctx(clock))
+    assert err.value.code == "not_an_id_token"
 
 
 @pytest.mark.parametrize("overrides,code", [

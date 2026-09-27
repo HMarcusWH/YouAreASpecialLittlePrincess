@@ -97,7 +97,10 @@ def limitations(report: Mapping[str, Any]) -> list[dict[str, str]]:
 
 def compile_packet(report: ValidatedDocument, db: InterpretationDatabase, *, packet_id: str, created_at: datetime,
                    image_asset_id: str | None, pack_id: str = DEFAULT_PACK,
-                   producers: Mapping[str, CandidateProducer] | None = None) -> PacketCompilation:
+                   producers: Mapping[str, CandidateProducer] | None = None,
+                   owner_id: str | None = None) -> PacketCompilation:
+    """``owner_id`` is the report's current owner, which differs from the
+    snapshot's analysis owner after a guest transfer."""
     if report.schema_name != "ReportDocument":
         raise InvalidInput("expected_report_document")
     require_opaque_id(packet_id, "packet_id")
@@ -153,7 +156,8 @@ def compile_packet(report: ValidatedDocument, db: InterpretationDatabase, *, pac
 
     used = sorted({cid for q in questions for cid in q["candidate_ids"]})
     packet = {
-        "contract_version": g.CONTRACT_VERSION, "packet_id": packet_id, "owner_id": doc["analysis"]["owner_id"],
+        "contract_version": g.CONTRACT_VERSION, "packet_id": packet_id,
+        "owner_id": owner_id or doc["analysis"]["owner_id"],
         "report_id": doc["report_id"], "report_revision": doc["revision"], "report_digest": report.digest,
         "created_at": rfc3339(created_at), "locale": doc["locale"],
         "interpretation_database_version": db.version, "interpretation_database_sha256": db.sha256,

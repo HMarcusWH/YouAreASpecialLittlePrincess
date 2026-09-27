@@ -95,8 +95,21 @@ The worker then claims a leased job, decodes within limits, runs the zero-AI eng
 - the capture was not deleted;
 - the `service_processing` permission epoch has not changed.
 
-Deletion or withdrawal ends the job. Repeatedly crashing workers exhaust after a bounded number of attempts.
+Deletion or withdrawal ends the job. Repeatedly crashing workers exhaust after a bounded number of attempts, and the run is marked failed.
+
+Admission and completion details:
+
+- Reservations are counted under a per-owner lock (3 per day, 20 with an accepted challenge). A challenge token is checked against the server-owned action `upload` and site `PRINCESS_CHALLENGE_SITE`; the client sends only the token.
+- One completion at a time holds a slot (`COMPLETING`). A retry converges only when it declares the same SHA-256; a wrong digest leaves the slot open, and unsafe bytes are erased and the slot rejected.
+- A worker refuses a run requested under other engine settings (`analysis_config_mismatch`).
+- Guest transfer cancels the guest's queued and running analyses (`owner_transferred`). The account records its own permissions and resubmits.
+
+Retention (T03 `retention.json`, still a draft pending owner review) is applied by the erasure consumer that runs inside the analysis worker process:
+
+- Deleting a capture, or withdrawing `service_processing` for it, tombstones the capture and its reports and erases every object version.
+- When an analysis finishes, the original is erased unless an `image_retention` grant covers the capture. Withdrawing `image_retention` queues the same check. The report and its measurements are kept.
+- Erasure is verified before an outbox event is marked dispatched; an unverified erasure is retried.
 
 Only JPEG and PNG are accepted (≤ 20 MB, ≤ 24 MP, ≤ 12 000 px per side). HEIC, GIF, WebP, SVG and archives are rejected with explicit codes, and mobile clients convert HEIC to JPEG before upload.
 
-Local runs use the filesystem object store (`PRINCESS_LOCAL_STORAGE_DIR`, default `.local-storage/`), which is shared by the API and `apps/workers/analysis/run_worker.py`. Its upload URLs are HMAC-signed paths served by the local/test-only `PUT /v1/dev/uploads/{id}`. A real S3-compatible adapter waits on the ADR-004 provider decision, and composition refuses non-fake storage until it exists.
+Local runs use the filesystem object store (`PRINCESS_LOCAL_STORAGE_DIR`, default `.local-storage/`), which is shared by the API and `apps/workers/analysis/run_worker.py`. Its upload URLs are HMAC-signed paths served by `PUT /v1/dev/uploads/{id}`, which exists only in local, test and preview (never staging or production). A real S3-compatible adapter waits on the ADR-004 provider decision, and composition refuses non-fake storage until it exists.

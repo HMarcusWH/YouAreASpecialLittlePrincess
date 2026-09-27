@@ -155,7 +155,7 @@ class PremiumRunner:
             compilation = compile_packet(report, self._db, packet_id=f"packet_{attempt_id}",
                                          created_at=self._clock.now(),
                                          image_asset_id=image.asset_id if image else None,
-                                         producers=self._producers)
+                                         producers=self._producers, owner_id=job.owner_id)
         except NotApplicable as na:
             return record(Outcome.NOT_APPLICABLE, na.reason)
         if not self._budget.reserve(attempt_id, MAX_OUTPUT_TOKENS):

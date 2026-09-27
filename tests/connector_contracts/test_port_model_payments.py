@@ -6,7 +6,7 @@ from port_harness import ctx
 
 from princess_app.adapters.fakes import FakeClock, FakeNativePurchaseClient, FakePaymentProvider, FakePremiumModel
 from princess_app.ports import model, payments
-from princess_app.ports.base import AmbiguousOutcome, Environment, InvalidInput, RateLimited, Unauthenticated
+from princess_app.ports.base import AmbiguousOutcome, Conflict, Environment, InvalidInput, RateLimited, Unauthenticated
 from princess_contracts import canonical_digest
 
 PACKET = {"questions": []}
@@ -173,6 +173,8 @@ def test_web_checkout_redirect_is_not_payment_until_provider_says_so():
     clock, stripe = rail(payments.PaymentRail.STRIPE)
     session = stripe.create_web_checkout("intent_1", CATALOG[3], "acct_1", ctx(clock))
     assert stripe.create_web_checkout("intent_1", CATALOG[3], "acct_1", ctx(clock)) == session  # retry
+    with pytest.raises(Conflict):  # a reused intent for another account or product is a key collision
+        stripe.create_web_checkout("intent_1", CATALOG[3], "acct_2", ctx(clock))
     assert "checkout" not in repr(session)
     ref = stripe.reconcile(clock.now(), ctx(clock))[0].transaction_ref
     assert stripe.retrieve_authoritative_purchase(ref, "acct_1", ctx(clock)).state is payments.PurchaseState.PENDING
