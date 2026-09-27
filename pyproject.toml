@@ -32,7 +32,7 @@ include = ["princess_graphology*", "princess_contracts*"]
 princess_graphology = ["_feature_contract.json"]
 
 [tool.pytest.ini_options]
-pythonpath = ["src", "tools"]
+pythonpath = ["src", "tools", "apps/api"]
 testpaths = ["tests"]
 
 [tool.ruff]

@@ -56,3 +56,23 @@ The local admin password above is a documented development-only value for a loop
 | JavaScript workspace | `package.json`, `pnpm-lock.yaml` | Exact versions only; pnpm pinned with a SHA-512 in `packageManager` |
 
 Provider SDKs are added by the task that implements each real adapter, with their own reviewed pins, and never to the Free library.
+
+## Database migrations and the API (T02)
+
+Migrations are reviewed Alembic revisions under `migrations/versions/`, run with a migration-role URL (never the runtime role):
+
+```bash
+PRINCESS_MIGRATION_DATABASE_URL=postgresql://princess_admin:local-only-admin@127.0.0.1:5432/princess_local \
+  .venv/bin/python -m princess_app.adapters.postgres.migrate upgrade
+```
+
+`0001_product_plane` creates the `app` schema and the `princess_app` group role. The runtime login role must be a member of `princess_app`, and must not own the tables, be a superuser or hold `BYPASSRLS`. Every transaction sets `princess.principal_id` locally, and row-level security scopes principals, assets, runs, measurements, regions, evidence, reports, permissions, jobs and outbox rows to that principal. Measurements, regions, evidence, report revisions and permission events can be inserted but never updated or deleted by the runtime role. Composite `(owner_id, id)` foreign keys prevent cross-owner or cross-run links. The downgrade refuses to drop a populated schema.
+
+Backend integration tests use a real PostgreSQL database and connect as a separate non-owner role:
+
+```bash
+PRINCESS_TEST_DATABASE_URL=postgresql://princess_admin:local-only-admin@127.0.0.1:5432/princess_test \
+  .venv/bin/python -m pytest -q tests_app
+```
+
+The API factory is `princess_api.compose:app_from_environment` (`uvicorn --factory`). Identity is fake-only until the ADR-002 vendor decision. The OIDC verifier in `princess_app.adapters.oidc` is implemented and tested, but no production issuer is configured.

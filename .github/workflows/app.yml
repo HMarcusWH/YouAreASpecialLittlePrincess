@@ -59,7 +59,7 @@ jobs:
           --allow "special-little-princess-graphology==0.1.0"
       - run: python -m pip check
       - run: python tools/check_environments.py
-      - run: ruff check tests_app
+      - run: ruff check apps migrations tests_app
       - name: Backend and PostgreSQL integration tests
         run: python -m pytest -q tests_app
 

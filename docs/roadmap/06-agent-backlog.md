@@ -16,7 +16,7 @@ Use `python docs/roadmap/plan_tools.py --ready` or `--task ID`. Edit tasks.json 
 | [T00 — Green baseline and dependency policy](#t00) | DONE | — | platform |
 | [T00A — Post-merge dependency graph hardening](#t00a) | DONE | T00 | platform-security |
 | [T01 — Product contracts and zero-AI capability manifest](#t01) | DONE | T00, T00A, T03 | contracts |
-| [T02 — Persistence identity authorization](#t02) | PLANNED | T01, T27, T28 | backend |
+| [T02 — Persistence identity authorization](#t02) | IMPLEMENTED_PENDING_REVIEW | T01, T27, T28 | backend |
 | [T03 — Rights consent and collection protocol](#t03) | DONE | — | product-data |
 | [T04 — Safe intake and durable analysis jobs](#t04) | PLANNED | T02, T03, T28 | backend |
 | [T05 — Evidence payload and chart observations](#t05) | IMPLEMENTED_PENDING_REVIEW | T01 | engine |
@@ -344,7 +344,7 @@ Historical completion evidence: Merged PR #13 (merge 48d4e033d576211766d1d98a650
 <a id="t02"></a>
 ## T02 — Persistence identity authorization
 
-**Status:** `PLANNED` · **Owner:** backend · **Milestone:** foundation
+**Status:** `IMPLEMENTED_PENDING_REVIEW` · **Owner:** backend · **Milestone:** foundation
 
 **Hard predecessors:** [T01](#t01), [T27](#t27), [T28](#t28)
 **Platforms:** backend
