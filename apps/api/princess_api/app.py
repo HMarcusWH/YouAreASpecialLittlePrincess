@@ -14,7 +14,7 @@ from dataclasses import dataclass, field
 from datetime import timedelta
 from typing import Any, Callable, Literal
 
-from fastapi import Depends, FastAPI, Request
+from fastapi import Depends, FastAPI, Query, Request
 from fastapi.responses import JSONResponse, Response
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -308,6 +308,16 @@ def create_app(services: Services) -> FastAPI:
 
     def reader_for(who: Principal) -> ReportReader:
         return ReportReader(services.report_store_for(who.principal_id), services.clock, services.report_access)
+
+    @app.get("/v1/reports")
+    def list_reports(limit: int = Query(20, ge=1, le=50),
+                     cursor: str | None = Query(default=None, max_length=512),
+                     who: Principal = Depends(principal)) -> dict:
+        return reader_for(who).history(principal_id=who.principal_id, limit=limit, cursor=cursor)
+
+    @app.get("/v1/reports/{report_id}/evidence")
+    def read_report_evidence(report_id: str, who: Principal = Depends(principal)) -> dict:
+        return reader_for(who).evidence(report_id=report_id, principal_id=who.principal_id)
 
     @app.get("/v1/reports/{report_id}")
     def read_report(report_id: str, projection: Literal["FREE", "OWNER", "PREMIUM", "EXPORT"] = "OWNER",
