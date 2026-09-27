@@ -28,7 +28,7 @@
 The technical content in chapters 01–05 and original source register 07 is retained, with current-scope navigation notices. Do not silently discard its numerical, privacy or failure-handling requirements. The following explicit amendments take precedence over its historical implementation/status sentences:
 
 1. Native iOS and Android, including their digital billing, are now required programme deliverables. Web is an early validation surface, not the entire v1 completion criterion.
-2. The code baseline is `251668a…`, not the earlier PR #1 baseline. T00 and T26 are historically DONE; T00A is an outstanding follow-up. Statements that all tasks are planned or that the T26 database is empty are superseded.
+2. The code baseline is `251668a…`, not the earlier PR #1 baseline. T00 and T26 are historically DONE; T00A, T03 and T01 were completed afterwards (PR #12, PR #13). Statements that all tasks are planned or that the T26 database is empty are superseded.
 3. T26 source JSON and compiler are authoritative. Use `selection_domain` and `cardinality`, not old illustrative `selection_mode` examples. Traditional runtime eligibility is still zero; reviewed database structure does not activate content.
 4. Earlier model aliases, prices and API snippets are dated research/examples, not approved production configuration. [22](22-research-and-source-refresh.md) and the provider decision process govern new integration work. No particular model or price is approved by this PR.
 5. JSON Schemas own product wire DTOs. Generated Python/TypeScript representations and derived OpenAPI must be drift-tested. This is separate from the 272-feature numerical schema, which is unchanged.

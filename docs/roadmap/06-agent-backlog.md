@@ -14,10 +14,10 @@ Use `python docs/roadmap/plan_tools.py --ready` or `--task ID`. Edit tasks.json 
 | Task | Status | Hard predecessors | Owner |
 |---|---|---|---|
 | [T00 — Green baseline and dependency policy](#t00) | DONE | — | platform |
-| [T00A — Post-merge dependency graph hardening](#t00a) | IMPLEMENTED_PENDING_REVIEW | T00 | platform-security |
-| [T01 — Product contracts and zero-AI capability manifest](#t01) | PLANNED | T00, T00A, T03 | contracts |
+| [T00A — Post-merge dependency graph hardening](#t00a) | DONE | T00 | platform-security |
+| [T01 — Product contracts and zero-AI capability manifest](#t01) | DONE | T00, T00A, T03 | contracts |
 | [T02 — Persistence identity authorization](#t02) | PLANNED | T01, T27, T28 | backend |
-| [T03 — Rights consent and collection protocol](#t03) | IMPLEMENTED_PENDING_REVIEW | — | product-data |
+| [T03 — Rights consent and collection protocol](#t03) | DONE | — | product-data |
 | [T04 — Safe intake and durable analysis jobs](#t04) | PLANNED | T02, T03, T28 | backend |
 | [T05 — Evidence payload and chart observations](#t05) | PLANNED | T01 | engine |
 | [T06 — Calibration suitability core repair](#t06) | PLANNED | T05, T11 | evaluation |
@@ -191,7 +191,7 @@ Historical completion evidence: Merged PR #10; source head 90e88e5c73a0811829745
 <a id="t00a"></a>
 ## T00A — Post-merge dependency graph hardening
 
-**Status:** `IMPLEMENTED_PENDING_REVIEW` · **Owner:** platform-security · **Milestone:** foundation
+**Status:** `DONE` · **Owner:** platform-security · **Milestone:** foundation
 
 **Hard predecessors:** [T00](#t00)
 **Platforms:** core, ci
@@ -252,12 +252,14 @@ Validation profiles: [core](#validation-core), [docs](#validation-docs). Planned
 
 No task-specific production gate; all repository privacy/security and scope boundaries still apply.
 
+Historical completion evidence: Merged PR #12 (merge bcf5562dde79fd241142fac18abcdde090641b2f); exact head d4647fc70cc06c2fc6633c59be67b1ef5fa83fd3 passed CI run 36273093400 on Python 3.10/3.11/3.12 and roadmap run 36273093435; the Codex code review of that head reported no major issues (issue comment 5850081384). Failing-before/passing-after cases are in docs/ci/T00_BASELINE.md.
+
 [Back to task table](#task-table) · [Documentation index](00-index.md) · [Execution sequence](20-end-to-end-build-sequence.md)
 
 <a id="t01"></a>
 ## T01 — Product contracts and zero-AI capability manifest
 
-**Status:** `PLANNED` · **Owner:** contracts · **Milestone:** foundation
+**Status:** `DONE` · **Owner:** contracts · **Milestone:** foundation
 
 **Hard predecessors:** [T00](#t00), [T00A](#t00a), [T03](#t03)
 **Platforms:** shared
@@ -319,6 +321,8 @@ Frozen wire schemas, generated DTOs, fixtures and version/compatibility policy u
 Validation profiles: [core](#validation-core), [docs](#validation-docs), [contracts](#validation-contracts). Planned suites must be implemented and their actual command documented by the owning task; they are not passing tests today.
 
 No task-specific production gate; all repository privacy/security and scope boundaries still apply.
+
+Historical completion evidence: Merged PR #13 (merge 48d4e033d576211766d1d98a65061452b4b199e9); exact head 1de5a3dde7d4a7317a7a2714bc79a15aa24d4032 passed CI run 36280551268 and roadmap run 36280551264; main CI run 36281080920 passed after merge. Codex security review of that head completed with no findings; no code-review finding was posted.
 
 [Back to task table](#task-table) · [Documentation index](00-index.md) · [Execution sequence](20-end-to-end-build-sequence.md)
 
@@ -403,7 +407,7 @@ No approval is created by this task brief. Mock/disabled implementation is not a
 <a id="t03"></a>
 ## T03 — Rights consent and collection protocol
 
-**Status:** `IMPLEMENTED_PENDING_REVIEW` · **Owner:** product-data · **Milestone:** foundation
+**Status:** `DONE` · **Owner:** product-data · **Milestone:** foundation
 
 **Hard predecessors:** None
 **Platforms:** shared, policy
@@ -463,6 +467,8 @@ Validation profiles: [docs](#validation-docs), [consent](#validation-consent). P
 - `pilot_rights_consent`: Owner-reviewed collection agreement, purpose/retention/withdrawal protocol before recruitment.
 
 No approval is created by this task brief. Mock/disabled implementation is not authorization for live collection, charges, signing or release.
+
+Historical completion evidence: Merged PR #12 with T00A at the same exact head and CI/review evidence. Draft protocol contracts only: the pilot_rights_consent gate stays pending, no approval, participant or source clearance exists, and recruitment remains T11.
 
 [Back to task table](#task-table) · [Documentation index](00-index.md) · [Execution sequence](20-end-to-end-build-sequence.md)
 

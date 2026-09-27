@@ -14,7 +14,7 @@ The report is the product: an attractive, interactive personal dossier with real
 
 The repository contains the pure Python measurement core, 272 canonical feature definitions, 64 registered core measurements, provenance/research material, and the reviewed T26 interpretation database. The remaining definitions are not promised outputs. Most measured estimates remain experimental rather than empirically calibrated. See the [engine README](README.md), [measurement methods](docs/measurement_methods.md) and [interpretation manifest](schema/graphology_interpretation/v1/manifest.json).
 
-T00 and T26 remain `DONE` as historical task completions. PR #10 merged the CI/dependency baseline. Its final code review produced four follow-up dependency-policy findings; these are explicitly assigned to **T00A**, now `IMPLEMENTED_PENDING_REVIEW` with failing-before/passing-after regressions recorded in the [T00 evidence](docs/ci/T00_BASELINE.md#t00a-post-merge-follow-up). It becomes `DONE` only after exact-head CI and review. A green historical run does not prove those findings are fixed. The [T00 evidence](docs/ci/T00_BASELINE.md) and [review follow-up](docs/roadmap/06-agent-backlog.md#t00a) remain linked.
+T00 and T26 remain `DONE` as historical task completions. PR #10 merged the CI/dependency baseline. Its final code review produced four follow-up dependency-policy findings; these were assigned to **T00A**, which is now `DONE`: PR #12 recorded failing-before/passing-after regressions in the [T00 evidence](docs/ci/T00_BASELINE.md#t00a-post-merge-follow-up), exact-head CI and a clean review. T03 (draft consent protocol, pilot gate still pending) and T01 (product contracts, PR #13) are also `DONE`. The [T00 evidence](docs/ci/T00_BASELINE.md) and [review follow-up](docs/roadmap/06-agent-backlog.md#t00a) remain linked.
 
 There is no production API, application database, consumer client, store billing implementation, production reference corpus or live Premium service established by this baseline. Paths in the build specifications are planned unless identified as existing. Documentation, mock completion, human approval, store approval and production activation are distinct.
 
@@ -70,7 +70,7 @@ python docs/roadmap/plan_tools.py --task T01
 
 These documentation commands are provided by this PR. Product test commands marked `TO_IMPLEMENT` in task briefs are not executable claims. After changing task data, run `--write` to regenerate the human backlog, then `--check`.
 
-Start coding with T00A. T03 protocol/schema drafting can proceed independently without recruiting people. Follow [20](docs/roadmap/20-end-to-end-build-sequence.md) for safe parallel work. Maintain one contract steward for shared DTOs, one owner of each provider adapter and a documented handoff for stacked PRs.
+The foundation contracts (T00A, T01, T03) are merged; run `plan_tools.py --ready` for the next unblocked tasks. Follow [20](docs/roadmap/20-end-to-end-build-sequence.md) for safe parallel work. Maintain one contract steward for shared DTOs, one owner of each provider adapter and a documented handoff for stacked PRs.
 
 ## Definition of ready
 

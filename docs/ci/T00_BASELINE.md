@@ -89,7 +89,7 @@ T00 remains marked `DONE` only if the current PR head satisfies the complete rev
 
 ## T00A post-merge follow-up
 
-Status: `IMPLEMENTED_PENDING_REVIEW`. This section is appended; the T00 history above is unchanged.
+Status: `DONE`. Exact head `d4647fc` passed CI run 36273093400 (3.10/3.11/3.12) and received a clean Codex code review before PR #12 merged as `bcf5562`. This section is appended; the T00 history above is unchanged.
 
 The final Codex review of PR #10 at `90e88e5c73a081182974575925561ac948dbc0e1` ([review 5324261655](https://github.com/HMarcusWH/YouAreASpecialLittlePrincess/pull/10#pullrequestreview-5324261655)) was submitted after the merge decision and left four P2 findings. T00 stays `DONE` as a historical record; T00A owns these repairs.
 
