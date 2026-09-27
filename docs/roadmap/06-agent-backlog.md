@@ -1411,14 +1411,13 @@ Working Free web journey and reusable web report components tied to saved projec
 
 ### Implementation evidence
 
-PR #14 commit 99c5462 plus T21 integration provides the working Free Next.js journey, guarded API client, session/proxy boundary, fixture browser journeys and live upload → analysis → report → PDF flow.
+PR #14 established the working deterministic Free Next.js journey and T21 export integration. This T17 slice adds canonical ReportSummary/ReportPage contracts, owner-scoped paginated report history, report-scoped EvidenceBundle reads with stored digest/lineage validation, current-principal history UI, stored baseline/spacing/slant evidence views and cross-owner/browser regression coverage.
 
 ### Remaining work
 
-- Implement production account sign-in UI after the ADR-002 identity provider decision.
-- Implement account-backed report/history lists and recovery UI.
-- Render EvidenceBundle interactions/charts with accessible text alternatives.
-- Add automated axe accessibility coverage and finish owner-accepted T10 design integration.
+- Implement production account sign-in and cross-device/account recovery after the ADR-002 identity provider decision.
+- Add a reviewed pinned axe dependency/lockfile update and automated WCAG journey coverage; existing Playwright semantic/keyboard/overflow checks remain in force until then.
+- Finish owner-accepted T10 design integration across responsive history/evidence/report states.
 
 ### Acceptance evidence
 
