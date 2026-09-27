@@ -6,11 +6,11 @@ export const dynamic = "force-dynamic";
 
 const ITEMS = [
   { report_id: "report_3", revision: 2, kind: "INDIVIDUAL" as const, created_at: "2026-09-27T11:00:00Z",
-    locale: "en", has_premium: true },
+    locale: "en" },
   { report_id: "report_2", revision: 1, kind: "INDIVIDUAL" as const, created_at: "2026-09-26T11:00:00Z",
-    locale: "sv", has_premium: false },
+    locale: "sv" },
   { report_id: "report_1", revision: 1, kind: "INDIVIDUAL" as const, created_at: "2026-09-25T11:00:00Z",
-    locale: "en", has_premium: false },
+    locale: "en" },
 ];
 
 export default async function HistoryFixture({ searchParams }: { searchParams: Promise<{ locale?: string; empty?: string }> }) {

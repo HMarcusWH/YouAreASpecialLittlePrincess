@@ -44,7 +44,7 @@ test("history and evidence payloads are guarded before clients use them", () => 
   const page = parseReportPage({
     contract_version: "1.0.0",
     items: [{ report_id: "report_1", revision: 2, kind: "INDIVIDUAL",
-              created_at: "2026-09-27T12:00:00Z", locale: "en", has_premium: false }],
+              created_at: "2026-09-27T12:00:00Z", locale: "en" }],
     next_cursor: "cursor_1",
   });
   assert.equal(page.items[0]!.revision, 2);
@@ -52,7 +52,7 @@ test("history and evidence payloads are guarded before clients use them", () => 
 
   assert.throws(() => parseReportPage({
     contract_version: "1.0.0", items: [{ report_id: "report_1", revision: 0, kind: "INDIVIDUAL",
-      created_at: "2026-09-27T12:00:00Z", locale: "en", has_premium: false }], next_cursor: null,
+      created_at: "2026-09-27T12:00:00Z", locale: "en" }], next_cursor: null,
   }), PayloadError);
   const corrupt = structuredClone(fixture("evidence-bundle.json"));
   corrupt.frames[0].width = 0;

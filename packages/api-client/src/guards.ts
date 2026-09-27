@@ -159,7 +159,7 @@ const RFC3339 = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?Z$/;
 
 function reportSummary(raw: unknown, path: string): ReportSummary {
   const item = object(raw, path);
-  exactKeys(item, ["report_id", "revision", "kind", "created_at", "locale", "has_premium"], path);
+  exactKeys(item, ["report_id", "revision", "kind", "created_at", "locale"], path);
   str(item.report_id, `${path}/report_id`, OPAQUE);
   if (!Number.isInteger(item.revision) || (item.revision as number) < 1) {
     throw new PayloadError(`${path}/revision`, "expected positive integer");
@@ -167,7 +167,6 @@ function reportSummary(raw: unknown, path: string): ReportSummary {
   member(item.kind, REPORT_KINDS, `${path}/kind`);
   str(item.created_at, `${path}/created_at`, RFC3339);
   str(item.locale, `${path}/locale`, /^[a-z]{2}(?:-[A-Z]{2})?$/);
-  if (typeof item.has_premium !== "boolean") throw new PayloadError(`${path}/has_premium`, "expected boolean");
   return item as unknown as ReportSummary;
 }
 

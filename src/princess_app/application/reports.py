@@ -26,7 +26,6 @@ class ReportHistoryEntry:
     kind: str
     created_at: datetime
     locale: str
-    has_premium: bool
 
 
 def encode_report_cursor(created_at: datetime, report_id: str) -> str:
@@ -104,7 +103,7 @@ class InMemoryReportStore:
                 continue
             rows.append(ReportHistoryEntry(
                 report_id, int(latest["revision"]), str(latest["kind"]), created_at,
-                str(latest["locale"]), latest["premium_overlay_id"] is not None))
+                str(latest["locale"])))
         rows.sort(key=lambda row: (row.created_at, row.report_id), reverse=True)
         return rows[:limit]
 
@@ -199,7 +198,6 @@ class ReportReader:
                 "kind": row.kind,
                 "created_at": row.created_at.astimezone(timezone.utc).isoformat().replace("+00:00", "Z"),
                 "locale": row.locale,
-                "has_premium": row.has_premium,
             } for row in page_rows],
             "next_cursor": next_cursor,
         }

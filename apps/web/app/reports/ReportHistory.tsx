@@ -10,7 +10,6 @@ const COPY = {
     start: "Start an analysis",
     open: "Open report",
     revision: "Revision",
-    premium: "Premium saved",
     next: "Older reports",
     kinds: { INDIVIDUAL: "Individual report", PAIR: "Pair report", HISTORY: "History report" },
   },
@@ -21,7 +20,6 @@ const COPY = {
     start: "Starta en analys",
     open: "Öppna rapport",
     revision: "Version",
-    premium: "Premium sparad",
     next: "Äldre rapporter",
     kinds: { INDIVIDUAL: "Individuell rapport", PAIR: "Parrapport", HISTORY: "Historikrapport" },
   },
@@ -50,7 +48,6 @@ export function ReportHistory({ page, locale }: { page: ReportPage; locale: Loca
                 <p className="muted">
                   <time dateTime={item.created_at}>{formatter.format(new Date(item.created_at))}</time>
                   {" · "}{c.revision} {item.revision}
-                  {item.has_premium ? <> · {c.premium}</> : null}
                 </p>
               </div>
               <a className="button button-secondary"

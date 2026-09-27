@@ -420,8 +420,7 @@ class PostgresReportStore:
             raise NotAuthorized("owner_mismatch")
         base = (
             "SELECT r.report_id, rr.revision, r.kind, r.created_at, "
-            "rr.document->>'locale' AS locale, "
-            "(rr.document->>'premium_overlay_id') IS NOT NULL AS has_premium "
+            "rr.document->>'locale' AS locale "
             "FROM app.report r "
             "JOIN LATERAL (SELECT revision, document FROM app.report_revision x "
             "WHERE x.report_id = r.report_id ORDER BY revision DESC LIMIT 1) rr ON true "
@@ -436,7 +435,7 @@ class PostgresReportStore:
             rows = conn.execute(text(base), params).mappings().all()
         return [ReportHistoryEntry(
             row["report_id"], int(row["revision"]), row["kind"], row["created_at"],
-            row["locale"], bool(row["has_premium"])) for row in rows]
+            row["locale"]) for row in rows]
 
     def evidence(self, report_id: str) -> ValidatedDocument | None:
         latest = self.latest(report_id)
