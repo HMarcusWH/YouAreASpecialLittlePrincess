@@ -6,7 +6,7 @@ Next.js 16 / React 19, presentation only (ADR-001). The FastAPI service owns aut
 - **Proxy**: `app/api/v1/[...path]` forwards only allowlisted routes to `PRINCESS_API_BASE`, attaches the credential server-side and rejects cross-origin mutations. The signed local upload PUT is forwarded only in local and test.
 - **Validation**: payloads go through `@princess/api-client` runtime guards (`parseReportView`, `parseRunStatus`) before rendering. They are never cast into contract types.
 - **Rendering**: `@princess/report-web` renders the saved `ReportViewModel` only: no computed percentiles, no model text, and "not measured" instead of zero. Colours and spacing come from `@princess/design-tokens`.
-- **Pages**: `/start` (consent → upload → verify → permission → analysis), `/analyses/[runId]` (bounded polling that resumes the known run on refresh), `/reports/[reportId]`, `/settings` (sign out, sign out everywhere, delete account) and `/fixtures/[name]` (synthetic view fixtures, only with `PRINCESS_WEB_FIXTURES=1`).
+- **Pages**: `/start` (consent → upload → verify → permission → analysis), `/analyses/[runId]` (bounded polling that resumes the known run on refresh), `/reports/[reportId]`, `/settings` (account report-ready mail preference, sign out, sign out everywhere, delete account) and `/fixtures/[name]` (synthetic view fixtures, only with `PRINCESS_WEB_FIXTURES=1`).
 
 Local run against the local API (see `infra/README.md` for the API and worker):
 
