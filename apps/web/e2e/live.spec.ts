@@ -84,8 +84,16 @@ test("upload, refresh queued work, report, history and export without any AI pro
   await expect(page.getByRole("checkbox", { name: "Email me when a report is ready" })).toHaveCount(0);
   await expectAccessible(page, testInfo);
 
-  // Test-only provider sign-in creates a synthetic account; no production IdP is activated.
+  // UI hiding is not authorization: a guest attempting the same-origin mutation is rejected by the backend.
   const settingsOrigin = new URL(page.url()).origin;
+  const guestEnable = await page.request.put(settingsOrigin + "/api/v1/me/notification-preferences", {
+    headers: { origin: settingsOrigin },
+    data: { mail_report_ready: true, locale: "en" },
+  });
+  expect(guestEnable.status()).toBe(403);
+  expect(await guestEnable.json()).toEqual({ error: "account_required" });
+
+  // Test-only provider sign-in creates a synthetic account; no production IdP is activated.
   const login = await page.request.post(settingsOrigin + "/api/session/dev-login", {
     headers: { origin: settingsOrigin },
     data: { subject: "mail-pref-account" },

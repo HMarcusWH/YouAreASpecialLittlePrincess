@@ -25,4 +25,4 @@ PYTHON=.venv/bin/python tools/run_web_e2e.sh                          # live jou
 
 In a sandbox with a pre-installed browser, set `PRINCESS_CHROMIUM` to its executable instead of running `playwright install`.
 
-PDF export is implemented through T21 and the renderer can also produce scoped share-card PNGs from authorized SHARE projections. The Free web product now includes current-principal saved-report history plus stored baseline/spacing/slant evidence views. Not yet included: production account sign-in/cross-device recovery (waiting on ADR-002), Premium/paid states (T20), share-link/invitation UI (T22), and automated axe audits with a reviewed pinned dependency.
+PDF export is implemented through T21 and the renderer can also produce scoped share-card PNGs from authorized SHARE projections. The Free web product now includes current-principal saved-report history, stored baseline/spacing/slant evidence views, account report-ready mail preferences, and automated axe WCAG A/AA journey coverage. Not yet included: production account sign-in/cross-device recovery (waiting on ADR-002), Premium/paid states (T20), and share-link/invitation UI (T22).
