@@ -76,6 +76,10 @@ class TransactionObservation:
     refunded_at: datetime | None = None
     original_transaction_ref: str | None = None
     completed: bool | None = None  # consumed/acknowledged/finished, None when unknown
+    # The opaque account token the purchase was made under, as attested by the
+    # provider (Stripe client reference, Apple appAccountToken, Play obfuscated
+    # account ID). Our own token, never an email; None when not supplied.
+    account_ref: str | None = None
 
     def __post_init__(self) -> None:
         if not isinstance(self.transaction_ref, str) or not 0 < len(self.transaction_ref) <= 512:
@@ -83,6 +87,8 @@ class TransactionObservation:
         require_opaque_id(self.product_id, "product_id")
         if type(self.quantity) is not int or not 1 <= self.quantity <= 100:
             raise InvalidInput("invalid_quantity")
+        if self.account_ref is not None:
+            require_opaque_id(self.account_ref, "account_ref")
         for name in ("purchased_at", "refunded_at"):
             value = getattr(self, name)
             if value is not None:

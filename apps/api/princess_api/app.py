@@ -7,6 +7,7 @@ route handlers.
 """
 from __future__ import annotations
 
+import hashlib
 import re
 import uuid
 from dataclasses import dataclass, field
@@ -18,11 +19,13 @@ from fastapi.responses import JSONResponse, Response
 from pydantic import BaseModel, ConfigDict, Field
 
 from princess_app.adapters.fakes import FakeIdentityProvider
+from princess_app.application.commerce import CommerceService
 from princess_app.application.identity import IdentityService, Principal
 from princess_app.application.intake import ChallengeProof, IntakeService
 from princess_app.application.permissions import PermissionService
 from princess_app.application.reports import ReportReader, ReportStore
 from princess_app.domain.analysis import rfc3339
+from princess_app.domain.commerce import Platform
 from princess_app.domain.permissions import Decision, Scope
 from princess_app.ports.base import (
     AmbiguousOutcome,
@@ -41,6 +44,7 @@ from princess_app.ports.base import (
     Unauthenticated,
     Unsupported,
 )
+from princess_app.ports.payments import PaymentRail
 from princess_contracts import compile_document
 from princess_contracts import generated as g
 
@@ -67,6 +71,7 @@ class Services:
     # Local/test only: a fake/filesystem store exposing ``accept_signed_put``
     # in place of a provider's presigned PUT endpoint.
     dev_store: Any = None
+    commerce: CommerceService | None = None
 
 
 class _Strict(BaseModel):
@@ -107,6 +112,20 @@ class CompleteBody(_Strict):
 
 class AnalysisBody(_Strict):
     capture_id: str = Field(pattern=r"^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$")
+
+
+class CheckoutBody(_Strict):
+    product_id: str = Field(pattern=r"^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$")
+    intent_ref: str = Field(pattern=r"^[A-Za-z0-9][A-Za-z0-9._:-]{7,127}$")
+
+
+class ClaimBody(_Strict):
+    rail: Literal["apple_app_store", "google_play"]
+    proof: str = Field(min_length=1, max_length=8192)
+
+
+class PremiumBody(_Strict):
+    platform: Literal["web", "ios", "android"]
 
 
 def create_app(services: Services) -> FastAPI:
@@ -238,6 +257,70 @@ def create_app(services: Services) -> FastAPI:
 
     # The filesystem store's HMAC-signed PUT stands in for a provider's presigned
     # URL wherever that fake store is composed (never staging or production).
+    def commerce() -> CommerceService:
+        if services.commerce is None:
+            raise Unsupported("commerce_not_configured")
+        return services.commerce
+
+    def account_only(who: Principal) -> Principal:
+        if who.kind != "ACCOUNT":
+            raise NotAuthorized("account_required")  # purchases need an authenticated account
+        return who
+
+    def selling() -> None:
+        if not services.kill_switches.get("commerce", False):
+            raise Unsupported("commerce_disabled")
+
+    @app.get("/v1/catalog")
+    def catalog() -> dict:
+        return {"products": commerce().catalog()}
+
+    @app.get("/v1/me/payment-account")
+    def payment_account(who: Principal = Depends(principal)) -> dict:
+        return {"account_ref": commerce().payment_account(account_only(who).principal_id)}
+
+    @app.get("/v1/me/credits")
+    def credits(platform: Literal["web", "ios", "android"], who: Principal = Depends(principal)) -> dict:
+        balance = commerce().balance(who.principal_id, Platform(platform))
+        return {"platform": platform, "available": balance.available, "reserved": balance.reserved}
+
+    @app.post("/v1/checkout/web", status_code=201)
+    def web_checkout(body: CheckoutBody, request: Request, who: Principal = Depends(principal)) -> dict:
+        selling()
+        session = commerce().start_web_checkout(account_only(who).principal_id, body.product_id, body.intent_ref,
+                                                call_context(request))
+        return {"redirect_url": session.redirect_url, "expires_at": rfc3339(session.expires_at)}
+
+    @app.post("/v1/payments/{rail}/events")
+    async def payment_events(rail: Literal["stripe", "apple_app_store", "google_play"], request: Request) -> dict:
+        """Signed provider notifications. Always accepted, even with sales
+        disabled, so refunds and reconciliation keep flowing."""
+        raw = await request.body()
+        if len(raw) > 256 * 1024:
+            raise InvalidInput("event_too_large")
+        outcomes = commerce().ingest_event(PaymentRail(rail), raw, dict(request.headers),
+                                           hashlib.sha256(raw).hexdigest(), call_context(request))
+        return {"received": True, "transactions": len(outcomes)}
+
+    @app.post("/v1/purchases/claims")
+    def claim_purchase(body: ClaimBody, request: Request, who: Principal = Depends(principal)) -> dict:
+        result = commerce().claim_store_purchase(account_only(who).principal_id, PaymentRail(body.rail), body.proof,
+                                                 call_context(request))
+        return {"outcome": result.outcome, "finish_transaction": result.finish_on_client}
+
+    @app.post("/v1/reports/{report_id}/premium", status_code=202)
+    def request_premium(report_id: str, body: PremiumBody, who: Principal = Depends(principal)) -> dict:
+        selling()
+        if not services.kill_switches.get("premium_generation", False):
+            raise Unsupported("premium_generation_disabled")
+        requested = commerce().request_premium(account_only(who).principal_id, report_id, Platform(body.platform))
+        return {"job_id": requested.job_id, "created": requested.created}
+
+    @app.get("/v1/premium-jobs/{job_id}")
+    def premium_job(job_id: str, who: Principal = Depends(principal)) -> dict:
+        state, error = commerce().premium_status(who.principal_id, job_id)
+        return {"job_id": job_id, "state": state, "error_code": error}
+
     if services.dev_store is not None and services.environment in (Environment.LOCAL, Environment.TEST,
                                                                    Environment.PREVIEW):
         store = services.dev_store

@@ -63,6 +63,8 @@ class PremiumJob:
     report_revision: int
     permission_epoch: int
     attempt_number: int = 1
+    fencing_token: int = 0            # lease fence for durable publication
+    reservation_id: str | None = None  # the credit this deliverable spends
 
 
 @dataclass(frozen=True)

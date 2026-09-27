@@ -246,7 +246,8 @@ class FakePaymentProvider(FakeAdapter):
             rail=self.rail, environment=txn.environment, transaction_ref=txn.ref,
             product_id=product.product_id if product else "unknown_product", quantity=txn.quantity,
             state=txn.state, account_binding=binding, completion_action=action,
-            purchased_at=txn.purchased_at, refunded_at=txn.refunded_at, completed=txn.completed)
+            purchased_at=txn.purchased_at, refunded_at=txn.refunded_at, completed=txn.completed,
+            account_ref=txn.account_ref)
 
 
 class FakeNativePurchaseClient:

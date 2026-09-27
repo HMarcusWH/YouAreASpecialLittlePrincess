@@ -9,15 +9,19 @@ import pytest
 from fastapi.testclient import TestClient
 
 from princess_api import Services, create_app
-from princess_app.adapters.fakes import FakeClock, FakeIdentityProvider, SequentialIds
+from princess_app.adapters.fakes import FakeClock, FakeIdentityProvider, FakePaymentProvider, SequentialIds
+from princess_app.adapters.postgres.commerce import PostgresLedger
 from princess_app.adapters.postgres.stores import (
     PostgresIdentityStore,
     PostgresPermissionStore,
     PostgresReportStore,
 )
+from princess_app.application.commerce import CommerceService
 from princess_app.application.identity import IdentityService
 from princess_app.application.permissions import PermissionService
+from princess_app.domain.commerce import CATALOG
 from princess_app.ports.base import Environment
+from princess_app.ports.payments import PaymentRail
 from princess_contracts import compile_document
 from test_persistence import publish_report
 
@@ -215,3 +219,51 @@ def test_composed_local_stack_upload_to_report(app_url, worker_db, tmp_path, mon
     assert report.status_code == 200 and len(report.json()["facts"]) == 64
     assert api.delete(f"/v1/captures/{capture['capture_id']}", headers=auth).status_code == 202
     assert api.get(f"/v1/reports/{status['report_id']}", headers=auth).status_code == 404
+
+
+def commerce_client(app_db, *, selling):  # noqa: D103
+    clock = FakeClock(T0)
+    provider = FakeIdentityProvider(clock=clock)
+    permissions = PermissionService(PostgresPermissionStore(app_db), clock, SequentialIds(), allow_draft_policy=True)
+    rails = {rail: FakePaymentProvider(rail, catalog=CATALOG, clock=clock, environment=Environment.TEST)
+             for rail in PaymentRail}
+    commerce = CommerceService(ledger=PostgresLedger(app_db, SequentialIds()), providers=rails,
+                               permissions=permissions, reports=lambda pid: PostgresReportStore(app_db, pid),
+                               clock=clock, ids=SequentialIds(), environment=Environment.TEST)
+    services = Services(
+        environment=Environment.TEST, clock=clock,
+        identity=IdentityService(provider, PostgresIdentityStore(app_db), clock, SequentialIds(), "princess-api"),
+        permissions=permissions, report_store_for=lambda pid: PostgresReportStore(app_db, pid),
+        kill_switches={"commerce": selling, "premium_generation": selling}, dev_identity=provider,
+        commerce=commerce)
+    return TestClient(create_app(services)), rails, services
+
+
+def test_commerce_routes_need_accounts_verified_events_and_open_sales(app_db):
+    api, rails, services = commerce_client(app_db, selling=True)
+    catalog = api.get("/v1/catalog").json()["products"]
+    assert [p["product_id"] for p in catalog] == ["premium_single"]
+    assert "price" not in json.dumps(catalog).lower().replace("price_premium", "")  # prices are owner-gated
+    guest = {"Authorization": f"Bearer {api.post('/v1/guest-sessions').json()['guest_token']}"}
+    body = {"product_id": "premium_single", "intent_ref": "intent_0001"}
+    assert api.post("/v1/checkout/web", json=body, headers=guest).status_code == 403  # accounts only
+    alice = login(api, "alice")
+    session = api.post("/v1/checkout/web", json=body, headers=alice)
+    assert session.status_code == 201
+    assert api.get("/v1/me/credits?platform=web", headers=alice).json()["available"] == 0  # redirect grants nothing
+    stripe = rails[PaymentRail.STRIPE]
+    ref = stripe.simulate_checkout_paid(next(iter(stripe._sessions)))
+    raw, headers = stripe.signed_event("checkout.session.completed", [ref])
+    forged = api.post("/v1/payments/stripe/events", content=raw, headers={"x-fake-signature": "t=1,v1=00"})
+    assert forged.status_code == 401
+    assert api.post("/v1/payments/stripe/events", content=raw, headers=headers).status_code == 200
+    assert api.get("/v1/me/credits?platform=web", headers=alice).json() == {"platform": "web", "available": 1,
+                                                                            "reserved": 0}
+    assert api.post("/v1/reports/report_missing/premium", json={"platform": "web"},
+                    headers=alice).status_code == 404
+
+    services.kill_switches["commerce"] = False  # sales off: no new checkouts, webhooks still flow
+    assert api.post("/v1/checkout/web", json={**body, "intent_ref": "intent_0002"},
+                    headers=alice).status_code == 501
+    raw, headers = stripe.signed_event("checkout.session.completed", [ref])
+    assert api.post("/v1/payments/stripe/events", content=raw, headers=headers).status_code == 200

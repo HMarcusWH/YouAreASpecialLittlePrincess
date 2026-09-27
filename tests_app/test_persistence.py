@@ -93,7 +93,7 @@ def publish_report(app_db, owner_id, run_id="run_1"):
     return report
 
 
-HEAD = "0002_intake_and_jobs"
+HEAD = "0003_commerce_ledger"
 
 
 def version(admin_engine):
@@ -109,9 +109,16 @@ def test_migrations_refuse_to_drop_populated_tables_and_round_trip_empty(admin_e
         conn.execute(text("INSERT INTO app.upload (upload_id, owner_id, asset_id, media_type, max_bytes, state, "
                           "created_at, expires_at) VALUES ('upl_1', :p, 'asset_x', 'image/png', 10, 'RESERVED', now(), "
                           "now() + interval '1 hour')"), {"p": principal.principal_id})
+    with admin_engine.begin() as conn:
+        conn.execute(text("INSERT INTO app.provider_event (rail, environment, event_id, event_type, body_sha256, "
+                          "received_at) VALUES ('stripe', 'test', 'evt_1', 'x', :h, now())"), {"h": "0" * 64})
+    with pytest.raises(DBAPIError):
+        migrate.downgrade(url, "0002_intake_and_jobs")  # financial history is never dropped
+    with admin_engine.begin() as conn:
+        conn.execute(text("DELETE FROM app.provider_event"))
     with pytest.raises(DBAPIError):
         migrate.downgrade(url, "0001_product_plane")  # intake rows exist
-    assert version(admin_engine) == HEAD
+    assert version(admin_engine) == "0002_intake_and_jobs"
     with admin_engine.begin() as conn:
         conn.execute(text("DELETE FROM app.upload"))
     migrate.downgrade(url, "0001_product_plane")

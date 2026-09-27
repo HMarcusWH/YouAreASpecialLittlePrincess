@@ -36,6 +36,8 @@ ROUTE_TEMPLATES = frozenset({
     "/v1/me/permissions/{purpose_id}", "/v1/reports/{report_id}", "/v1/dev/id-tokens",
     "/v1/uploads", "/v1/uploads/{upload_id}/complete", "/v1/analyses", "/v1/analyses/{run_id}",
     "/v1/analyses/{run_id}/cancel", "/v1/captures/{capture_id}", "/v1/dev/uploads/{upload_id}",
+    "/v1/catalog", "/v1/me/payment-account", "/v1/me/credits", "/v1/checkout/web", "/v1/payments/{rail}/events",
+    "/v1/purchases/claims", "/v1/reports/{report_id}/premium", "/v1/premium-jobs/{job_id}",
 })
 
 

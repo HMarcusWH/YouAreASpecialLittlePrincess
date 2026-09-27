@@ -113,3 +113,31 @@ Retention (T03 `retention.json`, still a draft pending owner review) is applied 
 Only JPEG and PNG are accepted (≤ 20 MB, ≤ 24 MP, ≤ 12 000 px per side). HEIC, GIF, WebP, SVG and archives are rejected with explicit codes, and mobile clients convert HEIC to JPEG before upload.
 
 Local runs use the filesystem object store (`PRINCESS_LOCAL_STORAGE_DIR`, default `.local-storage/`), which is shared by the API and `apps/workers/analysis/run_worker.py`. Its upload URLs are HMAC-signed paths served by `PUT /v1/dev/uploads/{id}`, which exists only in local, test and preview (never staging or production). A real S3-compatible adapter waits on the ADR-004 provider decision, and composition refuses non-fake storage until it exists.
+
+## Commerce ledger and metered Premium (T19)
+
+Migration `0003_commerce_ledger` adds the internal ledger. Every rail — web checkout, StoreKit and Play — feeds the same tables:
+
+- `payment_account` holds our opaque per-account token (a UUID). Providers carry it back as the attested account: the Stripe client reference, Apple `appAccountToken` or Play obfuscated account ID. `GET /v1/me/payment-account` hands it to native clients.
+- `provider_event` is the verified webhook inbox. It stores the event ID, type and body SHA-256, and no account data.
+- `financial_transaction` is unique on `(rail, environment, transaction_ref)`, so each financial identity is granted at most once. `credit_lot` keeps the origin rail. `credit_reservation` is unique per intended Premium operation. `ledger_entry` is insert-only (`GRANT`, `RESERVE`, `RELEASE`, `SPEND`, `REVOKE`, `REFUND_AFTER_SPEND`), and balances are derived from lots.
+- `premium_overlay` stores the validated packet and output of a published Premium revision.
+
+Rules the code enforces (`src/princess_app/application/commerce.py`, `adapters/postgres/commerce.py`):
+
+- Only a server-verified `PURCHASED` observation grants credits. It must come from this deployment's environment, be a catalog product on that rail, and carry the account's own token. A checkout redirect, a client flag or event arrival order never grants. Pending, wrong-environment, unknown-product and foreign-account purchases grant nothing.
+- Each owner's grants, refunds, reservations and releases serialize on a per-owner advisory lock, so two devices cannot both reserve the last credit.
+- Play consumption (or acknowledgement for non-consumables) follows the durable grant. If it fails, the grant stands and `CommerceService.complete_pending` retries it. Apple transactions are finished by the client after the claim response says so. Stripe needs no completion.
+- `POST /v1/reports/{id}/premium` needs an account, open sales (`commerce` and `premium_generation` kill switches), a current `third_party_ai_processing` grant for the report, and an eligible credit. It reserves the credit and creates the job in one transaction; repeating the same request returns the same job.
+- The Premium worker publishes the overlay revision and spends the reservation in one transaction. That transaction is fenced on the job lease, the permission epoch, account deletion, report deletion or revision, and a live reservation. A refused, failed or fenced attempt releases the credit. A transient or ambiguous provider outcome is retried once, then released, so the customer is never charged twice for one deliverable.
+- A refund revokes the unspent credit and any active reservation, which blocks publication. After a spend it records `REFUND_AFTER_SPEND`. Who keeps access to delivered Premium content after a refund is an owner decision. Late notifications for a deleted account grant nothing.
+- By default, credits can be spent only on their origin platform (web credits on web, and so on). Cross-store portability needs an approved, dated policy record.
+
+Reconciliation runbook (fakes today; the same calls apply to real adapters):
+
+1. Missed or delayed webhooks: run `CommerceService.reconcile(rail, since, ctx)`. It re-reads authoritative provider state and applies it idempotently, so refunds and settled pending purchases converge.
+2. Grants whose store completion is outstanding: run `complete_pending` with the worker login. Alert on the age of the oldest `financial_transaction` with `completed_at IS NULL`.
+3. Reservations stuck in `RESERVED` belong to live Premium jobs. Check the job state before releasing anything by hand, and use `release_reservation` so the ledger entry is written.
+4. Never delete ledger rows. Corrections are compensating entries.
+
+Scheduling these loops (which process, how often, alerts) belongs to T24. Real Stripe, App Store Server API and Play Developer API adapters, sandbox evidence, prices, tax and refund terms are blocked on `price_account_terms_before_charges` and `processor_retention_contracts`. Composition refuses non-fake payment providers until then.

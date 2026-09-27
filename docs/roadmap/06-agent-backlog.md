@@ -33,7 +33,7 @@ Use `python docs/roadmap/plan_tools.py --ready` or `--task ID`. Edit tasks.json 
 | [T16 — Model evaluation and generation policy](#t16) | PLANNED | T06, T15 | evaluation |
 | [T17 — Interactive Free web product](#t17) | PLANNED | T02, T04, T09, T10, T28 | frontend |
 | [T18 — Deterministic pair and history comparison](#t18) | PLANNED | T08, T09 | statistics-report |
-| [T19 — Cross-platform purchase ledger entitlements and metered jobs](#t19) | PLANNED | T02, T03, T09, T15, T27 | commerce |
+| [T19 — Cross-platform purchase ledger entitlements and metered jobs](#t19) | IMPLEMENTED_PENDING_REVIEW | T02, T03, T09, T15, T27 | commerce |
 | [T20 — Premium and paid-pair web experience](#t20) | PLANNED | T15, T16, T17, T18, T19, T21, T24 | frontend-premium |
 | [T21 — Same-content PDF and share-card rendering](#t21) | PLANNED | T09, T10, T17 | report-frontend |
 | [T22 — Scoped sharing and comparison invitations](#t22) | PLANNED | T17, T18, T21 | backend-frontend |
@@ -1459,7 +1459,7 @@ No task-specific production gate; all repository privacy/security and scope boun
 <a id="t19"></a>
 ## T19 — Cross-platform purchase ledger entitlements and metered jobs
 
-**Status:** `PLANNED` · **Owner:** commerce · **Milestone:** premium
+**Status:** `IMPLEMENTED_PENDING_REVIEW` · **Owner:** commerce · **Milestone:** premium
 
 **Hard predecessors:** [T02](#t02), [T03](#t03), [T09](#t09), [T15](#t15), [T27](#t27)
 **Platforms:** backend, workers

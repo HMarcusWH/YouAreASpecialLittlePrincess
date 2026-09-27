@@ -15,9 +15,10 @@ from pathlib import Path
 
 from fastapi import FastAPI
 
-from princess_app.adapters.fakes import FakeAbuseChallenge, FakeIdentityProvider
+from princess_app.adapters.fakes import FakeAbuseChallenge, FakeIdentityProvider, FakePaymentProvider
 from princess_app.adapters.imaging import inspect_header
 from princess_app.adapters.localfs import LocalObjectStore
+from princess_app.adapters.postgres.commerce import PostgresLedger
 from princess_app.adapters.postgres.intake import PostgresIntakeRepository
 from princess_app.adapters.postgres.stores import (
     Database,
@@ -26,10 +27,13 @@ from princess_app.adapters.postgres.stores import (
     PostgresReportStore,
     make_engine,
 )
+from princess_app.application.commerce import CommerceService
 from princess_app.application.identity import IdentityService
 from princess_app.application.intake import IntakeService
 from princess_app.application.permissions import PermissionService
 from princess_app.config import RuntimeConfig, load_runtime_config
+from princess_app.domain.commerce import CATALOG
+from princess_app.ports.payments import PaymentRail
 from princess_app.ports.base import Environment, ProviderMode, SystemClock, Unsupported
 from princess_graphology import __version__ as ENGINE_VERSION
 
@@ -68,10 +72,19 @@ def compose(config: RuntimeConfig) -> Services:
                            inspect=inspect_header, clock=clock, ids=UuidIds(),
                            challenge_site=os.environ.get("PRINCESS_CHALLENGE_SITE", "localhost"),
                            uploads_enabled=lambda: config.enabled("uploads"))
+    if config.provider_mode("PaymentProvider") is not ProviderMode.FAKE:
+        # Real Stripe/StoreKit/Play adapters wait on accounts, products and terms
+        # (price_account_terms_before_charges); only the fake rails compose.
+        raise Unsupported("payment_adapters_not_configured", detail="price_account_terms_before_charges")
+    reports = lambda principal_id: PostgresReportStore(db, principal_id)  # noqa: E731
+    commerce = CommerceService(
+        ledger=PostgresLedger(db, UuidIds()),
+        providers={rail: FakePaymentProvider(rail, catalog=CATALOG, clock=clock, environment=config.environment)
+                   for rail in PaymentRail},
+        permissions=permissions, reports=reports, clock=clock, ids=UuidIds(), environment=config.environment)
     return Services(environment=config.environment, clock=clock, identity=identity, permissions=permissions,
-                    report_store_for=lambda principal_id: PostgresReportStore(db, principal_id),
-                    kill_switches=dict(config.manifest.kill_switches), dev_identity=provider, audience=audience,
-                    intake=intake, dev_store=store)
+                    report_store_for=reports, kill_switches=dict(config.manifest.kill_switches),
+                    dev_identity=provider, audience=audience, intake=intake, dev_store=store, commerce=commerce)
 
 
 def local_store(config: RuntimeConfig, clock) -> LocalObjectStore:
