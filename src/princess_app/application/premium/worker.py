@@ -16,6 +16,10 @@ class PremiumJobQueue(Protocol):
         """Requeue a bounded retry, or fail the job and release its reservation."""
         ...
 
+    def reap(self, now: datetime) -> int:
+        """Fail jobs whose final attempt lost its lease; release their credits."""
+        ...
+
 
 @dataclass(frozen=True)
 class PremiumWorkOutcome:
@@ -34,6 +38,7 @@ class PremiumWorker:
         self._lease = lease_seconds
 
     def run_once(self) -> PremiumWorkOutcome | None:
+        self._queue.reap(self._clock.now())
         job = self._queue.claim(self._worker_id, self._lease, self._clock.now())
         if job is None:
             return None

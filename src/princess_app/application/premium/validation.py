@@ -54,9 +54,18 @@ _PROHIBITED = re.compile(
 _SENTENCE_END = re.compile(r"[.!?…]+(?:\s|$)")
 
 
+def answer_support(packet: Mapping[str, Any]) -> dict[str, list[str]]:
+    """Facts an answer may cite: its question's mapped facts plus the support
+    of the candidates offered for it, never the whole packet."""
+    candidate_support = {c["candidate_id"]: c["support_fact_ids"] for c in packet["candidates"]}
+    return {q["question_id"]: sorted(set(q["support_fact_ids"]).union(
+        *(candidate_support.get(cid, ()) for cid in q["candidate_ids"]))) for q in packet["questions"]}
+
+
 def output_schema(compilation: PacketCompilation) -> dict[str, Any]:
     packet = compilation.packet.to_dict()
     facts = packet["allowed_fact_ids"]
+    support = answer_support(packet)
 
     def ids(values: list[str], max_items: int) -> dict[str, Any]:
         if not values:
@@ -72,7 +81,7 @@ def output_schema(compilation: PacketCompilation) -> dict[str, Any]:
                     "question_id": {"type": "string", "enum": [q["question_id"]]},
                     "answer_state": {"type": "string", "enum": list(ANSWER_STATES)},
                     "selected_candidate_ids": ids(list(q["candidate_ids"]), cap),
-                    "support_fact_ids": ids(facts, min(len(facts), 32)),
+                    "support_fact_ids": ids(support[q["question_id"]], min(len(support[q["question_id"]]), 32)),
                     "prose": {"anyOf": [{"type": "string", "maxLength": MAX_PROSE}, {"type": "null"}]}}}
 
     def soft(field_id: str, max_chars: int) -> dict[str, Any]:
@@ -125,8 +134,12 @@ def validate_output(compilation: PacketCompilation, raw: Any) -> ValidationResul
     output = compiled.value
     issues = list(validate_premium_output(compilation.packet, output))
     data = output.to_dict()
+    support = answer_support(compilation.packet.to_dict())
     for i, answer in enumerate(data["answers"]):
         path = f"/answers/{i}"
+        if not set(answer["support_fact_ids"]) <= set(support.get(answer["question_id"], ())):
+            issues.append(_issue("ANSWER_SUPPORT_OUTSIDE_QUESTION", f"{path}/support_fact_ids",
+                                 "an answer cites only its own question's facts and candidate support"))
         prose = answer["prose"]
         if answer["answer_state"] != "ANSWERED" and prose:
             issues.append(_issue("NONANSWERED_PROSE", f"{path}/prose", "unanswered states carry no text"))
@@ -152,4 +165,4 @@ def validate_output(compilation: PacketCompilation, raw: Any) -> ValidationResul
     return compiled
 
 
-__all__ = ["MAX_PROSE", "output_schema", "text_issues", "validate_output"]
+__all__ = ["MAX_PROSE", "answer_support", "output_schema", "text_issues", "validate_output"]

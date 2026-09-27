@@ -23,6 +23,7 @@ from ...ports.base import (
     NotFound,
     Unauthenticated,
     Unsupported,
+    require_opaque_id,
 )
 from .base import FakeAdapter, SequentialIds
 
@@ -253,11 +254,10 @@ class FakePaymentProvider(FakeAdapter):
 class FakeNativePurchaseClient:
     """Simulates a native store client on top of a fake Apple/Google rail."""
 
-    def __init__(self, provider: FakePaymentProvider, account_ref: str) -> None:
+    def __init__(self, provider: FakePaymentProvider) -> None:
         if provider.rail is port.PaymentRail.STRIPE:
             raise InvalidInput("native_client_needs_store_rail")
         self.provider = provider
-        self.account_ref = account_ref
         self.unfinished: dict[str, port.StoreProof] = {}
         self.finished: set[str] = set()
         self._listeners: list[Callable[[port.StoreProof], None]] = []
@@ -279,10 +279,14 @@ class FakeNativePurchaseClient:
 
     def begin_purchase(self, store_product_id: str, account_token: str,
                        *, pending: bool = False, cancel: bool = False) -> port.NativePurchaseOutcome:
+        # The store binds the transaction to exactly the token the app passed
+        # (appAccountToken / obfuscatedAccountId), so a wiring bug that sends
+        # the wrong or an empty token shows up as an account mismatch.
+        require_opaque_id(account_token, "account_token")
         if cancel:
             return port.NativePurchaseOutcome("CANCELLED")
         proof = port.StoreProof(self.provider.rail,
-                                self.provider.simulate_purchase(self.account_ref, store_product_id, pending=pending),
+                                self.provider.simulate_purchase(account_token, store_product_id, pending=pending),
                                 store_product_id, pending=pending)
         self.unfinished[proof.proof] = proof
         return port.NativePurchaseOutcome("PENDING" if pending else "PURCHASED", proof)

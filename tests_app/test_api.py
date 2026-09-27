@@ -71,7 +71,7 @@ def test_login_me_and_owner_scoped_report_reads(client, app_db):
                         "reason": "commerce_disabled"}
     assert api.get(f"/v1/reports/{rid}", headers=bob).status_code == 404
     assert api.get("/v1/reports/report_guess", headers=alice).status_code == 404
-    assert api.get(f"/v1/reports/{rid}?projection=PREMIUM", headers=alice).status_code == 422
+    assert api.get(f"/v1/reports/{rid}?projection=PREMIUM", headers=alice).status_code == 403  # no unlocked overlay
 
 
 def test_permission_lifecycle_returns_contract_grant_snapshots(client):
@@ -195,6 +195,11 @@ def test_composed_local_stack_upload_to_report(app_url, worker_db, tmp_path, mon
     assert api.put(path.path + "?" + path.query, content=data, headers={"content-type": "image/png"}).status_code == 204
     bad_sig = api.put(path.path + "?sig=" + "0" * 64, content=data, headers={"content-type": "image/png"})
     assert bad_sig.status_code == 401
+    from princess_app.domain.intake import MAX_UPLOAD_BYTES
+    random_id = "/v1/dev/uploads/upl_random?sig=" + "0" * 64  # size is checked before the ID or signature
+    assert api.put(random_id, content=b"x" * (MAX_UPLOAD_BYTES + 1)).status_code == 413
+    chunked = api.put(random_id, content=iter([b"x" * (1 << 20)] * 21))  # no declared length
+    assert chunked.status_code == 413
     capture = api.post(f"/v1/uploads/{ticket['upload_id']}/complete",
                        json={"sha256": hashlib.sha256(data).hexdigest()}, headers=auth).json()
     assert api.post("/v1/analyses", json={"capture_id": capture["capture_id"]}, headers=auth).status_code == 403
@@ -217,6 +222,7 @@ def test_composed_local_stack_upload_to_report(app_url, worker_db, tmp_path, mon
     assert status["state"] == "SUCCEEDED" and status["report_id"]
     report = api.get(f"/v1/reports/{status['report_id']}?projection=FREE", headers=auth)
     assert report.status_code == 200 and len(report.json()["facts"]) == 64
+    assert api.get(f"/v1/reports/{status['report_id']}/premium", headers=auth).status_code == 403  # nothing bought
     assert api.delete(f"/v1/captures/{capture['capture_id']}", headers=auth).status_code == 202
     assert api.get(f"/v1/reports/{status['report_id']}", headers=auth).status_code == 404
 
@@ -256,6 +262,8 @@ def test_commerce_routes_need_accounts_verified_events_and_open_sales(app_db):
     raw, headers = stripe.signed_event("checkout.session.completed", [ref])
     forged = api.post("/v1/payments/stripe/events", content=raw, headers={"x-fake-signature": "t=1,v1=00"})
     assert forged.status_code == 401
+    huge = api.post("/v1/payments/stripe/events", content=iter([b"{" * (64 << 10)] * 5))
+    assert huge.status_code == 413  # cut off while streaming, before any signature work
     assert api.post("/v1/payments/stripe/events", content=raw, headers=headers).status_code == 200
     assert api.get("/v1/me/credits?platform=web", headers=alice).json() == {"platform": "web", "available": 1,
                                                                             "reserved": 0}

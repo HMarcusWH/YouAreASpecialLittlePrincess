@@ -80,6 +80,7 @@ class PendingCompletion:
     rail: PaymentRail
     transaction_ref: str
     action: CompletionAction
+    owner_id: str
 
 
 class Ledger(Protocol):
@@ -105,7 +106,9 @@ class Ledger(Protocol):
 
     def refund(self, owner_id: str, observation: TransactionObservation, at: datetime) -> str: ...
 
-    def mark_completed(self, txn_id: str, at: datetime) -> None: ...
+    def mark_completed(self, owner_id: str, txn_id: str, at: datetime) -> bool:
+        """Record a confirmed consume/acknowledge in the owner's context."""
+        ...
 
     def pending_completions(self, limit: int) -> list[PendingCompletion]: ...
 
@@ -230,22 +233,21 @@ class CommerceService:
         except NotFound:
             return "owner_deleted"  # a late notification cannot resurrect a deleted account
         if result.completion_due:
-            self._complete(result.txn_id, observation.rail, observation.transaction_ref,
+            self._complete(owner, result.txn_id, observation.rail, observation.transaction_ref,
                            observation.completion_action, ctx)
         return "granted" if result.created else "already_granted"
 
-    def _complete(self, txn_id: str, rail: PaymentRail, ref: str, action: CompletionAction,
+    def _complete(self, owner_id: str, txn_id: str, rail: PaymentRail, ref: str, action: CompletionAction,
                   ctx: CallContext) -> bool:
         try:
             self._provider(rail).complete_store_purchase(ref, action, ctx)
         except PortError:
             return False  # durable grant stands; the completion worker retries
-        self._ledger.mark_completed(txn_id, self._clock.now())
-        return True
+        return self._ledger.mark_completed(owner_id, txn_id, self._clock.now())
 
     def complete_pending(self, ctx: CallContext, limit: int = 50) -> int:
         """Retry server-side consume/acknowledge for grants not yet completed."""
-        return sum(self._complete(p.txn_id, p.rail, p.transaction_ref, p.action, ctx)
+        return sum(self._complete(p.owner_id, p.txn_id, p.rail, p.transaction_ref, p.action, ctx)
                    for p in self._ledger.pending_completions(limit))
 
     def reconcile(self, rail: PaymentRail, since: datetime, ctx: CallContext) -> list[str]:

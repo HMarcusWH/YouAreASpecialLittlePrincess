@@ -22,7 +22,7 @@ from princess_contracts import ValidatedDocument, canonical_digest, compile_docu
 from princess_contracts import generated as g
 
 from ...domain.analysis import rfc3339
-from ...ports.base import InvalidInput, require_opaque_id
+from ...ports.base import InvalidInput, Unsupported, require_opaque_id
 from .database import InterpretationDatabase
 from .prompt import PROMPT_VERSION
 
@@ -98,9 +98,13 @@ def limitations(report: Mapping[str, Any]) -> list[dict[str, str]]:
 def compile_packet(report: ValidatedDocument, db: InterpretationDatabase, *, packet_id: str, created_at: datetime,
                    image_asset_id: str | None, pack_id: str = DEFAULT_PACK,
                    producers: Mapping[str, CandidateProducer] | None = None,
-                   owner_id: str | None = None) -> PacketCompilation:
+                   owner_id: str | None = None, allow_inactive: bool = False) -> PacketCompilation:
     """``owner_id`` is the report's current owner, which differs from the
-    snapshot's analysis owner after a guest transfer."""
+    snapshot's analysis owner after a guest transfer.
+
+    T26 content is reviewed but inactive: a database or pack whose
+    ``runtime_activation`` is false is refused. ``allow_inactive`` exists for
+    local/test composition only; no operational switch activates content."""
     if report.schema_name != "ReportDocument":
         raise InvalidInput("expected_report_document")
     require_opaque_id(packet_id, "packet_id")
@@ -109,6 +113,8 @@ def compile_packet(report: ValidatedDocument, db: InterpretationDatabase, *, pac
     pack = db.packs.get(pack_id)
     if pack is None:
         raise InvalidInput("unknown_question_pack")
+    if not allow_inactive and not (db.runtime_activation and pack["runtime_activation"]):
+        raise Unsupported("interpretation_pack_inactive")
     producers = producers or {}
     doc = report.to_dict()
     facts = {f["fact_id"]: f for f in doc["facts"] if f["availability"] in PRESENT}

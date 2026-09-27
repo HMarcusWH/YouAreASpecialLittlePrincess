@@ -9,6 +9,7 @@ import pytest
 from sqlalchemy import text
 
 from princess_app.adapters.fakes import FakePaymentProvider, FakePremiumModel, SequentialIds
+from princess_app.adapters.postgres.access import PostgresReportAccess
 from princess_app.adapters.postgres.commerce import (
     PostgresImageSource,
     PostgresLedger,
@@ -21,6 +22,7 @@ from princess_app.application.permissions import PermissionService
 from princess_app.application.premium import InMemorySpendBudget, PremiumRunner, load_interpretation_database
 from princess_app.application.premium.service import AttemptRecord, Outcome
 from princess_app.application.premium.worker import PremiumWorker
+from princess_app.application.reports import ReportReader
 from princess_app.domain.commerce import CATALOG, PREMIUM_SINGLE, Platform, catalog_entry
 from princess_app.domain.permissions import Decision, Scope
 from princess_app.ports import model as model_port
@@ -29,11 +31,12 @@ from princess_app.ports.base import (
     Environment,
     InvalidInput,
     NotAuthorized,
+    NotFound,
     TransientUnavailable,
     Unauthenticated,
 )
 from princess_app.ports.payments import PaymentRail
-from test_intake import NOTICE, Env
+from test_intake import NOTICE, Env, erasure
 from test_persistence import account, world  # noqa: F401 - fixture re-export
 
 DB = load_interpretation_database()
@@ -216,7 +219,7 @@ class Studio:
             reports=lambda owner: PostgresReportStore(env.worker_db, owner), permissions=worker_permissions,
             images=PostgresImageSource(env.worker_db), model=self.model, budget=InMemorySpendBudget(100_000),
             publisher=PostgresOverlayPublisher(env.worker_db), database=DB, clock=env.clock, ids=SequentialIds(),
-            context=env.ctx)
+            context=env.ctx, allow_inactive_content=True)
         self.worker = PremiumWorker(queue=PostgresPremiumQueue(env.worker_db), runner=runner, clock=env.clock,
                                     worker_id="premium-1")
 
@@ -274,9 +277,11 @@ def test_a_refund_during_generation_blocks_publication(shop, world):  # noqa: F8
 
     studio = Studio(shop, world, responder=refund_mid_call)
     holder["studio"] = studio
-    studio.request()
+    requested = studio.request()
     done = studio.worker.run_once()
-    assert (done.record.outcome.value, done.record.error_code) == ("FENCED", "reservation_not_active")
+    # The refund cancelled the leased job, so the in-flight attempt lost its lease.
+    assert (done.record.outcome.value, done.record.error_code, done.job_state) == ("FENCED", "lease_lost", "FENCED")
+    assert shop.service.premium_status(studio.owner, requested.job_id) == ("CANCELLED", "credit_refunded")
     assert studio.revision() == 1 and studio.reservation_state() == "REVOKED"
     assert shop.credits(studio.owner).available == 0
 
@@ -304,3 +309,88 @@ def test_stale_premium_workers_cannot_publish(shop, world):  # noqa: F811
     assert queue.finish(stale, AttemptRecord("a", stale.job_id, Outcome.FAILED, "late"),
                         studio.env.clock.now() + timedelta(seconds=1)) == "FENCED"
     assert studio.reservation_state() == "SPENT"
+
+
+def test_a_first_time_store_completion_is_recorded_under_the_owner(shop, world):  # noqa: F811
+    owner = account(world, "sub-a").principal_id
+    proof, result = shop.buy_store(owner, GOOGLE)  # consume succeeds inside the API request
+    assert result.outcome == "granted"
+    with shop.env.app_db.session(owner) as conn:
+        assert conn.execute(text("SELECT completed_at IS NOT NULL FROM app.financial_transaction")).scalar()
+    shop.providers[GOOGLE].faults.inject("complete_store_purchase", TransientUnavailable("must_not_be_called"))
+    assert shop.worker_service.complete_pending(shop.env.ctx()) == 0  # nothing left to repeat
+
+
+def test_a_refund_before_claim_cancels_the_queued_job(shop, world):  # noqa: F811
+    studio = Studio(shop, world)
+    requested = studio.request()
+    shop.providers[STRIPE].simulate_refund(studio.ref)
+    assert shop.webhook(STRIPE, [studio.ref]) == ["refunded"]
+    assert shop.service.premium_status(studio.owner, requested.job_id) == ("CANCELLED", "credit_refunded")
+    assert studio.worker.run_once() is None and studio.model.requests == []
+
+
+def test_crashed_final_attempts_are_not_reclaimed_and_release_the_credit(shop, world):  # noqa: F811
+    studio = Studio(shop, world)
+    requested = studio.request()
+    queue = PostgresPremiumQueue(studio.env.worker_db)
+    for _ in range(2):  # two workers crash mid-attempt; neither reaches finish()
+        assert queue.claim("crashing", 30, studio.env.clock.now()) is not None
+        studio.env.clock.advance(31)
+    assert queue.claim("another", 30, studio.env.clock.now()) is None  # the attempt cap holds on recovery
+    assert studio.worker.run_once() is None and studio.model.requests == []
+    assert shop.service.premium_status(studio.owner, requested.job_id) == ("FAILED", "attempts_exhausted")
+    assert studio.reservation_state() == "RELEASED" and shop.credits(studio.owner).available == 1
+
+
+def test_a_successful_retry_clears_the_earlier_error(shop, world):  # noqa: F811
+    studio = Studio(shop, world)
+    studio.model.faults.inject("generate", TransientUnavailable("provider_unavailable"))
+    requested = studio.request()
+    assert studio.worker.run_once().job_state == "QUEUED"
+    assert shop.service.premium_status(studio.owner, requested.job_id) == ("QUEUED", "provider_unavailable")
+    assert studio.worker.run_once().job_state == "SUCCEEDED"
+    assert shop.service.premium_status(studio.owner, requested.job_id) == ("SUCCEEDED", None)
+
+
+def test_the_buyer_reads_the_published_overlay_until_ai_processing_is_withdrawn(shop, world):  # noqa: F811
+    studio = Studio(shop, world)
+    studio.request()
+    assert studio.worker.run_once().job_state == "SUCCEEDED"
+    reader = ReportReader(PostgresReportStore(studio.env.app_db, studio.owner), studio.env.clock,
+                          PostgresReportAccess(studio.env.app_db))
+    owner_view = reader.view(report_id=studio.report_id, principal_id=studio.owner, projection="OWNER").data
+    assert any(s["premium_section_id"] for s in owner_view["sections"])
+    assert reader.view(report_id=studio.report_id, principal_id=studio.owner, projection="PREMIUM")
+    content = reader.premium_content(report_id=studio.report_id, principal_id=studio.owner)
+    assert content["evidence_class"] == "AI_SYNTHESIS" and content["answers"] and content["revision"] == 2
+
+    studio.env.clock.advance(1)
+    studio.env.permissions.record(subject_id=studio.owner, actor_id=studio.owner,
+                                  purpose_id="third_party_ai_processing", scope=Scope("REPORT", studio.report_id),
+                                  decision=Decision.WITHDRAW, notice_version="settings")
+    with studio.env.app_db.session(studio.owner) as conn:  # erased in the withdrawal's own transaction
+        row = conn.execute(text("SELECT packet, output, erased_at IS NOT NULL FROM app.premium_overlay")).first()
+    assert row == (None, None, True)
+    owner_view = reader.view(report_id=studio.report_id, principal_id=studio.owner, projection="OWNER").data
+    assert not any(s["premium_section_id"] for s in owner_view["sections"])
+    assert "notice.premium_revoked" in {n["localization_key"] for n in owner_view["notices"]}
+    with pytest.raises(NotAuthorized):
+        reader.premium_content(report_id=studio.report_id, principal_id=studio.owner)
+
+
+def test_reads_disclose_an_erased_source_image(shop, world):  # noqa: F811
+    studio = Studio(shop, world)
+    reader = ReportReader(PostgresReportStore(studio.env.app_db, studio.owner), studio.env.clock,
+                          PostgresReportAccess(studio.env.app_db))
+    view = reader.view(report_id=studio.report_id, principal_id=studio.owner, projection="OWNER").data
+    assert view["authorized_asset_ids"]
+    with studio.env.app_db.session(studio.owner) as conn:
+        capture_id = conn.execute(text("SELECT capture_id FROM app.capture")).scalar()
+    studio.env.repo.request_retention_review(studio.owner, capture_id, studio.env.clock.now())
+    assert "ERASED" in {o.action for o in erasure(studio.env).run_once()}  # no image-retention grant
+    view = reader.view(report_id=studio.report_id, principal_id=studio.owner, projection="OWNER").data
+    assert not view["authorized_asset_ids"]
+    assert "notice.source_image_unavailable" in {n["localization_key"] for n in view["notices"]}
+    with pytest.raises(NotFound):
+        reader.premium_content(report_id="report_missing", principal_id=studio.owner)

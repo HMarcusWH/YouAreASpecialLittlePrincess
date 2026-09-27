@@ -16,6 +16,7 @@ from princess_app.ports import model as port
 from princess_app.ports.base import (
     AmbiguousOutcome,
     CallContext,
+    DeadlineExceeded,
     Environment,
     InvalidInput,
     PermanentFailure,
@@ -160,3 +161,20 @@ def test_cross_environment_context_is_rejected_before_anything_is_sent():
     with pytest.raises(InvalidInput):
         setup.model.generate(setup.request(), setup.ctx(Environment.PRODUCTION))
     assert setup.seen == [] and KEY not in repr(setup.model)
+
+
+def test_an_expired_deadline_after_reading_the_image_sends_nothing():
+    setup = Setup(lambda r: httpx.Response(200, json=completed("{}")))
+    image = setup.image()
+    ctx = setup.ctx()
+    real_read = setup.store.read_object
+
+    def slow_read(obj, call_ctx):
+        data = real_read(obj, call_ctx)
+        setup.clock.advance(31)  # the object read consumed the whole call budget
+        return data
+
+    setup.store.read_object = slow_read
+    with pytest.raises(DeadlineExceeded):
+        setup.model.generate(setup.request(image), ctx)
+    assert setup.seen == []

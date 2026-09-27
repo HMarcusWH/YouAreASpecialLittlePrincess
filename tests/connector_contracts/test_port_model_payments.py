@@ -187,18 +187,18 @@ def test_web_checkout_redirect_is_not_payment_until_provider_says_so():
 
 def test_native_client_returns_proofs_and_apple_finish_is_client_side():
     clock, apple = rail(payments.PaymentRail.APPLE_APP_STORE)
-    client = FakeNativePurchaseClient(apple, "acct_1")
-    outcome = client.begin_purchase("a.credits.1", "session-token")
+    client = FakeNativePurchaseClient(apple)
+    outcome = client.begin_purchase("a.credits.1", "acct_1")
     assert outcome.state == "PURCHASED" and client.recover_pending_transactions() == [outcome.proof]
     obs = apple.verify_purchase(outcome.proof.proof, "acct_1", ctx(clock))
     assert obs.completion_action is payments.CompletionAction.CLIENT_FINISH and obs.completed is False
     client.finish_after_server_grant(outcome.proof)
     assert client.recover_pending_transactions() == []
     assert apple.verify_purchase(outcome.proof.proof, "acct_1", ctx(clock)).completed is True
-    assert client.begin_purchase("a.credits.1", "t", cancel=True).proof is None
+    assert client.begin_purchase("a.credits.1", "acct_1", cancel=True).proof is None
     updates = []
     unsubscribe = client.observe_transaction_updates(updates.append)
-    pending = client.begin_purchase("a.credits.1", "t", pending=True).proof
+    pending = client.begin_purchase("a.credits.1", "acct_1", pending=True).proof
     client.settle_pending(pending)
     assert [u.pending for u in updates] == [False]
     assert apple.verify_purchase(pending.proof, "acct_1", ctx(clock)).state is payments.PurchaseState.PURCHASED
@@ -206,4 +206,14 @@ def test_native_client_returns_proofs_and_apple_finish_is_client_side():
     client.settle_pending(pending)
     assert len(updates) == 1
     with pytest.raises(InvalidInput):
-        FakeNativePurchaseClient(rail(payments.PaymentRail.STRIPE)[1], "acct_1")
+        FakeNativePurchaseClient(rail(payments.PaymentRail.STRIPE)[1])
+
+
+def test_native_client_binds_the_purchase_to_the_token_the_app_passed():
+    clock, apple = rail(payments.PaymentRail.APPLE_APP_STORE)
+    client = FakeNativePurchaseClient(apple)
+    other = client.begin_purchase("a.credits.1", "acct_2").proof
+    observed = apple.verify_purchase(other.proof, "acct_1", ctx(clock))
+    assert observed.account_binding is payments.AccountBinding.MISMATCHED and observed.account_ref == "acct_2"
+    with pytest.raises(InvalidInput):
+        client.begin_purchase("a.credits.1", "")

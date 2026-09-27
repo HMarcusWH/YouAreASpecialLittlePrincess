@@ -101,6 +101,11 @@ class PostgresIdentityStore:
                          {"p": principal_id, "t": at, "h": token_hash, "e": expires_at})
         return Principal(principal_id, "GUEST", at, guest_expires_at=expires_at)
 
+    def admit_guest(self, at: datetime, policy) -> bool:
+        with self.db.session() as conn:
+            return bool(conn.execute(text("SELECT app.admit_guest(:t, :w, :n)"),
+                                     {"t": at, "w": policy.window_seconds, "n": policy.limit}).scalar())
+
     def guest_by_capability(self, token_hash: str) -> Principal | None:
         with self.db.session() as conn:
             row = conn.execute(text("SELECT * FROM app.resolve_guest(:h)"), {"h": token_hash}).mappings().first()
@@ -343,21 +348,30 @@ def _value_columns(value: Any) -> dict[str, Any]:
     return {"vf": None, "vj": json.dumps(value, allow_nan=False)}
 
 
+MAX_REGION_DEPTH = 64
+
+
 def _parent_first(regions: list[Mapping[str, Any]]) -> list[Mapping[str, Any]]:
+    """Order regions parents-first; a parent cycle (including a self-parent)
+    or a chain deeper than MAX_REGION_DEPTH rejects the whole result before
+    any projection row is written."""
     by_id = {r["region_id"]: r for r in regions}
-    ordered, seen = [], set()
-
-    def visit(region: Mapping[str, Any], depth: int = 0) -> None:
-        if region["region_id"] in seen or depth > 64:
-            return
-        parent = region.get("parent_id")
-        if parent in by_id:
-            visit(by_id[parent], depth + 1)
-        seen.add(region["region_id"])
-        ordered.append(region)
-
+    ordered, done = [], set()
     for region in regions:
-        visit(region)
+        path: list[Mapping[str, Any]] = []
+        on_path: set[str] = set()
+        node: Mapping[str, Any] | None = region
+        while node is not None and node["region_id"] not in done:
+            if node["region_id"] in on_path:
+                raise InvalidInput("region_parent_cycle")
+            if len(path) >= MAX_REGION_DEPTH:
+                raise InvalidInput("region_hierarchy_too_deep")
+            path.append(node)
+            on_path.add(node["region_id"])
+            node = by_id.get(node.get("parent_id"))
+        for item in reversed(path):
+            done.add(item["region_id"])
+            ordered.append(item)
     return ordered
 
 

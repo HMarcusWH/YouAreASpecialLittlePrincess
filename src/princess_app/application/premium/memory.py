@@ -25,10 +25,10 @@ class InMemorySpendBudget:
     reserved: dict[str, int] = field(default_factory=dict)
     spent: int = 0
 
-    def reserve(self, attempt_id: str, max_output_tokens: int) -> bool:
-        if self.spent + sum(self.reserved.values()) + max_output_tokens > self.limit_tokens:
+    def reserve(self, attempt_id: str, max_billable_tokens: int) -> bool:
+        if self.spent + sum(self.reserved.values()) + max_billable_tokens > self.limit_tokens:
             return False
-        self.reserved[attempt_id] = max_output_tokens
+        self.reserved[attempt_id] = max_billable_tokens
         return True
 
     def settle(self, attempt_id: str, usage: port.ProviderUsage | None) -> None:

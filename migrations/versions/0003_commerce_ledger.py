@@ -119,13 +119,17 @@ CREATE TABLE app.premium_overlay (
   reservation_id text NOT NULL UNIQUE,
   packet_digest text NOT NULL CHECK (packet_digest ~ {SHA}),
   output_digest text NOT NULL CHECK (output_digest ~ {SHA}),
-  packet jsonb NOT NULL,
-  output jsonb NOT NULL,
+  -- premium_request_payload retention class: erased (NULL) on withdrawal of
+  -- third-party AI processing; the digests remain as the deletion tombstone.
+  packet jsonb,
+  output jsonb,
   omissions jsonb NOT NULL,
   model_returned text,
   created_at timestamptz NOT NULL,
+  erased_at timestamptz,
   FOREIGN KEY (owner_id, report_id) REFERENCES app.report (owner_id, report_id)
-    ON UPDATE CASCADE DEFERRABLE INITIALLY IMMEDIATE
+    ON UPDATE CASCADE DEFERRABLE INITIALLY IMMEDIATE,
+  CHECK ((erased_at IS NULL) = (packet IS NOT NULL AND output IS NOT NULL))
 );
 
 DO $$ DECLARE t text; BEGIN
@@ -160,6 +164,23 @@ $f$ SELECT owner_id FROM app.financial_transaction
 REVOKE ALL ON FUNCTION app.resolve_payment_owner(text), app.resolve_transaction_owner(text, text, text) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION app.resolve_payment_owner(text), app.resolve_transaction_owner(text, text, text)
   TO princess_app;
+
+-- Withdrawing (or denying) third-party AI processing ends the stored Premium
+-- request payload in the same transaction that records the decision.
+CREATE FUNCTION app.erase_withdrawn_premium() RETURNS trigger
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = app, pg_temp AS
+$f$
+BEGIN
+  UPDATE app.premium_overlay SET packet = NULL, output = NULL, erased_at = NEW.recorded_at
+    WHERE owner_id = NEW.subject_id AND erased_at IS NULL
+      AND (NEW.scope_kind = 'SUBJECT_WIDE' OR (NEW.scope_kind = 'REPORT' AND report_id = NEW.scope_ref));
+  RETURN NULL;
+END
+$f$;
+REVOKE ALL ON FUNCTION app.erase_withdrawn_premium() FROM PUBLIC;
+CREATE TRIGGER premium_payload_withdrawal AFTER INSERT ON app.permission_event
+  FOR EACH ROW WHEN (NEW.purpose_id = 'third_party_ai_processing' AND NEW.decision IN ('WITHDRAW', 'DENY'))
+  EXECUTE FUNCTION app.erase_withdrawn_premium();
 """
 
 DOWNGRADE = """
@@ -169,6 +190,8 @@ DO $$ BEGIN
     RAISE EXCEPTION 'refusing to drop financial history';
   END IF;
 END $$;
+DROP TRIGGER premium_payload_withdrawal ON app.permission_event;
+DROP FUNCTION app.erase_withdrawn_premium();
 DROP FUNCTION app.resolve_transaction_owner(text, text, text);
 DROP FUNCTION app.resolve_payment_owner(text);
 DROP TABLE app.premium_overlay;

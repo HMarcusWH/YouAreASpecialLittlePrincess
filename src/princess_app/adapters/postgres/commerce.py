@@ -176,24 +176,31 @@ class PostgresLedger:
                 _entry(conn, owner_id, lot_id, "REVOKE", -available, at, reason="refund_unspent")
             for reservation_id in revoked:
                 _entry(conn, owner_id, lot_id, "REVOKE", 0, at, reservation_id, "refund_reserved")
+            if revoked:
+                # Unstarted work for a refunded credit must not reach the provider;
+                # a leased attempt loses its lease and cannot publish.
+                conn.execute(text(
+                    "UPDATE app.job SET state = 'CANCELLED', lease_owner = NULL, lease_expires_at = NULL, "
+                    "last_error = 'credit_refunded', updated_at = :t WHERE kind = :k AND state IN ('QUEUED', 'LEASED') "
+                    "AND payload->>'reservation_id' = ANY(:r)"), {"t": at, "k": PREMIUM_KIND, "r": revoked})
             if spent:
                 # Delivered Premium stays delivered; access policy after refund is an owner decision.
                 _entry(conn, owner_id, lot_id, "REFUND_AFTER_SPEND", 0, at, reason=f"spent:{spent}")
         return "refunded"
 
-    def mark_completed(self, txn_id: str, at: datetime) -> None:
-        with self.db.session() as conn:
-            conn.execute(text("UPDATE app.financial_transaction SET completed_at = coalesce(completed_at, :t) "
-                              "WHERE txn_id = :x"), {"t": at, "x": txn_id})
+    def mark_completed(self, owner_id: str, txn_id: str, at: datetime) -> bool:
+        with self.db.session(owner_id) as conn:
+            return conn.execute(text("UPDATE app.financial_transaction SET completed_at = coalesce(completed_at, :t) "
+                                     "WHERE txn_id = :x"), {"t": at, "x": txn_id}).rowcount == 1
 
     def pending_completions(self, limit: int) -> list[PendingCompletion]:
         """Worker login only (the completion policy spans owners)."""
         with self.db.session() as conn:
             rows = conn.execute(text(
-                "SELECT txn_id, rail, transaction_ref, completion_action FROM app.financial_transaction "
+                "SELECT txn_id, rail, transaction_ref, completion_action, owner_id FROM app.financial_transaction "
                 "WHERE completed_at IS NULL AND refunded_at IS NULL AND completion_action = ANY(:c) "
                 "ORDER BY granted_at LIMIT :n"), {"c": list(SERVER_COMPLETIONS), "n": limit}).all()
-        return [PendingCompletion(r[0], PaymentRail(r[1]), r[2], CompletionAction(r[3])) for r in rows]
+        return [PendingCompletion(r[0], PaymentRail(r[1]), r[2], CompletionAction(r[3]), r[4]) for r in rows]
 
     # --- credits and Premium jobs -----------------------------------------------
     def balance(self, owner_id: str, rails: Sequence[PaymentRail]) -> Balance:
@@ -253,17 +260,35 @@ class PostgresPremiumQueue:
             row = conn.execute(text(
                 "UPDATE app.job SET state = 'LEASED', lease_owner = :w, lease_expires_at = :exp, "
                 "fencing_token = fencing_token + 1, attempts = attempts + 1, updated_at = :now "
-                "WHERE job_id = (SELECT job_id FROM app.job WHERE kind = :k AND (state = 'QUEUED' OR "
-                "(state = 'LEASED' AND lease_expires_at < :now)) ORDER BY created_at FOR UPDATE SKIP LOCKED LIMIT 1) "
+                "WHERE job_id = (SELECT job_id FROM app.job WHERE kind = :k AND attempts < :max AND "
+                "(state = 'QUEUED' OR (state = 'LEASED' AND lease_expires_at < :now)) "
+                "ORDER BY created_at FOR UPDATE SKIP LOCKED LIMIT 1) "
                 "RETURNING job_id, owner_id, subject_ref, fencing_token, attempts, payload"),
                 {"w": worker_id, "exp": now + timedelta(seconds=lease_seconds), "now": now,
-                 "k": PREMIUM_KIND}).mappings().first()
+                 "k": PREMIUM_KIND, "max": MAX_ATTEMPTS}).mappings().first()
         if row is None:
             return None
         payload = row["payload"]
         return PremiumJob(row["job_id"], row["owner_id"], row["subject_ref"], int(payload["report_revision"]),
                           int(payload["permission_epoch"]), int(row["attempts"]),
                           fencing_token=int(row["fencing_token"]), reservation_id=payload["reservation_id"])
+
+    def reap(self, now: datetime, limit: int = 20) -> int:
+        """Terminalize jobs whose last permitted attempt lost its lease (a
+        crashed worker never reaches ``finish``) and release their credits.
+        Such an attempt may still have executed remotely; that cost is ours."""
+        with self.db.session() as conn:
+            rows = conn.execute(text(
+                "UPDATE app.job SET state = 'FAILED', lease_owner = NULL, lease_expires_at = NULL, "
+                "last_error = 'attempts_exhausted', updated_at = :now WHERE job_id IN (SELECT job_id FROM app.job "
+                "WHERE kind = :k AND state = 'LEASED' AND lease_expires_at < :now AND attempts >= :max "
+                "ORDER BY created_at FOR UPDATE SKIP LOCKED LIMIT :n) RETURNING owner_id, payload"),
+                {"now": now, "k": PREMIUM_KIND, "max": MAX_ATTEMPTS, "n": limit}).all()
+            for owner_id, payload in rows:
+                set_context(conn, owner_id)
+                release_reservation(conn, owner_id, payload["reservation_id"], "attempts_exhausted", now)
+            set_context(conn, None)
+        return len(rows)
 
     def finish(self, job: PremiumJob, record: AttemptRecord, now: datetime) -> str:
         """Settle the job after an attempt. Success was already committed by the
@@ -342,7 +367,7 @@ class PostgresOverlayPublisher:
             _entry(conn, job.owner_id, spent, "SPEND", 0, now, job.reservation_id, "premium_published")
             set_context(conn, None)
             conn.execute(text("UPDATE app.job SET state = 'SUCCEEDED', lease_owner = NULL, lease_expires_at = NULL, "
-                              "updated_at = :t WHERE job_id = :j"), {"t": now, "j": job.job_id})
+                              "last_error = NULL, updated_at = :t WHERE job_id = :j"), {"t": now, "j": job.job_id})
         return document.data["revision"]
 
 

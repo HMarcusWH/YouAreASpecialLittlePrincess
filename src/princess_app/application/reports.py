@@ -8,7 +8,7 @@ provider or renderer is reachable from here.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Mapping, Protocol
+from typing import Any, Mapping, Protocol
 
 from princess_contracts import ValidatedDocument
 
@@ -60,10 +60,29 @@ class ShareAccess:
     revoked: bool = False
 
 
+@dataclass(frozen=True)
+class ReportAccess:
+    """Live state a saved snapshot cannot carry, resolved on every read."""
+
+    source_image_available: bool = True
+    premium: PremiumAuthorization | None = None
+
+
+class ReportAccessResolver(Protocol):
+    def resolve(self, owner_id: str, report: ValidatedDocument) -> ReportAccess:
+        """Whether the source image still exists, and the saved overlay's access."""
+        ...
+
+    def premium_content(self, owner_id: str, overlay_id: str) -> Mapping[str, Any] | None:
+        """The validated overlay output and omissions, or None once erased."""
+        ...
+
+
 class ReportReader:
-    def __init__(self, store: ReportStore, clock: Clock) -> None:
+    def __init__(self, store: ReportStore, clock: Clock, access: ReportAccessResolver | None = None) -> None:
         self._store = store
         self._clock = clock
+        self._access = access
 
     def view(self, *, report_id: str, principal_id: str | None, projection: str,
              premium: PremiumAuthorization | None = None, share: ShareAccess | None = None,
@@ -81,6 +100,10 @@ class ReportReader:
             raise NotFound("report_not_found")  # never reveal another owner's report exists
         else:
             scope = frozenset()
+        if self._access is not None:
+            resolved = self._access.resolve(owner_id, report)
+            source_image_available = source_image_available and resolved.source_image_available
+            premium = premium if premium is not None else resolved.premium
         result = project_report(report, ProjectionRequest(
             projection=projection, generated_at=self._clock.now(), premium=premium,
             source_image_available=source_image_available, include_source_image=include_source_image,
@@ -91,3 +114,15 @@ class ReportReader:
                 raise NotAuthorized("premium_not_authorized")
             raise PermanentFailure("projection_invalid", detail=",".join(sorted(codes))[:120])
         return result.value
+
+    def premium_content(self, *, report_id: str, principal_id: str) -> dict[str, Any]:
+        """The purchased overlay for the owner's latest revision. Served only
+        while the overlay is unlocked; an erased or revoked payload is gone."""
+        view = self.view(report_id=report_id, principal_id=principal_id, projection="PREMIUM")
+        entry = self._store.latest(report_id)
+        overlay_id = entry[1].data["premium_overlay_id"] if entry else None
+        content = self._access.premium_content(principal_id, overlay_id) if self._access and overlay_id else None
+        if content is None:
+            raise NotFound("premium_not_available")
+        return {"report_id": report_id, "revision": view.data["source_revision"], "overlay_id": overlay_id,
+                "evidence_class": "AI_SYNTHESIS", **content}

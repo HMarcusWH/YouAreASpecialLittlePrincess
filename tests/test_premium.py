@@ -19,12 +19,18 @@ from princess_app.application.premium import (
     Outcome,
     PremiumJob,
     PremiumRunner,
+    answer_support,
     compile_packet,
     load_interpretation_database,
     output_schema,
     validate_output,
 )
 from princess_app.application.premium.database import DEFAULT_PATH
+from princess_app.application.premium.service import (
+    IMAGE_INPUT_TOKEN_BOUND,
+    MAX_OUTPUT_TOKENS,
+    billable_token_bound,
+)
 from princess_app.application.reports import InMemoryReportStore
 from princess_app.domain.evidence import build_evidence_bundle
 from princess_app.domain.permissions import Decision, Scope
@@ -37,6 +43,7 @@ from princess_app.ports.base import (
     InvalidInput,
     PermanentFailure,
     RateLimited,
+    Unsupported,
 )
 from princess_app.ports.storage import StoredObject
 
@@ -60,6 +67,7 @@ OWNER = REPORT.data["analysis"]["owner_id"]
 
 
 def compilation(image="asset_1", **kwargs):
+    kwargs.setdefault("allow_inactive", True)  # T26 is reviewed but inactive; tests exercise it explicitly
     return compile_packet(REPORT, DB, packet_id="packet_1", created_at=T0, image_asset_id=image, **kwargs)
 
 
@@ -163,7 +171,11 @@ def test_output_schema_is_strict_and_encodes_only_frozen_ids():
         assert props["selected_candidate_ids"]["items"]["enum"] == question["candidate_ids"]
         assert props["selected_candidate_ids"]["maxItems"] == (1 if question["cardinality"] == "SINGLE"
                                                                else len(question["candidate_ids"]))
-        assert props["support_fact_ids"]["items"]["enum"] == packet["allowed_fact_ids"]
+        allowed = answer_support(packet)[question["question_id"]]
+        assert props["support_fact_ids"]["items"].get("enum", []) == allowed
+        assert set(allowed) <= set(packet["allowed_fact_ids"])
+        if not allowed:
+            assert props["support_fact_ids"]["maxItems"] == 0
     soft = schema["properties"]["soft_fields"]["items"]["anyOf"]
     assert [s["properties"]["field_id"]["enum"] for s in soft] == [["SOFT_LIMITATION"]]
 
@@ -204,6 +216,19 @@ def test_adversarial_output_cases(case):
         assert outcome.value is not None, outcome.issues
 
 
+def test_an_answer_cannot_cite_facts_outside_its_own_question():
+    c = compilation()
+    packet = c.packet.to_dict()
+    support = answer_support(packet)
+    first = packet["questions"][0]["question_id"]
+    foreign = sorted(set(packet["allowed_fact_ids"]) - set(support[first]))
+    assert foreign, "fixture needs a fact outside the first question's support"
+    output = well_behaved(c.model_input)
+    output["answers"][0]["support_fact_ids"] = foreign[:1]
+    result = validate_output(c, output)
+    assert result.value is None and "ANSWER_SUPPORT_OUTSIDE_QUESTION" in {i.code for i in result.issues}
+
+
 # --- attempts -------------------------------------------------------------------
 class Images:
     def __init__(self, image=IMAGE):
@@ -214,7 +239,7 @@ class Images:
 
 
 class World:
-    def __init__(self, responder=None, *, image=IMAGE, limit=100_000):
+    def __init__(self, responder=None, *, image=IMAGE, limit=100_000, allow_inactive=True):
         self.clock = FakeClock(T0 + timedelta(minutes=5))
         self.permissions = PermissionService(InMemoryPermissionStore(), self.clock, SequentialIds(),
                                              allow_draft_policy=True)
@@ -226,7 +251,8 @@ class World:
         self.runner = PremiumRunner(
             reports=lambda owner: self.store, permissions=self.permissions, images=Images(image), model=self.model,
             budget=self.budget, publisher=self.publisher, database=DB, clock=self.clock, ids=SequentialIds(),
-            context=lambda: CallContext("corr-1", Environment.TEST, self.clock.now() + timedelta(seconds=60)))
+            context=lambda: CallContext("corr-1", Environment.TEST, self.clock.now() + timedelta(seconds=60)),
+            allow_inactive_content=allow_inactive)
 
     def grant(self):
         self.permissions.record(subject_id=OWNER, actor_id=OWNER, purpose_id="third_party_ai_processing",
@@ -271,6 +297,39 @@ def test_stale_consent_blocks_before_the_call_and_during_publication():
     record = racing.runner.run(job)
     assert (record.outcome, record.error_code) == (Outcome.FENCED, "permission_changed")
     assert racing.store.latest("report_1")[1].data["revision"] == 1
+
+
+def test_withdrawal_after_compilation_stops_the_transfer():
+    world = World()
+    job = world.job()
+
+    class WithdrawWhileCompiling(Images):
+        def authorized_image(self, owner_id, report):
+            world.withdraw()  # commits after the first check, before any private data is sent
+            return IMAGE
+
+    world.runner._images = WithdrawWhileCompiling()
+    record = world.runner.run(job)
+    assert (record.outcome, record.error_code) == (Outcome.FENCED, "permission_changed")
+    assert world.model.requests == [] and world.budget.reserved == {} and world.budget.spent == 0
+
+
+def test_inactive_t26_content_is_refused_without_a_call():
+    with pytest.raises(Unsupported):
+        compilation(allow_inactive=False)
+    world = World(allow_inactive=False)
+    record = world.runner.run(world.job())
+    assert (record.outcome, record.error_code) == (Outcome.FAILED, "interpretation_pack_inactive")
+    assert world.model.requests == [] and world.budget.reserved == {}
+
+
+def test_budget_reserves_input_and_image_tokens_not_only_output():
+    c = compilation()
+    bound = billable_token_bound(c, IMAGE)
+    assert bound > MAX_OUTPUT_TOKENS + IMAGE_INPUT_TOKEN_BOUND
+    assert billable_token_bound(c, None) == bound - IMAGE_INPUT_TOKEN_BOUND
+    world = World(limit=bound - 1)
+    assert world.runner.run(world.job()).outcome is Outcome.BUDGET_EXHAUSTED and world.model.requests == []
 
 
 def test_no_image_is_not_applicable_and_never_calls_or_reserves():

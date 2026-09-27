@@ -16,11 +16,19 @@ from dataclasses import dataclass, field, replace
 from datetime import datetime, timedelta
 from typing import Protocol
 
-from ..ports.base import CallContext, Clock, Conflict, IdGenerator, NotFound, Unauthenticated
+from ..ports.base import CallContext, Clock, Conflict, IdGenerator, NotFound, RateLimited, Unauthenticated
 from ..ports.identity import IdentityProvider
 
 GUEST_PREFIX = "guest_"
 GUEST_TTL = timedelta(days=30)
+
+
+@dataclass(frozen=True)
+class GuestAdmission:
+    """Global cap on unauthenticated guest creation per fixed window."""
+
+    limit: int = 300
+    window_seconds: int = 60
 
 
 @dataclass(frozen=True)
@@ -49,6 +57,10 @@ class IdentityStore(Protocol):
 
     def create_guest(self, principal_id: str, token_hash: str, expires_at: datetime, at: datetime) -> Principal: ...
 
+    def admit_guest(self, at: datetime, policy: GuestAdmission) -> bool:
+        """Count one guest creation in the current window; False once it is full."""
+        ...
+
     def guest_by_capability(self, token_hash: str) -> Principal | None: ...
 
     def transfer_guest(self, token_hash: str, account_id: str, at: datetime) -> str:
@@ -71,12 +83,13 @@ class IdentityStore(Protocol):
 
 class IdentityService:
     def __init__(self, provider: IdentityProvider, store: IdentityStore, clock: Clock, ids: IdGenerator,
-                 audience: str) -> None:
+                 audience: str, guest_admission: GuestAdmission = GuestAdmission()) -> None:
         self._provider = provider
         self._store = store
         self._clock = clock
         self._ids = ids
         self._audience = audience
+        self._guest_admission = guest_admission
 
     # --- authentication --------------------------------------------------
     def authenticate(self, credential: str, ctx: CallContext) -> Principal:
@@ -109,8 +122,12 @@ class IdentityService:
         return principal
 
     def create_guest(self) -> tuple[Principal, str]:
-        token = GUEST_PREFIX + secrets.token_urlsafe(32)
         now = self._clock.now()
+        policy = self._guest_admission
+        if not self._store.admit_guest(now, policy):
+            elapsed = now.timestamp() % policy.window_seconds
+            raise RateLimited("guest_admission_limited", retry_after_s=max(1.0, policy.window_seconds - elapsed))
+        token = GUEST_PREFIX + secrets.token_urlsafe(32)
         principal = self._store.create_guest(self._ids.new_id("prn"), capability_hash(token), now + GUEST_TTL, now)
         return principal, token
 
@@ -157,6 +174,14 @@ class InMemoryIdentityStore:
     guest_index: dict[str, str] = field(default_factory=dict)
     owned: dict[str, str] = field(default_factory=dict)  # object id -> owner principal (for transfer tests)
     outbox: list[tuple[str, str]] = field(default_factory=list)
+    admissions: dict[int, int] = field(default_factory=dict)
+
+    def admit_guest(self, at: datetime, policy: GuestAdmission) -> bool:
+        window = int(at.timestamp()) // policy.window_seconds
+        if self.admissions.get(window, 0) >= policy.limit:
+            return False
+        self.admissions[window] = self.admissions.get(window, 0) + 1
+        return True
 
     def principal(self, principal_id: str) -> Principal | None:
         return self.principals.get(principal_id)
@@ -193,6 +218,8 @@ class InMemoryIdentityStore:
             raise Conflict("guest_already_transferred")
         if guest.guest_expires_at is not None and at >= guest.guest_expires_at:
             raise Conflict("guest_capability_expired")
+        if guest.revoked_before is not None or guest.deleted_at is not None:
+            raise Conflict("guest_not_transferable")  # logout-everywhere ends the capability
         for obj, owner in list(self.owned.items()):
             if owner == guest.principal_id:
                 self.owned[obj] = account_id

@@ -44,6 +44,15 @@ class PostgresErasureOutbox:
             conn.execute(text("UPDATE app.asset SET deleted_at = coalesce(deleted_at, :t) WHERE asset_id = :a"),
                          {"a": asset_id, "t": at})
 
+    def unerased_assets(self, owner_id: str) -> list[str]:
+        with self.db.session(owner_id) as conn:
+            return list(conn.execute(text("SELECT asset_id FROM app.asset WHERE deleted_at IS NULL "
+                                          "ORDER BY created_at, asset_id")).scalars())
+
+    def erase_account_records(self, owner_id: str, at: datetime) -> None:
+        with self.db.session() as conn:
+            conn.execute(text("SELECT app.erase_deleted_account(:o, :t)"), {"o": owner_id, "t": at})
+
     def dispatched(self, event_id: str, at: datetime) -> None:
         with self.db.session() as conn:
             conn.execute(text("UPDATE app.outbox_event SET dispatched_at = :t WHERE event_id = :e "

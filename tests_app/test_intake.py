@@ -32,7 +32,9 @@ from princess_app.ports.base import (
     NotAuthorized,
     NotFound,
     RateLimited,
+    TransientUnavailable,
 )
+from princess_app.domain.intake import MAX_ACTIVE_JOBS
 from princess_graphology import GraphologyEngine, __version__
 from test_persistence import account, world  # noqa: F401 - fixture re-export
 
@@ -195,6 +197,51 @@ def test_unsafe_or_unsupported_uploads_are_rejected_and_bytes_removed(env, world
     assert err.value.code == code
     assert env.store.verify_deletion(ticket.asset_id, env.ctx()) in (True, False)  # deletion requested
     assert env.repo.capture_for_upload(owner, ticket.upload_id) is None
+
+
+def test_concurrent_submissions_cannot_exceed_the_active_limit(env, world):  # noqa: F811
+    owner = account(world, "sub-a").principal_id
+    captures = []
+    for _ in range(MAX_ACTIVE_JOBS + 3):
+        data = handwriting_png()
+        ticket = env.upload(owner, data, proof=ChallengeProof(env.challenge.issue_token("upload", "app.test")))
+        capture = env.intake.complete_upload(owner, ticket.upload_id, sha(data), env.ctx())
+        env.grant(owner, capture.capture_id)
+        captures.append(capture.capture_id)
+    outcomes = []
+
+    def submit(capture_id):
+        try:
+            env.intake.start_analysis(owner, capture_id)
+            outcomes.append("ok")
+        except RateLimited:
+            outcomes.append("limited")
+
+    threads = [threading.Thread(target=submit, args=(c,)) for c in captures]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+    assert outcomes.count("ok") == MAX_ACTIVE_JOBS and outcomes.count("limited") == 3
+
+
+def test_a_failed_erase_after_rejection_is_queued_not_stranded(env, world):  # noqa: F811
+    owner = account(world, "sub-a").principal_id
+    data = jpeg()
+    ticket = env.upload(owner, data, "image/png")
+    env.store.faults.inject("delete_asset_versions", TransientUnavailable("store_down"))
+    with pytest.raises(InvalidInput):
+        env.intake.complete_upload(owner, ticket.upload_id, sha(data), env.ctx())
+    assert env.repo.upload(owner, ticket.upload_id).state == "REJECTED"  # not stuck in COMPLETING
+    assert not env.store.verify_deletion(ticket.asset_id, env.ctx())
+    assert [o.action for o in erasure(env).run_once()] == ["ERASED"]
+    assert env.store.verify_deletion(ticket.asset_id, env.ctx())
+
+
+def test_capture_dimensions_follow_exif_orientation(env, world):  # noqa: F811
+    owner = account(world, "sub-a").principal_id
+    capture = env.capture(owner, jpeg((400, 200), orientation=6), "image/jpeg")
+    assert (capture.width, capture.height, capture.exif_orientation) == (200, 400, 6)
 
 
 def test_exif_orientation_is_applied_and_metadata_dropped():
@@ -382,6 +429,29 @@ def test_service_withdrawal_ends_the_report_and_erases_bytes(env, world):  # noq
     assert PostgresReportStore(env.app_db, owner).latest(report_id) is None
     assert "ERASED" in {o.action for o in erasure(env).run_once()}
     assert env.store.verify_deletion(capture.asset_id, env.ctx())
+
+
+def test_account_deletion_erases_assets_then_records(env, world):  # noqa: F811
+    clock, provider, identity = world
+    acct = account(world, "sub-a")
+    owner = acct.principal_id
+    capture, run_id = env.analysis(owner)
+    grant_retention(env, owner, capture.capture_id)  # a retained original must go too
+    assert env.worker().run_once().outcome == "SUCCEEDED"
+    assert [o.action for o in erasure(env).run_once()] == ["KEPT"]
+    report_id = env.intake.status(owner, run_id).report_id
+    identity.delete_account(acct, env.ctx())
+    env.store.faults.inject("delete_asset_versions", TransientUnavailable("store_down"))
+    assert [o.action for o in erasure(env).run_once()] == ["UNVERIFIED"]  # rows stay until bytes are gone
+    assert PostgresReportStore(env.app_db, owner).latest(report_id) is not None
+    assert [o.action for o in erasure(env).run_once()] == ["ERASED"]
+    assert env.store.verify_deletion(capture.asset_id, env.ctx())
+    with env.app_db.session(owner) as conn:
+        for table in ("report", "report_revision", "analysis_run", "measurement", "capture", "upload", "job"):
+            assert conn.execute(text(f"SELECT count(*) FROM app.{table}")).scalar() == 0, table
+        assert conn.execute(text("SELECT count(*) FROM app.asset WHERE deleted_at IS NULL")).scalar() == 0
+        assert conn.execute(text("SELECT count(*) FROM app.permission_event")).scalar() > 0  # consent history kept
+    assert erasure(env).run_once() == []
 
 
 def test_guest_transfer_moves_completed_captures_and_ends_inflight_work(env, world):  # noqa: F811

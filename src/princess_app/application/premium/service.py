@@ -17,7 +17,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Callable, Mapping, Protocol
 
-from princess_contracts import ValidatedDocument
+from princess_contracts import ValidatedDocument, canonical_json
 
 from ...domain.permissions import Scope
 from ...ports import model as port
@@ -30,18 +30,29 @@ from ...ports.base import (
     PortError,
     RateLimited,
     TransientUnavailable,
+    Unsupported,
 )
 from ...ports.storage import StoredObject
 from ..permissions import PermissionService
 from ..reports import ReportStore
 from .database import InterpretationDatabase
 from .packet import CandidateProducer, NotApplicable, Omission, PacketCompilation, compile_packet
-from .prompt import POLICY_ID
+from .prompt import POLICY_ID, SYSTEM_PROMPT
 from .validation import output_schema, validate_output
 
 PURPOSE = "third_party_ai_processing"
 MAX_ATTEMPTS = 2  # the first call plus at most one automated retry of a transient failure
 MAX_OUTPUT_TOKENS = 4000
+# Conservative bound on what one authorized image can bill as input tokens.
+IMAGE_INPUT_TOKEN_BOUND = 6000
+
+
+def billable_token_bound(compilation: PacketCompilation, image: StoredObject | None) -> int:
+    """Worst case for input plus output: a BPE token covers at least one byte,
+    so the byte length of everything sent bounds its text tokens."""
+    text = canonical_json({"system": SYSTEM_PROMPT, "packet": compilation.model_input,
+                           "schema": output_schema(compilation)})
+    return len(text.encode("utf-8")) + (IMAGE_INPUT_TOKEN_BOUND if image else 0) + MAX_OUTPUT_TOKENS
 
 
 class Outcome(str, Enum):
@@ -105,7 +116,9 @@ class ImageSource(Protocol):
 
 
 class SpendBudget(Protocol):
-    def reserve(self, attempt_id: str, max_output_tokens: int) -> bool: ...
+    def reserve(self, attempt_id: str, max_billable_tokens: int) -> bool:
+        """Reserve the attempt's worst case (input, image and output tokens)."""
+        ...
 
     def settle(self, attempt_id: str, usage: port.ProviderUsage | None) -> None:
         """Replace a reservation with actual usage; ``None`` releases it."""
@@ -124,7 +137,8 @@ class PremiumRunner:
                  images: ImageSource, model: port.PremiumModelProvider, budget: SpendBudget,
                  publisher: OverlayPublisher, database: InterpretationDatabase, clock: Clock, ids: IdGenerator,
                  context: Callable[[], CallContext],
-                 producers: Mapping[str, CandidateProducer] | None = None) -> None:
+                 producers: Mapping[str, CandidateProducer] | None = None,
+                 allow_inactive_content: bool = False) -> None:
         self._reports = reports
         self._permissions = permissions
         self._images = images
@@ -136,6 +150,7 @@ class PremiumRunner:
         self._ids = ids
         self._context = context
         self._producers = producers or {}
+        self._allow_inactive = allow_inactive_content  # local/test composition only
 
     def run(self, job: PremiumJob) -> AttemptRecord:
         attempt_id = self._ids.new_id("attempt")
@@ -143,29 +158,47 @@ class PremiumRunner:
         def record(outcome: Outcome, code: str | None = None, **extra) -> AttemptRecord:
             return AttemptRecord(attempt_id, job.job_id, outcome, code, **extra)
 
-        check = self._permissions.check(job.owner_id, PURPOSE, Scope("REPORT", job.report_id))
-        if not check.allowed or check.epoch != job.permission_epoch:
-            return record(Outcome.FENCED, "permission_changed")
-        latest = self._reports(job.owner_id).latest(job.report_id)
-        if latest is None or latest[0] != job.owner_id:
-            return record(Outcome.FENCED, "report_unavailable")
-        report = latest[1]
-        if report.data["revision"] != job.report_revision:
-            return record(Outcome.FENCED, "report_revised")
+        fence = self._fence(job)
+        if isinstance(fence, str):
+            return record(Outcome.FENCED, fence)
+        report = fence
         image = self._images.authorized_image(job.owner_id, report)
         try:
             compilation = compile_packet(report, self._db, packet_id=f"packet_{attempt_id}",
                                          created_at=self._clock.now(),
                                          image_asset_id=image.asset_id if image else None,
-                                         producers=self._producers, owner_id=job.owner_id)
+                                         producers=self._producers, owner_id=job.owner_id,
+                                         allow_inactive=self._allow_inactive)
         except NotApplicable as na:
             return record(Outcome.NOT_APPLICABLE, na.reason)
-        if not self._budget.reserve(attempt_id, MAX_OUTPUT_TOKENS):
+        except Unsupported as exc:
+            return record(Outcome.FAILED, exc.code)  # inactive content: no provider call, nothing billed
+        if not self._budget.reserve(attempt_id, billable_token_bound(compilation, image)):
             return record(Outcome.BUDGET_EXHAUSTED, "budget_exhausted")
+        # Re-check immediately before any private data leaves: a withdrawal or
+        # deletion committed while the packet compiled stops the transfer here.
+        # One committed during the provider call itself cannot be recalled; the
+        # publication fence still refuses the result.
+        fence = self._fence(job)
+        if isinstance(fence, str):
+            self._budget.settle(attempt_id, None)
+            return record(Outcome.FENCED, fence)
         result = self._call(job, attempt_id, compilation, image, record)
         if isinstance(result, AttemptRecord):
             return result
         return self._finish(job, attempt_id, compilation, result, record)
+
+    def _fence(self, job: PremiumJob) -> ValidatedDocument | str:
+        """The current report if the job may still run, else the fence reason."""
+        check = self._permissions.check(job.owner_id, PURPOSE, Scope("REPORT", job.report_id))
+        if not check.allowed or check.epoch != job.permission_epoch:
+            return "permission_changed"
+        latest = self._reports(job.owner_id).latest(job.report_id)
+        if latest is None or latest[0] != job.owner_id:
+            return "report_unavailable"
+        if latest[1].data["revision"] != job.report_revision:
+            return "report_revised"
+        return latest[1]
 
     def _call(self, job, attempt_id, compilation: PacketCompilation, image, record):
         request = port.GenerationRequest(attempt_id=attempt_id, packet=compilation.model_input,
@@ -209,5 +242,5 @@ class PremiumRunner:
         return record(Outcome.SUCCEEDED, revision=revision, **meta)
 
 
-__all__ = ["AttemptRecord", "Fenced", "ImageSource", "MAX_ATTEMPTS", "Outcome", "OverlayPublisher",
-           "PremiumJob", "PremiumOverlay", "PremiumRunner", "SpendBudget"]
+__all__ = ["AttemptRecord", "Fenced", "IMAGE_INPUT_TOKEN_BOUND", "ImageSource", "MAX_ATTEMPTS", "Outcome", "OverlayPublisher",
+           "PremiumJob", "PremiumOverlay", "PremiumRunner", "SpendBudget", "billable_token_bound"]

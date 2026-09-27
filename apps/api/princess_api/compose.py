@@ -18,6 +18,7 @@ from fastapi import FastAPI
 from princess_app.adapters.fakes import FakeAbuseChallenge, FakeIdentityProvider, FakePaymentProvider
 from princess_app.adapters.imaging import inspect_header
 from princess_app.adapters.localfs import LocalObjectStore
+from princess_app.adapters.postgres.access import PostgresReportAccess
 from princess_app.adapters.postgres.commerce import PostgresLedger
 from princess_app.adapters.postgres.intake import PostgresIntakeRepository
 from princess_app.adapters.postgres.stores import (
@@ -28,7 +29,7 @@ from princess_app.adapters.postgres.stores import (
     make_engine,
 )
 from princess_app.application.commerce import CommerceService
-from princess_app.application.identity import IdentityService
+from princess_app.application.identity import GuestAdmission, IdentityService
 from princess_app.application.intake import IntakeService
 from princess_app.application.permissions import PermissionService
 from princess_app.config import RuntimeConfig, load_runtime_config
@@ -58,7 +59,9 @@ def compose(config: RuntimeConfig) -> Services:
     if config.provider_mode("IdentityProvider") is not ProviderMode.FAKE:
         raise Unsupported("identity_adapter_not_configured", detail="ADR-002 vendor pending")
     provider = FakeIdentityProvider(clock=clock, environment=config.environment)
-    identity = IdentityService(provider, PostgresIdentityStore(db), clock, UuidIds(), audience)
+    admission = GuestAdmission(limit=int(os.environ.get("PRINCESS_GUEST_ADMISSIONS_PER_MINUTE", "300")))
+    identity = IdentityService(provider, PostgresIdentityStore(db), clock, UuidIds(), audience,
+                               guest_admission=admission)
     permissions = PermissionService(
         PostgresPermissionStore(db), clock, UuidIds(),
         # Draft T03 notices authorize nothing outside synthetic local/test data.
@@ -84,7 +87,8 @@ def compose(config: RuntimeConfig) -> Services:
         permissions=permissions, reports=reports, clock=clock, ids=UuidIds(), environment=config.environment)
     return Services(environment=config.environment, clock=clock, identity=identity, permissions=permissions,
                     report_store_for=reports, kill_switches=dict(config.manifest.kill_switches),
-                    dev_identity=provider, audience=audience, intake=intake, dev_store=store, commerce=commerce)
+                    dev_identity=provider, audience=audience, intake=intake, dev_store=store, commerce=commerce,
+                    report_access=PostgresReportAccess(db))
 
 
 def local_store(config: RuntimeConfig, clock) -> LocalObjectStore:

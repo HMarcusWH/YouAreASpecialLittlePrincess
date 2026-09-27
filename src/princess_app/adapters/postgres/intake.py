@@ -76,8 +76,15 @@ class PostgresIntakeRepository:
     def release_completion(self, owner_id: str, upload_id: str) -> None:
         self._transition(owner_id, upload_id, "COMPLETING", "RESERVED")
 
-    def reject_upload(self, owner_id: str, upload_id: str) -> None:
-        self._transition(owner_id, upload_id, "COMPLETING", "REJECTED")
+    def reject_upload(self, owner_id: str, upload_id: str, asset_id: str, at: datetime) -> None:
+        with self.db.session(owner_id) as conn:
+            conn.execute(text("UPDATE app.upload SET state = 'REJECTED' WHERE upload_id = :u AND state = 'COMPLETING'"),
+                         {"u": upload_id})
+            conn.execute(text("INSERT INTO app.outbox_event (event_id, topic, owner_id, aggregate_ref, payload, "
+                              "dedupe_key, created_at) VALUES (:e, 'upload.rejected', :o, :u, CAST(:p AS jsonb), "
+                              ":d, :t) ON CONFLICT (dedupe_key) DO NOTHING"),
+                         {"e": f"evt.upload_rejected.{upload_id}", "o": owner_id, "u": upload_id, "t": at,
+                          "p": json.dumps({"asset_id": asset_id}), "d": f"upload-rejected:{upload_id}"})
 
     def upload(self, owner_id: str, upload_id: str) -> UploadRow | None:
         with self.db.session(owner_id) as conn:
@@ -123,24 +130,28 @@ class PostgresIntakeRepository:
             return _capture(conn.execute(text(CAPTURE_SELECT + "WHERE c.capture_id = :c"),
                                          {"c": capture_id}).mappings().first())
 
-    def count_active_jobs(self, owner_id: str) -> int:
-        with self.db.session(owner_id) as conn:
-            return int(conn.execute(text("SELECT count(*) FROM app.job WHERE state IN ('QUEUED', 'LEASED')")).scalar())
-
     def find_analysis(self, owner_id: str, dedupe_key: str) -> str | None:
         with self.db.session(owner_id) as conn:
             return conn.execute(text("SELECT subject_ref FROM app.job WHERE dedupe_key = :k"),
                                 {"k": dedupe_key}).scalar()
 
     def create_analysis(self, capture: CaptureRow, *, run_id: str, job_id: str, dedupe_key: str,
-                        permission_epoch: int, analysis_config: str, at: datetime) -> str:
+                        permission_epoch: int, analysis_config: str, at: datetime, max_active: int) -> str:
         owner = capture.owner_id
         try:
             with self.db.session(owner) as conn:
+                # Same serialization as upload admission: concurrent submissions
+                # cannot all see a count below the limit.
+                conn.execute(text("SELECT pg_advisory_xact_lock(hashtextextended(:k, 0))"),
+                             {"k": f"analysis-admission:{owner}"})
                 existing = conn.execute(text("SELECT subject_ref FROM app.job WHERE dedupe_key = :k"),
                                         {"k": dedupe_key}).scalar()
                 if existing is not None:
                     return existing
+                active = conn.execute(text("SELECT count(*) FROM app.job WHERE kind = :k "
+                                           "AND state IN ('QUEUED', 'LEASED')"), {"k": ANALYSIS_KIND}).scalar()
+                if active >= max_active:
+                    raise RateLimited("too_many_active_analyses", retry_after_s=60)
                 conn.execute(text(
                     "INSERT INTO app.analysis_run (run_id, owner_id, input_asset_id, capture_id, status, engine_version, "
                     "feature_schema, method_manifest, analysis_config_sha256, input_sha256, created_at) VALUES "

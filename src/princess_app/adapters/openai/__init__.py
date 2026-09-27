@@ -105,6 +105,7 @@ class OpenAIResponsesModel:
             raise InvalidInput("environment_mismatch")
         ctx.check_deadline(self._clock)
         body = self._body(request, ctx)
+        ctx.check_deadline(self._clock)  # reading the image may have used the budget: send nothing late
         remaining = ctx.remaining(self._clock)
         budget = max(0.1, min(self._timeout_s, remaining / timedelta(seconds=1)))
         timeout = httpx.Timeout(budget, connect=min(5.0, budget))

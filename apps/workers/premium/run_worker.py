@@ -59,8 +59,8 @@ def main() -> int:
         raise Unsupported("premium_model_not_approved", detail="api_access_spend_before_live_calls")
     clock = SystemClock()
     db = Database(make_engine(config.secret("PRINCESS_DATABASE_URL")))
-    permissions = PermissionService(PostgresPermissionStore(db), clock, UuidIds(),
-                                    allow_draft_policy=config.environment in (Environment.LOCAL, Environment.TEST))
+    local = config.environment in (Environment.LOCAL, Environment.TEST)
+    permissions = PermissionService(PostgresPermissionStore(db), clock, UuidIds(), allow_draft_policy=local)
 
     def context() -> CallContext:
         return CallContext(uuid.uuid4().hex, config.environment, clock.now() + timedelta(seconds=60))
@@ -69,7 +69,10 @@ def main() -> int:
         reports=lambda owner: PostgresReportStore(db, owner), permissions=permissions,
         images=PostgresImageSource(db), model=FakePremiumModel(unassessed, clock=clock, environment=config.environment),
         budget=InMemorySpendBudget(DAILY_TOKEN_BUDGET), publisher=PostgresOverlayPublisher(db),
-        database=load_interpretation_database(), clock=clock, ids=UuidIds(), context=context)
+        database=load_interpretation_database(), clock=clock, ids=UuidIds(), context=context,
+        # Reviewed T26 content stays inactive until its owner activation gate;
+        # only local/test composition may exercise it against the fake model.
+        allow_inactive_content=local)
     worker = PremiumWorker(queue=PostgresPremiumQueue(db), runner=runner, clock=clock,
                            worker_id=f"premium-{uuid.uuid4().hex[:8]}")
     while True:  # pragma: no cover - long-running loop

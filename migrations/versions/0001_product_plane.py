@@ -279,7 +279,7 @@ BEGIN
   IF NOT FOUND OR v_guest.transferred_to IS NOT NULL THEN
     RAISE EXCEPTION 'guest_not_transferable' USING ERRCODE = 'P0002';
   END IF;
-  IF v_guest.guest_expires_at <= p_at OR v_guest.deleted_at IS NOT NULL THEN
+  IF v_guest.guest_expires_at <= p_at OR v_guest.deleted_at IS NOT NULL OR v_guest.revoked_before IS NOT NULL THEN
     RAISE EXCEPTION 'guest_not_transferable' USING ERRCODE = 'P0002';
   END IF;
   -- Owner changes cascade through the composite (owner_id, id) foreign keys.

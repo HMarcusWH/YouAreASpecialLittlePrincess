@@ -15,20 +15,30 @@ from sqlalchemy.exc import DBAPIError, IntegrityError, ProgrammingError
 from princess_app.adapters.fakes import FakeClock, FakeIdentityProvider, SequentialIds
 from princess_app.adapters.postgres import migrate
 from princess_app.adapters.postgres.stores import (
+    MAX_REGION_DEPTH,
     PostgresAnalysisStore,
     PostgresIdentityStore,
     PostgresPermissionStore,
     PostgresReportStore,
+    _parent_first,
     epoch_for,
 )
-from princess_app.application.identity import IdentityService
+from princess_app.application.identity import GuestAdmission, IdentityService
 from princess_app.application.permissions import PermissionService
 from princess_app.application.reports import ReportReader
 from princess_app.domain.analysis import analysis_reference
 from princess_app.domain.evidence import build_evidence_bundle
 from princess_app.domain.permissions import SUBJECT_WIDE, Decision, Scope
 from princess_app.domain.reports import assemble_report, revise_report
-from princess_app.ports.base import CallContext, Conflict, Environment, InvalidInput, NotFound, Unauthenticated
+from princess_app.ports.base import (
+    CallContext,
+    Conflict,
+    Environment,
+    InvalidInput,
+    NotFound,
+    RateLimited,
+    Unauthenticated,
+)
 
 ROOT = Path(__file__).resolve().parents[1]
 FIXTURES = ROOT / "fixtures" / "reports" / "source"
@@ -93,7 +103,7 @@ def publish_report(app_db, owner_id, run_id="run_1"):
     return report
 
 
-HEAD = "0003_commerce_ledger"
+HEAD = "0004_erasure_admission"
 
 
 def version(admin_engine):
@@ -210,6 +220,29 @@ def test_failed_projection_leaves_no_partial_rows(app_db, world):
         assert conn.execute(text("SELECT status FROM app.analysis_run")).scalar() == "QUEUED"
 
 
+@pytest.mark.parametrize("regions,code", [
+    ([{"region_id": "a", "parent_id": "a"}], "region_parent_cycle"),
+    ([{"region_id": "a", "parent_id": "b"}, {"region_id": "b", "parent_id": "c"},
+      {"region_id": "c", "parent_id": "a"}], "region_parent_cycle"),
+    ([{"region_id": f"r{i}", "parent_id": f"r{i + 1}" if i < MAX_REGION_DEPTH else None}
+      for i in range(MAX_REGION_DEPTH + 1)], "region_hierarchy_too_deep"),
+])
+def test_region_parent_cycles_and_runaway_depth_are_rejected(regions, code):
+    with pytest.raises(InvalidInput) as err:
+        _parent_first(regions)
+    assert err.value.code == code
+
+
+def test_regions_are_written_parents_first():
+    chain = [{"region_id": f"r{i}", "parent_id": f"r{i + 1}" if i < MAX_REGION_DEPTH - 1 else None}
+             for i in range(MAX_REGION_DEPTH)]
+    ordered = [r["region_id"] for r in _parent_first(chain)]
+    assert ordered == [f"r{i}" for i in reversed(range(MAX_REGION_DEPTH))]
+    mixed = [{"region_id": "word", "parent_id": "line"}, {"region_id": "line", "parent_id": "page"},
+             {"region_id": "page", "parent_id": None}, {"region_id": "orphan", "parent_id": "elsewhere"}]
+    assert [r["region_id"] for r in _parent_first(mixed)] == ["page", "line", "word", "orphan"]
+
+
 def test_forged_region_parent_from_another_run_is_rejected(app_db, world):
     alice = account(world, "sub-a")
     seed_run(app_db, alice.principal_id, "run_1", "asset_1")
@@ -292,6 +325,31 @@ def test_concurrent_first_login_converges_on_one_principal(world):
     for t in threads:
         t.join()
     assert errors == [] and len(set(results)) == 1
+
+
+def test_guest_creation_is_admitted_per_window(app_db):
+    clock = FakeClock(T0)
+    identity = IdentityService(FakeIdentityProvider(clock=clock), PostgresIdentityStore(app_db), clock,
+                               SequentialIds(), AUD, guest_admission=GuestAdmission(limit=2, window_seconds=60))
+    identity.create_guest()
+    identity.create_guest()
+    with pytest.raises(RateLimited) as limited:
+        identity.create_guest()
+    assert 1 <= limited.value.retry_after_s <= 60
+    clock.advance(60)
+    identity.create_guest()  # a new window admits again
+
+
+def test_revoked_guest_capability_cannot_transfer(world, app_db):
+    clock, provider, identity = world
+    guest, token = identity.create_guest()
+    publish_report(app_db, guest.principal_id)
+    identity.logout_everywhere(guest, ctx(clock))
+    acct = account(world, "sub-revoked")
+    with pytest.raises(Conflict):
+        identity.transfer_guest(acct, token)
+    with app_db.session(acct.principal_id) as conn:
+        assert conn.execute(text("SELECT count(*) FROM app.report")).scalar() == 0
 
 
 def test_guest_transfer_moves_ownership_once_under_concurrency(world, app_db):

@@ -23,9 +23,10 @@ from princess_app.application.commerce import CommerceService
 from princess_app.application.identity import IdentityService, Principal
 from princess_app.application.intake import ChallengeProof, IntakeService
 from princess_app.application.permissions import PermissionService
-from princess_app.application.reports import ReportReader, ReportStore
+from princess_app.application.reports import ReportAccessResolver, ReportReader, ReportStore
 from princess_app.domain.analysis import rfc3339
 from princess_app.domain.commerce import Platform
+from princess_app.domain.intake import MAX_UPLOAD_BYTES
 from princess_app.domain.permissions import Decision, Scope
 from princess_app.ports.base import (
     AmbiguousOutcome,
@@ -50,7 +51,14 @@ from princess_contracts import generated as g
 
 REQUEST_DEADLINE = timedelta(seconds=10)
 _CORRELATION = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:-]{0,63}$")
-STATUS = [(RateLimited, 429), (DeadlineExceeded, 504), (TransientUnavailable, 503), (Unauthenticated, 401),
+MAX_EVENT_BYTES = 256 * 1024
+
+
+class PayloadTooLarge(InvalidInput):
+    pass
+
+
+STATUS = [(PayloadTooLarge, 413), (RateLimited, 429), (DeadlineExceeded, 504), (TransientUnavailable, 503), (Unauthenticated, 401),
           (NotAuthorized, 403), (NotFound, 404), (Conflict, 409), (InvalidInput, 422), (Unsupported, 501),
           (AmbiguousOutcome, 502), (PermanentFailure, 502)]
 DECISION_STATUS = {Decision.GRANT: "GRANTED", Decision.DENY: "DENIED", Decision.WITHDRAW: "WITHDRAWN"}
@@ -72,6 +80,8 @@ class Services:
     # in place of a provider's presigned PUT endpoint.
     dev_store: Any = None
     commerce: CommerceService | None = None
+    # Live source-image and Premium overlay state for saved snapshots.
+    report_access: ReportAccessResolver | None = None
 
 
 class _Strict(BaseModel):
@@ -126,6 +136,21 @@ class ClaimBody(_Strict):
 
 class PremiumBody(_Strict):
     platform: Literal["web", "ios", "android"]
+
+
+async def read_bounded(request: Request, limit: int) -> bytes:
+    """Read a raw body without buffering more than ``limit`` bytes: a larger
+    declared length is refused up front, and the stream is cut off as soon as
+    it passes the limit (chunked or lying clients)."""
+    declared = request.headers.get("content-length")
+    if declared is not None and (not declared.isdigit() or int(declared) > limit):
+        raise PayloadTooLarge("body_too_large")
+    body = bytearray()
+    async for chunk in request.stream():
+        body += chunk
+        if len(body) > limit:
+            raise PayloadTooLarge("body_too_large")
+    return bytes(body)
 
 
 def create_app(services: Services) -> FastAPI:
@@ -201,10 +226,13 @@ def create_app(services: Services) -> FastAPI:
         check = services.permissions.check(who.principal_id, purpose_id, Scope(scope_kind, scope_ref))
         return {"purpose_id": purpose_id, "allowed": check.allowed, "reason": check.reason}
 
+    def reader_for(who: Principal) -> ReportReader:
+        return ReportReader(services.report_store_for(who.principal_id), services.clock, services.report_access)
+
     @app.get("/v1/reports/{report_id}")
-    def read_report(report_id: str, projection: Literal["FREE", "OWNER", "EXPORT"] = "OWNER",
+    def read_report(report_id: str, projection: Literal["FREE", "OWNER", "PREMIUM", "EXPORT"] = "OWNER",
                     who: Principal = Depends(principal)) -> dict:
-        reader = ReportReader(services.report_store_for(who.principal_id), services.clock)
+        reader = reader_for(who)
         commerce = services.kill_switches.get("commerce", False)
         actions = {"EXPORT": None, "SAVE": None, "DELETE": None,
                    "SHARE": None if services.kill_switches.get("sharing", False) else "sharing_disabled",
@@ -295,9 +323,7 @@ def create_app(services: Services) -> FastAPI:
     async def payment_events(rail: Literal["stripe", "apple_app_store", "google_play"], request: Request) -> dict:
         """Signed provider notifications. Always accepted, even with sales
         disabled, so refunds and reconciliation keep flowing."""
-        raw = await request.body()
-        if len(raw) > 256 * 1024:
-            raise InvalidInput("event_too_large")
+        raw = await read_bounded(request, MAX_EVENT_BYTES)
         outcomes = commerce().ingest_event(PaymentRail(rail), raw, dict(request.headers),
                                            hashlib.sha256(raw).hexdigest(), call_context(request))
         return {"received": True, "transactions": len(outcomes)}
@@ -316,6 +342,11 @@ def create_app(services: Services) -> FastAPI:
         requested = commerce().request_premium(account_only(who).principal_id, report_id, Platform(body.platform))
         return {"job_id": requested.job_id, "created": requested.created}
 
+    @app.get("/v1/reports/{report_id}/premium")
+    def read_premium(report_id: str, who: Principal = Depends(principal)) -> dict:
+        """The purchased, validated overlay. Read-only: no model call on read."""
+        return reader_for(who).premium_content(report_id=report_id, principal_id=who.principal_id)
+
     @app.get("/v1/premium-jobs/{job_id}")
     def premium_job(job_id: str, who: Principal = Depends(principal)) -> dict:
         state, error = commerce().premium_status(who.principal_id, job_id)
@@ -328,7 +359,7 @@ def create_app(services: Services) -> FastAPI:
         @app.put("/v1/dev/uploads/{upload_id}", status_code=204)
         async def dev_upload(upload_id: str, request: Request) -> Response:
             """Local/test only: stands in for a provider's presigned PUT."""
-            data = await request.body()
+            data = await read_bounded(request, MAX_UPLOAD_BYTES)
             store.accept_signed_put(upload_id, request.query_params.get("sig"), data,
                                     request.headers.get("content-type"))
             return Response(status_code=204)

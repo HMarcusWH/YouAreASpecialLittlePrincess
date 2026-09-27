@@ -26,7 +26,6 @@ from ..ports.base import (
     NotAuthorized,
     NotFound,
     PortError,
-    RateLimited,
     Unsupported,
 )
 from ..ports.storage import ObjectStore, StoredObject, UploadPolicy, UploadTicket
@@ -106,8 +105,8 @@ class IntakeRepository(Protocol):
         """COMPLETING -> RESERVED after a retryable completion failure."""
         ...
 
-    def reject_upload(self, owner_id: str, upload_id: str) -> None:
-        """COMPLETING -> REJECTED after unsafe or invalid bytes were erased."""
+    def reject_upload(self, owner_id: str, upload_id: str, asset_id: str, at: datetime) -> None:
+        """COMPLETING -> REJECTED and queue erasure of the promoted bytes, atomically."""
         ...
 
     def upload(self, owner_id: str, upload_id: str) -> UploadRow | None: ...
@@ -121,13 +120,13 @@ class IntakeRepository(Protocol):
 
     def capture(self, owner_id: str, capture_id: str) -> CaptureRow | None: ...
 
-    def count_active_jobs(self, owner_id: str) -> int: ...
-
     def find_analysis(self, owner_id: str, dedupe_key: str) -> str | None: ...
 
     def create_analysis(self, capture: CaptureRow, *, run_id: str, job_id: str, dedupe_key: str,
-                        permission_epoch: int, analysis_config: str, at: datetime) -> str:
-        """Create the QUEUED run and job, or return the existing run for ``dedupe_key``."""
+                        permission_epoch: int, analysis_config: str, at: datetime, max_active: int) -> str:
+        """Create the QUEUED run and job, or return the existing run for ``dedupe_key``.
+        Counting active jobs and creating one is atomic per owner; raises
+        ``RateLimited("too_many_active_analyses")`` at capacity."""
         ...
 
     def run_status(self, owner_id: str, run_id: str) -> RunStatus | None: ...
@@ -220,16 +219,22 @@ class IntakeService:
             header = self._inspect(self._store.read_object(stored, ctx))
             policy.check_header(header, upload.media_type)
         except InvalidInput:
-            self._store.delete_asset_versions(upload.asset_id, ctx)
-            self._repo.reject_upload(owner_id, upload_id)
+            # Leave COMPLETING and queue durable erasure first, so a failed
+            # delete below is retried by the erasure worker, not stranded.
+            self._repo.reject_upload(owner_id, upload_id, upload.asset_id, self._clock.now())
+            try:
+                self._store.delete_asset_versions(upload.asset_id, ctx)
+            except PortError:
+                pass
             raise
         except PortError:
             # Wrong digest, missing bytes or a transient store failure: the slot stays usable.
             self._repo.release_completion(owner_id, upload_id)
             raise
+        width, height = header.oriented_size  # the frame the analysis runs in, after EXIF rotation
         capture = CaptureRow(
             capture_id=self._ids.new_id("capture"), owner_id=owner_id, upload_id=upload_id,
-            asset_id=stored.asset_id, media_type=header.media_type, width=header.width, height=header.height,
+            asset_id=stored.asset_id, media_type=header.media_type, width=width, height=height,
             exif_orientation=header.exif_orientation, sha256=stored.sha256, version_ref=stored.version_ref,
             size_bytes=stored.size_bytes)
         return self._repo.record_capture(capture, self._clock.now())
@@ -245,11 +250,10 @@ class IntakeService:
         existing = self._repo.find_analysis(owner_id, dedupe_key)
         if existing is not None:
             return existing  # a retried submission recovers its run even at capacity
-        if self._repo.count_active_jobs(owner_id) >= policy.MAX_ACTIVE_JOBS:
-            raise RateLimited("too_many_active_analyses", retry_after_s=60)
         return self._repo.create_analysis(
             capture, run_id=self._ids.new_id("run"), job_id=self._ids.new_id("job"), dedupe_key=dedupe_key,
-            permission_epoch=epoch, analysis_config=self._config, at=self._clock.now())
+            permission_epoch=epoch, analysis_config=self._config, at=self._clock.now(),
+            max_active=policy.MAX_ACTIVE_JOBS)
 
     def status(self, owner_id: str, run_id: str) -> RunStatus:
         status = self._repo.run_status(owner_id, run_id)
