@@ -56,5 +56,5 @@ test("destructive settings action can be cancelled from the keyboard", async ({ 
 test("the accessibility gate detects a deliberately unnamed control", async ({ page }) => {
   await page.goto("/fixtures/a11y-negative");
   const results = await analyzeAccessibility(page);
-  expect(results.violations.map((v) => v.id)).toContain("button-name");
+  expect(results.violations.map((v) => v.id)).toContain("label");
 });
