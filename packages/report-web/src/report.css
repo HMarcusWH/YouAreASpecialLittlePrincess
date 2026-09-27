@@ -1,0 +1,48 @@
+/* Report components; colours and sizes come only from @princess/design-tokens. */
+.pr-report { max-width: 72rem; margin: 0 auto; color: var(--color-text); font-family: var(--font-family-text); }
+.pr-header h1 { font-size: var(--font-size-2xl); line-height: var(--font-line-height-tight); margin: 0; }
+.pr-hint { color: var(--color-text-muted); font-size: var(--font-size-sm); }
+.pr-notices { list-style: none; padding: var(--space-4); margin: var(--space-4) 0; background: var(--color-surface-sunken);
+  border-radius: var(--radius-md); display: grid; gap: var(--space-2); font-size: var(--font-size-sm); }
+.pr-section { margin: var(--space-6) 0; }
+.pr-section h2 { font-size: var(--font-size-xl); margin: 0 0 var(--space-3); overflow-wrap: anywhere; hyphens: auto; }
+.pr-table-wrap { overflow-x: auto; }
+.pr-facts { width: 100%; border-collapse: collapse; font-size: var(--font-size-sm); }
+.pr-facts th, .pr-facts td { text-align: start; padding: var(--space-2) var(--space-3); border-bottom: 1px solid var(--color-border);
+  vertical-align: top; overflow-wrap: anywhere; }
+.pr-facts th { font-weight: var(--font-weight-medium); }
+.pr-value { font-family: var(--font-family-numeric); font-variant-numeric: tabular-nums; }
+.pr-unavailable { color: var(--color-text-muted); font-style: italic; }
+.pr-badge { display: inline-flex; gap: var(--space-1); align-items: center; white-space: nowrap; font-size: var(--font-size-xs);
+  border: 1px solid currentColor; border-radius: var(--radius-pill); padding: 0 var(--space-2); }
+.pr-evidence-measured { color: var(--color-evidence-measured); }
+.pr-evidence-proxy { color: var(--color-evidence-proxy); }
+.pr-evidence-reference { color: var(--color-evidence-reference); }
+.pr-evidence-authored { color: var(--color-evidence-authored); }
+.pr-evidence-traditional { color: var(--color-evidence-traditional); }
+.pr-evidence-ai { color: var(--color-evidence-ai); }
+.pr-actions { display: flex; flex-wrap: wrap; gap: var(--space-3); margin: var(--space-6) 0; }
+.pr-action { display: inline-flex; flex-direction: column; gap: var(--space-1); }
+.pr-action button { min-height: var(--target-min-touch); min-width: var(--target-min-touch); padding: 0 var(--space-4);
+  border-radius: var(--radius-md); border: 1px solid var(--color-border-strong); background: var(--color-surface-raised);
+  color: var(--color-text); font: inherit; }
+.pr-action button:disabled { color: var(--color-text-muted); border-style: dashed; }
+.pr-visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+@media print { .pr-actions { display: none; } .pr-report { max-width: none; } }
+/* Print mode: expanded, static, paged. */
+.pr-print { font-size: 10.5pt; }
+.pr-print .pr-section { break-inside: avoid-page; }
+.pr-print .pr-facts tr { break-inside: avoid; }
+.pr-print .pr-table-wrap { overflow: visible; }
+.pr-colophon { border-top: 1px solid var(--color-border); padding-top: var(--space-4); }
+/* Share cards: fixed canvases, redacted by construction (no image, no names). */
+.pr-card { display: flex; flex-direction: column; justify-content: space-between; padding: 72px; box-sizing: border-box;
+  background: var(--color-surface-sunken); color: var(--color-text); font-family: var(--font-family-text); }
+.pr-card-square { width: 1080px; height: 1080px; }
+.pr-card-story { width: 1080px; height: 1920px; }
+.pr-card-brand { font-size: 64px; font-weight: var(--font-weight-bold); margin: 0; color: var(--color-accent); }
+.pr-card-context { font-size: 32px; margin: 0; color: var(--color-text-muted); }
+.pr-card-facts { display: grid; gap: 36px; margin: 0; }
+.pr-card-fact dt { font-size: 34px; color: var(--color-text-muted); overflow-wrap: anywhere; }
+.pr-card-fact dd { margin: 0; font-size: 60px; font-family: var(--font-family-numeric); font-variant-numeric: tabular-nums; }
+.pr-card-fact dd.pr-card-label { font-size: 28px; font-family: var(--font-family-text); color: var(--color-evidence-proxy); }

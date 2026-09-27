@@ -1,14 +1,26 @@
 """Orchestration only: prepare shared primitives, run stages, validate results."""
 from __future__ import annotations
 
+import hashlib
 import os
 
 import cv2
+import numpy as np
 
 from .context import prepare_context
 from .measurements import IMPLEMENTED_FEATURE_IDS, MEASUREMENT_STAGES, STAGE_FEATURE_IDS
 from .models import AnalysisResult, Box, Region
 from .schema_validation import load_contract, validate_result
+
+
+def input_pixels_sha256(image):
+    """Digest of the exact decoded pixel buffer analysed (dtype, shape, bytes).
+
+    Results and evidence carry it so a product layer can bind them to the
+    processed input they came from (``AnalysisReference.processed_sha256``).
+    """
+    header = f'{np.asarray(image).dtype.str}:{tuple(np.asarray(image).shape)}'.encode()
+    return hashlib.sha256(header + b'\0' + np.ascontiguousarray(image).tobytes()).hexdigest()
 
 
 class GraphologyEngine:
@@ -30,12 +42,28 @@ class GraphologyEngine:
         return self.analyze(image, source=path)
 
     def analyze(self, image, source='<array>'):
+        return self._analyze(image, source)[1]
+
+    def analyze_with_evidence(self, image, source='<array>'):
+        """Return ``(AnalysisResult, evidence payload)`` from one shared context.
+
+        The aggregate result is identical to :meth:`analyze`; the evidence payload
+        is a separate versioned artifact (see :mod:`princess_graphology.evidence`).
+        """
+        from .evidence import collect_evidence
+
+        ctx, result = self._analyze(image, source)
+        return result, collect_evidence(ctx, result)
+
+    def _analyze(self, image, source):
         if not isinstance(source, str):
             raise ValueError('source must be a string')
         ctx = prepare_context(image, max_dimension=self.max_dimension, deskew_enabled=self.deskew_enabled)
+        pixels_sha256 = input_pixels_sha256(image)
         contract = load_contract()
         result = AnalysisResult(source=source, width=ctx.width, height=ctx.height)
         result.metadata.update(ctx.metadata)
+        result.metadata['input_pixels_sha256'] = pixels_sha256
         result.metadata.update({'schema_version': contract['schema_version'],
                                 'schema_source_sha256': contract['source_sha256'],
                                 'defined_feature_count': contract['feature_count'],
@@ -62,4 +90,4 @@ class GraphologyEngine:
             for measurement in measurements:
                 result.add(measurement)
         validate_result(result)
-        return result
+        return ctx, result

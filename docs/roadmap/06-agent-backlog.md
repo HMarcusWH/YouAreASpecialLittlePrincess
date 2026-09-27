@@ -14,35 +14,35 @@ Use `python docs/roadmap/plan_tools.py --ready` or `--task ID`. Edit tasks.json 
 | Task | Status | Hard predecessors | Owner |
 |---|---|---|---|
 | [T00 — Green baseline and dependency policy](#t00) | DONE | — | platform |
-| [T00A — Post-merge dependency graph hardening](#t00a) | IMPLEMENTED_PENDING_REVIEW | T00 | platform-security |
-| [T01 — Product contracts and zero-AI capability manifest](#t01) | PLANNED | T00, T00A, T03 | contracts |
-| [T02 — Persistence identity authorization](#t02) | PLANNED | T01, T27, T28 | backend |
-| [T03 — Rights consent and collection protocol](#t03) | IMPLEMENTED_PENDING_REVIEW | — | product-data |
-| [T04 — Safe intake and durable analysis jobs](#t04) | PLANNED | T02, T03, T28 | backend |
-| [T05 — Evidence payload and chart observations](#t05) | PLANNED | T01 | engine |
+| [T00A — Post-merge dependency graph hardening](#t00a) | DONE | T00 | platform-security |
+| [T01 — Product contracts and zero-AI capability manifest](#t01) | DONE | T00, T00A, T03 | contracts |
+| [T02 — Persistence identity authorization](#t02) | IMPLEMENTED_PENDING_REVIEW | T01, T27, T28 | backend |
+| [T03 — Rights consent and collection protocol](#t03) | DONE | — | product-data |
+| [T04 — Safe intake and durable analysis jobs](#t04) | IMPLEMENTED_PENDING_REVIEW | T02, T03, T28 | backend |
+| [T05 — Evidence payload and chart observations](#t05) | IMPLEMENTED_PENDING_REVIEW | T01 | engine |
 | [T06 — Calibration suitability core repair](#t06) | PLANNED | T05, T11 | evaluation |
 | [T07 — Bounded classical topology shape expansion](#t07) | PLANNED | T05, T06 | engine |
 | [T08 — Normalization and reviewed content](#t08) | PLANNED | T01, T05, T06 | content-engine |
-| [T09 — Report assembly and authorized projections](#t09) | PLANNED | T01, T05 | report-backend |
-| [T10 — Contract-driven multi-platform design handoff](#t10) | PLANNED | T01 | design |
+| [T09 — Report assembly and authorized projections](#t09) | IMPLEMENTED_PENDING_REVIEW | T01, T05 | report-backend |
+| [T10 — Contract-driven multi-platform design handoff](#t10) | IMPLEMENTED_PENDING_REVIEW | T01 | design |
 | [T11 — Owned pilot recruitment and annotation](#t11) | PLANNED | T03, T04 | product-data-human |
 | [T12 — Candidate corpus ETL and deduplication](#t12) | PLANNED | T04, T06, T11 | data |
 | [T13 — Reference statistics and distinctiveness](#t13) | PLANNED | T08, T12 | statistics |
 | [T14 — Benchmark publish withdraw drift rollback](#t14) | PLANNED | T03, T13 | data-platform |
-| [T15 — Evidence-bound OpenAI adapter](#t15) | PLANNED | T01, T09, T26, T27 | premium-backend |
+| [T15 — Evidence-bound OpenAI adapter](#t15) | IMPLEMENTED_PENDING_REVIEW | T01, T09, T26, T27 | premium-backend |
 | [T16 — Model evaluation and generation policy](#t16) | PLANNED | T06, T15 | evaluation |
-| [T17 — Interactive Free web product](#t17) | PLANNED | T02, T04, T09, T10, T28 | frontend |
+| [T17 — Interactive Free web product](#t17) | IMPLEMENTED_PENDING_REVIEW | T02, T04, T09, T10, T28 | frontend |
 | [T18 — Deterministic pair and history comparison](#t18) | PLANNED | T08, T09 | statistics-report |
-| [T19 — Cross-platform purchase ledger entitlements and metered jobs](#t19) | PLANNED | T02, T03, T09, T15, T27 | commerce |
+| [T19 — Cross-platform purchase ledger entitlements and metered jobs](#t19) | IMPLEMENTED_PENDING_REVIEW | T02, T03, T09, T15, T27 | commerce |
 | [T20 — Premium and paid-pair web experience](#t20) | PLANNED | T15, T16, T17, T18, T19, T21, T24 | frontend-premium |
-| [T21 — Same-content PDF and share-card rendering](#t21) | PLANNED | T09, T10, T17 | report-frontend |
+| [T21 — Same-content PDF and share-card rendering](#t21) | IMPLEMENTED_PENDING_REVIEW | T09, T10, T17 | report-frontend |
 | [T22 — Scoped sharing and comparison invitations](#t22) | PLANNED | T17, T18, T21 | backend-frontend |
 | [T23 — Multi-platform end-to-end QA and threat model](#t23) | PLANNED | T00, T00A, T06, T08, T14, T18, T20, T21, T22, T24, T30, T31 | independent-review |
-| [T24 — Deployment recovery support and notifications](#t24) | PLANNED | T02, T04, T19, T28 | platform-product |
+| [T24 — Deployment recovery support and notifications](#t24) | IN_PROGRESS | T02, T04, T19, T28 | platform-product |
 | [T25 — Public multi-platform v1 signoff](#t25) | PLANNED | T23, T24, T32, T33 | product-owner-human |
 | [T26 — Populate premium selector/question database](#t26) | DONE | — | product-content-contracts |
-| [T27 — Connector ports fakes and provider decisions](#t27) | PLANNED | T01 | application-architecture |
-| [T28 — Environment workspace and build foundation](#t28) | PLANNED | T00A, T27 | platform |
+| [T27 — Connector ports fakes and provider decisions](#t27) | IMPLEMENTED_PENDING_REVIEW | T01 | application-architecture |
+| [T28 — Environment workspace and build foundation](#t28) | IMPLEMENTED_PENDING_REVIEW | T00A, T27 | platform |
 | [T29 — Shared native foundation and compatibility spike](#t29) | PLANNED | T01, T02, T10, T27, T28 | mobile-platform |
 | [T30 — Complete iOS and iPad client integration](#t30) | PLANNED | T29, T04, T09, T15, T16, T18, T19, T20, T21, T22, T24 | mobile-apple |
 | [T31 — Complete Android phone and tablet client integration](#t31) | PLANNED | T29, T04, T09, T15, T16, T18, T19, T20, T21, T22, T24 | mobile-android |
@@ -101,22 +101,61 @@ State: `TO_IMPLEMENT`. T01 must add reproducible Python/TypeScript generation, J
 <a id="validation-backend"></a>
 ### backend
 
-State: `TO_IMPLEMENT`. Owning task adds real PostgreSQL role/migration/transaction integration tests and application API/port tests.
+State: `EXISTS_IN_THIS_PR`. PostgreSQL migration, non-owner RLS role, constraint, identity, permission-fencing, OIDC and API tests (T02); later tasks extend it.
+
+```bash
+python tools/check_environments.py
+python -m pytest -q tests_app
+```
 
 <a id="validation-connectors"></a>
 ### connectors
 
-State: `TO_IMPLEMENT`. T27 adds a fake/conformance harness; each real adapter adds redacted opt-in sandbox evidence and failure cases.
+State: `EXISTS_IN_THIS_PR`. T27 adds a fake/conformance harness; each real adapter adds redacted opt-in sandbox evidence and failure cases.
+
+```bash
+python -m pytest -q tests/connector_contracts tests/test_architecture_boundaries.py
+```
 
 <a id="validation-empirical"></a>
 ### empirical
 
 State: `TO_IMPLEMENT`. Protected rights-cleared writer-disjoint evaluation; record actual artifacts, tolerances and outcomes, not synthetic proxy approvals.
 
+<a id="validation-js_packages"></a>
+### js_packages
+
+State: `EXISTS_IN_THIS_PR`. Shared TypeScript packages only (generated contracts type-check, report-core formatting/chart/frame parity against shared fixtures). Not browser, accessibility or PDF coverage.
+
+```bash
+pnpm install --frozen-lockfile
+pnpm typecheck
+pnpm test
+```
+
+<a id="validation-web_browser"></a>
+### web_browser
+
+State: `EXISTS_IN_THIS_PR`. Free web journeys in Chromium: fixture-backed report views (projection parity, missing-not-zero, evidence labels, keyboard focus, 320px Swedish overflow, dark mode, security headers, proxy allowlist and CSRF) in CI; the live upload-to-report journey (resume on refresh, cross-owner 404) runs locally against PostgreSQL via tools/run_web_e2e.sh. Not PDF, share-card or automated axe coverage.
+
+```bash
+pnpm install --frozen-lockfile
+pnpm --filter @princess/web build
+pnpm --filter @princess/web exec playwright install --with-deps chromium
+pnpm --filter @princess/web e2e
+tools/run_web_e2e.sh
+```
+
 <a id="validation-web_render"></a>
 ### web_render
 
-State: `TO_IMPLEMENT`. Owning task adds generated-client/type tests, browser journeys, accessibility and report/PDF/card fact parity.
+State: `EXISTS_IN_THIS_PR`. Offline Chromium renderer tests (EXPORT-only documents as tagged A4/Letter PDF, SHARE-only 1080x1080/1080x1920 PNG cards, projection/layout mismatch and bad-input codes), export job/API tests with a recording renderer (fact parity with the OWNER projection, disclosed-section cards, projection change mid-render, stale retrieval revoked and erased, capture deletion, bounded renderer failures, scrubbed child environment) and the live journey downloading a real PDF. Not automated axe or pixel-diff coverage.
+
+```bash
+pnpm --filter @princess/render test
+python -m pytest -q tests_app/test_exports.py
+tools/run_web_e2e.sh
+```
 
 <a id="validation-native"></a>
 ### native
@@ -191,7 +230,7 @@ Historical completion evidence: Merged PR #10; source head 90e88e5c73a0811829745
 <a id="t00a"></a>
 ## T00A — Post-merge dependency graph hardening
 
-**Status:** `IMPLEMENTED_PENDING_REVIEW` · **Owner:** platform-security · **Milestone:** foundation
+**Status:** `DONE` · **Owner:** platform-security · **Milestone:** foundation
 
 **Hard predecessors:** [T00](#t00)
 **Platforms:** core, ci
@@ -252,12 +291,14 @@ Validation profiles: [core](#validation-core), [docs](#validation-docs). Planned
 
 No task-specific production gate; all repository privacy/security and scope boundaries still apply.
 
+Historical completion evidence: Merged PR #12 (merge bcf5562dde79fd241142fac18abcdde090641b2f); exact head d4647fc70cc06c2fc6633c59be67b1ef5fa83fd3 passed CI run 36273093400 on Python 3.10/3.11/3.12 and roadmap run 36273093435; the Codex code review of that head reported no major issues (issue comment 5850081384). Failing-before/passing-after cases are in docs/ci/T00_BASELINE.md.
+
 [Back to task table](#task-table) · [Documentation index](00-index.md) · [Execution sequence](20-end-to-end-build-sequence.md)
 
 <a id="t01"></a>
 ## T01 — Product contracts and zero-AI capability manifest
 
-**Status:** `PLANNED` · **Owner:** contracts · **Milestone:** foundation
+**Status:** `DONE` · **Owner:** contracts · **Milestone:** foundation
 
 **Hard predecessors:** [T00](#t00), [T00A](#t00a), [T03](#t03)
 **Platforms:** shared
@@ -320,12 +361,14 @@ Validation profiles: [core](#validation-core), [docs](#validation-docs), [contra
 
 No task-specific production gate; all repository privacy/security and scope boundaries still apply.
 
+Historical completion evidence: Merged PR #13 (merge 48d4e033d576211766d1d98a65061452b4b199e9); exact head 1de5a3dde7d4a7317a7a2714bc79a15aa24d4032 passed CI run 36280551268 and roadmap run 36280551264; main CI run 36281080920 passed after merge. Codex security review of that head completed with no findings; no code-review finding was posted.
+
 [Back to task table](#task-table) · [Documentation index](00-index.md) · [Execution sequence](20-end-to-end-build-sequence.md)
 
 <a id="t02"></a>
 ## T02 — Persistence identity authorization
 
-**Status:** `PLANNED` · **Owner:** backend · **Milestone:** foundation
+**Status:** `IMPLEMENTED_PENDING_REVIEW` · **Owner:** backend · **Milestone:** foundation
 
 **Hard predecessors:** [T01](#t01), [T27](#t27), [T28](#t28)
 **Platforms:** backend
@@ -403,7 +446,7 @@ No approval is created by this task brief. Mock/disabled implementation is not a
 <a id="t03"></a>
 ## T03 — Rights consent and collection protocol
 
-**Status:** `IMPLEMENTED_PENDING_REVIEW` · **Owner:** product-data · **Milestone:** foundation
+**Status:** `DONE` · **Owner:** product-data · **Milestone:** foundation
 
 **Hard predecessors:** None
 **Platforms:** shared, policy
@@ -464,12 +507,14 @@ Validation profiles: [docs](#validation-docs), [consent](#validation-consent). P
 
 No approval is created by this task brief. Mock/disabled implementation is not authorization for live collection, charges, signing or release.
 
+Historical completion evidence: Merged PR #12 with T00A at the same exact head and CI/review evidence. Draft protocol contracts only: the pilot_rights_consent gate stays pending, no approval, participant or source clearance exists, and recruitment remains T11.
+
 [Back to task table](#task-table) · [Documentation index](00-index.md) · [Execution sequence](20-end-to-end-build-sequence.md)
 
 <a id="t04"></a>
 ## T04 — Safe intake and durable analysis jobs
 
-**Status:** `PLANNED` · **Owner:** backend · **Milestone:** free
+**Status:** `IMPLEMENTED_PENDING_REVIEW` · **Owner:** backend · **Milestone:** free
 
 **Hard predecessors:** [T02](#t02), [T03](#t03), [T28](#t28)
 **Platforms:** backend, workers
@@ -537,7 +582,7 @@ No approval is created by this task brief. Mock/disabled implementation is not a
 <a id="t05"></a>
 ## T05 — Evidence payload and chart observations
 
-**Status:** `PLANNED` · **Owner:** engine · **Milestone:** free
+**Status:** `IMPLEMENTED_PENDING_REVIEW` · **Owner:** engine · **Milestone:** free
 
 **Hard predecessors:** [T01](#t01)
 **Platforms:** core, shared
@@ -788,7 +833,7 @@ No approval is created by this task brief. Mock/disabled implementation is not a
 <a id="t09"></a>
 ## T09 — Report assembly and authorized projections
 
-**Status:** `PLANNED` · **Owner:** report-backend · **Milestone:** free
+**Status:** `IMPLEMENTED_PENDING_REVIEW` · **Owner:** report-backend · **Milestone:** free
 
 **Hard predecessors:** [T01](#t01), [T05](#t05)
 **Platforms:** shared, backend
@@ -851,7 +896,7 @@ No task-specific production gate; all repository privacy/security and scope boun
 <a id="t10"></a>
 ## T10 — Contract-driven multi-platform design handoff
 
-**Status:** `PLANNED` · **Owner:** design · **Milestone:** free
+**Status:** `IMPLEMENTED_PENDING_REVIEW` · **Owner:** design · **Milestone:** free
 
 **Hard predecessors:** [T01](#t01)
 **Platforms:** web, ios, android, render
@@ -1170,7 +1215,7 @@ No approval is created by this task brief. Mock/disabled implementation is not a
 <a id="t15"></a>
 ## T15 — Evidence-bound OpenAI adapter
 
-**Status:** `PLANNED` · **Owner:** premium-backend · **Milestone:** premium
+**Status:** `IMPLEMENTED_PENDING_REVIEW` · **Owner:** premium-backend · **Milestone:** premium
 
 **Hard predecessors:** [T01](#t01), [T09](#t09), [T26](#t26), [T27](#t27)
 **Platforms:** backend, workers
@@ -1303,7 +1348,7 @@ No approval is created by this task brief. Mock/disabled implementation is not a
 <a id="t17"></a>
 ## T17 — Interactive Free web product
 
-**Status:** `PLANNED` · **Owner:** frontend · **Milestone:** free
+**Status:** `IMPLEMENTED_PENDING_REVIEW` · **Owner:** frontend · **Milestone:** free
 
 **Hard predecessors:** [T02](#t02), [T04](#t04), [T09](#t09), [T10](#t10), [T28](#t28)
 **Platforms:** web
@@ -1360,7 +1405,7 @@ Working Free web journey and reusable web report components tied to saved projec
 
 ### Validation and human gates
 
-Validation profiles: [docs](#validation-docs), [contracts](#validation-contracts), [web_render](#validation-web_render), [backend](#validation-backend). Planned suites must be implemented and their actual command documented by the owning task; they are not passing tests today.
+Validation profiles: [docs](#validation-docs), [contracts](#validation-contracts), [js_packages](#validation-js_packages), [web_browser](#validation-web_browser), [web_render](#validation-web_render), [backend](#validation-backend). Planned suites must be implemented and their actual command documented by the owning task; they are not passing tests today.
 
 - `design_acceptance`: Owner acceptance of real contract-driven web/native/report design.
 - `processor_retention_contracts`: Approved providers, regions, purposes, retention/deletion and support obligations.
@@ -1433,7 +1478,7 @@ No task-specific production gate; all repository privacy/security and scope boun
 <a id="t19"></a>
 ## T19 — Cross-platform purchase ledger entitlements and metered jobs
 
-**Status:** `PLANNED` · **Owner:** commerce · **Milestone:** premium
+**Status:** `IMPLEMENTED_PENDING_REVIEW` · **Owner:** commerce · **Milestone:** premium
 
 **Hard predecessors:** [T02](#t02), [T03](#t03), [T09](#t09), [T15](#t15), [T27](#t27)
 **Platforms:** backend, workers
@@ -1568,7 +1613,7 @@ No approval is created by this task brief. Mock/disabled implementation is not a
 <a id="t21"></a>
 ## T21 — Same-content PDF and share-card rendering
 
-**Status:** `PLANNED` · **Owner:** report-frontend · **Milestone:** reports
+**Status:** `IMPLEMENTED_PENDING_REVIEW` · **Owner:** report-frontend · **Milestone:** reports
 
 **Hard predecessors:** [T09](#t09), [T10](#t10), [T17](#t17)
 **Platforms:** render, web, shared
@@ -1764,7 +1809,7 @@ No approval is created by this task brief. Mock/disabled implementation is not a
 <a id="t24"></a>
 ## T24 — Deployment recovery support and notifications
 
-**Status:** `PLANNED` · **Owner:** platform-product · **Milestone:** release
+**Status:** `IN_PROGRESS` · **Owner:** platform-product · **Milestone:** release
 
 **Hard predecessors:** [T02](#t02), [T04](#t04), [T19](#t19), [T28](#t28)
 **Platforms:** backend, workers, operations
@@ -1967,7 +2012,7 @@ Historical completion evidence: Merged T26 finalization PR #9 and current interp
 <a id="t27"></a>
 ## T27 — Connector ports fakes and provider decisions
 
-**Status:** `PLANNED` · **Owner:** application-architecture · **Milestone:** foundation
+**Status:** `IMPLEMENTED_PENDING_REVIEW` · **Owner:** application-architecture · **Milestone:** foundation
 
 **Hard predecessors:** [T01](#t01)
 **Platforms:** shared, backend
@@ -2039,7 +2084,7 @@ No task-specific production gate; all repository privacy/security and scope boun
 <a id="t28"></a>
 ## T28 — Environment workspace and build foundation
 
-**Status:** `PLANNED` · **Owner:** platform · **Milestone:** foundation
+**Status:** `IMPLEMENTED_PENDING_REVIEW` · **Owner:** platform · **Milestone:** foundation
 
 **Hard predecessors:** [T00A](#t00a), [T27](#t27)
 **Platforms:** ci, backend, web, ios, android
@@ -2097,7 +2142,7 @@ Documented setup/teardown, exact dependency/build matrix and isolated environmen
 
 ### Validation and human gates
 
-Validation profiles: [core](#validation-core), [docs](#validation-docs), [contracts](#validation-contracts), [backend](#validation-backend), [web_render](#validation-web_render), [native](#validation-native). Planned suites must be implemented and their actual command documented by the owning task; they are not passing tests today.
+Validation profiles: [core](#validation-core), [docs](#validation-docs), [contracts](#validation-contracts), [backend](#validation-backend), [web_render](#validation-web_render), [native](#validation-native), [js_packages](#validation-js_packages). Planned suites must be implemented and their actual command documented by the owning task; they are not passing tests today.
 
 - `processor_retention_contracts`: Approved providers, regions, purposes, retention/deletion and support obligations.
 - `native_signing_accounts`: Owner-authorized developer accounts, identifiers, signing custody and protected release credentials.

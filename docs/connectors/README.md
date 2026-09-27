@@ -36,3 +36,32 @@ Direct SDK imports belong under `src/princess_app/adapters/<provider>/`; provide
 Run the same internal port cases against fakes and sandbox adapters where feasible. Include invalid credentials, wrong environment, expired proof, malformed payload, replay, duplicate business operation, retry-after, throttling, timeout after remote acceptance, revocation and resource deletion. Fakes must reproduce ambiguous outcomes, not simply raise a generic error before every action. Exact live sandbox tests are opt-in, owner-approved and redacted.
 
 See [test gates](../roadmap/16-testing-evals-and-quality-gates.md) and [environment rules](../roadmap/15-environments-deployment-and-secrets.md). Native app-store readiness adds actual signed-device and store evidence; passing Python fake tests is not sufficient.
+
+## Implemented seams (T27)
+
+The ports, fakes and conformance harness now exist. Real adapters remain the owning tasks' work and every production provider decision in [19](../roadmap/19-provider-decision-register.md) is still `CANDIDATE`/pending.
+
+| Port | Protocol and DTOs | Fake (standard library only) | Fake capability profile |
+|---|---|---|---|
+| IdentityProvider | `src/princess_app/ports/identity.py` | `FakeIdentityProvider` | verify, revoke session, provider account deletion; expiry, audience, key rotation and revocation states |
+| ObjectStore | `src/princess_app/ports/storage.py` | `FakeObjectStore` | presigned PUT, immutable versions, server copy, download tickets, hard delete; **no** size enforcement at upload and **no** provider SHA-256 unless configured |
+| PremiumModelProvider | `src/princess_app/ports/model.py` | `FakePremiumModel` | structured output, image input, no provider storage; explicit responder, no default success |
+| PaymentProvider | `src/princess_app/ports/payments.py` | `FakePaymentProvider` (Stripe-, Apple-, Google-shaped rails) | per rail: web checkout/refund (Stripe), proof verification (stores), server consume/acknowledge (Google only), signed events, lookup, reconcile |
+| NativePurchaseClient | `src/princess_app/ports/payments.py` | `FakeNativePurchaseClient` | returns store proofs; Apple finish is client-side after the server grant |
+| TransactionalMailer | `src/princess_app/ports/messaging.py` | `FakeMailer` | template/variable allowlist, bounded provider idempotency window, suppression |
+| PushProvider | `src/princess_app/ports/messaging.py` | `FakePushProvider` | stateless targets, generic payloads, token invalidation, environment mismatch, duplicate delivery |
+| AbuseChallengeProvider | `src/princess_app/ports/abuse.py` | `FakeAbuseChallenge` | action/site binding, expiry, replay, outage → `UNAVAILABLE` |
+| AnalyticsSink | `src/princess_app/ports/analytics.py` | `FakeAnalyticsSink` | versioned event/property allowlist (`analytics-events/1`), consent and disable switch |
+| TelemetryExporter | `src/princess_app/ports/telemetry.py` | `FakeTelemetryExporter` | attribute allowlist and redaction; `BufferedTelemetry` drops rather than blocks |
+
+Shared semantics live in `src/princess_app/ports/base.py`: the typed failure taxonomy (`InvalidInput`, `Unauthenticated`, `NotAuthorized`, `NotFound`, `Conflict`, `Unsupported`, `RateLimited`, `TransientUnavailable`, `DeadlineExceeded`, `PermanentFailure`, `AmbiguousOutcome`), `CallContext` (correlation ID, explicit environment, absolute UTC deadline, optional semantic dedupe key), `CapabilityProfile`, and `provider_errors()` which translates SDK exceptions without chaining the original. The environment/mode matrix composes fakes only into local/test/preview and requires live adapters in production; a fake constructed for production raises.
+
+Fakes script failures per operation through `FaultPlan`, including `after_effect=True` for "the remote side executed, the caller saw a timeout". Latency past the call deadline also yields `AmbiguousOutcome` after the effect.
+
+Run the harness with:
+
+```bash
+python -m pytest -q tests/connector_contracts tests/test_architecture_boundaries.py
+```
+
+`tests/test_architecture_boundaries.py` reads imports from the AST and enforces the import directions in [09](../roadmap/09-connectors-and-provider-boundaries.md): the numerical core, contracts, ports, domain, application and fakes cannot import provider SDKs, SQL or HTTP frameworks, and only `princess_app.adapters.<provider>` may. The learned `princess_graphology.signature` extra is the one declared exception and nothing else may import it.

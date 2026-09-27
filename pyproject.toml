@@ -24,12 +24,15 @@ princess-graphology = "princess_graphology.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+# The Free distribution is the numerical core plus pure contracts. The product
+# application (princess_app) runs from the repository with its own lock.
+include = ["princess_graphology*", "princess_contracts*"]
 
 [tool.setuptools.package-data]
 princess_graphology = ["_feature_contract.json"]
 
 [tool.pytest.ini_options]
-pythonpath = ["src", "tools"]
+pythonpath = ["src", "tools", "apps/api"]
 testpaths = ["tests"]
 
 [tool.ruff]

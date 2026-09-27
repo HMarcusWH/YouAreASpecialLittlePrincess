@@ -378,3 +378,11 @@ def test_premium_output_is_complete_and_soft_fields_cannot_escape_packet_or_t26_
     long_output = compile_document("PremiumOutput", long_data).value
     assert long_output is not None
     assert "SOFT_FIELD_TOO_LONG" in {i.code for i in validate_premium_output(packet, long_output)}
+
+
+def test_negative_zero_is_canonicalized_so_digests_survive_storage_round_trips():
+    from princess_contracts import canonical_digest, canonical_json
+
+    assert canonical_json({"a": -0.0, "b": [-0.0, 1.5]}) == '{"a":0.0,"b":[0.0,1.5]}'
+    assert canonical_digest({"v": -0.0}) == canonical_digest({"v": 0.0})
+    assert canonical_json({"v": -1e-9}) == '{"v":-1e-09}'  # only exact zero is affected

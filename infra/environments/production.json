@@ -1,0 +1,125 @@
+{
+  "version": 1,
+  "environment": "production",
+  "database": {
+    "name": "princess_production"
+  },
+  "providers": {
+    "IdentityProvider": "live",
+    "ObjectStore": "live",
+    "PremiumModelProvider": "live",
+    "PaymentProvider": "live",
+    "TransactionalMailer": "live",
+    "PushProvider": "live",
+    "AbuseChallengeProvider": "live",
+    "AnalyticsSink": "live",
+    "TelemetryExporter": "live"
+  },
+  "kill_switches": {
+    "premium_generation": false,
+    "commerce": false,
+    "uploads": false,
+    "sharing": false,
+    "notifications": false
+  },
+  "components": {
+    "api": {
+      "secrets": [
+        "PRINCESS_DATABASE_URL",
+        "PRINCESS_SESSION_SECRET",
+        "PRINCESS_IDENTITY_AUDIENCE",
+        "PRINCESS_STORAGE_SIGNING_KEY"
+      ],
+      "egress": [
+        "database",
+        "object_store",
+        "identity_provider",
+        "telemetry"
+      ]
+    },
+    "web_server": {
+      "secrets": [
+        "PRINCESS_SESSION_SECRET"
+      ],
+      "egress": [
+        "api"
+      ]
+    },
+    "analysis_worker": {
+      "secrets": [
+        "PRINCESS_DATABASE_URL",
+        "PRINCESS_STORAGE_READ_KEY"
+      ],
+      "egress": [
+        "database",
+        "object_store"
+      ]
+    },
+    "premium_worker": {
+      "secrets": [
+        "PRINCESS_DATABASE_URL",
+        "PRINCESS_STORAGE_READ_KEY"
+      ],
+      "egress": [
+        "database",
+        "object_store"
+      ]
+    },
+    "render_worker": {
+      "secrets": [
+        "PRINCESS_STORAGE_READ_KEY"
+      ],
+      "egress": [
+        "object_store"
+      ]
+    },
+    "export_worker": {
+      "secrets": [
+        "PRINCESS_DATABASE_URL",
+        "PRINCESS_STORAGE_READ_KEY"
+      ],
+      "egress": [
+        "database",
+        "object_store"
+      ]
+    },
+    "reference_worker": {
+      "secrets": [
+        "PRINCESS_DATABASE_URL",
+        "PRINCESS_STORAGE_READ_KEY"
+      ],
+      "egress": [
+        "database",
+        "object_store"
+      ]
+    },
+    "notification_worker": {
+      "secrets": [
+        "PRINCESS_DATABASE_URL"
+      ],
+      "egress": [
+        "database"
+      ]
+    },
+    "migrations": {
+      "secrets": [
+        "PRINCESS_MIGRATION_DATABASE_URL"
+      ],
+      "egress": [
+        "database"
+      ]
+    },
+    "web_public": {
+      "secrets": [],
+      "egress": [
+        "api"
+      ]
+    },
+    "native_public": {
+      "secrets": [],
+      "egress": [
+        "api"
+      ]
+    }
+  }
+}
