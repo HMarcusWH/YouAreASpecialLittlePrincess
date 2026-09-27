@@ -1,7 +1,7 @@
 {
-  "plan_version": "2.0",
+  "plan_version": "2.1",
   "research_date": "2026-09-26",
-  "baseline_commit": "251668a521150668b90c3551530daab694a5c739",
+  "baseline_commit": "e8e174a2311f8d4327850218405819de8f87277e",
   "historical_baseline_commit": "8f2ec7b07f23f7b3613ccc71576714f3c245e7a0",
   "status": "IMPLEMENTATION_PLAN_NOT_RELEASE_APPROVAL",
   "task_spec": "06-agent-backlog.md",
@@ -35,299 +35,2290 @@
     "google_play_review": "Actual Play testing/production-access/product/privacy review evidence and current account requirements verified."
   },
   "validation_profiles": {
-    "docs": {"state": "EXISTS_IN_THIS_PR", "commands": ["python docs/roadmap/plan_tools.py --check", "python -m unittest discover -s docs/roadmap -p 'test_plan_tools.py'"], "description": "Task graph, generated backlog, references and local documentation navigation."},
-    "core": {"state": "EXISTS", "commands": ["python tools/generate_feature_contract.py --check", "python tools/compile_premium_interpretation_db.py --check", "python tools/validate_graphology_integrity.py", "python tools/validate_graphology_ontology.py", "python tools/validate_graphology_selector_foundation.py", "python tools/validate_graphology_traditional_rules.py", "python tools/validate_graphology_database.py", "python tools/check_graphology_research.py", "python tools/test_graphology_research.py", "ruff check src tests tools", "python -m compileall -q src", "python -m pytest -q"], "description": "Also execute the complete current CI dependency-policy, hash-lock and installed-wheel gates; this list is not a replacement for the workflow."},
-    "consent": {"state": "EXISTS_IN_THIS_PR", "commands": ["python tools/validate_consent_protocol.py", "python -m pytest -q tests/test_consent_protocol.py"], "description": "T03 draft consent/retention/source-rights/collection contracts: strict schema subset, semantic rules, reference permission evaluator, scenario and collection fixtures. Validates drafts; approves nothing."},
-    "contracts": {"state": "TO_IMPLEMENT", "commands": [], "description": "T01 must add reproducible Python/TypeScript generation, JSON Schema/OpenAPI semantic fixtures and zero-AI import/egress tests."},
-    "backend": {"state": "EXISTS_IN_THIS_PR", "commands": ["python tools/check_environments.py", "python -m pytest -q tests_app"], "description": "PostgreSQL migration, non-owner RLS role, constraint, identity, permission-fencing, OIDC and API tests (T02); later tasks extend it."},
-    "connectors": {"state": "EXISTS_IN_THIS_PR", "commands": ["python -m pytest -q tests/connector_contracts tests/test_architecture_boundaries.py"], "description": "T27 adds a fake/conformance harness; each real adapter adds redacted opt-in sandbox evidence and failure cases."},
-    "empirical": {"state": "TO_IMPLEMENT", "commands": [], "description": "Protected rights-cleared writer-disjoint evaluation; record actual artifacts, tolerances and outcomes, not synthetic proxy approvals."},
-    "js_packages": {"state": "EXISTS_IN_THIS_PR", "commands": ["pnpm install --frozen-lockfile", "pnpm typecheck", "pnpm test"], "description": "Shared TypeScript packages only (generated contracts type-check, report-core formatting/chart/frame parity against shared fixtures). Not browser, accessibility or PDF coverage."},
-    "web_browser": {"state": "EXISTS_IN_THIS_PR", "commands": ["pnpm install --frozen-lockfile", "pnpm --filter @princess/web build", "pnpm --filter @princess/web exec playwright install --with-deps chromium", "pnpm --filter @princess/web e2e", "tools/run_web_e2e.sh"], "description": "Free web journeys in Chromium: fixture-backed report views (projection parity, missing-not-zero, evidence labels, keyboard focus, 320px Swedish overflow, dark mode, security headers, proxy allowlist and CSRF) in CI; the live upload-to-report journey (resume on refresh, cross-owner 404) runs locally against PostgreSQL via tools/run_web_e2e.sh. Not PDF, share-card or automated axe coverage."},
-    "web_render": {"state": "EXISTS_IN_THIS_PR", "commands": ["pnpm --filter @princess/render test", "python -m pytest -q tests_app/test_exports.py", "tools/run_web_e2e.sh"], "description": "Offline Chromium renderer tests (EXPORT-only documents as tagged A4/Letter PDF, SHARE-only 1080x1080/1080x1920 PNG cards, projection/layout mismatch and bad-input codes), export job/API tests with a recording renderer (fact parity with the OWNER projection, disclosed-section cards, projection change mid-render, stale retrieval revoked and erased, capture deletion, bounded renderer failures, scrubbed child environment) and the live journey downloading a real PDF. Not automated axe or pixel-diff coverage."},
-    "native": {"state": "TO_IMPLEMENT", "commands": [], "description": "T29 establishes JS/native test commands and signed-build matrix; T30/T31 add real device and sandbox purchase/lifecycle evidence."},
-    "release": {"state": "TO_IMPLEMENT", "commands": [], "description": "T23/T24/T32/T33 add real recovery, security, signed-store and rollout evidence; T25 requires human approval."}
+    "docs": {
+      "state": "EXISTS",
+      "commands": [
+        "python docs/roadmap/plan_tools.py --check",
+        "python -m unittest discover -s docs/roadmap -p 'test_plan_tools.py'"
+      ],
+      "description": "Merged task-graph, generated-backlog, reference and local-link validation on main."
+    },
+    "core": {
+      "state": "EXISTS",
+      "commands": [
+        "python tools/generate_feature_contract.py --check",
+        "python tools/compile_premium_interpretation_db.py --check",
+        "python tools/validate_graphology_integrity.py",
+        "python tools/validate_graphology_ontology.py",
+        "python tools/validate_graphology_selector_foundation.py",
+        "python tools/validate_graphology_traditional_rules.py",
+        "python tools/validate_graphology_database.py",
+        "python tools/check_graphology_research.py",
+        "python tools/test_graphology_research.py",
+        "ruff check src tests tools",
+        "python -m compileall -q src",
+        "python -m pytest -q"
+      ],
+      "description": "Also execute the complete current CI dependency-policy, hash-lock and installed-wheel gates; this list is not a replacement for the workflow."
+    },
+    "consent": {
+      "state": "EXISTS",
+      "commands": [
+        "python tools/validate_consent_protocol.py",
+        "python -m pytest -q tests/test_consent_protocol.py"
+      ],
+      "description": "Merged T03 draft consent/retention/source-rights/collection contract validators and scenario fixtures. Validates drafts; approves nothing."
+    },
+    "contracts": {
+      "state": "EXISTS",
+      "commands": [
+        "python tools/generate_product_contracts.py --check",
+        "python tools/validate_product_contracts.py",
+        "python tools/test_product_contract_faults.py",
+        "python -m pytest -q tests/test_product_contracts.py"
+      ],
+      "description": "Merged T01 reproducible product-contract generation, semantic validation, negative fault injection and runtime contract tests."
+    },
+    "backend": {
+      "state": "EXISTS",
+      "commands": [
+        "python tools/check_environments.py",
+        "python -m pytest -q tests_app"
+      ],
+      "description": "Merged PostgreSQL 16 integration suite covering migrations, non-owner RLS, persistence, identity/permissions, intake, commerce, Premium, exports, feedback, notifications, restore and API composition."
+    },
+    "connectors": {
+      "state": "EXISTS",
+      "commands": [
+        "python -m pytest -q tests/connector_contracts tests/test_architecture_boundaries.py"
+      ],
+      "description": "Merged T27 fake/conformance harness and architecture-boundary checks; real adapters add their own sandbox evidence in owning tasks."
+    },
+    "empirical": {
+      "state": "TO_IMPLEMENT",
+      "commands": [],
+      "description": "Protected rights-cleared writer-disjoint evaluation; record actual artifacts, tolerances and outcomes, not synthetic proxy approvals."
+    },
+    "js_packages": {
+      "state": "EXISTS",
+      "commands": [
+        "pnpm install --frozen-lockfile",
+        "pnpm typecheck",
+        "pnpm test"
+      ],
+      "description": "Merged shared TypeScript packages: generated contracts, API client, report-core/web, design tokens and offline renderer package tests."
+    },
+    "web_browser": {
+      "state": "EXISTS",
+      "commands": [
+        "pnpm install --frozen-lockfile",
+        "pnpm --filter @princess/web build",
+        "pnpm --filter @princess/web exec playwright install --with-deps chromium",
+        "pnpm --filter @princess/web e2e",
+        "tools/run_web_e2e.sh"
+      ],
+      "description": "Merged Free web Chromium fixture journeys plus the local live upload-to-report journey. This profile does not replace web_render or future automated axe coverage."
+    },
+    "web_render": {
+      "state": "EXISTS",
+      "commands": [
+        "pnpm --filter @princess/render test",
+        "python -m pytest -q tests_app/test_exports.py",
+        "tools/run_web_e2e.sh"
+      ],
+      "description": "Merged offline Chromium PDF/share-card renderer tests, export job/API tests and live PDF download journey. Automated axe/pixel-diff coverage remains future work."
+    },
+    "native": {
+      "state": "TO_IMPLEMENT",
+      "commands": [],
+      "description": "T29 establishes JS/native test commands and signed-build matrix; T30/T31 add real device and sandbox purchase/lifecycle evidence."
+    },
+    "release": {
+      "state": "TO_IMPLEMENT",
+      "commands": [],
+      "description": "T23/T24/T32/T33 add real recovery, security, signed-store and rollout evidence; T25 requires human approval."
+    }
   },
   "tasks": [
     {
-      "id": "T00", "title": "Green baseline and dependency policy", "status": "DONE", "depends_on": [], "owner_role": "platform", "milestone": "foundation", "platforms": ["core", "ci"], "connectors": [],
-      "required_docs": ["docs/ci/T00_BASELINE.md","docs/roadmap/16-testing-evals-and-quality-gates.md"], "owned_paths": [".github/workflows/ci.yml", "requirements/", "tools/verify_ci_lock.py"],
-      "coding_steps": ["Preserve the merged baseline and its recorded failure/repair history; do not redo formatting as product work.", "Keep exact interpreter/dependency/toolchain evidence and full core checks. Follow-up findings are assigned to T00A, not silently treated as fixed."],
+      "id": "T00",
+      "title": "Green baseline and dependency policy",
+      "status": "DONE",
+      "depends_on": [],
+      "owner_role": "platform",
+      "milestone": "foundation",
+      "platforms": [
+        "core",
+        "ci"
+      ],
+      "connectors": [],
+      "required_docs": [
+        "docs/ci/T00_BASELINE.md",
+        "docs/roadmap/16-testing-evals-and-quality-gates.md"
+      ],
+      "owned_paths": [
+        ".github/workflows/ci.yml",
+        "requirements/",
+        "tools/verify_ci_lock.py"
+      ],
+      "coding_steps": [
+        "Preserve the merged baseline and its recorded failure/repair history; do not redo formatting as product work.",
+        "Keep exact interpreter/dependency/toolchain evidence and full core checks. Follow-up findings are assigned to T00A, not silently treated as fixed."
+      ],
       "contract_handoff": "A reproducible tested core baseline, not a deployed app or proof of complete supply-chain hardening.",
-      "acceptance": ["Historical PR #10 completion and its executed checks remain linked.", "T00A remains visible until its distinct repairs pass."], "negative_tests": ["No hidden Ruff exclusions or removed Python matrix job to hide a failure."],
-      "artifacts": ["Existing T00 baseline evidence and reviewed dependency manifests/locks"], "production_gates": [], "validation_profiles": ["core", "docs"], "rollback": ["Use reviewed commits and lock changes; do not undo security checks or deletion/financial data."], "completion_evidence": "Merged PR #10; source head 90e88e5c73a081182974575925561ac948dbc0e1; premerge run 36212342579. Four later findings are T00A."
+      "acceptance": [
+        "Historical PR #10 completion and its executed checks remain linked.",
+        "T00A remains visible until its distinct repairs pass."
+      ],
+      "negative_tests": [
+        "No hidden Ruff exclusions or removed Python matrix job to hide a failure."
+      ],
+      "artifacts": [
+        "Existing T00 baseline evidence and reviewed dependency manifests/locks"
+      ],
+      "production_gates": [],
+      "validation_profiles": [
+        "core",
+        "docs"
+      ],
+      "rollback": [
+        "Use reviewed commits and lock changes; do not undo security checks or deletion/financial data."
+      ],
+      "completion_evidence": "Merged PR #10; source head 90e88e5c73a081182974575925561ac948dbc0e1; premerge run 36212342579. Four later findings are T00A."
     },
     {
-      "id": "T00A", "title": "Post-merge dependency graph hardening", "status": "DONE", "completion_evidence": "Merged PR #12 (merge bcf5562dde79fd241142fac18abcdde090641b2f); exact head d4647fc70cc06c2fc6633c59be67b1ef5fa83fd3 passed CI run 36273093400 on Python 3.10/3.11/3.12 and roadmap run 36273093435; the Codex code review of that head reported no major issues (issue comment 5850081384). Failing-before/passing-after cases are in docs/ci/T00_BASELINE.md.", "depends_on": ["T00"], "owner_role": "platform-security", "milestone": "foundation", "platforms": ["core", "ci"], "connectors": [],
-      "required_docs": ["docs/ci/T00_BASELINE.md","docs/roadmap/16-testing-evals-and-quality-gates.md","docs/roadmap/22-research-and-source-refresh.md"], "owned_paths": ["tools/verify_ci_lock.py", "tools/verify_project_dependency_policy.py", "tests/test_ci_lock.py", ".github/workflows/ci.yml", "docs/ci/T00_BASELINE.md", "requirements/README.md"],
-      "coding_steps": ["Reproduce all four post-merge Codex findings against the actual current head before changing the validator.", "Inspect active Requires-Dist edges of every reviewed distribution, validating locked versions and rejecting unsupported extras/direct URLs without fetching dependencies.", "Reject dynamic dependency/optional-dependency metadata and implicit/missing build-system declarations, or adopt a separately reviewed generated-metadata policy.", "Capture backend-reported wheel/editable build requirements in a no-download sandbox or explicitly prohibit configurations that can supply unreviewed hooks/requirements. Do not execute arbitrary backend code merely to claim static safety.", "Add regressions for every bypass plus valid/inactive-marker controls; preserve existing no-deps/hash/duplicate protections."],
+      "id": "T00A",
+      "title": "Post-merge dependency graph hardening",
+      "status": "DONE",
+      "completion_evidence": "Merged PR #12 (merge bcf5562dde79fd241142fac18abcdde090641b2f); exact head d4647fc70cc06c2fc6633c59be67b1ef5fa83fd3 passed CI run 36273093400 on Python 3.10/3.11/3.12 and roadmap run 36273093435; the Codex code review of that head reported no major issues (issue comment 5850081384). Failing-before/passing-after cases are in docs/ci/T00_BASELINE.md.",
+      "depends_on": [
+        "T00"
+      ],
+      "owner_role": "platform-security",
+      "milestone": "foundation",
+      "platforms": [
+        "core",
+        "ci"
+      ],
+      "connectors": [],
+      "required_docs": [
+        "docs/ci/T00_BASELINE.md",
+        "docs/roadmap/16-testing-evals-and-quality-gates.md",
+        "docs/roadmap/22-research-and-source-refresh.md"
+      ],
+      "owned_paths": [
+        "tools/verify_ci_lock.py",
+        "tools/verify_project_dependency_policy.py",
+        "tests/test_ci_lock.py",
+        ".github/workflows/ci.yml",
+        "docs/ci/T00_BASELINE.md",
+        "requirements/README.md"
+      ],
+      "coding_steps": [
+        "Reproduce all four post-merge Codex findings against the actual current head before changing the validator.",
+        "Inspect active Requires-Dist edges of every reviewed distribution, validating locked versions and rejecting unsupported extras/direct URLs without fetching dependencies.",
+        "Reject dynamic dependency/optional-dependency metadata and implicit/missing build-system declarations, or adopt a separately reviewed generated-metadata policy.",
+        "Capture backend-reported wheel/editable build requirements in a no-download sandbox or explicitly prohibit configurations that can supply unreviewed hooks/requirements. Do not execute arbitrary backend code merely to claim static safety.",
+        "Add regressions for every bypass plus valid/inactive-marker controls; preserve existing no-deps/hash/duplicate protections."
+      ],
       "contract_handoff": "An explicit supported dependency/build configuration and a closed reviewed active graph; document residual trust in the selected backend/toolchain.",
-      "acceptance": ["All four findings have reproducible failing-before/passing-after cases and review disposition.", "Full exact-head Python matrix, compiler/validator/research/wheel checks pass without schema or measurement changes."], "negative_tests": ["Locked child[extra] or direct reference; dynamic dependencies; missing requires/backend; backend setup requirements outside the lock; inactive markers; duplicate metadata."],
-      "artifacts": ["Dependency-policy repairs and regression cases", "Updated post-merge evidence and explicit supported-build policy"], "production_gates": [], "validation_profiles": ["core", "docs"], "rollback": ["Revert scoped policy implementation if defective while keeping affected dependency changes blocked; never allow unsafe installation as fallback."]
+      "acceptance": [
+        "All four findings have reproducible failing-before/passing-after cases and review disposition.",
+        "Full exact-head Python matrix, compiler/validator/research/wheel checks pass without schema or measurement changes."
+      ],
+      "negative_tests": [
+        "Locked child[extra] or direct reference; dynamic dependencies; missing requires/backend; backend setup requirements outside the lock; inactive markers; duplicate metadata."
+      ],
+      "artifacts": [
+        "Dependency-policy repairs and regression cases",
+        "Updated post-merge evidence and explicit supported-build policy"
+      ],
+      "production_gates": [],
+      "validation_profiles": [
+        "core",
+        "docs"
+      ],
+      "rollback": [
+        "Revert scoped policy implementation if defective while keeping affected dependency changes blocked; never allow unsafe installation as fallback."
+      ]
     },
     {
-      "id": "T01", "title": "Product contracts and zero-AI capability manifest", "status": "DONE", "completion_evidence": "Merged PR #13 (merge 48d4e033d576211766d1d98a65061452b4b199e9); exact head 1de5a3dde7d4a7317a7a2714bc79a15aa24d4032 passed CI run 36280551268 and roadmap run 36280551264; main CI run 36281080920 passed after merge. Codex security review of that head completed with no findings; no code-review finding was posted.", "depends_on": ["T00","T00A","T03"], "owner_role": "contracts", "milestone": "foundation", "platforms": ["shared"], "connectors": [],
-      "required_docs": ["docs/roadmap/01-data-architecture.md","docs/roadmap/04-reports-design.md","docs/roadmap/08-premium-question-selector-database.md","docs/roadmap/09-connectors-and-provider-boundaries.md","docs/roadmap/16-testing-evals-and-quality-gates.md"], "owned_paths": ["contracts/product/v1/", "contracts/http/", "src/princess_contracts/", "packages/contracts/", "schema/method_capabilities/"],
-      "coding_steps": ["Author versioned JSON Schemas for AnalysisReference, EvidenceBundle, ReportDocument/ViewModel, Comparison, Premium packet/output, grants, exports and entitlement-facing DTOs; preserve the canonical numerical schema.", "Pin and implement generation of Python/TypeScript DTOs and derive/check API schema compatibility from the same source. Define canonical hashes, time/ID/currency/missingness formats.", "Define method capability records and resolve transitive learned/provider dependencies. Partition Free from model/signature/provider runtimes with import and egress-denied tests.", "Provide positive/negative fixtures for partial/no-reference/locked/pending/revoked states and a consumer handoff manifest."],
+      "id": "T01",
+      "title": "Product contracts and zero-AI capability manifest",
+      "status": "DONE",
+      "completion_evidence": "Merged PR #13 (merge 48d4e033d576211766d1d98a65061452b4b199e9); exact head 1de5a3dde7d4a7317a7a2714bc79a15aa24d4032 passed CI run 36280551268 and roadmap run 36280551264; main CI run 36281080920 passed after merge. Codex security review of that head completed with no findings; no code-review finding was posted.",
+      "depends_on": [
+        "T00",
+        "T00A",
+        "T03"
+      ],
+      "owner_role": "contracts",
+      "milestone": "foundation",
+      "platforms": [
+        "shared"
+      ],
+      "connectors": [],
+      "required_docs": [
+        "docs/roadmap/01-data-architecture.md",
+        "docs/roadmap/04-reports-design.md",
+        "docs/roadmap/08-premium-question-selector-database.md",
+        "docs/roadmap/09-connectors-and-provider-boundaries.md",
+        "docs/roadmap/16-testing-evals-and-quality-gates.md"
+      ],
+      "owned_paths": [
+        "contracts/product/v1/",
+        "contracts/http/",
+        "src/princess_contracts/",
+        "packages/contracts/",
+        "schema/method_capabilities/"
+      ],
+      "coding_steps": [
+        "Author versioned JSON Schemas for AnalysisReference, EvidenceBundle, ReportDocument/ViewModel, Comparison, Premium packet/output, grants, exports and entitlement-facing DTOs; preserve the canonical numerical schema.",
+        "Pin and implement generation of Python/TypeScript DTOs and derive/check API schema compatibility from the same source. Define canonical hashes, time/ID/currency/missingness formats.",
+        "Define method capability records and resolve transitive learned/provider dependencies. Partition Free from model/signature/provider runtimes with import and egress-denied tests.",
+        "Provide positive/negative fixtures for partial/no-reference/locked/pending/revoked states and a consumer handoff manifest."
+      ],
       "contract_handoff": "Frozen wire schemas, generated DTOs, fixtures and version/compatibility policy used by backend, web, mobile, renderer and Premium.",
-      "acceptance": ["Generation is deterministic and schema/type/OpenAPI drift fails CI.", "Free executes without provider credentials, learned weights or provider egress; unavailable methods return explicit reasons.", "Region/run/evidence references and finite canonical values are validated."], "negative_tests": ["NaN/Infinity, boolean-as-number, wrong unit/owner/run, unknown enum, missing-as-zero, learned transitive dependency, incompatible schema major."],
-      "artifacts": ["Product schemas and generated DTOs", "Method capability manifest and isolation fixtures", "Contract version/migration guide"], "production_gates": [], "validation_profiles": ["core", "docs", "contracts"], "rollback": ["Version contracts rather than rewriting old report snapshots; preserve old consumers through the documented compatibility window."]
+      "acceptance": [
+        "Generation is deterministic and schema/type/OpenAPI drift fails CI.",
+        "Free executes without provider credentials, learned weights or provider egress; unavailable methods return explicit reasons.",
+        "Region/run/evidence references and finite canonical values are validated."
+      ],
+      "negative_tests": [
+        "NaN/Infinity, boolean-as-number, wrong unit/owner/run, unknown enum, missing-as-zero, learned transitive dependency, incompatible schema major."
+      ],
+      "artifacts": [
+        "Product schemas and generated DTOs",
+        "Method capability manifest and isolation fixtures",
+        "Contract version/migration guide"
+      ],
+      "production_gates": [],
+      "validation_profiles": [
+        "core",
+        "docs",
+        "contracts"
+      ],
+      "rollback": [
+        "Version contracts rather than rewriting old report snapshots; preserve old consumers through the documented compatibility window."
+      ]
     },
     {
-      "id": "T02", "title": "Persistence identity authorization", "status": "IMPLEMENTED_PENDING_REVIEW", "depends_on": ["T01", "T27", "T28"], "owner_role": "backend", "milestone": "foundation", "platforms": ["backend"], "connectors": ["IdentityProvider"],
-      "required_docs": ["docs/roadmap/01-data-architecture.md","docs/roadmap/09-connectors-and-provider-boundaries.md","docs/connectors/identity.md","docs/adr/ADR-002-auth-provider.md","docs/adr/ADR-003-postgres-hosting.md","docs/roadmap/17-security-privacy-and-abuse.md"], "owned_paths": ["src/princess_app/domain/","src/princess_app/application/","src/princess_app/adapters/persistence/","src/princess_app/adapters/identity/","apps/api/","migrations/","src/princess_app/domain/permissions/","src/princess_app/application/permissions/"],
-      "coding_steps": ["Implement initial principal/identity, asset/sample/capture, run/measurement/region, report, job/outbox and version tables with reviewed Alembic migrations; defer commerce-specific tables to T19.","Implement an append-only permission/consent event ledger and owner-scoped grant/withdraw lifecycle for service processing, retention, third-party AI processing, contribution, ordinary sharing and partner comparison as distinct purposes, using T03 purpose/policy IDs; check effective permission at use time rather than mutating historical grants.","Map verified provider identities to internal principals; implement guest-to-account transfer and deletion/session revocation. No home-grown password system or email-only account linking.","Persist canonical result JSON and relational projections atomically; enforce owner/run composite references and actual non-owner runtime roles.","Publish authenticated API composition and repository/unit-of-work fakes plus PostgreSQL integration fixtures."],
+      "id": "T02",
+      "title": "Persistence identity authorization",
+      "status": "DONE",
+      "depends_on": [
+        "T01",
+        "T27",
+        "T28"
+      ],
+      "owner_role": "backend",
+      "milestone": "foundation",
+      "platforms": [
+        "backend"
+      ],
+      "connectors": [
+        "IdentityProvider"
+      ],
+      "required_docs": [
+        "docs/roadmap/01-data-architecture.md",
+        "docs/roadmap/09-connectors-and-provider-boundaries.md",
+        "docs/connectors/identity.md",
+        "docs/adr/ADR-002-auth-provider.md",
+        "docs/adr/ADR-003-postgres-hosting.md",
+        "docs/roadmap/17-security-privacy-and-abuse.md"
+      ],
+      "owned_paths": [
+        "src/princess_app/domain/",
+        "src/princess_app/application/",
+        "src/princess_app/adapters/postgres/",
+        "src/princess_app/adapters/oidc/",
+        "apps/api/",
+        "migrations/"
+      ],
+      "coding_steps": [
+        "Implement initial principal/identity, asset/sample/capture, run/measurement/region, report, job/outbox and version tables with reviewed Alembic migrations; defer commerce-specific tables to T19.",
+        "Implement an append-only permission/consent event ledger and owner-scoped grant/withdraw lifecycle for service processing, retention, third-party AI processing, contribution, ordinary sharing and partner comparison as distinct purposes, using T03 purpose/policy IDs; check effective permission at use time rather than mutating historical grants.",
+        "Map verified provider identities to internal principals; implement guest-to-account transfer and deletion/session revocation. No home-grown password system or email-only account linking.",
+        "Persist canonical result JSON and relational projections atomically; enforce owner/run composite references and actual non-owner runtime roles.",
+        "Publish authenticated API composition and repository/unit-of-work fakes plus PostgreSQL integration fixtures."
+      ],
       "contract_handoff": "Stable internal ownership IDs, transaction boundaries and versioned persistence interfaces; no provider objects leak into DTOs.",
-      "acceptance": ["Cross-owner/run access and duplicate features are rejected by application and relevant database constraints.","Actual PostgreSQL role/RLS and migration/restore smoke pass; reference members remain service-only.","Permission grants/withdrawals persist as append-only purpose/policy/scope events; stale or withdrawn permission cannot authorize later processing.","Partner-comparison authorization is a separate purpose from ordinary sharing, with independent grant/withdraw/audit state checked at use time."], "negative_tests": ["Guessed report IDs, forged region parent, guest-transfer race, revoked token, duplicate projection write and migration rollback with existing rows.","Permission replay, stale policy version, concurrent withdraw/use, contribution without authority and AI processing after withdrawal.","Ordinary share grant reused as partner-comparison authority, withdrawn partner comparison reused by a stale invitation, and concurrent partner withdrawal/use."],
-      "artifacts": ["Migrations, repositories/unit of work and identity adapter","Owner-scoped API and non-owner role tests","Permission-event schema/repository/service and grant/withdraw API lifecycle"], "production_gates": ["processor_retention_contracts"], "validation_profiles": ["core", "docs", "contracts", "backend", "connectors"], "rollback": ["Use expand/contract migrations and revoke provider bindings safely; never restore deleted ownership from a stale cache."]
+      "acceptance": [
+        "Cross-owner/run access and duplicate features are rejected by application and relevant database constraints.",
+        "Actual PostgreSQL role/RLS and migration/restore smoke pass; reference members remain service-only.",
+        "Permission grants/withdrawals persist as append-only purpose/policy/scope events; stale or withdrawn permission cannot authorize later processing.",
+        "Partner-comparison authorization is a separate purpose from ordinary sharing, with independent grant/withdraw/audit state checked at use time."
+      ],
+      "negative_tests": [
+        "Guessed report IDs, forged region parent, guest-transfer race, revoked token, duplicate projection write and migration rollback with existing rows.",
+        "Permission replay, stale policy version, concurrent withdraw/use, contribution without authority and AI processing after withdrawal.",
+        "Ordinary share grant reused as partner-comparison authority, withdrawn partner comparison reused by a stale invitation, and concurrent partner withdrawal/use."
+      ],
+      "artifacts": [
+        "Migrations, repositories/unit of work and identity adapter",
+        "Owner-scoped API and non-owner role tests",
+        "Permission-event schema/repository/service and grant/withdraw API lifecycle"
+      ],
+      "production_gates": [
+        "processor_retention_contracts"
+      ],
+      "validation_profiles": [
+        "core",
+        "docs",
+        "contracts",
+        "backend",
+        "connectors"
+      ],
+      "rollback": [
+        "Use expand/contract migrations and revoke provider bindings safely; never restore deleted ownership from a stale cache."
+      ],
+      "completion_evidence": "PR #14 commit e1e6164 plus review repairs implemented the PostgreSQL product plane, non-owner RLS, append-only permission ledger, identity bindings/OIDC verifier, guest transfer/session revocation and FastAPI persistence composition. Production identity/hosting activation remains provider-gated, not unfinished T02 implementation. Merged PR #14 (merge e8e174a2311f8d4327850218405819de8f87277e; final head d2e106325c549f91c177d5cfd8277b032526ecff). Final-head CI, Roadmap integrity and Application environments passed; see docs/roadmap/23-post-pr14-reconciliation.md."
     },
     {
-      "id": "T03", "title": "Rights consent and collection protocol", "status": "DONE", "completion_evidence": "Merged PR #12 with T00A at the same exact head and CI/review evidence. Draft protocol contracts only: the pilot_rights_consent gate stays pending, no approval, participant or source clearance exists, and recruitment remains T11.", "depends_on": [], "owner_role": "product-data", "milestone": "foundation", "platforms": ["shared", "policy"], "connectors": [],
-      "required_docs": ["docs/roadmap/01-data-architecture.md","docs/roadmap/02-corpus-benchmarks.md","docs/roadmap/17-security-privacy-and-abuse.md"], "owned_paths": ["docs/privacy/", "contracts/consent/", "content/collection/", "tools/validate_consent_protocol.py", "tests/test_consent_protocol.py"],
-      "coding_steps": ["Draft purpose-specific consent/withdrawal, retention and source-license contracts without inventing approvals; define partner comparison as a distinct purpose from ordinary sharing, and coordinate final DTO mapping with T01.","Prepare original Swedish/English controlled/free-writing prompts and capture/author guidance, keeping copied tasks separate from free writing and repeat captures separate from writers.","Specify deletion lineage, participant/source rights evidence, adult eligibility and unsupported context handling for owner review.","Provide fixtures for grant/deny/withdraw/no-authority cases and a gated pilot handoff; actual recruitment belongs to T11."],
+      "id": "T03",
+      "title": "Rights consent and collection protocol",
+      "status": "DONE",
+      "completion_evidence": "Merged PR #12 with T00A at the same exact head and CI/review evidence. Draft protocol contracts only: the pilot_rights_consent gate stays pending, no approval, participant or source clearance exists, and recruitment remains T11.",
+      "depends_on": [],
+      "owner_role": "product-data",
+      "milestone": "foundation",
+      "platforms": [
+        "shared",
+        "policy"
+      ],
+      "connectors": [],
+      "required_docs": [
+        "docs/roadmap/01-data-architecture.md",
+        "docs/roadmap/02-corpus-benchmarks.md",
+        "docs/roadmap/17-security-privacy-and-abuse.md"
+      ],
+      "owned_paths": [
+        "docs/privacy/",
+        "contracts/consent/",
+        "content/collection/",
+        "tools/validate_consent_protocol.py",
+        "tests/test_consent_protocol.py"
+      ],
+      "coding_steps": [
+        "Draft purpose-specific consent/withdrawal, retention and source-license contracts without inventing approvals; define partner comparison as a distinct purpose from ordinary sharing, and coordinate final DTO mapping with T01.",
+        "Prepare original Swedish/English controlled/free-writing prompts and capture/author guidance, keeping copied tasks separate from free writing and repeat captures separate from writers.",
+        "Specify deletion lineage, participant/source rights evidence, adult eligibility and unsupported context handling for owner review.",
+        "Provide fixtures for grant/deny/withdraw/no-authority cases and a gated pilot handoff; actual recruitment belongs to T11."
+      ],
       "contract_handoff": "Versioned purpose/protocol IDs and approved-or-pending evidence references; service permission, contribution, AI processing, ordinary sharing and partner comparison are distinct purposes.",
-      "acceptance": ["Declining contribution does not reduce Free; no prechecked sharing/donation.", "Source code, data and model-weight rights are distinguished; retention is a reviewed configuration, not a legal claim."], "negative_tests": ["Payment mistaken for AI consent, uploader lacks author permission, withdrawal during use, reused obsolete notice, duplicate specimen counted as a writer."],
-      "artifacts": ["Draft consent/retention/source-rights specifications", "Original collection prompts and protocol fixtures"], "production_gates": ["pilot_rights_consent"], "validation_profiles": ["docs", "consent"], "rollback": ["Version notices/protocols; revoke future uses without silently changing the meaning of historical grants."]
+      "acceptance": [
+        "Declining contribution does not reduce Free; no prechecked sharing/donation.",
+        "Source code, data and model-weight rights are distinguished; retention is a reviewed configuration, not a legal claim."
+      ],
+      "negative_tests": [
+        "Payment mistaken for AI consent, uploader lacks author permission, withdrawal during use, reused obsolete notice, duplicate specimen counted as a writer."
+      ],
+      "artifacts": [
+        "Draft consent/retention/source-rights specifications",
+        "Original collection prompts and protocol fixtures"
+      ],
+      "production_gates": [
+        "pilot_rights_consent"
+      ],
+      "validation_profiles": [
+        "docs",
+        "consent"
+      ],
+      "rollback": [
+        "Version notices/protocols; revoke future uses without silently changing the meaning of historical grants."
+      ]
     },
     {
-      "id": "T04", "title": "Safe intake and durable analysis jobs", "status": "IMPLEMENTED_PENDING_REVIEW", "depends_on": ["T02", "T03", "T28"], "owner_role": "backend", "milestone": "free", "platforms": ["backend", "workers"], "connectors": ["ObjectStore", "AbuseChallengeProvider"],
-      "required_docs": ["docs/roadmap/05-release-operations.md","docs/connectors/object-storage.md","docs/connectors/abuse-challenge.md","docs/roadmap/17-security-privacy-and-abuse.md"], "owned_paths": ["apps/api/", "apps/workers/analysis/", "src/princess_app/application/intake/", "src/princess_app/adapters/storage/"],
-      "coding_steps": ["Implement owner/quota-bound upload reservation and completion, media sniffing, bounded decode/sanitization and tested mobile-format conversion policy.", "Promote verified bytes to an immutable internal asset/version before scheduling; retain digest and coordinate-transform lineage.", "Expose `POST /v1/analyses` as the explicit idempotent transition from a completed immutable sample/capture to one deterministic AnalysisRun/job; upload completion validates/promotes bytes but does not silently create a run.", "Implement PostgreSQL job/outbox, short lease/heartbeat, attempt records and fenced publication outside long transactions.", "Provide owner-scoped status/cancel/delete behavior and safe failure codes; restrict CPU/memory/provider egress and admission cost."],
+      "id": "T04",
+      "title": "Safe intake and durable analysis jobs",
+      "status": "DONE",
+      "depends_on": [
+        "T02",
+        "T03",
+        "T28"
+      ],
+      "owner_role": "backend",
+      "milestone": "free",
+      "platforms": [
+        "backend",
+        "workers"
+      ],
+      "connectors": [
+        "ObjectStore",
+        "AbuseChallengeProvider"
+      ],
+      "required_docs": [
+        "docs/roadmap/05-release-operations.md",
+        "docs/connectors/object-storage.md",
+        "docs/connectors/abuse-challenge.md",
+        "docs/roadmap/17-security-privacy-and-abuse.md"
+      ],
+      "owned_paths": [
+        "apps/api/",
+        "apps/workers/analysis/",
+        "src/princess_app/application/intake/",
+        "src/princess_app/adapters/storage/"
+      ],
+      "coding_steps": [
+        "Implement owner/quota-bound upload reservation and completion, media sniffing, bounded decode/sanitization and tested mobile-format conversion policy.",
+        "Promote verified bytes to an immutable internal asset/version before scheduling; retain digest and coordinate-transform lineage.",
+        "Expose `POST /v1/analyses` as the explicit idempotent transition from a completed immutable sample/capture to one deterministic AnalysisRun/job; upload completion validates/promotes bytes but does not silently create a run.",
+        "Implement PostgreSQL job/outbox, short leases, attempt records and fenced publication outside long transactions. Add a heartbeat only if measured real latency approaches the lease budget.",
+        "Provide owner-scoped status/cancel/delete behavior and safe failure codes; restrict CPU/memory/provider egress and admission cost."
+      ],
       "contract_handoff": "An immutable authorized capture and durable AnalysisRun/job reference; source bytes and processed frame are never conflated.",
-      "acceptance": ["Repeated completion/submission converges on one intended result.", "Stale workers and delete-during-run cannot publish; Free is bounded and provider independent."], "negative_tests": ["Pixel bomb, spoofed MIME, animated/malformed file, HEIC orientation, signed-URL overwrite race, checksum mismatch, expired upload, queue crash and stale lease."],
-      "artifacts": ["Safe intake routes and storage adapter", "Durable analysis worker with limits/fencing", "Failure/format compatibility fixtures"], "production_gates": ["processor_retention_contracts"], "validation_profiles": ["core", "docs", "backend", "connectors"], "rollback": ["Stop admission and drain/fence leases; preserve verified inputs only under retention and never republish tombstoned captures."]
+      "acceptance": [
+        "Repeated completion/submission converges on one intended result.",
+        "Stale workers and delete-during-run cannot publish; Free is bounded and provider independent."
+      ],
+      "negative_tests": [
+        "Pixel bomb, spoofed MIME, animated/malformed file, HEIC orientation, signed-URL overwrite race, checksum mismatch, expired upload, queue crash and stale lease."
+      ],
+      "artifacts": [
+        "Safe intake routes and storage adapter",
+        "Durable analysis worker with limits/fencing",
+        "Failure/format compatibility fixtures"
+      ],
+      "production_gates": [
+        "processor_retention_contracts"
+      ],
+      "validation_profiles": [
+        "core",
+        "docs",
+        "backend",
+        "connectors"
+      ],
+      "rollback": [
+        "Stop admission and drain/fence leases; preserve verified inputs only under retention and never republish tombstoned captures."
+      ],
+      "completion_evidence": "PR #14 commit 6d746c4 plus review repairs implemented safe bounded intake, immutable captures, idempotent analysis jobs, fenced leases, admission/attempt limits, cancellation and durable erasure paths. Measured work remained far below the 120-second lease; a heartbeat is deferred to T24 only if real latency warrants it. Merged PR #14 (merge e8e174a2311f8d4327850218405819de8f87277e; final head d2e106325c549f91c177d5cfd8277b032526ecff). Final-head CI, Roadmap integrity and Application environments passed; see docs/roadmap/23-post-pr14-reconciliation.md."
     },
     {
-      "id": "T05", "title": "Evidence payload and chart observations", "status": "IMPLEMENTED_PENDING_REVIEW", "depends_on": ["T01"], "owner_role": "engine", "milestone": "free", "platforms": ["core", "shared"], "connectors": [],
-      "required_docs": ["docs/roadmap/01-data-architecture.md","docs/roadmap/04-reports-design.md","docs/measurement_methods.md"], "owned_paths": ["src/princess_graphology/", "tests/", "contracts/product/v1/"],
-      "coding_steps": ["Add an explicit versioned evidence output beside existing aggregate measurements; do not overload feature dictionary keys.", "Capture actual baseline points, slant observations/bins, accepted spacing gaps and component distributions with region/frame references.", "Bound array sizes and preserve deterministic ordering, transform maps, accepted/rejected provenance and missing reasons.", "Provide report-ready fixtures and verify evidence-derived summaries against canonical aggregate calculations."],
+      "id": "T05",
+      "title": "Evidence payload and chart observations",
+      "status": "DONE",
+      "depends_on": [
+        "T01"
+      ],
+      "owner_role": "engine",
+      "milestone": "free",
+      "platforms": [
+        "core",
+        "shared"
+      ],
+      "connectors": [],
+      "required_docs": [
+        "docs/roadmap/01-data-architecture.md",
+        "docs/roadmap/04-reports-design.md",
+        "docs/measurement_methods.md"
+      ],
+      "owned_paths": [
+        "src/princess_graphology/",
+        "tests/",
+        "contracts/product/v1/"
+      ],
+      "coding_steps": [
+        "Add an explicit versioned evidence output beside existing aggregate measurements; do not overload feature dictionary keys.",
+        "Capture actual baseline points, slant observations/bins, accepted spacing gaps and component distributions with region/frame references.",
+        "Bound array sizes and preserve deterministic ordering, transform maps, accepted/rejected provenance and missing reasons.",
+        "Provide report-ready fixtures and verify evidence-derived summaries against canonical aggregate calculations."
+      ],
       "contract_handoff": "EvidenceBundle tied to one run/schema/configuration, with real observations and original-to-analysis transform metadata.",
-      "acceptance": ["Overlay coordinates round-trip across crop/resize/deskew and supported perspective operations.", "Histograms are based on observations, not fabricated curves; numerical feature semantics are unchanged."], "negative_tests": ["Empty evidence, cross-frame region, invalid run link, nonfinite point, huge arrays, false page margin and mutable shared image."],
-      "artifacts": ["Evidence emitters, schema fixtures and transform tests"], "production_gates": [], "validation_profiles": ["core", "docs", "contracts"], "rollback": ["Version the evidence extension; retain compatibility with aggregate-only stored runs and label unavailable evidence."]
+      "acceptance": [
+        "Overlay coordinates round-trip across crop/resize/deskew and supported perspective operations.",
+        "Histograms are based on observations, not fabricated curves; numerical feature semantics are unchanged."
+      ],
+      "negative_tests": [
+        "Empty evidence, cross-frame region, invalid run link, nonfinite point, huge arrays, false page margin and mutable shared image."
+      ],
+      "artifacts": [
+        "Evidence emitters, schema fixtures and transform tests"
+      ],
+      "production_gates": [],
+      "validation_profiles": [
+        "core",
+        "docs",
+        "contracts"
+      ],
+      "rollback": [
+        "Version the evidence extension; retain compatibility with aggregate-only stored runs and label unavailable evidence."
+      ],
+      "completion_evidence": "PR #14 commit 8878bdc implemented the versioned evidence/1 payload, EvidenceBundle builder, bounded report fixtures and coordinate-frame composition without changing canonical aggregates. Merged PR #14 (merge e8e174a2311f8d4327850218405819de8f87277e; final head d2e106325c549f91c177d5cfd8277b032526ecff). Final-head CI, Roadmap integrity and Application environments passed; see docs/roadmap/23-post-pr14-reconciliation.md."
     },
     {
-      "id": "T06", "title": "Calibration suitability core repair", "status": "PLANNED", "depends_on": ["T05", "T11"], "owner_role": "evaluation", "milestone": "reference", "platforms": ["core", "evaluation"], "connectors": [],
-      "required_docs": ["docs/roadmap/02-corpus-benchmarks.md","docs/measurement_methods.md","docs/roadmap/16-testing-evals-and-quality-gates.md"], "owned_paths": ["evaluation/measurements/", "src/princess_graphology/", "docs/measurement_methods.md"],
-      "coding_steps": ["Freeze annotated geometry, writer-disjoint splits, coverage/error measures and tolerances before held-out evaluation.", "Measure page boundaries, segmentation, x-height, baseline, slant, spacing and image-proxy repeatability across declared capture/script contexts.", "Repair demonstrated errors with method/configuration versioning; preserve original evidence and annotator disagreement.", "Publish a capability/calibration release defining where estimates remain experimental, unavailable or sufficiently validated."],
+      "id": "T06",
+      "title": "Calibration suitability core repair",
+      "status": "PLANNED",
+      "depends_on": [
+        "T05",
+        "T11"
+      ],
+      "owner_role": "evaluation",
+      "milestone": "reference",
+      "platforms": [
+        "core",
+        "evaluation"
+      ],
+      "connectors": [],
+      "required_docs": [
+        "docs/roadmap/02-corpus-benchmarks.md",
+        "docs/measurement_methods.md",
+        "docs/roadmap/16-testing-evals-and-quality-gates.md"
+      ],
+      "owned_paths": [
+        "evaluation/measurements/",
+        "src/princess_graphology/",
+        "docs/measurement_methods.md"
+      ],
+      "coding_steps": [
+        "Freeze annotated geometry, writer-disjoint splits, coverage/error measures and tolerances before held-out evaluation.",
+        "Measure page boundaries, segmentation, x-height, baseline, slant, spacing and image-proxy repeatability across declared capture/script contexts.",
+        "Repair demonstrated errors with method/configuration versioning; preserve original evidence and annotator disagreement.",
+        "Publish a capability/calibration release defining where estimates remain experimental, unavailable or sufficiently validated."
+      ],
       "contract_handoff": "Actual calibration artifacts and supported-context policy consumed by display/reference/model gates.",
-      "acceptance": ["Real authorized held-out evidence, actual counts and error/coverage results are recorded.", "Confidence appears only when calibrated; repeat-photo variation is not writer variation."], "negative_tests": ["Leaked writer splits, tuned holdout, cropped-page margins, weak x-height invalidating ratios, unsupported script, spurious confidence from sample count."],
-      "artifacts": ["Protected evaluation release and method repair evidence", "Versioned suitability/calibration policy"], "production_gates": ["empirical_calibration"], "validation_profiles": ["core", "docs", "empirical"], "rollback": ["Disable affected claims and revert to the last supported method version; do not pool incompatible outputs into a reference."]
+      "acceptance": [
+        "Real authorized held-out evidence, actual counts and error/coverage results are recorded.",
+        "Confidence appears only when calibrated; repeat-photo variation is not writer variation."
+      ],
+      "negative_tests": [
+        "Leaked writer splits, tuned holdout, cropped-page margins, weak x-height invalidating ratios, unsupported script, spurious confidence from sample count."
+      ],
+      "artifacts": [
+        "Protected evaluation release and method repair evidence",
+        "Versioned suitability/calibration policy"
+      ],
+      "production_gates": [
+        "empirical_calibration"
+      ],
+      "validation_profiles": [
+        "core",
+        "docs",
+        "empirical"
+      ],
+      "rollback": [
+        "Disable affected claims and revert to the last supported method version; do not pool incompatible outputs into a reference."
+      ]
     },
     {
-      "id": "T07", "title": "Bounded classical topology shape expansion", "status": "PLANNED", "depends_on": ["T05", "T06"], "owner_role": "engine", "milestone": "enhancement", "platforms": ["core"], "connectors": [], "optional": true,
-      "required_docs": ["docs/measurement_methods.md","docs/roadmap/01-data-architecture.md","docs/roadmap/16-testing-evals-and-quality-gates.md"], "owned_paths": ["src/princess_graphology/measurements/", "tests/", "docs/measurement_methods.md"],
-      "coding_steps": ["Select one classical family only when a report use case justifies it; do not chase all 272 definitions.", "Implement topology/shape estimates behind capability/evidence contracts and exact canonical semantics.", "Add synthetic topology invariants and real supported-image robustness evidence before enabling claims."],
+      "id": "T07",
+      "title": "Bounded classical topology shape expansion",
+      "status": "PLANNED",
+      "depends_on": [
+        "T05",
+        "T06"
+      ],
+      "owner_role": "engine",
+      "milestone": "enhancement",
+      "platforms": [
+        "core"
+      ],
+      "connectors": [],
+      "optional": true,
+      "required_docs": [
+        "docs/measurement_methods.md",
+        "docs/roadmap/01-data-architecture.md",
+        "docs/roadmap/16-testing-evals-and-quality-gates.md"
+      ],
+      "owned_paths": [
+        "src/princess_graphology/measurements/",
+        "tests/",
+        "docs/measurement_methods.md"
+      ],
+      "coding_steps": [
+        "Select one classical family only when a report use case justifies it; do not chase all 272 definitions.",
+        "Implement topology/shape estimates behind capability/evidence contracts and exact canonical semantics.",
+        "Add synthetic topology invariants and real supported-image robustness evidence before enabling claims."
+      ],
       "contract_handoff": "A bounded versioned feature-family addition with explicit availability and evidence.",
-      "acceptance": ["Feature ID/unit/scale/domain and dependency closure match the source schema.", "Omitting this task from initial marketed scope does not block public v1."], "negative_tests": ["Invented pen lifts/timing/physical pressure from a static image, disconnected skeleton noise, missing evidence treated as a negative trait."],
-      "artifacts": ["One-family extractors and tests", "Updated method/capability documentation"], "production_gates": [], "validation_profiles": ["core", "docs", "empirical"], "rollback": ["Disable/revert the family with explicit method version; keep definition-only outputs unavailable."]
+      "acceptance": [
+        "Feature ID/unit/scale/domain and dependency closure match the source schema.",
+        "Omitting this task from initial marketed scope does not block public v1."
+      ],
+      "negative_tests": [
+        "Invented pen lifts/timing/physical pressure from a static image, disconnected skeleton noise, missing evidence treated as a negative trait."
+      ],
+      "artifacts": [
+        "One-family extractors and tests",
+        "Updated method/capability documentation"
+      ],
+      "production_gates": [],
+      "validation_profiles": [
+        "core",
+        "docs",
+        "empirical"
+      ],
+      "rollback": [
+        "Disable/revert the family with explicit method version; keep definition-only outputs unavailable."
+      ]
     },
     {
-      "id": "T08", "title": "Normalization and reviewed content", "status": "PLANNED", "depends_on": ["T01", "T05", "T06"], "owner_role": "content-engine", "milestone": "reference", "platforms": ["core", "shared"], "connectors": [],
-      "required_docs": ["docs/roadmap/01-data-architecture.md","docs/roadmap/02-corpus-benchmarks.md","docs/roadmap/04-reports-design.md","docs/roadmap/08-premium-question-selector-database.md"], "owned_paths": ["src/princess_app/domain/content/", "content/", "contracts/product/v1/"],
-      "coding_steps": ["Implement fixed versioned mechanical display axes with domains, family weights and missingness; do not use per-user auto-max normalization.", "Add authored deterministic captions/geometric style labels and localization keys tied to evidence.", "Keep traditional packs inactive unless exact source/wording/runtime eligibility is separately approved; T26 structure does not supply active rules automatically."],
+      "id": "T08",
+      "title": "Normalization and reviewed content",
+      "status": "PLANNED",
+      "depends_on": [
+        "T01",
+        "T05",
+        "T06"
+      ],
+      "owner_role": "content-engine",
+      "milestone": "reference",
+      "platforms": [
+        "core",
+        "shared"
+      ],
+      "connectors": [],
+      "required_docs": [
+        "docs/roadmap/01-data-architecture.md",
+        "docs/roadmap/02-corpus-benchmarks.md",
+        "docs/roadmap/04-reports-design.md",
+        "docs/roadmap/08-premium-question-selector-database.md"
+      ],
+      "owned_paths": [
+        "src/princess_app/domain/content/",
+        "content/",
+        "contracts/product/v1/"
+      ],
+      "coding_steps": [
+        "Implement fixed versioned mechanical display axes with domains, family weights and missingness; do not use per-user auto-max normalization.",
+        "Add authored deterministic captions/geometric style labels and localization keys tied to evidence.",
+        "Keep traditional packs inactive unless exact source/wording/runtime eligibility is separately approved; T26 structure does not supply active rules automatically."
+      ],
       "contract_handoff": "Normalization/content release IDs and deterministic outputs for T09/T13/T18.",
-      "acceptance": ["Monotonicity, unit/scale equivalence and partial-dependency behavior are tested.", "No arbitrary psychological weights or double-counted correlated summaries; evidence labels travel to every view."], "negative_tests": ["Zero denominator, constant scale, missing axis plotted zero, repeated signal overweighting, unsupported traditional inversion."],
-      "artifacts": ["Versioned formulas/caption pack and localization fixtures"], "production_gates": ["traditional_content_if_enabled"], "validation_profiles": ["core", "docs", "contracts"], "rollback": ["Pin content/normalization versions in saved reports; disable a pack without rewriting canonical facts."]
+      "acceptance": [
+        "Monotonicity, unit/scale equivalence and partial-dependency behavior are tested.",
+        "No arbitrary psychological weights or double-counted correlated summaries; evidence labels travel to every view."
+      ],
+      "negative_tests": [
+        "Zero denominator, constant scale, missing axis plotted zero, repeated signal overweighting, unsupported traditional inversion."
+      ],
+      "artifacts": [
+        "Versioned formulas/caption pack and localization fixtures"
+      ],
+      "production_gates": [
+        "traditional_content_if_enabled"
+      ],
+      "validation_profiles": [
+        "core",
+        "docs",
+        "contracts"
+      ],
+      "rollback": [
+        "Pin content/normalization versions in saved reports; disable a pack without rewriting canonical facts."
+      ]
     },
     {
-      "id": "T09", "title": "Report assembly and authorized projections", "status": "IMPLEMENTED_PENDING_REVIEW", "depends_on": ["T01", "T05"], "owner_role": "report-backend", "milestone": "free", "platforms": ["shared", "backend"], "connectors": [],
-      "required_docs": ["docs/roadmap/01-data-architecture.md","docs/roadmap/04-reports-design.md","docs/roadmap/09-connectors-and-provider-boundaries.md","docs/roadmap/17-security-privacy-and-abuse.md"], "owned_paths": ["src/princess_app/domain/reports/", "src/princess_app/application/reports/", "contracts/product/v1/", "packages/report-core/"],
-      "coding_steps": ["Build pure immutable ReportDocument assembly from canonical results/evidence plus optional content/reference and saved Premium overlays.", "Produce owner/Free/Premium/share projections through an explicit authorization context; do not embed hidden paid prose in Free JSON.", "Define version/digest/revision rules, availability states and shared formatting/chart specs. Provide fixture-backed service seams before persistence integration.", "Integrate repository-backed report endpoints in the backend/client tasks without moving measurement or billing authority into a renderer."],
+      "id": "T09",
+      "title": "Report assembly and authorized projections",
+      "status": "DONE",
+      "depends_on": [
+        "T01",
+        "T05"
+      ],
+      "owner_role": "report-backend",
+      "milestone": "free",
+      "platforms": [
+        "shared",
+        "backend"
+      ],
+      "connectors": [],
+      "required_docs": [
+        "docs/roadmap/01-data-architecture.md",
+        "docs/roadmap/04-reports-design.md",
+        "docs/roadmap/09-connectors-and-provider-boundaries.md",
+        "docs/roadmap/17-security-privacy-and-abuse.md"
+      ],
+      "owned_paths": [
+        "src/princess_app/domain/reports/",
+        "src/princess_app/application/reports/",
+        "contracts/product/v1/",
+        "packages/report-core/"
+      ],
+      "coding_steps": [
+        "Build pure immutable ReportDocument assembly from canonical results/evidence plus optional content/reference and saved Premium overlays.",
+        "Produce owner/Free/Premium/share projections through an explicit authorization context; do not embed hidden paid prose in Free JSON.",
+        "Define version/digest/revision rules, availability states and shared formatting/chart specs. Provide fixture-backed service seams before persistence integration.",
+        "Integrate repository-backed report endpoints in the backend/client tasks without moving measurement or billing authority into a renderer."
+      ],
       "contract_handoff": "Stable ReportDocument/ViewModel snapshots and read-only projection/formatting helpers used by all clients and export.",
-      "acceptance": ["Partial/no-reference/no-traditional reports are useful and honest.", "Reads/expansion/export assembly never call a model; incompatible versions and cross-report evidence fail."], "negative_tests": ["Foreign support ID, revoked image, stale entitlement, hidden paid JSON, missing-to-zero coercion and silently re-benchmarked history."],
-      "artifacts": ["Report assembler/projections and cross-client fixtures"], "production_gates": [], "validation_profiles": ["core", "docs", "contracts"], "rollback": ["Create explicit revisions for changed content; revoke serving separately from immutable fact records."]
+      "acceptance": [
+        "Partial/no-reference/no-traditional reports are useful and honest.",
+        "Reads/expansion/export assembly never call a model; incompatible versions and cross-report evidence fail."
+      ],
+      "negative_tests": [
+        "Foreign support ID, revoked image, stale entitlement, hidden paid JSON, missing-to-zero coercion and silently re-benchmarked history."
+      ],
+      "artifacts": [
+        "Report assembler/projections and cross-client fixtures"
+      ],
+      "production_gates": [],
+      "validation_profiles": [
+        "core",
+        "docs",
+        "contracts"
+      ],
+      "rollback": [
+        "Create explicit revisions for changed content; revoke serving separately from immutable fact records."
+      ],
+      "completion_evidence": "PR #14 commit 4a70fef implemented immutable self-digested ReportDocument assembly, revision rules and authorization-filtered FREE/OWNER/PREMIUM/SHARE/EXPORT projections. Reference-view extensions remain T13 scope. Merged PR #14 (merge e8e174a2311f8d4327850218405819de8f87277e; final head d2e106325c549f91c177d5cfd8277b032526ecff). Final-head CI, Roadmap integrity and Application environments passed; see docs/roadmap/23-post-pr14-reconciliation.md."
     },
     {
-      "id": "T10", "title": "Contract-driven multi-platform design handoff", "status": "IMPLEMENTED_PENDING_REVIEW", "depends_on": ["T01"], "owner_role": "design", "milestone": "free", "platforms": ["web", "ios", "android", "render"], "connectors": [],
-      "required_docs": ["docs/roadmap/04-reports-design.md","docs/roadmap/10-web-client-and-api-integration.md","docs/roadmap/11-mobile-architecture.md","docs/roadmap/14-payments-entitlements-and-commerce.md"], "owned_paths": ["docs/design/", "packages/design-tokens/", "fixtures/reports/"],
-      "coding_steps": ["Design the complete capture/report/paid/comparison/settings journey against generated DTO fixtures; use clearly synthetic states with no private provider upload.", "Specify web DOM/print and native layout/interaction differences, shared tokens, chart text alternatives, accessibility and Swedish/English overflow behavior.", "Produce component inventory, state transitions and a Claude Design/Code or equivalent handoff mapped to real properties; mark illustrative values.", "Include native purchase pending/restore, refusal/refund, no-reference, revoked/deleted and export-preview states, not just a polished happy path."],
+      "id": "T10",
+      "title": "Contract-driven multi-platform design handoff",
+      "status": "IMPLEMENTED_PENDING_REVIEW",
+      "depends_on": [
+        "T01"
+      ],
+      "owner_role": "design",
+      "milestone": "free",
+      "platforms": [
+        "web",
+        "ios",
+        "android",
+        "render"
+      ],
+      "connectors": [],
+      "required_docs": [
+        "docs/roadmap/04-reports-design.md",
+        "docs/roadmap/10-web-client-and-api-integration.md",
+        "docs/roadmap/11-mobile-architecture.md",
+        "docs/roadmap/14-payments-entitlements-and-commerce.md"
+      ],
+      "owned_paths": [
+        "docs/design/",
+        "packages/design-tokens/",
+        "fixtures/reports/"
+      ],
+      "coding_steps": [
+        "Design the complete capture/report/paid/comparison/settings journey against generated DTO fixtures; use clearly synthetic states with no private provider upload.",
+        "Specify web DOM/print and native layout/interaction differences, shared tokens, chart text alternatives, accessibility and Swedish/English overflow behavior.",
+        "Produce component inventory, state transitions and a Claude Design/Code or equivalent handoff mapped to real properties; mark illustrative values.",
+        "Include native purchase pending/restore, refusal/refund, no-reference, revoked/deleted and export-preview states, not just a polished happy path."
+      ],
       "contract_handoff": "Owner-reviewed design tokens, reusable component boundaries and fixture/property mapping for T17/T21/T29–T31.",
-      "acceptance": ["Clickable responsive/native designs and accessible text/motion states are accepted by the owner.", "No fake personalized blurred Premium text or unsupported rarity used to fill a layout."], "negative_tests": ["Long Swedish text, large text scaling, empty data, denied permissions, unavailable purchase, no eligible benchmark and narrow/large screens."],
-      "artifacts": ["Design specification/prototype references", "Tokens, component/state inventory and approved assets"], "production_gates": ["design_acceptance"], "validation_profiles": ["docs", "contracts"], "rollback": ["Version tokens/templates and preserve content/contract semantics during design revisions."]
+      "acceptance": [
+        "Clickable responsive/native designs and accessible text/motion states are accepted by the owner.",
+        "No fake personalized blurred Premium text or unsupported rarity used to fill a layout."
+      ],
+      "negative_tests": [
+        "Long Swedish text, large text scaling, empty data, denied permissions, unavailable purchase, no eligible benchmark and narrow/large screens."
+      ],
+      "artifacts": [
+        "Design specification/prototype references",
+        "Tokens, component/state inventory and approved assets"
+      ],
+      "production_gates": [
+        "design_acceptance"
+      ],
+      "validation_profiles": [
+        "docs",
+        "contracts"
+      ],
+      "rollback": [
+        "Version tokens/templates and preserve content/contract semantics during design revisions."
+      ],
+      "implementation_evidence": "PR #14 commit c5463a4 added contract-driven draft design tokens generated to CSS/TypeScript/Swift/Kotlin and a complete state/component handoff. The repository explicitly keeps the tokens DRAFT_PENDING_DESIGN_ACCEPTANCE.",
+      "remaining_work": [
+        "Obtain explicit owner design_acceptance for the responsive/native journeys, accessibility states, Swedish/English overflow, missing/error/purchase states and report presentation."
+      ]
     },
     {
-      "id": "T11", "title": "Owned pilot recruitment and annotation", "status": "PLANNED", "depends_on": ["T03", "T04"], "owner_role": "product-data-human", "milestone": "reference", "platforms": ["data", "evaluation"], "connectors": [],
-      "required_docs": ["docs/roadmap/02-corpus-benchmarks.md","docs/roadmap/17-security-privacy-and-abuse.md","docs/roadmap/16-testing-evals-and-quality-gates.md"], "owned_paths": ["evaluation/collection/", "docs/data/"],
-      "coding_steps": ["Build consented collection/annotation tooling and private evidence references; humans recruit actual eligible writers under approved terms.", "Collect controlled/free specimens, repeated captures and declared context without turning pages/crops into independent people.", "Create protected writer-disjoint annotation/evaluation splits, record recruitment bias and inter-annotator disagreement.", "Exercise withdrawal/deletion before a corpus release; no participant images or signed consent documents enter public Git fixtures."],
+      "id": "T11",
+      "title": "Owned pilot recruitment and annotation",
+      "status": "PLANNED",
+      "depends_on": [
+        "T03",
+        "T04"
+      ],
+      "owner_role": "product-data-human",
+      "milestone": "reference",
+      "platforms": [
+        "data",
+        "evaluation"
+      ],
+      "connectors": [],
+      "required_docs": [
+        "docs/roadmap/02-corpus-benchmarks.md",
+        "docs/roadmap/17-security-privacy-and-abuse.md",
+        "docs/roadmap/16-testing-evals-and-quality-gates.md"
+      ],
+      "owned_paths": [
+        "evaluation/collection/",
+        "docs/data/"
+      ],
+      "coding_steps": [
+        "Build consented collection/annotation tooling and private evidence references; humans recruit actual eligible writers under approved terms.",
+        "Collect controlled/free specimens, repeated captures and declared context without turning pages/crops into independent people.",
+        "Create protected writer-disjoint annotation/evaluation splits, record recruitment bias and inter-annotator disagreement.",
+        "Exercise withdrawal/deletion before a corpus release; no participant images or signed consent documents enter public Git fixtures."
+      ],
       "contract_handoff": "A real rights-cleared pilot release with writer/specimen/capture lineage and annotation provenance, not synthetic recruitment counts.",
-      "acceptance": ["Actual permissions, protected splits and counts are inspectable by authorized reviewers.", "Collection targets are planning inputs, never proof that enough representative writers exist."], "negative_tests": ["Withdrawn participant, duplicate capture/writer, synthetic data in human set, insufficient author authority and holdout leakage."],
-      "artifacts": ["Protected pilot/annotation release and safe audit summary"], "production_gates": ["pilot_rights_consent", "actual_participants_and_permissions"], "validation_profiles": ["docs", "empirical"], "rollback": ["Quarantine affected records and propagate withdrawal; preserve only authorized audit references."]
+      "acceptance": [
+        "Actual permissions, protected splits and counts are inspectable by authorized reviewers.",
+        "Collection targets are planning inputs, never proof that enough representative writers exist."
+      ],
+      "negative_tests": [
+        "Withdrawn participant, duplicate capture/writer, synthetic data in human set, insufficient author authority and holdout leakage."
+      ],
+      "artifacts": [
+        "Protected pilot/annotation release and safe audit summary"
+      ],
+      "production_gates": [
+        "pilot_rights_consent",
+        "actual_participants_and_permissions"
+      ],
+      "validation_profiles": [
+        "docs",
+        "empirical"
+      ],
+      "rollback": [
+        "Quarantine affected records and propagate withdrawal; preserve only authorized audit references."
+      ]
     },
     {
-      "id": "T12", "title": "Candidate corpus ETL and deduplication", "status": "PLANNED", "depends_on": ["T04", "T06", "T11"], "owner_role": "data", "milestone": "reference", "platforms": ["workers", "data"], "connectors": ["ObjectStore"],
-      "required_docs": ["docs/roadmap/02-corpus-benchmarks.md","docs/roadmap/01-data-architecture.md","docs/roadmap/17-security-privacy-and-abuse.md","docs/connectors/object-storage.md"], "owned_paths": ["apps/workers/reference/", "src/princess_app/application/corpus/", "migrations/"],
-      "coding_steps": ["Ingest only approved source releases with archive/digest/license/purpose lineage and version-compatible extraction.", "Group writer/specimen/capture and duplicate-review signals; select primary specimens by a predeclared rule independent of rarity.", "Compute per-feature suitability/cohort masks and quarantine/review states. Reruns are idempotent and do not inflate N.", "Expose release-candidate interfaces only to authorized reference roles, not user endpoints."],
+      "id": "T12",
+      "title": "Candidate corpus ETL and deduplication",
+      "status": "PLANNED",
+      "depends_on": [
+        "T04",
+        "T06",
+        "T11"
+      ],
+      "owner_role": "data",
+      "milestone": "reference",
+      "platforms": [
+        "workers",
+        "data"
+      ],
+      "connectors": [
+        "ObjectStore"
+      ],
+      "required_docs": [
+        "docs/roadmap/02-corpus-benchmarks.md",
+        "docs/roadmap/01-data-architecture.md",
+        "docs/roadmap/17-security-privacy-and-abuse.md",
+        "docs/connectors/object-storage.md"
+      ],
+      "owned_paths": [
+        "apps/workers/reference/",
+        "src/princess_app/application/corpus/",
+        "migrations/"
+      ],
+      "coding_steps": [
+        "Ingest only approved source releases with archive/digest/license/purpose lineage and version-compatible extraction.",
+        "Group writer/specimen/capture and duplicate-review signals; select primary specimens by a predeclared rule independent of rarity.",
+        "Compute per-feature suitability/cohort masks and quarantine/review states. Reruns are idempotent and do not inflate N.",
+        "Expose release-candidate interfaces only to authorized reference roles, not user endpoints."
+      ],
       "contract_handoff": "Reproducible candidate membership, quality masks and rights lineage for T13/T14.",
-      "acceptance": ["Repeated/rotated captures cannot create new writers; perceptual matching is not authorship identification.", "Rights-denied/withdrawn records cannot enter a candidate release."], "negative_tests": ["Duplicate transform, mixed versions, missing permission, repeated ingestion, rare-but-valid sample wrongly excluded and cross-source duplicate."],
-      "artifacts": ["Candidate ETL/review pipeline and deduplication audit"], "production_gates": ["source_rights"], "validation_profiles": ["core", "docs", "backend", "empirical"], "rollback": ["Quarantine a source/release and rebuild descendants without reactivating withdrawn membership."]
+      "acceptance": [
+        "Repeated/rotated captures cannot create new writers; perceptual matching is not authorship identification.",
+        "Rights-denied/withdrawn records cannot enter a candidate release."
+      ],
+      "negative_tests": [
+        "Duplicate transform, mixed versions, missing permission, repeated ingestion, rare-but-valid sample wrongly excluded and cross-source duplicate."
+      ],
+      "artifacts": [
+        "Candidate ETL/review pipeline and deduplication audit"
+      ],
+      "production_gates": [
+        "source_rights"
+      ],
+      "validation_profiles": [
+        "core",
+        "docs",
+        "backend",
+        "empirical"
+      ],
+      "rollback": [
+        "Quarantine a source/release and rebuild descendants without reactivating withdrawn membership."
+      ]
     },
     {
-      "id": "T13", "title": "Reference statistics and distinctiveness", "status": "PLANNED", "depends_on": ["T08", "T12"], "owner_role": "statistics", "milestone": "reference", "platforms": ["data", "shared"], "connectors": [],
-      "required_docs": ["docs/roadmap/02-corpus-benchmarks.md","docs/roadmap/04-reports-design.md","docs/roadmap/16-testing-evals-and-quality-gates.md"], "owned_paths": ["src/princess_app/domain/reference/", "evaluation/reference/", "contracts/product/v1/"],
-      "coding_steps": ["Implement tie-aware empirical CDF/rank with per-feature eligible unique-writer counts and exclusion of all query-writer samples.", "Freeze cohort choice, quantization, uncertainty/coverage and headline-selection policy before looking for flattering outliers.", "Calibrate selected-feature/multiplicity behavior and any distance/index mapping with held-out writers; do not multiply marginal rarities.", "Return qualified reference fact DTOs and unavailable reasons for no-match/small/constant/unsupported contexts."],
+      "id": "T13",
+      "title": "Reference statistics and distinctiveness",
+      "status": "PLANNED",
+      "depends_on": [
+        "T08",
+        "T12"
+      ],
+      "owner_role": "statistics",
+      "milestone": "reference",
+      "platforms": [
+        "data",
+        "shared"
+      ],
+      "connectors": [],
+      "required_docs": [
+        "docs/roadmap/02-corpus-benchmarks.md",
+        "docs/roadmap/04-reports-design.md",
+        "docs/roadmap/16-testing-evals-and-quality-gates.md"
+      ],
+      "owned_paths": [
+        "src/princess_app/domain/reference/",
+        "evaluation/reference/",
+        "contracts/product/v1/"
+      ],
+      "coding_steps": [
+        "Implement tie-aware empirical CDF/rank with per-feature eligible unique-writer counts and exclusion of all query-writer samples.",
+        "Freeze cohort choice, quantization, uncertainty/coverage and headline-selection policy before looking for flattering outliers.",
+        "Calibrate selected-feature/multiplicity behavior and any distance/index mapping with held-out writers; do not multiply marginal rarities.",
+        "Return qualified reference fact DTOs and unavailable reasons for no-match/small/constant/unsupported contexts."
+      ],
       "contract_handoff": "Versioned reference facts/outliers selected by statistics code, never by the model.",
-      "acceptance": ["Ranks name their finite cohort/release and uncertainty; no population-wide claim from convenience data.", "Replay from release artifacts produces the same facts and eligible counts."], "negative_tests": ["Ties, constant features, empty N, query writer included, best-flattering cohort selection, correlated maximum and missing scale denominator."],
-      "artifacts": ["Statistical implementation, frozen selection plan and validation release"], "production_gates": ["public_reference_validation"], "validation_profiles": ["core", "docs", "empirical", "contracts"], "rollback": ["Withhold affected ranks and select only an authorized validated reference release; preserve historical revision labels."]
+      "acceptance": [
+        "Ranks name their finite cohort/release and uncertainty; no population-wide claim from convenience data.",
+        "Replay from release artifacts produces the same facts and eligible counts."
+      ],
+      "negative_tests": [
+        "Ties, constant features, empty N, query writer included, best-flattering cohort selection, correlated maximum and missing scale denominator."
+      ],
+      "artifacts": [
+        "Statistical implementation, frozen selection plan and validation release"
+      ],
+      "production_gates": [
+        "public_reference_validation"
+      ],
+      "validation_profiles": [
+        "core",
+        "docs",
+        "empirical",
+        "contracts"
+      ],
+      "rollback": [
+        "Withhold affected ranks and select only an authorized validated reference release; preserve historical revision labels."
+      ]
     },
     {
-      "id": "T14", "title": "Benchmark publish withdraw drift rollback", "status": "PLANNED", "depends_on": ["T03", "T13"], "owner_role": "data-platform", "milestone": "reference", "platforms": ["workers", "data"], "connectors": ["ObjectStore"],
-      "required_docs": ["docs/roadmap/02-corpus-benchmarks.md","docs/roadmap/17-security-privacy-and-abuse.md","docs/roadmap/18-observability-support-and-cost-control.md","docs/connectors/object-storage.md"], "owned_paths": ["apps/workers/reference/", "src/princess_app/application/benchmarks/", "docs/runbooks/"],
-      "coding_steps": ["Implement candidate/build/review/publish/retire states with frozen cutoff, member/config/artifact hashes and human promotion.", "Evaluate drift/composition and quality before atomically switching the active release pointer; do not rewrite saved reports.", "Apply withdrawal lineage, in-flight consent rechecks, retirement/rebuild and tombstone-aware restoration.", "Restrict rollback to still-authorized releases and record invalidated historical reference annotations explicitly."],
+      "id": "T14",
+      "title": "Benchmark publish withdraw drift rollback",
+      "status": "PLANNED",
+      "depends_on": [
+        "T03",
+        "T13"
+      ],
+      "owner_role": "data-platform",
+      "milestone": "reference",
+      "platforms": [
+        "workers",
+        "data"
+      ],
+      "connectors": [
+        "ObjectStore"
+      ],
+      "required_docs": [
+        "docs/roadmap/02-corpus-benchmarks.md",
+        "docs/roadmap/17-security-privacy-and-abuse.md",
+        "docs/roadmap/18-observability-support-and-cost-control.md",
+        "docs/connectors/object-storage.md"
+      ],
+      "owned_paths": [
+        "apps/workers/reference/",
+        "src/princess_app/application/benchmarks/",
+        "docs/runbooks/"
+      ],
+      "coding_steps": [
+        "Implement candidate/build/review/publish/retire states with frozen cutoff, member/config/artifact hashes and human promotion.",
+        "Evaluate drift/composition and quality before atomically switching the active release pointer; do not rewrite saved reports.",
+        "Apply withdrawal lineage, in-flight consent rechecks, retirement/rebuild and tombstone-aware restoration.",
+        "Restrict rollback to still-authorized releases and record invalidated historical reference annotations explicitly."
+      ],
       "contract_handoff": "Approved benchmark release pointer and traceable retirement/withdrawal state.",
-      "acceptance": ["Consent revoked during build cannot be published; continuous ingestion does not mutate a release.", "Rebuild/withdrawal/restore drills preserve privacy and reproducible lineage."], "negative_tests": ["Poisoned duplicate batch, revoked member at publish, stale active pointer, backup resurrection and incompatible engine release."],
-      "artifacts": ["Release publisher and drift/withdrawal runbooks"], "production_gates": ["benchmark_promotion"], "validation_profiles": ["core", "docs", "backend", "empirical", "release"], "rollback": ["Switch only to an authorized compatible release or disable reference claims; never resurrect a revoked cohort."]
+      "acceptance": [
+        "Consent revoked during build cannot be published; continuous ingestion does not mutate a release.",
+        "Rebuild/withdrawal/restore drills preserve privacy and reproducible lineage."
+      ],
+      "negative_tests": [
+        "Poisoned duplicate batch, revoked member at publish, stale active pointer, backup resurrection and incompatible engine release."
+      ],
+      "artifacts": [
+        "Release publisher and drift/withdrawal runbooks"
+      ],
+      "production_gates": [
+        "benchmark_promotion"
+      ],
+      "validation_profiles": [
+        "core",
+        "docs",
+        "backend",
+        "empirical",
+        "release"
+      ],
+      "rollback": [
+        "Switch only to an authorized compatible release or disable reference claims; never resurrect a revoked cohort."
+      ]
     },
     {
-      "id": "T15", "title": "Evidence-bound OpenAI adapter", "status": "IMPLEMENTED_PENDING_REVIEW", "depends_on": ["T01", "T09", "T26", "T27"], "owner_role": "premium-backend", "milestone": "premium", "platforms": ["backend", "workers"], "connectors": ["PremiumModelProvider","ObjectStore"],
-      "required_docs": ["docs/roadmap/03-premium-openai.md","docs/roadmap/08-premium-question-selector-database.md","docs/connectors/premium-model.md","docs/roadmap/14-payments-entitlements-and-commerce.md","docs/connectors/object-storage.md"], "owned_paths": ["src/princess_app/application/premium/", "src/princess_app/adapters/openai/", "apps/workers/premium/", "evaluation/premium/"],
-      "coding_steps": ["Retrieve only the authorized image/analysis derivative through the restricted ObjectStore port with scoped worker access; re-check consent/deletion before transfer and never expose a reusable storage credential to the model provider.","Assemble a bounded immutable packet from authorized image/evidence, eligible reference facts and T26 applicable question/candidate contracts.","Implement supported deterministic candidate producers and explicit unavailable states; compile per-request strict enums/output schema from frozen data.","Implement one bounded multimodal Responses request with server-only credentials and no hidden retry/tool/browse behavior; begin with fakes.","Validate shape, evidence, semantics and text bounds before a saved overlay; hand off reservation/publication integration to shared commerce rather than inventing a second ledger."],
+      "id": "T15",
+      "title": "Evidence-bound OpenAI adapter",
+      "status": "IN_PROGRESS",
+      "depends_on": [
+        "T01",
+        "T09",
+        "T26",
+        "T27"
+      ],
+      "owner_role": "premium-backend",
+      "milestone": "premium",
+      "platforms": [
+        "backend",
+        "workers"
+      ],
+      "connectors": [
+        "PremiumModelProvider",
+        "ObjectStore"
+      ],
+      "required_docs": [
+        "docs/roadmap/03-premium-openai.md",
+        "docs/roadmap/08-premium-question-selector-database.md",
+        "docs/connectors/premium-model.md",
+        "docs/roadmap/14-payments-entitlements-and-commerce.md",
+        "docs/connectors/object-storage.md"
+      ],
+      "owned_paths": [
+        "src/princess_app/application/premium/",
+        "src/princess_app/adapters/openai/",
+        "apps/workers/premium/",
+        "evaluation/premium/"
+      ],
+      "coding_steps": [
+        "Retrieve only the authorized image/analysis derivative through the restricted ObjectStore port with scoped worker access; re-check consent/deletion before transfer and never expose a reusable storage credential to the model provider.",
+        "Assemble a bounded immutable packet from authorized image/evidence, eligible reference facts and T26 applicable question/candidate contracts.",
+        "Implement supported deterministic candidate producers and explicit unavailable states; compile per-request strict enums/output schema from frozen data.",
+        "Implement one bounded multimodal Responses request with server-only credentials and no hidden retry/tool/browse behavior; begin with fakes.",
+        "Validate shape, evidence, semantics and text bounds before a saved overlay; hand off reservation/publication integration to shared commerce rather than inventing a second ledger."
+      ],
       "contract_handoff": "PremiumRequestPacket, provider attempt/result and validated saved-overlay interfaces for T16/T19/T20/native clients.",
-      "acceptance": ["Image text is untrusted, model output cannot mutate canonical measurements or invent ranks.", "Refusal/truncation/ambiguous timeout and no-reference cases are explicit; Free has no provider dependency."], "negative_tests": ["Foreign support IDs, impossible enums, extra properties, fabricated numbers, prompt injection, stale consent, empty candidates and budget exhaustion."],
-      "artifacts": ["Packet/candidate/schema compiler, model adapter/fake and semantic validators"], "production_gates": ["api_access_spend_before_live_calls"], "validation_profiles": ["core", "docs", "contracts", "connectors", "backend"], "rollback": ["Disable new Premium attempts; preserve saved valid overlays and reconcile reserved credits without changing Free."]
+      "acceptance": [
+        "Image text is untrusted, model output cannot mutate canonical measurements or invent ranks.",
+        "Refusal/truncation/ambiguous timeout and no-reference cases are explicit; Free has no provider dependency."
+      ],
+      "negative_tests": [
+        "Foreign support IDs, impossible enums, extra properties, fabricated numbers, prompt injection, stale consent, empty candidates and budget exhaustion."
+      ],
+      "artifacts": [
+        "Packet/candidate/schema compiler, model adapter/fake and semantic validators"
+      ],
+      "production_gates": [
+        "api_access_spend_before_live_calls"
+      ],
+      "validation_profiles": [
+        "core",
+        "docs",
+        "contracts",
+        "connectors",
+        "backend"
+      ],
+      "rollback": [
+        "Disable new Premium attempts; preserve saved valid overlays and reconcile reserved credits without changing Free."
+      ],
+      "implementation_evidence": "PR #14 commit 3c6947e plus review repairs implemented bounded Premium packet compilation, strict per-request schemas, semantic/text validation, spend/fencing controls, an OpenAI Responses adapter behind the disabled spend gate and adversarial tests.",
+      "remaining_work": [
+        "Implement deterministic candidate producers for the supported dynamic selector contracts; explicitly classify generator contracts that remain unsupported and prove their fail-closed omission behavior.",
+        "Review packet coverage after candidate-producer work and record which individual-pack questions are answerable for each supported input context.",
+        "Keep runtime_activation=false; live provider/model evaluation and activation remain T16 and the api_access_spend_before_live_calls gate."
+      ]
     },
     {
-      "id": "T16", "title": "Model evaluation and generation policy", "status": "PLANNED", "depends_on": ["T06", "T15"], "owner_role": "evaluation", "milestone": "premium", "platforms": ["evaluation", "backend"], "connectors": ["PremiumModelProvider"],
-      "required_docs": ["docs/roadmap/03-premium-openai.md","docs/roadmap/08-premium-question-selector-database.md","docs/roadmap/16-testing-evals-and-quality-gates.md","docs/roadmap/19-provider-decision-register.md","docs/connectors/premium-model.md"], "owned_paths": ["evaluation/premium/", "content/prompts/", "docs/evaluation/"],
-      "coding_steps": ["Freeze a human/adversarial rubric and expected evidence/selector behavior before choosing a model; obtain permission for all evaluation images.", "Test approved candidate model/SDK/account capabilities, Swedish/English content, repeated stability, refusal/truncation and actual image/token/cost/latency.", "Review unsupported claims, privacy and hallucinated numerical facts as critical failures; do not use longer/flatter text as a quality proxy.", "Publish an approved-or-disabled generation policy with exact version identifiers, retry/cost limits and regression triggers."],
+      "id": "T16",
+      "title": "Model evaluation and generation policy",
+      "status": "PLANNED",
+      "depends_on": [
+        "T06",
+        "T15"
+      ],
+      "owner_role": "evaluation",
+      "milestone": "premium",
+      "platforms": [
+        "evaluation",
+        "backend"
+      ],
+      "connectors": [
+        "PremiumModelProvider"
+      ],
+      "required_docs": [
+        "docs/roadmap/03-premium-openai.md",
+        "docs/roadmap/08-premium-question-selector-database.md",
+        "docs/roadmap/16-testing-evals-and-quality-gates.md",
+        "docs/roadmap/19-provider-decision-register.md",
+        "docs/connectors/premium-model.md"
+      ],
+      "owned_paths": [
+        "evaluation/premium/",
+        "content/prompts/",
+        "docs/evaluation/"
+      ],
+      "coding_steps": [
+        "Freeze a human/adversarial rubric and expected evidence/selector behavior before choosing a model; obtain permission for all evaluation images.",
+        "Test approved candidate model/SDK/account capabilities, Swedish/English content, repeated stability, refusal/truncation and actual image/token/cost/latency.",
+        "Review unsupported claims, privacy and hallucinated numerical facts as critical failures; do not use longer/flatter text as a quality proxy.",
+        "Publish an approved-or-disabled generation policy with exact version identifiers, retry/cost limits and regression triggers."
+      ],
       "contract_handoff": "Evaluated model/prompt/image policy and real data-control/spend evidence, not a copied historical alias/price.",
-      "acceptance": ["Critical failures block activation; noncritical criteria were declared before the final evaluation.", "Account-specific processing/retention support and actual costs are recorded without logging private packets."], "negative_tests": ["No reference, conflicting rule, image/fact conflict, malicious image text, low quality, foreign evidence, new numerical assertion and late deleted-report output."],
-      "artifacts": ["Protected evaluation suite/results and approved generation configuration"], "production_gates": ["api_access_spend_before_live_calls", "model_evaluation_and_data_controls"], "validation_profiles": ["core", "docs", "empirical", "connectors"], "rollback": ["Disable the model/prompt policy or return to a still-approved evaluated version; never regenerate saved reports automatically."]
+      "acceptance": [
+        "Critical failures block activation; noncritical criteria were declared before the final evaluation.",
+        "Account-specific processing/retention support and actual costs are recorded without logging private packets."
+      ],
+      "negative_tests": [
+        "No reference, conflicting rule, image/fact conflict, malicious image text, low quality, foreign evidence, new numerical assertion and late deleted-report output."
+      ],
+      "artifacts": [
+        "Protected evaluation suite/results and approved generation configuration"
+      ],
+      "production_gates": [
+        "api_access_spend_before_live_calls",
+        "model_evaluation_and_data_controls"
+      ],
+      "validation_profiles": [
+        "core",
+        "docs",
+        "empirical",
+        "connectors"
+      ],
+      "rollback": [
+        "Disable the model/prompt policy or return to a still-approved evaluated version; never regenerate saved reports automatically."
+      ]
     },
     {
-      "id": "T17", "title": "Interactive Free web product", "status": "IMPLEMENTED_PENDING_REVIEW", "depends_on": ["T02", "T04", "T09", "T10", "T28"], "owner_role": "frontend", "milestone": "free", "platforms": ["web"], "connectors": ["IdentityProvider", "AnalyticsSink"],
-      "required_docs": ["docs/roadmap/04-reports-design.md","docs/roadmap/10-web-client-and-api-integration.md","docs/roadmap/17-security-privacy-and-abuse.md","docs/release/web.md","docs/connectors/identity.md","docs/connectors/analytics.md"], "owned_paths": ["apps/web/", "packages/api-client/", "packages/report-core/", "packages/report-web/", "packages/design-tokens/"],
-      "coding_steps": ["Build fixture-backed route/state UI then integrate real capture/upload/job status and authorized report endpoints through generated clients.", "Implement evidence interaction, partial/no-reference report, history, guest upgrade, logout and deletion with principal/revision-aware caches.", "Keep Next handlers limited to presentation/session transport; no independent measurement, SQL or purchase authority.", "Add accessible responsive layouts and explicit allowlisted analytics only; shared report components become T21 print/card inputs."],
+      "id": "T17",
+      "title": "Interactive Free web product",
+      "status": "IN_PROGRESS",
+      "depends_on": [
+        "T02",
+        "T04",
+        "T09",
+        "T10",
+        "T28"
+      ],
+      "owner_role": "frontend",
+      "milestone": "free",
+      "platforms": [
+        "web"
+      ],
+      "connectors": [
+        "IdentityProvider",
+        "AnalyticsSink"
+      ],
+      "required_docs": [
+        "docs/roadmap/04-reports-design.md",
+        "docs/roadmap/10-web-client-and-api-integration.md",
+        "docs/roadmap/17-security-privacy-and-abuse.md",
+        "docs/release/web.md",
+        "docs/connectors/identity.md",
+        "docs/connectors/analytics.md"
+      ],
+      "owned_paths": [
+        "apps/web/",
+        "packages/api-client/",
+        "packages/report-core/",
+        "packages/report-web/",
+        "packages/design-tokens/"
+      ],
+      "coding_steps": [
+        "Build fixture-backed route/state UI then integrate real capture/upload/job status and authorized report endpoints through generated clients.",
+        "Implement evidence interaction, partial/no-reference report, history, guest upgrade, logout and deletion with principal/revision-aware caches.",
+        "Keep Next handlers limited to presentation/session transport; no independent measurement, SQL or purchase authority.",
+        "Add accessible responsive layouts and explicit allowlisted analytics only; shared report components become T21 print/card inputs."
+      ],
       "contract_handoff": "Working Free web journey and reusable web report components tied to saved projections.",
-      "acceptance": ["Refresh/reconnect resumes the known job rather than creating work; provider-disabled Free works.", "No server keys or paid hidden data in client payloads; supported browser/accessibility journeys pass."], "negative_tests": ["Auth expiry, late prior-account response, cross-owner URL, revoked report, corrupt payload, upload failure, long labels and zero/missing charts."],
-      "artifacts": ["Web client and browser/accessibility contract tests"], "production_gates": ["design_acceptance", "processor_retention_contracts"], "validation_profiles": ["docs", "contracts", "js_packages", "web_browser", "web_render", "backend"], "rollback": ["Deploy compatible presentation versions and clear unsafe caches; preserve API compatibility and saved reports."]
+      "acceptance": [
+        "Refresh/reconnect resumes the known job rather than creating work; provider-disabled Free works.",
+        "No server keys or paid hidden data in client payloads; supported browser/accessibility journeys pass."
+      ],
+      "negative_tests": [
+        "Auth expiry, late prior-account response, cross-owner URL, revoked report, corrupt payload, upload failure, long labels and zero/missing charts."
+      ],
+      "artifacts": [
+        "Web client and browser/accessibility contract tests"
+      ],
+      "production_gates": [
+        "design_acceptance",
+        "processor_retention_contracts"
+      ],
+      "validation_profiles": [
+        "docs",
+        "contracts",
+        "js_packages",
+        "web_browser",
+        "web_render",
+        "backend"
+      ],
+      "rollback": [
+        "Deploy compatible presentation versions and clear unsafe caches; preserve API compatibility and saved reports."
+      ],
+      "implementation_evidence": "PR #14 commit 99c5462 plus T21 integration provides the working Free Next.js journey, guarded API client, session/proxy boundary, fixture browser journeys and live upload → analysis → report → PDF flow.",
+      "remaining_work": [
+        "Implement production account sign-in UI after the ADR-002 identity provider decision.",
+        "Implement account-backed report/history lists and recovery UI.",
+        "Render EvidenceBundle interactions/charts with accessible text alternatives.",
+        "Add automated axe accessibility coverage and finish owner-accepted T10 design integration."
+      ]
     },
     {
-      "id": "T18", "title": "Deterministic pair and history comparison", "status": "PLANNED", "depends_on": ["T08", "T09"], "owner_role": "statistics-report", "milestone": "comparison", "platforms": ["shared", "backend"], "connectors": [],
-      "required_docs": ["docs/roadmap/02-corpus-benchmarks.md","docs/roadmap/04-reports-design.md","docs/roadmap/01-data-architecture.md"], "owned_paths": ["src/princess_app/domain/comparison/", "src/princess_app/application/comparison/", "contracts/product/v1/"],
-      "coding_steps": ["Implement native-unit differences, common valid masks, method/version compatibility and fixed family scales before any overall score.", "Resolve the existing cosine-range/schema conflict explicitly rather than clipping a value into a probability.", "Support same-owner Me-v-Me first and service contracts for separately granted partner inputs; T22 gates other-owner release.", "Distinguish capture/date/task/method variation from writing change and qualify any similarity index with an evaluated mapping."],
+      "id": "T18",
+      "title": "Deterministic pair and history comparison",
+      "status": "PLANNED",
+      "depends_on": [
+        "T08",
+        "T09"
+      ],
+      "owner_role": "statistics-report",
+      "milestone": "comparison",
+      "platforms": [
+        "shared",
+        "backend"
+      ],
+      "connectors": [],
+      "required_docs": [
+        "docs/roadmap/02-corpus-benchmarks.md",
+        "docs/roadmap/04-reports-design.md",
+        "docs/roadmap/01-data-architecture.md"
+      ],
+      "owned_paths": [
+        "src/princess_app/domain/comparison/",
+        "src/princess_app/application/comparison/",
+        "contracts/product/v1/"
+      ],
+      "coding_steps": [
+        "Implement native-unit differences, common valid masks, method/version compatibility and fixed family scales before any overall score.",
+        "Resolve the existing cosine-range/schema conflict explicitly rather than clipping a value into a probability.",
+        "Support same-owner Me-v-Me first and service contracts for separately granted partner inputs; T22 gates other-owner release.",
+        "Distinguish capture/date/task/method variation from writing change and qualify any similarity index with an evaluated mapping."
+      ],
       "contract_handoff": "ComparisonDocument fixtures with directional facts, coverage and authorized evidence for web/native/export/Premium.",
-      "acceptance": ["A/B swap preserves distance and reverses directional labels; self-distance is zero where defined.", "Reference absence still permits valid descriptive comparisons; no authorship/romance/mental-health inference."], "negative_tests": ["Zero variance/norm, missing overlap, incompatible methods, negative cosine, near-zero percent-change denominator and unapproved partner sample."],
-      "artifacts": ["Comparison use cases and invariant fixtures"], "production_gates": [], "validation_profiles": ["core", "docs", "contracts", "backend"], "rollback": ["Version comparison mappings and withhold incompatible summaries rather than reinterpreting old results."]
+      "acceptance": [
+        "A/B swap preserves distance and reverses directional labels; self-distance is zero where defined.",
+        "Reference absence still permits valid descriptive comparisons; no authorship/romance/mental-health inference."
+      ],
+      "negative_tests": [
+        "Zero variance/norm, missing overlap, incompatible methods, negative cosine, near-zero percent-change denominator and unapproved partner sample."
+      ],
+      "artifacts": [
+        "Comparison use cases and invariant fixtures"
+      ],
+      "production_gates": [],
+      "validation_profiles": [
+        "core",
+        "docs",
+        "contracts",
+        "backend"
+      ],
+      "rollback": [
+        "Version comparison mappings and withhold incompatible summaries rather than reinterpreting old results."
+      ]
     },
     {
-      "id": "T19", "title": "Cross-platform purchase ledger entitlements and metered jobs", "status": "IMPLEMENTED_PENDING_REVIEW", "depends_on": ["T02", "T03", "T09", "T15", "T27"], "owner_role": "commerce", "milestone": "premium", "platforms": ["backend", "workers"], "connectors": ["PaymentProvider"],
-      "required_docs": ["docs/roadmap/14-payments-entitlements-and-commerce.md","docs/connectors/payments.md","docs/roadmap/12-apple-platform-and-app-store.md","docs/roadmap/13-android-and-google-play.md","docs/adr/ADR-006-payments.md"], "owned_paths": ["src/princess_app/domain/commerce/", "src/princess_app/application/commerce/", "src/princess_app/adapters/payments/", "apps/api/", "migrations/"],
-      "coding_steps": ["Create internal catalog/provider mappings, verified event inbox, unique financial transactions, immutable credit lots/ledger, reservation and fulfilment states.", "Implement fake then sandbox Stripe checkout/webhooks, Apple signed/server-notification verification and Play token/RTDN verification with environment/account binding.", "Grant a durable credit atomically then promptly finish/consume/acknowledge via the product-appropriate provider path; never wait for AI completion.", "Reserve one eligible credit per intended Premium job; fence publication, release/compensate failure and reconcile ambiguous provider outcomes.", "Implement repeated restore, refunds/voided events, account deletion and cross-platform origin-policy enforcement; backend work does not depend on native UI completion."],
+      "id": "T19",
+      "title": "Cross-platform purchase ledger entitlements and metered jobs",
+      "status": "IN_PROGRESS",
+      "depends_on": [
+        "T02",
+        "T03",
+        "T09",
+        "T15",
+        "T27"
+      ],
+      "owner_role": "commerce",
+      "milestone": "premium",
+      "platforms": [
+        "backend",
+        "workers"
+      ],
+      "connectors": [
+        "PaymentProvider"
+      ],
+      "required_docs": [
+        "docs/roadmap/14-payments-entitlements-and-commerce.md",
+        "docs/connectors/payments.md",
+        "docs/roadmap/12-apple-platform-and-app-store.md",
+        "docs/roadmap/13-android-and-google-play.md",
+        "docs/adr/ADR-006-payments.md"
+      ],
+      "owned_paths": [
+        "src/princess_app/domain/commerce/",
+        "src/princess_app/application/commerce/",
+        "src/princess_app/adapters/payments/",
+        "apps/api/",
+        "migrations/"
+      ],
+      "coding_steps": [
+        "Create internal catalog/provider mappings, verified event inbox, unique financial transactions, immutable credit lots/ledger, reservation and fulfilment states.",
+        "Implement fake then sandbox Stripe checkout/webhooks, Apple signed/server-notification verification and Play token/RTDN verification with environment/account binding.",
+        "Grant a durable credit atomically then promptly finish/consume/acknowledge via the product-appropriate provider path; never wait for AI completion.",
+        "Reserve one eligible credit per intended Premium job; fence publication, release/compensate failure and reconcile ambiguous provider outcomes.",
+        "Implement repeated restore, refunds/voided events, account deletion and cross-platform origin-policy enforcement; backend work does not depend on native UI completion."
+      ],
       "contract_handoff": "Server-owned catalog, purchase claims/status, credit/fulfilment APIs and reconciliation workers for web/iOS/Android.",
-      "acceptance": ["Only verified PURCHASED/paid states grant, once per financial identity; client redirects/flags never grant.", "Concurrency and crash tests prove no double spend/grant and no lost durable credit; refunds are compensating events."], "negative_tests": ["Pending payment, wrong product/account/environment, duplicate/reordered events, grant-before-finish crash, consume timeout, last-credit race, refund after spend and replay after deletion."],
-      "artifacts": ["Ledger/migrations, three backend payment adapters, sandbox evidence and reconciliation runbook"], "production_gates": ["price_account_terms_before_charges", "processor_retention_contracts"], "validation_profiles": ["docs", "contracts", "backend", "connectors"], "rollback": ["Disable new sales/fulfilment safely while preserving audit and reconciliation; never delete financial history or remint restored transactions."]
+      "acceptance": [
+        "Only verified PURCHASED/paid states grant, once per financial identity; client redirects/flags never grant.",
+        "Concurrency and crash tests prove no double spend/grant and no lost durable credit; refunds are compensating events."
+      ],
+      "negative_tests": [
+        "Pending payment, wrong product/account/environment, duplicate/reordered events, grant-before-finish crash, consume timeout, last-credit race, refund after spend and replay after deletion."
+      ],
+      "artifacts": [
+        "Ledger/migrations, three backend payment adapters, sandbox evidence and reconciliation runbook"
+      ],
+      "production_gates": [
+        "price_account_terms_before_charges",
+        "processor_retention_contracts"
+      ],
+      "validation_profiles": [
+        "docs",
+        "contracts",
+        "backend",
+        "connectors"
+      ],
+      "rollback": [
+        "Disable new sales/fulfilment safely while preserving audit and reconciliation; never delete financial history or remint restored transactions."
+      ],
+      "implementation_evidence": "PR #14 commit 6d7fc25 plus review repairs implemented the server-owned catalog draft, verified event inbox, immutable financial ledger, origin-rail credit lots, reservations, metered Premium publication/spend and reconciliation semantics using fake rails.",
+      "remaining_work": [
+        "Implement and test real/sandbox Stripe checkout and signed webhook verification.",
+        "Implement App Store server purchase/notification verification and Google Play token/RTDN verification with environment/account binding.",
+        "Record sandbox grant/completion/refund/replay reconciliation evidence for all approved rails.",
+        "Resolve approved products/prices/tax/refund/storefront/credit-portability policy, including the owner decision for refund-after-spend Premium access, without inventing approvals."
+      ]
     },
     {
-      "id": "T20", "title": "Premium and paid-pair web experience", "status": "PLANNED", "depends_on": ["T15","T16","T17","T18","T19","T21","T24"], "owner_role": "frontend-premium", "milestone": "premium", "platforms": ["web", "shared"], "connectors": ["AnalyticsSink"],
-      "required_docs": ["docs/roadmap/04-reports-design.md","docs/roadmap/10-web-client-and-api-integration.md","docs/roadmap/14-payments-entitlements-and-commerce.md","docs/roadmap/17-security-privacy-and-abuse.md","docs/connectors/analytics.md"], "owned_paths": ["apps/web/", "packages/report-web/", "packages/report-core/"],
-      "coding_steps": ["Integrate a truthful offer, explicit image-provider processing permission and server catalog/credit status; no fabricated pre-generated personal teaser.","Implement purchase pending/verify/granted, job/refusal/failure/refund and saved-overlay states using real backend APIs.","Add optional paid-pair narrative and submit report-content feedback only through the T24 backend feedback API, preserving deterministic pair access without requiring two individual purchases.","Ensure panel expansion/reopen/theme/export reads saved content and never calls the model."],
+      "id": "T20",
+      "title": "Premium and paid-pair web experience",
+      "status": "PLANNED",
+      "depends_on": [
+        "T15",
+        "T16",
+        "T17",
+        "T18",
+        "T19",
+        "T21",
+        "T24"
+      ],
+      "owner_role": "frontend-premium",
+      "milestone": "premium",
+      "platforms": [
+        "web",
+        "shared"
+      ],
+      "connectors": [
+        "AnalyticsSink"
+      ],
+      "required_docs": [
+        "docs/roadmap/04-reports-design.md",
+        "docs/roadmap/10-web-client-and-api-integration.md",
+        "docs/roadmap/14-payments-entitlements-and-commerce.md",
+        "docs/roadmap/17-security-privacy-and-abuse.md",
+        "docs/connectors/analytics.md"
+      ],
+      "owned_paths": [
+        "apps/web/",
+        "packages/report-web/",
+        "packages/report-core/"
+      ],
+      "coding_steps": [
+        "Integrate a truthful offer, explicit image-provider processing permission and server catalog/credit status; no fabricated pre-generated personal teaser.",
+        "Implement purchase pending/verify/granted, job/refusal/failure/refund and saved-overlay states using real backend APIs.",
+        "Add optional paid-pair narrative and submit report-content feedback only through the T24 backend feedback API, preserving deterministic pair access without requiring two individual purchases.",
+        "Ensure panel expansion/reopen/theme/export reads saved content and never calls the model."
+      ],
       "contract_handoff": "Web paid journey/state fixtures and presentation semantics reused by native implementations.",
-      "acceptance": ["A failed paid generation leaves Free available with documented recovery.", "Server-side paid projection and exact report/PDF content parity remain enforced."], "negative_tests": ["Duplicate click, success redirect before verification, revoked consent, no credit, ambiguous job, account switch and paid text leakage."],
-      "artifacts": ["Web paywall/fulfilment/feedback UI and E2E cases"], "production_gates": ["price_account_terms_before_charges", "model_evaluation_and_data_controls"], "validation_profiles": ["docs", "contracts", "web_render", "backend"], "rollback": ["Disable offers/new generation through capabilities without hiding already authorized saved content or breaking Free."]
+      "acceptance": [
+        "A failed paid generation leaves Free available with documented recovery.",
+        "Server-side paid projection and exact report/PDF content parity remain enforced."
+      ],
+      "negative_tests": [
+        "Duplicate click, success redirect before verification, revoked consent, no credit, ambiguous job, account switch and paid text leakage."
+      ],
+      "artifacts": [
+        "Web paywall/fulfilment/feedback UI and E2E cases"
+      ],
+      "production_gates": [
+        "price_account_terms_before_charges",
+        "model_evaluation_and_data_controls"
+      ],
+      "validation_profiles": [
+        "docs",
+        "contracts",
+        "web_render",
+        "backend"
+      ],
+      "rollback": [
+        "Disable offers/new generation through capabilities without hiding already authorized saved content or breaking Free."
+      ]
     },
     {
-      "id": "T21", "title": "Same-content PDF and share-card rendering", "status": "IMPLEMENTED_PENDING_REVIEW", "depends_on": ["T09", "T10", "T17"], "owner_role": "report-frontend", "milestone": "reports", "platforms": ["render", "web", "shared"], "connectors": ["ObjectStore"],
-      "required_docs": ["docs/roadmap/04-reports-design.md","docs/roadmap/09-connectors-and-provider-boundaries.md","docs/roadmap/17-security-privacy-and-abuse.md","docs/connectors/object-storage.md"], "owned_paths": ["apps/render/", "packages/report-web/", "src/princess_app/application/exports/"],
-      "coding_steps": ["Render trusted print/card components from the authorized saved projection; expand appropriate details without adding new prose/measurements.", "Create bounded render jobs, safe internal asset resolution, A4/Letter/card formats and revision/projection/template/locale cache keys.", "Use selectable text/vector charts where practical, wait for approved fonts/assets, and inspect actual rendered pages for clipping/reading order.", "Support user-visible image omission and native authorized file download/share handoff; no model credentials or arbitrary Internet browsing."],
+      "id": "T21",
+      "title": "Same-content PDF and share-card rendering",
+      "status": "IMPLEMENTED_PENDING_REVIEW",
+      "depends_on": [
+        "T09",
+        "T10",
+        "T17"
+      ],
+      "owner_role": "report-frontend",
+      "milestone": "reports",
+      "platforms": [
+        "render",
+        "web",
+        "shared"
+      ],
+      "connectors": [
+        "ObjectStore"
+      ],
+      "required_docs": [
+        "docs/roadmap/04-reports-design.md",
+        "docs/roadmap/09-connectors-and-provider-boundaries.md",
+        "docs/roadmap/17-security-privacy-and-abuse.md",
+        "docs/connectors/object-storage.md"
+      ],
+      "owned_paths": [
+        "apps/render/",
+        "packages/report-web/",
+        "src/princess_app/application/exports/"
+      ],
+      "coding_steps": [
+        "Render trusted print/card components from the authorized saved projection; expand appropriate details without adding new prose/measurements.",
+        "Create bounded render jobs, safe internal asset resolution, A4/Letter/card formats and revision/projection/template/locale cache keys.",
+        "Use selectable text/vector charts where practical, wait for approved fonts/assets, and inspect actual rendered pages for clipping/reading order.",
+        "Support user-visible image omission and native authorized file download/share handoff; no model credentials or arbitrary Internet browsing."
+      ],
       "contract_handoff": "Export request/status and scoped artifact retrieval APIs with fact-equivalent print/card assets.",
-      "acceptance": ["Free/Premium/pair/history facts, units, labels and qualifications match web/native projections.", "Revoked access blocks new issuance and protected retrieval; downloaded copies are not falsely claimed recallable."], "negative_tests": ["Long labels, empty charts, revoked image mid-render, malicious URL/text, oversized render, stale cache grant and missing font."],
-      "artifacts": ["Renderer, export APIs, parity fixtures and visual inspection evidence"], "production_gates": [], "validation_profiles": ["docs", "contracts", "web_render", "backend"], "rollback": ["Rollback template independently and invalidate unsafe cached projections; do not regenerate Premium content."]
+      "acceptance": [
+        "For every report kind/projection currently supported by its owning task, facts, units, labels and qualifications match the saved web/native projection; T18/T20 add their own parity fixtures when those contents exist.",
+        "Revoked access blocks new issuance and protected retrieval; downloaded copies are not falsely claimed recallable."
+      ],
+      "negative_tests": [
+        "Long labels, empty charts, revoked image mid-render, malicious URL/text, oversized render, stale cache grant and missing font."
+      ],
+      "artifacts": [
+        "Renderer, export APIs, parity fixtures and visual inspection evidence"
+      ],
+      "production_gates": [],
+      "validation_profiles": [
+        "docs",
+        "contracts",
+        "web_render",
+        "backend"
+      ],
+      "rollback": [
+        "Rollback template independently and invalidate unsafe cached projections; do not regenerate Premium content."
+      ],
+      "implementation_evidence": "PR #14 commits 7a39bcf/ddb06bf plus review repairs implemented the offline Chromium PDF/PNG renderer, bounded export jobs, projection re-derivation/fencing, authorized storage/retrieval, share-card grants and a real live PDF download.",
+      "remaining_work": [
+        "Complete final design/integration review against the owner-accepted T10 design, including actual rendered-page inspection, clipping/reading-order and accessibility evidence.",
+        "When T18/T20 add comparison/history/Premium content, add their parity fixtures before those owning tasks claim export parity; do not generate missing content inside T21."
+      ]
     },
     {
-      "id": "T22", "title": "Scoped sharing and comparison invitations", "status": "PLANNED", "depends_on": ["T17", "T18", "T21"], "owner_role": "backend-frontend", "milestone": "sharing", "platforms": ["backend", "web", "shared"], "connectors": ["AnalyticsSink"],
-      "required_docs": ["docs/roadmap/04-reports-design.md","docs/roadmap/10-web-client-and-api-integration.md","docs/roadmap/17-security-privacy-and-abuse.md","docs/connectors/analytics.md"], "owned_paths": ["src/princess_app/application/sharing/", "apps/api/", "apps/web/", "contracts/product/v1/"],
-      "coding_steps": ["Implement explicit field-scoped share grants, preview, hashed opaque tokens, expiry/revocation and conservative cache/asset issuance.", "Add invitations requiring each partner to authorize their own input and disclosure; sharing is not corpus or AI consent.", "Define web/deep-link resource contracts and safe redacted metadata for later native Universal/App Links.", "Track share initiation versus actual link/invite redemption without contact harvesting or private report analytics."],
+      "id": "T22",
+      "title": "Scoped sharing and comparison invitations",
+      "status": "PLANNED",
+      "depends_on": [
+        "T17",
+        "T18",
+        "T21"
+      ],
+      "owner_role": "backend-frontend",
+      "milestone": "sharing",
+      "platforms": [
+        "backend",
+        "web",
+        "shared"
+      ],
+      "connectors": [
+        "AnalyticsSink"
+      ],
+      "required_docs": [
+        "docs/roadmap/04-reports-design.md",
+        "docs/roadmap/10-web-client-and-api-integration.md",
+        "docs/roadmap/17-security-privacy-and-abuse.md",
+        "docs/connectors/analytics.md"
+      ],
+      "owned_paths": [
+        "src/princess_app/application/sharing/",
+        "apps/api/",
+        "apps/web/",
+        "contracts/product/v1/"
+      ],
+      "coding_steps": [
+        "Implement explicit field-scoped share grants, preview, hashed opaque tokens, expiry/revocation and conservative cache/asset issuance.",
+        "Add invitations requiring each partner to authorize their own input and disclosure; sharing is not corpus or AI consent.",
+        "Define web/deep-link resource contracts and safe redacted metadata for later native Universal/App Links.",
+        "Track share initiation versus actual link/invite redemption without contact harvesting or private report analytics."
+      ],
       "contract_handoff": "Share/invitation grant APIs and redacted projections used by native clients and export.",
-      "acceptance": ["No original writing/partner identity disclosed by default; revoked grants stop protected serving.", "Other-owner comparison is released only through explicit authorized inputs."], "negative_tests": ["Guessed token, foreign report ID, reused invite scope, revoked grant cached, public metadata leakage and deep-link access without login."],
-      "artifacts": ["Sharing/invitation APIs, web views and grant/revocation tests"], "production_gates": [], "validation_profiles": ["docs", "contracts", "backend", "web_render"], "rollback": ["Revoke affected grant classes and invalidate protected caches; preserve lawful private owner reports."]
+      "acceptance": [
+        "No original writing/partner identity disclosed by default; revoked grants stop protected serving.",
+        "Other-owner comparison is released only through explicit authorized inputs."
+      ],
+      "negative_tests": [
+        "Guessed token, foreign report ID, reused invite scope, revoked grant cached, public metadata leakage and deep-link access without login."
+      ],
+      "artifacts": [
+        "Sharing/invitation APIs, web views and grant/revocation tests"
+      ],
+      "production_gates": [],
+      "validation_profiles": [
+        "docs",
+        "contracts",
+        "backend",
+        "web_render"
+      ],
+      "rollback": [
+        "Revoke affected grant classes and invalidate protected caches; preserve lawful private owner reports."
+      ]
     },
     {
-      "id": "T23", "title": "Multi-platform end-to-end QA and threat model", "status": "PLANNED", "depends_on": ["T00", "T00A", "T06", "T08", "T14", "T18", "T20", "T21", "T22", "T24", "T30", "T31"], "owner_role": "independent-review", "milestone": "release", "platforms": ["web", "ios", "android", "backend"], "connectors": [],
-      "required_docs": ["docs/roadmap/16-testing-evals-and-quality-gates.md","docs/roadmap/17-security-privacy-and-abuse.md","docs/roadmap/21-release-readiness-checklists.md","docs/release/multi-platform-signoff.md"], "owned_paths": ["tests/e2e/", "evaluation/release/", "docs/security/", "docs/release/"],
-      "coding_steps": ["Before any real sample, paid-provider, billing or signed-device execution, verify and record the corresponding T23 production gates; mock-only coverage may be developed earlier but cannot satisfy T23 DONE.","Execute the complete core journey and failure matrix across web/iPhone/iPad/approved Android devices with actual authorized samples and controlled provider sandboxes.","Review the threat model and test ownership, media/resource attacks, model injection, payment/replay/refund, share/deletion/cache and old-client compatibility.","Compare facts and labels across native/web/PDF/cards, accessibility and no-provider Free behavior.","Publish exact candidate evidence, unresolved critical findings and approved limitations; route defects back to owners before qualification."],
+      "id": "T23",
+      "title": "Multi-platform end-to-end QA and threat model",
+      "status": "PLANNED",
+      "depends_on": [
+        "T00",
+        "T00A",
+        "T06",
+        "T08",
+        "T14",
+        "T18",
+        "T20",
+        "T21",
+        "T22",
+        "T24",
+        "T30",
+        "T31"
+      ],
+      "owner_role": "independent-review",
+      "milestone": "release",
+      "platforms": [
+        "web",
+        "ios",
+        "android",
+        "backend"
+      ],
+      "connectors": [],
+      "required_docs": [
+        "docs/roadmap/16-testing-evals-and-quality-gates.md",
+        "docs/roadmap/17-security-privacy-and-abuse.md",
+        "docs/roadmap/21-release-readiness-checklists.md",
+        "docs/release/multi-platform-signoff.md"
+      ],
+      "owned_paths": [
+        "tests/e2e/",
+        "evaluation/release/",
+        "docs/security/",
+        "docs/release/"
+      ],
+      "coding_steps": [
+        "Before any real sample, paid-provider, billing or signed-device execution, verify and record the corresponding T23 production gates; mock-only coverage may be developed earlier but cannot satisfy T23 DONE.",
+        "Execute the complete core journey and failure matrix across web/iPhone/iPad/approved Android devices with actual authorized samples and controlled provider sandboxes.",
+        "Review the threat model and test ownership, media/resource attacks, model injection, payment/replay/refund, share/deletion/cache and old-client compatibility.",
+        "Compare facts and labels across native/web/PDF/cards, accessibility and no-provider Free behavior.",
+        "Publish exact candidate evidence, unresolved critical findings and approved limitations; route defects back to owners before qualification."
+      ],
       "contract_handoff": "Independent release-candidate QA/security/privacy evidence for store readiness and T25.",
-      "acceptance": ["All critical disclosure/billing/factuality/security defects are closed with regressions.", "Actual latency/cost/coverage/device evidence is reported, not predicted from unit tests."], "negative_tests": ["Cross-account purchase/report, stale lease/deletion, restore resurrection, revoked partner, prompt injection, resource exhaustion and delayed store notification."],
-      "artifacts": ["Threat model, test results and candidate review disposition"], "production_gates": ["actual_participants_and_permissions","processor_retention_contracts","api_access_spend_before_live_calls","model_evaluation_and_data_controls","price_account_terms_before_charges","native_signing_accounts"], "validation_profiles": ["core", "docs", "backend", "web_render", "native", "empirical", "release"], "rollback": ["Block release and return failing capabilities to their owners; no waiver by hiding a failed test."]
+      "acceptance": [
+        "All critical disclosure/billing/factuality/security defects are closed with regressions.",
+        "Actual latency/cost/coverage/device evidence is reported, not predicted from unit tests."
+      ],
+      "negative_tests": [
+        "Cross-account purchase/report, stale lease/deletion, restore resurrection, revoked partner, prompt injection, resource exhaustion and delayed store notification."
+      ],
+      "artifacts": [
+        "Threat model, test results and candidate review disposition"
+      ],
+      "production_gates": [
+        "actual_participants_and_permissions",
+        "processor_retention_contracts",
+        "api_access_spend_before_live_calls",
+        "model_evaluation_and_data_controls",
+        "price_account_terms_before_charges",
+        "native_signing_accounts"
+      ],
+      "validation_profiles": [
+        "core",
+        "docs",
+        "backend",
+        "web_render",
+        "native",
+        "empirical",
+        "release"
+      ],
+      "rollback": [
+        "Block release and return failing capabilities to their owners; no waiver by hiding a failed test."
+      ]
     },
     {
-      "id": "T24", "title": "Deployment recovery support and notifications", "status": "IN_PROGRESS", "depends_on": ["T02", "T04", "T19", "T28"], "owner_role": "platform-product", "milestone": "release", "platforms": ["backend", "workers", "operations"], "connectors": ["TransactionalMailer", "PushProvider", "TelemetryExporter", "AnalyticsSink", "ObjectStore"],
-      "required_docs": ["docs/roadmap/15-environments-deployment-and-secrets.md","docs/roadmap/18-observability-support-and-cost-control.md","docs/roadmap/17-security-privacy-and-abuse.md","docs/connectors/email.md","docs/connectors/push.md","docs/connectors/telemetry.md","docs/connectors/analytics.md","docs/connectors/object-storage.md"], "owned_paths": ["infra/","docs/runbooks/","src/princess_app/adapters/notifications/","apps/workers/","src/princess_app/domain/feedback/","src/princess_app/application/feedback/","src/princess_app/adapters/feedback/","migrations/"],
-      "coding_steps": ["Deploy staging and approved production topology with narrow worker roles, migrations, private storage, secret rotation and independent capability kill switches.","Implement outbox mail/APNs/FCM delivery and safe telemetry/analytics adapters with failure isolation, token/suppression lifecycle and named alert owners.","Implement the authenticated report-feedback API, minimal/redacted persistence, retention/deletion lifecycle and restricted support-review access; feedback is not a telemetry event and may not include raw handwriting or unrestricted report payloads.","Exercise backups/restore with deletion tombstones, durable job/payment reconciliation, model outage, cost limits and compatible mobile/API rollout.","Write actionable incident/refund/deletion/key compromise/store halt and version rollback runbooks with actual deployed commands and support responsibility."],
+      "id": "T24",
+      "title": "Deployment recovery support and notifications",
+      "status": "IN_PROGRESS",
+      "depends_on": [
+        "T02",
+        "T04",
+        "T19",
+        "T28"
+      ],
+      "owner_role": "platform-product",
+      "milestone": "release",
+      "platforms": [
+        "backend",
+        "workers",
+        "operations"
+      ],
+      "connectors": [
+        "TransactionalMailer",
+        "PushProvider",
+        "TelemetryExporter",
+        "AnalyticsSink",
+        "ObjectStore"
+      ],
+      "required_docs": [
+        "docs/roadmap/15-environments-deployment-and-secrets.md",
+        "docs/roadmap/18-observability-support-and-cost-control.md",
+        "docs/roadmap/17-security-privacy-and-abuse.md",
+        "docs/connectors/email.md",
+        "docs/connectors/push.md",
+        "docs/connectors/telemetry.md",
+        "docs/connectors/analytics.md",
+        "docs/connectors/object-storage.md"
+      ],
+      "owned_paths": [
+        "infra/",
+        "docs/runbooks/",
+        "src/princess_app/adapters/notifications/",
+        "apps/workers/",
+        "src/princess_app/domain/feedback/",
+        "src/princess_app/application/feedback/",
+        "src/princess_app/adapters/feedback/",
+        "migrations/"
+      ],
+      "coding_steps": [
+        "Deploy staging and approved production topology with narrow worker roles, migrations, private storage, secret rotation and independent capability kill switches.",
+        "Implement outbox mail/APNs/FCM delivery and safe telemetry/analytics adapters with failure isolation, token/suppression lifecycle and named alert owners.",
+        "Implement the authenticated report-feedback API, minimal/redacted persistence, retention/deletion lifecycle and restricted support-review access; feedback is not a telemetry event and may not include raw handwriting or unrestricted report payloads.",
+        "Exercise backups/restore with deletion tombstones, durable job/payment reconciliation, model outage, cost limits and compatible mobile/API rollout.",
+        "Write actionable incident/refund/deletion/key compromise/store halt and version rollback runbooks with actual deployed commands and support responsibility."
+      ],
       "contract_handoff": "Operable staged infrastructure and recovery/notification/support evidence, not public release approval.",
-      "acceptance": ["A restore cannot resurrect erased data or duplicate credits/provider calls.","Provider outage preserves Free and safe business state; no private writing in dashboards or crash logs.","Report feedback is owner/report-bound, redacted to an allowlisted contract, removable under the approved lifecycle and inaccessible to generic analytics/telemetry roles."], "negative_tests": ["Mail/push outage, queue restoration, stale token, budget breaker, key revocation, expired DB connection, refund reconciliation and rollback to withdrawn benchmark.","Feedback containing raw writing/full report payload, cross-owner report feedback, support-role overreach, duplicate submission, and deletion followed by backup/queue resurrection."],
-      "artifacts": ["Deployment manifests, notification adapters, dashboards and tested runbooks"], "production_gates": ["processor_retention_contracts"], "validation_profiles": ["docs", "backend", "connectors", "release"], "rollback": ["Promote only tested compatible artifacts; preserve tombstones and immutable ledger while halting affected capabilities."]
+      "acceptance": [
+        "A restore cannot resurrect erased data or duplicate credits/provider calls.",
+        "Provider outage preserves Free and safe business state; no private writing in dashboards or crash logs.",
+        "Report feedback is owner/report-bound, redacted to an allowlisted contract, removable under the approved lifecycle and inaccessible to generic analytics/telemetry roles."
+      ],
+      "negative_tests": [
+        "Mail/push outage, queue restoration, stale token, budget breaker, key revocation, expired DB connection, refund reconciliation and rollback to withdrawn benchmark.",
+        "Feedback containing raw writing/full report payload, cross-owner report feedback, support-role overreach, duplicate submission, and deletion followed by backup/queue resurrection."
+      ],
+      "artifacts": [
+        "Deployment manifests, notification adapters, dashboards and tested runbooks"
+      ],
+      "production_gates": [
+        "processor_retention_contracts"
+      ],
+      "validation_profiles": [
+        "docs",
+        "backend",
+        "connectors",
+        "release"
+      ],
+      "rollback": [
+        "Promote only tested compatible artifacts; preserve tombstones and immutable ledger while halting affected capabilities."
+      ],
+      "implementation_evidence": "PR #14 slices 19b00a0, 3b2087e, 5a22ba4 and final repair d2e1063 implemented redacted report feedback, ops commands/runbooks, append-only restore tombstones for deletions/withdrawals/logout-everywhere, and an outbox-driven notification state machine with kill switch and fake mail/push adapters.",
+      "remaining_work": [
+        "Tombstone single-device logout and feedback withdrawal so a database restore cannot resurrect either.",
+        "Add durable reconciliation for restored queued Premium attempts using provider-side request lookup where the selected provider supports it.",
+        "Choose/implement production object and tombstone storage, backup tooling, RPO/RTO and execute a timed restore drill.",
+        "Implement live transactional mail plus signed bounce/complaint handling; integrate APNs/FCM with T29–T31 once native signing/accounts exist.",
+        "Implement broader key rotation/compromise handling, account/identity recovery and store-rollout halt procedures.",
+        "Add deployed dashboards/alert thresholds/named operational ownership, edge/global rate limits and the production deployment/installable backend topology.",
+        "Expose the web mail-preference surface and add a lease heartbeat only if measured production latency makes the current lease unsafe."
+      ]
     },
     {
-      "id": "T25", "title": "Public multi-platform v1 signoff", "status": "PLANNED", "depends_on": ["T23", "T24", "T32", "T33"], "owner_role": "product-owner-human", "milestone": "release", "platforms": ["web", "ios", "android"], "connectors": [],
-      "required_docs": ["docs/roadmap/21-release-readiness-checklists.md","docs/release/web.md","docs/release/apple.md","docs/release/android.md","docs/release/multi-platform-signoff.md"], "owned_paths": ["docs/release/", "infra/release/"],
-      "coding_steps": ["Review exact candidate artifacts, all gate evidence, actual store statuses, supported context/device matrix and truthful marketing claims.", "Approve or reject product/price/privacy/processor/retention/support and disabled-capability scope with named human decisions.", "Authorize staged web/App Store/Play publication of tested digests and observe halt/rollback criteria; store acceptance and public release are separate records.", "Publish versioned release notes with limitations and ongoing operational ownership."],
+      "id": "T25",
+      "title": "Public multi-platform v1 signoff",
+      "status": "PLANNED",
+      "depends_on": [
+        "T23",
+        "T24",
+        "T32",
+        "T33"
+      ],
+      "owner_role": "product-owner-human",
+      "milestone": "release",
+      "platforms": [
+        "web",
+        "ios",
+        "android"
+      ],
+      "connectors": [],
+      "required_docs": [
+        "docs/roadmap/21-release-readiness-checklists.md",
+        "docs/release/web.md",
+        "docs/release/apple.md",
+        "docs/release/android.md",
+        "docs/release/multi-platform-signoff.md"
+      ],
+      "owned_paths": [
+        "docs/release/",
+        "infra/release/"
+      ],
+      "coding_steps": [
+        "Review exact candidate artifacts, all gate evidence, actual store statuses, supported context/device matrix and truthful marketing claims.",
+        "Approve or reject product/price/privacy/processor/retention/support and disabled-capability scope with named human decisions.",
+        "Authorize staged web/App Store/Play publication of tested digests and observe halt/rollback criteria; store acceptance and public release are separate records.",
+        "Publish versioned release notes with limitations and ongoing operational ownership."
+      ],
       "contract_handoff": "Actual owner-approved multi-platform release record, not an agent-filled template.",
-      "acceptance": ["Supported core journey works on all three surfaces with platform-appropriate billing and recovery.", "No unmet critical/human gate is silently skipped; optional scope reductions are explicit amendments."], "negative_tests": ["Store-ready mistaken for released, stale artifact, unapproved price/region, unsupported rarity claim and production flag enabled before evidence."],
-      "artifacts": ["Signed-off release record, public release notes and rollout evidence"], "production_gates": ["public_release_signoff"], "validation_profiles": ["docs", "release"], "rollback": ["Halt phased rollout or disable affected capability per tested runbooks, preserving purchases and lawful saved reports."]
+      "acceptance": [
+        "Supported core journey works on all three surfaces with platform-appropriate billing and recovery.",
+        "No unmet critical/human gate is silently skipped; optional scope reductions are explicit amendments."
+      ],
+      "negative_tests": [
+        "Store-ready mistaken for released, stale artifact, unapproved price/region, unsupported rarity claim and production flag enabled before evidence."
+      ],
+      "artifacts": [
+        "Signed-off release record, public release notes and rollout evidence"
+      ],
+      "production_gates": [
+        "public_release_signoff"
+      ],
+      "validation_profiles": [
+        "docs",
+        "release"
+      ],
+      "rollback": [
+        "Halt phased rollout or disable affected capability per tested runbooks, preserving purchases and lawful saved reports."
+      ]
     },
     {
-      "id": "T26", "title": "Populate premium selector/question database", "status": "DONE", "depends_on": [], "owner_role": "product-content-contracts", "milestone": "premium", "platforms": ["content", "shared"], "connectors": [],
-      "required_docs": ["schema/graphology_interpretation/v1/README.md","docs/roadmap/08-premium-question-selector-database.md","research/graphology/DATABASE_HANDOFF.md"], "owned_paths": ["schema/graphology_interpretation/v1/", "schema/premium_interpretation_database_v1.json"],
-      "coding_steps": ["Preserve the reviewed source definitions and deterministic compiled artifact; do not rebuild/populate them as part of another task.", "Consumers use selection_domain/cardinality and exact IDs/policies. Generator contracts are not yet a promise of implemented runtime producers.", "Any semantic content change needs a separate reviewed versioned PR, provenance and fixtures."],
+      "id": "T26",
+      "title": "Populate premium selector/question database",
+      "status": "DONE",
+      "depends_on": [],
+      "owner_role": "product-content-contracts",
+      "milestone": "premium",
+      "platforms": [
+        "content",
+        "shared"
+      ],
+      "connectors": [],
+      "required_docs": [
+        "schema/graphology_interpretation/v1/README.md",
+        "docs/roadmap/08-premium-question-selector-database.md",
+        "research/graphology/DATABASE_HANDOFF.md"
+      ],
+      "owned_paths": [
+        "schema/graphology_interpretation/v1/",
+        "schema/premium_interpretation_database_v1.json"
+      ],
+      "coding_steps": [
+        "Preserve the reviewed source definitions and deterministic compiled artifact; do not rebuild/populate them as part of another task.",
+        "Consumers use selection_domain/cardinality and exact IDs/policies. Generator contracts are not yet a promise of implemented runtime producers.",
+        "Any semantic content change needs a separate reviewed versioned PR, provenance and fixtures."
+      ],
       "contract_handoff": "REVIEWED_READY_FOR_T15 database at version 1.0.0-rc.1, runtime_activation=false; active traditional rule packs remain zero.",
-      "acceptance": ["Compiler/source drift and graphology validators remain green.", "Reviewed structure is not presented as empirical psychological validation or production activation."], "negative_tests": ["Hand-edited compiled output, unknown pick/support ID, dormant association activated by lifecycle status and old selection_mode revived."],
-      "artifacts": ["Existing reviewed interpretation database, manifest and provenance"], "production_gates": ["interpretation_database_review"], "validation_profiles": ["core", "docs"], "rollback": ["Preserve historical source/review records; do not use status regression as a migration."], "completion_evidence": "Merged T26 finalization PR #9 and current interpretation manifest; no new activation approval is created by roadmap v2."
+      "acceptance": [
+        "Compiler/source drift and graphology validators remain green.",
+        "Reviewed structure is not presented as empirical psychological validation or production activation."
+      ],
+      "negative_tests": [
+        "Hand-edited compiled output, unknown pick/support ID, dormant association activated by lifecycle status and old selection_mode revived."
+      ],
+      "artifacts": [
+        "Existing reviewed interpretation database, manifest and provenance"
+      ],
+      "production_gates": [
+        "interpretation_database_review"
+      ],
+      "validation_profiles": [
+        "core",
+        "docs"
+      ],
+      "rollback": [
+        "Preserve historical source/review records; do not use status regression as a migration."
+      ],
+      "completion_evidence": "Merged T26 finalization PR #9 and current interpretation manifest; no new activation approval is created by roadmap v2."
     },
     {
-      "id": "T27", "title": "Connector ports fakes and provider decisions", "status": "IMPLEMENTED_PENDING_REVIEW", "depends_on": ["T01"], "owner_role": "application-architecture", "milestone": "foundation", "platforms": ["shared", "backend"], "connectors": ["IdentityProvider", "ObjectStore", "PremiumModelProvider", "PaymentProvider", "NativePurchaseClient", "TransactionalMailer", "PushProvider", "AbuseChallengeProvider", "AnalyticsSink", "TelemetryExporter"],
-      "required_docs": ["docs/roadmap/09-connectors-and-provider-boundaries.md","docs/connectors/README.md","docs/roadmap/19-provider-decision-register.md","docs/adr/README.md","docs/connectors/identity.md","docs/connectors/object-storage.md","docs/connectors/premium-model.md","docs/connectors/payments.md","docs/connectors/email.md","docs/connectors/push.md","docs/connectors/abuse-challenge.md","docs/connectors/analytics.md","docs/connectors/telemetry.md"], "owned_paths": ["src/princess_app/ports/", "src/princess_app/adapters/fakes/", "tests/connector_contracts/", "docs/adr/"],
-      "coding_steps": ["Define application-owned port DTOs/protocols and typed failure/deadline/idempotency semantics from connector specifications.", "Implement deterministic fakes with injected clock/state and ambiguous outcomes; create a common conformance harness and capability profiles.", "Record provider decisions or explicit pending candidates with data/region/retention/SDK/account/test/exit requirements; do not choose a production vendor implicitly by importing its SDK.", "Add import-boundary tests and owner handoffs; real adapters are implemented by their product tasks."],
+      "id": "T27",
+      "title": "Connector ports fakes and provider decisions",
+      "status": "DONE",
+      "depends_on": [
+        "T01"
+      ],
+      "owner_role": "application-architecture",
+      "milestone": "foundation",
+      "platforms": [
+        "shared",
+        "backend"
+      ],
+      "connectors": [
+        "IdentityProvider",
+        "ObjectStore",
+        "PremiumModelProvider",
+        "PaymentProvider",
+        "NativePurchaseClient",
+        "TransactionalMailer",
+        "PushProvider",
+        "AbuseChallengeProvider",
+        "AnalyticsSink",
+        "TelemetryExporter"
+      ],
+      "required_docs": [
+        "docs/roadmap/09-connectors-and-provider-boundaries.md",
+        "docs/connectors/README.md",
+        "docs/roadmap/19-provider-decision-register.md",
+        "docs/adr/README.md",
+        "docs/connectors/identity.md",
+        "docs/connectors/object-storage.md",
+        "docs/connectors/premium-model.md",
+        "docs/connectors/payments.md",
+        "docs/connectors/email.md",
+        "docs/connectors/push.md",
+        "docs/connectors/abuse-challenge.md",
+        "docs/connectors/analytics.md",
+        "docs/connectors/telemetry.md"
+      ],
+      "owned_paths": [
+        "src/princess_app/ports/",
+        "src/princess_app/adapters/fakes/",
+        "tests/connector_contracts/",
+        "docs/adr/"
+      ],
+      "coding_steps": [
+        "Define application-owned port DTOs/protocols and typed failure/deadline/idempotency semantics from connector specifications.",
+        "Implement deterministic fakes with injected clock/state and ambiguous outcomes; create a common conformance harness and capability profiles.",
+        "Record provider decisions or explicit pending candidates with data/region/retention/SDK/account/test/exit requirements; do not choose a production vendor implicitly by importing its SDK.",
+        "Add import-boundary tests and owner handoffs; real adapters are implemented by their product tasks."
+      ],
       "contract_handoff": "Stable typed seams, failure fixtures and provider decision records; no SDK object in domain or public contracts.",
-      "acceptance": ["Fake mode requires no network/secret and cannot accidentally activate production.", "Unsupported capabilities, retry ownership and environment differences are explicit."], "negative_tests": ["Always-success fake, SDK exception leak, provider import in Free, unknown environment, timeout after acceptance and unsupported refund/storage operation."],
-      "artifacts": ["Port/fake library, capability profiles, conformance tests and ADR decisions"], "production_gates": [], "validation_profiles": ["core", "docs", "contracts", "connectors"], "rollback": ["Version a changed port and adapter mapping; keep internal IDs/report semantics stable during provider replacement."]
+      "acceptance": [
+        "Fake mode requires no network/secret and cannot accidentally activate production.",
+        "Unsupported capabilities, retry ownership and environment differences are explicit."
+      ],
+      "negative_tests": [
+        "Always-success fake, SDK exception leak, provider import in Free, unknown environment, timeout after acceptance and unsupported refund/storage operation."
+      ],
+      "artifacts": [
+        "Port/fake library, capability profiles, conformance tests and ADR decisions"
+      ],
+      "production_gates": [],
+      "validation_profiles": [
+        "core",
+        "docs",
+        "contracts",
+        "connectors"
+      ],
+      "rollback": [
+        "Version a changed port and adapter mapping; keep internal IDs/report semantics stable during provider replacement."
+      ],
+      "completion_evidence": "PR #14 commits 1415c9e/064406c implemented all ten application-owned connector ports, deterministic production-refusing fakes, common conformance tests and import-boundary enforcement. Merged PR #14 (merge e8e174a2311f8d4327850218405819de8f87277e; final head d2e106325c549f91c177d5cfd8277b032526ecff). Final-head CI, Roadmap integrity and Application environments passed; see docs/roadmap/23-post-pr14-reconciliation.md."
     },
     {
-      "id": "T28", "title": "Environment workspace and build foundation", "status": "IMPLEMENTED_PENDING_REVIEW", "depends_on": ["T00A", "T27"], "owner_role": "platform", "milestone": "foundation", "platforms": ["ci", "backend", "web", "ios", "android"], "connectors": ["TelemetryExporter"],
-      "required_docs": ["docs/roadmap/15-environments-deployment-and-secrets.md","docs/roadmap/09-connectors-and-provider-boundaries.md","docs/roadmap/16-testing-evals-and-quality-gates.md","docs/adr/ADR-001-client-architecture.md","docs/adr/ADR-005-mobile-framework.md","docs/connectors/telemetry.md"], "owned_paths": ["infra/", "package.json", "pnpm-workspace.yaml", ".github/workflows/", "apps/", "packages/"],
-      "coding_steps": ["Create local/test/preview/staging configuration schemas with synthetic fakes and startup rejection of invalid live/test mixes.", "Establish planned Python application packaging and pinned pnpm workspace without contaminating the numerical Free installation; verify inherited Node and compatible framework versions.", "Provide local PostgreSQL, restricted worker/resource profiles, safe telemetry seams and per-component secrets/egress contracts.", "Add reproducible clean-build, schema/codegen, backend/web/native scaffold jobs and protected release promotion profiles; no production credentials on untrusted PRs."],
+      "id": "T28",
+      "title": "Environment workspace and build foundation",
+      "status": "DONE",
+      "depends_on": [
+        "T00A",
+        "T27"
+      ],
+      "owner_role": "platform",
+      "milestone": "foundation",
+      "platforms": [
+        "ci",
+        "backend",
+        "web",
+        "shared"
+      ],
+      "connectors": [
+        "TelemetryExporter"
+      ],
+      "required_docs": [
+        "docs/roadmap/15-environments-deployment-and-secrets.md",
+        "docs/roadmap/09-connectors-and-provider-boundaries.md",
+        "docs/roadmap/16-testing-evals-and-quality-gates.md",
+        "docs/adr/ADR-001-client-architecture.md",
+        "docs/adr/ADR-005-mobile-framework.md",
+        "docs/connectors/telemetry.md"
+      ],
+      "owned_paths": [
+        "infra/",
+        "package.json",
+        "pnpm-workspace.yaml",
+        ".github/workflows/",
+        "apps/",
+        "packages/"
+      ],
+      "coding_steps": [
+        "Create local/test/preview/staging configuration schemas with synthetic fakes and startup rejection of invalid live/test mixes.",
+        "Establish planned Python application packaging and pinned pnpm workspace without contaminating the numerical Free installation; verify inherited Node and compatible framework versions.",
+        "Provide local PostgreSQL, restricted worker/resource profiles, safe telemetry seams and per-component secrets/egress contracts.",
+        "Add reproducible clean-build, schema/codegen, backend and web workspace jobs plus protected promotion profiles; T29 owns creation and exact-version validation of the native scaffold/build matrix. No production credentials run on untrusted PRs."
+      ],
       "contract_handoff": "Documented setup/teardown, exact dependency/build matrix and isolated environment composition for product implementation.",
-      "acceptance": ["Fresh local/CI setup works without live providers or private files.", "Each runtime has reviewed dependency locks and no secret leakage; native production signing remains owner gated."], "negative_tests": ["Production with fake/test keys, shared prod preview DB, bundled server secret, latest-version scaffold drift and provider SDK forced into Free."],
-      "artifacts": ["Workspace/environment manifests, local setup and CI matrix"], "production_gates": ["processor_retention_contracts", "native_signing_accounts"], "validation_profiles": ["core", "docs", "contracts", "backend", "web_render", "native", "js_packages"], "rollback": ["Revert environment/build changes through pinned artifacts; do not reset production databases or remove lock enforcement."]
+      "acceptance": [
+        "Fresh local/CI setup works without live providers or private files.",
+        "Each runtime has reviewed dependency locks and no secret leakage; native production signing remains owner gated."
+      ],
+      "negative_tests": [
+        "Production with fake/test keys, shared prod preview DB, bundled server secret, latest-version scaffold drift and provider SDK forced into Free."
+      ],
+      "artifacts": [
+        "Workspace/environment manifests, local setup and backend/web CI matrix; native project/build validation is handed to T29."
+      ],
+      "production_gates": [
+        "processor_retention_contracts"
+      ],
+      "validation_profiles": [
+        "core",
+        "docs",
+        "contracts",
+        "backend",
+        "connectors",
+        "js_packages"
+      ],
+      "rollback": [
+        "Revert environment/build changes through pinned artifacts; do not reset production databases or remove lock enforcement."
+      ],
+      "completion_evidence": "PR #14 commits 6fc9579/991069e implemented reviewed environment manifests, secret/egress matrices, the hash-locked backend environment, pnpm workspace, local PostgreSQL and backend/web CI. Reconciliation assigns native scaffold/build validation to T29 and deployed packaging/topology to T24. Merged PR #14 (merge e8e174a2311f8d4327850218405819de8f87277e; final head d2e106325c549f91c177d5cfd8277b032526ecff). Final-head CI, Roadmap integrity and Application environments passed; see docs/roadmap/23-post-pr14-reconciliation.md."
     },
     {
-      "id": "T29", "title": "Shared native foundation and compatibility spike", "status": "PLANNED", "depends_on": ["T01", "T02", "T10", "T27", "T28"], "owner_role": "mobile-platform", "milestone": "mobile", "platforms": ["ios", "android"], "connectors": ["IdentityProvider", "NativePurchaseClient", "PushProvider", "AbuseChallengeProvider"],
-      "required_docs": ["docs/roadmap/11-mobile-architecture.md","docs/roadmap/12-apple-platform-and-app-store.md","docs/roadmap/13-android-and-google-play.md","docs/adr/ADR-005-mobile-framework.md","docs/connectors/payments.md","docs/connectors/identity.md","docs/connectors/push.md","docs/connectors/abuse-challenge.md"], "owned_paths": ["apps/mobile/", "packages/api-client/", "packages/report-core/", "packages/design-tokens/"],
-      "coding_steps": ["Create Expo/RN/Router shell with native routes, secure identity transport and generated API contracts; share semantics/tokens rather than DOM.", "Implement fake platform ports for capture, secure session, purchase updates, links, files and push; prototype permission/format/lifecycle behavior.", "Run exact-version development/release-build compatibility spikes for native IAP bridge, photo/HEIC conversion, links/push and device/tablet support.", "Choose documented prebuild/config-plugin ownership, build profiles and minimum supported OS/device matrix; provide T30/T31 integration handoff."],
+      "id": "T29",
+      "title": "Shared native foundation and compatibility spike",
+      "status": "PLANNED",
+      "depends_on": [
+        "T01",
+        "T02",
+        "T10",
+        "T27",
+        "T28"
+      ],
+      "owner_role": "mobile-platform",
+      "milestone": "mobile",
+      "platforms": [
+        "ios",
+        "android"
+      ],
+      "connectors": [
+        "IdentityProvider",
+        "NativePurchaseClient",
+        "PushProvider",
+        "AbuseChallengeProvider"
+      ],
+      "required_docs": [
+        "docs/roadmap/11-mobile-architecture.md",
+        "docs/roadmap/12-apple-platform-and-app-store.md",
+        "docs/roadmap/13-android-and-google-play.md",
+        "docs/adr/ADR-005-mobile-framework.md",
+        "docs/connectors/payments.md",
+        "docs/connectors/identity.md",
+        "docs/connectors/push.md",
+        "docs/connectors/abuse-challenge.md"
+      ],
+      "owned_paths": [
+        "apps/mobile/",
+        "packages/api-client/",
+        "packages/report-core/",
+        "packages/design-tokens/"
+      ],
+      "coding_steps": [
+        "Create Expo/RN/Router shell with native routes, secure identity transport and generated API contracts; share semantics/tokens rather than DOM.",
+        "Implement fake platform ports for capture, secure session, purchase updates, links, files and push; prototype permission/format/lifecycle behavior.",
+        "Run exact-version development/release-build compatibility spikes for native IAP bridge, photo/HEIC conversion, links/push and device/tablet support.",
+        "Choose documented prebuild/config-plugin ownership, build profiles and minimum supported OS/device matrix; provide T30/T31 integration handoff."
+      ],
       "contract_handoff": "A tested native scaffold/platform seam and build matrix; not a completed paid client or store approval.",
-      "acceptance": ["Development builds exercise real native modules; Expo Go-only testing is insufficient for IAP.", "No native secret/measurement/credit authority; late responses and account switch clear sensitive state."], "negative_tests": ["Permission denial, process death, token rotation, malformed deep link, unavailable camera, fake purchase callback and unsupported native module combination."],
-      "artifacts": ["Mobile scaffold/platform ports, compatibility report and signed-development test references"], "production_gates": ["native_signing_accounts", "processor_retention_contracts"], "validation_profiles": ["docs", "contracts", "native", "connectors"], "rollback": ["Rebuild native binaries for changed modules/entitlements; do not rely on OTA to bypass native/store compatibility."]
+      "acceptance": [
+        "Development builds exercise real native modules; Expo Go-only testing is insufficient for IAP.",
+        "No native secret/measurement/credit authority; late responses and account switch clear sensitive state."
+      ],
+      "negative_tests": [
+        "Permission denial, process death, token rotation, malformed deep link, unavailable camera, fake purchase callback and unsupported native module combination."
+      ],
+      "artifacts": [
+        "Mobile scaffold/platform ports, compatibility report and signed-development test references"
+      ],
+      "production_gates": [
+        "native_signing_accounts",
+        "processor_retention_contracts"
+      ],
+      "validation_profiles": [
+        "docs",
+        "contracts",
+        "native",
+        "connectors"
+      ],
+      "rollback": [
+        "Rebuild native binaries for changed modules/entitlements; do not rely on OTA to bypass native/store compatibility."
+      ]
     },
     {
-      "id": "T30", "title": "Complete iOS and iPad client integration", "status": "PLANNED", "depends_on": ["T29","T04","T09","T15","T16","T18","T19","T20","T21","T22","T24"], "owner_role": "mobile-apple", "milestone": "mobile", "platforms": ["ios", "ipados"], "connectors": ["IdentityProvider", "NativePurchaseClient", "PushProvider", "AbuseChallengeProvider"],
-      "required_docs": ["docs/roadmap/11-mobile-architecture.md","docs/roadmap/12-apple-platform-and-app-store.md","docs/roadmap/14-payments-entitlements-and-commerce.md","docs/connectors/identity.md","docs/connectors/push.md","docs/release/apple.md","docs/connectors/payments.md","docs/connectors/abuse-challenge.md"], "owned_paths": ["apps/mobile/", "packages/report-core/", "tests/mobile/"],
-      "coding_steps": ["Integrate native capture/photo/crop/HEIC and safe upload/job recovery, account-backed Free/Premium/history/comparison screens and shared report facts.", "Implement StoreKit product display, startup transaction updates, server verification/account binding, durable grant-before-finish and consumable recovery semantics.", "Integrate Sign in with Apple where applicable, private relay/relinking, Universal Links/AASA, APNs, approved integrity fallback and secure-session/cache lifecycle.", "Complete PDF/native share, permission and settings/deletion/feedback flows with iPhone/iPad accessibility and actual signed-device tests."],
+      "id": "T30",
+      "title": "Complete iOS and iPad client integration",
+      "status": "PLANNED",
+      "depends_on": [
+        "T29",
+        "T04",
+        "T09",
+        "T15",
+        "T16",
+        "T18",
+        "T19",
+        "T20",
+        "T21",
+        "T22",
+        "T24"
+      ],
+      "owner_role": "mobile-apple",
+      "milestone": "mobile",
+      "platforms": [
+        "ios",
+        "ipados"
+      ],
+      "connectors": [
+        "IdentityProvider",
+        "NativePurchaseClient",
+        "PushProvider",
+        "AbuseChallengeProvider"
+      ],
+      "required_docs": [
+        "docs/roadmap/11-mobile-architecture.md",
+        "docs/roadmap/12-apple-platform-and-app-store.md",
+        "docs/roadmap/14-payments-entitlements-and-commerce.md",
+        "docs/connectors/identity.md",
+        "docs/connectors/push.md",
+        "docs/release/apple.md",
+        "docs/connectors/payments.md",
+        "docs/connectors/abuse-challenge.md"
+      ],
+      "owned_paths": [
+        "apps/mobile/",
+        "packages/report-core/",
+        "tests/mobile/"
+      ],
+      "coding_steps": [
+        "Integrate native capture/photo/crop/HEIC and safe upload/job recovery, account-backed Free/Premium/history/comparison screens and shared report facts.",
+        "Implement StoreKit product display, startup transaction updates, server verification/account binding, durable grant-before-finish and consumable recovery semantics.",
+        "Integrate Sign in with Apple where applicable, private relay/relinking, Universal Links/AASA, APNs, approved integrity fallback and secure-session/cache lifecycle.",
+        "Complete PDF/native share, permission and settings/deletion/feedback flows with iPhone/iPad accessibility and actual signed-device tests."
+      ],
       "contract_handoff": "Integrated Apple client candidate and device/sandbox evidence for T23/T32.",
-      "acceptance": ["Full core journey and degraded states work on the agreed iPhone/iPad matrix; native buying does not route to web checkout by default.", "Consumed credit/report recovery uses the account ledger without duplicate grants or model calls on reopen."], "negative_tests": ["Ask to Buy/pending, wrong store account binding, kill before/after grant/finish, refund after spend, denied picker/push, cold link, logout late response and deleted report notification."],
-      "artifacts": ["Apple client integration, StoreKit/device test evidence and native config"], "production_gates": ["native_signing_accounts", "price_account_terms_before_charges", "model_evaluation_and_data_controls"], "validation_profiles": ["docs", "contracts", "native", "connectors", "release"], "rollback": ["Halt release/disable affected capabilities while retaining compatible backend and purchase reconciliation; native changes require rebuilt artifacts."]
+      "acceptance": [
+        "Full core journey and degraded states work on the agreed iPhone/iPad matrix; native buying does not route to web checkout by default.",
+        "Consumed credit/report recovery uses the account ledger without duplicate grants or model calls on reopen."
+      ],
+      "negative_tests": [
+        "Ask to Buy/pending, wrong store account binding, kill before/after grant/finish, refund after spend, denied picker/push, cold link, logout late response and deleted report notification."
+      ],
+      "artifacts": [
+        "Apple client integration, StoreKit/device test evidence and native config"
+      ],
+      "production_gates": [
+        "native_signing_accounts",
+        "price_account_terms_before_charges",
+        "model_evaluation_and_data_controls"
+      ],
+      "validation_profiles": [
+        "docs",
+        "contracts",
+        "native",
+        "connectors",
+        "release"
+      ],
+      "rollback": [
+        "Halt release/disable affected capabilities while retaining compatible backend and purchase reconciliation; native changes require rebuilt artifacts."
+      ]
     },
     {
-      "id": "T31", "title": "Complete Android phone and tablet client integration", "status": "PLANNED", "depends_on": ["T29","T04","T09","T15","T16","T18","T19","T20","T21","T22","T24"], "owner_role": "mobile-android", "milestone": "mobile", "platforms": ["android"], "connectors": ["IdentityProvider", "NativePurchaseClient", "PushProvider", "AbuseChallengeProvider"],
-      "required_docs": ["docs/roadmap/11-mobile-architecture.md","docs/roadmap/13-android-and-google-play.md","docs/roadmap/14-payments-entitlements-and-commerce.md","docs/connectors/push.md","docs/release/android.md","docs/connectors/identity.md","docs/connectors/payments.md","docs/connectors/abuse-challenge.md"], "owned_paths": ["apps/mobile/", "packages/report-core/", "tests/mobile/"],
-      "coding_steps": ["Integrate native camera/system picker/crop/upload, durable job foreground recovery and account-backed report/history/comparison screens.", "Implement Play Billing product/pending/update/recovery UI against server token verification and grant-before-consume; do not maintain a second local credit counter.", "Configure App Links/assetlinks release fingerprints, FCM token/account lifecycle, approved Play Integrity fallback and secure sessions.", "Complete PDF/file sharing, account deletion/public deletion link/feedback, TalkBack/text scaling and phone/tablet process-death/rotation tests."],
+      "id": "T31",
+      "title": "Complete Android phone and tablet client integration",
+      "status": "PLANNED",
+      "depends_on": [
+        "T29",
+        "T04",
+        "T09",
+        "T15",
+        "T16",
+        "T18",
+        "T19",
+        "T20",
+        "T21",
+        "T22",
+        "T24"
+      ],
+      "owner_role": "mobile-android",
+      "milestone": "mobile",
+      "platforms": [
+        "android"
+      ],
+      "connectors": [
+        "IdentityProvider",
+        "NativePurchaseClient",
+        "PushProvider",
+        "AbuseChallengeProvider"
+      ],
+      "required_docs": [
+        "docs/roadmap/11-mobile-architecture.md",
+        "docs/roadmap/13-android-and-google-play.md",
+        "docs/roadmap/14-payments-entitlements-and-commerce.md",
+        "docs/connectors/push.md",
+        "docs/release/android.md",
+        "docs/connectors/identity.md",
+        "docs/connectors/payments.md",
+        "docs/connectors/abuse-challenge.md"
+      ],
+      "owned_paths": [
+        "apps/mobile/",
+        "packages/report-core/",
+        "tests/mobile/"
+      ],
+      "coding_steps": [
+        "Integrate native camera/system picker/crop/upload, durable job foreground recovery and account-backed report/history/comparison screens.",
+        "Implement Play Billing product/pending/update/recovery UI against server token verification and grant-before-consume; do not maintain a second local credit counter.",
+        "Configure App Links/assetlinks release fingerprints, FCM token/account lifecycle, approved Play Integrity fallback and secure sessions.",
+        "Complete PDF/file sharing, account deletion/public deletion link/feedback, TalkBack/text scaling and phone/tablet process-death/rotation tests."
+      ],
       "contract_handoff": "Integrated Android candidate and real-device/Play sandbox evidence for T23/T33.",
-      "acceptance": ["Full core journey works in signed builds on the approved matrix, not just emulator JavaScript tests.", "Pending never grants; repeated token/RTDN/restore reconciles once and Free survives store/provider outage."], "negative_tests": ["Pending completion, token reused across accounts, consume timeout, app killed after purchase, stale signing link, old account push, permission revoked and refund after spend."],
-      "artifacts": ["Android integration, device/billing evidence and native config"], "production_gates": ["native_signing_accounts", "price_account_terms_before_charges", "model_evaluation_and_data_controls"], "validation_profiles": ["docs", "contracts", "native", "connectors", "release"], "rollback": ["Halt staged rollout and preserve API/purchase recovery compatibility; do not clear ledger state to fix a client mismatch."]
+      "acceptance": [
+        "Full core journey works in signed builds on the approved matrix, not just emulator JavaScript tests.",
+        "Pending never grants; repeated token/RTDN/restore reconciles once and Free survives store/provider outage."
+      ],
+      "negative_tests": [
+        "Pending completion, token reused across accounts, consume timeout, app killed after purchase, stale signing link, old account push, permission revoked and refund after spend."
+      ],
+      "artifacts": [
+        "Android integration, device/billing evidence and native config"
+      ],
+      "production_gates": [
+        "native_signing_accounts",
+        "price_account_terms_before_charges",
+        "model_evaluation_and_data_controls"
+      ],
+      "validation_profiles": [
+        "docs",
+        "contracts",
+        "native",
+        "connectors",
+        "release"
+      ],
+      "rollback": [
+        "Halt staged rollout and preserve API/purchase recovery compatibility; do not clear ledger state to fix a client mismatch."
+      ]
     },
     {
-      "id": "T32", "title": "App Store readiness and review evidence", "status": "PLANNED", "depends_on": ["T30", "T23", "T24"], "owner_role": "apple-release-human", "milestone": "store-release", "platforms": ["ios", "ipados"], "connectors": [],
-      "required_docs": ["docs/roadmap/12-apple-platform-and-app-store.md","docs/release/apple.md","docs/roadmap/21-release-readiness-checklists.md","docs/roadmap/22-research-and-source-refresh.md"], "owned_paths": ["docs/release/", "apps/mobile/", "infra/release/"],
-      "coding_steps": ["Verify current Apple SDK/submission/login/privacy/IAP rules against the actual app/account/storefront and record dated evidence.", "Prepare protected signing/build profiles, TestFlight candidate, actual device/purchase/restore/refund evidence and review-access instructions.", "Complete accurate product catalog, screenshots/localization/age rating, privacy manifests/labels, deletion/support URLs and AI-processing disclosures.", "Record app/product review outcomes and remediation; hand approved candidate digests and phased-release/halt plan to T25."],
+      "id": "T32",
+      "title": "App Store readiness and review evidence",
+      "status": "PLANNED",
+      "depends_on": [
+        "T30",
+        "T23",
+        "T24"
+      ],
+      "owner_role": "apple-release-human",
+      "milestone": "store-release",
+      "platforms": [
+        "ios",
+        "ipados"
+      ],
+      "connectors": [],
+      "required_docs": [
+        "docs/roadmap/12-apple-platform-and-app-store.md",
+        "docs/release/apple.md",
+        "docs/roadmap/21-release-readiness-checklists.md",
+        "docs/roadmap/22-research-and-source-refresh.md"
+      ],
+      "owned_paths": [
+        "docs/release/",
+        "apps/mobile/",
+        "infra/release/"
+      ],
+      "coding_steps": [
+        "Verify current Apple SDK/submission/login/privacy/IAP rules against the actual app/account/storefront and record dated evidence.",
+        "Prepare protected signing/build profiles, TestFlight candidate, actual device/purchase/restore/refund evidence and review-access instructions.",
+        "Complete accurate product catalog, screenshots/localization/age rating, privacy manifests/labels, deletion/support URLs and AI-processing disclosures.",
+        "Record app/product review outcomes and remediation; hand approved candidate digests and phased-release/halt plan to T25."
+      ],
       "contract_handoff": "Real Apple store-ready/review evidence, not public release authorization.",
-      "acceptance": ["Actual account/product/privacy/review/testing gates are satisfied and traceable.", "No store availability or approval claimed from a successful binary upload."], "negative_tests": ["Wrong build/signing environment, stale SDK policy, missing reviewer backend access, mislabelled consumable restore, privacy SDK mismatch and unsupported marketing claim."],
-      "artifacts": ["Apple readiness checklist with actual evidence and candidate digest"], "production_gates": ["native_signing_accounts", "apple_store_review"], "validation_profiles": ["docs", "native", "release"], "rollback": ["Keep manual release pending or withdraw/revise the candidate; use a new approved build rather than bypassing review."]
+      "acceptance": [
+        "Actual account/product/privacy/review/testing gates are satisfied and traceable.",
+        "No store availability or approval claimed from a successful binary upload."
+      ],
+      "negative_tests": [
+        "Wrong build/signing environment, stale SDK policy, missing reviewer backend access, mislabelled consumable restore, privacy SDK mismatch and unsupported marketing claim."
+      ],
+      "artifacts": [
+        "Apple readiness checklist with actual evidence and candidate digest"
+      ],
+      "production_gates": [
+        "native_signing_accounts",
+        "apple_store_review"
+      ],
+      "validation_profiles": [
+        "docs",
+        "native",
+        "release"
+      ],
+      "rollback": [
+        "Keep manual release pending or withdraw/revise the candidate; use a new approved build rather than bypassing review."
+      ]
     },
     {
-      "id": "T33", "title": "Google Play readiness and review evidence", "status": "PLANNED", "depends_on": ["T31", "T23", "T24"], "owner_role": "android-release-human", "milestone": "store-release", "platforms": ["android"], "connectors": [],
-      "required_docs": ["docs/roadmap/13-android-and-google-play.md","docs/release/android.md","docs/roadmap/21-release-readiness-checklists.md","docs/roadmap/22-research-and-source-refresh.md"], "owned_paths": ["docs/release/", "apps/mobile/", "infra/release/"],
-      "coding_steps": ["Verify current target API/billing/native-library/submission and actual account testing/production-access requirements; do not reuse a remembered fixed tester count.", "Prepare Play App Signing/AAB, protected service roles/RTDN, internal/closed-track and actual device/billing/prelaunch evidence.", "Complete Data Safety/account deletion/AI-content/app-access/content rating/store listing/screenshots and approved products/terms.", "Record review/eligibility outcomes and give candidate digests, staged rollout/halt plan and support ownership to T25."],
+      "id": "T33",
+      "title": "Google Play readiness and review evidence",
+      "status": "PLANNED",
+      "depends_on": [
+        "T31",
+        "T23",
+        "T24"
+      ],
+      "owner_role": "android-release-human",
+      "milestone": "store-release",
+      "platforms": [
+        "android"
+      ],
+      "connectors": [],
+      "required_docs": [
+        "docs/roadmap/13-android-and-google-play.md",
+        "docs/release/android.md",
+        "docs/roadmap/21-release-readiness-checklists.md",
+        "docs/roadmap/22-research-and-source-refresh.md"
+      ],
+      "owned_paths": [
+        "docs/release/",
+        "apps/mobile/",
+        "infra/release/"
+      ],
+      "coding_steps": [
+        "Verify current target API/billing/native-library/submission and actual account testing/production-access requirements; do not reuse a remembered fixed tester count.",
+        "Prepare Play App Signing/AAB, protected service roles/RTDN, internal/closed-track and actual device/billing/prelaunch evidence.",
+        "Complete Data Safety/account deletion/AI-content/app-access/content rating/store listing/screenshots and approved products/terms.",
+        "Record review/eligibility outcomes and give candidate digests, staged rollout/halt plan and support ownership to T25."
+      ],
       "contract_handoff": "Real Play readiness/review evidence with current account-specific requirements, not an agent-approved rollout.",
-      "acceptance": ["Required testing, product verification and privacy/app access are evidenced by actual outcomes.", "AAB upload or elapsed test duration alone is not treated as production approval."], "negative_tests": ["Wrong package/signing fingerprint, stale target API, missing closed-test evidence, invalid Pub/Sub audience, inaccurate Data Safety and absent deletion path."],
-      "artifacts": ["Play readiness checklist with actual evidence and AAB digest"], "production_gates": ["native_signing_accounts", "google_play_review"], "validation_profiles": ["docs", "native", "release"], "rollback": ["Pause/withdraw candidate or halt staged rollout; preserve backend support for installed versions and verified purchase reconciliation."]
+      "acceptance": [
+        "Required testing, product verification and privacy/app access are evidenced by actual outcomes.",
+        "AAB upload or elapsed test duration alone is not treated as production approval."
+      ],
+      "negative_tests": [
+        "Wrong package/signing fingerprint, stale target API, missing closed-test evidence, invalid Pub/Sub audience, inaccurate Data Safety and absent deletion path."
+      ],
+      "artifacts": [
+        "Play readiness checklist with actual evidence and AAB digest"
+      ],
+      "production_gates": [
+        "native_signing_accounts",
+        "google_play_review"
+      ],
+      "validation_profiles": [
+        "docs",
+        "native",
+        "release"
+      ],
+      "rollback": [
+        "Pause/withdraw candidate or halt staged rollout; preserve backend support for installed versions and verified purchase reconciliation."
+      ]
     }
-  ]
+  ],
+  "reconciled_date": "2026-09-27",
+  "reconciled_from_pr": 14,
+  "reconciled_head": "d2e106325c549f91c177d5cfd8277b032526ecff"
 }
