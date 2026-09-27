@@ -26,14 +26,15 @@ _SECRETISH = re.compile(
     r"(?i)(bearer\s+\S+|authorization|cookie|token=|signature=|sig=|x-amz-[a-z-]+=|"
     r"sk_(?:live|test)_\w+|-----BEGIN|eyJ[A-Za-z0-9_-]{8,})"
 )
-_URL = re.compile(r"(?i)\b[a-z][a-z0-9+.-]*://[^\s?#]*(\?[^\s#]*)?")
 REDACTED = "[redacted]"
 MAX_VALUE_LENGTH = 128
-# String attributes must look like low-cardinality codes, route templates or
-# opaque IDs; any other free text (exception messages, user input) is redacted.
+# String attributes must look like low-cardinality codes; ``route`` must be one
+# of the registered API route templates (never a literal path with IDs).
 _CODE_VALUE = re.compile(r"^[A-Za-z0-9_.:-]{1,64}$")
-_ROUTE_VALUE = re.compile(r"^(?:[a-z][a-z0-9+.-]*://[A-Za-z0-9.-]+(?::\d+)?)?/[A-Za-z0-9_./{}-]{0,120}$")
-_VALUE_SHAPES = {"route": _ROUTE_VALUE}
+ROUTE_TEMPLATES = frozenset({
+    "/v1/guest-sessions", "/v1/me", "/v1/me/guest-transfer", "/v1/me/logout-everywhere", "/v1/me/permissions",
+    "/v1/me/permissions/{purpose_id}", "/v1/reports/{report_id}", "/v1/dev/id-tokens",
+})
 
 
 class RecordKind(str, Enum):
@@ -47,10 +48,9 @@ def redact_value(value: AttrValue, key: str | None = None) -> AttrValue:
         return value
     if not isinstance(value, str) or _SECRETISH.search(value):
         return REDACTED
-    # Keep scheme/host/path of a URL, drop any query string.
-    value = _URL.sub(lambda m: m.group(0).split("?", 1)[0], value)
-    shape = _VALUE_SHAPES.get(key or "", _CODE_VALUE)
-    return value if shape.match(value) else REDACTED
+    if key == "route":
+        return value if value in ROUTE_TEMPLATES else REDACTED
+    return value if _CODE_VALUE.match(value) else REDACTED
 
 
 def sanitize_attributes(attributes: Mapping[str, AttrValue]) -> dict[str, AttrValue]:

@@ -11,7 +11,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Mapping, Protocol, Union
 
-from .base import CallContext, CapabilityProfile, InvalidInput
+from .base import CallContext, CapabilityProfile, InvalidInput, require_opaque_id
 
 PORT = "AnalyticsSink"
 ALLOWLIST_VERSION = "analytics-events/1"
@@ -77,6 +77,12 @@ class AnalyticsConsent:
 
     granted: bool
     pseudonymous_ref: str | None = None
+
+    def __post_init__(self) -> None:
+        if type(self.granted) is not bool:
+            raise InvalidInput("invalid_analytics_consent", detail="granted")
+        if self.pseudonymous_ref is not None:
+            require_opaque_id(self.pseudonymous_ref, "pseudonymous_ref")
 
 
 class AnalyticsSink(Protocol):

@@ -2223,6 +2223,7 @@
     "deskew_applied_deg": -3.0000000000000426,
     "empirically_validated_feature_count": 0,
     "implemented_feature_count": 64,
+    "input_pixels_sha256": "aecd336d36edf312cfdd887f8d0d133f0ee200a25346a82044d47e46e3cdb450",
     "layout_assumption": "single_column; margins relative to image canvas, not detected paper edges",
     "original_height": 360,
     "original_to_analysis": [

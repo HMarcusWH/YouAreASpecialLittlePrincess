@@ -7,6 +7,7 @@ through the T01 contract. Anything the contract rejects yields no value.
 """
 from __future__ import annotations
 
+import math
 from typing import Any, Mapping, Sequence
 
 from princess_contracts import ContractIssue, ValidatedDocument, ValidationResult, compile_document
@@ -17,14 +18,27 @@ EVIDENCE_PAYLOAD_VERSION = "evidence/1"
 MAX_WARNING_LENGTH = 256
 
 
+def _issue(code: str, path: str, message: str) -> ValidationResult[ValidatedDocument]:
+    return ValidationResult(None, (ContractIssue(code, path, message),))
+
+
 def build_evidence_bundle(payload: Mapping[str, Any], analysis: Mapping[str, Any],
                           bundle_id: str) -> ValidationResult[ValidatedDocument]:
-    if payload.get("evidence_version") != EVIDENCE_PAYLOAD_VERSION:
-        return ValidationResult(None, (ContractIssue("EVIDENCE_PAYLOAD_VERSION", "/evidence_version",
-                                                     f"expected {EVIDENCE_PAYLOAD_VERSION}"),))
+    if not isinstance(payload, Mapping) or payload.get("evidence_version") != EVIDENCE_PAYLOAD_VERSION:
+        return _issue("EVIDENCE_PAYLOAD_VERSION", "/evidence_version", f"expected {EVIDENCE_PAYLOAD_VERSION}")
+    for key in ("frames", "regions", "observations"):
+        rows = payload.get(key)
+        if not isinstance(rows, list) or not all(isinstance(row, Mapping) for row in rows):
+            return _issue("EVIDENCE_PAYLOAD_SHAPE", f"/{key}", "expected a list of objects")
+    warnings = payload.get("warnings")
+    if not isinstance(warnings, list) or not all(isinstance(w, str) for w in warnings):
+        return _issue("EVIDENCE_PAYLOAD_SHAPE", "/warnings", "expected a list of strings")
+    if not isinstance(analysis, Mapping) or payload.get("input_pixels_sha256") != analysis.get("processed_sha256"):
+        return _issue("EVIDENCE_ANALYSIS_MISMATCH", "/input_pixels_sha256",
+                      "payload was produced from different pixels than this analysis")
     versions = method_versions()
     observations = []
-    for row in payload.get("observations", ()):
+    for row in payload["observations"]:
         version = versions.get(row.get("method_id"))
         if version is None:
             return ValidationResult(None, (ContractIssue("UNKNOWN_METHOD", "/observations",
@@ -34,10 +48,10 @@ def build_evidence_bundle(payload: Mapping[str, Any], analysis: Mapping[str, Any
         "contract_version": analysis.get("contract_version"),
         "bundle_id": bundle_id,
         "analysis": dict(analysis),
-        "frames": [dict(f) for f in payload.get("frames", ())],
-        "regions": [dict(r) for r in payload.get("regions", ())],
+        "frames": [dict(f) for f in payload["frames"]],
+        "regions": [dict(r) for r in payload["regions"]],
         "observations": observations,
-        "warnings": [str(w)[:MAX_WARNING_LENGTH] for w in payload.get("warnings", ())],
+        "warnings": [w[:MAX_WARNING_LENGTH] for w in warnings],
     }
     return compile_document("EvidenceBundle", document)
 
@@ -97,8 +111,14 @@ def prepend_source_frame(frames: Sequence[Mapping[str, Any]], *, frame_id: str, 
     """Attach a new root (for example the uploaded photo before crop/perspective
     rectification) above the current root. ``root_to_new_parent`` maps current
     root coordinates into the new frame."""
-    if len(root_to_new_parent) != 9:
-        raise ValueError("transform must be a flat 3x3 matrix")
+    if len(root_to_new_parent) != 9 or not all(isinstance(v, (int, float)) and math.isfinite(v)
+                                                for v in root_to_new_parent):
+        raise ValueError("transform must be a finite flat 3x3 matrix")
+    m = [float(v) for v in root_to_new_parent]
+    det = (m[0] * (m[4] * m[8] - m[5] * m[7]) - m[1] * (m[3] * m[8] - m[5] * m[6])
+           + m[2] * (m[3] * m[7] - m[4] * m[6]))
+    if not math.isfinite(det) or abs(det) < 1e-12:
+        raise ValueError("transform must be invertible")
     out = [dict(f) for f in frames]
     roots = [f for f in out if f["parent_frame_id"] is None]
     if len(roots) != 1:

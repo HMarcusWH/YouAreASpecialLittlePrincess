@@ -41,9 +41,9 @@ def accepted(payload, feature_id):
     return [o['value'] for o in payload['observations'] if o['feature_id'] == feature_id and o['accepted']]
 
 
-def reference(**overrides):
+def reference(payload, **overrides):
     values = dict(analysis_id="analysis_1", run_id="run_1", owner_id="owner_1", input_asset_id="asset_1",
-                  input_sha256="0" * 64, processed_sha256="1" * 64,
+                  input_sha256="0" * 64, processed_sha256=payload["input_pixels_sha256"],
                   created_at=datetime(2026, 9, 27, 12, 0, tzinfo=timezone.utc), engine_version=__version__,
                   analysis_config_sha256="2" * 64)
     values.update(overrides)
@@ -82,10 +82,10 @@ def test_rejected_observations_carry_reasons_and_are_excluded(analyzed):
 
 def test_bundle_compiles_and_is_deterministic(analyzed):
     image, _, payload = analyzed
-    bundle = build_evidence_bundle(payload, reference(), "evidence_1")
+    bundle = build_evidence_bundle(payload, reference(payload), "evidence_1")
     assert bundle.ok, bundle.issues[:3]
     again = GraphologyEngine(max_dimension=900).analyze_with_evidence(image)[1]
-    assert build_evidence_bundle(again, reference(), "evidence_1").value.digest == bundle.value.digest
+    assert build_evidence_bundle(again, reference(again), "evidence_1").value.digest == bundle.value.digest
     data = bundle.value.to_dict()
     assert data['frames'][0]['frame_id'] == core_evidence.INPUT_FRAME
     assert all(o['method_version'] == '1.0.0' for o in data['observations'])
@@ -123,14 +123,14 @@ def test_perspective_source_frame_composes_and_inverts(analyzed):
     full = np.asarray(frames[2]['transform_to_parent']).reshape(3, 3)
     back = np.linalg.inv(h @ full) @ np.array([*got, 1.0])
     assert tuple(back[:2] / back[2]) == pytest.approx((x, y), abs=1e-9)
-    assert build_evidence_bundle({**payload, 'frames': frames}, reference(), 'evidence_2').ok
+    assert build_evidence_bundle({**payload, 'frames': frames}, reference(payload), 'evidence_2').ok
 
 
 def test_blank_image_yields_honest_empty_evidence():
     result, payload = GraphologyEngine().analyze_with_evidence(np.full((80, 120), 255, np.uint8))
     assert payload['observations'] == []
     assert any('No repeated observations' in w for w in payload['warnings'])
-    assert build_evidence_bundle(payload, reference(), 'evidence_blank').ok
+    assert build_evidence_bundle(payload, reference(payload), 'evidence_blank').ok
 
 
 def test_region_budget_truncates_deterministically(monkeypatch, analyzed):
@@ -141,7 +141,7 @@ def test_region_budget_truncates_deterministically(monkeypatch, analyzed):
     assert any(w.startswith('region budget reached') for w in payload['warnings'])
     kept = {r['region_id'] for r in payload['regions']}
     assert all(set(o['region_ids']) <= kept for o in payload['observations'])
-    assert build_evidence_bundle(payload, reference(), 'evidence_small').ok
+    assert build_evidence_bundle(payload, reference(payload), 'evidence_small').ok
 
 
 def mutated(payload, fn):
@@ -163,7 +163,7 @@ def mutated(payload, fn):
 ])
 def test_contract_rejects_broken_evidence(analyzed, mutation, code):
     _, _, payload = analyzed
-    result = build_evidence_bundle(mutated(payload, mutation), reference(), 'evidence_bad')
+    result = build_evidence_bundle(mutated(payload, mutation), reference(payload), 'evidence_bad')
     assert result.value is None and code in {i.code for i in result.issues}
 
 
@@ -171,14 +171,14 @@ def test_nonfinite_values_invalid_links_and_versions_are_rejected(analyzed):
     _, _, payload = analyzed
     bad = mutated(payload, lambda p: None)
     bad['observations'][0]['value'] = float('nan')
-    assert build_evidence_bundle(bad, reference(), 'e').value is None
-    drift = reference()
+    assert build_evidence_bundle(bad, reference(bad), 'e').value is None
+    drift = reference(payload)
     drift['versions']['method_manifest'] = 'f' * 64
     assert 'METHOD_MANIFEST_DRIFT' in {i.code for i in build_evidence_bundle(payload, drift, 'e').issues}
     unknown = mutated(payload, lambda p: p['observations'][0].update(method_id='learned_magic_v1'))
-    assert build_evidence_bundle(unknown, reference(), 'e').issues[0].code == 'UNKNOWN_METHOD'
+    assert build_evidence_bundle(unknown, reference(unknown), 'e').issues[0].code == 'UNKNOWN_METHOD'
     old = mutated(payload, lambda p: p.update(evidence_version='evidence/0'))
-    assert build_evidence_bundle(old, reference(), 'e').issues[0].code == 'EVIDENCE_PAYLOAD_VERSION'
+    assert build_evidence_bundle(old, reference(old), 'e').issues[0].code == 'EVIDENCE_PAYLOAD_VERSION'
 
 
 def test_nonfinite_observation_values_are_never_emitted():
@@ -192,3 +192,33 @@ def test_context_arrays_are_read_only():
     for array in (ctx.gray, ctx.mask, ctx.labels):
         with pytest.raises(ValueError):
             array[0, 0] = 1
+
+
+def test_payload_from_other_pixels_or_malformed_shape_is_rejected(analyzed):
+    _, _, payload = analyzed
+    other = reference(payload, processed_sha256="f" * 64)
+    assert build_evidence_bundle(payload, other, "e").issues[0].code == "EVIDENCE_ANALYSIS_MISMATCH"
+    for key, value in (("observations", "not-a-list"), ("regions", [1, 2]), ("warnings", [3])):
+        bad = mutated(payload, lambda p: p.update({key: value}))
+        assert build_evidence_bundle(bad, reference(payload), "e").issues[0].code == "EVIDENCE_PAYLOAD_SHAPE"
+
+
+@pytest.mark.parametrize("matrix", [[0.0] * 9, [1, 0, 0, 0, 0, 0, 0, 0, 1], [1, 0, 0, 0, 1, 0, 0, 0, float("nan")]])
+def test_noninvertible_or_nonfinite_source_transforms_are_rejected(analyzed, matrix):
+    _, _, payload = analyzed
+    with pytest.raises(ValueError):
+        prepend_source_frame(payload["frames"], frame_id="frame_upload", width=10, height=10,
+                             root_to_new_parent=matrix)
+
+
+def test_observation_budget_drops_whole_families(monkeypatch, analyzed):
+    image, result, _ = analyzed
+    monkeypatch.setattr(core_evidence, "MAX_OBSERVATIONS", 150)
+    _, payload = GraphologyEngine(max_dimension=900).analyze_with_evidence(image)
+    omitted = {w.split(":", 1)[1] for w in payload["warnings"] if w.startswith(core_evidence.OMITTED_FAMILY_PREFIX)}
+    assert omitted and len(payload["observations"]) <= 150
+    kept = {o["feature_id"] for o in payload["observations"]}
+    assert not kept & omitted
+    for feature_id in kept:  # every family that remains is complete
+        values = [o["value"] for o in payload["observations"] if o["feature_id"] == feature_id and o["accepted"]]
+        assert len(values) == result.measurements[feature_id].n_observations

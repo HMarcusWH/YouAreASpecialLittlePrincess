@@ -35,10 +35,30 @@ class PremiumAccess(str, Enum):
 
 
 @dataclass(frozen=True)
+class PremiumAuthorization:
+    """Premium read authority resolved from the ledger (T19) in the same request.
+
+    It is bound to one report and overlay; an authorization for another report
+    or an older/newer overlay never unlocks this snapshot.
+    """
+
+    report_id: str
+    overlay_id: str
+    state: PremiumAccess
+
+    def unlocks(self, report_id: str, overlay_id: str | None) -> bool:
+        return (self.state is PremiumAccess.UNLOCKED and self.report_id == report_id
+                and overlay_id is not None and self.overlay_id == overlay_id)
+
+    def revokes(self, report_id: str, overlay_id: str | None) -> bool:
+        return self.state is PremiumAccess.REVOKED and self.report_id == report_id and self.overlay_id == overlay_id
+
+
+@dataclass(frozen=True)
 class ProjectionRequest:
     projection: str  # FREE | OWNER | PREMIUM | SHARE | EXPORT
     generated_at: datetime
-    premium_access: PremiumAccess = PremiumAccess.NONE
+    premium: PremiumAuthorization | None = None
     source_image_available: bool = True
     include_source_image: bool = True
     share_scope: frozenset[str] = field(default_factory=frozenset)
@@ -56,14 +76,20 @@ def project_report(report: ValidatedDocument, request: ProjectionRequest) -> Val
     kind = request.projection
     if kind not in {"FREE", "OWNER", "PREMIUM", "SHARE", "EXPORT"}:
         return _issue("UNKNOWN_PROJECTION", kind)
-    unlocked = request.premium_access is PremiumAccess.UNLOCKED
+    source = report.to_dict()
+    if source["reference_claims"]:
+        # ReportViewModel v1 has no reference-claim field; T13 extends the view
+        # contract. Until then, refuse rather than silently drop cohort context.
+        return _issue("REFERENCE_PROJECTION_UNSUPPORTED", "reference claims need the T13 view contract")
+    premium = request.premium
+    unlocked = premium is not None and premium.unlocks(source["report_id"], source["premium_overlay_id"])
+    revoked = premium is not None and premium.revokes(source["report_id"], source["premium_overlay_id"])
     if kind == "PREMIUM" and not unlocked:
         return _issue("PREMIUM_NOT_AUTHORIZED", "Premium projection requires an unlocked, unrevoked overlay")
     unknown_actions = set(request.actions) - set(ACTION_KINDS)
     if unknown_actions:
         return _issue("UNKNOWN_ACTION", ",".join(sorted(unknown_actions)))
 
-    source = report.to_dict()
     include_premium = kind in {"OWNER", "PREMIUM", "EXPORT", "SHARE"} and unlocked
     sections = []
     for section in source["sections"]:
@@ -87,7 +113,7 @@ def project_report(report: ValidatedDocument, request: ProjectionRequest) -> Val
     elif kind in {"EXPORT", "SHARE"} and not image_allowed:
         notices.append({"notice_id": "notice.source_image", "class": "PRIVACY",
                         "localization_key": "notice.source_image_omitted"})
-    if request.premium_access is PremiumAccess.REVOKED and source["premium_overlay_id"]:
+    if revoked:
         notices.append({"notice_id": "notice.premium_revoked", "class": "AI",
                         "localization_key": "notice.premium_revoked"})
 

@@ -16,12 +16,13 @@ from princess_contracts import (
     ValidationResult,
     canonical_digest,
     compile_document,
+    free_feature_ids,
     free_method_ids,
 )
 from princess_contracts import generated as g
 
 from ..analysis import method_versions, rfc3339
-from .template import FACT_SECTIONS, PREMIUM_SECTION, REFERENCE_SECTION, formatting_for
+from .template import FACT_SECTIONS, PREMIUM_SECTION, REFERENCE_SECTION, TEMPLATE_VERSION, formatting_for
 
 MAX_SOURCE_REGIONS = 128
 EVIDENCE_CLASS = {"MEASURED_VISUAL_FEATURE": "MEASURED", "COMPUTATIONAL_PROXY": "COMPUTATIONAL_PROXY"}
@@ -159,9 +160,19 @@ def assemble_report(*, report_id: str, analysis: Mapping[str, Any], result: Mapp
                     reference_claims: Sequence[Mapping[str, Any]] = (),
                     premium_overlay_id: str | None = None) -> ValidationResult[ValidatedDocument]:
     """Assemble revision 1 of an individual report."""
-    schema = result.get("metadata", {}).get("schema_version")
-    if schema != g.FEATURE_SCHEMA_VERSION:
+    metadata = result.get("metadata", {})
+    if metadata.get("schema_version") != g.FEATURE_SCHEMA_VERSION:
         return _fail("RESULT_SCHEMA_DRIFT", "/metadata/schema_version", "result was produced for another schema")
+    if metadata.get("input_pixels_sha256") != analysis.get("processed_sha256"):
+        return _fail("RESULT_ANALYSIS_MISMATCH", "/metadata/input_pixels_sha256",
+                     "result was produced from different pixels than this analysis")
+    if analysis.get("versions", {}).get("template") != TEMPLATE_VERSION:
+        return _fail("TEMPLATE_VERSION_MISMATCH", "/analysis/versions/template",
+                     f"this assembler produces {TEMPLATE_VERSION}")
+    missing = set(free_feature_ids()) - set(result.get("measurements", {}))
+    if missing:
+        return _fail("INCOMPLETE_RESULT", "/measurements",
+                     f"{len(missing)} Free aggregates absent, e.g. {sorted(missing)[0]}")
     kept = None
     if evidence is not None:
         if evidence.schema_name != "EvidenceBundle":
@@ -223,4 +234,10 @@ def check_revision(previous: ValidatedDocument, candidate: ValidatedDocument) ->
               for field in IMMUTABLE_ACROSS_REVISIONS if old[field] != new[field]]
     if new["revision"] != old["revision"] + 1:
         issues.append(ContractIssue("REVISION_NOT_SEQUENTIAL", "/revision", "revisions increase by one"))
+    if _parse_time(new["created_at"]) < _parse_time(old["created_at"]):
+        issues.append(ContractIssue("REVISION_BEFORE_PREVIOUS", "/created_at", "a revision cannot predate its predecessor"))
     return tuple(issues)
+
+
+def _parse_time(value: str) -> datetime:
+    return datetime.fromisoformat(value.replace("Z", "+00:00"))

@@ -12,7 +12,7 @@ from typing import Mapping, Protocol
 
 from princess_contracts import ValidatedDocument
 
-from ..domain.reports import PremiumAccess, ProjectionRequest, check_revision, project_report
+from ..domain.reports import PremiumAuthorization, ProjectionRequest, check_revision, project_report
 from ..ports.base import Clock, Conflict, InvalidInput, NotAuthorized, NotFound, PermanentFailure
 
 
@@ -66,7 +66,7 @@ class ReportReader:
         self._clock = clock
 
     def view(self, *, report_id: str, principal_id: str | None, projection: str,
-             premium_access: PremiumAccess = PremiumAccess.NONE, share: ShareAccess | None = None,
+             premium: PremiumAuthorization | None = None, share: ShareAccess | None = None,
              source_image_available: bool = True, include_source_image: bool = True,
              actions: Mapping[str, str | None] | None = None) -> ValidatedDocument:
         entry = self._store.latest(report_id)
@@ -82,7 +82,7 @@ class ReportReader:
         else:
             scope = frozenset()
         result = project_report(report, ProjectionRequest(
-            projection=projection, generated_at=self._clock.now(), premium_access=premium_access,
+            projection=projection, generated_at=self._clock.now(), premium=premium,
             source_image_available=source_image_available, include_source_image=include_source_image,
             share_scope=scope, actions=dict(actions or {})))
         if result.value is None:

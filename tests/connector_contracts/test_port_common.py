@@ -170,7 +170,7 @@ def test_port_error_codes_must_be_safe():
 @pytest.mark.parametrize("detail", ["https://x.example/a?token=abc", "'secret body'", "x" * 200, "a\nb"])
 def test_port_error_details_are_redacted_unless_identifier_like(detail):
     error = InvalidInput("bad_input", detail=detail)
-    assert error.detail == "[redacted]" and detail not in str(error)
+    assert error.detail == "[redacted]" and str(error) == "bad_input" and detail not in repr(error)
     assert InvalidInput("bad_input", detail="max_bytes").detail == "max_bytes"
     with pytest.raises(InvalidInput) as err:
         Environment.parse("prod'; DROP TABLE")

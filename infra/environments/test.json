@@ -36,6 +36,14 @@
         "telemetry"
       ]
     },
+    "web_server": {
+      "secrets": [
+        "PRINCESS_SESSION_SECRET"
+      ],
+      "egress": [
+        "api"
+      ]
+    },
     "analysis_worker": {
       "secrets": [
         "PRINCESS_DATABASE_URL",
@@ -64,6 +72,16 @@
         "object_store"
       ]
     },
+    "reference_worker": {
+      "secrets": [
+        "PRINCESS_DATABASE_URL",
+        "PRINCESS_STORAGE_READ_KEY"
+      ],
+      "egress": [
+        "database",
+        "object_store"
+      ]
+    },
     "notification_worker": {
       "secrets": [
         "PRINCESS_DATABASE_URL"
@@ -78,14 +96,6 @@
       ],
       "egress": [
         "database"
-      ]
-    },
-    "web_server": {
-      "secrets": [
-        "PRINCESS_SESSION_SECRET"
-      ],
-      "egress": [
-        "api"
       ]
     },
     "web_public": {

@@ -146,3 +146,11 @@ def test_report_fixture_parity_between_store_and_api(client, app_db):
     assert served["source_digest"] == report.data["document_digest"]
     assert json.dumps(sorted(f["fact_id"] for f in served["facts"])) == json.dumps(
         sorted(f["fact_id"] for f in report.data["facts"]))
+
+
+def test_every_api_route_is_a_registered_telemetry_template(client):
+    from princess_app.ports.telemetry import ROUTE_TEMPLATES
+
+    api, _ = client
+    paths = {route.path for route in api.app.routes if route.path.startswith("/v1/")}
+    assert paths and paths <= ROUTE_TEMPLATES

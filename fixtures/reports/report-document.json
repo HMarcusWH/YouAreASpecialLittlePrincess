@@ -6,7 +6,7 @@
     "input_asset_id": "asset_fixture_1",
     "input_sha256": "46abc778393d1570137b4c395912856da5c02233643e51b6d13facf18151c99a",
     "owner_id": "owner_fixture_1",
-    "processed_sha256": "46abc778393d1570137b4c395912856da5c02233643e51b6d13facf18151c99a",
+    "processed_sha256": "aecd336d36edf312cfdd887f8d0d133f0ee200a25346a82044d47e46e3cdb450",
     "run_id": "run_fixture_1",
     "versions": {
       "analysis_config": "494ff873c4bf7a309da8a78664999b2714980d90728c9c2c49b9012ae5494e68",
@@ -18,12 +18,12 @@
       "method_manifest": "a4606d9925680ff135c6dd2c332bec51e3a2cf878383275a83fa8ecb0d20c835",
       "normalization": null,
       "quality_policy": "quality-policy/1",
-      "template": null
+      "template": "individual-report/1"
     }
   },
   "contract_version": "1.0.0",
   "created_at": "2026-09-27T12:00:00Z",
-  "document_digest": "47fdde20ee5522052201e69fb7785e2eece98896528d8450b7f848ccbfa947b9",
+  "document_digest": "8d74090a6aba18249b1defd5f41adff4f03c5dfb6bc3081b338620731a3312b8",
   "evidence_bundle_id": "evidence_fixture_1",
   "facts": [
     {

@@ -103,7 +103,7 @@ class FakeAdapter:
 
     def _run(self, operation: str, ctx: CallContext, effect: Callable[[], T]) -> T:
         if ctx.environment is not self.environment:
-            raise InvalidInput("environment_mismatch", detail=f"{ctx.environment.value}!={self.environment.value}")
+            raise InvalidInput("environment_mismatch", detail=f"{ctx.environment.value}:{self.environment.value}")
         ctx.check_deadline(self.clock)
         self.calls.append(operation)
         fault = self.faults.take(operation)

@@ -32,6 +32,7 @@ ANALYSIS_FRAME = 'frame_analysis'
 MAX_REGIONS = 4096
 MAX_OBSERVATIONS = 20000
 BASELINE_POINTS_PER_LINE = 12
+OMITTED_FAMILY_PREFIX = 'evidence_omitted:'
 PAGE_WARNING = 'page_0 is the analysis canvas, not a detected paper edge; margins are canvas-relative.'
 
 
@@ -87,7 +88,11 @@ def _baseline_point_regions(ctx, fits):
 
 
 def collect_evidence(ctx, result):
-    """Build the evidence payload for one analysis from its shared context."""
+    """Build the evidence payload for one analysis from its shared context.
+
+    ``input_pixels_sha256`` binds the payload to the same analysed pixels as
+    the result metadata.
+    """
     warnings = [PAGE_WARNING]
     fits = baseline_fits(ctx)
     groups = [
@@ -140,12 +145,24 @@ def collect_evidence(ctx, result):
         add(_observation(f'obs:x_height:component_{i}', 'X_HEIGHT_PX', 'component_height_mode_v1',
                          [f'component_{i}'], ctx.components[i].height))
     if len(observations) > MAX_OBSERVATIONS:
-        warnings.append(f'observation budget reached; omitted {len(observations) - MAX_OBSERVATIONS}')
-        observations = observations[:MAX_OBSERVATIONS]
+        # Never publish a partial family: drop whole feature families (largest
+        # first) so every family that remains reproduces its aggregate.
+        sizes = {}
+        for obs in observations:
+            sizes[obs['feature_id']] = sizes.get(obs['feature_id'], 0) + 1
+        dropped, total = set(), len(observations)
+        for feature_id, count in sorted(sizes.items(), key=lambda kv: (-kv[1], kv[0])):
+            if total <= MAX_OBSERVATIONS:
+                break
+            dropped.add(feature_id)
+            total -= count
+        observations = [o for o in observations if o['feature_id'] not in dropped]
+        warnings.extend(f'{OMITTED_FAMILY_PREFIX}{feature_id}' for feature_id in sorted(dropped))
     if not observations:
         warnings.append('No repeated observations were available for this image.')
     return {
         'evidence_version': EVIDENCE_VERSION,
+        'input_pixels_sha256': result.metadata['input_pixels_sha256'],
         'frames': _frames(ctx),
         'regions': regions,
         'observations': observations,

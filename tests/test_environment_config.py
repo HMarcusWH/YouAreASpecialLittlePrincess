@@ -86,7 +86,8 @@ def test_egress_matrix_rejects_forbidden_destinations(component, destination):
     (lambda d: d["database"].update(name="prod_db"), "invalid_database_name"),
     (lambda d: d["providers"].pop("ObjectStore"), "manifest_providers_incomplete"),
     (lambda d: d["kill_switches"].update(commerce="yes"), "manifest_kill_switches"),
-    (lambda d: d["components"].update(mystery={"secrets": [], "egress": []}), "unknown_component"),
+    (lambda d: d["components"].update(mystery={"secrets": [], "egress": []}), "manifest_components_incomplete"),
+    (lambda d: d["components"].pop("reference_worker"), "manifest_components_incomplete"),
     (lambda d: d["components"]["api"]["secrets"].append("PRINCESS_UNREVIEWED"), "unknown_secret_name"),
     (lambda d: d.update(environment="staging"), "manifest_environment_mismatch"),
 ])
@@ -118,6 +119,27 @@ def test_local_runtime_config_loads_and_hides_secret_values():
 ])
 def test_runtime_rejects_unknown_or_incomplete_composition(env, expected):
     assert code(lambda: runtime(env)) == expected
+
+
+def test_ungranted_secrets_in_the_process_environment_are_refused():
+    env = {"PRINCESS_ENV": "local", "PRINCESS_COMPONENT": "analysis_worker",
+           "PRINCESS_DATABASE_URL": LOCAL_SECRETS["PRINCESS_DATABASE_URL"],
+           "PRINCESS_STORAGE_READ_KEY": "local-read-key-0123456789", "PRINCESS_MODEL_API_KEY": "anything"}
+    assert code(lambda: runtime(env)) == "ungranted_secret_present"
+
+
+def test_database_url_must_be_postgresql():
+    env = {"PRINCESS_ENV": "local", "PRINCESS_COMPONENT": "api", **LOCAL_SECRETS,
+           "PRINCESS_DATABASE_URL": "sqlite:///princess_local"}
+    assert code(lambda: runtime(env)) == "database_url_not_postgresql"
+
+
+def test_loaded_configuration_is_read_only():
+    config = runtime({"PRINCESS_ENV": "local", "PRINCESS_COMPONENT": "api", **LOCAL_SECRETS})
+    with pytest.raises(TypeError):
+        config.manifest.kill_switches["commerce"] = True  # type: ignore[index]
+    with pytest.raises(TypeError):
+        config.manifest.providers["PaymentProvider"] = "live"  # type: ignore[index]
 
 
 def test_preview_cannot_point_at_the_production_database():

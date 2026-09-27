@@ -23,6 +23,7 @@ from princess_app.domain.analysis import analysis_reference  # noqa: E402
 from princess_app.domain.evidence import build_evidence_bundle, map_point, prepend_source_frame  # noqa: E402
 from princess_app.domain.reports import (  # noqa: E402
     PremiumAccess,
+    PremiumAuthorization,
     ProjectionRequest,
     assemble_report,
     project_report,
@@ -56,7 +57,8 @@ def capture() -> None:
     digest = hashlib.sha256(image.tobytes()).hexdigest()
     reference = analysis_reference(
         analysis_id="analysis_fixture_1", run_id="run_fixture_1", owner_id="owner_fixture_1",
-        input_asset_id="asset_fixture_1", input_sha256=digest, processed_sha256=digest, created_at=CREATED,
+        input_asset_id="asset_fixture_1", input_sha256=digest,
+        processed_sha256=result.metadata["input_pixels_sha256"], created_at=CREATED,
         engine_version=__version__, analysis_config_sha256=hashlib.sha256(b"max_dimension=700").hexdigest())
     SOURCE.mkdir(parents=True, exist_ok=True)
     (SOURCE / "engine-result.synthetic.json").write_text(dump(result.to_dict()), encoding="utf-8")
@@ -83,13 +85,14 @@ def build() -> dict[str, str]:
                                   created_at=CREATED, locale="sv-SE", evidence=evidence), "report")
     premium = need(revise_report(report, created_at=CREATED.replace(hour=13), premium_overlay_id="overlay_fixture_1"),
                    "premium revision")
+    UNLOCKED = PremiumAuthorization("report_fixture_1", "overlay_fixture_1", PremiumAccess.UNLOCKED)
     views = {
         "view.free.json": (report, ProjectionRequest("FREE", CREATED, actions=OWNER_ACTIONS)),
         "view.owner-premium.json": (premium, ProjectionRequest(
-            "OWNER", CREATED, premium_access=PremiumAccess.UNLOCKED,
+            "OWNER", CREATED, premium=UNLOCKED,
             actions={**OWNER_ACTIONS, "PURCHASE": "already_unlocked"})),
         "view.share.json": (premium, ProjectionRequest(
-            "SHARE", CREATED, premium_access=PremiumAccess.UNLOCKED,
+            "SHARE", CREATED, premium=UNLOCKED,
             share_scope=frozenset({"section.slant", "section.baseline"}))),
         "view.export-no-image.json": (report, ProjectionRequest("EXPORT", CREATED, include_source_image=False)),
         "view.owner-image-revoked.json": (report, ProjectionRequest(

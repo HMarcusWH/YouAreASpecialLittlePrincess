@@ -101,7 +101,7 @@ State: `TO_IMPLEMENT`. T01 must add reproducible Python/TypeScript generation, J
 <a id="validation-backend"></a>
 ### backend
 
-State: `EXISTS_IN_THIS_PR`. Owning task adds real PostgreSQL role/migration/transaction integration tests and application API/port tests.
+State: `EXISTS_IN_THIS_PR`. PostgreSQL migration, non-owner RLS role, constraint, identity, permission-fencing, OIDC and API tests (T02); later tasks extend it.
 
 ```bash
 python tools/check_environments.py
@@ -122,16 +122,21 @@ python -m pytest -q tests/connector_contracts tests/test_architecture_boundaries
 
 State: `TO_IMPLEMENT`. Protected rights-cleared writer-disjoint evaluation; record actual artifacts, tolerances and outcomes, not synthetic proxy approvals.
 
-<a id="validation-web_render"></a>
-### web_render
+<a id="validation-js_packages"></a>
+### js_packages
 
-State: `EXISTS_IN_THIS_PR`. Owning task adds generated-client/type tests, browser journeys, accessibility and report/PDF/card fact parity.
+State: `EXISTS_IN_THIS_PR`. Shared TypeScript packages only (generated contracts type-check, report-core formatting/chart/frame parity against shared fixtures). Not browser, accessibility or PDF coverage.
 
 ```bash
 pnpm install --frozen-lockfile
 pnpm typecheck
 pnpm test
 ```
+
+<a id="validation-web_render"></a>
+### web_render
+
+State: `TO_IMPLEMENT`. Owning task adds generated-client/type tests, browser journeys, accessibility and report/PDF/card fact parity.
 
 <a id="validation-native"></a>
 ### native
@@ -2118,7 +2123,7 @@ Documented setup/teardown, exact dependency/build matrix and isolated environmen
 
 ### Validation and human gates
 
-Validation profiles: [core](#validation-core), [docs](#validation-docs), [contracts](#validation-contracts), [backend](#validation-backend), [web_render](#validation-web_render), [native](#validation-native). Planned suites must be implemented and their actual command documented by the owning task; they are not passing tests today.
+Validation profiles: [core](#validation-core), [docs](#validation-docs), [contracts](#validation-contracts), [backend](#validation-backend), [web_render](#validation-web_render), [native](#validation-native), [js_packages](#validation-js_packages). Planned suites must be implemented and their actual command documented by the owning task; they are not passing tests today.
 
 - `processor_retention_contracts`: Approved providers, regions, purposes, retention/deletion and support obligations.
 - `native_signing_accounts`: Owner-authorized developer accounts, identifiers, signing custody and protected release credentials.

@@ -30,6 +30,9 @@ def analysis_reference(*, analysis_id: str, run_id: str, owner_id: str, input_as
                        analysis_config_sha256: str, quality_policy: str = QUALITY_POLICY_VERSION,
                        normalization: str | None = None, feature_set: str | None = None,
                        benchmark_release: str | None = None, template: str | None = None) -> dict[str, Any]:
+    from .reports.template import TEMPLATE_VERSION  # local import: reports imports this module
+
+    template = TEMPLATE_VERSION if template is None else template
     return {
         "contract_version": g.CONTRACT_VERSION,
         "analysis_id": analysis_id,

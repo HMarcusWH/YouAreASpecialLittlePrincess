@@ -15,7 +15,7 @@ from enum import Enum
 from typing import Callable, Iterator, Mapping, Protocol
 
 _SAFE_CODE = re.compile(r"^[a-z0-9_.:-]{1,64}$")
-_SAFE_DETAIL = re.compile(r"^[A-Za-z0-9_.:=!,/ -]{0,120}$")
+_SAFE_DETAIL = re.compile(r"^[A-Za-z0-9_.:-]{1,64}$")
 REDACTED_DETAIL = "[redacted]"
 _OPAQUE_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$")
 
@@ -23,10 +23,10 @@ _OPAQUE_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$")
 class PortError(Exception):
     """Base class for typed connector failures.
 
-    ``code`` is a short, safe, low-cardinality reason. ``detail`` is kept only
-    when it is a short identifier-like string; anything else (quotes, URLs with
-    queries, payload fragments, long text) is replaced by ``[redacted]`` so an
-    exception message cannot carry credentials or user content.
+    ``code`` is a short, safe, low-cardinality reason and is the *only* text in
+    ``str(error)``/``repr(error)``, so ordinary exception logging cannot leak
+    anything else. ``detail`` is a structured debugging attribute limited to a
+    short identifier token; anything else becomes ``[redacted]``.
     """
 
     retryable = False
@@ -38,7 +38,7 @@ class PortError(Exception):
             detail = REDACTED_DETAIL
         self.code = code
         self.detail = detail
-        super().__init__(code if detail is None else f"{code}: {detail}")
+        super().__init__(code)
 
 
 class InvalidInput(PortError):
@@ -137,8 +137,7 @@ ALLOWED_MODES: Mapping[Environment, frozenset[ProviderMode]] = {
 
 def check_mode_allowed(environment: Environment, mode: ProviderMode) -> None:
     if mode not in ALLOWED_MODES[environment]:
-        raise InvalidInput("mode_not_allowed_in_environment",
-                           detail=f"{mode.value} in {environment.value}")
+        raise InvalidInput("mode_not_allowed_in_environment", detail=f"{mode.value}:{environment.value}")
 
 
 def utc_now() -> datetime:
@@ -237,5 +236,5 @@ def provider_errors(mapper: ErrorMapper | None = None) -> Iterator[None]:
     except Exception as exc:  # noqa: BLE001 - boundary translation is the purpose
         mapped = mapper(exc) if mapper is not None else None
         if mapped is None:
-            mapped = PermanentFailure("provider_error", detail=type(exc).__name__)
+            mapped = PermanentFailure("provider_error", detail=type(exc).__name__[:64])
         raise mapped from None

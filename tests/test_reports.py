@@ -15,6 +15,7 @@ from princess_app.domain.analysis import analysis_reference
 from princess_app.domain.evidence import build_evidence_bundle
 from princess_app.domain.reports import (
     PremiumAccess,
+    PremiumAuthorization,
     ProjectionRequest,
     assemble_report,
     check_revision,
@@ -71,7 +72,8 @@ def test_report_binds_all_facts_and_is_deterministic():
 def test_missing_stays_missing_and_values_are_never_coerced():
     blank = GraphologyEngine().analyze(np.full((80, 120), 255, np.uint8)).to_dict()
     ref = analysis_reference(analysis_id="a2", run_id="r2", owner_id="owner_fixture_1", input_asset_id="asset_2",
-                             input_sha256="0" * 64, processed_sha256="0" * 64, created_at=T0,
+                             input_sha256="0" * 64, processed_sha256=blank["metadata"]["input_pixels_sha256"],
+                             created_at=T0,
                              engine_version="0.1.0", analysis_config_sha256="1" * 64)
     data = report(result=blank, analysis=ref, evidence=None).to_dict()
     missing = [f for f in data["facts"] if f["availability"] == "MISSING"]
@@ -94,23 +96,29 @@ def test_no_reference_and_no_traditional_is_honest():
 
 def test_free_projection_never_carries_premium_content():
     premium = revise_report(report(), created_at=T0 + timedelta(hours=1), premium_overlay_id="overlay_9").value
-    free = project_report(premium, ProjectionRequest("FREE", T0, premium_access=PremiumAccess.UNLOCKED,
-                                                     actions=ACTIONS))
+    unlocked = PremiumAuthorization("report_1", "overlay_9", PremiumAccess.UNLOCKED)
+    free = project_report(premium, ProjectionRequest("FREE", T0, premium=unlocked, actions=ACTIONS))
     assert free.ok
     text = json.dumps(free.value.to_dict())
     assert "overlay_9" not in text and '"AI"' not in text
-    owner = project_report(premium, ProjectionRequest("OWNER", T0, premium_access=PremiumAccess.UNLOCKED)).value
+    owner = project_report(premium, ProjectionRequest("OWNER", T0, premium=unlocked)).value
     assert any(s["premium_section_id"] == "premium.overlay_9" for s in owner.data["sections"])
 
 
-@pytest.mark.parametrize("access", [PremiumAccess.NONE, PremiumAccess.REVOKED])
-def test_premium_requires_current_unlock(access):
+@pytest.mark.parametrize("authorization", [
+    None,
+    PremiumAuthorization("report_1", "overlay_9", PremiumAccess.REVOKED),
+    PremiumAuthorization("report_1", "overlay_9", PremiumAccess.NONE),
+    PremiumAuthorization("report_other", "overlay_9", PremiumAccess.UNLOCKED),  # another report
+    PremiumAuthorization("report_1", "overlay_old", PremiumAccess.UNLOCKED),    # another overlay
+])
+def test_premium_requires_current_unlock_bound_to_this_snapshot(authorization):
     premium = revise_report(report(), created_at=T0, premium_overlay_id="overlay_9").value
     assert "PREMIUM_NOT_AUTHORIZED" in codes(project_report(premium, ProjectionRequest("PREMIUM", T0,
-                                                                                       premium_access=access)))
-    owner = project_report(premium, ProjectionRequest("OWNER", T0, premium_access=access)).value
+                                                                                       premium=authorization)))
+    owner = project_report(premium, ProjectionRequest("OWNER", T0, premium=authorization)).value
     assert all(s["premium_section_id"] is None for s in owner.data["sections"])
-    if access is PremiumAccess.REVOKED:
+    if authorization is not None and authorization.state is PremiumAccess.REVOKED:
         assert any(n["localization_key"] == "notice.premium_revoked" for n in owner.data["notices"])
 
 
@@ -226,3 +234,42 @@ def test_shared_fixtures_are_current():
     outputs = fixtures.build()
     stale = [n for n, text in outputs.items() if (fixtures.FIXTURES / n).read_text(encoding="utf-8") != text]
     assert stale == []
+
+
+def test_result_must_come_from_this_analysis_and_be_complete():
+    other = copy.deepcopy(REFERENCE)
+    other["processed_sha256"] = "e" * 64
+    assert codes(assemble_report(report_id="r", analysis=other, result=RESULT, created_at=T0,
+                                 locale="en")) == {"RESULT_ANALYSIS_MISMATCH"}
+    partial = copy.deepcopy(RESULT)
+    del partial["measurements"]["SLANT_ANGLE_MEAN"]
+    assert codes(assemble_report(report_id="r", analysis=REFERENCE, result=partial, created_at=T0,
+                                 locale="en")) == {"INCOMPLETE_RESULT"}
+    untemplated = copy.deepcopy(REFERENCE)
+    untemplated["versions"]["template"] = None
+    assert codes(assemble_report(report_id="r", analysis=untemplated, result=RESULT, created_at=T0,
+                                 locale="en")) == {"TEMPLATE_VERSION_MISMATCH"}
+
+
+def test_persistence_guard_rejects_reordered_revision_times():
+    first = report()
+    earlier = copy.deepcopy(revise_report(first, created_at=T0, premium_overlay_id="o").value.to_dict())
+    earlier["created_at"] = "2026-09-27T11:00:00Z"
+    from princess_contracts import canonical_digest
+    earlier["document_digest"] = None
+    earlier["document_digest"] = canonical_digest(earlier)
+    candidate = compile_document("ReportDocument", earlier).value
+    assert "REVISION_BEFORE_PREVIOUS" in {i.code for i in check_revision(first, candidate)}
+
+
+def test_reports_with_reference_claims_fail_closed_until_the_view_contract_carries_them():
+    doc = report().to_dict()
+    doc["reference_claims"] = [{"feature_id": "SLANT_ANGLE_MEAN", "cohort_id": "c1", "benchmark_release_id": "b1",
+                                "writer_n": 100, "percentile": 50.0, "uncertainty": None, "methodology_key": "m"}]
+    doc["analysis"]["versions"]["benchmark_release"] = "b1"
+    from princess_contracts import canonical_digest
+    doc["document_digest"] = None
+    doc["document_digest"] = canonical_digest(doc)
+    claimed = compile_document("ReportDocument", doc)
+    assert claimed.ok, claimed.issues[:3]
+    assert codes(project_report(claimed.value, ProjectionRequest("OWNER", T0))) == {"REFERENCE_PROJECTION_UNSUPPORTED"}

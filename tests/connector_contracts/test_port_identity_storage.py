@@ -173,3 +173,32 @@ def test_download_ticket_is_redacted_and_bounded():
     assert "sig" not in repr(download)
     with pytest.raises(InvalidInput):
         s.issue_download_ticket(stored, 86400, ctx(clock))
+
+
+def test_expired_slot_cannot_be_promoted_but_a_promoted_retry_converges():
+    clock, s = store()
+    ticket = s.issue_upload_ticket("asset_1", "image/png", POLICY, ctx(clock))
+    s.client_put(ticket, b"bytes")
+    clock.advance(301)
+    with pytest.raises(Conflict):
+        s.promote_verified_input(ticket.upload_id, sha(b"bytes"), ctx(clock))
+    clock2, s2 = store()
+    t2 = s2.issue_upload_ticket("asset_2", "image/png", POLICY, ctx(clock2))
+    s2.client_put(t2, b"bytes")
+    stored = s2.promote_verified_input(t2.upload_id, sha(b"bytes"), ctx(clock2))
+    clock2.advance(301)
+    assert s2.promote_verified_input(t2.upload_id, sha(b"bytes"), ctx(clock2)) == stored
+
+
+def test_deletion_revokes_open_upload_slots():
+    clock, s = store()
+    ticket = s.issue_upload_ticket("asset_1", "image/png", POLICY, ctx(clock))
+    s.client_put(ticket, b"bytes")
+    s.delete_asset_versions("asset_1", ctx(clock))
+    with pytest.raises(NotFound):
+        s.client_put(ticket, b"again")
+    with pytest.raises(NotFound):
+        s.promote_verified_input(ticket.upload_id, sha(b"again"), ctx(clock))
+    assert s.verify_deletion("asset_1", ctx(clock)) is True
+    open_ticket = s.issue_upload_ticket("asset_2", "image/png", POLICY, ctx(clock))
+    assert open_ticket and s.verify_deletion("asset_2", ctx(clock)) is False  # an open slot is not deleted

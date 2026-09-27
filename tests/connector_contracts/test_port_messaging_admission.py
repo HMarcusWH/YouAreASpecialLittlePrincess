@@ -123,17 +123,18 @@ def test_analytics_consent_disabled_and_dedupe():
 
 def test_telemetry_redacts_and_drops_unknown_attributes():
     record = telemetry.TelemetryRecord(telemetry.RecordKind.LOG, "upload.completed", {
-        "route": "https://api.example/v1/reports?page=2", "error_code": "Bearer abc.def",
+        "route": "/v1/reports/{report_id}", "error_code": "Bearer abc.def",
         "operation": "https://store.example/put/obj?X-Amz-Signature=abc",
         "user_text": "dear diary", "correlation_id": "corr-1", "latency_ms": 12,
     })
-    assert record.attributes == {"route": "https://api.example/v1/reports", "error_code": telemetry.REDACTED,
+    assert record.attributes == {"route": "/v1/reports/{report_id}", "error_code": telemetry.REDACTED,
                                  "operation": telemetry.REDACTED, "correlation_id": "corr-1", "latency_ms": 12}
 
 
 @pytest.mark.parametrize("key,value", [
     ("error_code", "dear diary, today I wrote"), ("operation", "user typed <b>this</b>"),
     ("route", "/reports/../../etc?x=1 plus text"), ("correlation_id", "asset handwriting text"),
+    ("route", "/v1/reports/report_secret"), ("route", "https://api.example/v1/reports?page=2"),
 ])
 def test_telemetry_redacts_free_text_in_allowlisted_keys(key, value):
     record = telemetry.TelemetryRecord(telemetry.RecordKind.LOG, "x.y", {key: value})
@@ -157,3 +158,9 @@ def test_buffered_telemetry_survives_outage_and_bounds_memory():
     assert buffered.flush() == 2 and buffered.flush() == 1 and buffered.flush() == 0
     buffered.record(telemetry.RecordKind.METRIC, "Bad Name!", {})
     assert buffered.dropped == 3
+
+
+@pytest.mark.parametrize("granted,ref", [("false", None), (1, None), (True, "free text with spaces")])
+def test_analytics_consent_requires_exact_boolean_and_opaque_ref(granted, ref):
+    with pytest.raises(InvalidInput):
+        analytics.AnalyticsConsent(granted, ref)

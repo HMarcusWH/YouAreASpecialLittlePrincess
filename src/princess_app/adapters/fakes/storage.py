@@ -24,6 +24,7 @@ class _Upload:
     data: bytes | None = None
     writes: int = 0
     promoted: port.StoredObject | None = None
+    revoked: bool = False
 
 
 @dataclass
@@ -55,7 +56,7 @@ class FakeObjectStore(FakeAdapter):
     def client_put(self, ticket: port.UploadTicket, data: bytes, *, media_type: str | None = None,
                    truncate_to: int | None = None) -> None:
         upload = self._uploads.get(ticket.upload_id)
-        if upload is None:
+        if upload is None or upload.revoked:
             raise NotFound("upload_not_found")
         if self.clock.now() >= upload.expires_at:
             raise Unauthenticated("upload_ticket_expired")
@@ -104,12 +105,14 @@ class FakeObjectStore(FakeAdapter):
 
         def effect() -> port.StoredObject:
             upload = self._uploads.get(upload_id)
-            if upload is None or upload.data is None:
+            if upload is None or upload.revoked or upload.data is None:
                 raise NotFound("upload_missing")
             if upload.promoted is not None:
                 if upload.promoted.sha256 == expected_sha256:
                     return upload.promoted  # duplicate completion converges
                 raise Conflict("already_promoted_with_different_bytes")
+            if self.clock.now() >= upload.expires_at:
+                raise Conflict("upload_expired")
             data = bytes(upload.data)  # copy exactly the bytes we hash
             actual = hashlib.sha256(data).hexdigest()
             if actual != expected_sha256:
@@ -165,6 +168,7 @@ class FakeObjectStore(FakeAdapter):
             for upload in self._uploads.values():
                 if upload.asset_id == asset_id:
                     upload.data = None
+                    upload.revoked = True  # the bearer ticket can never recreate the asset
             return port.DeletionReceipt(asset_id, count, complete=self.delete_delay_s == 0)
 
         return self._run("delete_asset_versions", ctx, effect)
@@ -173,7 +177,10 @@ class FakeObjectStore(FakeAdapter):
         def effect() -> bool:
             asset = self._assets.get(asset_id)
             now = self.clock.now()
-            return asset is None or all(v.deleted_at is not None and v.deleted_at <= now for v in asset.versions)
+            open_slots = any(u.asset_id == asset_id and not u.revoked and now < u.expires_at
+                             for u in self._uploads.values())
+            gone = asset is None or all(v.deleted_at is not None and v.deleted_at <= now for v in asset.versions)
+            return gone and not open_slots
 
         return self._run("verify_deletion", ctx, effect)
 

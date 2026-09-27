@@ -24,6 +24,7 @@ import json
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
+from types import MappingProxyType
 from typing import Any, Mapping
 from urllib.parse import urlsplit
 
@@ -146,8 +147,8 @@ def parse_manifest(data: Any, *, expected: Environment | None = None) -> Environ
         raise _fail("manifest_kill_switches")
 
     components = data["components"]
-    if not isinstance(components, dict) or not components:
-        raise _fail("manifest_components")
+    if not isinstance(components, dict) or set(components) != set(COMPONENT_SECRET_CATEGORIES):
+        raise _fail("manifest_components_incomplete")
     policies = {}
     for name, policy in components.items():
         if name not in COMPONENT_SECRET_CATEGORIES:
@@ -169,7 +170,9 @@ def parse_manifest(data: Any, *, expected: Environment | None = None) -> Environ
         if len(set(secrets)) != len(secrets) or len(set(egress)) != len(egress):
             raise _fail("duplicate_component_entry", name)
         policies[name] = ComponentPolicy(frozenset(secrets), frozenset(egress))
-    return EnvironmentManifest(environment, database["name"], modes, dict(switches), policies)
+    # Read-only views: validated composition cannot be edited after startup.
+    return EnvironmentManifest(environment, database["name"], MappingProxyType(modes),
+                               MappingProxyType(dict(switches)), MappingProxyType(policies))
 
 
 def _check_database_name(environment: Environment, name: str) -> None:
@@ -226,6 +229,10 @@ def load_runtime_config(env: Mapping[str, str], root: Path) -> RuntimeConfig:
     if component not in manifest.components:
         raise _fail("component_not_in_manifest", str(component)[:64])
     policy = manifest.components[component]
+    stray = sorted(name for name in SECRET_CATEGORIES if env.get(name) and name not in policy.secrets)
+    if stray:
+        # A known secret the component is not granted must not even be present.
+        raise _fail("ungranted_secret_present", stray[0])
     secrets: dict[str, str] = {}
     for name in sorted(policy.secrets):
         value = env.get(name)
@@ -238,7 +245,9 @@ def load_runtime_config(env: Mapping[str, str], root: Path) -> RuntimeConfig:
         secrets[name] = _Secret(value)
     for name in ("PRINCESS_DATABASE_URL", "PRINCESS_MIGRATION_DATABASE_URL"):
         if name in secrets:
-            db = urlsplit(secrets[name]).path.lstrip("/")
-            if db != manifest.database_name:
+            parts = urlsplit(secrets[name])
+            if parts.scheme not in ("postgresql", "postgresql+psycopg") or not parts.hostname:
+                raise _fail("database_url_not_postgresql", name)
+            if parts.path.lstrip("/") != manifest.database_name:
                 raise _fail("database_url_names_another_database", name)
-    return RuntimeConfig(environment, component, manifest, secrets)
+    return RuntimeConfig(environment, component, manifest, MappingProxyType(secrets))
