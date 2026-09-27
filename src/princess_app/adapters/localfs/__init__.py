@@ -174,11 +174,12 @@ class LocalObjectStore:
         expires = self._clock.now() + timedelta(seconds=expires_in_s)
         return port.DownloadTicket(f"{self._base}/v1/dev/objects/{stored.asset_id}/{stored.version_ref}", expires)
 
-    def write_derivative(self, asset_id: str, parent: port.StoredObject, data: bytes, media_type: str,
+    def write_derivative(self, asset_id: str, parent: port.StoredObject | None, data: bytes, media_type: str,
                          ctx: CallContext) -> port.StoredObject:
         self._check(ctx)
         require_opaque_id(asset_id, "asset_id")
-        self.read_object(parent, ctx)
+        if parent is not None:
+            self.read_object(parent, ctx)
         if (self.root / "objects" / asset_id).exists():
             raise Conflict("asset_exists")
         return self._put(asset_id, bytes(data), media_type)

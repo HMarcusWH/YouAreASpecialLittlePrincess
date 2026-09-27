@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Live web journey on a local PostgreSQL 16: API + analysis worker + Next.
+# Live web journey on a local PostgreSQL 16: API + analysis and export workers + Next.
 # Usage: PYTHON=.venv/bin/python PRINCESS_CHROMIUM=/path/to/chrome tools/run_web_e2e.sh
 # Needs the princess_admin role from infra/README.md. It runs the "test" environment
 # and therefore recreates the princess_test database (the tests_app database).
@@ -8,7 +8,7 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 PY="${PYTHON:-python3}"
 ADMIN="postgresql://princess_admin:local-only-admin@127.0.0.1:5432"
 WORK="$(mktemp -d)"
-cleanup() { kill "${API_PID:-}" "${WORKER_PID:-}" 2>/dev/null || true; rm -rf "$WORK"; }
+cleanup() { kill "${API_PID:-}" "${WORKER_PID:-}" "${EXPORT_PID:-}" 2>/dev/null || true; rm -rf "$WORK"; }
 trap cleanup EXIT
 
 psql "$ADMIN/postgres" -qc "DROP DATABASE IF EXISTS princess_test WITH (FORCE)" -c "CREATE DATABASE princess_test"
@@ -41,6 +41,11 @@ PRINCESS_COMPONENT=analysis_worker \
   PRINCESS_DATABASE_URL="postgresql://princess_e2e_worker:e2e-only-worker@127.0.0.1:5432/princess_test" \
   PRINCESS_STORAGE_READ_KEY=local-storage-key-e2e "$PY" "$ROOT/apps/workers/analysis/run_worker.py" &
 WORKER_PID=$!
+(cd "$ROOT" && pnpm --filter @princess/render run build >/dev/null)
+PRINCESS_COMPONENT=export_worker \
+  PRINCESS_DATABASE_URL="postgresql://princess_e2e_worker:e2e-only-worker@127.0.0.1:5432/princess_test" \
+  PRINCESS_STORAGE_READ_KEY=local-storage-key-e2e "$PY" "$ROOT/apps/workers/export/run_worker.py" &
+EXPORT_PID=$!
 
 cd "$ROOT/apps/web"
 PRINCESS_E2E_API=http://127.0.0.1:8000 PRINCESS_E2E_SAMPLE="$WORK/sample.png" PRINCESS_ENVIRONMENT=test \

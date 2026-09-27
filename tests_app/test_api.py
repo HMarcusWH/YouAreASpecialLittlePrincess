@@ -223,6 +223,14 @@ def test_composed_local_stack_upload_to_report(app_url, worker_db, tmp_path, mon
     report = api.get(f"/v1/reports/{status['report_id']}?projection=FREE", headers=auth)
     assert report.status_code == 200 and len(report.json()["facts"]) == 64
     assert api.get(f"/v1/reports/{status['report_id']}/premium", headers=auth).status_code == 403  # nothing bought
+    export = api.post("/v1/report-exports", json={"report_id": status["report_id"], "layout": "A4"}, headers=auth)
+    assert export.status_code == 202 and export.json()["state"] == "QUEUED"
+    assert export.json()["downloaded_copies"] == "downloaded_copies_cannot_be_recalled"
+    export_id = export.json()["export_id"]
+    assert api.get(f"/v1/report-exports/{export_id}", headers=auth).json()["state"] == "QUEUED"
+    assert api.get(f"/v1/report-exports/{export_id}/file", headers=auth).status_code == 409  # not rendered yet
+    other = {"Authorization": f"Bearer {api.post('/v1/guest-sessions').json()['guest_token']}"}
+    assert api.get(f"/v1/report-exports/{export_id}", headers=other).status_code == 404
     assert api.delete(f"/v1/captures/{capture['capture_id']}", headers=auth).status_code == 202
     assert api.get(f"/v1/reports/{status['report_id']}", headers=auth).status_code == 404
 

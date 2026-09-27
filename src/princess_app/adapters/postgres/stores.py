@@ -264,6 +264,16 @@ class PostgresAnalysisStore:
         return row[0]
 
 
+def queue_asset_erasure(conn: Connection, owner_id: str, asset_id: str, at: datetime) -> None:
+    """Queue verified erasure of one stored asset in the caller's transaction
+    (``asset.erasure_requested``, consumed by the erasure worker)."""
+    conn.execute(text("INSERT INTO app.outbox_event (event_id, topic, owner_id, aggregate_ref, payload, dedupe_key, "
+                      "created_at) VALUES (:e, 'asset.erasure_requested', :o, :a, CAST(:p AS jsonb), :d, :t) "
+                      "ON CONFLICT (dedupe_key) DO NOTHING"),
+                 {"e": f"evt.asset_erasure.{asset_id}", "o": owner_id, "a": asset_id, "t": at,
+                  "p": json.dumps({"asset_id": asset_id}), "d": f"asset-erasure:{asset_id}"})
+
+
 def lock_live_owner(conn: Connection, owner_id: str) -> None:
     """Deletion fence for owner writes: hold the principal row FOR SHARE so a
     concurrent account deletion waits for this transaction, and refuse once a

@@ -72,6 +72,16 @@
         "object_store"
       ]
     },
+    "export_worker": {
+      "secrets": [
+        "PRINCESS_DATABASE_URL",
+        "PRINCESS_STORAGE_READ_KEY"
+      ],
+      "egress": [
+        "database",
+        "object_store"
+      ]
+    },
     "reference_worker": {
       "secrets": [
         "PRINCESS_DATABASE_URL",

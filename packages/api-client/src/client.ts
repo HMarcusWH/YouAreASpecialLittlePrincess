@@ -40,6 +40,29 @@ export interface Capture {
 
 export type Projection = "FREE" | "OWNER" | "EXPORT";
 
+export type ExportState = "QUEUED" | "READY" | "FAILED" | "REVOKED";
+
+export interface ExportStatus {
+  readonly export_id: string;
+  readonly report_id: string;
+  readonly revision: number;
+  readonly layout: "A4" | "LETTER" | "CARD_SQUARE" | "CARD_STORY";
+  readonly state: ExportState;
+  readonly error_code: string | null;
+}
+
+const EXPORT_STATES = new Set<string>(["QUEUED", "READY", "FAILED", "REVOKED"]);
+
+export function parseExportStatus(raw: unknown): ExportStatus {
+  const v = raw as Record<string, unknown> | null;
+  if (!v || typeof v.export_id !== "string" || typeof v.report_id !== "string" || typeof v.revision !== "number"
+      || typeof v.layout !== "string" || typeof v.state !== "string" || !EXPORT_STATES.has(v.state)
+      || (v.error_code !== null && typeof v.error_code !== "string")) {
+    throw new ApiError(502, "unreadable_export_status");
+  }
+  return v as unknown as ExportStatus;
+}
+
 const SAFE_CODE = /^[a-z0-9_.:-]{1,64}$/;
 
 export class PrincessApi {
@@ -111,6 +134,19 @@ export class PrincessApi {
   async report(reportId: string, projection: Projection = "OWNER"): Promise<ReportViewModel> {
     const path = `/v1/reports/${encodeURIComponent(reportId)}?projection=${projection}`;
     return parseReportView(await this.call("GET", path));
+  }
+
+  async requestExport(reportId: string, layout: "A4" | "LETTER" = "A4"): Promise<ExportStatus> {
+    return parseExportStatus(await this.call("POST", "/v1/report-exports", { report_id: reportId, layout }));
+  }
+
+  async exportStatus(exportId: string): Promise<ExportStatus> {
+    return parseExportStatus(await this.call("GET", `/v1/report-exports/${encodeURIComponent(exportId)}`));
+  }
+
+  /** Same-origin URL of the file; the API re-authorizes it on every request. */
+  exportFileUrl(exportId: string): string {
+    return `${this.base}/v1/report-exports/${encodeURIComponent(exportId)}/file`;
   }
 
   deleteCapture(captureId: string): Promise<unknown> {

@@ -202,3 +202,13 @@ def test_deletion_revokes_open_upload_slots():
     assert s.verify_deletion("asset_1", ctx(clock)) is True
     open_ticket = s.issue_upload_ticket("asset_2", "image/png", POLICY, ctx(clock))
     assert open_ticket and s.verify_deletion("asset_2", ctx(clock)) is False  # an open slot is not deleted
+
+
+def test_report_exports_are_stored_without_a_parent_asset():
+    clock, s = store()
+    export = s.write_derivative("export_1", None, b"%PDF-1.7", "application/pdf", ctx(clock))
+    assert export.sha256 == sha(b"%PDF-1.7") and s.read_object(export, ctx(clock)) == b"%PDF-1.7"
+    with pytest.raises(Conflict):
+        s.write_derivative("export_1", None, b"other", "application/pdf", ctx(clock))
+    s.delete_asset_versions("export_1", ctx(clock))
+    assert s.verify_deletion("export_1", ctx(clock))

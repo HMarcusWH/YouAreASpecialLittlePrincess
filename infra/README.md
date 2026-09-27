@@ -118,6 +118,16 @@ Only JPEG and PNG are accepted (≤ 20 MB, ≤ 24 MP, ≤ 12 000 px per side). H
 
 Local runs use the filesystem object store (`PRINCESS_LOCAL_STORAGE_DIR`, default `.local-storage/`), which is shared by the API and `apps/workers/analysis/run_worker.py`. Its upload URLs are HMAC-signed paths served by `PUT /v1/dev/uploads/{id}`, which exists only in local, test and preview (never staging or production). A real S3-compatible adapter waits on the ADR-004 provider decision, and composition refuses non-fake storage until it exists.
 
+## Report exports: PDF and share cards (T21)
+
+Migration `0005_report_exports` adds `report_export`. Components:
+
+- `apps/render` (the `render_worker` boundary) is Node plus offline Chromium. It gets one authorized projection on stdin and nothing else: no database, no storage key, no model key, JavaScript off, every request aborted. Documents render the `EXPORT` projection (A4 or Letter, tagged PDF). Cards render a `SHARE` projection limited to the sections the owner picked (1080×1080 or 1080×1920 PNG). Build it with `pnpm --filter @princess/render run build`.
+- `apps/workers/export/run_worker.py` (component `export_worker`: database and object store, no model key) claims export jobs. It derives the projection from the saved report and runs the renderer as a child with a scrubbed environment. It checks the output type and size, stores the bytes as an `EXPORT` asset, and publishes, fenced on the job lease, a live owner and report, and an unchanged projection.
+- `POST /v1/report-exports` (`report_id`, `layout`, and `sections` for cards; cards also need the `sharing` switch), `GET /v1/report-exports/{id}` and `GET /v1/report-exports/{id}/file`. Re-exporting never calls a model.
+
+The cache key is the digest of the authorized projection (without its generation time), the layout and the template. Anything that changes what may be shown yields a new key: an erased original, an erased Premium payload or a new revision. Retrieval re-derives the key, and a stale export is revoked and its bytes queued for erasure (`asset.erasure_requested`). Deleting a capture revokes its reports' exports, and account erasure removes them with the other assets. A file the owner already downloaded cannot be recalled; the status DTO says so. The source image is not embedded yet, so every export carries the "source image omitted" notice.
+
 ## Commerce ledger and metered Premium (T19)
 
 Migration `0003_commerce_ledger` adds the internal ledger. Every rail — web checkout, StoreKit and Play — feeds the same tables:

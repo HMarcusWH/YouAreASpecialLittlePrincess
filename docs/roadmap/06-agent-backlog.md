@@ -35,7 +35,7 @@ Use `python docs/roadmap/plan_tools.py --ready` or `--task ID`. Edit tasks.json 
 | [T18 — Deterministic pair and history comparison](#t18) | PLANNED | T08, T09 | statistics-report |
 | [T19 — Cross-platform purchase ledger entitlements and metered jobs](#t19) | IMPLEMENTED_PENDING_REVIEW | T02, T03, T09, T15, T27 | commerce |
 | [T20 — Premium and paid-pair web experience](#t20) | PLANNED | T15, T16, T17, T18, T19, T21, T24 | frontend-premium |
-| [T21 — Same-content PDF and share-card rendering](#t21) | PLANNED | T09, T10, T17 | report-frontend |
+| [T21 — Same-content PDF and share-card rendering](#t21) | IMPLEMENTED_PENDING_REVIEW | T09, T10, T17 | report-frontend |
 | [T22 — Scoped sharing and comparison invitations](#t22) | PLANNED | T17, T18, T21 | backend-frontend |
 | [T23 — Multi-platform end-to-end QA and threat model](#t23) | PLANNED | T00, T00A, T06, T08, T14, T18, T20, T21, T22, T24, T30, T31 | independent-review |
 | [T24 — Deployment recovery support and notifications](#t24) | PLANNED | T02, T04, T19, T28 | platform-product |
@@ -149,7 +149,13 @@ tools/run_web_e2e.sh
 <a id="validation-web_render"></a>
 ### web_render
 
-State: `TO_IMPLEMENT`. Owning task adds generated-client/type tests, browser journeys, accessibility and report/PDF/card fact parity.
+State: `EXISTS_IN_THIS_PR`. Offline Chromium renderer tests (EXPORT-only documents as tagged A4/Letter PDF, SHARE-only 1080x1080/1080x1920 PNG cards, projection/layout mismatch and bad-input codes), export job/API tests with a recording renderer (fact parity with the OWNER projection, disclosed-section cards, projection change mid-render, stale retrieval revoked and erased, capture deletion, bounded renderer failures, scrubbed child environment) and the live journey downloading a real PDF. Not automated axe or pixel-diff coverage.
+
+```bash
+pnpm --filter @princess/render test
+python -m pytest -q tests_app/test_exports.py
+tools/run_web_e2e.sh
+```
 
 <a id="validation-native"></a>
 ### native
@@ -1607,7 +1613,7 @@ No approval is created by this task brief. Mock/disabled implementation is not a
 <a id="t21"></a>
 ## T21 — Same-content PDF and share-card rendering
 
-**Status:** `PLANNED` · **Owner:** report-frontend · **Milestone:** reports
+**Status:** `IMPLEMENTED_PENDING_REVIEW` · **Owner:** report-frontend · **Milestone:** reports
 
 **Hard predecessors:** [T09](#t09), [T10](#t10), [T17](#t17)
 **Platforms:** render, web, shared

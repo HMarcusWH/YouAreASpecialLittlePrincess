@@ -62,6 +62,9 @@ COMPONENT_SECRET_CATEGORIES: Mapping[str, frozenset[str]] = {
     "analysis_worker": frozenset({"database", "storage_read", "telemetry"}),
     "premium_worker": frozenset({"database", "storage_read", "model", "telemetry"}),
     "render_worker": frozenset({"storage_read", "telemetry"}),
+    # Claims export jobs, derives the authorized projection and stores the
+    # bytes; spawns the render_worker sandbox, which gets only the projection.
+    "export_worker": frozenset({"database", "storage_read", "telemetry"}),
     "reference_worker": frozenset({"database", "storage_read", "telemetry"}),
     "notification_worker": frozenset({"database", "mail", "push", "telemetry"}),
     "migrations": frozenset({"database_migration"}),
@@ -75,6 +78,7 @@ COMPONENT_EGRESS: Mapping[str, frozenset[str]] = {
     "analysis_worker": frozenset({"database", "object_store", "telemetry"}),
     "premium_worker": frozenset({"database", "object_store", "model_provider", "telemetry"}),
     "render_worker": frozenset({"object_store", "telemetry"}),
+    "export_worker": frozenset({"database", "object_store", "telemetry"}),
     "reference_worker": frozenset({"database", "object_store", "telemetry"}),
     "notification_worker": frozenset({"database", "mail_provider", "push_provider", "telemetry"}),
     "migrations": frozenset({"database"}),

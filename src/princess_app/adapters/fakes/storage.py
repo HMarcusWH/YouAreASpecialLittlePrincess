@@ -149,12 +149,13 @@ class FakeObjectStore(FakeAdapter):
 
         return self._run("issue_download_ticket", ctx, effect)
 
-    def write_derivative(self, asset_id: str, parent: port.StoredObject, data: bytes, media_type: str,
+    def write_derivative(self, asset_id: str, parent: port.StoredObject | None, data: bytes, media_type: str,
                          ctx: CallContext) -> port.StoredObject:
         require_opaque_id(asset_id, "asset_id")
 
         def effect() -> port.StoredObject:
-            self._live_version(parent)
+            if parent is not None:
+                self._live_version(parent)
             if asset_id in self._assets:
                 raise Conflict("asset_exists")
             return self._put_version(asset_id, bytes(data), media_type)

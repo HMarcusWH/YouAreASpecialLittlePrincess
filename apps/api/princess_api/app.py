@@ -20,6 +20,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from princess_app.adapters.fakes import FakeIdentityProvider
 from princess_app.application.commerce import CommerceService
+from princess_app.application.exports import NOT_RECALLABLE, ExportRow, ExportService
 from princess_app.application.identity import IdentityService, Principal
 from princess_app.application.intake import ChallengeProof, IntakeService
 from princess_app.application.permissions import PermissionService
@@ -82,6 +83,7 @@ class Services:
     commerce: CommerceService | None = None
     # Live source-image and Premium overlay state for saved snapshots.
     report_access: ReportAccessResolver | None = None
+    exports: ExportService | None = None
 
 
 class _Strict(BaseModel):
@@ -136,6 +138,22 @@ class ClaimBody(_Strict):
 
 class PremiumBody(_Strict):
     platform: Literal["web", "ios", "android"]
+
+
+class ExportBody(_Strict):
+    report_id: str = Field(pattern=r"^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$")
+    layout: Literal["A4", "LETTER", "CARD_SQUARE", "CARD_STORY"]
+    sections: list[str] = Field(default_factory=list, max_length=8)
+
+
+def export_status(row: ExportRow) -> dict:
+    return {"export_id": row.export_id, "report_id": row.report_id, "revision": row.revision,
+            "layout": row.layout, "sections": list(row.sections), "state": row.state,
+            "media_type": row.media_type, "size_bytes": row.size_bytes, "error_code": row.error_code,
+            "created_at": rfc3339(row.created_at),
+            "completed_at": rfc3339(row.completed_at) if row.completed_at else None,
+            # Revocation stops our copy being served; a file already saved elsewhere cannot be recalled.
+            "downloaded_copies": NOT_RECALLABLE}
 
 
 async def read_bounded(request: Request, limit: int) -> bytes:
@@ -234,8 +252,11 @@ def create_app(services: Services) -> FastAPI:
                     who: Principal = Depends(principal)) -> dict:
         reader = reader_for(who)
         commerce = services.kill_switches.get("commerce", False)
-        actions = {"EXPORT": None, "SAVE": None, "DELETE": None,
-                   "SHARE": None if services.kill_switches.get("sharing", False) else "sharing_disabled",
+        # Only flows that exist are enabled; the rest say why they are not.
+        actions = {"EXPORT": None if services.exports is not None else "export_not_available",
+                   "SAVE": "save_not_available", "DELETE": "delete_from_settings",
+                   "SHARE": "sharing_not_available" if services.kill_switches.get("sharing", False)
+                   else "sharing_disabled",
                    "COMPARE": "comparison_not_available",
                    "PURCHASE": None if commerce else "commerce_disabled"}
         view = reader.view(report_id=report_id, principal_id=who.principal_id, projection=projection,
@@ -346,6 +367,29 @@ def create_app(services: Services) -> FastAPI:
     def read_premium(report_id: str, who: Principal = Depends(principal)) -> dict:
         """The purchased, validated overlay. Read-only: no model call on read."""
         return reader_for(who).premium_content(report_id=report_id, principal_id=who.principal_id)
+
+    def exports() -> ExportService:
+        if services.exports is None:
+            raise Unsupported("exports_not_configured")
+        return services.exports
+
+    @app.post("/v1/report-exports", status_code=202)
+    def request_export(body: ExportBody, who: Principal = Depends(principal)) -> dict:
+        """Render the authorized projection of the latest revision. Never calls a model."""
+        return export_status(exports().request(who.principal_id, body.report_id, body.layout,
+                                               tuple(body.sections)))
+
+    @app.get("/v1/report-exports/{export_id}")
+    def read_export(export_id: str, who: Principal = Depends(principal)) -> dict:
+        return export_status(exports().status(who.principal_id, export_id))
+
+    @app.get("/v1/report-exports/{export_id}/file")
+    def download_export(export_id: str, request: Request, who: Principal = Depends(principal)) -> Response:
+        data, row = exports().download(who.principal_id, export_id, call_context(request))
+        suffix = "pdf" if row.media_type == "application/pdf" else "png"
+        return Response(content=data, media_type=row.media_type, headers={
+            "Content-Disposition": f'attachment; filename="princess-{row.report_id}-r{row.revision}.{suffix}"',
+            "Cache-Control": "private, no-store", "X-Content-Type-Options": "nosniff"})
 
     @app.get("/v1/premium-jobs/{job_id}")
     def premium_job(job_id: str, who: Principal = Depends(principal)) -> dict:

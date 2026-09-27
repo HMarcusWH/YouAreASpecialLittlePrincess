@@ -29,7 +29,15 @@ from ...application.intake import (
     UploadRow,
 )
 from ...ports.base import Conflict, NotFound, RateLimited
-from .stores import Database, epoch_for, insert_first_revision, lock_live_owner, set_context, write_result
+from .stores import (
+    Database,
+    epoch_for,
+    insert_first_revision,
+    lock_live_owner,
+    queue_asset_erasure,
+    set_context,
+    write_result,
+)
 
 TERMINAL_FENCES = frozenset({"capture_deleted", "permission_changed", "owner_deleted"})
 CAPTURE_SELECT = ("SELECT c.capture_id, c.owner_id, c.upload_id, c.asset_id, c.media_type, c.width, c.height, "
@@ -220,6 +228,14 @@ class PostgresIntakeRepository:
                                   "WHERE run_id = :r AND status IN ('QUEUED', 'RUNNING')"), {"r": run_id, "t": at})
             conn.execute(text("UPDATE app.report SET deleted_at = coalesce(deleted_at, :t) "
                               "WHERE run_id = ANY(:runs)"), {"t": at, "runs": runs})
+            # export_artifacts end with their parent report: revoke and erase.
+            exported = conn.execute(text(
+                "UPDATE app.report_export SET state = 'REVOKED', error_code = 'report_deleted' "
+                "WHERE report_id IN (SELECT report_id FROM app.report WHERE run_id = ANY(:runs)) "
+                "AND state <> 'REVOKED' RETURNING asset_id"), {"runs": runs}).scalars().all()
+            for export_asset in exported:
+                if export_asset is not None:
+                    queue_asset_erasure(conn, owner_id, export_asset, at)
             conn.execute(text("INSERT INTO app.outbox_event (event_id, topic, owner_id, aggregate_ref, payload, "
                               "dedupe_key, created_at) VALUES (:e, 'capture.deletion_requested', :o, :c, "
                               "CAST(:p AS jsonb), :d, :t) ON CONFLICT (dedupe_key) DO NOTHING"),

@@ -1,5 +1,5 @@
-// Live Free journey through the real stack (API, PostgreSQL, worker, local
-// object store). Runs only when PRINCESS_E2E_API and PRINCESS_E2E_SAMPLE are
+// Live Free journey through the real stack (API, PostgreSQL, analysis and
+// export workers, offline renderer, local object store). Runs only when PRINCESS_E2E_API and PRINCESS_E2E_SAMPLE are
 // set, e.g. by tools/run_web_e2e.sh; CI runs the fixture journeys.
 import { expect, test } from "@playwright/test";
 
@@ -19,6 +19,16 @@ test("upload, consent, job and report without any AI provider", async ({ page })
   await expect(page.getByRole("heading", { level: 1, name: "Your report" })).toBeVisible();
   expect(await page.locator("tr[data-fact-id]").count()).toBeGreaterThan(10);
   await expect(page.getByText("No reference group is available yet")).toBeVisible();
+
+  // Export: the saved projection is rendered to a PDF by the sandboxed renderer.
+  await page.getByRole("button", { name: "Export PDF" }).click();
+  const download = page.getByRole("link", { name: "Download PDF" });
+  await expect(download).toBeVisible({ timeout: 60_000 });
+  const pdf = await page.request.get(new URL((await download.getAttribute("href"))!, page.url()).toString());
+  expect(pdf.status()).toBe(200);
+  expect(pdf.headers()["content-type"]).toBe("application/pdf");
+  expect((await pdf.body()).subarray(0, 5).toString()).toBe("%PDF-");
+  await expect(page.getByRole("button", { name: "Save" })).toBeDisabled();  // no flow, says why
 
   // Refresh on the job URL resumes the known run: it redirects to the same report.
   const reportUrl = page.url();

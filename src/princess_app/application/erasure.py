@@ -34,7 +34,8 @@ DELETION = "capture.deletion_requested"
 RETENTION_REVIEW = "capture.retention_review"
 ACCOUNT_DELETION = "account.deletion_requested"
 UPLOAD_REJECTED = "upload.rejected"  # promoted bytes failed inspection; erase them
-TOPICS = (DELETION, RETENTION_REVIEW, ACCOUNT_DELETION, UPLOAD_REJECTED)
+ASSET_ERASURE = "asset.erasure_requested"  # e.g. a revoked or never-published export
+TOPICS = (DELETION, RETENTION_REVIEW, ACCOUNT_DELETION, UPLOAD_REJECTED, ASSET_ERASURE)
 
 
 @dataclass(frozen=True)
@@ -95,7 +96,7 @@ class ErasureWorker:
         now = self._clock.now()
         if event.topic == ACCOUNT_DELETION:
             return self._erase_account(event)
-        if event.topic in (DELETION, UPLOAD_REJECTED):
+        if event.topic in (DELETION, UPLOAD_REJECTED, ASSET_ERASURE):
             asset_id = event.payload.get("asset_id")
             if not isinstance(asset_id, str):
                 self._outbox.dispatched(event.event_id, now)
@@ -140,5 +141,5 @@ class ErasureWorker:
         return ErasureOutcome(event.event_id, "ERASED")
 
 
-__all__ = ["ACCOUNT_DELETION", "CaptureAsset", "DELETION", "ErasureOutbox", "ErasureOutcome", "ErasureWorker", "OutboxEvent",
+__all__ = ["ACCOUNT_DELETION", "ASSET_ERASURE", "CaptureAsset", "DELETION", "ErasureOutbox", "ErasureOutcome", "ErasureWorker", "OutboxEvent",
            "RETENTION_REVIEW", "TOPICS", "UPLOAD_REJECTED"]
