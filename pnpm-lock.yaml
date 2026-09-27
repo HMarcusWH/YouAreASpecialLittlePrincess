@@ -17,6 +17,8 @@ importers:
 
   packages/contracts: {}
 
+  packages/design-tokens: {}
+
   packages/report-core:
     dependencies:
       '@princess/contracts':

@@ -83,5 +83,7 @@ jobs:
       - name: Install the pnpm version pinned (with SHA-512) in packageManager
         run: corepack enable && corepack install
       - run: pnpm install --frozen-lockfile
+      - name: Generated design tokens are current (standard-library generator)
+        run: python3 tools/generate_design_tokens.py --check
       - run: pnpm typecheck
       - run: pnpm test

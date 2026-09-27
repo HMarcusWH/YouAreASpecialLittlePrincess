@@ -24,7 +24,7 @@ Use `python docs/roadmap/plan_tools.py --ready` or `--task ID`. Edit tasks.json 
 | [T07 — Bounded classical topology shape expansion](#t07) | PLANNED | T05, T06 | engine |
 | [T08 — Normalization and reviewed content](#t08) | PLANNED | T01, T05, T06 | content-engine |
 | [T09 — Report assembly and authorized projections](#t09) | IMPLEMENTED_PENDING_REVIEW | T01, T05 | report-backend |
-| [T10 — Contract-driven multi-platform design handoff](#t10) | PLANNED | T01 | design |
+| [T10 — Contract-driven multi-platform design handoff](#t10) | IMPLEMENTED_PENDING_REVIEW | T01 | design |
 | [T11 — Owned pilot recruitment and annotation](#t11) | PLANNED | T03, T04 | product-data-human |
 | [T12 — Candidate corpus ETL and deduplication](#t12) | PLANNED | T04, T06, T11 | data |
 | [T13 — Reference statistics and distinctiveness](#t13) | PLANNED | T08, T12 | statistics |
@@ -877,7 +877,7 @@ No task-specific production gate; all repository privacy/security and scope boun
 <a id="t10"></a>
 ## T10 — Contract-driven multi-platform design handoff
 
-**Status:** `PLANNED` · **Owner:** design · **Milestone:** free
+**Status:** `IMPLEMENTED_PENDING_REVIEW` · **Owner:** design · **Milestone:** free
 
 **Hard predecessors:** [T01](#t01)
 **Platforms:** web, ios, android, render
