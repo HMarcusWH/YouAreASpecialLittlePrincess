@@ -1,0 +1,85 @@
+{
+  "contract_version": "claude-design-import/v1",
+  "source_baseline_sha": "9b9a313fe0acb8b7b90cf6233da21cc6a793210f",
+  "entrypoint": "docs/design/CLAUDE_DESIGN_HANDOFF.md",
+  "read_first": [
+    "docs/design/CLAUDE_DESIGN_HANDOFF.md",
+    "docs/design/README.md",
+    "docs/design/claude-design-state-matrix.json",
+    "docs/roadmap/04-reports-design.md",
+    "docs/roadmap/11-mobile-architecture.md"
+  ],
+  "product_and_security_context": [
+    "docs/roadmap/10-web-client-and-api-integration.md",
+    "docs/roadmap/12-apple-platform-and-app-store.md",
+    "docs/roadmap/13-android-and-google-play.md",
+    "docs/roadmap/14-payments-entitlements-and-commerce.md",
+    "docs/roadmap/17-security-privacy-and-abuse.md",
+    "docs/adr/ADR-005-mobile-framework.md"
+  ],
+  "framework_context": [
+    "package.json",
+    "pnpm-workspace.yaml",
+    "apps/web/package.json"
+  ],
+  "design_system": [
+    "packages/design-tokens/tokens.json",
+    "packages/design-tokens/generated/",
+    "packages/report-web/src/",
+    "packages/report-core/src/"
+  ],
+  "semantic_contracts": [
+    "contracts/product/v1/schemas/",
+    "packages/contracts/src/",
+    "packages/api-client/src/"
+  ],
+  "synthetic_fixtures": [
+    "fixtures/reports/README.md",
+    "fixtures/reports/view.free.json",
+    "fixtures/reports/view.owner-premium.json",
+    "fixtures/reports/view.owner-image-revoked.json",
+    "fixtures/reports/view.share.json",
+    "fixtures/reports/view.export-no-image.json",
+    "fixtures/reports/evidence-bundle.json",
+    "fixtures/reports/report-document.json",
+    "fixtures/reports/report-document.premium.json"
+  ],
+  "existing_web_implementation": [
+    "apps/web/app/globals.css",
+    "apps/web/app/layout.tsx",
+    "apps/web/app/page.tsx",
+    "apps/web/app/start/",
+    "apps/web/app/analyses/",
+    "apps/web/app/reports/",
+    "apps/web/app/settings/",
+    "apps/web/app/fixtures/"
+  ],
+  "rendering_context": [
+    "apps/render/src/"
+  ],
+  "native_design_context": [
+    "packages/design-tokens/generated/PrincessTokens.swift",
+    "packages/design-tokens/generated/PrincessTokens.kt",
+    "docs/roadmap/11-mobile-architecture.md",
+    "docs/roadmap/12-apple-platform-and-app-store.md",
+    "docs/roadmap/13-android-and-google-play.md",
+    "docs/adr/ADR-005-mobile-framework.md"
+  ],
+  "do_not_import_by_default": [
+    "src/princess_graphology/",
+    "research/",
+    "migrations/",
+    "src/princess_app/adapters/postgres/",
+    "src/princess_app/adapters/openai/",
+    "apps/workers/",
+    "contracts/consent/",
+    "*.zip"
+  ],
+  "rules": [
+    "Use repository contracts and synthetic fixtures as product truth; do not invent fields or unsupported statistics.",
+    "Treat packages/report-web as existing DOM/print implementation context, not a requirement to reuse DOM patterns on native.",
+    "Treat native canvases as design simulations until T29-T31 implement them.",
+    "Do not upload real handwriting, participant data, production dumps, secrets or private provider payloads.",
+    "Keep packages/design-tokens/tokens.json in DRAFT_PENDING_DESIGN_ACCEPTANCE until the owner explicitly accepts the prototype."
+  ]
+}
