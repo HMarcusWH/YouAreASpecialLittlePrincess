@@ -38,11 +38,14 @@ class GeneratorDisposition:
     candidate_kind: str
     state: str
     reason: str | None
-    required_feature_ids: tuple[str, ...] = ()
+    source_feature_ids: tuple[str, ...] = ()
     producer: CandidateProducer | None = None
 
 
-def _by_feature(facts: Mapping[str, Mapping[str, Any]], feature_ids: tuple[str, ...]) -> dict[str, tuple[str, Mapping[str, Any]]]:
+def _by_feature(
+    facts: Mapping[str, Mapping[str, Any]],
+    feature_ids: tuple[str, ...],
+) -> dict[str, tuple[str, Mapping[str, Any]]]:
     wanted = set(feature_ids)
     found: dict[str, tuple[str, Mapping[str, Any]]] = {}
     for fact_id, fact in facts.items():
@@ -107,9 +110,9 @@ def _thickness_fact(facts: Mapping[str, Mapping[str, Any]]) -> tuple[Candidate, 
     ),)
 
 
-def _supported(generator_id: str, candidate_kind: str, required_feature_ids: tuple[str, ...],
+def _supported(generator_id: str, candidate_kind: str, source_feature_ids: tuple[str, ...],
                producer: CandidateProducer) -> GeneratorDisposition:
-    return GeneratorDisposition(generator_id, candidate_kind, SUPPORTED, None, required_feature_ids, producer)
+    return GeneratorDisposition(generator_id, candidate_kind, SUPPORTED, None, source_feature_ids, producer)
 
 
 def _unsupported(generator_id: str, candidate_kind: str, reason: str) -> GeneratorDisposition:
