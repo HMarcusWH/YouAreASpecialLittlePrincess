@@ -140,10 +140,10 @@ GENERATOR_DISPOSITIONS: Mapping[str, GeneratorDisposition] = MappingProxyType({
         "GEN_COPYBOOK_DIFFERENCE_V1", "COPYBOOK_DIFFERENCE", "copybook_context_unavailable"),
     "GEN_INK_APPEARANCE_FACT_V1": _supported(
         "GEN_INK_APPEARANCE_FACT_V1", "INK_APPEARANCE_FACT",
-        ("INK_DARKNESS_CV",), _ink_appearance),
+        ("INK_DARKNESS_CV", "INK_DARKNESS_MEAN"), _ink_appearance),
     "GEN_THICKNESS_FACT_V1": _supported(
         "GEN_THICKNESS_FACT_V1", "THICKNESS_FACT",
-        ("STROKE_WIDTH_MEAN",), _thickness_fact),
+        ("STROKE_WIDTH_MEAN", "STROKE_WIDTH_CV"), _thickness_fact),
     "GEN_INITIAL_STROKE_DESCRIPTION_V1": _unsupported(
         "GEN_INITIAL_STROKE_DESCRIPTION_V1", "INITIAL_STROKE_DESCRIPTION",
         "glyph_feature_not_implemented"),
