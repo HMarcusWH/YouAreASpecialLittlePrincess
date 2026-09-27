@@ -19,6 +19,12 @@ def task(task_id, depends=(), status="PLANNED"):
     }
     if status == "DONE":
         record["completion_evidence"] = "fixture evidence"
+    elif status == "IN_PROGRESS":
+        record["implementation_evidence"] = "fixture implementation"
+        record["remaining_work"] = ["Finish fixture integration"]
+    elif status == "IMPLEMENTED_PENDING_REVIEW":
+        record["implementation_evidence"] = "fixture implementation"
+        record["remaining_work"] = ["Complete fixture review"]
     return record
 
 
@@ -35,6 +41,34 @@ class PlanTests(unittest.TestCase):
         data = plan()
         self.assertEqual(plan_tools.validate_plan(data), [])
         self.assertEqual([t["id"] for t in plan_tools.ready_tasks(data)], ["T00A"])
+
+    def test_active_tasks_are_distinct_from_ready_work(self):
+        data = plan()
+        data["tasks"][1] = task("T00A", ["T00"], status="IN_PROGRESS")
+        data["tasks"][2] = task("T01", ["T00A"], status="IMPLEMENTED_PENDING_REVIEW")
+        self.assertEqual([t["id"] for t in plan_tools.active_tasks(data)], ["T00A", "T01"])
+        self.assertEqual(plan_tools.ready_tasks(data), [])
+
+    def test_partial_status_evidence_rules(self):
+        data = plan()
+        data["tasks"][1]["status"] = "IN_PROGRESS"
+        errors = "\n".join(plan_tools.validate_plan(data))
+        self.assertIn("IN_PROGRESS requires nonempty remaining_work", errors)
+        data["tasks"][1]["remaining_work"] = ["finish"]
+        self.assertEqual(plan_tools.validate_plan(data), [])
+
+        data = plan()
+        data["tasks"][1]["status"] = "IMPLEMENTED_PENDING_REVIEW"
+        data["tasks"][1]["remaining_work"] = ["review"]
+        errors = "\n".join(plan_tools.validate_plan(data))
+        self.assertIn("requires implementation_evidence", errors)
+        data["tasks"][1]["implementation_evidence"] = "implemented"
+        self.assertEqual(plan_tools.validate_plan(data), [])
+
+        data = plan()
+        data["tasks"][0]["remaining_work"] = ["should not remain"]
+        errors = "\n".join(plan_tools.validate_plan(data))
+        self.assertIn("DONE cannot have remaining_work", errors)
 
     def test_duplicate_and_unknown_predecessor_rejected(self):
         data = plan()

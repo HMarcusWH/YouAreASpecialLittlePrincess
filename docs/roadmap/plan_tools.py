@@ -66,6 +66,27 @@ def validate_plan(data: dict, root: Path | None = None) -> list[str]:
         for field in ("title", "owner_role", "milestone", "contract_handoff"):
             if not isinstance(task.get(field), str) or not task[field].strip():
                 errors.append(f"{task_id}: missing text field {field}")
+        status = task.get("status")
+        implementation_evidence = task.get("implementation_evidence")
+        remaining_work = task.get("remaining_work", [])
+        if implementation_evidence is not None and (
+            not isinstance(implementation_evidence, str) or not implementation_evidence.strip()
+        ):
+            errors.append(f"{task_id}: implementation_evidence must be nonempty text when present")
+        if not isinstance(remaining_work, list) or any(
+            not isinstance(value, str) or not value.strip() for value in remaining_work
+        ):
+            errors.append(f"{task_id}: remaining_work must be a string list when present")
+            remaining_work = []
+        if status == "IN_PROGRESS" and not remaining_work:
+            errors.append(f"{task_id}: IN_PROGRESS requires nonempty remaining_work")
+        if status == "IMPLEMENTED_PENDING_REVIEW":
+            if not isinstance(implementation_evidence, str) or not implementation_evidence.strip():
+                errors.append(f"{task_id}: IMPLEMENTED_PENDING_REVIEW requires implementation_evidence")
+            if not remaining_work:
+                errors.append(f"{task_id}: IMPLEMENTED_PENDING_REVIEW requires nonempty remaining_work")
+        if status == "DONE" and remaining_work:
+            errors.append(f"{task_id}: DONE cannot have remaining_work")
         for field in LIST_FIELDS:
             values = task.get(field)
             if not isinstance(values, list) or any(not isinstance(v, str) or not v.strip() for v in values):
@@ -153,6 +174,13 @@ def ready_tasks(data: dict) -> list[dict]:
     return [task for task in tasks if task["status"] == "PLANNED" and set(task["depends_on"]) <= done]
 
 
+def active_tasks(data: dict) -> list[dict]:
+    return [
+        task for task in data["tasks"]
+        if task["status"] in {"IN_PROGRESS", "IMPLEMENTED_PENDING_REVIEW"}
+    ]
+
+
 def doc_link(path: str) -> str:
     rel = Path(os.path.relpath(path, "docs/roadmap")).as_posix()
     return f"[{path}]({rel})"
@@ -173,6 +201,12 @@ def render_task(task: dict, data: dict) -> str:
     lines += ["### Coding sequence", ""]
     lines += [f"{i}. {step}" for i, step in enumerate(task["coding_steps"], 1)]
     lines += ["", "### Contract and integration handoff", "", task["contract_handoff"], ""]
+    if task.get("implementation_evidence"):
+        lines += ["### Implementation evidence", "", task["implementation_evidence"], ""]
+    if task.get("remaining_work"):
+        lines += ["### Remaining work", ""]
+        lines += [f"- {value}" for value in task["remaining_work"]]
+        lines.append("")
     for field, title in (("acceptance", "Acceptance evidence"), ("negative_tests", "Required failure and regression cases"), ("artifacts", "Deliverables"), ("rollback", "Rollback and compatibility")):
         lines += [f"### {title}", ""]
         lines += [f"- {value}" for value in task[field]]
@@ -291,6 +325,7 @@ def main(argv: list[str] | None = None) -> int:
     mode.add_argument("--check", action="store_true")
     mode.add_argument("--write", action="store_true")
     mode.add_argument("--ready", action="store_true")
+    mode.add_argument("--active", action="store_true")
     mode.add_argument("--task")
     args = parser.parse_args(argv)
     source = ROOT / "docs/roadmap/tasks.json"
@@ -310,6 +345,16 @@ def main(argv: list[str] | None = None) -> int:
                 gates = ", ".join(task["production_gates"]) or "none"
                 print(f"{task['id']}: {task['title']} | owner={task['owner_role']} | human gates={gates}")
             print("Readiness permits scoped implementation, not unapproved production actions.")
+            return 0
+        if args.active:
+            for task in active_tasks(data):
+                gates = ", ".join(task["production_gates"]) or "none"
+                next_step = task.get("remaining_work", ["review/acceptance pending"])[0]
+                print(
+                    f"{task['id']}: {task['title']} | status={task['status']} "
+                    f"| next={next_step} | human gates={gates}"
+                )
+            print("Active work is implementation/review state, not production authorization.")
             return 0
         if args.task:
             matches = [task for task in data["tasks"] if task["id"] == args.task]
