@@ -47,6 +47,22 @@ def test_rate_limit_and_timeout_after_acceptance():
     assert len(fake.requests) == 1  # the provider did receive (and may bill) the request
 
 
+def test_model_attempt_lookup_recovers_after_effect_and_rejects_mismatch():
+    clock = FakeClock()
+    fake = FakePremiumModel(lambda r: {"answers": []}, clock=clock)
+    req = request()
+    fake.faults.inject("generate", AmbiguousOutcome("timeout_after_send"), after_effect=True)
+    with pytest.raises(AmbiguousOutcome):
+        fake.generate(req, ctx(clock))
+    recovered = fake.lookup_attempt(req, ctx(clock))
+    assert recovered is not None and recovered.state is model.GenerationState.COMPLETED
+    assert fake.lookup_attempt(request("att_2"), ctx(clock)) is None
+
+    changed = request("att_1", packet={"questions": [{"id": "different"}]})
+    with pytest.raises(InvalidInput) as err:
+        fake.lookup_attempt(changed, ctx(clock))
+    assert err.value.code == "attempt_lookup_mismatch"
+
 def test_generation_request_snapshots_mappings_and_binds_digest():
     packet = {"questions": [{"id": "q1"}]}
     schema = {"type": "object"}
