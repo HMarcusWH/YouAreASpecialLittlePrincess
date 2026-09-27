@@ -4,7 +4,7 @@
 
 # 03 — Premium OpenAI orchestration
 
-Status: proposed integration contract. No paid API call or model-quality evaluation was executed for this roadmap. Current API facts are sourced in [07](07-evidence-register.md); deployment must verify the account's actual access and applicable data controls.
+Status: provider-independent Premium packet/compiler/validator/runtime implementation is complete under T15, with live provider activation still disabled. No production paid API/model-quality approval is implied; T16 and the model account/data/spend gates still govern live use. Current provider facts are sourced in [22](22-research-and-source-refresh.md) and the connector specification.
 
 ## 1. One bounded enrichment job
 
@@ -55,11 +55,11 @@ Do not include names, email addresses, unrelated account data, file paths, unbou
 
 **Visible text in the handwriting image is untrusted data, never instructions.** The system prompt says this explicitly, including text that asks the model to ignore previous instructions.
 
-The selector/question/soft-field source of truth is specified in [08](08-premium-question-selector-database.md) and scaffolded at `schema/premium_interpretation_database_v1.json`. Exact pick values are populated in T26 before T15 compiles production schemas/prompts.
+The selector/question/soft-field source of truth is specified in [08](08-premium-question-selector-database.md) and compiled at `schema/premium_interpretation_database_v1.json`. T26 is DONE and T15 consumes that reviewed, runtime-inactive database; production activation still requires downstream evaluation/provider gates.
 
 ### Current deterministic dynamic candidates
 
-The initial T15 runtime supports only dynamic candidates that can be exposed
+The implemented T15 runtime supports only dynamic candidates that can be exposed
 directly from existing canonical facts without a new classification rubric:
 line-start/line-end trend, ink-darkness variation and stroke-thickness profile.
 These candidates carry stable IDs plus support fact IDs; the model selects or

@@ -6,17 +6,17 @@
 
 `IMPLEMENTATION_DEFAULT` is the engineering direction this plan proposes for coding agents after merge. `CANDIDATE` is not a selected vendor. `RESEARCH_REQUIRED` blocks the affected real adapter choice, not fixture/port work. `PRODUCTION_APPROVED` requires a named human owner, dated evidence and a scope/environment; no such approval is fabricated here.
 
-| Decision | Direction | Open before implementation/activation | Owner/task |
+| Decision | Direction | Open before production activation | Current owner/task |
 |---|---|---|---|
-| ADR-001 | Next.js web presentation and thin session layer; FastAPI remains business authority | Exact compatible versions, deployment profile, cookie/origin contract | T17/T28 |
-| ADR-002 | Managed OIDC identity behind an internal principal/identity binding | Compare Clerk/Supabase Auth or approved equivalent for native Apple/Google login, deletion, region and cost; choose one | T02/T27 |
-| ADR-003 | PostgreSQL + SQLAlchemy/Alembic; local DB tests and non-owner roles | Managed host/region/backups/PITR/pooling contract; Supabase/Neon candidates, not approvals | T02/T24 |
-| ADR-004 | S3-shaped private storage port with provider capability tests | R2/S3 candidate choice, jurisdiction, checksum/version/copy/delete semantics and egress pricing | T04/T27 |
+| ADR-001 | Next.js web presentation and thin session layer; FastAPI remains business authority | Production deployment profile plus final identity/session integration | T17/T24 |
+| ADR-002 | Managed OIDC identity behind an internal principal/identity binding | Choose/approve provider for production sign-in, recovery, native Apple/Google login, deletion, region and cost | T17/T29–T31 |
+| ADR-003 | PostgreSQL + SQLAlchemy/Alembic; local DB tests and non-owner roles | Managed host/region/backups/PITR/pooling contract and timed restore evidence | T24 |
+| ADR-004 | S3-shaped private storage port with provider capability tests | Production object/tombstone provider, jurisdiction, checksum/version/copy/delete semantics and egress pricing | T24 |
 | ADR-005 | Expo/RN/Router native app; shared contract/state/tokens, native platform UX | Exact SDK/native bridge/build compatibility, minimum OS, generated-native ownership, signing/build provider approval | T29 |
-| ADR-006 | Internal ledger; Stripe web candidate; direct StoreKit/Play server verification as default | Native bridge/library selection, RevenueCat comparison, catalog/consumable portability/terms/storefront policy | T19/T29 |
-| ADR-007 | Outbox-driven transactional mail; Resend candidate or equivalent | Sender domains, identity email separation, retention/region, bounce/retry behavior, contract | T02/T24 |
-| ADR-008 | OTel-compatible operational telemetry; explicit product-event allowlist | Export destination, SDK privacy, retention, alerts and support access | T28/T24 |
-| ADR-009 | Layered quotas, web challenge candidate, native integrity signals | Abuse provider data use, fallback behavior, account/device policy | T04/T29 |
+| ADR-006 | Internal ledger; Stripe web candidate; direct StoreKit/Play server verification as default | Real rails, native bridge/library selection, catalog/consumable portability/terms/storefront policy | T19/T29–T31 |
+| ADR-007 | Outbox-driven transactional mail; Resend candidate or equivalent | Sender domains, identity email separation, retention/region, signed bounce/complaint behavior and contract | T24 |
+| ADR-008 | OTel-compatible operational telemetry; explicit product-event allowlist | Production export destination, SDK privacy, retention, thresholds, alerts and support access | T24 |
+| ADR-009 | Layered quotas, web challenge candidate, native integrity signals | Production edge/global abuse controls plus native/account/device policy | T24/T29–T31 |
 
 [ADR files](../adr/README.md) contain the rationale and exit/acceptance conditions. This table does not authorize account provisioning or paid usage.
 

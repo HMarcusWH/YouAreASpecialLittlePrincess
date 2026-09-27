@@ -2,7 +2,7 @@
 
 [Roadmap index](../roadmap/00-index.md) · [Module/import boundaries](../roadmap/09-connectors-and-provider-boundaries.md) · [Decisions](../roadmap/19-provider-decision-register.md) · [Task briefs](../roadmap/06-agent-backlog.md).
 
-A connector is an adapter between an application-owned typed port and an external system. It is not an SDK object exposed as our domain model. T27 establishes ports, error taxonomy, fakes and contract fixtures; owning tasks add the real adapters. All paths in these specifications are planned implementation targets.
+A connector is an adapter between an application-owned typed port and an external system. It is not an SDK object exposed as our domain model. T27 established ports, error taxonomy, fakes and contract fixtures; owning tasks add or qualify real adapters. Some provider-independent and disabled adapters now exist, while production provider selection/activation remains separately gated. Specifications describe both implemented seams and downstream activation requirements.
 
 | Port ID used by tasks | Specification | Owning integration |
 |---|---|---|
@@ -39,13 +39,13 @@ See [test gates](../roadmap/16-testing-evals-and-quality-gates.md) and [environm
 
 ## Implemented seams (T27)
 
-The ports, fakes and conformance harness now exist. Real adapters remain the owning tasks' work and every production provider decision in [19](../roadmap/19-provider-decision-register.md) is still `CANDIDATE`/pending.
+The ports, fakes and conformance harness exist. Several adapter implementations also exist in disabled/provider-independent form; that is not production approval. Production provider decisions in [19](../roadmap/19-provider-decision-register.md) remain pending until their task-specific evidence/gates are satisfied.
 
 | Port | Protocol and DTOs | Fake (standard library only) | Fake capability profile |
 |---|---|---|---|
 | IdentityProvider | `src/princess_app/ports/identity.py` | `FakeIdentityProvider` | verify, revoke session, provider account deletion; expiry, audience, key rotation and revocation states |
 | ObjectStore | `src/princess_app/ports/storage.py` | `FakeObjectStore` | presigned PUT, immutable versions, server copy, download tickets, hard delete; **no** size enforcement at upload and **no** provider SHA-256 unless configured |
-| PremiumModelProvider | `src/princess_app/ports/model.py` | `FakePremiumModel` | structured output, image input, no provider storage; explicit responder, no default success |
+| PremiumModelProvider | `src/princess_app/ports/model.py` | `FakePremiumModel` | structured output, image input, no provider storage, authoritative fake `attempt_lookup`; explicit responder, no default success |
 | PaymentProvider | `src/princess_app/ports/payments.py` | `FakePaymentProvider` (Stripe-, Apple-, Google-shaped rails) | per rail: web checkout/refund (Stripe), proof verification (stores), server consume/acknowledge (Google only), signed events, lookup, reconcile |
 | NativePurchaseClient | `src/princess_app/ports/payments.py` | `FakeNativePurchaseClient` | returns store proofs; Apple finish is client-side after the server grant |
 | TransactionalMailer | `src/princess_app/ports/messaging.py` | `FakeMailer` | template/variable allowlist, bounded provider idempotency window, suppression |
