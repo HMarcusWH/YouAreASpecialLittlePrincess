@@ -241,6 +241,8 @@ def test_composed_local_stack_upload_to_report(app_url, worker_db, tmp_path, mon
     assert api.get(f"/v1/report-exports/{export_id}", headers=other).status_code == 404
     assert api.delete(f"/v1/captures/{capture['capture_id']}", headers=auth).status_code == 202
     assert api.get(f"/v1/reports/{status['report_id']}", headers=auth).status_code == 404
+    tombstones = (tmp_path / "tombstones" / "tombstones.jsonl").read_text()  # outside the database
+    assert capture["capture_id"] in tombstones and "CAPTURE_DELETED" in tombstones
 
 
 def commerce_client(app_db, *, selling):  # noqa: D103
@@ -302,9 +304,11 @@ def test_ops_commands_run_against_the_composed_stack(app_url, tmp_path, monkeypa
                        "PRINCESS_IDENTITY_AUDIENCE": "princess-test",
                        "PRINCESS_STORAGE_SIGNING_KEY": "signing-key-0123456789"}.items():
         monkeypatch.setenv(key, value)
-    for argv in (["complete-pending"], ["reconcile", "--rail", "stripe", "--since-hours", "1"], ["expire-feedback"]):
+    for argv in (["complete-pending"], ["reconcile", "--rail", "stripe", "--since-hours", "1"], ["expire-feedback"],
+                 ["replay-tombstones"]):
         assert ops.main(argv) == 0
     lines = [json.loads(line) for line in capsys.readouterr().out.splitlines()]
     assert lines == [{"command": "complete-pending", "completed": 0},
                      {"command": "reconcile", "outcomes": {}, "rail": "stripe"},
-                     {"command": "expire-feedback", "expired": 0}]
+                     {"command": "expire-feedback", "expired": 0},
+                     {"command": "replay-tombstones", "already": 0, "reapplied": 0, "unknown": 0}]

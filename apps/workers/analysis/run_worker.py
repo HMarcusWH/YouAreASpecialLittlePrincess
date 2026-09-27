@@ -20,6 +20,7 @@ sys.path.insert(0, str(ROOT / "src"))
 
 from princess_app.adapters.imaging import decode_image  # noqa: E402
 from princess_app.adapters.localfs import LocalObjectStore  # noqa: E402
+from princess_app.adapters.localfs.tombstones import JsonlTombstoneLog  # noqa: E402
 from princess_app.adapters.postgres.intake import PostgresIntakeRepository, PostgresJobQueue  # noqa: E402
 from princess_app.adapters.postgres.outbox import PostgresErasureOutbox  # noqa: E402
 from princess_app.adapters.postgres.stores import Database, PostgresPermissionStore, make_engine  # noqa: E402
@@ -72,7 +73,10 @@ def main() -> int:
     erasure = ErasureWorker(outbox=PostgresErasureOutbox(db), store=store, permissions=permissions, clock=clock,
                             context=context,
                             propagate=lambda owner, purpose, scope, decision: propagate_withdrawal(
-                                repo, permissions, owner, purpose, scope, decision, clock.now()))
+                                repo, permissions, owner, purpose, scope, decision, clock.now()),
+                            tombstones=JsonlTombstoneLog(Path(os.environ.get(
+                                "PRINCESS_TOMBSTONE_DIR", str(Path(os.environ.get(
+                                    "PRINCESS_LOCAL_STORAGE_DIR", str(ROOT / ".local-storage"))) / "tombstones")))))
     poll(worker, erasure)
     return 0
 

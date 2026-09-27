@@ -1,4 +1,4 @@
-# Runbooks (T24, slice 1)
+# Runbooks (T24)
 
 Status: **DRAFT.** These cover the mechanisms that exist in the code today, with commands you can run against a local or staging database. No hosting, alerting or paging provider has been chosen yet. Every step that depends on one is marked **PENDING DEPLOYMENT** instead of guessed. Alert owners and escalation channels are owner decisions ([18](../roadmap/18-observability-support-and-cost-control.md)).
 
@@ -67,9 +67,22 @@ $API_ENV python -m princess_api.ops expire-feedback
 ```
 This deletes report feedback past `expires_at` (a draft 180-day period, owner-pending). Only the `princess_support` role may read feedback, and it sees the feedback columns only.
 
-## 7. Not yet covered (T24 later slices)
+## 7. Database restore without resurrecting deletions
 
-- Backup and restore with tombstone replay.
+Every account and capture deletion is also written to an append-only tombstone log kept outside the database (`PRINCESS_TOMBSTONE_DIR`, a JSONL file locally). The API writes it right after committing a deletion. The erasure worker writes it again before processing the deletion event, and the event stays pending until that write succeeds. A restore never rolls the log back.
+
+After restoring a backup, **before the environment serves traffic**:
+```sh
+$API_ENV python -m princess_api.ops replay-tombstones
+```
+The command prints `reapplied` (deletions the restored database had forgotten, now tombstoned again and queued for erasure), `already` and `unknown` (subjects the restore does not contain). It is idempotent. Then start the erasure worker. Byte erasure is idempotent, so objects that are already gone verify at once.
+
+- **Also run:** `reconcile` and `complete-pending` (section 2), because payments made after the backup point are recovered from the provider's authoritative state rather than replayed.
+- **Known gap:** Premium jobs restored in `QUEUED` may call the model again, although customers are still charged only on publication. Durable provider-attempt reconciliation needs provider-side request lookup, which the adapter does not support yet.
+- **PENDING DEPLOYMENT:** backup tooling, RPO/RTO, where the log lives in production (an append-only bucket after ADR-004), and a timed restore drill.
+
+## 8. Not yet covered (T24 later slices)
+
 - Mail and push delivery (ADR-007, token storage).
 - Key rotation and compromise.
 - Store rollout halt.

@@ -29,6 +29,7 @@ from ..ports.base import CallContext, Clock, PortError
 from ..ports.storage import ObjectStore
 from .intake import RETENTION_PURPOSE
 from .permissions import PermissionService
+from .tombstones import ACCOUNT_DELETED, CAPTURE_DELETED, Tombstone, TombstoneLog
 
 DELETION = "capture.deletion_requested"
 RETENTION_REVIEW = "capture.retention_review"
@@ -97,7 +98,8 @@ class ErasureOutcome:
 class ErasureWorker:
     def __init__(self, *, outbox: ErasureOutbox, store: ObjectStore, permissions: PermissionService, clock: Clock,
                  context: Callable[[], CallContext], batch: int = 20,
-                 propagate: Callable[[str, str, Scope, Decision], None] | None = None) -> None:
+                 propagate: Callable[[str, str, Scope, Decision], None] | None = None,
+                 tombstones: TombstoneLog | None = None) -> None:
         self._outbox = outbox
         self._store = store
         self._permissions = permissions
@@ -105,6 +107,7 @@ class ErasureWorker:
         self._context = context
         self._batch = batch
         self._propagate = propagate
+        self._tombstones = tombstones  # outlives database restores; see application.tombstones
         # Withdrawal events wait until a propagation is composed; they are never dropped.
         self._topics = TOPICS if propagate else tuple(t for t in TOPICS if t != PERMISSION_WITHDRAWN)
 
@@ -113,8 +116,23 @@ class ErasureWorker:
         self._outbox.review_idle_captures(self._clock.now(), IDLE_CAPTURE_SECONDS, self._batch)
         return [self._handle(event) for event in self._outbox.pending(self._topics, self._batch)]
 
+    def _tombstone(self, event: OutboxEvent) -> bool:
+        """Durable path for the tombstone: the event is not processed (and so
+        stays pending) until its deletion is recorded outside the database."""
+        if self._tombstones is None or event.topic not in (ACCOUNT_DELETION, DELETION):
+            return True
+        kind, ref = ((ACCOUNT_DELETED, event.owner_id) if event.topic == ACCOUNT_DELETION
+                     else (CAPTURE_DELETED, event.aggregate_ref))
+        try:
+            self._tombstones.append(Tombstone(kind, event.owner_id, ref, self._clock.now()))
+        except OSError:
+            return False
+        return True
+
     def _handle(self, event: OutboxEvent) -> ErasureOutcome:
         now = self._clock.now()
+        if not self._tombstone(event):
+            return ErasureOutcome(event.event_id, "UNVERIFIED")
         if event.topic == ACCOUNT_DELETION:
             return self._erase_account(event)
         if event.topic == PERMISSION_WITHDRAWN and self._propagate is not None:

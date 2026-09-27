@@ -18,6 +18,7 @@ from fastapi import FastAPI
 from princess_app.adapters.fakes import FakeAbuseChallenge, FakeIdentityProvider, FakePaymentProvider
 from princess_app.adapters.imaging import inspect_header
 from princess_app.adapters.localfs import LocalObjectStore
+from princess_app.adapters.localfs.tombstones import JsonlTombstoneLog
 from princess_app.adapters.postgres.access import PostgresReportAccess
 from princess_app.adapters.postgres.commerce import PostgresLedger
 from princess_app.adapters.postgres.exports import PostgresExportRepository
@@ -98,7 +99,8 @@ def compose(config: RuntimeConfig) -> Services:
                     report_store_for=reports, kill_switches=kill_switches,
                     dev_identity=provider, audience=audience, intake=intake, dev_store=store, commerce=commerce,
                     report_access=access, exports=exports,
-                    feedback=FeedbackService(reports=reports, repo=PostgresFeedbackRepository(db), clock=clock))
+                    feedback=FeedbackService(reports=reports, repo=PostgresFeedbackRepository(db), clock=clock),
+                    tombstones=tombstone_log())
 
 
 def local_store(config: RuntimeConfig, clock) -> LocalObjectStore:
@@ -107,6 +109,13 @@ def local_store(config: RuntimeConfig, clock) -> LocalObjectStore:
     return LocalObjectStore(root, signing_key=config.secret(key_name).encode(), clock=clock,
                             environment=config.environment,
                             public_base=os.environ.get("PRINCESS_PUBLIC_API_BASE", "http://127.0.0.1:8000"))
+
+
+def tombstone_log() -> JsonlTombstoneLog:
+    """Kept apart from the database so a restore cannot roll it back
+    (production: an append-only store, pending ADR-004)."""
+    default = Path(os.environ.get("PRINCESS_LOCAL_STORAGE_DIR", str(ROOT / ".local-storage"))) / "tombstones"
+    return JsonlTombstoneLog(Path(os.environ.get("PRINCESS_TOMBSTONE_DIR", str(default))))
 
 
 def app_from_environment() -> FastAPI:

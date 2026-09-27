@@ -26,6 +26,7 @@ from princess_app.application.identity import IdentityService, Principal
 from princess_app.application.intake import ChallengeProof, IntakeService
 from princess_app.application.permissions import PermissionService
 from princess_app.application.reports import ReportAccessResolver, ReportReader, ReportStore
+from princess_app.application.tombstones import ACCOUNT_DELETED, CAPTURE_DELETED, Tombstone, TombstoneLog
 from princess_app.domain.analysis import rfc3339
 from princess_app.domain.commerce import Platform
 from princess_app.domain.feedback import FeedbackSubmission
@@ -87,6 +88,8 @@ class Services:
     report_access: ReportAccessResolver | None = None
     exports: ExportService | None = None
     feedback: FeedbackService | None = None
+    # Deletions recorded outside the database, replayed after a restore.
+    tombstones: TombstoneLog | None = None
 
 
 class _Strict(BaseModel):
@@ -226,9 +229,19 @@ def create_app(services: Services) -> FastAPI:
         services.identity.logout_everywhere(who, call_context(request))
         return Response(status_code=204)
 
+    def tombstone(kind: str, owner_id: str, ref: str) -> None:
+        """Fast path after the commit. Best effort: the erasure worker writes
+        the same tombstone before it processes the deletion event."""
+        if services.tombstones is not None:
+            try:
+                services.tombstones.append(Tombstone(kind, owner_id, ref, services.clock.now()))
+            except OSError:
+                pass
+
     @app.delete("/v1/me", status_code=202)
     def delete_me(request: Request, who: Principal = Depends(principal)) -> dict:
         services.identity.delete_account(who, call_context(request))
+        tombstone(ACCOUNT_DELETED, who.principal_id, who.principal_id)
         return {"state": "DELETION_REQUESTED"}
 
     @app.post("/v1/me/permissions", status_code=201)
@@ -316,6 +329,7 @@ def create_app(services: Services) -> FastAPI:
     @app.delete("/v1/captures/{capture_id}", status_code=202)
     def delete_capture(capture_id: str, who: Principal = Depends(principal)) -> dict:
         intake().delete_capture(who.principal_id, capture_id)
+        tombstone(CAPTURE_DELETED, who.principal_id, capture_id)
         return {"state": "DELETION_REQUESTED"}
 
     # The filesystem store's HMAC-signed PUT stands in for a provider's presigned
