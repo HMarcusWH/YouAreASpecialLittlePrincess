@@ -825,7 +825,7 @@
     {
       "id": "T11",
       "title": "Owned pilot recruitment and annotation",
-      "status": "PLANNED",
+      "status": "IN_PROGRESS",
       "depends_on": [
         "T03",
         "T04"
@@ -840,7 +840,10 @@
       "required_docs": [
         "docs/roadmap/02-corpus-benchmarks.md",
         "docs/roadmap/17-security-privacy-and-abuse.md",
-        "docs/roadmap/16-testing-evals-and-quality-gates.md"
+        "docs/roadmap/16-testing-evals-and-quality-gates.md",
+        "docs/privacy/collection-protocol.md",
+        "docs/privacy/validated-release-boundary.md",
+        "docs/data/pilot-tooling.md"
       ],
       "owned_paths": [
         "evaluation/collection/",
@@ -873,6 +876,14 @@
       ],
       "rollback": [
         "Quarantine affected records and propagate withdrawal; preserve only authorized audit references."
+      ],
+      "implementation_evidence": "PR #22 adds metadata-only T11 pilot tooling: canonical collection-manifest/v1 compilation, local capture hashing with path/PII exclusion, synthetic semantic qualification through the existing consent validator, deterministic writer-disjoint split planning, metadata-only annotation worklists and descriptive recruitment summaries. Human mode remains fail-closed behind the real pilot gate with no override; all checked-in pilot bytes are explicitly synthetic.",
+      "remaining_work": [
+        "Obtain explicit pilot_rights_consent approval with all required owner/legal/privacy decisions, approved protocol/prompt rights and active participant notice; do not treat tooling as approval.",
+        "Recruit actual eligible writers through approved channels and obtain inspectable participant permissions/evidence under the approved collection agreement.",
+        "Collect protected controlled/free specimens, repeat captures and later-session specimens without committing handwriting, names, agreements or private evidence to Git/CI artifacts.",
+        "Run authorized protected annotation, record annotation provenance and inter-annotator disagreement, and freeze real writer-disjoint evaluation evidence from the approved human release boundary.",
+        "Exercise actual participant withdrawal/deletion before corpus release and record real recruitment-bias, counts, exclusions and protected audit evidence."
       ]
     },
     {
