@@ -1,0 +1,118 @@
+{
+  "synthetic": true,
+  "release_purpose": {
+    "purpose_id": "engineering_evaluation",
+    "purpose_version": 1
+  },
+  "release_cutoff": "2026-03-01T00:00:00Z",
+  "writers": [
+    {
+      "writer_id": "wrt_syn1",
+      "adult_eligibility": "DECLARED_ADULT",
+      "enrollment_id": "enr_syn1"
+    },
+    {
+      "writer_id": "wrt_syn2",
+      "adult_eligibility": "DECLARED_ADULT",
+      "enrollment_id": "enr_syn2"
+    },
+    {
+      "writer_id": "wrt_syn3",
+      "adult_eligibility": "DECLARED_ADULT",
+      "enrollment_id": "enr_syn3"
+    }
+  ],
+  "specimens": [
+    {
+      "specimen_id": "spc_syn1",
+      "writer_id": "wrt_syn1",
+      "task_id": "copy_en",
+      "session_index": 1,
+      "collected_at": "2026-02-01T10:00:00Z",
+      "declared_language": "en",
+      "declared_script": "LATIN",
+      "declared_style": "PRINT",
+      "paper": "BLANK",
+      "instrument": "BALLPOINT",
+      "context_status": "SUPPORTED"
+    },
+    {
+      "specimen_id": "spc_syn2",
+      "writer_id": "wrt_syn2",
+      "task_id": "copy_sv",
+      "session_index": 1,
+      "collected_at": "2026-02-01T10:00:00Z",
+      "declared_language": "sv",
+      "declared_script": "LATIN",
+      "declared_style": "CURSIVE",
+      "paper": "LINED",
+      "instrument": "PENCIL",
+      "context_status": "SUPPORTED"
+    },
+    {
+      "specimen_id": "spc_syn3",
+      "writer_id": "wrt_syn3",
+      "task_id": "free_en",
+      "session_index": 1,
+      "collected_at": "2026-02-01T10:00:00Z",
+      "declared_language": "en",
+      "declared_script": "LATIN",
+      "declared_style": "MIXED",
+      "paper": "BLANK",
+      "instrument": "GEL_OR_ROLLERBALL",
+      "context_status": "SUPPORTED"
+    },
+    {
+      "specimen_id": "spc_syn4",
+      "writer_id": "wrt_syn3",
+      "task_id": "free_en",
+      "session_index": 2,
+      "collected_at": "2026-02-15T10:00:00Z",
+      "declared_language": "en",
+      "declared_script": "LATIN",
+      "declared_style": "MIXED",
+      "paper": "BLANK",
+      "instrument": "GEL_OR_ROLLERBALL",
+      "context_status": "SUPPORTED"
+    }
+  ],
+  "captures": [
+    {
+      "capture_id": "cap_syn1",
+      "specimen_id": "spc_syn1",
+      "capture_index": 1,
+      "captured_at": "2026-02-01T10:05:00Z",
+      "source_path": "captures/w1.txt",
+      "repeat_of_capture_id": null
+    },
+    {
+      "capture_id": "cap_syn2",
+      "specimen_id": "spc_syn2",
+      "capture_index": 1,
+      "captured_at": "2026-02-01T10:05:00Z",
+      "source_path": "captures/w2.txt",
+      "repeat_of_capture_id": null
+    },
+    {
+      "capture_id": "cap_syn3",
+      "specimen_id": "spc_syn3",
+      "capture_index": 1,
+      "captured_at": "2026-02-01T10:05:00Z",
+      "source_path": "captures/w3-s1.txt",
+      "repeat_of_capture_id": null
+    },
+    {
+      "capture_id": "cap_syn4",
+      "specimen_id": "spc_syn4",
+      "capture_index": 1,
+      "captured_at": "2026-02-15T10:05:00Z",
+      "source_path": "captures/w3-s2.txt",
+      "repeat_of_capture_id": null
+    }
+  ],
+  "claimed_counts": {
+    "writers": 3,
+    "specimens": 4,
+    "captures": 4
+  }
+}
