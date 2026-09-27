@@ -6,7 +6,7 @@ export default function AccessibilityNegativeFixture() {
     <section className="stack">
       <h1>Accessibility negative control</h1>
       <p>This fixture is intentionally invalid and exists only to prove the automated gate fires.</p>
-      <button type="button"></button>
+      <button type="button"><span aria-hidden="true">×</span></button>
     </section>
   );
 }
