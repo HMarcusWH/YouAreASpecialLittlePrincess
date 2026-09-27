@@ -78,5 +78,54 @@ test("upload, refresh queued work, report, history and export without any AI pro
   await expect(nobody.locator("tr[data-fact-id]")).toHaveCount(0);
   await anonymous.close();
 
+  // A guest can see the settings surface but cannot opt into account email.
+  await page.goto("/settings");
+  await expect(page.getByText("Email notifications are available after signing in to an account.")).toBeVisible();
+  await expect(page.getByRole("checkbox", { name: "Email me when a report is ready" })).toHaveCount(0);
+  await expectAccessible(page, testInfo);
+
+  // UI hiding is not authorization: a guest attempting the same-origin mutation is rejected by the backend.
+  const settingsOrigin = new URL(page.url()).origin;
+  const guestEnable = await page.request.put(settingsOrigin + "/api/v1/me/notification-preferences", {
+    headers: { origin: settingsOrigin },
+    data: { mail_report_ready: true, locale: "en" },
+  });
+  expect(guestEnable.status()).toBe(403);
+  expect(await guestEnable.json()).toEqual({ error: "account_required" });
+
+  // Test-only provider sign-in creates a synthetic account; no production IdP is activated.
+  const login = await page.request.post(settingsOrigin + "/api/session/dev-login", {
+    headers: { origin: settingsOrigin },
+    data: { subject: "mail-pref-account" },
+  });
+  expect(login.status()).toBe(201);
+  await page.reload();
+
+  const preference = page.getByRole("checkbox", { name: "Email me when a report is ready" });
+  await expect(preference).toBeVisible();
+  await expect(preference).not.toBeChecked();
+  await expectAccessible(page, testInfo);
+
+  await preference.check();
+  await page.getByRole("button", { name: "Save email preference" }).click();
+  await expect(page.getByRole("status")).toHaveText("Email preference saved.");
+  await expectAccessible(page, testInfo);
+  await page.reload();
+  await expect(preference).toBeChecked();
+
+  // The proxy exposes exactly GET/PUT for the preference route and retains the same-origin mutation fence.
+  const crossOrigin = await page.request.put(settingsOrigin + "/api/v1/me/notification-preferences", {
+    headers: { origin: "https://attacker.example" },
+    data: { mail_report_ready: false, locale: "en" },
+  });
+  expect(crossOrigin.status()).toBe(403);
+  expect((await page.request.get(settingsOrigin + "/api/v1/me/notification-preferences/extra")).status()).toBe(404);
+
+  await preference.uncheck();
+  await page.getByRole("button", { name: "Save email preference" }).click();
+  await expect(page.getByRole("status")).toHaveText("Email preference saved.");
+  await page.reload();
+  await expect(preference).not.toBeChecked();
+
   expect(api).toMatch(/^http:\/\/127\.0\.0\.1:\d+$/);
 });

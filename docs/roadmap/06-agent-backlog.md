@@ -1907,7 +1907,7 @@ Operable staged infrastructure and recovery/notification/support evidence, not p
 
 ### Implementation evidence
 
-PR #14 slices 19b00a0, 3b2087e, 5a22ba4 and final repair d2e1063 implemented redacted report feedback, ops commands/runbooks, append-only restore tombstones for deletions/withdrawals/logout-everywhere, and an outbox-driven notification state machine with kill switch and fake mail/push adapters. This repair adds transactionally queued outbox events plus external restore tombstones for single-device logout and feedback withdrawal, with temporal replay guards that preserve newer re-registration/resubmission.
+PR #14 slices 19b00a0, 3b2087e, 5a22ba4 and final repair d2e1063 implemented redacted report feedback, ops commands/runbooks, append-only restore tombstones for deletions/withdrawals/logout-everywhere, and an outbox-driven notification state machine with kill switch and fake mail/push adapters. This repair adds transactionally queued outbox events plus external restore tombstones for single-device logout and feedback withdrawal, with temporal replay guards that preserve newer re-registration/resubmission. PR #20 exposes the existing account report-ready mail preference through the typed client and exact same-origin web proxy, with guest refusal, persistence, CSRF/route-boundary and accessibility coverage in the isolated live-web journey; no mail provider is activated.
 
 ### Remaining work
 
@@ -1916,7 +1916,7 @@ PR #14 slices 19b00a0, 3b2087e, 5a22ba4 and final repair d2e1063 implemented red
 - Implement live transactional mail plus signed bounce/complaint handling; integrate APNs/FCM with T29–T31 once native signing/accounts exist.
 - Implement broader key rotation/compromise handling, account/identity recovery and store-rollout halt procedures.
 - Add deployed dashboards/alert thresholds/named operational ownership, edge/global rate limits and the production deployment/installable backend topology.
-- Expose the web mail-preference surface and add a lease heartbeat only if measured production latency makes the current lease unsafe.
+- Add a lease heartbeat only if measured production latency makes the current lease unsafe.
 
 ### Acceptance evidence
 

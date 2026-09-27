@@ -38,6 +38,22 @@ export interface Capture {
   readonly media_type: string;
 }
 
+export interface NotificationPreferences {
+  readonly mail_report_ready: boolean;
+  readonly locale: string;
+}
+
+const LOCALE = /^[a-z]{2}(?:-[A-Z]{2})?$/;
+
+export function parseNotificationPreferences(raw: unknown): NotificationPreferences {
+  const value = raw as Record<string, unknown> | null;
+  if (!value || typeof value.mail_report_ready !== "boolean" || typeof value.locale !== "string"
+      || !LOCALE.test(value.locale) || Object.keys(value).some((key) => key !== "mail_report_ready" && key !== "locale")) {
+    throw new ApiError(502, "unreadable_notification_preferences");
+  }
+  return value as unknown as NotificationPreferences;
+}
+
 export type Projection = "FREE" | "OWNER" | "EXPORT";
 
 export type ExportState = "QUEUED" | "READY" | "FAILED" | "REVOKED";
@@ -162,6 +178,14 @@ export class PrincessApi {
 
   deleteCapture(captureId: string): Promise<unknown> {
     return this.call("DELETE", `/v1/captures/${encodeURIComponent(captureId)}`);
+  }
+
+  async notificationPreferences(): Promise<NotificationPreferences> {
+    return parseNotificationPreferences(await this.call("GET", "/v1/me/notification-preferences"));
+  }
+
+  async setNotificationPreferences(preferences: NotificationPreferences): Promise<NotificationPreferences> {
+    return parseNotificationPreferences(await this.call("PUT", "/v1/me/notification-preferences", preferences));
   }
 
   logoutEverywhere(): Promise<unknown> {
