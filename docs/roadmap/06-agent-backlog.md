@@ -31,7 +31,7 @@ Use `python docs/roadmap/plan_tools.py --ready` or `--task ID`. Edit tasks.json 
 | [T14 — Benchmark publish withdraw drift rollback](#t14) | PLANNED | T03, T13 | data-platform |
 | [T15 — Evidence-bound OpenAI adapter](#t15) | IMPLEMENTED_PENDING_REVIEW | T01, T09, T26, T27 | premium-backend |
 | [T16 — Model evaluation and generation policy](#t16) | PLANNED | T06, T15 | evaluation |
-| [T17 — Interactive Free web product](#t17) | PLANNED | T02, T04, T09, T10, T28 | frontend |
+| [T17 — Interactive Free web product](#t17) | IMPLEMENTED_PENDING_REVIEW | T02, T04, T09, T10, T28 | frontend |
 | [T18 — Deterministic pair and history comparison](#t18) | PLANNED | T08, T09 | statistics-report |
 | [T19 — Cross-platform purchase ledger entitlements and metered jobs](#t19) | IMPLEMENTED_PENDING_REVIEW | T02, T03, T09, T15, T27 | commerce |
 | [T20 — Premium and paid-pair web experience](#t20) | PLANNED | T15, T16, T17, T18, T19, T21, T24 | frontend-premium |
@@ -131,6 +131,19 @@ State: `EXISTS_IN_THIS_PR`. Shared TypeScript packages only (generated contracts
 pnpm install --frozen-lockfile
 pnpm typecheck
 pnpm test
+```
+
+<a id="validation-web_browser"></a>
+### web_browser
+
+State: `EXISTS_IN_THIS_PR`. Free web journeys in Chromium: fixture-backed report views (projection parity, missing-not-zero, evidence labels, keyboard focus, 320px Swedish overflow, dark mode, security headers, proxy allowlist and CSRF) in CI; the live upload-to-report journey (resume on refresh, cross-owner 404) runs locally against PostgreSQL via tools/run_web_e2e.sh. Not PDF, share-card or automated axe coverage.
+
+```bash
+pnpm install --frozen-lockfile
+pnpm --filter @princess/web build
+pnpm --filter @princess/web exec playwright install --with-deps chromium
+pnpm --filter @princess/web e2e
+tools/run_web_e2e.sh
 ```
 
 <a id="validation-web_render"></a>
@@ -1329,7 +1342,7 @@ No approval is created by this task brief. Mock/disabled implementation is not a
 <a id="t17"></a>
 ## T17 — Interactive Free web product
 
-**Status:** `PLANNED` · **Owner:** frontend · **Milestone:** free
+**Status:** `IMPLEMENTED_PENDING_REVIEW` · **Owner:** frontend · **Milestone:** free
 
 **Hard predecessors:** [T02](#t02), [T04](#t04), [T09](#t09), [T10](#t10), [T28](#t28)
 **Platforms:** web
@@ -1386,7 +1399,7 @@ Working Free web journey and reusable web report components tied to saved projec
 
 ### Validation and human gates
 
-Validation profiles: [docs](#validation-docs), [contracts](#validation-contracts), [web_render](#validation-web_render), [backend](#validation-backend). Planned suites must be implemented and their actual command documented by the owning task; they are not passing tests today.
+Validation profiles: [docs](#validation-docs), [contracts](#validation-contracts), [js_packages](#validation-js_packages), [web_browser](#validation-web_browser), [web_render](#validation-web_render), [backend](#validation-backend). Planned suites must be implemented and their actual command documented by the owning task; they are not passing tests today.
 
 - `design_acceptance`: Owner acceptance of real contract-driven web/native/report design.
 - `processor_retention_contracts`: Approved providers, regions, purposes, retention/deletion and support obligations.

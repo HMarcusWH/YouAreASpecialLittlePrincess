@@ -87,3 +87,11 @@ jobs:
         run: python3 tools/generate_design_tokens.py --check
       - run: pnpm typecheck
       - run: pnpm test
+      - name: Build the web app
+        run: pnpm --filter @princess/web build
+        env:
+          NEXT_TELEMETRY_DISABLED: "1"
+      - name: Browser journeys over the shared report fixtures
+        run: |
+          pnpm --filter @princess/web exec playwright install --with-deps chromium
+          pnpm --filter @princess/web e2e

@@ -1,0 +1,28 @@
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--color-surface); color: var(--color-text); font-family: var(--font-family-text);
+  font-size: var(--font-size-md); line-height: var(--font-line-height-normal); }
+main { padding: var(--space-5) var(--space-4); max-width: 72rem; margin: 0 auto; }
+a { color: var(--color-accent); }
+:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 2px; }
+.skip-link { position: absolute; left: var(--space-3); top: -4rem; background: var(--color-surface-raised); padding: var(--space-2); }
+.skip-link:focus { top: var(--space-3); }
+.site-header { display: flex; flex-wrap: wrap; gap: var(--space-4); align-items: center; justify-content: space-between;
+  padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--color-border); }
+.site-header nav { display: flex; gap: var(--space-4); flex-wrap: wrap; }
+.site-header a { min-height: var(--target-min-touch); display: inline-flex; align-items: center; }
+.brand { font-weight: var(--font-weight-bold); text-decoration: none; color: var(--color-text); }
+.button { min-height: var(--target-min-touch); padding: 0 var(--space-5); border-radius: var(--radius-md); border: 0;
+  background: var(--color-accent); color: var(--color-accent-contrast); font: inherit; font-weight: var(--font-weight-medium);
+  cursor: pointer; display: inline-flex; align-items: center; text-decoration: none; }
+.button[disabled] { opacity: 0.6; cursor: not-allowed; }
+.button-secondary { background: transparent; color: var(--color-text); border: 1px solid var(--color-border-strong); }
+.stack { display: grid; gap: var(--space-4); }
+.panel { background: var(--color-surface-sunken); border-radius: var(--radius-lg); padding: var(--space-5); }
+.status { font-size: var(--font-size-lg); }
+.error { color: var(--color-state-danger); }
+.muted { color: var(--color-text-muted); }
+fieldset { border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: var(--space-4); }
+label { display: flex; gap: var(--space-3); align-items: flex-start; }
+input[type="checkbox"] { width: 1.25rem; height: 1.25rem; margin-top: 0.2rem; }
+@media (prefers-reduced-motion: no-preference) { .progress { transition: opacity var(--motion-duration-base) var(--motion-easing-standard); } }

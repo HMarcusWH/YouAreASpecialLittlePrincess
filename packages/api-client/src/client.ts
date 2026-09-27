@@ -1,0 +1,161 @@
+// Typed calls to the product API. In the browser the base URL is the web
+// app's same-origin proxy (the session cookie never reaches client code); on
+// the server it is the API with a bearer token read from the session cookie.
+import type { ReportViewModel } from "@princess/contracts";
+import { parseReportView, parseRunStatus, type RunStatus } from "./guards.ts";
+
+export class ApiError extends Error {
+  readonly status: number;
+  readonly code: string;
+
+  constructor(status: number, code: string) {
+    super(`${status} ${code}`);
+    this.name = "ApiError";
+    this.status = status;
+    this.code = code;
+  }
+}
+
+export interface ClientOptions {
+  readonly baseUrl: string;
+  readonly fetch?: typeof fetch;
+  readonly token?: string | null;
+  readonly correlationId?: string;
+}
+
+export interface UploadTicket {
+  readonly upload_id: string;
+  readonly method: string;
+  readonly url: string;
+  readonly expires_at: string;
+  readonly max_bytes: number;
+}
+
+export interface Capture {
+  readonly capture_id: string;
+  readonly width: number;
+  readonly height: number;
+  readonly media_type: string;
+}
+
+export type Projection = "FREE" | "OWNER" | "EXPORT";
+
+const SAFE_CODE = /^[a-z0-9_.:-]{1,64}$/;
+
+export class PrincessApi {
+  private readonly base: string;
+  private readonly doFetch: typeof fetch;
+  private readonly token: string | null;
+  private readonly correlationId: string | undefined;
+
+  constructor(options: ClientOptions) {
+    this.base = options.baseUrl.replace(/\/+$/, "");
+    // Never call the global fetch as a method of this object: browsers throw "Illegal invocation".
+    this.doFetch = options.fetch ?? ((input, init) => globalThis.fetch(input, init));
+    this.token = options.token ?? null;
+    this.correlationId = options.correlationId;
+  }
+
+  private async call(method: string, path: string, body?: unknown): Promise<unknown> {
+    const headers: Record<string, string> = { accept: "application/json" };
+    if (body !== undefined) headers["content-type"] = "application/json";
+    if (this.token) headers.authorization = `Bearer ${this.token}`;
+    if (this.correlationId) headers["x-correlation-id"] = this.correlationId;
+    const init: RequestInit = { method, headers, cache: "no-store", credentials: "same-origin" };
+    if (body !== undefined) init.body = JSON.stringify(body);
+    const response = await this.doFetch(`${this.base}${path}`, init);
+    if (response.status === 204) return null;
+    let payload: unknown = null;
+    try {
+      payload = await response.json();
+    } catch {
+      if (response.ok) throw new ApiError(response.status, "unreadable_response");
+    }
+    if (!response.ok) {
+      const raw = (payload as { error?: unknown } | null)?.error;
+      throw new ApiError(response.status, typeof raw === "string" && SAFE_CODE.test(raw) ? raw : "request_failed");
+    }
+    return payload;
+  }
+
+  me(): Promise<{ principal_id: string; kind: "ACCOUNT" | "GUEST" }> {
+    return this.call("GET", "/v1/me") as Promise<{ principal_id: string; kind: "ACCOUNT" | "GUEST" }>;
+  }
+
+  reserveUpload(mediaType: "image/jpeg" | "image/png"): Promise<UploadTicket> {
+    return this.call("POST", "/v1/uploads", { media_type: mediaType }) as Promise<UploadTicket>;
+  }
+
+  completeUpload(uploadId: string, sha256: string): Promise<Capture> {
+    return this.call("POST", `/v1/uploads/${encodeURIComponent(uploadId)}/complete`, { sha256 }) as Promise<Capture>;
+  }
+
+  recordPermission(choice: { purpose_id: string; scope_kind: string; scope_ref: string | null;
+                             decision: "GRANT" | "DENY" | "WITHDRAW"; notice_version: string;
+                             request_id: string }): Promise<unknown> {
+    return this.call("POST", "/v1/me/permissions", choice);
+  }
+
+  async startAnalysis(captureId: string): Promise<{ run_id: string; state: string }> {
+    return this.call("POST", "/v1/analyses", { capture_id: captureId }) as Promise<{ run_id: string; state: string }>;
+  }
+
+  async analysis(runId: string): Promise<RunStatus> {
+    return parseRunStatus(await this.call("GET", `/v1/analyses/${encodeURIComponent(runId)}`));
+  }
+
+  cancelAnalysis(runId: string): Promise<unknown> {
+    return this.call("POST", `/v1/analyses/${encodeURIComponent(runId)}/cancel`);
+  }
+
+  async report(reportId: string, projection: Projection = "OWNER"): Promise<ReportViewModel> {
+    const path = `/v1/reports/${encodeURIComponent(reportId)}?projection=${projection}`;
+    return parseReportView(await this.call("GET", path));
+  }
+
+  deleteCapture(captureId: string): Promise<unknown> {
+    return this.call("DELETE", `/v1/captures/${encodeURIComponent(captureId)}`);
+  }
+
+  logoutEverywhere(): Promise<unknown> {
+    return this.call("POST", "/v1/me/logout-everywhere");
+  }
+
+  deleteAccount(): Promise<unknown> {
+    return this.call("DELETE", "/v1/me");
+  }
+}
+
+/** Drops responses that arrive after the signed-in principal changed. */
+export class SessionEpoch {
+  private epoch = 0;
+
+  current(): number {
+    return this.epoch;
+  }
+
+  switchPrincipal(): void {
+    this.epoch += 1;
+  }
+
+  async guard<T>(work: Promise<T>): Promise<T | null> {
+    const started = this.epoch;
+    const result = await work;
+    return started === this.epoch ? result : null;
+  }
+}
+
+/** Cache keys include principal and revision so one account never sees another's report. */
+export function reportCacheKey(principalId: string, reportId: string, revision: number, projection: Projection): string {
+  return ["report", principalId, reportId, String(revision), projection].join("|");
+}
+
+/** Bounded backoff for job polling: never a tight loop, never forever. */
+export function pollDelayMs(attempt: number): number {
+  return Math.min(8000, 500 * 2 ** Math.min(attempt, 4));
+}
+
+export async function sha256Hex(bytes: ArrayBuffer): Promise<string> {
+  const digest = await crypto.subtle.digest("SHA-256", bytes);
+  return Array.from(new Uint8Array(digest), (b) => b.toString(16).padStart(2, "0")).join("");
+}

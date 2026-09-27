@@ -9,3 +9,6 @@ build/
 .DS_Store
 node_modules/
 .local-storage/
+.next/
+playwright-report/
+test-results/
