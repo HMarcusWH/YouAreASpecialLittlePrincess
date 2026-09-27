@@ -14,12 +14,18 @@ account owns: each remaining asset's object versions are erased and verified,
 then the account's analysis records, reports and Premium payloads are removed
 in one database step that refuses to run while any asset is unverified.
 
+Withdrawals (``permission.withdrawn``) and "log out everywhere"
+(``sessions.revoked``) pass through here too. Each deletion, withdrawal and
+revocation is written to the tombstone log before its event is handled, so a
+database restore cannot undo it (see ``application.tombstones``).
+
 Deletes are idempotent, so an event processed twice (crash before marking it
 dispatched, or two consumers) is harmless. An event whose erasure cannot be
 verified stays pending and is retried.
 """
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Callable, Mapping, Protocol
@@ -29,7 +35,15 @@ from ..ports.base import CallContext, Clock, PortError
 from ..ports.storage import ObjectStore
 from .intake import RETENTION_PURPOSE
 from .permissions import PermissionService
-from .tombstones import ACCOUNT_DELETED, CAPTURE_DELETED, Tombstone, TombstoneLog
+from .tombstones import (
+    ACCOUNT_DELETED,
+    CAPTURE_DELETED,
+    PERMISSION_WITHDRAWN as WITHDRAWAL_TOMBSTONE,
+    SESSIONS_REVOKED,
+    Tombstone,
+    TombstoneLog,
+    merged_expansion,
+)
 
 DELETION = "capture.deletion_requested"
 RETENTION_REVIEW = "capture.retention_review"
@@ -37,7 +51,9 @@ ACCOUNT_DELETION = "account.deletion_requested"
 UPLOAD_REJECTED = "upload.rejected"  # promoted bytes failed inspection; erase them
 ASSET_ERASURE = "asset.erasure_requested"  # e.g. a revoked or never-published export
 PERMISSION_WITHDRAWN = "permission.withdrawn"  # queued with the decision; re-applies its effects
-TOPICS = (DELETION, RETENTION_REVIEW, ACCOUNT_DELETION, UPLOAD_REJECTED, ASSET_ERASURE, PERMISSION_WITHDRAWN)
+SESSIONS_REVOKED_TOPIC = "sessions.revoked"  # "log out everywhere": recorded as a tombstone only
+TOPICS = (DELETION, RETENTION_REVIEW, ACCOUNT_DELETION, UPLOAD_REJECTED, ASSET_ERASURE, PERMISSION_WITHDRAWN,
+          SESSIONS_REVOKED_TOPIC)
 # A completed capture with no analysis after this long is reviewed (draft, owner-pending).
 IDLE_CAPTURE_SECONDS = 24 * 3600
 
@@ -86,13 +102,32 @@ class ErasureOutbox(Protocol):
         """Queue retention reviews for captures that never went on to an analysis."""
         ...
 
+    def merged_guests(self, owner_id: str) -> list[str]:
+        """Guest principals whose data was merged into this account."""
+        ...
+
     def dispatched(self, event_id: str, at: datetime) -> None: ...
+
+
+_FRACTION = re.compile(r"\.(\d{1,6})(?=[+-]\d{2}:\d{2}$)")
+
+
+def _payload_time(value: object, fallback: datetime) -> datetime:
+    """Times in outbox payloads are ISO strings written by PostgreSQL, which
+    trims trailing zeros from fractional seconds; widen them to six digits
+    so every supported Python parses them."""
+    text = _FRACTION.sub(lambda m: "." + m.group(1).ljust(6, "0"), str(value))
+    try:
+        parsed = datetime.fromisoformat(text)
+    except ValueError:
+        return fallback
+    return parsed if parsed.tzinfo is not None else fallback
 
 
 @dataclass(frozen=True)
 class ErasureOutcome:
     event_id: str
-    action: str  # ERASED | KEPT | WAITING | UNVERIFIED | SKIPPED | PROPAGATED
+    action: str  # ERASED | KEPT | WAITING | UNVERIFIED | SKIPPED | PROPAGATED | RECORDED
 
 
 class ErasureWorker:
@@ -118,13 +153,29 @@ class ErasureWorker:
 
     def _tombstone(self, event: OutboxEvent) -> bool:
         """Durable path for the tombstone: the event is not processed (and so
-        stays pending) until its deletion is recorded outside the database."""
-        if self._tombstones is None or event.topic not in (ACCOUNT_DELETION, DELETION):
+        stays pending) until its change is recorded outside the database."""
+        if self._tombstones is None:
             return True
-        kind, ref = ((ACCOUNT_DELETED, event.owner_id) if event.topic == ACCOUNT_DELETION
-                     else (CAPTURE_DELETED, event.aggregate_ref))
+        now = self._clock.now()
+        if event.topic == ACCOUNT_DELETION:
+            entries = merged_expansion(ACCOUNT_DELETED, event.owner_id, event.owner_id, now,
+                                       self._outbox.merged_guests(event.owner_id))
+        elif event.topic == DELETION:
+            entries = merged_expansion(CAPTURE_DELETED, event.owner_id, event.aggregate_ref, now,
+                                       self._outbox.merged_guests(event.owner_id))
+        elif event.topic == PERMISSION_WITHDRAWN:
+            p = event.payload
+            entries = [Tombstone(WITHDRAWAL_TOMBSTONE, event.owner_id, event.aggregate_ref,
+                                 _payload_time(p.get("recorded_at"), now), str(p.get("purpose_id")),
+                                 str(p.get("scope_kind")), p.get("scope_ref"), str(p.get("notice_version")))]
+        elif event.topic == SESSIONS_REVOKED_TOPIC:
+            entries = [Tombstone(SESSIONS_REVOKED, event.owner_id, event.owner_id,
+                                 _payload_time(event.payload.get("at"), now))]
+        else:
+            return True
         try:
-            self._tombstones.append(Tombstone(kind, event.owner_id, ref, self._clock.now()))
+            for entry in entries:
+                self._tombstones.append(entry)
         except OSError:
             return False
         return True
@@ -135,6 +186,9 @@ class ErasureWorker:
             return ErasureOutcome(event.event_id, "UNVERIFIED")
         if event.topic == ACCOUNT_DELETION:
             return self._erase_account(event)
+        if event.topic == SESSIONS_REVOKED_TOPIC:
+            self._outbox.dispatched(event.event_id, now)
+            return ErasureOutcome(event.event_id, "RECORDED")
         if event.topic == PERMISSION_WITHDRAWN and self._propagate is not None:
             p = event.payload
             self._propagate(event.owner_id, str(p.get("purpose_id")), Scope(str(p.get("scope_kind")),
@@ -191,5 +245,6 @@ class ErasureWorker:
         return ErasureOutcome(event.event_id, "ERASED")
 
 
-__all__ = ["ACCOUNT_DELETION", "ASSET_ERASURE", "CaptureAsset", "PERMISSION_WITHDRAWN", "DELETION", "ErasureOutbox", "ErasureOutcome", "ErasureWorker", "OutboxEvent",
+__all__ = ["ACCOUNT_DELETION", "ASSET_ERASURE", "CaptureAsset", "PERMISSION_WITHDRAWN", "DELETION",
+           "SESSIONS_REVOKED_TOPIC", "ErasureOutbox", "ErasureOutcome", "ErasureWorker", "OutboxEvent",
            "RETENTION_REVIEW", "TOPICS", "UPLOAD_REJECTED"]

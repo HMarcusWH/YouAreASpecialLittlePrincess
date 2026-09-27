@@ -328,7 +328,7 @@ def test_ops_commands_run_against_the_composed_stack(app_url, tmp_path, monkeypa
     assert lines == [{"command": "complete-pending", "completed": 0},
                      {"command": "reconcile", "outcomes": {}, "rail": "stripe"},
                      {"command": "expire-feedback", "expired": 0},
-                     {"command": "replay-tombstones", "already": 0, "reapplied": 0, "unknown": 0}]
+                     {"command": "replay-tombstones", "already": 0, "reapplied": 0, "unknown": 0, "unreadable": 0}]
 
 
 

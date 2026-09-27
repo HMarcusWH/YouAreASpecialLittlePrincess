@@ -103,7 +103,7 @@ def publish_report(app_db, owner_id, run_id="run_1"):
     return report
 
 
-HEAD = "0008_notifications"
+HEAD = "0009_restore_and_transfer"
 
 
 def version(admin_engine):

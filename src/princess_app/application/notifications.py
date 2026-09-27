@@ -129,7 +129,7 @@ class NotificationRepository(Protocol):
 
     def unbind(self, owner_id: str, installation_id: str) -> bool: ...
 
-    def unbind_all(self, owner_id: str) -> int: ...
+    def unbind_all(self, owner_id: str, registered_before: datetime | None = None) -> int: ...
 
     def preferences(self, owner_id: str) -> Preferences | None: ...
 
@@ -185,9 +185,10 @@ class NotificationService:
         """Logout or account switch on the device. Idempotent; queued notices go too."""
         self._repo.unbind(owner_id, installation_id)
 
-    def forget_devices(self, owner_id: str) -> int:
-        """Logout everywhere or account deletion: no device keeps receiving notices."""
-        return self._repo.unbind_all(owner_id)
+    def forget_devices(self, owner_id: str, registered_before: datetime | None = None) -> int:
+        """Logout everywhere or account deletion: no device keeps receiving notices.
+        A restore replay passes the revocation time, so later bindings stay."""
+        return self._repo.unbind_all(owner_id, registered_before)
 
     def preferences(self, owner_id: str) -> Preferences:
         return self._repo.preferences(owner_id) or DEFAULT_PREFERENCES

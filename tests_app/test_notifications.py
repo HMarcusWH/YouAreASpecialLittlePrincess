@@ -246,3 +246,18 @@ def test_account_deletion_skips_queued_notices_and_erasure_removes_every_record(
                           ("notification_preference", "owner_id"), ("mail_suppression", "recipient_ref")):
         assert not rig.rows(f"SELECT 1 FROM app.{table} WHERE {column} = :o", o=who.principal_id), table
     assert rig.mailer.sent == [] and rig.push.delivered == []
+
+
+def test_guest_devices_follow_the_sign_in_and_are_erased_with_the_account(rig):
+    clock, _, identity = rig.world
+    guest, token = identity.create_guest()
+    installation = rig.register(guest)
+    who = rig.principal("sub-n13")
+    identity.transfer_guest(who, token)
+    assert [i.installation_id for i in rig.service.installations(who.principal_id)] == [installation]
+    assert rig.service.installations(guest.principal_id) == []
+    rig.report(who.principal_id)
+    assert [(o.channel, o.state) for o in rig.worker.run_once()] == [(PUSH, "ACCEPTED")]
+    identity.delete_account(who, ctx(clock))
+    assert "ERASED" in {o.action for o in erasure(rig.env).run_once()}
+    assert not rig.rows("SELECT 1 FROM app.push_installation WHERE installation_id = :i", i=installation)

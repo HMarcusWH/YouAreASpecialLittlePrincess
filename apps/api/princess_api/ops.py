@@ -60,8 +60,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     elif args.command == "replay-tombstones":
         db = Database(make_engine(config.secret("PRINCESS_DATABASE_URL")))
         replayed = replay(tombstone_log(), PostgresIdentityStore(db),
-                          PostgresIntakeRepository(db, engine_version=ENGINE_VERSION))
-        result = {"reapplied": replayed.reapplied, "already": replayed.already, "unknown": replayed.unknown}
+                          PostgresIntakeRepository(db, engine_version=ENGINE_VERSION), services.permissions,
+                          services.notifications)
+        result = {"reapplied": replayed.reapplied, "already": replayed.already, "unknown": replayed.unknown,
+                  "unreadable": replayed.unreadable}
     else:
         db = Database(make_engine(config.secret("PRINCESS_DATABASE_URL")))
         result = {"expired": PostgresFeedbackRepository(db).expire(services.clock.now())}

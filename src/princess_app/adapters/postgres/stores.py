@@ -130,6 +130,14 @@ class PostgresIdentityStore:
         with self.db.session(principal_id) as conn:
             conn.execute(text("UPDATE app.principal SET revoked_before = greatest(coalesce(revoked_before, :t), :t) "
                               "WHERE principal_id = :p"), {"p": principal_id, "t": at})
+            # Durable path to the tombstone log, so a restore cannot undo the revocation.
+            stamp = at.strftime("%Y%m%dT%H%M%S%f")
+            conn.execute(text("INSERT INTO app.outbox_event (event_id, topic, owner_id, aggregate_ref, payload, "
+                              "dedupe_key, created_at) VALUES (:e, 'sessions.revoked', :p, :p, "
+                              "jsonb_build_object('at', CAST(:t AS timestamptz)), :d, :t) "
+                              "ON CONFLICT (dedupe_key) DO NOTHING"),
+                         {"e": f"evt.revoked.{principal_id}.{stamp}", "p": principal_id, "t": at,
+                          "d": f"sessions-revoked:{principal_id}:{stamp}"})
 
     def mark_deleted(self, principal_id: str, at: datetime) -> None:
         with self.db.session(principal_id) as conn:

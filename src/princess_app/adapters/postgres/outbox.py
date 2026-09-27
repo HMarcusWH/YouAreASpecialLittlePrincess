@@ -80,6 +80,10 @@ class PostgresErasureOutbox:
             return int(conn.execute(text("SELECT app.review_idle_captures(:t, :s, :n)"),
                                     {"t": now, "s": idle_seconds, "n": limit}).scalar())
 
+    def merged_guests(self, owner_id: str) -> list[str]:
+        with self.db.session() as conn:
+            return list(conn.execute(text("SELECT app.merged_guests(:o)"), {"o": owner_id}).scalars())
+
     def dispatched(self, event_id: str, at: datetime) -> None:
         with self.db.session() as conn:
             conn.execute(text("UPDATE app.outbox_event SET dispatched_at = :t WHERE event_id = :e "

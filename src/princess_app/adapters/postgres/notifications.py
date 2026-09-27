@@ -52,9 +52,12 @@ class PostgresNotificationRepository:
             return conn.execute(text("DELETE FROM app.push_installation WHERE installation_id = :i"),
                                 {"i": installation_id}).rowcount == 1
 
-    def unbind_all(self, owner_id: str) -> int:
-        with self.db.session(owner_id) as conn:
-            return conn.execute(text("DELETE FROM app.push_installation")).rowcount  # RLS: the owner's only
+    def unbind_all(self, owner_id: str, registered_before: datetime | None = None) -> int:
+        with self.db.session(owner_id) as conn:  # RLS: the owner's bindings only
+            if registered_before is None:
+                return conn.execute(text("DELETE FROM app.push_installation")).rowcount
+            return conn.execute(text("DELETE FROM app.push_installation WHERE registered_at <= :b"),
+                                {"b": registered_before}).rowcount
 
     def preferences(self, owner_id: str) -> Preferences | None:
         with self.db.session(owner_id) as conn:

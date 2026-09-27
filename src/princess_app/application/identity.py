@@ -229,6 +229,7 @@ class InMemoryIdentityStore:
 
     def revoke_sessions(self, principal_id: str, at: datetime) -> None:
         self.principals[principal_id] = replace(self.principals[principal_id], revoked_before=at)
+        self.outbox.append(("sessions.revoked", principal_id))
 
     def mark_deleted(self, principal_id: str, at: datetime) -> None:
         self.principals[principal_id] = replace(self.principals[principal_id], deleted_at=at, revoked_before=at)

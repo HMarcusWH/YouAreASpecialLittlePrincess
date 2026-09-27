@@ -27,7 +27,14 @@ from princess_app.application.intake import ChallengeProof, IntakeService
 from princess_app.application.notifications import NotificationService
 from princess_app.application.permissions import PermissionService
 from princess_app.application.reports import ReportAccessResolver, ReportReader, ReportStore
-from princess_app.application.tombstones import ACCOUNT_DELETED, CAPTURE_DELETED, Tombstone, TombstoneLog
+from princess_app.application.tombstones import (
+    ACCOUNT_DELETED,
+    CAPTURE_DELETED,
+    PERMISSION_WITHDRAWN,
+    SESSIONS_REVOKED,
+    Tombstone,
+    TombstoneLog,
+)
 from princess_app.domain.analysis import rfc3339
 from princess_app.domain.commerce import Platform
 from princess_app.domain.feedback import FeedbackSubmission
@@ -243,6 +250,7 @@ def create_app(services: Services) -> FastAPI:
     @app.post("/v1/me/logout-everywhere", status_code=204)
     def logout_everywhere(request: Request, who: Principal = Depends(principal)) -> Response:
         services.identity.logout_everywhere(who, call_context(request))
+        tombstone(SESSIONS_REVOKED, who.principal_id, who.principal_id)
         forget_devices(who.principal_id)
         return Response(status_code=204)
 
@@ -250,12 +258,13 @@ def create_app(services: Services) -> FastAPI:
         if services.notifications is not None:
             services.notifications.forget_devices(owner_id)
 
-    def tombstone(kind: str, owner_id: str, ref: str) -> None:
+    def tombstone(kind: str, owner_id: str, ref: str, **fields: Any) -> None:
         """Fast path after the commit. Best effort: the erasure worker writes
-        the same tombstone before it processes the deletion event."""
+        the same tombstone before it processes the change's outbox event."""
         if services.tombstones is not None:
+            at = fields.pop("at", None) or services.clock.now()
             try:
-                services.tombstones.append(Tombstone(kind, owner_id, ref, services.clock.now()))
+                services.tombstones.append(Tombstone(kind, owner_id, ref, at, **fields))
             except OSError:
                 pass
 
@@ -273,6 +282,10 @@ def create_app(services: Services) -> FastAPI:
             subject_id=who.principal_id, actor_id=who.principal_id, purpose_id=body.purpose_id,
             scope=scope, decision=Decision(body.decision), notice_version=body.notice_version,
             request_id=body.request_id)
+        if event.decision is not Decision.GRANT:
+            tombstone(PERMISSION_WITHDRAWN, event.subject_id, event.event_id, at=event.recorded_at,
+                      purpose_id=event.purpose_id, scope_kind=event.scope.kind, scope_ref=event.scope.ref,
+                      notice_version=event.notice_version)
         if services.intake is not None:
             # T03 withdrawal propagation to intake-owned retention classes.
             services.intake.apply_permission_change(who.principal_id, event.purpose_id, event.scope, event.decision)

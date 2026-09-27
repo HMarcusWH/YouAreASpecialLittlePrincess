@@ -64,6 +64,9 @@ class PermissionService:
             effective_at=effective_at or now, actor_id=actor_id, notice_version=notice_version)
         return self._store.append(event)
 
+    def history(self, subject_id: str, purpose_id: str) -> list[PermissionEvent]:
+        return self._store.events(subject_id, purpose_id)
+
     def check(self, subject_id: str, purpose_id: str, scope: Scope, at: datetime | None = None) -> PermissionCheck:
         epoch = self._store.epoch(subject_id, purpose_id)
         result = evaluate(self._store.events(subject_id, purpose_id), subject_id=subject_id,
