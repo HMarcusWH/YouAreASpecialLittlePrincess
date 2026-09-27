@@ -110,6 +110,13 @@ def compile_packet(report: ValidatedDocument, db: InterpretationDatabase, *, pac
         raise NotApplicable("no_present_facts")
     present_features = {f["feature_id"]: f["fact_id"] for f in facts.values()}
     inputs = available_inputs(doc, image_asset_id)
+    for precondition in pack.get("preconditions", ()):
+        if precondition == "APPLICABLE_QUESTIONS_COMPILED":
+            continue
+        if precondition not in inputs:
+            if precondition == "AUTHORIZED_IMAGE":
+                raise NotApplicable("authorized_image_unavailable")
+            raise NotApplicable("pack_precondition_unavailable")
 
     omissions: list[Omission] = []
     questions: list[dict[str, Any]] = []

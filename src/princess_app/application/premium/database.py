@@ -88,6 +88,7 @@ class InterpretationDatabase:
         self.packs: Mapping[str, Mapping[str, Any]] = MappingProxyType(
             {p["pack_id"]: MappingProxyType({"question_ids": tuple(p["question_ids"]),
                                              "soft_field_ids": tuple(p["soft_field_ids"]),
+                                             "preconditions": tuple(p.get("preconditions", ())),
                                              "output_schema_version": p["output_schema_version"],
                                              "runtime_activation": bool(p["runtime_activation"])})
              for p in data["question_packs"]})
