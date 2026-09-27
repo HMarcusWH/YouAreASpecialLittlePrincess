@@ -107,7 +107,9 @@ test("mail preference is keyboard-operable and fits a 320px viewport", async ({ 
 test("mail preference load failure is announced and remains accessible", async ({ page }, testInfo) => {
   await mockAccountNotificationPreferences(page, { loadFails: true });
   await page.goto("/settings");
-  await expect(page.getByRole("alert")).toHaveText("Email preferences could not be loaded. Please try again.");
+  await expect(page.locator('main [role="alert"]').filter({
+    hasText: "Email preferences could not be loaded. Please try again.",
+  })).toHaveText("Email preferences could not be loaded. Please try again.");
   await expect(page.getByRole("checkbox", { name: "Email me when a report is ready" })).toHaveCount(0);
   await expectAccessible(page, testInfo);
 });
@@ -121,9 +123,9 @@ test("mail preference save failure restores the confirmed value and remains acce
   await preference.check();
   await page.getByRole("button", { name: "Save email preference" }).click();
 
-  await expect(page.getByRole("alert")).toHaveText(
-    "Email preference could not be saved. Your previous setting is unchanged.",
-  );
+  await expect(page.locator('main [role="alert"]').filter({
+    hasText: "Email preference could not be saved. Your previous setting is unchanged.",
+  })).toHaveText("Email preference could not be saved. Your previous setting is unchanged.");
   await expect(preference).not.toBeChecked();
   await expectAccessible(page, testInfo);
 });
