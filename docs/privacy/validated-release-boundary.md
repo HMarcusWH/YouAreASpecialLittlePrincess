@@ -1,9 +1,9 @@
 # Validated consent and collection-release boundary
 
-Status: **implemented reference tooling, pending exact-head review and owner decisions**.
-Scope: T00A/T03 of PR #12. No measurement engine, numerical feature contract,
-participant recruitment, real approval, source clearance or pilot activation is
-created by this change. Revert the structural-repair commit to restore the prior
+Status: **implemented and exact-head qualified reference tooling; human owner/legal/privacy/source/participant decisions remain pending**.
+Scope: T00A/T03 of PR #12 plus subsequent T11 tooling integration. No measurement
+engine, participant recruitment, real approval, source clearance or pilot activation
+is created by this boundary. Revert the structural-repair commit to restore the prior
 reference API; never use rollback to rewrite protected consent history.
 
 ## Why the entry point changed

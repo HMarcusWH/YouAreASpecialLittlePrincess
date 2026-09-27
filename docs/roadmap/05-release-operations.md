@@ -1,30 +1,34 @@
 <!-- roadmap-v2-navigation -->
 > **Roadmap v2 navigation and scope:** [index](00-index.md) · [task briefs](06-agent-backlog.md) · [machine graph](tasks.json) · [build sequence](20-end-to-end-build-sequence.md).
-> This chapter's technical content is retained. Its historical status/scope examples are superseded where explicitly listed in [v2 authority amendments](00-index.md): web, iOS and Android/native payments are main-programme scope; T00 and T26 are historically DONE; T00A is pending follow-up. T26 is reviewed but inactive, not an empty scaffold. Earlier model aliases/prices/API examples are dated research, not approved configuration; see [current source refresh](22-research-and-source-refresh.md). Required release/owner gates are not completed by this documentation.
+> This chapter's technical content is retained. Historical implementation/status examples are superseded by [tasks.json](tasks.json) and the [v2 authority amendments](00-index.md): web, iOS and Android/native payments are main-programme scope; T00, T00A and T26 are DONE; T26 remains reviewed but runtime-inactive. Earlier model aliases/prices/API examples are dated research, not approved configuration; see [current source refresh](22-research-and-source-refresh.md). Required release/owner gates are not completed by this documentation.
 
 # 05 — Product API, security, payments, and operations
 
-Status: proposed deployment/release design. See [07](07-evidence-register.md) for primary sources and [06](06-agent-backlog.md) for implementation gates.
+Status: mixed implemented/current architecture plus remaining deployment/release design. Provider-independent API, workers, persistence, web/render and operational mechanisms now exist; production hosting/providers and several release surfaces remain gated. See [06](06-agent-backlog.md) for current task status.
 
 ## 1. Repository boundaries
 
-Preserve `src/princess_graphology/` as a pure library. Add product surfaces incrementally:
+Preserve `src/princess_graphology/` as a pure library. The current product tree separates implemented application surfaces from still-planned reference/native work:
 
 ```text
-apps/api/                 HTTP, auth, permissions, persistence, outbox
-apps/workers/analysis/    CPU-only safe extraction
-apps/workers/premium/     OpenAI adapter, evidence validation, metering
-apps/web/                 responsive interactive report UX
-apps/render/              isolated Playwright PDF/PNG jobs
-packages/contracts/      generated Python/TypeScript/JSON interfaces
-packages/report-ui/      shared web/print/card components
-migrations/              database schema and rollback tests
-content/                  reviewed localization, templates, rule packs
-reference/                source/cohort manifests and build code, NOT private samples
-evals/                    public-safe synthetic fixtures and test definitions
+apps/api/                    FastAPI auth/permissions/product API
+apps/workers/analysis/       CPU-only deterministic extraction
+apps/workers/premium/        bounded Premium execution/reconciliation
+apps/workers/notifications/  outbox notification delivery
+apps/web/                    responsive Free web product
+apps/render/                 isolated Playwright PDF/PNG jobs
+packages/contracts/          generated product DTOs
+packages/api-client/         typed transport + runtime guards
+packages/report-core/        shared formatting/chart semantics
+packages/report-web/         React web/print/card components
+packages/design-tokens/      shared cross-platform token source
+migrations/                  reviewed PostgreSQL migrations
+content/                     reviewed prompts/content/rule sources
+evaluation/                  public-safe evaluation/pilot tooling
+reference/                   planned source/cohort release pipeline; never private samples
 ```
 
-These paths are planned; do not claim they already exist. Keep input bytes, private samples, production feature vectors and participant consent records outside Git. Add repository exclusions, secret scanning and safe fixture reviews. Public datasets are not automatically safe to redistribute in CI.
+Do not infer implementation merely from a documented path: current task status lives in `tasks.json`. Keep input bytes, private samples, production feature vectors and participant consent records outside Git. Public datasets are not automatically safe to redistribute in CI.
 
 ## 2. Proposed API boundaries
 
