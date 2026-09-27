@@ -1,5 +1,7 @@
 # 23 — Post-PR14 reconciliation
 
+> **Historical snapshot.** This document records the repository state immediately after PR #14 and is retained as append-only reconciliation evidence. It is **not** the current task-status page. For current status use [tasks.json](tasks.json), the generated [backlog](06-agent-backlog.md) and [build sequence](20-end-to-end-build-sequence.md).
+
 [Index](00-index.md) · [Machine graph](tasks.json) · [Build sequence](20-end-to-end-build-sequence.md) · [PR #14](https://github.com/HMarcusWH/YouAreASpecialLittlePrincess/pull/14).
 
 ## Purpose
@@ -59,6 +61,19 @@ The following PR #14 follow-ups remain explicit T24 work unless another task is 
 
 Human gates do not become approvals merely because implementation is complete.
 
-## Resulting handoff
+## Resulting handoff at the PR #14 snapshot
 
-After this reconciliation, `plan_tools.py --ready` should identify T11 as the only newly startable planned task. T29 remains blocked by T10's hard predecessor until the owner explicitly accepts the design. `plan_tools.py --active` surfaces T10, T15, T17, T19, T21 and T24 without confusing them with new READY work.
+At that historical point, `plan_tools.py --ready` identified T11 as the only newly startable planned task; `--active` surfaced T10, T15, T17, T19, T21 and T24.
+
+## Subsequent reconciliations
+
+Later merged work changed the current disposition without rewriting this historical matrix:
+
+- T15 is now DONE provider-independently; live model activation/evaluation remains gated.
+- T17 gained saved history/evidence/accessibility qualification and account mail-preference UI; production identity and accepted-design integration remain.
+- T24 gained single-device/feedback restore tombstones, web mail preferences and deterministic Premium provider-attempt reconciliation; production storage/providers/recovery/operations remain.
+- T11 is IN_PROGRESS with synthetic-qualified, fail-closed pilot tooling; real recruitment/annotation remains gated.
+- T10 now has a production-aware Claude Design handoff but still requires explicit owner `design_acceptance`.
+- No new PLANNED task is READY until T10 is accepted; T29 remains the next native unlock.
+
+Current authority remains [tasks.json](tasks.json).
