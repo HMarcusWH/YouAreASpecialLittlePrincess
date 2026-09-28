@@ -254,7 +254,14 @@ def test_duplicate_json_keys_fail_closed(tmp_path):
         raise AssertionError("duplicate JSON keys must fail closed")
 
 
-def test_display_domain_access_is_defensive():\n    first = display_domain("SLANT_ANGLE_MEAN")\n    assert first is not None\n    first["min"] = 0\n    assert display_domain("SLANT_ANGLE_MEAN")["min"] == -90\n\ndef test_presentation_loader_rejects_nonfinite_and_symlink_inputs(tmp_path):
+def test_display_domain_access_is_defensive():
+    first = display_domain("SLANT_ANGLE_MEAN")
+    assert first is not None
+    first["min"] = 0
+    assert display_domain("SLANT_ANGLE_MEAN")["min"] == -90
+
+
+def test_presentation_loader_rejects_nonfinite_and_symlink_inputs(tmp_path):
     nonfinite = tmp_path / "nonfinite.json"
     nonfinite.write_text('{"value": NaN}', encoding="utf-8")
     try:
