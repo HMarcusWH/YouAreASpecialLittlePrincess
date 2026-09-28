@@ -13,6 +13,7 @@ from princess_app.adapters.fakes import FakeClock
 from princess_app.application.reports import InMemoryReportStore, ReportReader, ShareAccess
 from princess_app.domain.analysis import analysis_reference
 from princess_app.domain.evidence import build_evidence_bundle
+from princess_app.domain.reports.assembly import build_sections
 from princess_app.domain.reports import (
     PremiumAccess,
     PremiumAuthorization,
@@ -84,7 +85,7 @@ def test_missing_stays_missing_and_values_are_never_coerced():
     assert by_id["section.sample"]["availability"] == "READY"  # exact image dimensions
 
 
-def test_highlight_template_pins_presentation_authority():
+def test_compound_highlight_is_uncalibrated_when_any_support_is_uncalibrated():\n    facts = [\n        {\n            "fact_id": "fact.GLYPH_WIDTH_CV", "feature_id": "GLYPH_WIDTH_CV",\n            "availability": "READY", "value": 0.35, "quality": {"n_observations": 20},\n        },\n        {\n            "fact_id": "fact.GLYPH_HEIGHT_CV", "feature_id": "GLYPH_HEIGHT_CV",\n            "availability": "UNCALIBRATED", "value": 0.15, "quality": {"n_observations": 20},\n        },\n    ]\n    sections = build_sections(facts, reference_claims=(), premium_overlay_id=None,\n                              template_version=HIGHLIGHT_TEMPLATE_VERSION)\n    highlight = next(section for section in sections if section["section_id"] == "section.highlight.primary")\n    assert highlight["content_ids"] == ["content.highlight.v1.size.width_more_variable"]\n    assert highlight["availability"] == "UNCALIBRATED"\n\ndef test_highlight_template_pins_presentation_authority():
     from princess_app.domain.content import PRESENTATION_VERSION
     assert HIGHLIGHT_PRESENTATION_VERSION == PRESENTATION_VERSION == "presentation/1"
 
