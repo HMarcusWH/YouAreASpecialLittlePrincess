@@ -202,6 +202,10 @@ def test_registry_validator_rejects_claim_drift_and_rule_configuration_faults():
     row["strength"]["max"] = row["strength"]["min"]
     cases.append(zero_width_strength)
 
+    invalid_weight = copy.deepcopy(source)
+    invalid_weight["candidates"][0]["strength"]["weight"] = 1.1
+    cases.append(invalid_weight)
+
     for bad in cases:
         try:
             generator.validate(bad)
