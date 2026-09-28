@@ -2,7 +2,9 @@
 > **Building the app:** [complete roadmap](ROADMAP.md) · [coding-agent entry](AGENTS.md) · [documentation index](docs/roadmap/00-index.md) · [detailed task briefs](docs/roadmap/06-agent-backlog.md) · [Claude Design handoff](docs/design/CLAUDE_DESIGN_HANDOFF.md).
 > **Status:** active development, not publicly released. `docs/roadmap/tasks.json` is the machine authority for current task state and gates.
 
-# You Are A Special Little Princess
+# Inktrospect
+
+> Repository/internal codename: **You Are A Special Little Princess**. Existing `Princess` / `princess_*` package and service namespaces remain implementation details while the public brand is finalized through T10 design acceptance.
 
 A privacy-conscious consumer handwriting-analysis product built around deterministic
 handwriting measurements, structured evidence and clearly separated interpretive
