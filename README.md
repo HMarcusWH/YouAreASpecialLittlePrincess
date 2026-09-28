@@ -27,7 +27,7 @@ separately labelled and are not validated psychological assessment.
 | Commerce | Internal ledger/reservation/fulfilment machinery implemented; real Stripe/App Store/Play verification remains gated |
 | Recovery/notifications | Tombstones, restore reconciliation and notification state machine implemented; production providers/topology remain incomplete |
 | Pilot tooling | Synthetic-qualified, human mode fail-closed behind rights/participant gates |
-| Product design | Claude Design handoff prepared; owner `design_acceptance` still pending |
+| Product design | Working public brand **Inktrospect**; Direction A — The Dossier selected and app prototype in progress; owner `design_acceptance` still pending |
 | Native clients | Planned; T29 unlocks after T10 design acceptance |
 
 Current task status is intentionally not duplicated here; run:
