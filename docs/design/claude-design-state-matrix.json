@@ -62,7 +62,7 @@
       "id": "first_reveal",
       "states": [
         "prototype_illustrative_selection",
-        "server_owned_highlight",
+        "planned_server_owned_highlight",
         "no_eligible_highlight",
         "source_image_not_retained"
       ]
