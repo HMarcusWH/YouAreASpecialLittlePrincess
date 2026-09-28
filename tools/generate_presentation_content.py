@@ -37,6 +37,30 @@ STRENGTH_OPS = {
     "normalize", "distance_from", "relative_difference", "max_feature",
     "abs_normalize", "max_abs_features",
 }
+TOP_LEVEL_KEYS = {
+    "version", "policy_version", "locales", "family_order", "primary_families",
+    "threshold_policy", "selection_strength_semantics", "feature_labels",
+    "display_domains", "fallback_content_id", "content", "candidates",
+}
+CANDIDATE_KEYS = {
+    "candidate_id", "family", "correlation_group", "content_id", "support_features",
+    "minimum_observations", "clauses", "strength", "witness", "priority",
+}
+CLAUSE_KEYS = {
+    "range": {"op", "feature", "min", "max", "max_inclusive"},
+    "abs_range": {"op", "feature", "min", "max", "max_inclusive"},
+    "difference_range": {"op", "left", "right", "min", "max", "max_inclusive"},
+    "max_range": {"op", "features", "min", "max", "max_inclusive"},
+    "count_at_least": {"op", "features", "threshold", "count"},
+}
+STRENGTH_KEYS = {
+    "normalize": {"op", "feature", "min", "max", "invert", "weight"},
+    "distance_from": {"op", "feature", "center", "max_distance", "invert", "weight"},
+    "relative_difference": {"op", "left", "right", "weight"},
+    "max_feature": {"op", "features", "invert", "weight"},
+    "abs_normalize": {"op", "feature", "max_abs", "invert", "weight"},
+    "max_abs_features": {"op", "features", "max_abs", "weight"},
+}
 BANNED = {
     "en": ("percentile", " rare ", "rarity", " unique", "unusual", "personality", "pressure",
            "intelligence", "diagnos", "honest", "dishonest", " typical", "abnormal", " better ", " worse "),
@@ -100,6 +124,8 @@ def _clause_matches(clause: dict[str, Any], values: dict[str, float]) -> bool:
 
 
 def validate(data: dict[str, Any]) -> None:
+    if set(data) != TOP_LEVEL_KEYS:
+        raise ValueError(f"unexpected presentation top-level keys: {sorted(set(data) ^ TOP_LEVEL_KEYS)}")
     if data.get("version") != "presentation/1" or data.get("policy_version") != "highlight-policy/1":
         raise ValueError("unexpected presentation/policy version")
     if tuple(data.get("locales", ())) != LOCALES:
@@ -174,6 +200,8 @@ def validate(data: dict[str, Any]) -> None:
         raise ValueError("presentation v1 requires at least 42 candidate states")
     ids, family_counts = set(), {family: 0 for family in FAMILIES}
     for row in candidates:
+        if set(row) != CANDIDATE_KEYS:
+            raise ValueError(f"candidate has unexpected/missing keys: {sorted(set(row) ^ CANDIDATE_KEYS)}")
         candidate_id = row.get("candidate_id")
         if not isinstance(candidate_id, str) or candidate_id in ids:
             raise ValueError(f"duplicate/invalid candidate id {candidate_id!r}")
