@@ -59,7 +59,8 @@ def content_text(content_id: str, locale: str) -> str:
 
 
 def display_domain(feature_id: str) -> Mapping[str, Any] | None:
-    return _DATA["display_domains"].get(feature_id)
+    domain = _DATA["display_domains"].get(feature_id)
+    return copy.deepcopy(domain) if domain is not None else None
 
 
 def _numeric_fact_map(facts: Sequence[Mapping[str, Any]]) -> dict[str, Mapping[str, Any]]:
