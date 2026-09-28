@@ -215,6 +215,10 @@ def validate(data: dict[str, Any]) -> None:
         if not isinstance(strength, dict) or strength.get("op") not in STRENGTH_OPS:
             raise ValueError(f"{candidate_id}: unsupported strength op")
         strength_op = strength["op"]
+        if "weight" in strength:
+            weight = _number(strength["weight"])
+            if not 0 < weight <= 1:
+                raise ValueError(f"{candidate_id}: strength weight must be in (0,1]")
         if strength_op == "normalize" and _number(strength["min"]) >= _number(strength["max"]):
             raise ValueError(f"{candidate_id}: normalize strength requires min < max")
         if strength_op == "distance_from" and _number(strength["max_distance"]) <= 0:
