@@ -107,6 +107,30 @@ def test_current_template_persists_broad_server_owned_highlights():
     assert data["analysis"]["versions"]["template"] == "individual-report/2"
 
 
+def test_v2_revision_preserves_selected_highlights_and_base_fact_coverage():
+    current = copy.deepcopy(REFERENCE)
+    current["versions"]["template"] = HIGHLIGHT_TEMPLATE_VERSION
+    first = report(analysis=current, evidence=None)
+    first_data = first.to_dict()
+    base_fact_ids = [
+        fact_id
+        for section in first_data["sections"]
+        if not section["section_id"].startswith("section.highlight.")
+        for fact_id in section["fact_ids"]
+    ]
+    assert sorted(base_fact_ids) == sorted(fact["fact_id"] for fact in first_data["facts"])
+    first_highlights = [
+        section for section in first_data["sections"]
+        if section["section_id"].startswith("section.highlight.")
+    ]
+    second = revise_report(first, created_at=T0 + timedelta(minutes=1), premium_overlay_id="overlay_v2").value
+    second_highlights = [
+        section for section in second.to_dict()["sections"]
+        if section["section_id"].startswith("section.highlight.")
+    ]
+    assert second_highlights == first_highlights
+    assert check_revision(first, second) == ()
+
 def test_legacy_template_never_gains_highlights_on_revision():
     assert REFERENCE["versions"]["template"] == BASE_TEMPLATE_VERSION
     first = report()
