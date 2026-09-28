@@ -20,7 +20,7 @@ The [post-PR14 reconciliation](23-post-pr14-reconciliation.md) is retained as hi
 
 - **READY planned work:** none.
 - **Active incomplete work:** T11 (human pilot gates/real evidence), T17 (production identity plus accepted-design integration), T19 (real payment rails/sandbox evidence and product policy) and T24 (deployment/recovery/live providers).
-- **Implemented pending review:** T10 (Claude Design prototype + explicit owner design acceptance) and T21 (final design/integration/render review).
+- **Implemented pending review:** T10 (Direction A — The Dossier selected for the Inktrospect prototype; complete prototype + explicit owner design acceptance remain) and T21 (final design/integration/render review).
 - **Completed since PR #14:** T15 provider-independent Premium adapter/runtime work is DONE; live model activation/evaluation remains separately gated.
 - **Next native unlock:** T10 DONE makes T29 ready because T01/T02/T27/T28 are already DONE.
 - **Optional enhancement:** T07 remains non-blocking if omitted from the approved marketed scope.
