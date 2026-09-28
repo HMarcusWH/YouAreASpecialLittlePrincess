@@ -802,6 +802,7 @@ Planned targets unless present in the code tree:
 src/princess_app/domain/content/
 content/
 contracts/product/v1/
+src/princess_app/domain/reports/
 ```
 
 ### Coding sequence
