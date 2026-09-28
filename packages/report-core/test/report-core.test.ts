@@ -29,6 +29,9 @@ test("presentation registry resolves reviewed EN/SV labels, content and fixed do
   assert.deepEqual(presentationDisplayDomain("SLANT_ANGLE_MEAN"), {
     min: -90, max: 90, unit: "degrees", kind: "GEOMETRIC_CANVAS", accepted_min: -60, accepted_max: 60,
   });
+  const mutable = presentationDisplayDomain("SLANT_ANGLE_MEAN") as Record<string, string | number>;
+  mutable.min = 0;
+  assert.equal(presentationDisplayDomain("SLANT_ANGLE_MEAN")?.min, -90);
   assert.equal(presentationDisplayDomain("MARGIN_RIGHT_REL"), undefined);
 });
 
