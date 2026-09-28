@@ -33,7 +33,7 @@ Use `python docs/roadmap/plan_tools.py --ready`, `--active` or `--task ID`. Edit
 | [T15 — Evidence-bound OpenAI adapter](#t15) | DONE | T01, T09, T26, T27 | premium-backend |
 | [T16 — Model evaluation and generation policy](#t16) | PLANNED | T06, T15 | evaluation |
 | [T17 — Interactive Free web product](#t17) | IN_PROGRESS | T02, T04, T08A, T09, T10, T28 | frontend |
-| [T18 — Deterministic pair and history comparison](#t18) | PLANNED | T08A, T09 | statistics-report |
+| [T18 — Deterministic pair and history comparison](#t18) | DONE | T08A, T09 | statistics-report |
 | [T19 — Cross-platform purchase ledger entitlements and metered jobs](#t19) | IN_PROGRESS | T02, T03, T09, T15, T27 | commerce |
 | [T20 — Premium and paid-pair web experience](#t20) | PLANNED | T15, T16, T17, T18, T19, T21, T24 | frontend-premium |
 | [T21 — Same-content PDF and share-card rendering](#t21) | IMPLEMENTED_PENDING_REVIEW | T09, T10, T17 | report-frontend |
@@ -1537,7 +1537,7 @@ No approval is created by this task brief. Mock/disabled implementation is not a
 <a id="t18"></a>
 ## T18 — Deterministic pair and history comparison
 
-**Status:** `PLANNED` · **Owner:** statistics-report · **Milestone:** comparison
+**Status:** `DONE` · **Owner:** statistics-report · **Milestone:** comparison
 
 **Hard predecessors:** [T08A](#t08a), [T09](#t09)
 **Platforms:** shared, backend
@@ -1570,6 +1570,10 @@ contracts/product/v1/
 
 ComparisonDocument fixtures with directional facts, coverage and authorized evidence for web/native/export/Premium.
 
+### Implementation evidence
+
+T18 implementation started on task/T18-deterministic-comparison from main 50a4c90b448d95560b045031f01514200b6f75fc. The scoped PR extends the existing Comparison contract and implements server-side native-unit pair/history comparison using T08A fixed non-population domains; exact-head acceptance evidence is pending.
+
 ### Acceptance evidence
 
 - A/B swap preserves distance and reverses directional labels; self-distance is zero where defined.
@@ -1593,6 +1597,8 @@ ComparisonDocument fixtures with directional facts, coverage and authorized evid
 Validation profiles: [core](#validation-core), [docs](#validation-docs), [contracts](#validation-contracts), [backend](#validation-backend). Planned suites must be implemented and their actual command documented by the owning task; they are not passing tests today.
 
 No task-specific production gate; all repository privacy/security and scope boundaries still apply.
+
+Historical completion evidence: T18 deterministic comparison implementation qualified on exact head 4417219ae174eba0080e83dc951c11f99f1f1dc3: CI run 36491392995 passed on Python 3.10/3.11/3.12 including full pytest, product-contract fault injection, research checks and installed-wheel smoke; Roadmap integrity run 36491392973 passed; Application environments run 36491393001 passed backend/PostgreSQL, web/render/browser accessibility and the live Free upload-to-export journey. The implementation extends the existing Comparison root contract with 18 T08A fixed-domain candidates, explicit compatibility/exclusion coverage, per-input provenance and native-unit adjacent deltas; aggregate/cosine/Mahalanobis/percent-change outputs remain absent. Same-owner service use is implemented; other-owner release remains gated to T22.
 
 [Back to task table](#task-table) · [Documentation index](00-index.md) · [Execution sequence](20-end-to-end-build-sequence.md)
 

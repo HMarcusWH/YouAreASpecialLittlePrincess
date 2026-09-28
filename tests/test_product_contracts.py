@@ -124,6 +124,39 @@ def test_duplicate_canonical_ids_are_never_resolved_by_array_order():
         assert result.value is None and code in {i.code for i in result.issues}
 
 
+def test_comparison_contract_rejects_derived_field_and_coverage_drift():
+    base = load("valid/comparison.json")
+    assert compile_document("Comparison", base).ok
+
+    wrong_delta = copy.deepcopy(base)
+    wrong_delta["differences"][0]["signed_delta"] += 1
+    wrong_delta["comparison_digest"] = None
+    wrong_delta["comparison_digest"] = runtime.canonical_digest(wrong_delta)
+    result = compile_document("Comparison", wrong_delta)
+    assert result.value is None and "SIGNED_DELTA_DRIFT" in {i.code for i in result.issues}
+
+    wrong_direction = copy.deepcopy(base)
+    wrong_direction["differences"][0]["direction"] = "EQUAL"
+    wrong_direction["comparison_digest"] = None
+    wrong_direction["comparison_digest"] = runtime.canonical_digest(wrong_direction)
+    result = compile_document("Comparison", wrong_direction)
+    assert result.value is None and "DIRECTION_DRIFT" in {i.code for i in result.issues}
+
+    wrong_coverage = copy.deepcopy(base)
+    wrong_coverage["coverage"]["common_n"] -= 1
+    wrong_coverage["comparison_digest"] = None
+    wrong_coverage["comparison_digest"] = runtime.canonical_digest(wrong_coverage)
+    result = compile_document("Comparison", wrong_coverage)
+    assert result.value is None and "COVERAGE_COMMON_COUNT" in {i.code for i in result.issues}
+
+    wrong_input = copy.deepcopy(base)
+    wrong_input["input_report_ids"].reverse()
+    wrong_input["comparison_digest"] = None
+    wrong_input["comparison_digest"] = runtime.canonical_digest(wrong_input)
+    result = compile_document("Comparison", wrong_input)
+    assert result.value is None and "COMPARISON_INPUT_ID_DRIFT" in {i.code for i in result.issues}
+
+
 def test_evidence_coordinate_graph_rejects_cycles_missing_parents_and_bounds():
     base = load("valid/evidence-bundle.json")
     child = {"frame_id":"frame_child","width":60,"height":40,"unit":"px","parent_frame_id":"frame_original","transform_to_parent":[1,0,0,0,1,0,0,0,1]}

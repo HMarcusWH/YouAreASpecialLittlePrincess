@@ -22,6 +22,9 @@
     "created_at": {
       "$ref": "common.schema.json#/$defs/Rfc3339Utc"
     },
+    "ordering_basis": {
+      "$ref": "common.schema.json#/$defs/ComparisonOrdering"
+    },
     "input_report_ids": {
       "type": "array",
       "items": {
@@ -29,6 +32,23 @@
       },
       "minItems": 2,
       "maxItems": 16,
+      "uniqueItems": true
+    },
+    "inputs": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/ComparisonInput"
+      },
+      "minItems": 2,
+      "maxItems": 16
+    },
+    "candidate_feature_ids": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/OpaqueId"
+      },
+      "minItems": 1,
+      "maxItems": 512,
       "uniqueItems": true
     },
     "common_feature_ids": {
@@ -40,15 +60,37 @@
       "maxItems": 512,
       "uniqueItems": true
     },
+    "coverage": {
+      "$ref": "common.schema.json#/$defs/ComparisonCoverage"
+    },
+    "differences": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/ComparisonDifference"
+      },
+      "minItems": 0,
+      "maxItems": 7680
+    },
+    "exclusions": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/ComparisonExclusion"
+      },
+      "minItems": 0,
+      "maxItems": 512
+    },
     "facts": {
       "type": "array",
       "items": {
         "$ref": "common.schema.json#/$defs/Fact"
       },
       "minItems": 0,
-      "maxItems": 1024
+      "maxItems": 0
     },
     "method_version": {
+      "$ref": "common.schema.json#/$defs/Version"
+    },
+    "presentation_version": {
       "$ref": "common.schema.json#/$defs/Version"
     },
     "comparison_digest": {
@@ -67,10 +109,17 @@
     "comparison_id",
     "kind",
     "created_at",
+    "ordering_basis",
     "input_report_ids",
+    "inputs",
+    "candidate_feature_ids",
     "common_feature_ids",
+    "coverage",
+    "differences",
+    "exclusions",
     "facts",
     "method_version",
+    "presentation_version",
     "comparison_digest"
   ]
 }

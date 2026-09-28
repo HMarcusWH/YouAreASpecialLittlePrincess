@@ -39,8 +39,8 @@
     "TEXT_BLOCK_HORIZONTAL_CENTER",
     "TEXT_BLOCK_VERTICAL_CENTER"
   ],
-  "comparison_digest": "49965ff78c7fcb261f7f9166a5796274b860817567b38ce192bee23896862c17",
-  "comparison_id": "comparison_pair_ab",
+  "comparison_digest": "e4ee0da797c8d37a760fdf7932a2e84c91333f117d027eb9817ba2d528d8bbe0",
+  "comparison_id": "comparison_pair_equal",
   "contract_version": "1.0.0",
   "coverage": {
     "candidate_n": 18,
@@ -51,8 +51,8 @@
   "created_at": "2026-09-28T17:00:00Z",
   "differences": [
     {
-      "absolute_delta": 0.09999999999999998,
-      "direction": "TO_GREATER",
+      "absolute_delta": 0.0,
+      "direction": "EQUAL",
       "display_domain": {
         "accepted_max": null,
         "accepted_min": null,
@@ -68,16 +68,16 @@
       "method_id": "grayscale_darkness_v1",
       "method_version": "1.0.0",
       "precision": 3,
-      "signed_delta": 0.09999999999999998,
+      "signed_delta": 0.0,
       "to_fact_id": "fact.INK_DARKNESS_MEAN",
       "to_position": 1,
       "unit": "normalized",
       "value_from": 0.7882968997084526,
-      "value_to": 0.8882968997084526
+      "value_to": 0.7882968997084526
     },
     {
-      "absolute_delta": 0.1,
-      "direction": "TO_GREATER",
+      "absolute_delta": 0.0,
+      "direction": "EQUAL",
       "display_domain": {
         "accepted_max": null,
         "accepted_min": null,
@@ -93,16 +93,16 @@
       "method_id": "grayscale_darkness_v1",
       "method_version": "1.0.0",
       "precision": 2,
-      "signed_delta": 0.1,
+      "signed_delta": 0.0,
       "to_fact_id": "fact.INK_SATURATION_FRACTION",
       "to_position": 1,
       "unit": "ratio",
       "value_from": 0.0015009005403241946,
-      "value_to": 0.10150090054032421
+      "value_to": 0.0015009005403241946
     },
     {
-      "absolute_delta": 0.09999999999999998,
-      "direction": "TO_GREATER",
+      "absolute_delta": 0.0,
+      "direction": "EQUAL",
       "display_domain": {
         "accepted_max": null,
         "accepted_min": null,
@@ -118,16 +118,16 @@
       "method_id": "line_width_page_ratio_v1",
       "method_version": "1.0.0",
       "precision": 2,
-      "signed_delta": 0.09999999999999998,
+      "signed_delta": 0.0,
       "to_fact_id": "fact.LINE_LENGTH_MEAN_REL",
       "to_position": 1,
       "unit": "ratio",
       "value_from": 0.5053763440860215,
-      "value_to": 0.6053763440860215
+      "value_to": 0.5053763440860215
     },
     {
-      "absolute_delta": 0.09999999999999998,
-      "direction": "TO_GREATER",
+      "absolute_delta": 0.0,
+      "direction": "EQUAL",
       "display_domain": {
         "accepted_max": null,
         "accepted_min": null,
@@ -143,16 +143,16 @@
       "method_id": "margin_balance_index_v1",
       "method_version": "1.0.0",
       "precision": 2,
-      "signed_delta": 0.09999999999999998,
+      "signed_delta": 0.0,
       "to_fact_id": "fact.MARGIN_SYMMETRY",
       "to_position": 1,
       "unit": "score_0_1",
       "value_from": 0.2108843537414966,
-      "value_to": 0.3108843537414966
+      "value_to": 0.2108843537414966
     },
     {
-      "absolute_delta": 0.09999999999999998,
-      "direction": "TO_GREATER",
+      "absolute_delta": 0.0,
+      "direction": "EQUAL",
       "display_domain": {
         "accepted_max": null,
         "accepted_min": null,
@@ -168,16 +168,16 @@
       "method_id": "text_bounds_canvas_ratio_v1",
       "method_version": "1.0.0",
       "precision": 2,
-      "signed_delta": 0.09999999999999998,
+      "signed_delta": 0.0,
       "to_fact_id": "fact.PAGE_HORIZONTAL_DENSITY",
       "to_position": 1,
       "unit": "ratio",
       "value_from": 0.5876577840112202,
-      "value_to": 0.6876577840112201
+      "value_to": 0.5876577840112202
     },
     {
-      "absolute_delta": 0.09999999999999998,
-      "direction": "TO_GREATER",
+      "absolute_delta": 0.0,
+      "direction": "EQUAL",
       "display_domain": {
         "accepted_max": null,
         "accepted_min": null,
@@ -193,16 +193,16 @@
       "method_id": "text_bounds_canvas_ratio_v1",
       "method_version": "1.0.0",
       "precision": 2,
-      "signed_delta": 0.09999999999999998,
+      "signed_delta": 0.0,
       "to_fact_id": "fact.PAGE_VERTICAL_DENSITY",
       "to_position": 1,
       "unit": "ratio",
       "value_from": 0.5917721518987342,
-      "value_to": 0.6917721518987342
+      "value_to": 0.5917721518987342
     },
     {
-      "absolute_delta": 17.999999999999996,
-      "direction": "TO_GREATER",
+      "absolute_delta": 0.0,
+      "direction": "EQUAL",
       "display_domain": {
         "accepted_max": 60,
         "accepted_min": -60,
@@ -218,16 +218,16 @@
       "method_id": "oriented_component_axis_v1",
       "method_version": "1.0.0",
       "precision": 1,
-      "signed_delta": 17.999999999999996,
+      "signed_delta": 0.0,
       "to_fact_id": "fact.SLANT_ANGLE_MEAN",
       "to_position": 1,
       "unit": "degrees",
       "value_from": 20.075050431612258,
-      "value_to": 38.075050431612254
+      "value_to": 20.075050431612258
     },
     {
-      "absolute_delta": 18.0,
-      "direction": "TO_GREATER",
+      "absolute_delta": 0.0,
+      "direction": "EQUAL",
       "display_domain": {
         "accepted_max": 60,
         "accepted_min": -60,
@@ -243,16 +243,16 @@
       "method_id": "oriented_component_axis_v1",
       "method_version": "1.0.0",
       "precision": 1,
-      "signed_delta": 18.0,
+      "signed_delta": 0.0,
       "to_fact_id": "fact.SLANT_ANGLE_MEDIAN",
       "to_position": 1,
       "unit": "degrees",
       "value_from": 20.71525089687971,
-      "value_to": 38.71525089687971
+      "value_to": 20.71525089687971
     },
     {
-      "absolute_delta": 0.09999999999999998,
-      "direction": "TO_GREATER",
+      "absolute_delta": 0.0,
+      "direction": "EQUAL",
       "display_domain": {
         "accepted_max": null,
         "accepted_min": null,
@@ -268,16 +268,16 @@
       "method_id": "oriented_component_axis_v1",
       "method_version": "1.0.0",
       "precision": 2,
-      "signed_delta": 0.09999999999999998,
+      "signed_delta": 0.0,
       "to_fact_id": "fact.SLANT_CONSISTENCY",
       "to_position": 1,
       "unit": "score_0_1",
       "value_from": 0.8393804484051045,
-      "value_to": 0.9393804484051045
+      "value_to": 0.8393804484051045
     },
     {
-      "absolute_delta": 0.10000000000000003,
-      "direction": "TO_GREATER",
+      "absolute_delta": 0.0,
+      "direction": "EQUAL",
       "display_domain": {
         "accepted_max": null,
         "accepted_min": null,
@@ -293,16 +293,16 @@
       "method_id": "oriented_component_axis_v1",
       "method_version": "1.0.0",
       "precision": 2,
-      "signed_delta": 0.10000000000000003,
+      "signed_delta": 0.0,
       "to_fact_id": "fact.SLANT_EXTREME_FRACTION",
       "to_position": 1,
       "unit": "ratio",
       "value_from": 0.2692307692307692,
-      "value_to": 0.36923076923076925
+      "value_to": 0.2692307692307692
     },
     {
-      "absolute_delta": 0.1,
-      "direction": "TO_GREATER",
+      "absolute_delta": 0.0,
+      "direction": "EQUAL",
       "display_domain": {
         "accepted_max": null,
         "accepted_min": null,
@@ -318,16 +318,16 @@
       "method_id": "oriented_component_axis_v1",
       "method_version": "1.0.0",
       "precision": 2,
-      "signed_delta": 0.1,
+      "signed_delta": 0.0,
       "to_fact_id": "fact.SLANT_LEFT_FRACTION",
       "to_position": 1,
       "unit": "ratio",
       "value_from": 0.0,
-      "value_to": 0.1
+      "value_to": 0.0
     },
     {
-      "absolute_delta": 18.0,
-      "direction": "TO_GREATER",
+      "absolute_delta": 0.0,
+      "direction": "EQUAL",
       "display_domain": {
         "accepted_max": 60,
         "accepted_min": -60,
@@ -343,16 +343,16 @@
       "method_id": "oriented_component_axis_v1",
       "method_version": "1.0.0",
       "precision": 1,
-      "signed_delta": 18.0,
+      "signed_delta": 0.0,
       "to_fact_id": "fact.SLANT_P05",
       "to_position": 1,
       "unit": "degrees",
       "value_from": 5.07681240002939,
-      "value_to": 23.07681240002939
+      "value_to": 5.07681240002939
     },
     {
-      "absolute_delta": 18.0,
-      "direction": "TO_GREATER",
+      "absolute_delta": 0.0,
+      "direction": "EQUAL",
       "display_domain": {
         "accepted_max": 60,
         "accepted_min": -60,
@@ -368,16 +368,16 @@
       "method_id": "oriented_component_axis_v1",
       "method_version": "1.0.0",
       "precision": 1,
-      "signed_delta": 18.0,
+      "signed_delta": 0.0,
       "to_fact_id": "fact.SLANT_P95",
       "to_position": 1,
       "unit": "degrees",
       "value_from": 34.60893307811425,
-      "value_to": 52.60893307811425
+      "value_to": 34.60893307811425
     },
     {
-      "absolute_delta": 0.09999999999999998,
-      "direction": "FROM_GREATER",
+      "absolute_delta": 0.0,
+      "direction": "EQUAL",
       "display_domain": {
         "accepted_max": null,
         "accepted_min": null,
@@ -393,16 +393,16 @@
       "method_id": "oriented_component_axis_v1",
       "method_version": "1.0.0",
       "precision": 2,
-      "signed_delta": -0.09999999999999998,
+      "signed_delta": 0.0,
       "to_fact_id": "fact.SLANT_RIGHT_FRACTION",
       "to_position": 1,
       "unit": "ratio",
       "value_from": 0.9615384615384616,
-      "value_to": 0.8615384615384616
+      "value_to": 0.9615384615384616
     },
     {
-      "absolute_delta": 0.1,
-      "direction": "TO_GREATER",
+      "absolute_delta": 0.0,
+      "direction": "EQUAL",
       "display_domain": {
         "accepted_max": null,
         "accepted_min": null,
@@ -418,16 +418,16 @@
       "method_id": "oriented_component_axis_v1",
       "method_version": "1.0.0",
       "precision": 2,
-      "signed_delta": 0.1,
+      "signed_delta": 0.0,
       "to_fact_id": "fact.SLANT_VERTICAL_FRACTION",
       "to_position": 1,
       "unit": "ratio",
       "value_from": 0.038461538461538464,
-      "value_to": 0.13846153846153847
+      "value_to": 0.038461538461538464
     },
     {
-      "absolute_delta": 0.09999999999999998,
-      "direction": "TO_GREATER",
+      "absolute_delta": 0.0,
+      "direction": "EQUAL",
       "display_domain": {
         "accepted_max": null,
         "accepted_min": null,
@@ -443,16 +443,16 @@
       "method_id": "medial_axis_diameter_v1",
       "method_version": "1.0.0",
       "precision": 2,
-      "signed_delta": 0.09999999999999998,
+      "signed_delta": 0.0,
       "to_fact_id": "fact.STROKE_UNIFORMITY",
       "to_position": 1,
       "unit": "score_0_1",
       "value_from": 0.8128064635741235,
-      "value_to": 0.9128064635741234
+      "value_to": 0.8128064635741235
     },
     {
-      "absolute_delta": 0.09999999999999998,
-      "direction": "TO_GREATER",
+      "absolute_delta": 0.0,
+      "direction": "EQUAL",
       "display_domain": {
         "accepted_max": null,
         "accepted_min": null,
@@ -468,16 +468,16 @@
       "method_id": "text_bounds_canvas_ratio_v1",
       "method_version": "1.0.0",
       "precision": 3,
-      "signed_delta": 0.09999999999999998,
+      "signed_delta": 0.0,
       "to_fact_id": "fact.TEXT_BLOCK_HORIZONTAL_CENTER",
       "to_position": 1,
       "unit": "normalized_x",
       "value_from": 0.3373071528751753,
-      "value_to": 0.4373071528751753
+      "value_to": 0.3373071528751753
     },
     {
-      "absolute_delta": 0.09999999999999998,
-      "direction": "TO_GREATER",
+      "absolute_delta": 0.0,
+      "direction": "EQUAL",
       "display_domain": {
         "accepted_max": null,
         "accepted_min": null,
@@ -493,19 +493,19 @@
       "method_id": "text_bounds_canvas_ratio_v1",
       "method_version": "1.0.0",
       "precision": 3,
-      "signed_delta": 0.09999999999999998,
+      "signed_delta": 0.0,
       "to_fact_id": "fact.TEXT_BLOCK_VERTICAL_CENTER",
       "to_position": 1,
       "unit": "normalized_y",
       "value_from": 0.49841772151898733,
-      "value_to": 0.5984177215189873
+      "value_to": 0.49841772151898733
     }
   ],
   "exclusions": [],
   "facts": [],
   "input_report_ids": [
     "report_comparison_a",
-    "report_comparison_b"
+    "report_comparison_equal"
   ],
   "inputs": [
     {
@@ -531,14 +531,14 @@
       }
     },
     {
-      "analysis_created_at": "2026-09-28T13:00:00Z",
-      "analysis_id": "analysis_comparison_b",
+      "analysis_created_at": "2026-09-28T15:00:00Z",
+      "analysis_id": "analysis_comparison_equal",
       "position": 1,
-      "report_created_at": "2026-09-28T13:00:00Z",
-      "report_digest": "afcfa757bac9316f21819cc9f16d3d90dc7e6f21bb8166c1d0af0229dcadf208",
-      "report_id": "report_comparison_b",
+      "report_created_at": "2026-09-28T15:00:00Z",
+      "report_digest": "3044e563eda602a8631daf6a3dce5fd33616865db7c0c2fcfcfa24497426b885",
+      "report_id": "report_comparison_equal",
       "revision": 1,
-      "run_id": "run_comparison_b",
+      "run_id": "run_comparison_equal",
       "versions": {
         "analysis_config": "494ff873c4bf7a309da8a78664999b2714980d90728c9c2c49b9012ae5494e68",
         "benchmark_release": null,

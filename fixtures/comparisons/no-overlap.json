@@ -1,0 +1,217 @@
+{
+  "candidate_feature_ids": [
+    "INK_DARKNESS_MEAN",
+    "INK_SATURATION_FRACTION",
+    "LINE_LENGTH_MEAN_REL",
+    "MARGIN_SYMMETRY",
+    "PAGE_HORIZONTAL_DENSITY",
+    "PAGE_VERTICAL_DENSITY",
+    "SLANT_ANGLE_MEAN",
+    "SLANT_ANGLE_MEDIAN",
+    "SLANT_CONSISTENCY",
+    "SLANT_EXTREME_FRACTION",
+    "SLANT_LEFT_FRACTION",
+    "SLANT_P05",
+    "SLANT_P95",
+    "SLANT_RIGHT_FRACTION",
+    "SLANT_VERTICAL_FRACTION",
+    "STROKE_UNIFORMITY",
+    "TEXT_BLOCK_HORIZONTAL_CENTER",
+    "TEXT_BLOCK_VERTICAL_CENTER"
+  ],
+  "common_feature_ids": [],
+  "comparison_digest": "7c1d0dda793e2916c8eea5ad63fd37e4f4ddd0c6057ce11fbe333f7980d3bb7d",
+  "comparison_id": "comparison_no_overlap",
+  "contract_version": "1.0.0",
+  "coverage": {
+    "candidate_n": 18,
+    "common_fraction": 0.0,
+    "common_n": 0,
+    "excluded_n": 18
+  },
+  "created_at": "2026-09-28T17:00:00Z",
+  "differences": [],
+  "exclusions": [
+    {
+      "affected_positions": [
+        1
+      ],
+      "feature_id": "INK_DARKNESS_MEAN",
+      "reason": "UNAVAILABLE"
+    },
+    {
+      "affected_positions": [
+        1
+      ],
+      "feature_id": "INK_SATURATION_FRACTION",
+      "reason": "UNAVAILABLE"
+    },
+    {
+      "affected_positions": [
+        1
+      ],
+      "feature_id": "LINE_LENGTH_MEAN_REL",
+      "reason": "UNAVAILABLE"
+    },
+    {
+      "affected_positions": [
+        1
+      ],
+      "feature_id": "MARGIN_SYMMETRY",
+      "reason": "UNAVAILABLE"
+    },
+    {
+      "affected_positions": [
+        1
+      ],
+      "feature_id": "PAGE_HORIZONTAL_DENSITY",
+      "reason": "UNAVAILABLE"
+    },
+    {
+      "affected_positions": [
+        1
+      ],
+      "feature_id": "PAGE_VERTICAL_DENSITY",
+      "reason": "UNAVAILABLE"
+    },
+    {
+      "affected_positions": [
+        1
+      ],
+      "feature_id": "SLANT_ANGLE_MEAN",
+      "reason": "UNAVAILABLE"
+    },
+    {
+      "affected_positions": [
+        1
+      ],
+      "feature_id": "SLANT_ANGLE_MEDIAN",
+      "reason": "UNAVAILABLE"
+    },
+    {
+      "affected_positions": [
+        1
+      ],
+      "feature_id": "SLANT_CONSISTENCY",
+      "reason": "UNAVAILABLE"
+    },
+    {
+      "affected_positions": [
+        1
+      ],
+      "feature_id": "SLANT_EXTREME_FRACTION",
+      "reason": "UNAVAILABLE"
+    },
+    {
+      "affected_positions": [
+        1
+      ],
+      "feature_id": "SLANT_LEFT_FRACTION",
+      "reason": "UNAVAILABLE"
+    },
+    {
+      "affected_positions": [
+        1
+      ],
+      "feature_id": "SLANT_P05",
+      "reason": "UNAVAILABLE"
+    },
+    {
+      "affected_positions": [
+        1
+      ],
+      "feature_id": "SLANT_P95",
+      "reason": "UNAVAILABLE"
+    },
+    {
+      "affected_positions": [
+        1
+      ],
+      "feature_id": "SLANT_RIGHT_FRACTION",
+      "reason": "UNAVAILABLE"
+    },
+    {
+      "affected_positions": [
+        1
+      ],
+      "feature_id": "SLANT_VERTICAL_FRACTION",
+      "reason": "UNAVAILABLE"
+    },
+    {
+      "affected_positions": [
+        1
+      ],
+      "feature_id": "STROKE_UNIFORMITY",
+      "reason": "UNAVAILABLE"
+    },
+    {
+      "affected_positions": [
+        1
+      ],
+      "feature_id": "TEXT_BLOCK_HORIZONTAL_CENTER",
+      "reason": "UNAVAILABLE"
+    },
+    {
+      "affected_positions": [
+        1
+      ],
+      "feature_id": "TEXT_BLOCK_VERTICAL_CENTER",
+      "reason": "UNAVAILABLE"
+    }
+  ],
+  "facts": [],
+  "input_report_ids": [
+    "report_comparison_a",
+    "report_comparison_missing"
+  ],
+  "inputs": [
+    {
+      "analysis_created_at": "2026-09-28T12:00:00Z",
+      "analysis_id": "analysis_comparison_a",
+      "position": 0,
+      "report_created_at": "2026-09-28T12:00:00Z",
+      "report_digest": "a18f548c191ac210bd2fadf448dcdfa0da04f98b125b087804455d592850af70",
+      "report_id": "report_comparison_a",
+      "revision": 1,
+      "run_id": "run_comparison_a",
+      "versions": {
+        "analysis_config": "494ff873c4bf7a309da8a78664999b2714980d90728c9c2c49b9012ae5494e68",
+        "benchmark_release": null,
+        "content_schema": "1.0.0",
+        "engine": "0.1.0",
+        "feature_schema": "1.0.0-draft",
+        "feature_set": null,
+        "method_manifest": "a4606d9925680ff135c6dd2c332bec51e3a2cf878383275a83fa8ecb0d20c835",
+        "normalization": null,
+        "quality_policy": "quality-policy/1",
+        "template": "individual-report/2"
+      }
+    },
+    {
+      "analysis_created_at": "2026-09-28T16:00:00Z",
+      "analysis_id": "analysis_comparison_missing",
+      "position": 1,
+      "report_created_at": "2026-09-28T16:00:00Z",
+      "report_digest": "d32e54705d6b5b6c7b85c326c3b01ae71b5d1485de823e1b5b921b29927a82f7",
+      "report_id": "report_comparison_missing",
+      "revision": 1,
+      "run_id": "run_comparison_missing",
+      "versions": {
+        "analysis_config": "494ff873c4bf7a309da8a78664999b2714980d90728c9c2c49b9012ae5494e68",
+        "benchmark_release": null,
+        "content_schema": "1.0.0",
+        "engine": "0.1.0",
+        "feature_schema": "1.0.0-draft",
+        "feature_set": null,
+        "method_manifest": "a4606d9925680ff135c6dd2c332bec51e3a2cf878383275a83fa8ecb0d20c835",
+        "normalization": null,
+        "quality_policy": "quality-policy/1",
+        "template": "individual-report/2"
+      }
+    }
+  ],
+  "kind": "PAIR",
+  "method_version": "comparison-native-delta/1",
+  "ordering_basis": "REQUEST_ORDER",
+  "presentation_version": "presentation/1"
+}

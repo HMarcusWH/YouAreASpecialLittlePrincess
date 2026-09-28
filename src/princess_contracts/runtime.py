@@ -479,13 +479,116 @@ def _view_semantics(data: dict[str, Any], issues: list[ContractIssue]) -> None:
 
 
 def _comparison_semantics(data: dict[str, Any], issues: list[ContractIssue]) -> None:
-    common = set(data["common_feature_ids"])
-    _add(issues, all(fid in FEATURES for fid in common), "UNKNOWN_COMMON_FEATURE", "/common_feature_ids", "comparison common mask must use canonical features")
-    facts = _unique(data["facts"], "fact_id", issues, "/facts", "DUPLICATE_FACT")
-    del facts
-    for i, fact in enumerate(data["facts"]):
-        _fact_semantics(fact, issues, f"/facts/{i}")
-        _add(issues, fact["feature_id"] in common, "FACT_OUTSIDE_COMMON_MASK", f"/facts/{i}/feature_id", "comparison fact must belong to common feature mask")
+    candidate_ids = list(data["candidate_feature_ids"])
+    common_ids = list(data["common_feature_ids"])
+    candidate = set(candidate_ids)
+    common = set(common_ids)
+    _add(issues, all(fid in FEATURES for fid in candidate), "UNKNOWN_CANDIDATE_FEATURE",
+         "/candidate_feature_ids", "comparison candidates must use canonical features")
+    _add(issues, all(fid in FEATURES for fid in common), "UNKNOWN_COMMON_FEATURE",
+         "/common_feature_ids", "comparison common mask must use canonical features")
+    _add(issues, common <= candidate, "COMMON_OUTSIDE_CANDIDATES",
+         "/common_feature_ids", "comparison common mask must be a subset of candidates")
+
+    inputs = data["inputs"]
+    input_ids = [row["report_id"] for row in inputs]
+    _add(issues, input_ids == data["input_report_ids"], "COMPARISON_INPUT_ID_DRIFT",
+         "/input_report_ids", "input_report_ids must match ordered input provenance")
+    _add(issues, [row["position"] for row in inputs] == list(range(len(inputs))),
+         "COMPARISON_INPUT_POSITION_DRIFT", "/inputs", "input positions must be contiguous from zero")
+
+    if data["kind"] == "PAIR":
+        _add(issues, len(inputs) == 2, "PAIR_INPUT_COUNT", "/inputs", "PAIR requires exactly two inputs")
+        _add(issues, data["ordering_basis"] == "REQUEST_ORDER", "PAIR_ORDERING_DRIFT",
+             "/ordering_basis", "PAIR preserves request order")
+    else:
+        _add(issues, 2 <= len(inputs) <= 16, "HISTORY_INPUT_COUNT", "/inputs", "HISTORY requires 2..16 inputs")
+        _add(issues, data["ordering_basis"] == "REPORT_CREATED_AT", "HISTORY_ORDERING_DRIFT",
+             "/ordering_basis", "HISTORY is ordered by report creation time")
+        history_order = [(row["report_created_at"], row["report_id"]) for row in inputs]
+        _add(issues, history_order == sorted(history_order), "HISTORY_NOT_CHRONOLOGICAL",
+             "/inputs", "HISTORY inputs must be ordered by report creation time then report ID")
+
+    coverage = data["coverage"]
+    _add(issues, coverage["candidate_n"] == len(candidate_ids), "COVERAGE_CANDIDATE_COUNT",
+         "/coverage/candidate_n", "candidate count must match candidate_feature_ids")
+    _add(issues, coverage["common_n"] == len(common_ids), "COVERAGE_COMMON_COUNT",
+         "/coverage/common_n", "common count must match common_feature_ids")
+    _add(issues, coverage["excluded_n"] == len(data["exclusions"]), "COVERAGE_EXCLUDED_COUNT",
+         "/coverage/excluded_n", "excluded count must match exclusions")
+    _add(issues, coverage["candidate_n"] == coverage["common_n"] + coverage["excluded_n"],
+         "COVERAGE_PARTITION", "/coverage", "candidate coverage must partition into common and excluded")
+    expected_fraction = coverage["common_n"] / coverage["candidate_n"]
+    _add(issues, coverage["common_fraction"] == expected_fraction, "COVERAGE_FRACTION",
+         "/coverage/common_fraction", "coverage fraction must equal common/candidate")
+
+    exclusions = _unique(data["exclusions"], "feature_id", issues, "/exclusions", "DUPLICATE_EXCLUSION")
+    excluded_ids = set(exclusions)
+    _add(issues, excluded_ids == candidate - common, "EXCLUSION_SET_DRIFT",
+         "/exclusions", "exclusions must exactly cover candidate features outside the common mask")
+    for i, exclusion in enumerate(data["exclusions"]):
+        path = f"/exclusions/{i}"
+        _add(issues, exclusion["feature_id"] in candidate, "EXCLUSION_OUTSIDE_CANDIDATES",
+             f"{path}/feature_id", "excluded feature must be a candidate")
+        _add(issues, all(0 <= position < len(inputs) for position in exclusion["affected_positions"]),
+             "EXCLUSION_POSITION_OUT_OF_RANGE", f"{path}/affected_positions",
+             "excluded positions must refer to comparison inputs")
+
+    expected_edges = {(position, position + 1) for position in range(len(inputs) - 1)}
+    seen: set[tuple[str, int, int]] = set()
+    for i, row in enumerate(data["differences"]):
+        path = f"/differences/{i}"
+        feature_id = row["feature_id"]
+        edge = (row["from_position"], row["to_position"])
+        key = (feature_id, *edge)
+        _add(issues, feature_id in common, "DIFFERENCE_OUTSIDE_COMMON_MASK",
+             f"{path}/feature_id", "difference feature must be in common_feature_ids")
+        _add(issues, edge in expected_edges, "DIFFERENCE_NONADJACENT_INPUTS",
+             path, "differences must compare adjacent ordered inputs")
+        _add(issues, key not in seen, "DUPLICATE_DIFFERENCE", path,
+             "one difference per feature and adjacent input edge is allowed")
+        seen.add(key)
+
+        expected_signed = row["value_to"] - row["value_from"]
+        if expected_signed == 0:
+            expected_signed = 0.0
+        _add(issues, row["signed_delta"] == expected_signed, "SIGNED_DELTA_DRIFT",
+             f"{path}/signed_delta", "signed delta must equal value_to - value_from")
+        _add(issues, row["absolute_delta"] == abs(expected_signed), "ABSOLUTE_DELTA_DRIFT",
+             f"{path}/absolute_delta", "absolute delta must be abs(signed_delta)")
+        direction = "EQUAL" if expected_signed == 0 else ("TO_GREATER" if expected_signed > 0 else "FROM_GREATER")
+        _add(issues, row["direction"] == direction, "DIRECTION_DRIFT",
+             f"{path}/direction", "direction must agree with signed delta")
+
+        domain = row["display_domain"]
+        _add(issues, domain["min"] < domain["max"], "DISPLAY_DOMAIN_ORDER",
+             f"{path}/display_domain", "display domain min must be below max")
+        _add(issues, domain["unit"] == row["unit"], "DISPLAY_DOMAIN_UNIT_DRIFT",
+             f"{path}/display_domain/unit", "display domain unit must match difference unit")
+        _add(issues, domain["min"] <= row["value_from"] <= domain["max"],
+             "VALUE_FROM_OUTSIDE_DISPLAY_DOMAIN", f"{path}/value_from",
+             "from value must lie inside the approved display domain")
+        _add(issues, domain["min"] <= row["value_to"] <= domain["max"],
+             "VALUE_TO_OUTSIDE_DISPLAY_DOMAIN", f"{path}/value_to",
+             "to value must lie inside the approved display domain")
+        if domain["accepted_min"] is not None or domain["accepted_max"] is not None:
+            _add(issues, domain["accepted_min"] is not None and domain["accepted_max"] is not None,
+                 "PARTIAL_ACCEPTED_DOMAIN", f"{path}/display_domain",
+                 "accepted display bounds must be supplied together")
+            if domain["accepted_min"] is not None and domain["accepted_max"] is not None:
+                _add(issues, domain["min"] <= domain["accepted_min"] < domain["accepted_max"] <= domain["max"],
+                     "ACCEPTED_DOMAIN_OUTSIDE_CANVAS", f"{path}/display_domain",
+                     "accepted bounds must lie inside the display domain")
+
+    expected_difference_keys = {
+        (feature_id, from_position, to_position)
+        for feature_id in common_ids
+        for from_position, to_position in sorted(expected_edges)
+    }
+    _add(issues, seen == expected_difference_keys, "DIFFERENCE_SET_DRIFT",
+         "/differences", "differences must cover every common feature on every adjacent input edge")
+    _add(issues, data["facts"] == [], "AGGREGATE_COMPARISON_FACTS_UNSUPPORTED",
+         "/facts", "comparison-v1 does not publish aggregate similarity facts")
     _self_digest_semantics(data, "comparison_digest", issues)
 
 

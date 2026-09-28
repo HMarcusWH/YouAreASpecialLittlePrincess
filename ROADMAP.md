@@ -16,7 +16,7 @@ The numerical core still has **272 canonical feature definitions and 64 register
 
 PR #14 remains the historical architecture-reconciliation baseline documented in [23](docs/roadmap/23-post-pr14-reconciliation.md). Subsequent merged work completed T15, qualified the Free web accessibility/live journey, added account mail preferences and stronger restore reconciliation, started gated T11 pilot tooling, and prepared the Claude Design T10 handoff. The current design session uses the working public brand **Inktrospect** and has selected **Direction A — The Dossier**; full prototype review and owner `design_acceptance` remain pending.
 
-At the current baseline, **T00, T00A, T01, T02, T03, T04, T05, T09, T15, T26, T27 and T28 are `DONE`**. T10 and T21 are `IMPLEMENTED_PENDING_REVIEW`; T11, T17, T19 and T24 are `IN_PROGRESS`. **T08A is `DONE`** with the calibration-independent presentation/first-reveal engine implemented. **T18 is now computed READY** because T08A/T09 are DONE. T29 remains the next native unlock and still depends on owner-accepted T10 design.
+At the current baseline, **T00, T00A, T01, T02, T03, T04, T05, T08A, T09, T15, T18, T26, T27 and T28 are `DONE`**. T10 and T21 are `IMPLEMENTED_PENDING_REVIEW`; T11, T17, T19 and T24 are `IN_PROGRESS`. T18 now provides deterministic native-unit pair/history comparison over the approved T08A fixed-domain mechanical feature set, with explicit coverage/provenance and no aggregate similarity score. T29 remains the next native unlock and still depends on owner-accepted T10 design.
 
 This baseline still does **not** establish a validated reference cohort/statistics release, live Premium/model approval, real payment rails, production identity/object-storage/mail/push providers, native iOS/Android clients, deployed production recovery evidence, store approval or public release. Those are downstream tasks and human/provider gates, not gaps to conceal by changing status.
 
@@ -73,7 +73,7 @@ python docs/roadmap/plan_tools.py --task T11
 
 These documentation commands are repository tooling. Product test commands marked `TO_IMPLEMENT` in task briefs are not executable claims. After changing task data, run `--write` to regenerate the human backlog, then `--check`.
 
-At the current baseline, `--ready` yields **T18**. `--active` surfaces T10, T11, T17, T19, T21 and T24. T29 remains the next native unlock and becomes READY only after explicit T10 `design_acceptance`. Follow [20](docs/roadmap/20-end-to-end-build-sequence.md) for the current handoff; [23](docs/roadmap/23-post-pr14-reconciliation.md) is retained as the historical PR #14 reconciliation snapshot.
+At the current baseline, `--ready` yields **no newly startable planned task**; `--active` surfaces T10, T11, T17, T19, T21 and T24. T29 remains the next native unlock and becomes READY only after explicit T10 `design_acceptance`. Follow [20](docs/roadmap/20-end-to-end-build-sequence.md) for the current handoff; [23](docs/roadmap/23-post-pr14-reconciliation.md) is retained as the historical PR #14 reconciliation snapshot.
 
 ## Definition of ready
 
