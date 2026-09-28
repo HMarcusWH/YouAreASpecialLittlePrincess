@@ -115,6 +115,11 @@ def _section_availability(facts: Sequence[Mapping[str, Any]]) -> str:
     return "READY" if "READY" in states else "UNCALIBRATED"
 
 
+def _highlight_availability(facts: Sequence[Mapping[str, Any]]) -> str:
+    """A compound statement is only as calibrated as its least-ready support."""
+    return "READY" if facts and all(f["availability"] == "READY" for f in facts) else "UNCALIBRATED"
+
+
 def _highlight_sections(facts: Sequence[Mapping[str, Any]]) -> list[dict[str, Any]]:
     registry = presentation_registry()
     if registry["version"] != HIGHLIGHT_PRESENTATION_VERSION:
@@ -137,7 +142,7 @@ def _highlight_sections(facts: Sequence[Mapping[str, Any]]) -> list[dict[str, An
         sections.append({
             "section_id": "section.highlight.primary" if primary else f"section.highlight.secondary.{index}",
             "template": "HIGHLIGHT_PRIMARY" if primary else "HIGHLIGHT_SECONDARY",
-            "availability": _section_availability(members),
+            "availability": _highlight_availability(members),
             "fact_ids": list(candidate.support_fact_ids),
             "content_ids": [candidate.content_id],
             "premium_section_id": None,
