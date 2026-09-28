@@ -8,6 +8,7 @@ rank, calibrated confidence or user-visible score.
 from __future__ import annotations
 
 from dataclasses import dataclass
+import copy
 import json
 import math
 from pathlib import Path
@@ -29,8 +30,12 @@ class HighlightCandidate:
 
 
 def presentation_registry() -> Mapping[str, Any]:
-    """Return the immutable-by-convention reviewed registry object."""
-    return _DATA
+    """Return a defensive copy of the reviewed registry.
+
+    Callers may inspect presentation authority but cannot mutate process-global
+    selection/content state for later reports.
+    """
+    return copy.deepcopy(_DATA)
 
 
 def feature_label(feature_id: str, locale: str) -> str:
