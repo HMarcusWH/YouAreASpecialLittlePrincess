@@ -5,6 +5,7 @@ from __future__ import annotations
 BASE_TEMPLATE_VERSION = "individual-report/1"
 HIGHLIGHT_TEMPLATE_VERSION = "individual-report/2"
 HIGHLIGHT_PRESENTATION_VERSION = "presentation/1"
+HIGHLIGHT_POLICY_VERSION = "highlight-policy/1"
 # T17 promotes the default only when clients render the server-selected content.
 TEMPLATE_VERSION = BASE_TEMPLATE_VERSION
 SUPPORTED_TEMPLATE_VERSIONS = frozenset({BASE_TEMPLATE_VERSION, HIGHLIGHT_TEMPLATE_VERSION})
