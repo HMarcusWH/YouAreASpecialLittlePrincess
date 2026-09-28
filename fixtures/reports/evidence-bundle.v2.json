@@ -1,0 +1,3869 @@
+{
+  "analysis": {
+    "analysis_id": "analysis_fixture_v2",
+    "contract_version": "1.0.0",
+    "created_at": "2026-09-27T12:00:00Z",
+    "input_asset_id": "asset_fixture_1",
+    "input_sha256": "46abc778393d1570137b4c395912856da5c02233643e51b6d13facf18151c99a",
+    "owner_id": "owner_fixture_1",
+    "processed_sha256": "aecd336d36edf312cfdd887f8d0d133f0ee200a25346a82044d47e46e3cdb450",
+    "run_id": "run_fixture_v2",
+    "versions": {
+      "analysis_config": "494ff873c4bf7a309da8a78664999b2714980d90728c9c2c49b9012ae5494e68",
+      "benchmark_release": null,
+      "content_schema": "1.0.0",
+      "engine": "0.1.0",
+      "feature_schema": "1.0.0-draft",
+      "feature_set": null,
+      "method_manifest": "a4606d9925680ff135c6dd2c332bec51e3a2cf878383275a83fa8ecb0d20c835",
+      "normalization": null,
+      "quality_policy": "quality-policy/1",
+      "template": "individual-report/2"
+    }
+  },
+  "bundle_id": "evidence_fixture_v2",
+  "contract_version": "1.0.0",
+  "frames": [
+    {
+      "frame_id": "frame_input",
+      "height": 360,
+      "parent_frame_id": null,
+      "transform_to_parent": null,
+      "unit": "px",
+      "width": 900
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 316,
+      "parent_frame_id": "frame_input",
+      "transform_to_parent": [
+        1.2839522589701664,
+        0.06728908659807159,
+        -18.21779886250248,
+        -0.06728908659807159,
+        1.2839522589701662,
+        1.2669595977833847,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "unit": "px",
+      "width": 713
+    }
+  ],
+  "observations": [
+    {
+      "accepted": true,
+      "feature_id": "SLANT_ANGLE_MEAN",
+      "method_id": "oriented_component_axis_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:slant:component_0",
+      "region_ids": [
+        "component_0"
+      ],
+      "rejection_reason": null,
+      "unit": "degrees",
+      "value": 22.886889532547375
+    },
+    {
+      "accepted": true,
+      "feature_id": "SLANT_ANGLE_MEAN",
+      "method_id": "oriented_component_axis_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:slant:component_1",
+      "region_ids": [
+        "component_1"
+      ],
+      "rejection_reason": null,
+      "unit": "degrees",
+      "value": 5.073189036662589
+    },
+    {
+      "accepted": false,
+      "feature_id": "SLANT_ANGLE_MEAN",
+      "method_id": "oriented_component_axis_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:slant:component_2",
+      "region_ids": [
+        "component_2"
+      ],
+      "rejection_reason": "not_elongated",
+      "unit": "degrees",
+      "value": -1.6607033840678411
+    },
+    {
+      "accepted": true,
+      "feature_id": "SLANT_ANGLE_MEAN",
+      "method_id": "oriented_component_axis_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:slant:component_4",
+      "region_ids": [
+        "component_4"
+      ],
+      "rejection_reason": null,
+      "unit": "degrees",
+      "value": 6.13609599988996
+    },
+    {
+      "accepted": false,
+      "feature_id": "SLANT_ANGLE_MEAN",
+      "method_id": "oriented_component_axis_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:slant:component_5",
+      "region_ids": [
+        "component_5"
+      ],
+      "rejection_reason": "not_elongated",
+      "unit": "degrees",
+      "value": 4.442509632804458
+    },
+    {
+      "accepted": false,
+      "feature_id": "SLANT_ANGLE_MEAN",
+      "method_id": "oriented_component_axis_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:slant:component_7",
+      "region_ids": [
+        "component_7"
+      ],
+      "rejection_reason": "not_elongated",
+      "unit": "degrees",
+      "value": 35.136197314885955
+    },
+    {
+      "accepted": false,
+      "feature_id": "SLANT_ANGLE_MEAN",
+      "method_id": "oriented_component_axis_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:slant:component_8",
+      "region_ids": [
+        "component_8"
+      ],
+      "rejection_reason": "not_elongated",
+      "unit": "degrees",
+      "value": 6.0433963491338005
+    },
+    {
+      "accepted": false,
+      "feature_id": "SLANT_ANGLE_MEAN",
+      "method_id": "oriented_component_axis_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:slant:component_9",
+      "region_ids": [
+        "component_9"
+      ],
+      "rejection_reason": "not_elongated",
+      "unit": "degrees",
+      "value": 58.85701746695554
+    },
+    {
+      "accepted": true,
+      "feature_id": "SLANT_ANGLE_MEAN",
+      "method_id": "oriented_component_axis_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:slant:component_10",
+      "region_ids": [
+        "component_10"
+      ],
+      "rejection_reason": null,
+      "unit": "degrees",
+      "value": 13.602722273264881
+    },
+    {
+      "accepted": false,
+      "feature_id": "SLANT_ANGLE_MEAN",
+      "method_id": "oriented_component_axis_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:slant:component_11",
+      "region_ids": [
+        "component_11"
+      ],
+      "rejection_reason": "not_elongated",
+      "unit": "degrees",
+      "value": 28.173749164701135
+    },
+    {
+      "accepted": true,
+      "feature_id": "SLANT_ANGLE_MEAN",
+      "method_id": "oriented_component_axis_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:slant:component_12",
+      "region_ids": [
+        "component_12"
+      ],
+      "rejection_reason": null,
+      "unit": "degrees",
+      "value": 30.976469387074484
+    },
+    {
+      "accepted": false,
+      "feature_id": "SLANT_ANGLE_MEAN",
+      "method_id": "oriented_component_axis_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:slant:component_13",
+      "region_ids": [
+        "component_13"
+      ],
+      "rejection_reason": "not_elongated",
+      "unit": "degrees",
+      "value": 40.58288889446809
+    },
+    {
+      "accepted": false,
+      "feature_id": "SLANT_ANGLE_MEAN",
+      "method_id": "oriented_component_axis_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:slant:component_14",
+      "region_ids": [
+        "component_14"
+      ],
+      "rejection_reason": "outside_accepted_range",
+      "unit": "degrees",
+      "value": 80.030330148528
+    },
+    {
+      "accepted": false,
+      "feature_id": "SLANT_ANGLE_MEAN",
+      "method_id": "oriented_component_axis_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:slant:component_15",
+      "region_ids": [
+        "component_15"
+      ],
+      "rejection_reason": "not_elongated",
+      "unit": "degrees",
+      "value": 56.04744991265246
+    },
+    {
+      "accepted": false,
+      "feature_id": "SLANT_ANGLE_MEAN",
+      "method_id": "oriented_component_axis_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:slant:component_16",
+      "region_ids": [
+        "component_16"
+      ],
+      "rejection_reason": "not_elongated",
+      "unit": "degrees",
+      "value": 40.49413050688855
+    },
+    {
+      "accepted": false,
+      "feature_id": "SLANT_ANGLE_MEAN",
+      "method_id": "oriented_component_axis_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:slant:component_17",
+      "region_ids": [
+        "component_17"
+      ],
+      "rejection_reason": "not_elongated",
+      "unit": "degrees",
+      "value": 34.280270481177844
+    },
+    {
+      "accepted": true,
+      "feature_id": "SLANT_ANGLE_MEAN",
+      "method_id": "oriented_component_axis_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:slant:component_18",
+      "region_ids": [
+        "component_18"
+      ],
+      "rejection_reason": null,
+      "unit": "degrees",
+      "value": 19.37547543143703
+    },
+    {
+      "accepted": false,
+      "feature_id": "SLANT_ANGLE_MEAN",
+      "method_id": "oriented_component_axis_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:slant:component_19",
+      "region_ids": [
+        "component_19"
+      ],
+      "rejection_reason": "not_elongated",
+      "unit": "degrees",
+      "value": 56.694776144248955
+    },
+    {
+      "accepted": false,
+      "feature_id": "SLANT_ANGLE_MEAN",
+      "method_id": "oriented_component_axis_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:slant:component_20",
+      "region_ids": [
+        "component_20"
+      ],
+      "rejection_reason": "outside_accepted_range",
+      "unit": "degrees",
+      "value": 83.15786437395171
+    },
+    {
+      "accepted": true,
+      "feature_id": "SLANT_ANGLE_MEAN",
+      "method_id": "oriented_component_axis_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:slant:component_21",
+      "region_ids": [
+        "component_21"
+      ],
+      "rejection_reason": null,
+      "unit": "degrees",
+      "value": 34.69386299368655
+    },
+    {
+      "accepted": true,
+      "feature_id": "SLANT_ANGLE_MEAN",
+      "method_id": "oriented_component_axis_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:slant:component_22",
+      "region_ids": [
+        "component_22"
+      ],
+      "rejection_reason": null,
+      "unit": "degrees",
+      "value": 21.1283070659836
+    },
+    {
+      "accepted": true,
+      "feature_id": "SLANT_ANGLE_MEAN",
+      "method_id": "oriented_component_axis_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:slant:component_23",
+      "region_ids": [
+        "component_23"
+      ],
+      "rejection_reason": null,
+      "unit": "degrees",
+      "value": 12.648715485415867
+    },
+    {
+      "accepted": true,
+      "feature_id": "SLANT_ANGLE_MEAN",
+      "method_id": "oriented_component_axis_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:slant:component_24",
+      "region_ids": [
+        "component_24"
+      ],
+      "rejection_reason": null,
+      "unit": "degrees",
+      "value": 35.06373617518698
+    },
+    {
+      "accepted": false,
+      "feature_id": "SLANT_ANGLE_MEAN",
+      "method_id": "oriented_component_axis_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:slant:component_25",
+      "region_ids": [
+        "component_25"
+      ],
+      "rejection_reason": "not_elongated",
+      "unit": "degrees",
+      "value": 39.4574065966793
+    },
+    {
+      "accepted": false,
+      "feature_id": "SLANT_ANGLE_MEAN",
+      "method_id": "oriented_component_axis_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:slant:component_26",
+      "region_ids": [
+        "component_26"
+      ],
+      "rejection_reason": "not_elongated",
+      "unit": "degrees",
+      "value": 36.71004437125215
+    },
+    {
+      "accepted": false,
+      "feature_id": "SLANT_ANGLE_MEAN",
+      "method_id": "oriented_component_axis_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:slant:component_27",
+      "region_ids": [
+        "component_27"
+      ],
+      "rejection_reason": "not_elongated",
+      "unit": "degrees",
+      "value": 33.335354164204674
+    },
+    {
+      "accepted": true,
+      "feature_id": "SLANT_ANGLE_MEAN",
+      "method_id": "oriented_component_axis_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:slant:component_28",
+      "region_ids": [
+        "component_28"
+      ],
+      "rejection_reason": null,
+      "unit": "degrees",
+      "value": 31.503146554698866
+    },
+    {
+      "accepted": false,
+      "feature_id": "SLANT_ANGLE_MEAN",
+      "method_id": "oriented_component_axis_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:slant:component_29",
+      "region_ids": [
+        "component_29"
+      ],
+      "rejection_reason": "not_elongated",
+      "unit": "degrees",
+      "value": 40.61293098832045
+    },
+    {
+      "accepted": false,
+      "feature_id": "SLANT_ANGLE_MEAN",
+      "method_id": "oriented_component_axis_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:slant:component_30",
+      "region_ids": [
+        "component_30"
+      ],
+      "rejection_reason": "not_elongated",
+      "unit": "degrees",
+      "value": 38.15712435220035
+    },
+    {
+      "accepted": false,
+      "feature_id": "SLANT_ANGLE_MEAN",
+      "method_id": "oriented_component_axis_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:slant:component_31",
+      "region_ids": [
+        "component_31"
+      ],
+      "rejection_reason": "not_elongated",
+      "unit": "degrees",
+      "value": 33.839570083677216
+    },
+    {
+      "accepted": false,
+      "feature_id": "SLANT_ANGLE_MEAN",
+      "method_id": "oriented_component_axis_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:slant:component_32",
+      "region_ids": [
+        "component_32"
+      ],
+      "rejection_reason": "not_elongated",
+      "unit": "degrees",
+      "value": 81.12426648243962
+    },
+    {
+      "accepted": false,
+      "feature_id": "SLANT_ANGLE_MEAN",
+      "method_id": "oriented_component_axis_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:slant:component_33",
+      "region_ids": [
+        "component_33"
+      ],
+      "rejection_reason": "not_elongated",
+      "unit": "degrees",
+      "value": 40.12259398487977
+    },
+    {
+      "accepted": true,
+      "feature_id": "SLANT_ANGLE_MEAN",
+      "method_id": "oriented_component_axis_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:slant:component_34",
+      "region_ids": [
+        "component_34"
+      ],
+      "rejection_reason": null,
+      "unit": "degrees",
+      "value": 17.072642476187234
+    },
+    {
+      "accepted": true,
+      "feature_id": "SLANT_ANGLE_MEAN",
+      "method_id": "oriented_component_axis_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:slant:component_35",
+      "region_ids": [
+        "component_35"
+      ],
+      "rejection_reason": null,
+      "unit": "degrees",
+      "value": 24.119233140623134
+    },
+    {
+      "accepted": false,
+      "feature_id": "SLANT_ANGLE_MEAN",
+      "method_id": "oriented_component_axis_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:slant:component_36",
+      "region_ids": [
+        "component_36"
+      ],
+      "rejection_reason": "not_elongated",
+      "unit": "degrees",
+      "value": 40.26233482055287
+    },
+    {
+      "accepted": true,
+      "feature_id": "SLANT_ANGLE_MEAN",
+      "method_id": "oriented_component_axis_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:slant:component_37",
+      "region_ids": [
+        "component_37"
+      ],
+      "rejection_reason": null,
+      "unit": "degrees",
+      "value": 22.515127880917227
+    },
+    {
+      "accepted": true,
+      "feature_id": "SLANT_ANGLE_MEAN",
+      "method_id": "oriented_component_axis_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:slant:component_40",
+      "region_ids": [
+        "component_40"
+      ],
+      "rejection_reason": null,
+      "unit": "degrees",
+      "value": 23.756105682346867
+    },
+    {
+      "accepted": true,
+      "feature_id": "SLANT_ANGLE_MEAN",
+      "method_id": "oriented_component_axis_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:slant:component_42",
+      "region_ids": [
+        "component_42"
+      ],
+      "rejection_reason": null,
+      "unit": "degrees",
+      "value": 5.087682490129796
+    },
+    {
+      "accepted": true,
+      "feature_id": "SLANT_ANGLE_MEAN",
+      "method_id": "oriented_component_axis_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:slant:component_43",
+      "region_ids": [
+        "component_43"
+      ],
+      "rejection_reason": null,
+      "unit": "degrees",
+      "value": 12.55305200440475
+    },
+    {
+      "accepted": true,
+      "feature_id": "SLANT_ANGLE_MEAN",
+      "method_id": "oriented_component_axis_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:slant:component_44",
+      "region_ids": [
+        "component_44"
+      ],
+      "rejection_reason": null,
+      "unit": "degrees",
+      "value": 4.8735901223111
+    },
+    {
+      "accepted": false,
+      "feature_id": "SLANT_ANGLE_MEAN",
+      "method_id": "oriented_component_axis_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:slant:component_45",
+      "region_ids": [
+        "component_45"
+      ],
+      "rejection_reason": "outside_accepted_range",
+      "unit": "degrees",
+      "value": 79.33006786346094
+    },
+    {
+      "accepted": true,
+      "feature_id": "SLANT_ANGLE_MEAN",
+      "method_id": "oriented_component_axis_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:slant:component_46",
+      "region_ids": [
+        "component_46"
+      ],
+      "rejection_reason": null,
+      "unit": "degrees",
+      "value": 31.773840580236907
+    },
+    {
+      "accepted": true,
+      "feature_id": "SLANT_ANGLE_MEAN",
+      "method_id": "oriented_component_axis_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:slant:component_47",
+      "region_ids": [
+        "component_47"
+      ],
+      "rejection_reason": null,
+      "unit": "degrees",
+      "value": 12.414549570095923
+    },
+    {
+      "accepted": true,
+      "feature_id": "SLANT_ANGLE_MEAN",
+      "method_id": "oriented_component_axis_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:slant:component_48",
+      "region_ids": [
+        "component_48"
+      ],
+      "rejection_reason": null,
+      "unit": "degrees",
+      "value": 12.239628774900376
+    },
+    {
+      "accepted": false,
+      "feature_id": "SLANT_ANGLE_MEAN",
+      "method_id": "oriented_component_axis_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:slant:component_49",
+      "region_ids": [
+        "component_49"
+      ],
+      "rejection_reason": "not_elongated",
+      "unit": "degrees",
+      "value": 54.00846014215193
+    },
+    {
+      "accepted": true,
+      "feature_id": "SLANT_ANGLE_MEAN",
+      "method_id": "oriented_component_axis_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:slant:component_50",
+      "region_ids": [
+        "component_50"
+      ],
+      "rejection_reason": null,
+      "unit": "degrees",
+      "value": 24.109793526537068
+    },
+    {
+      "accepted": true,
+      "feature_id": "SLANT_ANGLE_MEAN",
+      "method_id": "oriented_component_axis_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:slant:component_51",
+      "region_ids": [
+        "component_51"
+      ],
+      "rejection_reason": null,
+      "unit": "degrees",
+      "value": 20.30219472777582
+    },
+    {
+      "accepted": false,
+      "feature_id": "SLANT_ANGLE_MEAN",
+      "method_id": "oriented_component_axis_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:slant:component_52",
+      "region_ids": [
+        "component_52"
+      ],
+      "rejection_reason": "not_elongated",
+      "unit": "degrees",
+      "value": 41.13176115064227
+    },
+    {
+      "accepted": false,
+      "feature_id": "SLANT_ANGLE_MEAN",
+      "method_id": "oriented_component_axis_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:slant:component_53",
+      "region_ids": [
+        "component_53"
+      ],
+      "rejection_reason": "outside_accepted_range",
+      "unit": "degrees",
+      "value": 83.84210877329089
+    },
+    {
+      "accepted": true,
+      "feature_id": "SLANT_ANGLE_MEAN",
+      "method_id": "oriented_component_axis_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:slant:component_54",
+      "region_ids": [
+        "component_54"
+      ],
+      "rejection_reason": null,
+      "unit": "degrees",
+      "value": 34.35414333139735
+    },
+    {
+      "accepted": false,
+      "feature_id": "SLANT_ANGLE_MEAN",
+      "method_id": "oriented_component_axis_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:slant:component_55",
+      "region_ids": [
+        "component_55"
+      ],
+      "rejection_reason": "not_elongated",
+      "unit": "degrees",
+      "value": 34.29574155839796
+    },
+    {
+      "accepted": true,
+      "feature_id": "SLANT_ANGLE_MEAN",
+      "method_id": "oriented_component_axis_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:slant:component_56",
+      "region_ids": [
+        "component_56"
+      ],
+      "rejection_reason": null,
+      "unit": "degrees",
+      "value": 12.888673820321731
+    },
+    {
+      "accepted": false,
+      "feature_id": "SLANT_ANGLE_MEAN",
+      "method_id": "oriented_component_axis_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:slant:component_57",
+      "region_ids": [
+        "component_57"
+      ],
+      "rejection_reason": "not_elongated",
+      "unit": "degrees",
+      "value": 27.840313405824354
+    },
+    {
+      "accepted": false,
+      "feature_id": "SLANT_ANGLE_MEAN",
+      "method_id": "oriented_component_axis_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:slant:component_58",
+      "region_ids": [
+        "component_58"
+      ],
+      "rejection_reason": "not_elongated",
+      "unit": "degrees",
+      "value": 53.6852571939898
+    },
+    {
+      "accepted": true,
+      "feature_id": "SLANT_ANGLE_MEAN",
+      "method_id": "oriented_component_axis_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:slant:component_59",
+      "region_ids": [
+        "component_59"
+      ],
+      "rejection_reason": null,
+      "unit": "degrees",
+      "value": 30.802443157885186
+    },
+    {
+      "accepted": false,
+      "feature_id": "SLANT_ANGLE_MEAN",
+      "method_id": "oriented_component_axis_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:slant:component_60",
+      "region_ids": [
+        "component_60"
+      ],
+      "rejection_reason": "not_elongated",
+      "unit": "degrees",
+      "value": 33.977173176387545
+    },
+    {
+      "accepted": true,
+      "feature_id": "BASELINE_ANGLE_MEAN",
+      "method_id": "bottom_quantile_angle_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:baseline:line_0",
+      "region_ids": [
+        "line_0",
+        "baseline_0_0",
+        "baseline_0_4",
+        "baseline_0_8",
+        "baseline_0_12",
+        "baseline_0_16",
+        "baseline_0_20",
+        "baseline_0_24",
+        "baseline_0_28",
+        "baseline_0_32",
+        "baseline_0_36",
+        "baseline_0_40",
+        "baseline_0_44"
+      ],
+      "rejection_reason": null,
+      "unit": "degrees",
+      "value": -0.2013536226079174
+    },
+    {
+      "accepted": true,
+      "feature_id": "BASELINE_ANGLE_MEAN",
+      "method_id": "bottom_quantile_angle_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:baseline:line_1",
+      "region_ids": [
+        "line_1",
+        "baseline_1_0",
+        "baseline_1_4",
+        "baseline_1_8",
+        "baseline_1_13",
+        "baseline_1_17",
+        "baseline_1_21",
+        "baseline_1_25",
+        "baseline_1_29",
+        "baseline_1_33",
+        "baseline_1_38",
+        "baseline_1_42",
+        "baseline_1_46"
+      ],
+      "rejection_reason": null,
+      "unit": "degrees",
+      "value": -0.7476949066641234
+    },
+    {
+      "accepted": true,
+      "feature_id": "BASELINE_ANGLE_MEAN",
+      "method_id": "bottom_quantile_angle_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:baseline:line_2",
+      "region_ids": [
+        "line_2",
+        "baseline_2_0",
+        "baseline_2_5",
+        "baseline_2_10",
+        "baseline_2_14",
+        "baseline_2_19",
+        "baseline_2_24",
+        "baseline_2_29",
+        "baseline_2_34",
+        "baseline_2_39",
+        "baseline_2_43",
+        "baseline_2_48",
+        "baseline_2_53"
+      ],
+      "rejection_reason": null,
+      "unit": "degrees",
+      "value": -0.30099849734013334
+    },
+    {
+      "accepted": true,
+      "feature_id": "LINE_SPACING_PX",
+      "method_id": "accepted_box_gap_px_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:line_gap:line_0",
+      "region_ids": [
+        "line_0",
+        "line_1"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 48.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "LINE_SPACING_PX",
+      "method_id": "accepted_box_gap_px_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:line_gap:line_1",
+      "region_ids": [
+        "line_1",
+        "line_2"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 46.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_HEIGHT_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_height:component_0",
+      "region_ids": [
+        "component_0"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 25.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_WIDTH_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_width:component_0",
+      "region_ids": [
+        "component_0"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 15.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_HEIGHT_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_height:component_1",
+      "region_ids": [
+        "component_1"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 24.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_WIDTH_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_width:component_1",
+      "region_ids": [
+        "component_1"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 13.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_HEIGHT_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_height:component_2",
+      "region_ids": [
+        "component_2"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 24.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_WIDTH_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_width:component_2",
+      "region_ids": [
+        "component_2"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 19.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_HEIGHT_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_height:component_4",
+      "region_ids": [
+        "component_4"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 24.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_WIDTH_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_width:component_4",
+      "region_ids": [
+        "component_4"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 18.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_HEIGHT_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_height:component_5",
+      "region_ids": [
+        "component_5"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 24.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_WIDTH_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_width:component_5",
+      "region_ids": [
+        "component_5"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 18.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_HEIGHT_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_height:component_7",
+      "region_ids": [
+        "component_7"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 18.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_WIDTH_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_width:component_7",
+      "region_ids": [
+        "component_7"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 17.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_HEIGHT_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_height:component_8",
+      "region_ids": [
+        "component_8"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 24.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_WIDTH_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_width:component_8",
+      "region_ids": [
+        "component_8"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 19.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_HEIGHT_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_height:component_9",
+      "region_ids": [
+        "component_9"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 17.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_WIDTH_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_width:component_9",
+      "region_ids": [
+        "component_9"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 18.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_HEIGHT_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_height:component_10",
+      "region_ids": [
+        "component_10"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 17.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_WIDTH_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_width:component_10",
+      "region_ids": [
+        "component_10"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 8.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_HEIGHT_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_height:component_11",
+      "region_ids": [
+        "component_11"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 18.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_WIDTH_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_width:component_11",
+      "region_ids": [
+        "component_11"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 17.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_HEIGHT_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_height:component_12",
+      "region_ids": [
+        "component_12"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 17.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_WIDTH_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_width:component_12",
+      "region_ids": [
+        "component_12"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 14.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_HEIGHT_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_height:component_13",
+      "region_ids": [
+        "component_13"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 18.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_WIDTH_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_width:component_13",
+      "region_ids": [
+        "component_13"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 17.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_HEIGHT_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_height:component_14",
+      "region_ids": [
+        "component_14"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 17.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_WIDTH_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_width:component_14",
+      "region_ids": [
+        "component_14"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 25.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_HEIGHT_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_height:component_15",
+      "region_ids": [
+        "component_15"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 18.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_WIDTH_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_width:component_15",
+      "region_ids": [
+        "component_15"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 19.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_HEIGHT_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_height:component_16",
+      "region_ids": [
+        "component_16"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 18.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_WIDTH_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_width:component_16",
+      "region_ids": [
+        "component_16"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 18.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_HEIGHT_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_height:component_17",
+      "region_ids": [
+        "component_17"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 17.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_WIDTH_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_width:component_17",
+      "region_ids": [
+        "component_17"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 20.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_HEIGHT_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_height:component_18",
+      "region_ids": [
+        "component_18"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 23.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_WIDTH_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_width:component_18",
+      "region_ids": [
+        "component_18"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 13.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_HEIGHT_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_height:component_19",
+      "region_ids": [
+        "component_19"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 17.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_WIDTH_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_width:component_19",
+      "region_ids": [
+        "component_19"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 18.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_HEIGHT_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_height:component_20",
+      "region_ids": [
+        "component_20"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 18.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_WIDTH_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_width:component_20",
+      "region_ids": [
+        "component_20"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 28.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_HEIGHT_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_height:component_21",
+      "region_ids": [
+        "component_21"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 24.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_WIDTH_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_width:component_21",
+      "region_ids": [
+        "component_21"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 19.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_HEIGHT_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_height:component_22",
+      "region_ids": [
+        "component_22"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 18.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_WIDTH_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_width:component_22",
+      "region_ids": [
+        "component_22"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 17.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_HEIGHT_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_height:component_23",
+      "region_ids": [
+        "component_23"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 24.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_WIDTH_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_width:component_23",
+      "region_ids": [
+        "component_23"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 9.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_HEIGHT_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_height:component_24",
+      "region_ids": [
+        "component_24"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 24.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_WIDTH_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_width:component_24",
+      "region_ids": [
+        "component_24"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 20.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_HEIGHT_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_height:component_25",
+      "region_ids": [
+        "component_25"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 18.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_WIDTH_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_width:component_25",
+      "region_ids": [
+        "component_25"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 17.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_HEIGHT_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_height:component_26",
+      "region_ids": [
+        "component_26"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 18.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_WIDTH_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_width:component_26",
+      "region_ids": [
+        "component_26"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 17.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_HEIGHT_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_height:component_27",
+      "region_ids": [
+        "component_27"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 18.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_WIDTH_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_width:component_27",
+      "region_ids": [
+        "component_27"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 17.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_HEIGHT_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_height:component_28",
+      "region_ids": [
+        "component_28"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 18.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_WIDTH_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_width:component_28",
+      "region_ids": [
+        "component_28"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 15.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_HEIGHT_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_height:component_29",
+      "region_ids": [
+        "component_29"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 18.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_WIDTH_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_width:component_29",
+      "region_ids": [
+        "component_29"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 19.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_HEIGHT_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_height:component_30",
+      "region_ids": [
+        "component_30"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 18.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_WIDTH_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_width:component_30",
+      "region_ids": [
+        "component_30"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 17.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_HEIGHT_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_height:component_31",
+      "region_ids": [
+        "component_31"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 18.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_WIDTH_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_width:component_31",
+      "region_ids": [
+        "component_31"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 17.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_HEIGHT_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_height:component_32",
+      "region_ids": [
+        "component_32"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 24.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_WIDTH_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_width:component_32",
+      "region_ids": [
+        "component_32"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 33.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_HEIGHT_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_height:component_33",
+      "region_ids": [
+        "component_33"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 18.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_WIDTH_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_width:component_33",
+      "region_ids": [
+        "component_33"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 19.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_HEIGHT_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_height:component_34",
+      "region_ids": [
+        "component_34"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 18.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_WIDTH_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_width:component_34",
+      "region_ids": [
+        "component_34"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 17.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_HEIGHT_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_height:component_35",
+      "region_ids": [
+        "component_35"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 24.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_WIDTH_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_width:component_35",
+      "region_ids": [
+        "component_35"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 18.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_HEIGHT_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_height:component_36",
+      "region_ids": [
+        "component_36"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 18.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_WIDTH_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_width:component_36",
+      "region_ids": [
+        "component_36"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 18.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_HEIGHT_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_height:component_37",
+      "region_ids": [
+        "component_37"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 25.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_WIDTH_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_width:component_37",
+      "region_ids": [
+        "component_37"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 21.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_HEIGHT_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_height:component_40",
+      "region_ids": [
+        "component_40"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 25.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_WIDTH_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_width:component_40",
+      "region_ids": [
+        "component_40"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 15.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_HEIGHT_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_height:component_42",
+      "region_ids": [
+        "component_42"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 24.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_WIDTH_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_width:component_42",
+      "region_ids": [
+        "component_42"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 13.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_HEIGHT_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_height:component_43",
+      "region_ids": [
+        "component_43"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 24.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_WIDTH_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_width:component_43",
+      "region_ids": [
+        "component_43"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 9.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_HEIGHT_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_height:component_44",
+      "region_ids": [
+        "component_44"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 24.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_WIDTH_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_width:component_44",
+      "region_ids": [
+        "component_44"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 13.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_HEIGHT_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_height:component_45",
+      "region_ids": [
+        "component_45"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 18.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_WIDTH_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_width:component_45",
+      "region_ids": [
+        "component_45"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 25.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_HEIGHT_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_height:component_46",
+      "region_ids": [
+        "component_46"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 18.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_WIDTH_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_width:component_46",
+      "region_ids": [
+        "component_46"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 15.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_HEIGHT_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_height:component_47",
+      "region_ids": [
+        "component_47"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 18.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_WIDTH_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_width:component_47",
+      "region_ids": [
+        "component_47"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 7.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_HEIGHT_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_height:component_48",
+      "region_ids": [
+        "component_48"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 18.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_WIDTH_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_width:component_48",
+      "region_ids": [
+        "component_48"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 8.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_HEIGHT_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_height:component_49",
+      "region_ids": [
+        "component_49"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 18.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_WIDTH_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_width:component_49",
+      "region_ids": [
+        "component_49"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 18.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_HEIGHT_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_height:component_50",
+      "region_ids": [
+        "component_50"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 25.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_WIDTH_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_width:component_50",
+      "region_ids": [
+        "component_50"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 20.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_HEIGHT_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_height:component_51",
+      "region_ids": [
+        "component_51"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 18.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_WIDTH_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_width:component_51",
+      "region_ids": [
+        "component_51"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 16.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_HEIGHT_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_height:component_52",
+      "region_ids": [
+        "component_52"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 18.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_WIDTH_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_width:component_52",
+      "region_ids": [
+        "component_52"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 19.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_HEIGHT_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_height:component_53",
+      "region_ids": [
+        "component_53"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 18.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_WIDTH_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_width:component_53",
+      "region_ids": [
+        "component_53"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 28.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_HEIGHT_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_height:component_54",
+      "region_ids": [
+        "component_54"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 24.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_WIDTH_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_width:component_54",
+      "region_ids": [
+        "component_54"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 20.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_HEIGHT_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_height:component_55",
+      "region_ids": [
+        "component_55"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 18.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_WIDTH_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_width:component_55",
+      "region_ids": [
+        "component_55"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 17.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_HEIGHT_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_height:component_56",
+      "region_ids": [
+        "component_56"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 18.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_WIDTH_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_width:component_56",
+      "region_ids": [
+        "component_56"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 8.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_HEIGHT_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_height:component_57",
+      "region_ids": [
+        "component_57"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 18.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_WIDTH_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_width:component_57",
+      "region_ids": [
+        "component_57"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 20.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_HEIGHT_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_height:component_58",
+      "region_ids": [
+        "component_58"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 18.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_WIDTH_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_width:component_58",
+      "region_ids": [
+        "component_58"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 19.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_HEIGHT_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_height:component_59",
+      "region_ids": [
+        "component_59"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 18.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_WIDTH_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_width:component_59",
+      "region_ids": [
+        "component_59"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 14.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_HEIGHT_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_height:component_60",
+      "region_ids": [
+        "component_60"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 18.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "GLYPH_WIDTH_MEAN",
+      "method_id": "component_box_size_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:glyph_width:component_60",
+      "region_ids": [
+        "component_60"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 17.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "X_HEIGHT_PX",
+      "method_id": "component_height_mode_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:x_height:component_7",
+      "region_ids": [
+        "component_7"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 18.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "X_HEIGHT_PX",
+      "method_id": "component_height_mode_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:x_height:component_9",
+      "region_ids": [
+        "component_9"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 17.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "X_HEIGHT_PX",
+      "method_id": "component_height_mode_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:x_height:component_10",
+      "region_ids": [
+        "component_10"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 17.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "X_HEIGHT_PX",
+      "method_id": "component_height_mode_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:x_height:component_11",
+      "region_ids": [
+        "component_11"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 18.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "X_HEIGHT_PX",
+      "method_id": "component_height_mode_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:x_height:component_12",
+      "region_ids": [
+        "component_12"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 17.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "X_HEIGHT_PX",
+      "method_id": "component_height_mode_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:x_height:component_13",
+      "region_ids": [
+        "component_13"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 18.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "X_HEIGHT_PX",
+      "method_id": "component_height_mode_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:x_height:component_14",
+      "region_ids": [
+        "component_14"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 17.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "X_HEIGHT_PX",
+      "method_id": "component_height_mode_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:x_height:component_15",
+      "region_ids": [
+        "component_15"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 18.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "X_HEIGHT_PX",
+      "method_id": "component_height_mode_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:x_height:component_16",
+      "region_ids": [
+        "component_16"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 18.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "X_HEIGHT_PX",
+      "method_id": "component_height_mode_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:x_height:component_17",
+      "region_ids": [
+        "component_17"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 17.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "X_HEIGHT_PX",
+      "method_id": "component_height_mode_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:x_height:component_19",
+      "region_ids": [
+        "component_19"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 17.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "X_HEIGHT_PX",
+      "method_id": "component_height_mode_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:x_height:component_20",
+      "region_ids": [
+        "component_20"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 18.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "X_HEIGHT_PX",
+      "method_id": "component_height_mode_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:x_height:component_22",
+      "region_ids": [
+        "component_22"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 18.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "X_HEIGHT_PX",
+      "method_id": "component_height_mode_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:x_height:component_25",
+      "region_ids": [
+        "component_25"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 18.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "X_HEIGHT_PX",
+      "method_id": "component_height_mode_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:x_height:component_26",
+      "region_ids": [
+        "component_26"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 18.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "X_HEIGHT_PX",
+      "method_id": "component_height_mode_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:x_height:component_27",
+      "region_ids": [
+        "component_27"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 18.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "X_HEIGHT_PX",
+      "method_id": "component_height_mode_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:x_height:component_28",
+      "region_ids": [
+        "component_28"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 18.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "X_HEIGHT_PX",
+      "method_id": "component_height_mode_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:x_height:component_29",
+      "region_ids": [
+        "component_29"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 18.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "X_HEIGHT_PX",
+      "method_id": "component_height_mode_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:x_height:component_30",
+      "region_ids": [
+        "component_30"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 18.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "X_HEIGHT_PX",
+      "method_id": "component_height_mode_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:x_height:component_31",
+      "region_ids": [
+        "component_31"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 18.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "X_HEIGHT_PX",
+      "method_id": "component_height_mode_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:x_height:component_33",
+      "region_ids": [
+        "component_33"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 18.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "X_HEIGHT_PX",
+      "method_id": "component_height_mode_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:x_height:component_34",
+      "region_ids": [
+        "component_34"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 18.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "X_HEIGHT_PX",
+      "method_id": "component_height_mode_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:x_height:component_36",
+      "region_ids": [
+        "component_36"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 18.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "X_HEIGHT_PX",
+      "method_id": "component_height_mode_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:x_height:component_45",
+      "region_ids": [
+        "component_45"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 18.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "X_HEIGHT_PX",
+      "method_id": "component_height_mode_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:x_height:component_46",
+      "region_ids": [
+        "component_46"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 18.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "X_HEIGHT_PX",
+      "method_id": "component_height_mode_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:x_height:component_47",
+      "region_ids": [
+        "component_47"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 18.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "X_HEIGHT_PX",
+      "method_id": "component_height_mode_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:x_height:component_48",
+      "region_ids": [
+        "component_48"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 18.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "X_HEIGHT_PX",
+      "method_id": "component_height_mode_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:x_height:component_49",
+      "region_ids": [
+        "component_49"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 18.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "X_HEIGHT_PX",
+      "method_id": "component_height_mode_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:x_height:component_51",
+      "region_ids": [
+        "component_51"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 18.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "X_HEIGHT_PX",
+      "method_id": "component_height_mode_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:x_height:component_52",
+      "region_ids": [
+        "component_52"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 18.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "X_HEIGHT_PX",
+      "method_id": "component_height_mode_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:x_height:component_53",
+      "region_ids": [
+        "component_53"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 18.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "X_HEIGHT_PX",
+      "method_id": "component_height_mode_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:x_height:component_55",
+      "region_ids": [
+        "component_55"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 18.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "X_HEIGHT_PX",
+      "method_id": "component_height_mode_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:x_height:component_56",
+      "region_ids": [
+        "component_56"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 18.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "X_HEIGHT_PX",
+      "method_id": "component_height_mode_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:x_height:component_57",
+      "region_ids": [
+        "component_57"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 18.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "X_HEIGHT_PX",
+      "method_id": "component_height_mode_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:x_height:component_58",
+      "region_ids": [
+        "component_58"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 18.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "X_HEIGHT_PX",
+      "method_id": "component_height_mode_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:x_height:component_59",
+      "region_ids": [
+        "component_59"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 18.0
+    },
+    {
+      "accepted": true,
+      "feature_id": "X_HEIGHT_PX",
+      "method_id": "component_height_mode_v1",
+      "method_version": "1.0.0",
+      "observation_id": "obs:x_height:component_60",
+      "region_ids": [
+        "component_60"
+      ],
+      "rejection_reason": null,
+      "unit": "px",
+      "value": 18.0
+    }
+  ],
+  "regions": [
+    {
+      "frame_id": "frame_analysis",
+      "height": 316,
+      "parent_region_id": null,
+      "region_id": "page_0",
+      "scope": "PAGE",
+      "width": 713,
+      "x": 0,
+      "y": 0
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 30,
+      "parent_region_id": "page_0",
+      "region_id": "line_0",
+      "scope": "LINE",
+      "width": 419,
+      "x": 31,
+      "y": 64
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 31,
+      "parent_region_id": "page_0",
+      "region_id": "line_1",
+      "scope": "LINE",
+      "width": 315,
+      "x": 31,
+      "y": 142
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 32,
+      "parent_region_id": "page_0",
+      "region_id": "line_2",
+      "scope": "LINE",
+      "width": 347,
+      "x": 32,
+      "y": 219
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 1,
+      "parent_region_id": "line_0",
+      "region_id": "baseline_0_0",
+      "scope": "BASELINE_POINT",
+      "width": 1,
+      "x": 31,
+      "y": 73
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 1,
+      "parent_region_id": "line_0",
+      "region_id": "baseline_0_4",
+      "scope": "BASELINE_POINT",
+      "width": 1,
+      "x": 71,
+      "y": 85
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 1,
+      "parent_region_id": "line_0",
+      "region_id": "baseline_0_8",
+      "scope": "BASELINE_POINT",
+      "width": 1,
+      "x": 119,
+      "y": 86
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 1,
+      "parent_region_id": "line_0",
+      "region_id": "baseline_0_12",
+      "scope": "BASELINE_POINT",
+      "width": 1,
+      "x": 151,
+      "y": 86
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 1,
+      "parent_region_id": "line_0",
+      "region_id": "baseline_0_16",
+      "scope": "BASELINE_POINT",
+      "width": 1,
+      "x": 191,
+      "y": 82
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 1,
+      "parent_region_id": "line_0",
+      "region_id": "baseline_0_20",
+      "scope": "BASELINE_POINT",
+      "width": 1,
+      "x": 223,
+      "y": 84
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 1,
+      "parent_region_id": "line_0",
+      "region_id": "baseline_0_24",
+      "scope": "BASELINE_POINT",
+      "width": 1,
+      "x": 263,
+      "y": 74
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 1,
+      "parent_region_id": "line_0",
+      "region_id": "baseline_0_28",
+      "scope": "BASELINE_POINT",
+      "width": 1,
+      "x": 311,
+      "y": 84
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 1,
+      "parent_region_id": "line_0",
+      "region_id": "baseline_0_32",
+      "scope": "BASELINE_POINT",
+      "width": 1,
+      "x": 343,
+      "y": 73
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 1,
+      "parent_region_id": "line_0",
+      "region_id": "baseline_0_36",
+      "scope": "BASELINE_POINT",
+      "width": 1,
+      "x": 375,
+      "y": 86
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 1,
+      "parent_region_id": "line_0",
+      "region_id": "baseline_0_40",
+      "scope": "BASELINE_POINT",
+      "width": 1,
+      "x": 407,
+      "y": 84
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 1,
+      "parent_region_id": "line_0",
+      "region_id": "baseline_0_44",
+      "scope": "BASELINE_POINT",
+      "width": 1,
+      "x": 447,
+      "y": 82
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 1,
+      "parent_region_id": "line_1",
+      "region_id": "baseline_1_0",
+      "scope": "BASELINE_POINT",
+      "width": 1,
+      "x": 31,
+      "y": 161
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 1,
+      "parent_region_id": "line_1",
+      "region_id": "baseline_1_4",
+      "scope": "BASELINE_POINT",
+      "width": 1,
+      "x": 61,
+      "y": 160
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 1,
+      "parent_region_id": "line_1",
+      "region_id": "baseline_1_8",
+      "scope": "BASELINE_POINT",
+      "width": 1,
+      "x": 85,
+      "y": 156
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 1,
+      "parent_region_id": "line_1",
+      "region_id": "baseline_1_13",
+      "scope": "BASELINE_POINT",
+      "width": 1,
+      "x": 121,
+      "y": 163
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 1,
+      "parent_region_id": "line_1",
+      "region_id": "baseline_1_17",
+      "scope": "BASELINE_POINT",
+      "width": 1,
+      "x": 151,
+      "y": 155
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 1,
+      "parent_region_id": "line_1",
+      "region_id": "baseline_1_21",
+      "scope": "BASELINE_POINT",
+      "width": 1,
+      "x": 175,
+      "y": 164
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 1,
+      "parent_region_id": "line_1",
+      "region_id": "baseline_1_25",
+      "scope": "BASELINE_POINT",
+      "width": 1,
+      "x": 199,
+      "y": 159
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 1,
+      "parent_region_id": "line_1",
+      "region_id": "baseline_1_29",
+      "scope": "BASELINE_POINT",
+      "width": 1,
+      "x": 229,
+      "y": 163
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 1,
+      "parent_region_id": "line_1",
+      "region_id": "baseline_1_33",
+      "scope": "BASELINE_POINT",
+      "width": 1,
+      "x": 253,
+      "y": 163
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 1,
+      "parent_region_id": "line_1",
+      "region_id": "baseline_1_38",
+      "scope": "BASELINE_POINT",
+      "width": 1,
+      "x": 295,
+      "y": 164
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 1,
+      "parent_region_id": "line_1",
+      "region_id": "baseline_1_42",
+      "scope": "BASELINE_POINT",
+      "width": 1,
+      "x": 319,
+      "y": 162
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 1,
+      "parent_region_id": "line_1",
+      "region_id": "baseline_1_46",
+      "scope": "BASELINE_POINT",
+      "width": 1,
+      "x": 343,
+      "y": 157
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 1,
+      "parent_region_id": "line_2",
+      "region_id": "baseline_2_0",
+      "scope": "BASELINE_POINT",
+      "width": 1,
+      "x": 32,
+      "y": 230
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 1,
+      "parent_region_id": "line_2",
+      "region_id": "baseline_2_5",
+      "scope": "BASELINE_POINT",
+      "width": 1,
+      "x": 62,
+      "y": 237
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 1,
+      "parent_region_id": "line_2",
+      "region_id": "baseline_2_10",
+      "scope": "BASELINE_POINT",
+      "width": 1,
+      "x": 92,
+      "y": 228
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 1,
+      "parent_region_id": "line_2",
+      "region_id": "baseline_2_14",
+      "scope": "BASELINE_POINT",
+      "width": 1,
+      "x": 116,
+      "y": 240
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 1,
+      "parent_region_id": "line_2",
+      "region_id": "baseline_2_19",
+      "scope": "BASELINE_POINT",
+      "width": 1,
+      "x": 152,
+      "y": 241
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 1,
+      "parent_region_id": "line_2",
+      "region_id": "baseline_2_24",
+      "scope": "BASELINE_POINT",
+      "width": 1,
+      "x": 182,
+      "y": 240
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 1,
+      "parent_region_id": "line_2",
+      "region_id": "baseline_2_29",
+      "scope": "BASELINE_POINT",
+      "width": 1,
+      "x": 212,
+      "y": 239
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 1,
+      "parent_region_id": "line_2",
+      "region_id": "baseline_2_34",
+      "scope": "BASELINE_POINT",
+      "width": 1,
+      "x": 248,
+      "y": 239
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 1,
+      "parent_region_id": "line_2",
+      "region_id": "baseline_2_39",
+      "scope": "BASELINE_POINT",
+      "width": 1,
+      "x": 290,
+      "y": 238
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 1,
+      "parent_region_id": "line_2",
+      "region_id": "baseline_2_43",
+      "scope": "BASELINE_POINT",
+      "width": 1,
+      "x": 314,
+      "y": 228
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 1,
+      "parent_region_id": "line_2",
+      "region_id": "baseline_2_48",
+      "scope": "BASELINE_POINT",
+      "width": 1,
+      "x": 344,
+      "y": 235
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 1,
+      "parent_region_id": "line_2",
+      "region_id": "baseline_2_53",
+      "scope": "BASELINE_POINT",
+      "width": 1,
+      "x": 374,
+      "y": 238
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 29,
+      "parent_region_id": "line_0",
+      "region_id": "word_0",
+      "scope": "WORD",
+      "width": 419,
+      "x": 31,
+      "y": 64
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 29,
+      "parent_region_id": "line_1",
+      "region_id": "word_1",
+      "scope": "WORD",
+      "width": 315,
+      "x": 31,
+      "y": 144
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 32,
+      "parent_region_id": "line_2",
+      "region_id": "word_2",
+      "scope": "WORD",
+      "width": 347,
+      "x": 32,
+      "y": 219
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 25,
+      "parent_region_id": "page_0",
+      "region_id": "component_0",
+      "scope": "COMPONENT",
+      "width": 15,
+      "x": 296,
+      "y": 63
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 24,
+      "parent_region_id": "page_0",
+      "region_id": "component_1",
+      "scope": "COMPONENT",
+      "width": 13,
+      "x": 31,
+      "y": 64
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 24,
+      "parent_region_id": "page_0",
+      "region_id": "component_2",
+      "scope": "COMPONENT",
+      "width": 19,
+      "x": 44,
+      "y": 64
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 4,
+      "parent_region_id": "page_0",
+      "region_id": "component_3",
+      "scope": "COMPONENT",
+      "width": 5,
+      "x": 136,
+      "y": 64
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 24,
+      "parent_region_id": "page_0",
+      "region_id": "component_4",
+      "scope": "COMPONENT",
+      "width": 18,
+      "x": 159,
+      "y": 64
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 24,
+      "parent_region_id": "page_0",
+      "region_id": "component_5",
+      "scope": "COMPONENT",
+      "width": 18,
+      "x": 186,
+      "y": 64
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 4,
+      "parent_region_id": "page_0",
+      "region_id": "component_6",
+      "scope": "COMPONENT",
+      "width": 5,
+      "x": 359,
+      "y": 64
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 18,
+      "parent_region_id": "page_0",
+      "region_id": "component_7",
+      "scope": "COMPONENT",
+      "width": 17,
+      "x": 65,
+      "y": 70
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 24,
+      "parent_region_id": "page_0",
+      "region_id": "component_8",
+      "scope": "COMPONENT",
+      "width": 19,
+      "x": 92,
+      "y": 70
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 17,
+      "parent_region_id": "page_0",
+      "region_id": "component_9",
+      "scope": "COMPONENT",
+      "width": 18,
+      "x": 113,
+      "y": 71
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 17,
+      "parent_region_id": "page_0",
+      "region_id": "component_10",
+      "scope": "COMPONENT",
+      "width": 8,
+      "x": 132,
+      "y": 71
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 18,
+      "parent_region_id": "page_0",
+      "region_id": "component_11",
+      "scope": "COMPONENT",
+      "width": 17,
+      "x": 141,
+      "y": 70
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 17,
+      "parent_region_id": "page_0",
+      "region_id": "component_12",
+      "scope": "COMPONENT",
+      "width": 14,
+      "x": 206,
+      "y": 71
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 18,
+      "parent_region_id": "page_0",
+      "region_id": "component_13",
+      "scope": "COMPONENT",
+      "width": 17,
+      "x": 220,
+      "y": 70
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 17,
+      "parent_region_id": "page_0",
+      "region_id": "component_14",
+      "scope": "COMPONENT",
+      "width": 25,
+      "x": 241,
+      "y": 71
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 18,
+      "parent_region_id": "page_0",
+      "region_id": "component_15",
+      "scope": "COMPONENT",
+      "width": 19,
+      "x": 266,
+      "y": 70
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 18,
+      "parent_region_id": "page_0",
+      "region_id": "component_16",
+      "scope": "COMPONENT",
+      "width": 18,
+      "x": 308,
+      "y": 70
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 17,
+      "parent_region_id": "page_0",
+      "region_id": "component_17",
+      "scope": "COMPONENT",
+      "width": 20,
+      "x": 326,
+      "y": 71
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 23,
+      "parent_region_id": "page_0",
+      "region_id": "component_18",
+      "scope": "COMPONENT",
+      "width": 13,
+      "x": 350,
+      "y": 71
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 17,
+      "parent_region_id": "page_0",
+      "region_id": "component_19",
+      "scope": "COMPONENT",
+      "width": 18,
+      "x": 364,
+      "y": 71
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 18,
+      "parent_region_id": "page_0",
+      "region_id": "component_20",
+      "scope": "COMPONENT",
+      "width": 28,
+      "x": 383,
+      "y": 70
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 24,
+      "parent_region_id": "page_0",
+      "region_id": "component_21",
+      "scope": "COMPONENT",
+      "width": 19,
+      "x": 412,
+      "y": 70
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 18,
+      "parent_region_id": "page_0",
+      "region_id": "component_22",
+      "scope": "COMPONENT",
+      "width": 17,
+      "x": 433,
+      "y": 70
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 24,
+      "parent_region_id": "page_0",
+      "region_id": "component_23",
+      "scope": "COMPONENT",
+      "width": 9,
+      "x": 214,
+      "y": 142
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 24,
+      "parent_region_id": "page_0",
+      "region_id": "component_24",
+      "scope": "COMPONENT",
+      "width": 20,
+      "x": 287,
+      "y": 142
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 18,
+      "parent_region_id": "page_0",
+      "region_id": "component_25",
+      "scope": "COMPONENT",
+      "width": 17,
+      "x": 31,
+      "y": 148
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 18,
+      "parent_region_id": "page_0",
+      "region_id": "component_26",
+      "scope": "COMPONENT",
+      "width": 17,
+      "x": 52,
+      "y": 148
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 18,
+      "parent_region_id": "page_0",
+      "region_id": "component_27",
+      "scope": "COMPONENT",
+      "width": 17,
+      "x": 69,
+      "y": 148
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 18,
+      "parent_region_id": "page_0",
+      "region_id": "component_28",
+      "scope": "COMPONENT",
+      "width": 15,
+      "x": 87,
+      "y": 148
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 18,
+      "parent_region_id": "page_0",
+      "region_id": "component_29",
+      "scope": "COMPONENT",
+      "width": 19,
+      "x": 109,
+      "y": 148
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 18,
+      "parent_region_id": "page_0",
+      "region_id": "component_30",
+      "scope": "COMPONENT",
+      "width": 17,
+      "x": 139,
+      "y": 148
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 18,
+      "parent_region_id": "page_0",
+      "region_id": "component_31",
+      "scope": "COMPONENT",
+      "width": 17,
+      "x": 156,
+      "y": 148
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 24,
+      "parent_region_id": "page_0",
+      "region_id": "component_32",
+      "scope": "COMPONENT",
+      "width": 33,
+      "x": 174,
+      "y": 148
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 18,
+      "parent_region_id": "page_0",
+      "region_id": "component_33",
+      "scope": "COMPONENT",
+      "width": 19,
+      "x": 223,
+      "y": 148
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 18,
+      "parent_region_id": "page_0",
+      "region_id": "component_34",
+      "scope": "COMPONENT",
+      "width": 17,
+      "x": 242,
+      "y": 148
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 24,
+      "parent_region_id": "page_0",
+      "region_id": "component_35",
+      "scope": "COMPONENT",
+      "width": 18,
+      "x": 261,
+      "y": 148
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 18,
+      "parent_region_id": "page_0",
+      "region_id": "component_36",
+      "scope": "COMPONENT",
+      "width": 18,
+      "x": 307,
+      "y": 148
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 25,
+      "parent_region_id": "page_0",
+      "region_id": "component_37",
+      "scope": "COMPONENT",
+      "width": 21,
+      "x": 325,
+      "y": 148
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 5,
+      "parent_region_id": "page_0",
+      "region_id": "component_38",
+      "scope": "COMPONENT",
+      "width": 5,
+      "x": 75,
+      "y": 219
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 5,
+      "parent_region_id": "page_0",
+      "region_id": "component_39",
+      "scope": "COMPONENT",
+      "width": 5,
+      "x": 97,
+      "y": 219
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 25,
+      "parent_region_id": "page_0",
+      "region_id": "component_40",
+      "scope": "COMPONENT",
+      "width": 15,
+      "x": 274,
+      "y": 219
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 5,
+      "parent_region_id": "page_0",
+      "region_id": "component_41",
+      "scope": "COMPONENT",
+      "width": 5,
+      "x": 290,
+      "y": 219
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 24,
+      "parent_region_id": "page_0",
+      "region_id": "component_42",
+      "scope": "COMPONENT",
+      "width": 13,
+      "x": 80,
+      "y": 220
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 24,
+      "parent_region_id": "page_0",
+      "region_id": "component_43",
+      "scope": "COMPONENT",
+      "width": 9,
+      "x": 237,
+      "y": 220
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 24,
+      "parent_region_id": "page_0",
+      "region_id": "component_44",
+      "scope": "COMPONENT",
+      "width": 13,
+      "x": 314,
+      "y": 220
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 18,
+      "parent_region_id": "page_0",
+      "region_id": "component_45",
+      "scope": "COMPONENT",
+      "width": 25,
+      "x": 32,
+      "y": 226
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 18,
+      "parent_region_id": "page_0",
+      "region_id": "component_46",
+      "scope": "COMPONENT",
+      "width": 15,
+      "x": 57,
+      "y": 226
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 18,
+      "parent_region_id": "page_0",
+      "region_id": "component_47",
+      "scope": "COMPONENT",
+      "width": 7,
+      "x": 71,
+      "y": 226
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 18,
+      "parent_region_id": "page_0",
+      "region_id": "component_48",
+      "scope": "COMPONENT",
+      "width": 8,
+      "x": 93,
+      "y": 226
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 18,
+      "parent_region_id": "page_0",
+      "region_id": "component_49",
+      "scope": "COMPONENT",
+      "width": 18,
+      "x": 102,
+      "y": 226
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 25,
+      "parent_region_id": "page_0",
+      "region_id": "component_50",
+      "scope": "COMPONENT",
+      "width": 20,
+      "x": 121,
+      "y": 226
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 18,
+      "parent_region_id": "page_0",
+      "region_id": "component_51",
+      "scope": "COMPONENT",
+      "width": 16,
+      "x": 151,
+      "y": 226
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 18,
+      "parent_region_id": "page_0",
+      "region_id": "component_52",
+      "scope": "COMPONENT",
+      "width": 19,
+      "x": 168,
+      "y": 226
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 18,
+      "parent_region_id": "page_0",
+      "region_id": "component_53",
+      "scope": "COMPONENT",
+      "width": 28,
+      "x": 187,
+      "y": 226
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 24,
+      "parent_region_id": "page_0",
+      "region_id": "component_54",
+      "scope": "COMPONENT",
+      "width": 20,
+      "x": 215,
+      "y": 226
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 18,
+      "parent_region_id": "page_0",
+      "region_id": "component_55",
+      "scope": "COMPONENT",
+      "width": 17,
+      "x": 247,
+      "y": 226
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 18,
+      "parent_region_id": "page_0",
+      "region_id": "component_56",
+      "scope": "COMPONENT",
+      "width": 8,
+      "x": 286,
+      "y": 226
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 18,
+      "parent_region_id": "page_0",
+      "region_id": "component_57",
+      "scope": "COMPONENT",
+      "width": 20,
+      "x": 293,
+      "y": 226
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 18,
+      "parent_region_id": "page_0",
+      "region_id": "component_58",
+      "scope": "COMPONENT",
+      "width": 19,
+      "x": 328,
+      "y": 226
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 18,
+      "parent_region_id": "page_0",
+      "region_id": "component_59",
+      "scope": "COMPONENT",
+      "width": 14,
+      "x": 348,
+      "y": 226
+    },
+    {
+      "frame_id": "frame_analysis",
+      "height": 18,
+      "parent_region_id": "page_0",
+      "region_id": "component_60",
+      "scope": "COMPONENT",
+      "width": 17,
+      "x": 362,
+      "y": 226
+    }
+  ],
+  "warnings": [
+    "page_0 is the analysis canvas, not a detected paper edge; margins are canvas-relative."
+  ]
+}
