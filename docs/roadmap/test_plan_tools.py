@@ -1,5 +1,6 @@
 """Offline regression tests for the documentation graph and navigation tooling."""
 from copy import deepcopy
+import json
 from pathlib import Path
 from tempfile import TemporaryDirectory
 import unittest
@@ -41,6 +42,20 @@ class PlanTests(unittest.TestCase):
         data = plan()
         self.assertEqual(plan_tools.validate_plan(data), [])
         self.assertEqual([t["id"] for t in plan_tools.ready_tasks(data)], ["T00A"])
+
+    def test_repository_graph_decouples_presentation_from_empirical_calibration(self):
+        data = json.loads((Path(__file__).with_name("tasks.json")).read_text(encoding="utf-8"))
+        by_id = {task["id"]: task for task in data["tasks"]}
+
+        self.assertEqual(by_id["T08A"]["depends_on"], ["T01", "T05", "T09"])
+        self.assertEqual(by_id["T08"]["depends_on"], ["T06", "T08A"])
+        self.assertIn("T08A", by_id["T17"]["depends_on"])
+        self.assertEqual(by_id["T18"]["depends_on"], ["T08A", "T09"])
+        self.assertEqual(by_id["T13"]["depends_on"], ["T08", "T12"])
+
+        if by_id["T08A"]["status"] == "PLANNED":
+            self.assertIn("T08A", [task["id"] for task in plan_tools.ready_tasks(data)])
+        self.assertEqual(plan_tools.validate_plan(data), [])
 
     def test_active_tasks_are_distinct_from_ready_work(self):
         data = plan()
