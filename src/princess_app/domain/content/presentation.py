@@ -127,13 +127,13 @@ def _strength(spec: Mapping[str, Any], values: Mapping[str, float]) -> float:
     if op == "normalize":
         low, high = float(spec["min"]), float(spec["max"])
         value = (values[spec["feature"]] - low) / (high - low)
-        return _clip(1.0 - value if spec.get("invert") else value)
+        return _clip((1.0 - value if spec.get("invert") else value) * weight)
     if op == "distance_from":
         value = abs(values[spec["feature"]] - float(spec["center"])) / float(spec["max_distance"])
         return _clip(1.0 - value if spec.get("invert") else value)
     if op == "relative_difference":
         left, right = values[spec["left"]], values[spec["right"]]
-        return _clip(abs(left - right) / max(abs(left) + abs(right), 1e-12))
+        return _clip((abs(left - right) / max(abs(left) + abs(right), 1e-12)) * weight)
     if op == "max_feature":
         value = max(values[feature] for feature in spec["features"])
         return _clip(1.0 - value if spec.get("invert") else value)
