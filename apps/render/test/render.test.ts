@@ -85,6 +85,7 @@ test("share cards are fixed-size PNGs of the redacted SHARE projection", { timeo
     assert.equal(png.readUInt32BE(20), height);
   }
   const html = run({ view, layout: "CARD_SQUARE", locale: "en", generated_at: GENERATED }, "--html").stdout.toString();
+  assert.ok(html.includes("Inktrospect") && !html.includes(">Princess<"));
   assert.ok(!html.includes("<img") && (html.match(/data-fact-id/g) ?? []).length <= 4);
 });
 

@@ -7,6 +7,13 @@ import { expect, test } from "@playwright/test";
 const fixture = (name: string) =>
   JSON.parse(readFileSync(new URL(`../../../fixtures/reports/view.${name}.json`, import.meta.url), "utf8"));
 
+test("public web chrome uses the Inktrospect brand", async ({ page }) => {
+  await page.goto("/");
+  await expect(page).toHaveTitle("Inktrospect — handwriting measured");
+  await expect(page.locator(".site-header .brand")).toHaveText("Inktrospect");
+  await expect(page.locator(".site-header")).not.toContainText("Princess");
+});
+
 test("the free view renders every projected fact and no Premium section", async ({ page }) => {
   const view = fixture("free");
   await page.goto("/fixtures/free");
