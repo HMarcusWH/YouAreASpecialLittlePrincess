@@ -33,7 +33,8 @@ def _sha(label: str) -> str:
     return hashlib.sha256(label.encode()).hexdigest()
 
 
-def _report(name: str, at: datetime, *, shift: float = 0.0, missing_candidates: bool = False):
+def _report(name: str, at: datetime, *, owner: str = "owner_fixture_1",
+            shift: float = 0.0, missing_candidates: bool = False):
     data = json.loads((ROOT / "fixtures/reports/report-document.v2.json").read_text(encoding="utf-8"))
     data["report_id"] = f"report_{name}"
     data["revision"] = 1
@@ -43,7 +44,8 @@ def _report(name: str, at: datetime, *, shift: float = 0.0, missing_candidates: 
     data["premium_overlay_id"] = None
     analysis = data["analysis"]
     analysis.update(
-        analysis_id=f"analysis_{name}", run_id=f"run_{name}", input_asset_id=f"asset_{name}",
+        analysis_id=f"analysis_{name}", run_id=f"run_{name}", owner_id=owner,
+        input_asset_id=f"asset_{name}",
         input_sha256=_sha(f"input-{name}"), processed_sha256=_sha(f"processed-{name}"),
         created_at=data["created_at"],
     )
@@ -130,7 +132,7 @@ def test_equal_values_have_zero_native_delta_without_similarity_score():
     outcome = build_comparison(comparison_id="comparison_equal", kind="PAIR", reports=[a, b],
                                created_at=T0 + timedelta(hours=2))
     assert outcome.ok
-    assert outcome.value.data["facts"] == []
+    assert outcome.value.data["facts"] == ()
     assert all(row["signed_delta"] == 0 and row["absolute_delta"] == 0 and row["direction"] == "EQUAL"
                for row in outcome.value.data["differences"])
     serialized = json.dumps(outcome.value.to_dict()).lower()
@@ -146,7 +148,7 @@ def test_history_is_ordered_by_report_creation_and_uses_adjacent_edges_only():
     assert outcome.ok
     data = outcome.value.data
     assert data["ordering_basis"] == "REPORT_CREATED_AT"
-    assert data["input_report_ids"] == ["report_hist_a", "report_hist_b", "report_hist_c"]
+    assert data["input_report_ids"] == ("report_hist_a", "report_hist_b", "report_hist_c")
     assert {(row["from_position"], row["to_position"]) for row in data["differences"]} == {(0, 1), (1, 2)}
     assert len(data["differences"]) == data["coverage"]["common_n"] * 2
 
@@ -160,7 +162,7 @@ def test_missing_inputs_are_excluded_not_imputed_and_zero_denominator_never_crea
     data = outcome.value.data
     assert data["coverage"]["common_n"] == 0
     assert data["coverage"]["common_fraction"] == 0
-    assert data["differences"] == []
+    assert data["differences"] == ()
     assert len(data["exclusions"]) == data["coverage"]["candidate_n"]
     assert {row["reason"] for row in data["exclusions"]} == {"UNAVAILABLE"}
 
@@ -170,7 +172,7 @@ def test_missing_inputs_are_excluded_not_imputed_and_zero_denominator_never_crea
 
 def test_policy_fails_closed_on_method_unit_and_availability_drift():
     report = _report("policy", T0)
-    source = {fact["feature_id"]: fact for fact in report.data["facts"]}
+    source = {fact["feature_id"]: fact for fact in report.to_dict()["facts"]}
     feature_id = "SLANT_ANGLE_MEAN"
     left = copy.deepcopy(source[feature_id])
     right = copy.deepcopy(left)
@@ -201,9 +203,9 @@ class _PartnerAccess:
 
 def test_application_service_is_same_owner_by_default_and_exposes_only_a_t22_partner_seam():
     store = InMemoryReportStore()
-    a = _report("owner_a_1", T0)
-    b = _report("owner_a_2", T0 + timedelta(hours=1), shift=0.05)
-    partner = _report("partner", T0 + timedelta(hours=2), shift=-0.05)
+    a = _report("owner_a_1", T0, owner="owner_a")
+    b = _report("owner_a_2", T0 + timedelta(hours=1), owner="owner_a", shift=0.05)
+    partner = _report("partner", T0 + timedelta(hours=2), owner="owner_b", shift=-0.05)
     store.append("owner_a", a)
     store.append("owner_a", b)
     store.append("owner_b", partner)
