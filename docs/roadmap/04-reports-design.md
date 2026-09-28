@@ -74,7 +74,7 @@ Recommended order:
 
 The Free experience should stand on its own. Do not deliberately degrade deterministic accuracy or withhold a basic measured feature just to force an API purchase.
 
-**First reveal / salience:** the selected Inktrospect “What stands out” design is a product requirement, but no client may choose a salient fact ad hoc. The current `ReportSection` contract already has the right transport primitives (`template`, `fact_ids`, `content_ids`), so a future versioned server selection should use that shape rather than adding a second client-owned truth. Until that server-owned selection and reviewed content exist, prototype standout copy is labelled illustrative. A sample with no eligible highlight must have an honest fallback rather than a fabricated superlative.
+**First reveal / salience:** the selected Inktrospect “What stands out” design is a product requirement, but no client may choose a salient fact ad hoc. **T08A owns the deterministic/versioned server selection, reviewed presentation content and honest no-eligible fallback.** The current `ReportSection` contract already has the right transport primitives (`template`, `fact_ids`, `content_ids`), so the selection should use that shape rather than adding a second client-owned truth. Until T08A is implemented, prototype standout copy is labelled illustrative. A sample with no eligible highlight must have an honest fallback rather than a fabricated superlative.
 
 ## 5. Premium report
 
@@ -100,7 +100,7 @@ Friend comparison should invite the other person to upload/authorize their own w
 
 - **Radar:** fixed, versioned axes and fixed scale mapping, normally no more than six to eight readable dimensions. Missing axes do not become zero; use an explicit incomplete state or bars instead of a misleading polygon. Do not rescale each person to their own maximum.
 - **Distribution:** actual observations or bins with count/weight definitions and scope. Do not generate a Gaussian-looking histogram from a mean/std pair. A population plot uses reference aggregates, not exposed private member vectors.
-- **Fixed geometric display domains:** an inherent geometric canvas may be specified independently of population calibration when its meaning is explicit. For example, a slant fan can show `-90°…+90°` as geometry while marking that the current extractor accepts only `-60°…+60°` observations. Arbitrary product ranges (for example a proposed margin bar maximum) require a reviewed versioned display-scale policy and must not be inferred from one user's values.
+- **Fixed geometric display domains:** T08A may specify an inherent or otherwise predeclared non-population mechanical canvas independently of calibration when its meaning is explicit. For example, a slant fan can show `-90°…+90°` as geometry while marking that the current extractor accepts only `-60°…+60°` observations. Arbitrary empirical/population-relative mappings require T06/T08 calibration and must not be inferred from one user's values.
 - **Baseline trace:** stored points with frame/units, not an illustrative curve unrelated to the input. Coordinate conversion must survive crop, perspective correction, resizing and deskew.
 - **Spacing:** actual accepted gaps and linked line/word regions. Avoid treating overlapping boxes or uncertain segmentation as zero spacing.
 - **Reference bar:** percentile of a named eligible metric plus cohort N/version and uncertainty context; a raw 0–100 engineering score must never masquerade as a percentile.
