@@ -1,7 +1,7 @@
 import { featureLabel, presentationContent } from "@princess/report-core";
 
 // Display strings only. Fact IDs, units and values are never localized here.
-// Feature names fall back to a readable form of the ID until reviewed content (T08) exists.
+// T08A reviewed labels come from @princess/report-core; unknown future IDs render raw rather than inventing copy.
 export type Locale = "en" | "sv";
 
 const EN: Record<string, string> = {
