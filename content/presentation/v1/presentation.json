@@ -665,7 +665,8 @@
         "feature": "GLYPH_ASPECT_RATIO_MEAN",
         "center": 1,
         "max_distance": 0.2,
-        "invert": true
+        "invert": true,
+        "weight": 0.45
       },
       "witness": {
         "GLYPH_ASPECT_RATIO_MEAN": 1
@@ -779,7 +780,8 @@
         "feature": "GLYPH_ASPECT_RATIO_CV",
         "min": 0,
         "max": 0.18,
-        "invert": true
+        "invert": true,
+        "weight": 0.65
       },
       "witness": {
         "GLYPH_ASPECT_RATIO_CV": 0.08
@@ -1077,7 +1079,8 @@
         "op": "normalize",
         "feature": "SLANT_CONSISTENCY",
         "min": 0.85,
-        "max": 1
+        "max": 1,
+        "weight": 0.7
       },
       "witness": {
         "SLANT_CONSISTENCY": 0.93
@@ -1188,7 +1191,8 @@
         "op": "abs_normalize",
         "feature": "BASELINE_ANGLE_MEAN",
         "max_abs": 0.5,
-        "invert": true
+        "invert": true,
+        "weight": 0.5
       },
       "witness": {
         "BASELINE_ANGLE_MEAN": 0.1
@@ -1217,7 +1221,8 @@
         "feature": "BASELINE_ANGLE_STD",
         "min": 0,
         "max": 0.5,
-        "invert": true
+        "invert": true,
+        "weight": 0.65
       },
       "witness": {
         "BASELINE_ANGLE_STD": 0.15
@@ -1274,7 +1279,8 @@
         "feature": "BASELINE_WAVINESS",
         "min": 0,
         "max": 0.15,
-        "invert": true
+        "invert": true,
+        "weight": 0.65
       },
       "witness": {
         "BASELINE_WAVINESS": 0.05
@@ -1416,7 +1422,8 @@
         "feature": "LINE_SPACING_CV",
         "min": 0,
         "max": 0.08,
-        "invert": true
+        "invert": true,
+        "weight": 0.65
       },
       "witness": {
         "LINE_SPACING_CV": 0.03
@@ -1473,7 +1480,8 @@
         "feature": "WORD_SPACING_CV",
         "min": 0,
         "max": 0.12,
-        "invert": true
+        "invert": true,
+        "weight": 0.65
       },
       "witness": {
         "WORD_SPACING_CV": 0.05
@@ -1589,7 +1597,8 @@
         "feature": "TEXT_BLOCK_HORIZONTAL_CENTER",
         "center": 0.5,
         "max_distance": 0.05,
-        "invert": true
+        "invert": true,
+        "weight": 0.45
       },
       "witness": {
         "TEXT_BLOCK_HORIZONTAL_CENTER": 0.5
@@ -1673,7 +1682,8 @@
         "op": "normalize",
         "feature": "MARGIN_SYMMETRY",
         "min": 0.85,
-        "max": 1
+        "max": 1,
+        "weight": 0.65
       },
       "witness": {
         "MARGIN_SYMMETRY": 0.93
@@ -1788,7 +1798,8 @@
         "feature": "LINE_LENGTH_VARIABILITY",
         "min": 0,
         "max": 0.08,
-        "invert": true
+        "invert": true,
+        "weight": 0.65
       },
       "witness": {
         "LINE_LENGTH_VARIABILITY": 0.03
@@ -1985,7 +1996,8 @@
         "op": "normalize",
         "feature": "STROKE_UNIFORMITY",
         "min": 0.85,
-        "max": 1
+        "max": 1,
+        "weight": 0.65
       },
       "witness": {
         "STROKE_UNIFORMITY": 0.93
@@ -2043,7 +2055,8 @@
         "feature": "INK_DARKNESS_CV",
         "min": 0,
         "max": 0.12,
-        "invert": true
+        "invert": true,
+        "weight": 0.65
       },
       "witness": {
         "INK_DARKNESS_CV": 0.05
