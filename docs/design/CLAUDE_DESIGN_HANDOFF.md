@@ -1,6 +1,6 @@
 # Claude Design handoff — Inktrospect
 
-Status: **prepared for Claude Design; still pending owner `design_acceptance`.**
+Status: **active Claude Design app-design phase; still pending owner `design_acceptance`.**
 
 This package exists so Claude Design can work from the real product contracts, components, tokens and synthetic fixtures instead of inventing a parallel UX. Start with this file, then follow `claude-design-import.json` in its listed order. The repository remains authoritative when this brief and a prototype disagree.
 
@@ -139,14 +139,13 @@ Do not polish only the happy path. The prototype must include:
 
 ## Review workflow
 
-1. Import/connect only the curated paths in `claude-design-import.json` where practical; the excluded roots are intentionally irrelevant or privacy-sensitive for UX design.
-2. Produce three directions.
-3. Owner selects/combines a direction.
-4. Build the complete interactive prototype/state matrix.
-5. Review against `CLAUDE_DESIGN_ACCEPTANCE.md`.
-6. Iterate in Claude Design until the owner explicitly accepts or rejects.
-7. Record the prototype reference and explicit owner decision in the acceptance file.
-8. **Only after explicit owner acceptance** may a follow-up commit promote T10 to `DONE` and change `DRAFT_PENDING_DESIGN_ACCEPTANCE`.
+1. Keep the curated paths in `claude-design-import.json` connected where practical; the excluded roots are intentionally irrelevant or privacy-sensitive for UX design.
+2. Continue the selected **Direction A — The Dossier** rather than reopening direction exploration.
+3. Build and stress-test the complete interactive prototype/state matrix, including first reveal and all failure/pending/revoked states.
+4. Review against `CLAUDE_DESIGN_ACCEPTANCE.md`.
+5. Iterate in Claude Design until the owner explicitly accepts or rejects.
+6. Record the prototype reference/revision and explicit owner decision in the acceptance file.
+7. **Only after explicit owner acceptance** may a follow-up commit promote T10 to `DONE` and change `DRAFT_PENDING_DESIGN_ACCEPTANCE`.
 
 Claude Design output is design evidence. It is not legal/privacy/provider/store approval and it does not activate Premium, payments, collection, traditional content or native signing.
 
