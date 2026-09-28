@@ -23,7 +23,8 @@ from princess_app.domain.reports import (
     project_report,
     revise_report,
 )
-from princess_app.domain.reports.template import BASE_TEMPLATE_VERSION, FACT_SECTIONS, HIGHLIGHT_TEMPLATE_VERSION
+from princess_app.domain.reports.template import (BASE_TEMPLATE_VERSION, FACT_SECTIONS,
+                                                    HIGHLIGHT_PRESENTATION_VERSION, HIGHLIGHT_TEMPLATE_VERSION)
 from princess_app.ports.base import Conflict, NotAuthorized, NotFound
 from princess_contracts import compile_document, validate_projection
 from princess_graphology import GraphologyEngine
@@ -81,6 +82,11 @@ def test_missing_stays_missing_and_values_are_never_coerced():
     by_id = {s["section_id"]: s for s in data["sections"]}
     assert by_id["section.slant"]["availability"] == "MISSING"
     assert by_id["section.sample"]["availability"] == "READY"  # exact image dimensions
+
+
+def test_highlight_template_pins_presentation_authority():
+    from princess_app.domain.content import PRESENTATION_VERSION
+    assert HIGHLIGHT_PRESENTATION_VERSION == PRESENTATION_VERSION == "presentation/1"
 
 
 def test_current_template_persists_broad_server_owned_highlights():
