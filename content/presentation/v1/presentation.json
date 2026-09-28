@@ -396,16 +396,16 @@
       "sv": "Inget enskilt mekaniskt mönster uppfyllde reglerna för den första sammanfattningen i detta prov."
     },
     "content.highlight.v1.size.taller_components": {
-      "en": "The detected components are mostly taller than they are wide.",
-      "sv": "De upptäckta komponenterna är oftast högre än de är breda."
+      "en": "On average, the detected components are taller than they are wide.",
+      "sv": "I genomsnitt är de upptäckta komponenterna högre än de är breda."
     },
     "content.highlight.v1.size.balanced_aspect": {
       "en": "The detected components are close to equal in width and height on average.",
       "sv": "De upptäckta komponenterna ligger i genomsnitt nära samma bredd som höjd."
     },
     "content.highlight.v1.size.wider_components": {
-      "en": "The detected components are mostly wider than they are tall.",
-      "sv": "De upptäckta komponenterna är oftast bredare än de är höga."
+      "en": "On average, the detected components are wider than they are tall.",
+      "sv": "I genomsnitt är de upptäckta komponenterna bredare än de är höga."
     },
     "content.highlight.v1.size.width_more_variable": {
       "en": "Component widths vary more than component heights in this sample.",
