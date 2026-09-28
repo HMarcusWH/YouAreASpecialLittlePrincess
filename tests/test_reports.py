@@ -13,6 +13,7 @@ from princess_app.adapters.fakes import FakeClock
 from princess_app.application.reports import InMemoryReportStore, ReportReader, ShareAccess
 from princess_app.domain.analysis import analysis_reference
 from princess_app.domain.evidence import build_evidence_bundle
+from princess_app.domain.reports.assembly import build_sections
 from princess_app.domain.reports import (
     PremiumAccess,
     PremiumAuthorization,
@@ -23,7 +24,9 @@ from princess_app.domain.reports import (
     project_report,
     revise_report,
 )
-from princess_app.domain.reports.template import FACT_SECTIONS
+from princess_app.domain.reports.template import (BASE_TEMPLATE_VERSION, FACT_SECTIONS,
+                                                    HIGHLIGHT_POLICY_VERSION, HIGHLIGHT_PRESENTATION_VERSION,
+                                                    HIGHLIGHT_TEMPLATE_VERSION)
 from princess_app.ports.base import Conflict, NotAuthorized, NotFound
 from princess_contracts import compile_document, validate_projection
 from princess_graphology import GraphologyEngine
@@ -81,6 +84,104 @@ def test_missing_stays_missing_and_values_are_never_coerced():
     by_id = {s["section_id"]: s for s in data["sections"]}
     assert by_id["section.slant"]["availability"] == "MISSING"
     assert by_id["section.sample"]["availability"] == "READY"  # exact image dimensions
+
+
+def test_compound_highlight_is_uncalibrated_when_any_support_is_uncalibrated():
+    facts = [
+        {
+            "fact_id": "fact.GLYPH_WIDTH_CV", "feature_id": "GLYPH_WIDTH_CV",
+            "availability": "READY", "value": 0.35, "quality": {"n_observations": 20},
+        },
+        {
+            "fact_id": "fact.GLYPH_HEIGHT_CV", "feature_id": "GLYPH_HEIGHT_CV",
+            "availability": "UNCALIBRATED", "value": 0.15, "quality": {"n_observations": 20},
+        },
+    ]
+    sections = build_sections(
+        facts, reference_claims=(), premium_overlay_id=None,
+        template_version=HIGHLIGHT_TEMPLATE_VERSION,
+    )
+    highlight = next(
+        section for section in sections if section["section_id"] == "section.highlight.primary"
+    )
+    assert highlight["content_ids"] == ["content.highlight.v1.size.width_more_variable"]
+    assert highlight["availability"] == "UNCALIBRATED"
+
+def test_highlight_template_pins_presentation_authority():
+    from princess_app.domain.content import HIGHLIGHT_POLICY_VERSION as RUNTIME_POLICY_VERSION, PRESENTATION_VERSION
+    assert HIGHLIGHT_PRESENTATION_VERSION == PRESENTATION_VERSION == "presentation/1"
+    assert HIGHLIGHT_POLICY_VERSION == RUNTIME_POLICY_VERSION == "highlight-policy/1"
+
+
+def test_current_template_persists_broad_server_owned_highlights():
+    current = copy.deepcopy(REFERENCE)
+    current["versions"]["template"] = HIGHLIGHT_TEMPLATE_VERSION
+    data = report(analysis=current, evidence=None).to_dict()
+    highlights = [section for section in data["sections"] if section["section_id"].startswith("section.highlight.")]
+    assert [section["section_id"] for section in highlights] == [
+        "section.highlight.primary", "section.highlight.secondary.1", "section.highlight.secondary.2",
+    ]
+    assert [section["content_ids"][0] for section in highlights] == [
+        "content.highlight.v1.slant.right.almost_all",
+        "content.highlight.v1.layout.margins_asymmetric",
+        "content.highlight.v1.baseline.angle_stable",
+    ]
+    assert all(section["fact_ids"] for section in highlights)
+    assert data["analysis"]["versions"]["template"] == "individual-report/2"
+
+
+def test_v2_revision_preserves_selected_highlights_and_base_fact_coverage():
+    current = copy.deepcopy(REFERENCE)
+    current["versions"]["template"] = HIGHLIGHT_TEMPLATE_VERSION
+    first = report(analysis=current, evidence=None)
+    first_data = first.to_dict()
+    base_fact_ids = [
+        fact_id
+        for section in first_data["sections"]
+        if not section["section_id"].startswith("section.highlight.")
+        for fact_id in section["fact_ids"]
+    ]
+    assert sorted(base_fact_ids) == sorted(fact["fact_id"] for fact in first_data["facts"])
+    first_highlights = [
+        section for section in first_data["sections"]
+        if section["section_id"].startswith("section.highlight.")
+    ]
+    second = revise_report(first, created_at=T0 + timedelta(minutes=1), premium_overlay_id="overlay_v2").value
+    second_highlights = [
+        section for section in second.to_dict()["sections"]
+        if section["section_id"].startswith("section.highlight.")
+    ]
+    assert second_highlights == first_highlights
+    assert check_revision(first, second) == ()
+
+def test_legacy_template_never_gains_highlights_on_revision():
+    assert REFERENCE["versions"]["template"] == BASE_TEMPLATE_VERSION
+    first = report()
+    assert not any(section["section_id"].startswith("section.highlight.") for section in first.data["sections"])
+    second = revise_report(first, created_at=T0 + timedelta(minutes=1), premium_overlay_id="overlay_legacy").value
+    assert not any(section["section_id"].startswith("section.highlight.") for section in second.data["sections"])
+
+
+def test_highlights_are_not_silently_disclosed_by_existing_share_scopes():
+    current = copy.deepcopy(REFERENCE)
+    current["versions"]["template"] = HIGHLIGHT_TEMPLATE_VERSION
+    doc = report(analysis=current, evidence=None)
+    share = project_report(doc, ProjectionRequest("SHARE", T0, share_scope=frozenset({"section.slant"}))).value
+    assert [section["section_id"] for section in share.data["sections"]] == ["section.slant"]
+    assert not any(section["section_id"].startswith("section.highlight.") for section in share.data["sections"])
+
+
+def test_v2_no_candidate_emits_ineligible_first_reveal_fallback():
+    blank = GraphologyEngine().analyze(np.full((80, 120), 255, np.uint8)).to_dict()
+    ref = analysis_reference(analysis_id="a3", run_id="r3", owner_id="owner_fixture_1", input_asset_id="asset_3",
+                             input_sha256="0" * 64, processed_sha256=blank["metadata"]["input_pixels_sha256"],
+                             created_at=T0, engine_version="0.1.0", analysis_config_sha256="1" * 64,
+                             template=HIGHLIGHT_TEMPLATE_VERSION)
+    data = report(result=blank, analysis=ref, evidence=None).to_dict()
+    highlight = next(section for section in data["sections"] if section["section_id"] == "section.highlight.primary")
+    assert highlight["availability"] == "INELIGIBLE"
+    assert highlight["fact_ids"] == []
+    assert highlight["content_ids"] == ["content.highlight.v1.none"]
 
 
 def test_no_reference_and_no_traditional_is_honest():

@@ -103,6 +103,7 @@ jobs:
       - run: python tools/generate_feature_contract.py --check
       - run: python tools/compile_premium_interpretation_db.py --check
       - run: python tools/generate_product_contracts.py --check
+      - run: python tools/generate_presentation_content.py --check
       - run: python tools/validate_product_contracts.py
       - run: python tools/validate_graphology_integrity.py
       - run: python tools/validate_graphology_ontology.py

@@ -1,5 +1,7 @@
+import { featureLabel, presentationContent } from "@princess/report-core";
+
 // Display strings only. Fact IDs, units and values are never localized here.
-// Feature names fall back to a readable form of the ID until reviewed content (T08) exists.
+// T08A reviewed labels come from @princess/report-core; unknown future IDs render raw rather than inventing copy.
 export type Locale = "en" | "sv";
 
 const EN: Record<string, string> = {
@@ -54,6 +56,8 @@ const EN: Record<string, string> = {
   "report.revision": "Revision",
   "report.facts": "Measurements",
   "report.premium_saved": "The AI-assisted section is saved with this revision.",
+  "report.what_stands_out": "What stands out",
+  "report.also_noticeable": "Also noticeable",
   "report.image_omitted": "Source image omitted.",
   "quality.observations": "observations",
   "evidence.title": "Evidence behind the measurements",
@@ -126,6 +130,8 @@ const SV: Record<string, string> = {
   "report.revision": "Version",
   "report.facts": "Mätvärden",
   "report.premium_saved": "Det AI-stödda avsnittet är sparat med denna version.",
+  "report.what_stands_out": "Det som sticker ut",
+  "report.also_noticeable": "Också tydligt",
   "report.image_omitted": "Källbilden är utelämnad.",
   "quality.observations": "observationer",
   "evidence.title": "Underlag bakom mätvärdena",
@@ -152,9 +158,12 @@ export function t(locale: Locale, key: string): string {
   return CATALOGS[locale][key] ?? CATALOGS.en[key] ?? key;
 }
 
-export function featureName(featureId: string): string {
-  const words = featureId.toLowerCase().split("_");
-  return words.map((w, i) => (i === 0 ? w.charAt(0).toUpperCase() + w.slice(1) : w)).join(" ");
+export function featureName(featureId: string, locale: Locale = "en"): string {
+  return featureLabel(featureId, locale) ?? featureId;
+}
+
+export function contentText(contentId: string, locale: Locale): string | undefined {
+  return presentationContent(contentId, locale);
 }
 
 export function sectionTitle(template: string): string {

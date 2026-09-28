@@ -4,7 +4,7 @@ import { test } from "node:test";
 
 import type { EvidenceBundle, Fact, ReportDocument, ReportViewModel } from "@princess/contracts";
 
-import { baselineTraces, formatFact, histogram, mapToAncestor, spacingBrackets } from "../src/index.ts";
+import { baselineTraces, featureLabel, formatFact, histogram, mapToAncestor, presentationContent, presentationDisplayDomain, spacingBrackets } from "../src/index.ts";
 
 function fixture<T>(name: string): T {
   return JSON.parse(readFileSync(new URL(`../../../fixtures/reports/${name}`, import.meta.url), "utf8")) as T;
@@ -19,6 +19,21 @@ function fact(featureId: string): Fact {
   assert.ok(found, featureId);
   return found;
 }
+
+test("presentation registry resolves reviewed EN/SV labels, content and fixed domains", () => {
+  assert.equal(featureLabel("SLANT_ANGLE_MEAN", "en-US"), "Mean dominant stroke slant");
+  assert.equal(featureLabel("SLANT_ANGLE_MEAN", "sv-SE"), "Genomsnittlig dominerande strecklutning");
+  assert.equal(featureLabel("NOT_A_FEATURE", "en"), undefined);
+  assert.match(presentationContent("content.highlight.v1.slant.right.almost_all", "sv") ?? "", /lutningsobservationer/);
+  assert.equal(presentationContent("content.unknown", "en"), undefined);
+  assert.deepEqual(presentationDisplayDomain("SLANT_ANGLE_MEAN"), {
+    min: -90, max: 90, unit: "degrees", kind: "GEOMETRIC_CANVAS", accepted_min: -60, accepted_max: 60,
+  });
+  const mutable = presentationDisplayDomain("SLANT_ANGLE_MEAN") as Record<string, string | number>;
+  mutable.min = 0;
+  assert.equal(presentationDisplayDomain("SLANT_ANGLE_MEAN")?.min, -90);
+  assert.equal(presentationDisplayDomain("MARGIN_RIGHT_REL"), undefined);
+});
 
 test("formats saved values with unit precision and locale", () => {
   const width = fact("IMG_WIDTH_PX");

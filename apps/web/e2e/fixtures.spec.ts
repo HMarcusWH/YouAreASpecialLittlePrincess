@@ -123,7 +123,7 @@ test("stored evidence renders baseline geometry, spacing rows and raw slant obse
     await expect(graphic.locator("title")).not.toBeEmpty();
     await expect(graphic.locator("desc")).not.toBeEmpty();
   }
-  await expect(page.getByRole("heading", { name: "Line spacing px" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Mean interline whitespace" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Slant observations" })).toBeVisible();
   await expect(page.getByText("Raw observations are shown here because a reviewed fixed histogram scale is not defined yet."))
     .toBeVisible();

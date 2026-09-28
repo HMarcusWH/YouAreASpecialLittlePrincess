@@ -31,7 +31,8 @@
   "semantic_contracts": [
     "contracts/product/v1/schemas/",
     "packages/contracts/src/",
-    "packages/api-client/src/"
+    "packages/api-client/src/",
+    "contracts/product/v1/presentation-content.v1.json"
   ],
   "synthetic_fixtures": [
     "fixtures/reports/README.md",
