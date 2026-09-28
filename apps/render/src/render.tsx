@@ -42,7 +42,7 @@ export function renderHtml(input: RenderInput): string {
     ? renderToStaticMarkup(<ShareCard view={view} locale={input.locale}
                                       shape={input.layout === "CARD_STORY" ? "story" : "square"} />)
     : renderToStaticMarkup(<PrintReport view={view} locale={input.locale} generatedAt={input.generated_at} />);
-  const title = card ? "Princess" : `Princess report ${view.source_report_id} r${view.source_revision}`;
+  const title = card ? "Inktrospect" : `Inktrospect report ${view.source_report_id} r${view.source_revision}`;
   return `<!doctype html><html lang="${input.locale}" data-theme="light"><head><meta charset="utf-8">` +
     `<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'">` +
     `<title>${escapeHtml(title)}</title><style>${tokensCss}\n${reportCss}\n` +
