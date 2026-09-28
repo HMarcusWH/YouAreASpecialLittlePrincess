@@ -345,8 +345,12 @@ def main() -> int:
     args = parser.parse_args()
     data = _load_json(SOURCE)
     validate(data)
-    expected = render(compiled_registry(data))
+    compiled = compiled_registry(data)
+    expected = render(compiled)
+    expected_ts = render_typescript(compiled)
     stale = [path for path in OUTPUTS if not path.is_file() or path.read_text(encoding="utf-8") != expected]
+    if not TS_OUTPUT.is_file() or TS_OUTPUT.read_text(encoding="utf-8") != expected_ts:
+        stale.append(TS_OUTPUT)
     if args.check:
         if stale:
             print("stale presentation outputs: " + ", ".join(str(path.relative_to(ROOT)) for path in stale))
@@ -356,7 +360,9 @@ def main() -> int:
     for path in OUTPUTS:
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(expected, encoding="utf-8")
-    print("wrote " + ", ".join(str(path.relative_to(ROOT)) for path in OUTPUTS))
+    TS_OUTPUT.parent.mkdir(parents=True, exist_ok=True)
+    TS_OUTPUT.write_text(expected_ts, encoding="utf-8")
+    print("wrote " + ", ".join(str(path.relative_to(ROOT)) for path in (*OUTPUTS, TS_OUTPUT)))
     return 0
 
 
