@@ -22,6 +22,7 @@ sys.path.insert(0, str(ROOT / "src"))
 from princess_app.domain.analysis import analysis_reference  # noqa: E402
 from princess_app.domain.evidence import build_evidence_bundle, map_point, prepend_source_frame  # noqa: E402
 from princess_app.domain.reports import (  # noqa: E402
+    HIGHLIGHT_TEMPLATE_VERSION,
     PremiumAccess,
     PremiumAuthorization,
     ProjectionRequest,
@@ -85,6 +86,12 @@ def build() -> dict[str, str]:
                                   created_at=CREATED, locale="sv-SE", evidence=evidence), "report")
     premium = need(revise_report(report, created_at=CREATED.replace(hour=13), premium_overlay_id="overlay_fixture_1"),
                    "premium revision")
+    highlight_reference = json.loads(json.dumps(reference))
+    highlight_reference["versions"]["template"] = HIGHLIGHT_TEMPLATE_VERSION
+    highlight_report = need(assemble_report(
+        report_id="report_fixture_highlight", analysis=highlight_reference, result=result,
+        created_at=CREATED, locale="sv-SE", evidence=None,
+    ), "highlight report")
     UNLOCKED = PremiumAuthorization("report_fixture_1", "overlay_fixture_1", PremiumAccess.UNLOCKED)
     views = {
         "view.free.json": (report, ProjectionRequest("FREE", CREATED, actions=OWNER_ACTIONS)),
