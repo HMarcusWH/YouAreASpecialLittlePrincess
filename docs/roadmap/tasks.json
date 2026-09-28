@@ -1325,7 +1325,7 @@
     {
       "id": "T18",
       "title": "Deterministic pair and history comparison",
-      "status": "PLANNED",
+      "status": "IN_PROGRESS",
       "depends_on": [
         "T08A",
         "T09"
@@ -1374,6 +1374,10 @@
       ],
       "rollback": [
         "Version comparison mappings and withhold incompatible summaries rather than reinterpreting old results."
+      ],
+      "implementation_evidence": "T18 implementation started on task/T18-deterministic-comparison from main 50a4c90b448d95560b045031f01514200b6f75fc. The scoped PR extends the existing Comparison contract and implements server-side native-unit pair/history comparison using T08A fixed non-population domains; exact-head acceptance evidence is pending.",
+      "remaining_work": [
+        "Complete exact-head contract/domain/application invariant qualification and review; then record the final merged evidence before promoting T18 to DONE."
       ]
     },
     {

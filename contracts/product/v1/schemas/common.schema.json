@@ -930,6 +930,283 @@
         "next_cursor"
       ],
       "additionalProperties": false
+    },
+    "ComparisonOrdering": {
+      "type": "string",
+      "maxLength": 32,
+      "enum": [
+        "REQUEST_ORDER",
+        "REPORT_CREATED_AT"
+      ]
+    },
+    "ComparisonDirection": {
+      "type": "string",
+      "maxLength": 32,
+      "enum": [
+        "FROM_GREATER",
+        "TO_GREATER",
+        "EQUAL"
+      ]
+    },
+    "ComparisonExclusionReason": {
+      "type": "string",
+      "maxLength": 32,
+      "enum": [
+        "ABSENT",
+        "UNAVAILABLE",
+        "NON_NUMERIC",
+        "UNIT_MISMATCH",
+        "DOMAIN_UNIT_MISMATCH",
+        "METHOD_ID_MISMATCH",
+        "METHOD_VERSION_MISMATCH",
+        "FORMATTING_MISMATCH"
+      ]
+    },
+    "ComparisonInput": {
+      "type": "object",
+      "properties": {
+        "position": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 15
+        },
+        "report_id": {
+          "$ref": "common.schema.json#/$defs/OpaqueId"
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000000
+        },
+        "report_digest": {
+          "$ref": "common.schema.json#/$defs/Sha256"
+        },
+        "report_created_at": {
+          "$ref": "common.schema.json#/$defs/Rfc3339Utc"
+        },
+        "analysis_id": {
+          "$ref": "common.schema.json#/$defs/OpaqueId"
+        },
+        "run_id": {
+          "$ref": "common.schema.json#/$defs/OpaqueId"
+        },
+        "analysis_created_at": {
+          "$ref": "common.schema.json#/$defs/Rfc3339Utc"
+        },
+        "versions": {
+          "$ref": "common.schema.json#/$defs/VersionSet"
+        }
+      },
+      "required": [
+        "position",
+        "report_id",
+        "revision",
+        "report_digest",
+        "report_created_at",
+        "analysis_id",
+        "run_id",
+        "analysis_created_at",
+        "versions"
+      ],
+      "additionalProperties": false
+    },
+    "ComparisonCoverage": {
+      "type": "object",
+      "properties": {
+        "candidate_n": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 512
+        },
+        "common_n": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 512
+        },
+        "excluded_n": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 512
+        },
+        "common_fraction": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      },
+      "required": [
+        "candidate_n",
+        "common_n",
+        "excluded_n",
+        "common_fraction"
+      ],
+      "additionalProperties": false
+    },
+    "ComparisonDisplayDomain": {
+      "type": "object",
+      "properties": {
+        "min": {
+          "type": "number"
+        },
+        "max": {
+          "type": "number"
+        },
+        "unit": {
+          "$ref": "common.schema.json#/$defs/Unit"
+        },
+        "kind": {
+          "type": "string",
+          "maxLength": 32,
+          "enum": [
+            "GEOMETRIC_CANVAS",
+            "MATHEMATICAL_DOMAIN"
+          ]
+        },
+        "accepted_min": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "accepted_max": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "min",
+        "max",
+        "unit",
+        "kind",
+        "accepted_min",
+        "accepted_max"
+      ],
+      "additionalProperties": false
+    },
+    "ComparisonDifference": {
+      "type": "object",
+      "properties": {
+        "feature_id": {
+          "$ref": "common.schema.json#/$defs/OpaqueId"
+        },
+        "from_position": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 15
+        },
+        "to_position": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 15
+        },
+        "from_fact_id": {
+          "$ref": "common.schema.json#/$defs/OpaqueId"
+        },
+        "to_fact_id": {
+          "$ref": "common.schema.json#/$defs/OpaqueId"
+        },
+        "unit": {
+          "$ref": "common.schema.json#/$defs/Unit"
+        },
+        "value_from": {
+          "type": "number"
+        },
+        "value_to": {
+          "type": "number"
+        },
+        "signed_delta": {
+          "type": "number"
+        },
+        "absolute_delta": {
+          "type": "number",
+          "minimum": 0
+        },
+        "direction": {
+          "$ref": "common.schema.json#/$defs/ComparisonDirection"
+        },
+        "method_id": {
+          "$ref": "common.schema.json#/$defs/OpaqueId"
+        },
+        "method_version": {
+          "$ref": "common.schema.json#/$defs/Version"
+        },
+        "formatting_key": {
+          "type": "string",
+          "maxLength": 128
+        },
+        "precision": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 12
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "display_domain": {
+          "$ref": "common.schema.json#/$defs/ComparisonDisplayDomain"
+        }
+      },
+      "required": [
+        "feature_id",
+        "from_position",
+        "to_position",
+        "from_fact_id",
+        "to_fact_id",
+        "unit",
+        "value_from",
+        "value_to",
+        "signed_delta",
+        "absolute_delta",
+        "direction",
+        "method_id",
+        "method_version",
+        "formatting_key",
+        "precision",
+        "display_domain"
+      ],
+      "additionalProperties": false
+    },
+    "ComparisonExclusion": {
+      "type": "object",
+      "properties": {
+        "feature_id": {
+          "$ref": "common.schema.json#/$defs/OpaqueId"
+        },
+        "reason": {
+          "$ref": "common.schema.json#/$defs/ComparisonExclusionReason"
+        },
+        "affected_positions": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 15
+          },
+          "minItems": 1,
+          "maxItems": 16,
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "feature_id",
+        "reason",
+        "affected_positions"
+      ],
+      "additionalProperties": false
     }
   }
 }
