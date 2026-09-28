@@ -85,7 +85,7 @@ def test_handoff_baseline_is_consistent_and_client_presentation_surface_stays_st
     acceptance = (DESIGN / "CLAUDE_DESIGN_ACCEPTANCE.md").read_text(encoding="utf-8")
     baseline = manifest["source_baseline_sha"]
     assert len(baseline) == 40 and all(char in "0123456789abcdef" for char in baseline)
-    assert f"`{baseline}`".replace("\\", "") in acceptance
+    assert f"`{baseline}`" in acceptance
 
     client_surface = (ROOT / "packages/report-core/src/presentation.generated.ts").read_text(encoding="utf-8")
     assert "content.highlight.v1.slant.right.almost_all" in client_surface
