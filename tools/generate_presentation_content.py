@@ -230,6 +230,19 @@ def validate(data: dict[str, Any]) -> None:
             raise ValueError(f"{candidate_id}: unsupported clause op")
         clause_features: set[str] = set()
         for clause in clauses:
+            op = clause["op"]
+            if not set(clause) <= CLAUSE_KEYS[op]:
+                raise ValueError(f"{candidate_id}: unexpected {op} clause keys")
+            if op != "count_at_least" and "min" not in clause and "max" not in clause:
+                raise ValueError(f"{candidate_id}: bounded clause needs min or max")
+            if op in {"max_range", "count_at_least"}:
+                features = clause.get("features")
+                if not isinstance(features, list) or not features or len(features) != len(set(features)):
+                    raise ValueError(f"{candidate_id}: clause features must be a nonempty unique list")
+            if op == "count_at_least":
+                if type(clause.get("count")) is not int or not 1 <= clause["count"] <= len(clause["features"]):
+                    raise ValueError(f"{candidate_id}: count_at_least count is invalid")
+                _number(clause["threshold"])
             clause_features.update(
                 value for key, value in clause.items()
                 if key in {"feature", "left", "right"} and isinstance(value, str)
@@ -243,6 +256,8 @@ def validate(data: dict[str, Any]) -> None:
         if not isinstance(strength, dict) or strength.get("op") not in STRENGTH_OPS:
             raise ValueError(f"{candidate_id}: unsupported strength op")
         strength_op = strength["op"]
+        if not set(strength) <= STRENGTH_KEYS[strength_op]:
+            raise ValueError(f"{candidate_id}: unexpected {strength_op} strength keys")
         if "weight" in strength:
             weight = _number(strength["weight"])
             if not 0 < weight <= 1:
