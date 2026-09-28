@@ -62,7 +62,7 @@
       "id": "first_reveal",
       "states": [
         "prototype_illustrative_selection",
-        "planned_server_owned_highlight",
+        "server_owned_highlight_available",
         "no_eligible_highlight",
         "source_image_not_retained"
       ]
@@ -231,7 +231,7 @@
       "T31"
     ],
     "first_reveal": [
-      "T08A"
+      "T17"
     ]
   },
   "prohibited_patterns": [

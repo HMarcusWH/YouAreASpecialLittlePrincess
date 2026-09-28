@@ -74,6 +74,6 @@ Later merged work changed the current disposition without rewriting this histori
 - T24 gained single-device/feedback restore tombstones, web mail preferences and deterministic Premium provider-attempt reconciliation; production storage/providers/recovery/operations remain.
 - T11 is IN_PROGRESS with synthetic-qualified, fail-closed pilot tooling; real recruitment/annotation remains gated.
 - T10 now has a production-aware Claude Design handoff but still requires explicit owner `design_acceptance`.
-- T08A was later split from T08 so calibration-independent presentation labels/domains and the server-owned first reveal can proceed without T06; T08A is READY while T08 retains calibrated normalization. T29 remains the next native unlock after T10 acceptance.
+- T08A was later split from T08 and completed with versioned EN/SV presentation content, broad deterministic server-owned highlight selection and an `individual-report/2` capability that remains client-inactive until T17 integration. T18 is now READY; T08 still waits on T06 calibrated evidence. T29 remains the next native unlock after T10 acceptance.
 
 Current authority remains [tasks.json](tasks.json).

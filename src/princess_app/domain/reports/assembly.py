@@ -22,7 +22,9 @@ from princess_contracts import (
 from princess_contracts import generated as g
 
 from ..analysis import method_versions, rfc3339
-from .template import FACT_SECTIONS, PREMIUM_SECTION, REFERENCE_SECTION, TEMPLATE_VERSION, formatting_for
+from ..content import presentation_registry, select_highlights
+from .template import (BASE_TEMPLATE_VERSION, FACT_SECTIONS, PREMIUM_SECTION, REFERENCE_SECTION,
+                       SUPPORTED_TEMPLATE_VERSIONS, TEMPLATE_VERSION, formatting_for)
 
 MAX_SOURCE_REGIONS = 128
 EVIDENCE_CLASS = {"MEASURED_VISUAL_FEATURE": "MEASURED", "COMPUTATIONAL_PROXY": "COMPUTATIONAL_PROXY"}
@@ -112,10 +114,39 @@ def _section_availability(facts: Sequence[Mapping[str, Any]]) -> str:
     return "READY" if "READY" in states else "UNCALIBRATED"
 
 
+def _highlight_sections(facts: Sequence[Mapping[str, Any]]) -> list[dict[str, Any]]:
+    by_id = {f["fact_id"]: f for f in facts}
+    selected = select_highlights(facts, limit=3)
+    if not selected:
+        return [{
+            "section_id": "section.highlight.primary",
+            "template": "HIGHLIGHT_PRIMARY",
+            "availability": "INELIGIBLE",
+            "fact_ids": [],
+            "content_ids": [presentation_registry()["fallback_content_id"]],
+            "premium_section_id": None,
+        }]
+    sections: list[dict[str, Any]] = []
+    for index, candidate in enumerate(selected):
+        members = [by_id[fact_id] for fact_id in candidate.support_fact_ids]
+        primary = index == 0
+        sections.append({
+            "section_id": "section.highlight.primary" if primary else f"section.highlight.secondary.{index}",
+            "template": "HIGHLIGHT_PRIMARY" if primary else "HIGHLIGHT_SECONDARY",
+            "availability": _section_availability(members),
+            "fact_ids": list(candidate.support_fact_ids),
+            "content_ids": [candidate.content_id],
+            "premium_section_id": None,
+        })
+    return sections
+
+
 def build_sections(facts: Sequence[Mapping[str, Any]], *, reference_claims: Sequence[Mapping[str, Any]],
-                   premium_overlay_id: str | None) -> list[dict[str, Any]]:
+                   premium_overlay_id: str | None, template_version: str = TEMPLATE_VERSION) -> list[dict[str, Any]]:
+    if template_version not in SUPPORTED_TEMPLATE_VERSIONS:
+        raise ValueError(f"unsupported report template {template_version!r}")
     by_feature = {f["feature_id"]: f for f in facts}
-    sections = []
+    sections = [] if template_version == BASE_TEMPLATE_VERSION else _highlight_sections(facts)
     for section_id, template, feature_ids in FACT_SECTIONS:
         members = [by_feature[f] for f in feature_ids if f in by_feature]
         if members:
@@ -171,9 +202,10 @@ def assemble_report(*, report_id: str, analysis: Mapping[str, Any], result: Mapp
     if metadata.get("input_pixels_sha256") != analysis.get("processed_sha256"):
         return _fail("RESULT_ANALYSIS_MISMATCH", "/metadata/input_pixels_sha256",
                      "result was produced from different pixels than this analysis")
-    if analysis.get("versions", {}).get("template") != TEMPLATE_VERSION:
+    template_version = analysis.get("versions", {}).get("template")
+    if template_version not in SUPPORTED_TEMPLATE_VERSIONS:
         return _fail("TEMPLATE_VERSION_MISMATCH", "/analysis/versions/template",
-                     f"this assembler produces {TEMPLATE_VERSION}")
+                     f"supported templates are {sorted(SUPPORTED_TEMPLATE_VERSIONS)}")
     missing = set(free_feature_ids()) - set(result.get("measurements", {}))
     if missing:
         return _fail("INCOMPLETE_RESULT", "/measurements",
@@ -200,7 +232,8 @@ def assemble_report(*, report_id: str, analysis: Mapping[str, Any], result: Mapp
         "evidence_bundle_id": evidence.data["bundle_id"] if evidence is not None else None,
         "facts": facts,
         "reference_claims": claims,
-        "sections": build_sections(facts, reference_claims=claims, premium_overlay_id=premium_overlay_id),
+        "sections": build_sections(facts, reference_claims=claims, premium_overlay_id=premium_overlay_id,
+                                   template_version=template_version),
         "notices": build_notices(facts, has_reference=bool(claims), premium_overlay_id=premium_overlay_id),
         "premium_overlay_id": premium_overlay_id,
     }
@@ -222,7 +255,8 @@ def revise_report(previous: ValidatedDocument, *, created_at: datetime,
     document = {**old, "revision": old["revision"] + 1, "created_at": rfc3339(created_at),
                 "premium_overlay_id": premium_overlay_id,
                 "sections": build_sections(old["facts"], reference_claims=old["reference_claims"],
-                                           premium_overlay_id=premium_overlay_id),
+                                           premium_overlay_id=premium_overlay_id,
+                                           template_version=old["analysis"]["versions"]["template"]),
                 "notices": build_notices(old["facts"], has_reference=bool(old["reference_claims"]),
                                          premium_overlay_id=premium_overlay_id)}
     return _finish(document)
@@ -244,7 +278,8 @@ def check_revision(previous: ValidatedDocument, candidate: ValidatedDocument) ->
     # facts or reword notices by recompiling a self-consistent document.
     overlay = new.get("premium_overlay_id")
     if new["sections"] != build_sections(new["facts"], reference_claims=new["reference_claims"],
-                                         premium_overlay_id=overlay):
+                                         premium_overlay_id=overlay,
+                                         template_version=new["analysis"]["versions"]["template"]):
         issues.append(ContractIssue("REVISION_SECTIONS_NOT_DERIVED", "/sections", "sections must be derived"))
     if new["notices"] != build_notices(new["facts"], has_reference=bool(new["reference_claims"]),
                                        premium_overlay_id=overlay):

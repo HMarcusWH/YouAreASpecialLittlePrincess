@@ -4,7 +4,7 @@
 
 [Documentation index](00-index.md) · [Machine authority](tasks.json) · [Build sequence](20-end-to-end-build-sequence.md) · [Release gates](21-release-readiness-checklists.md)
 
-Plan 2.2; code baseline `e8e174a2311f8d4327850218405819de8f87277e`. Statuses are implementation/history records, not production approvals. READY is computed from completed hard predecessors.
+Plan 2.3; code baseline `e8e174a2311f8d4327850218405819de8f87277e`. Statuses are implementation/history records, not production approvals. READY is computed from completed hard predecessors.
 
 Use `python docs/roadmap/plan_tools.py --ready`, `--active` or `--task ID`. Edit tasks.json and run `--write` then `--check` when maintaining the plan.
 
@@ -22,7 +22,7 @@ Use `python docs/roadmap/plan_tools.py --ready`, `--active` or `--task ID`. Edit
 | [T05 — Evidence payload and chart observations](#t05) | DONE | T01 | engine |
 | [T06 — Calibration suitability core repair](#t06) | PLANNED | T05, T11 | evaluation |
 | [T07 — Bounded classical topology shape expansion](#t07) | PLANNED | T05, T06 | engine |
-| [T08A — Report presentation and first-reveal policy](#t08a) | PLANNED | T01, T05, T09 | content-report |
+| [T08A — Report presentation and first-reveal policy](#t08a) | DONE | T01, T05, T09 | content-report |
 | [T08 — Calibrated normalization and reviewed interpretation content](#t08) | PLANNED | T06, T08A | content-engine |
 | [T09 — Report assembly and authorized projections](#t09) | DONE | T01, T05 | report-backend |
 | [T10 — Contract-driven multi-platform design handoff](#t10) | IMPLEMENTED_PENDING_REVIEW | T01 | design |
@@ -782,7 +782,7 @@ No task-specific production gate; all repository privacy/security and scope boun
 <a id="t08a"></a>
 ## T08A — Report presentation and first-reveal policy
 
-**Status:** `PLANNED` · **Owner:** content-report · **Milestone:** free
+**Status:** `DONE` · **Owner:** content-report · **Milestone:** free
 
 **Hard predecessors:** [T01](#t01), [T05](#t05), [T09](#t09)
 **Platforms:** shared, backend
@@ -843,6 +843,8 @@ Versioned presentation labels/captions, non-population display domains and deter
 Validation profiles: [docs](#validation-docs), [contracts](#validation-contracts), [backend](#validation-backend). Planned suites must be implemented and their actual command documented by the owning task; they are not passing tests today.
 
 No task-specific production gate; all repository privacy/security and scope boundaries still apply.
+
+Historical completion evidence: PR #27 implements presentation/1 with reviewed EN/SV labels for all 64 Free features, 54 reachable mechanical highlight states across six families, correlation/family diversity, image-proxy hero exclusion, deterministic server-side selection, explicit individual-report/2 highlight capability, v1 revision compatibility, share-scope non-expansion, generated-registry drift checks and adversarial rule validation. The v1 client default remains active until T17 renders/activates v2; exact-head workflow and review evidence are recorded on PR #27 before merge.
 
 [Back to task table](#task-table) · [Documentation index](00-index.md) · [Execution sequence](20-end-to-end-build-sequence.md)
 

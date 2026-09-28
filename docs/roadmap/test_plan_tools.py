@@ -53,8 +53,11 @@ class PlanTests(unittest.TestCase):
         self.assertEqual(by_id["T18"]["depends_on"], ["T08A", "T09"])
         self.assertEqual(by_id["T13"]["depends_on"], ["T08", "T12"])
 
+        ready = [task["id"] for task in plan_tools.ready_tasks(data)]
         if by_id["T08A"]["status"] == "PLANNED":
-            self.assertIn("T08A", [task["id"] for task in plan_tools.ready_tasks(data)])
+            self.assertIn("T08A", ready)
+        elif by_id["T08A"]["status"] == "DONE":
+            self.assertIn("T18", ready)
         self.assertEqual(plan_tools.validate_plan(data), [])
 
     def test_active_tasks_are_distinct_from_ready_work(self):
