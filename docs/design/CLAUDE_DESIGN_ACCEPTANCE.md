@@ -9,7 +9,7 @@ This file is the review checklist for the Claude Design prototype. Its presence 
 - Claude Design project/prototype reference: **PENDING**
 - Working public brand: **Inktrospect** (repository/package namespaces remain unchanged)
 - Design direction selected: **A — The Dossier**
-- Repository baseline used for handoff: `9b9a313fe0acb8b7b90cf6233da21cc6a793210f`
+- Repository baseline used for handoff: `8582215ee9a6b444a4c9c5faa7af3ac3c423d4a6`
 - Prototype revision reviewed: **PENDING**
 
 ## Owner review checklist
