@@ -108,6 +108,42 @@ def test_selection_is_order_invariant_and_returns_distinct_families():
     assert len({candidate.family for candidate in first}) == 3
 
 
+def test_common_neutral_states_do_not_monopolize_primary():
+    neutral_ids = {
+        "layout.centered",
+        "baseline.near_level",
+        "spacing.lines_consistent",
+        "size.balanced_aspect",
+        "slant.consistent",
+    }
+    source = json.loads(generator.SOURCE.read_text(encoding="utf-8"))
+    rows = {row["candidate_id"]: row for row in source["candidates"]}
+
+    def profile(target: str, overrides: dict[str, float]) -> list[dict]:
+        facts_by_id = {}
+        for candidate_id in neutral_ids | {target}:
+            row = rows[candidate_id]
+            for item in witness_facts(row):
+                facts_by_id[item["fact_id"]] = item
+        for feature_id, value in overrides.items():
+            fact_id = f"fact.{feature_id}"
+            if fact_id not in facts_by_id:
+                facts_by_id[fact_id] = fact(feature_id, value, n=8)
+            else:
+                facts_by_id[fact_id]["value"] = value
+        return list(facts_by_id.values())
+
+    cases = [
+        ("slant.right.almost_all", {"SLANT_RIGHT_FRACTION": 0.98}, "slant"),
+        ("layout.margins_asymmetric", {"MARGIN_SYMMETRY": 0.05}, "layout"),
+        ("baseline.rising", {"BASELINE_ANGLE_MEAN": 8.0}, "baseline"),
+        ("spacing.lines_more_consistent", {"LINE_SPACING_CV": 0.03, "WORD_SPACING_CV": 0.6}, "spacing"),
+        ("size.taller_components", {"GLYPH_ASPECT_RATIO_MEAN": 0.2}, "size"),
+    ]
+    for candidate_id, overrides, expected_family in cases:
+        selected = select_highlights(profile(candidate_id, overrides))
+        assert selected and selected[0].family == expected_family, candidate_id
+
 def test_missing_and_low_observation_support_never_becomes_a_highlight():
     source = json.loads(generator.SOURCE.read_text(encoding="utf-8"))
     row = source["candidates"][0]
