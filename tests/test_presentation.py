@@ -225,6 +225,13 @@ def test_registry_validator_rejects_claim_drift_and_rule_configuration_faults():
     invalid_weight["candidates"][0]["strength"]["weight"] = 1.1
     cases.append(invalid_weight)
 
+    typo_clause = copy.deepcopy(source)
+    typo_clause["candidates"][0]["clauses"][0]["maxx"] = 999
+    cases.append(typo_clause)
+
+    typo_strength = copy.deepcopy(source)
+    typo_strength["candidates"][0]["strength"]["weigth"] = 0.5
+    cases.append(typo_strength)
     for bad in cases:
         try:
             generator.validate(bad)
