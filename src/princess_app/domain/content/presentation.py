@@ -124,27 +124,28 @@ def _clip(value: float) -> float:
 
 def _strength(spec: Mapping[str, Any], values: Mapping[str, float]) -> float:
     op = spec["op"]
+    weight = float(spec.get("weight", 1.0))
     if op == "normalize":
         low, high = float(spec["min"]), float(spec["max"])
         value = (values[spec["feature"]] - low) / (high - low)
-        return _clip((1.0 - value if spec.get("invert") else value) * weight)
-    if op == "distance_from":
+        raw = 1.0 - value if spec.get("invert") else value
+    elif op == "distance_from":
         value = abs(values[spec["feature"]] - float(spec["center"])) / float(spec["max_distance"])
-        return _clip(1.0 - value if spec.get("invert") else value)
-    if op == "relative_difference":
+        raw = 1.0 - value if spec.get("invert") else value
+    elif op == "relative_difference":
         left, right = values[spec["left"]], values[spec["right"]]
-        return _clip((abs(left - right) / max(abs(left) + abs(right), 1e-12)) * weight)
-    if op == "max_feature":
+        raw = abs(left - right) / max(abs(left) + abs(right), 1e-12)
+    elif op == "max_feature":
         value = max(values[feature] for feature in spec["features"])
-        return _clip(1.0 - value if spec.get("invert") else value)
-    if op == "abs_normalize":
+        raw = 1.0 - value if spec.get("invert") else value
+    elif op == "abs_normalize":
         value = abs(values[spec["feature"]]) / float(spec["max_abs"])
-        return _clip(1.0 - value if spec.get("invert") else value)
-    if op == "max_abs_features":
-        value = max(abs(values[feature]) for feature in spec["features"]) / float(spec["max_abs"])
-        return _clip(value)
-    raise ValueError(f"unsupported presentation strength {op!r}")
-
+        raw = 1.0 - value if spec.get("invert") else value
+    elif op == "max_abs_features":
+        raw = max(abs(values[feature]) for feature in spec["features"]) / float(spec["max_abs"])
+    else:
+        raise ValueError(f"unsupported presentation strength {op!r}")
+    return _clip(raw * weight)
 
 def eligible_candidates(facts: Sequence[Mapping[str, Any]]) -> tuple[HighlightCandidate, ...]:
     """Evaluate every reviewed candidate against saved report facts."""
