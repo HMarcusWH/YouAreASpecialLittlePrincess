@@ -28,5 +28,6 @@ export function presentationContent(contentId: string, locale: string): string |
 }
 
 export function presentationDisplayDomain(featureId: string): PresentationDisplayDomain | undefined {
-  return DOMAINS[featureId];
+  const domain = DOMAINS[featureId];
+  return domain === undefined ? undefined : { ...domain };
 }
