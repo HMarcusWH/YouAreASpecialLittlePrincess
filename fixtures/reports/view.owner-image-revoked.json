@@ -2,9 +2,9 @@
   "actions": [
     {
       "action_id": "action.compare",
-      "enabled": true,
+      "enabled": false,
       "kind": "COMPARE",
-      "reason": null
+      "reason": "comparison_not_available"
     },
     {
       "action_id": "action.export",
@@ -14,21 +14,21 @@
     },
     {
       "action_id": "action.share",
-      "enabled": true,
+      "enabled": false,
       "kind": "SHARE",
-      "reason": null
+      "reason": "sharing_not_available"
     },
     {
       "action_id": "action.save",
-      "enabled": true,
+      "enabled": false,
       "kind": "SAVE",
-      "reason": null
+      "reason": "save_not_available"
     },
     {
       "action_id": "action.delete",
-      "enabled": true,
+      "enabled": false,
       "kind": "DELETE",
-      "reason": null
+      "reason": "delete_from_settings"
     },
     {
       "action_id": "action.purchase",

@@ -33,7 +33,8 @@ from princess_app.domain.reports import (  # noqa: E402
 FIXTURES = ROOT / "fixtures" / "reports"
 SOURCE = FIXTURES / "source"
 CREATED = datetime(2026, 9, 27, 12, 0, tzinfo=timezone.utc)
-OWNER_ACTIONS = {"COMPARE": None, "EXPORT": None, "SHARE": None, "SAVE": None, "DELETE": None,
+OWNER_ACTIONS = {"COMPARE": "comparison_not_available", "EXPORT": None, "SHARE": "sharing_not_available",
+                 "SAVE": "save_not_available", "DELETE": "delete_from_settings",
                  "PURCHASE": "premium_not_yet_available"}
 SYNTHETIC_LINES = ("the quick brown fox jumps", "over a very lazy dog", "writing sample fixture")
 

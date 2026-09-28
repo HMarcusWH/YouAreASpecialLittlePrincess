@@ -49,6 +49,21 @@ test("share and export previews disclose that the source image is omitted", asyn
 
 test("disabled actions explain why with localized product copy", async ({ page }) => {
   await page.goto("/fixtures/free");
+
+  for (const [name, reason] of [
+    ["Compare", "Comparison is not available yet."],
+    ["Share", "Share links are not available yet."],
+    ["Save", "Reports are saved to your account automatically."],
+    ["Delete", "Delete the sample in Settings to remove this report."],
+  ] as const) {
+    const action = page.getByRole("button", { name });
+    await expect(action).toBeDisabled();
+    const reasonId = await action.getAttribute("aria-describedby");
+    expect(reasonId).toBeTruthy();
+    await expect(page.locator(`[id="${reasonId}"]`)).toHaveText(reason);
+  }
+  await expect(page.getByRole("button", { name: "Export PDF" })).toBeEnabled();
+
   let purchase = page.getByRole("button", { name: "Get Premium" });
   await expect(purchase).toBeDisabled();
   let describedBy = await purchase.getAttribute("aria-describedby");
