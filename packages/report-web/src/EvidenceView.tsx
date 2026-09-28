@@ -56,7 +56,7 @@ function SpacingEvidence({ bundle, locale, featureId }: {
   const headingId = `spacing-${featureId.toLowerCase()}`;
   return (
     <section className="pr-evidence-block" aria-labelledby={headingId}>
-      <h3 id={headingId}>{featureName(featureId)}</h3>
+      <h3 id={headingId}>{featureName(featureId, locale)}</h3>
       <div className="pr-table-wrap">
         <table className="pr-evidence-table">
           <thead><tr>
