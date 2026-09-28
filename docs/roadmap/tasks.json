@@ -1,5 +1,5 @@
 {
-  "plan_version": "2.1",
+  "plan_version": "2.2",
   "research_date": "2026-09-26",
   "baseline_commit": "e8e174a2311f8d4327850218405819de8f87277e",
   "historical_baseline_commit": "8f2ec7b07f23f7b3613ccc71576714f3c245e7a0",
@@ -653,13 +653,71 @@
       ]
     },
     {
-      "id": "T08",
-      "title": "Normalization and reviewed content",
+      "id": "T08A",
+      "title": "Report presentation and first-reveal policy",
       "status": "PLANNED",
       "depends_on": [
         "T01",
         "T05",
-        "T06"
+        "T09"
+      ],
+      "owner_role": "content-report",
+      "milestone": "free",
+      "platforms": [
+        "shared",
+        "backend"
+      ],
+      "connectors": [],
+      "required_docs": [
+        "docs/roadmap/01-data-architecture.md",
+        "docs/roadmap/02-corpus-benchmarks.md",
+        "docs/roadmap/04-reports-design.md",
+        "docs/roadmap/16-testing-evals-and-quality-gates.md"
+      ],
+      "owned_paths": [
+        "src/princess_app/domain/content/",
+        "src/princess_app/domain/reports/",
+        "content/presentation/",
+        "contracts/product/v1/"
+      ],
+      "coding_steps": [
+        "Publish reviewed English/Swedish presentation labels and deterministic captions separately from canonical feature names; version every presentation/content identifier consumed by reports.",
+        "Define a versioned registry of intrinsic or otherwise predeclared non-population mechanical display domains. Do not derive per-user maxima or imply empirical calibration; calibrated/population-relative mappings remain T08.",
+        "Define a deterministic, versioned first-reveal/highlight eligibility and selection policy over eligible saved report facts, with reviewed content IDs, supporting fact IDs and an explicit no-eligible-highlight outcome.",
+        "Carry the optional server-owned highlight through the existing ReportSection transport while preserving fact availability/evidence class. Clients render the selected result or fallback and never rank facts themselves."
+      ],
+      "contract_handoff": "Versioned presentation labels/captions, non-population display domains and deterministic first-reveal selection/content outputs for report assembly, T17/T18/T21 and native consumers.",
+      "acceptance": [
+        "The same eligible saved facts and policy/content versions produce the same highlight and support-fact binding regardless of client or input ordering.",
+        "No eligible highlight yields an explicit absent/fallback state; missing or ineligible facts are never promoted to make the layout look complete.",
+        "Presentation labels and captions are reviewed for English/Swedish and evidence/availability semantics travel with every rendered result.",
+        "Intrinsic display domains do not claim population position, rarity, percentile or calibrated confidence."
+      ],
+      "negative_tests": [
+        "Missing/ineligible fact selected, tie/order-dependent salience, client-side ranking, unsupported percentile/rarity wording, per-user auto-max scale and missing localization key."
+      ],
+      "artifacts": [
+        "Versioned presentation-label/caption registry and localization fixtures",
+        "Deterministic first-reveal policy and report fixtures",
+        "Reviewed non-population display-domain registry"
+      ],
+      "production_gates": [],
+      "validation_profiles": [
+        "docs",
+        "contracts",
+        "backend"
+      ],
+      "rollback": [
+        "Pin presentation/highlight versions in saved reports; disable the highlight and use the honest fallback without rewriting canonical facts."
+      ]
+    },
+    {
+      "id": "T08",
+      "title": "Calibrated normalization and reviewed interpretation content",
+      "status": "PLANNED",
+      "depends_on": [
+        "T06",
+        "T08A"
       ],
       "owner_role": "content-engine",
       "milestone": "reference",
@@ -677,27 +735,24 @@
       "owned_paths": [
         "src/princess_app/domain/content/",
         "content/",
-        "contracts/product/v1/",
-        "src/princess_app/domain/reports/"
+        "contracts/product/v1/"
       ],
       "coding_steps": [
-        "Implement fixed versioned mechanical display axes with domains, family weights and missingness; do not use per-user auto-max normalization.",
-        "Publish reviewed localized presentation labels separately from canonical English feature names, and version any fixed display-scale registry; inherent geometric domains may be approved without pretending population calibration exists.",
-        "Define a deterministic, versioned first-reveal/highlight selection policy and reviewed localized content IDs over eligible report facts; report assembly may emit an optional highlight section, while clients only render the server-selected result and honest no-eligible fallback.",
-        "Add authored deterministic captions/geometric style labels and localization keys tied to evidence.",
-        "Keep traditional packs inactive unless exact source/wording/runtime eligibility is separately approved; T26 structure does not supply active rules automatically."
+        "Implement empirically qualified normalization and family-scale mappings from the T06 supported-context/calibration release, preserving explicit missingness and forbidding per-user auto-max normalization.",
+        "Version calibrated scale mappings and any justified family weighting; test monotonicity, unit/scale equivalence and partial-dependency behavior against the approved calibration evidence.",
+        "Add calibration-sensitive authored/traditional content only where its evidence/source/wording/runtime eligibility is separately reviewed; T26 structure does not activate traditional packs automatically."
       ],
-      "contract_handoff": "Normalization/content release IDs, reviewed presentation labels/scales, and deterministic highlight selection/content outputs for report assembly plus T13/T17/T18/native consumers.",
+      "contract_handoff": "Calibrated normalization/content release IDs and empirically justified mappings for T13/reference consumers; T08A presentation/highlight IDs remain stable inputs.",
       "acceptance": [
-        "Monotonicity, unit/scale equivalence and partial-dependency behavior are tested.",
-        "No arbitrary psychological weights or double-counted correlated summaries; evidence labels travel to every view.",
-        "First-reveal selection is deterministic, versioned, support-fact bound and absent when no eligible highlight exists; clients never rank report facts themselves."
+        "Calibration-dependent mappings are versioned, monotonic where required and preserve missingness; uncalibrated inputs never masquerade as calibrated scores.",
+        "No arbitrary psychological weights or double-counted correlated summaries; any family weighting is justified by recorded T06/T08 evidence.",
+        "Traditional packs remain inactive unless exact source/wording/runtime eligibility is separately approved."
       ],
       "negative_tests": [
-        "Zero denominator, constant scale, missing axis plotted zero, repeated signal overweighting, unsupported traditional inversion."
+        "Zero denominator, constant scale, missing axis plotted zero, repeated signal overweighting, unsupported calibrated mapping and unsupported traditional inversion."
       ],
       "artifacts": [
-        "Versioned formulas/caption pack and localization fixtures"
+        "Versioned calibrated normalization/content release and qualification fixtures"
       ],
       "production_gates": [
         "traditional_content_if_enabled"
@@ -705,7 +760,8 @@
       "validation_profiles": [
         "core",
         "docs",
-        "contracts"
+        "contracts",
+        "empirical"
       ],
       "rollback": [
         "Pin content/normalization versions in saved reports; disable a pack without rewriting canonical facts."
@@ -825,7 +881,7 @@
       ],
       "implementation_evidence": "PR #14 commit c5463a4 added contract-driven draft design tokens generated to CSS/TypeScript/Swift/Kotlin and a complete state/component handoff. The repository explicitly keeps the tokens DRAFT_PENDING_DESIGN_ACCEPTANCE. PR #23 packages a production-aware Claude Design handoff with an exact curated code/import manifest, complete responsive/native/print/share state matrix, synthetic fixture mapping, product-truth constraints and a pending owner acceptance record. The design tokens intentionally remain design-tokens/0.1-draft / DRAFT_PENDING_DESIGN_ACCEPTANCE.",
       "remaining_work": [
-        "Complete the selected Direction A — The Dossier interactive Inktrospect responsive/native/print/share prototype; keep backend-owned gaps explicitly PLANNED/ILLUSTRATIVE and hand them to T08/T18 rather than implementing client authority; obtain explicit owner design_acceptance recorded in docs/design/CLAUDE_DESIGN_ACCEPTANCE.md before promoting T10 or the token status."
+        "Complete the selected Direction A — The Dossier interactive Inktrospect responsive/native/print/share prototype; keep backend-owned gaps explicitly PLANNED/ILLUSTRATIVE and hand them to T08A/T18 rather than implementing client authority; obtain explicit owner design_acceptance recorded in docs/design/CLAUDE_DESIGN_ACCEPTANCE.md before promoting T10 or the token status."
       ]
     },
     {
@@ -1198,6 +1254,7 @@
       "depends_on": [
         "T02",
         "T04",
+        "T08A",
         "T09",
         "T10",
         "T28"
@@ -1261,7 +1318,7 @@
       "implementation_evidence": "PR #14 established the working deterministic Free Next.js journey and T21 export integration. This T17 slice adds canonical ReportSummary/ReportPage contracts, owner-scoped paginated report history, report-scoped EvidenceBundle reads with stored digest/lineage validation, current-principal history UI, stored baseline/spacing/slant evidence views and cross-owner/browser regression coverage. PR #18 adds a reviewed pinned axe dependency and generated lockfile, automated WCAG A/AA browser-state coverage with a proven negative control, explicit fixture/live Playwright modes, and a mandatory isolated live Free upload-to-export CI journey that refreshes the queued run before deterministic worker execution.",
       "remaining_work": [
         "Implement production account sign-in and cross-device/account recovery after the ADR-002 identity provider decision.",
-        "Finish owner-accepted Inktrospect / The Dossier T10 design integration across responsive first-reveal, history, evidence and report states; render the T08 server-owned highlight when present and an honest fallback when absent, never client-side salience."
+        "Finish owner-accepted Inktrospect / The Dossier T10 design integration across responsive first-reveal, history, evidence and report states; render the T08A server-owned highlight when present and the approved no-highlight fallback when absent; never perform salience selection client-side."
       ]
     },
     {
@@ -1269,7 +1326,7 @@
       "title": "Deterministic pair and history comparison",
       "status": "PLANNED",
       "depends_on": [
-        "T08",
+        "T08A",
         "T09"
       ],
       "owner_role": "statistics-report",
@@ -1290,15 +1347,16 @@
         "contracts/product/v1/"
       ],
       "coding_steps": [
-        "Extend the existing T01 Comparison wire schema/semantics with native-unit directional facts, common valid masks/coverage, per-input provenance, method/version compatibility and fixed family scales before any overall score; do not create a parallel comparison DTO.",
+        "Extend the existing T01 Comparison wire schema/semantics with native-unit directional facts, common valid masks/coverage, per-input provenance, method/version compatibility and T08A fixed non-population mechanical display domains; do not create a parallel comparison DTO.",
         "Resolve the existing cosine-range/schema conflict explicitly rather than clipping a value into a probability.",
         "Support same-owner Me-v-Me first and service contracts for separately granted partner inputs; T22 gates other-owner release.",
-        "Distinguish system ingestion/analysis/report timestamps from separately sourced writing/photo dates, task/method variation and writing change; qualify any similarity index with an evaluated mapping."
+        "Distinguish system ingestion/analysis/report timestamps from separately sourced writing/photo dates, task/method variation and writing change; withhold any calibrated or aggregate similarity score unless an evaluated mapping exists."
       ],
       "contract_handoff": "ComparisonDocument fixtures with directional facts, coverage and authorized evidence for web/native/export/Premium.",
       "acceptance": [
         "A/B swap preserves distance and reverses directional labels; self-distance is zero where defined.",
-        "Reference absence still permits valid descriptive comparisons; no authorship/romance/mental-health inference."
+        "Reference absence still permits valid descriptive comparisons; no authorship/romance/mental-health inference.",
+        "Calibrated or aggregate similarity scores remain absent unless their mapping has evaluation evidence; descriptive native-unit comparison does not require a reference cohort."
       ],
       "negative_tests": [
         "Zero variance/norm, missing overlap, incompatible methods, negative cosine, near-zero percent-change denominator and unapproved partner sample."
