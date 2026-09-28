@@ -25,7 +25,8 @@ from princess_app.domain.reports import (
     revise_report,
 )
 from princess_app.domain.reports.template import (BASE_TEMPLATE_VERSION, FACT_SECTIONS,
-                                                    HIGHLIGHT_PRESENTATION_VERSION, HIGHLIGHT_TEMPLATE_VERSION)
+                                                    HIGHLIGHT_POLICY_VERSION, HIGHLIGHT_PRESENTATION_VERSION,
+                                                    HIGHLIGHT_TEMPLATE_VERSION)
 from princess_app.ports.base import Conflict, NotAuthorized, NotFound
 from princess_contracts import compile_document, validate_projection
 from princess_graphology import GraphologyEngine
@@ -86,8 +87,9 @@ def test_missing_stays_missing_and_values_are_never_coerced():
 
 
 def test_compound_highlight_is_uncalibrated_when_any_support_is_uncalibrated():\n    facts = [\n        {\n            "fact_id": "fact.GLYPH_WIDTH_CV", "feature_id": "GLYPH_WIDTH_CV",\n            "availability": "READY", "value": 0.35, "quality": {"n_observations": 20},\n        },\n        {\n            "fact_id": "fact.GLYPH_HEIGHT_CV", "feature_id": "GLYPH_HEIGHT_CV",\n            "availability": "UNCALIBRATED", "value": 0.15, "quality": {"n_observations": 20},\n        },\n    ]\n    sections = build_sections(facts, reference_claims=(), premium_overlay_id=None,\n                              template_version=HIGHLIGHT_TEMPLATE_VERSION)\n    highlight = next(section for section in sections if section["section_id"] == "section.highlight.primary")\n    assert highlight["content_ids"] == ["content.highlight.v1.size.width_more_variable"]\n    assert highlight["availability"] == "UNCALIBRATED"\n\ndef test_highlight_template_pins_presentation_authority():
-    from princess_app.domain.content import PRESENTATION_VERSION
+    from princess_app.domain.content import HIGHLIGHT_POLICY_VERSION as RUNTIME_POLICY_VERSION, PRESENTATION_VERSION
     assert HIGHLIGHT_PRESENTATION_VERSION == PRESENTATION_VERSION == "presentation/1"
+    assert HIGHLIGHT_POLICY_VERSION == RUNTIME_POLICY_VERSION == "highlight-policy/1"
 
 
 def test_current_template_persists_broad_server_owned_highlights():
