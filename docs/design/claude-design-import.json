@@ -45,7 +45,10 @@
     "fixtures/reports/report-document.premium.json",
     "fixtures/reports/view.free-v2.json",
     "fixtures/reports/evidence-bundle.v2.json",
-    "fixtures/reports/report-document.v2.json"
+    "fixtures/reports/report-document.v2.json",
+    "fixtures/comparisons/pair-ab.json",
+    "fixtures/comparisons/history.json",
+    "fixtures/comparisons/no-overlap.json"
   ],
   "existing_web_implementation": [
     "apps/web/app/globals.css",

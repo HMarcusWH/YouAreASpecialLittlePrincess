@@ -1325,7 +1325,7 @@
     {
       "id": "T18",
       "title": "Deterministic pair and history comparison",
-      "status": "IN_PROGRESS",
+      "status": "DONE",
       "depends_on": [
         "T08A",
         "T09"
@@ -1376,9 +1376,7 @@
         "Version comparison mappings and withhold incompatible summaries rather than reinterpreting old results."
       ],
       "implementation_evidence": "T18 implementation started on task/T18-deterministic-comparison from main 50a4c90b448d95560b045031f01514200b6f75fc. The scoped PR extends the existing Comparison contract and implements server-side native-unit pair/history comparison using T08A fixed non-population domains; exact-head acceptance evidence is pending.",
-      "remaining_work": [
-        "Complete exact-head contract/domain/application invariant qualification and review; then record the final merged evidence before promoting T18 to DONE."
-      ]
+      "completion_evidence": "T18 deterministic comparison implementation qualified on exact head 4417219ae174eba0080e83dc951c11f99f1f1dc3: CI run 36491392995 passed on Python 3.10/3.11/3.12 including full pytest, product-contract fault injection, research checks and installed-wheel smoke; Roadmap integrity run 36491392973 passed; Application environments run 36491393001 passed backend/PostgreSQL, web/render/browser accessibility and the live Free upload-to-export journey. The implementation extends the existing Comparison root contract with 18 T08A fixed-domain candidates, explicit compatibility/exclusion coverage, per-input provenance and native-unit adjacent deltas; aggregate/cosine/Mahalanobis/percent-change outputs remain absent. Same-owner service use is implemented; other-owner release remains gated to T22."
     },
     {
       "id": "T19",

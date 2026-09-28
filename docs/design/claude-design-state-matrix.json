@@ -217,11 +217,13 @@
     "export_no_image": "fixtures/reports/view.export-no-image.json",
     "evidence": "fixtures/reports/evidence-bundle.json",
     "first_reveal": "fixtures/reports/view.free-v2.json",
-    "first_reveal_evidence": "fixtures/reports/evidence-bundle.v2.json"
+    "first_reveal_evidence": "fixtures/reports/evidence-bundle.v2.json",
+    "comparison_pair": "fixtures/comparisons/pair-ab.json",
+    "comparison_history": "fixtures/comparisons/history.json",
+    "comparison_no_overlap": "fixtures/comparisons/no-overlap.json"
   },
   "planned_owners": {
     "pair_invitation_comparison": [
-      "T18",
       "T22"
     ],
     "premium_web": [

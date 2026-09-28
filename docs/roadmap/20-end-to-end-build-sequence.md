@@ -12,16 +12,16 @@ python docs/roadmap/plan_tools.py --active
 python docs/roadmap/plan_tools.py --task T11
 ```
 
-At the current T08A implementation baseline, `--ready` yields **T18**. `--active` yields **T10, T11, T17, T19, T21 and T24**. T29 is the next native unlock but remains unready until T10 is explicitly accepted. Human recruitment, provider accounts/live calls, real charges, signing and store publication remain separately gated.
+At the current implementation baseline, `--ready` yields **no newly startable planned task**. `--active` yields **T10, T11, T17, T19, T21 and T24**. T18 is DONE. T29 is the next native unlock but remains unready until T10 is explicitly accepted. Human recruitment, provider accounts/live calls, real charges, signing and store publication remain separately gated.
 
 ## Current handoff
 
 The [post-PR14 reconciliation](23-post-pr14-reconciliation.md) is retained as historical evidence. Current status comes from [tasks.json](tasks.json) and the generated backlog.
 
-- **READY planned work:** T18 (deterministic pair and history comparison).
+- **READY planned work:** none at this graph state; T29 is the next coding unlock after owner `design_acceptance` closes T10.
 - **Active incomplete work:** T11 (human pilot gates/real evidence), T17 (production identity plus accepted-design integration), T19 (real payment rails/sandbox evidence and product policy) and T24 (deployment/recovery/live providers).
 - **Implemented pending review:** T10 (Direction A — The Dossier selected for the Inktrospect prototype; complete prototype + explicit owner design acceptance remain) and T21 (final design/integration/render review).
-- **Completed since PR #14:** T15 provider-independent Premium adapter/runtime work and T08A calibration-independent presentation/first-reveal policy are DONE; live model activation/evaluation and population calibration remain separately gated.
+- **Completed since PR #14:** T15 provider-independent Premium adapter/runtime work, T08A calibration-independent presentation/first-reveal policy and T18 deterministic pair/history comparison are DONE; live model activation/evaluation and population calibration remain separately gated.
 - **Next native unlock:** T10 DONE makes T29 ready because T01/T02/T27/T28 are already DONE.
 - **Optional enhancement:** T07 remains non-blocking if omitted from the approved marketed scope.
 
