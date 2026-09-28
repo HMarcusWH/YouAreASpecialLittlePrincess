@@ -23,8 +23,9 @@ from princess_contracts import generated as g
 
 from ..analysis import method_versions, rfc3339
 from ..content import presentation_registry, select_highlights
-from .template import (BASE_TEMPLATE_VERSION, FACT_SECTIONS, PREMIUM_SECTION, REFERENCE_SECTION,
-                       SUPPORTED_TEMPLATE_VERSIONS, TEMPLATE_VERSION, formatting_for)
+from .template import (BASE_TEMPLATE_VERSION, FACT_SECTIONS, HIGHLIGHT_PRESENTATION_VERSION,
+                       PREMIUM_SECTION, REFERENCE_SECTION, SUPPORTED_TEMPLATE_VERSIONS,
+                       TEMPLATE_VERSION, formatting_for)
 
 MAX_SOURCE_REGIONS = 128
 EVIDENCE_CLASS = {"MEASURED_VISUAL_FEATURE": "MEASURED", "COMPUTATIONAL_PROXY": "COMPUTATIONAL_PROXY"}
@@ -115,6 +116,9 @@ def _section_availability(facts: Sequence[Mapping[str, Any]]) -> str:
 
 
 def _highlight_sections(facts: Sequence[Mapping[str, Any]]) -> list[dict[str, Any]]:
+    registry = presentation_registry()
+    if registry["version"] != HIGHLIGHT_PRESENTATION_VERSION:
+        raise ValueError("highlight template/presentation authority drift")
     by_id = {f["fact_id"]: f for f in facts}
     selected = select_highlights(facts, limit=3)
     if not selected:
@@ -123,7 +127,7 @@ def _highlight_sections(facts: Sequence[Mapping[str, Any]]) -> list[dict[str, An
             "template": "HIGHLIGHT_PRIMARY",
             "availability": "INELIGIBLE",
             "fact_ids": [],
-            "content_ids": [presentation_registry()["fallback_content_id"]],
+            "content_ids": [registry["fallback_content_id"]],
             "premium_section_id": None,
         }]
     sections: list[dict[str, Any]] = []
