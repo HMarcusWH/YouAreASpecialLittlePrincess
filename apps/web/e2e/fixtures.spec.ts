@@ -62,6 +62,19 @@ test("disabled actions explain why with localized product copy", async ({ page }
   expect(describedBy).toBeTruthy();
   await expect(page.locator(`[id="${describedBy}"]`))
     .toHaveText("Premium is already unlocked for this report.");
+
+  await page.goto("/fixtures/free?locale=sv");
+  purchase = page.getByRole("button", { name: "Skaffa Premium" });
+  describedBy = await purchase.getAttribute("aria-describedby");
+  expect(describedBy).toBeTruthy();
+  await expect(page.locator(`[id="${describedBy}"]`)).toHaveText("Premium är inte tillgängligt ännu.");
+
+  await page.goto("/fixtures/owner-premium?locale=sv");
+  purchase = page.getByRole("button", { name: "Skaffa Premium" });
+  describedBy = await purchase.getAttribute("aria-describedby");
+  expect(describedBy).toBeTruthy();
+  await expect(page.locator(`[id="${describedBy}"]`))
+    .toHaveText("Premium är redan upplåst för den här rapporten.");
 });
 
 test("keyboard users reach the content first and focus is visible", async ({ page }) => {
