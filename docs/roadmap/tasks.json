@@ -677,18 +677,21 @@
       "owned_paths": [
         "src/princess_app/domain/content/",
         "content/",
-        "contracts/product/v1/"
+        "contracts/product/v1/",
+        "src/princess_app/domain/reports/"
       ],
       "coding_steps": [
         "Implement fixed versioned mechanical display axes with domains, family weights and missingness; do not use per-user auto-max normalization.",
         "Publish reviewed localized presentation labels separately from canonical English feature names, and version any fixed display-scale registry; inherent geometric domains may be approved without pretending population calibration exists.",
+        "Define a deterministic, versioned first-reveal/highlight selection policy and reviewed localized content IDs over eligible report facts; report assembly may emit an optional highlight section, while clients only render the server-selected result and honest no-eligible fallback.",
         "Add authored deterministic captions/geometric style labels and localization keys tied to evidence.",
         "Keep traditional packs inactive unless exact source/wording/runtime eligibility is separately approved; T26 structure does not supply active rules automatically."
       ],
-      "contract_handoff": "Normalization/content release IDs and deterministic outputs for T09/T13/T18.",
+      "contract_handoff": "Normalization/content release IDs, reviewed presentation labels/scales, and deterministic highlight selection/content outputs for report assembly plus T13/T17/T18/native consumers.",
       "acceptance": [
         "Monotonicity, unit/scale equivalence and partial-dependency behavior are tested.",
-        "No arbitrary psychological weights or double-counted correlated summaries; evidence labels travel to every view."
+        "No arbitrary psychological weights or double-counted correlated summaries; evidence labels travel to every view.",
+        "First-reveal selection is deterministic, versioned, support-fact bound and absent when no eligible highlight exists; clients never rank report facts themselves."
       ],
       "negative_tests": [
         "Zero denominator, constant scale, missing axis plotted zero, repeated signal overweighting, unsupported traditional inversion."
@@ -822,7 +825,7 @@
       ],
       "implementation_evidence": "PR #14 commit c5463a4 added contract-driven draft design tokens generated to CSS/TypeScript/Swift/Kotlin and a complete state/component handoff. The repository explicitly keeps the tokens DRAFT_PENDING_DESIGN_ACCEPTANCE. PR #23 packages a production-aware Claude Design handoff with an exact curated code/import manifest, complete responsive/native/print/share state matrix, synthetic fixture mapping, product-truth constraints and a pending owner acceptance record. The design tokens intentionally remain design-tokens/0.1-draft / DRAFT_PENDING_DESIGN_ACCEPTANCE.",
       "remaining_work": [
-        "Complete the selected Direction A — The Dossier interactive Inktrospect responsive/native/print/share prototype, resolve the documented illustrative contract findings without inventing client authority, and obtain explicit owner design_acceptance recorded in docs/design/CLAUDE_DESIGN_ACCEPTANCE.md before promoting T10 or the token status."
+        "Complete the selected Direction A — The Dossier interactive Inktrospect responsive/native/print/share prototype; keep backend-owned gaps explicitly PLANNED/ILLUSTRATIVE and hand them to T08/T18 rather than implementing client authority; obtain explicit owner design_acceptance recorded in docs/design/CLAUDE_DESIGN_ACCEPTANCE.md before promoting T10 or the token status."
       ]
     },
     {
@@ -1258,7 +1261,7 @@
       "implementation_evidence": "PR #14 established the working deterministic Free Next.js journey and T21 export integration. This T17 slice adds canonical ReportSummary/ReportPage contracts, owner-scoped paginated report history, report-scoped EvidenceBundle reads with stored digest/lineage validation, current-principal history UI, stored baseline/spacing/slant evidence views and cross-owner/browser regression coverage. PR #18 adds a reviewed pinned axe dependency and generated lockfile, automated WCAG A/AA browser-state coverage with a proven negative control, explicit fixture/live Playwright modes, and a mandatory isolated live Free upload-to-export CI journey that refreshes the queued run before deterministic worker execution.",
       "remaining_work": [
         "Implement production account sign-in and cross-device/account recovery after the ADR-002 identity provider decision.",
-        "Finish owner-accepted Inktrospect / The Dossier T10 design integration across responsive first-reveal, history, evidence and report states; consume only server-owned highlight selection once that contract is implemented."
+        "Finish owner-accepted Inktrospect / The Dossier T10 design integration across responsive first-reveal, history, evidence and report states; render the T08 server-owned highlight when present and an honest fallback when absent, never client-side salience."
       ]
     },
     {
