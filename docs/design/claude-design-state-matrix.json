@@ -61,7 +61,7 @@
     {
       "id": "first_reveal",
       "states": [
-        "prototype_illustrative_selection",
+        "legacy_v1_without_highlight",
         "server_owned_highlight_available",
         "no_eligible_highlight",
         "source_image_not_retained"
