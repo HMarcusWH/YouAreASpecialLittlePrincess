@@ -681,6 +681,7 @@
       ],
       "coding_steps": [
         "Implement fixed versioned mechanical display axes with domains, family weights and missingness; do not use per-user auto-max normalization.",
+        "Publish reviewed localized presentation labels separately from canonical English feature names, and version any fixed display-scale registry; inherent geometric domains may be approved without pretending population calibration exists.",
         "Add authored deterministic captions/geometric style labels and localization keys tied to evidence.",
         "Keep traditional packs inactive unless exact source/wording/runtime eligibility is separately approved; T26 structure does not supply active rules automatically."
       ],
@@ -821,7 +822,7 @@
       ],
       "implementation_evidence": "PR #14 commit c5463a4 added contract-driven draft design tokens generated to CSS/TypeScript/Swift/Kotlin and a complete state/component handoff. The repository explicitly keeps the tokens DRAFT_PENDING_DESIGN_ACCEPTANCE. PR #23 packages a production-aware Claude Design handoff with an exact curated code/import manifest, complete responsive/native/print/share state matrix, synthetic fixture mapping, product-truth constraints and a pending owner acceptance record. The design tokens intentionally remain design-tokens/0.1-draft / DRAFT_PENDING_DESIGN_ACCEPTANCE.",
       "remaining_work": [
-        "Run Claude Design against docs/design/CLAUDE_DESIGN_HANDOFF.md and the curated import manifest, compare three distinct directions, iterate the selected complete interactive responsive/native/print/share prototype, and obtain explicit owner design_acceptance recorded in docs/design/CLAUDE_DESIGN_ACCEPTANCE.md before promoting T10 or the token status."
+        "Complete the selected Direction A — The Dossier interactive Inktrospect responsive/native/print/share prototype, resolve the documented illustrative contract findings without inventing client authority, and obtain explicit owner design_acceptance recorded in docs/design/CLAUDE_DESIGN_ACCEPTANCE.md before promoting T10 or the token status."
       ]
     },
     {
@@ -1257,7 +1258,7 @@
       "implementation_evidence": "PR #14 established the working deterministic Free Next.js journey and T21 export integration. This T17 slice adds canonical ReportSummary/ReportPage contracts, owner-scoped paginated report history, report-scoped EvidenceBundle reads with stored digest/lineage validation, current-principal history UI, stored baseline/spacing/slant evidence views and cross-owner/browser regression coverage. PR #18 adds a reviewed pinned axe dependency and generated lockfile, automated WCAG A/AA browser-state coverage with a proven negative control, explicit fixture/live Playwright modes, and a mandatory isolated live Free upload-to-export CI journey that refreshes the queued run before deterministic worker execution.",
       "remaining_work": [
         "Implement production account sign-in and cross-device/account recovery after the ADR-002 identity provider decision.",
-        "Finish owner-accepted T10 design integration across responsive history/evidence/report states."
+        "Finish owner-accepted Inktrospect / The Dossier T10 design integration across responsive first-reveal, history, evidence and report states; consume only server-owned highlight selection once that contract is implemented."
       ]
     },
     {
@@ -1286,10 +1287,10 @@
         "contracts/product/v1/"
       ],
       "coding_steps": [
-        "Implement native-unit differences, common valid masks, method/version compatibility and fixed family scales before any overall score.",
+        "Extend the existing T01 Comparison wire schema/semantics with native-unit directional facts, common valid masks/coverage, per-input provenance, method/version compatibility and fixed family scales before any overall score; do not create a parallel comparison DTO.",
         "Resolve the existing cosine-range/schema conflict explicitly rather than clipping a value into a probability.",
         "Support same-owner Me-v-Me first and service contracts for separately granted partner inputs; T22 gates other-owner release.",
-        "Distinguish capture/date/task/method variation from writing change and qualify any similarity index with an evaluated mapping."
+        "Distinguish system ingestion/analysis/report timestamps from separately sourced writing/photo dates, task/method variation and writing change; qualify any similarity index with an evaluated mapping."
       ],
       "contract_handoff": "ComparisonDocument fixtures with directional facts, coverage and authorized evidence for web/native/export/Premium.",
       "acceptance": [
