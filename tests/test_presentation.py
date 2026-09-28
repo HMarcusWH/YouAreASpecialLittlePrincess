@@ -42,6 +42,12 @@ def test_presentation_compiler_outputs_are_exact_and_reviewed():
     assert all(path.read_text(encoding="utf-8") == expected for path in generator.OUTPUTS)
 
 
+def test_registry_access_is_defensive():
+    registry = presentation_registry()
+    registry["feature_labels"]["SLANT_ANGLE_MEAN"]["en"] = "mutated"
+    assert feature_label("SLANT_ANGLE_MEAN", "en") != "mutated"
+
+
 def test_registry_is_broad_across_six_mechanical_families():
     registry = presentation_registry()
     assert len(registry["feature_labels"]) == 64
