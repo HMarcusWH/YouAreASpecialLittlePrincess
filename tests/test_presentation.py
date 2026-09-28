@@ -252,7 +252,32 @@ def test_duplicate_json_keys_fail_closed(tmp_path):
         raise AssertionError("duplicate JSON keys must fail closed")
 
 
-def test_display_domain_access_is_defensive():\n    first = display_domain("SLANT_ANGLE_MEAN")\n    assert first is not None\n    first["min"] = 0\n    assert display_domain("SLANT_ANGLE_MEAN")["min"] == -90\n\ndef test_display_domains_are_non_population_and_slant_canvas_keeps_acceptance_boundary():
+def test_display_domain_access_is_defensive():\n    first = display_domain("SLANT_ANGLE_MEAN")\n    assert first is not None\n    first["min"] = 0\n    assert display_domain("SLANT_ANGLE_MEAN")["min"] == -90\n\ndef test_presentation_loader_rejects_nonfinite_and_symlink_inputs(tmp_path):
+    nonfinite = tmp_path / "nonfinite.json"
+    nonfinite.write_text('{"value": NaN}', encoding="utf-8")
+    try:
+        generator._load_json(nonfinite)
+    except ValueError as exc:
+        assert "non-finite JSON token" in str(exc)
+    else:
+        raise AssertionError("non-finite JSON must fail closed")
+
+    target = tmp_path / "target.json"
+    target.write_text("{}", encoding="utf-8")
+    link = tmp_path / "link.json"
+    try:
+        link.symlink_to(target)
+    except (OSError, NotImplementedError):
+        return
+    try:
+        generator._load_json(link)
+    except ValueError as exc:
+        assert "symlink is not reviewed presentation input" in str(exc)
+    else:
+        raise AssertionError("symlinked presentation input must fail closed")
+
+
+def test_display_domains_are_non_population_and_slant_canvas_keeps_acceptance_boundary():
     registry = presentation_registry()
     assert {row["kind"] for row in registry["display_domains"].values()} <= {
         "GEOMETRIC_CANVAS", "MATHEMATICAL_DOMAIN",
