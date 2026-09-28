@@ -1,6 +1,6 @@
-# Design handoff — contract-driven report experience (T10)
+# Design handoff — Inktrospect contract-driven report experience (T10)
 
-Status: **DRAFT, pending the `design_acceptance` owner gate.** This file and `packages/design-tokens/` give T17 (web), T21 (PDF/cards) and T29–T31 (native) stable names to build against. Every value, layout and label here is an engineering default. None of it is an accepted design, and none of it is a shipping promise about a statistic or feature.
+Status: **DRAFT, pending the `design_acceptance` owner gate.** The working public brand is **Inktrospect** and the selected Claude Design direction is **A — The Dossier**; repository/package namespaces such as `Princess`/`princess_*` remain internal for now. This file and `packages/design-tokens/` give T17 (web), T21 (PDF/cards) and T29–T31 (native) stable names to build against. Every value, layout and label here remains unaccepted until owner review. None of it is a shipping promise about a statistic or feature.
 
 Sources: [report design](../roadmap/04-reports-design.md), [web client](../roadmap/10-web-client-and-api-integration.md), [mobile](../roadmap/11-mobile-architecture.md), [commerce](../roadmap/14-payments-entitlements-and-commerce.md) and the generated contracts in `contracts/product/v1/`.
 
@@ -25,6 +25,7 @@ Each screen lists the states the design must cover, beyond the happy path.
 | Permission and upload | `POST /v1/me/permissions`, `POST /v1/uploads` | consent choices unselected; service processing required; image retention and AI processing offered separately; challenge required after the free quota; quota exceeded (`upload_quota_exceeded`, retry-after) |
 | Crop, orientation, preview | client only, then `…/complete` | EXIF rotation applied; unsupported format (HEIC before conversion, GIF, WebP); too large or too small; pixel bomb rejected; completion in progress; bytes changed (`upload_completed_with_different_bytes`) |
 | Processing | `GET /v1/analyses/{run_id}` | `QUEUED`, `RUNNING`, `SUCCEEDED`, `FAILED` (with safe error code), `CANCELLED`, `owner_transferred`; resume after refresh without resubmitting |
+| First reveal / What stands out | future server-owned highlight selection carried by the existing `ReportSection` shape | selected highlight with supporting facts; no eligible highlight; source image retained/not retained; prototype selection remains illustrative until implemented; never select on the client |
 | Free report | `ReportViewModel` projection `FREE`/`OWNER` | complete; partial (some families `MISSING`); uncalibrated proxies; no eligible benchmark (`notice.reference_unavailable`); image revoked (`view.owner-image-revoked.json`); original not retained |
 | Premium offer and consent | `GET /v1/catalog`, `GET /v1/me/credits` | offer with processing recipient and success/failure terms; no credit; credit from another platform (not spendable by default); sales disabled (`commerce_disabled`) |
 | Purchase | web checkout or native store | pending payment; Ask to Buy / pending store purchase; cancelled; failed; restored; claim `account_mismatch` |
@@ -44,6 +45,7 @@ Each screen lists the states the design must cover, beyond the happy path.
 | `EvidenceBadge` | `Fact.evidence_class`, `Notice.class` | Colour role `evidence-*` plus icon plus label; tooltip links to the method (`method_id`, `method_version`). |
 | `QualityHint` | `Fact.quality` (`state`, `n_observations`, `confidence_kind`, `missing_reason`) | `confidence_kind: UNCALIBRATED` is always shown as "not calibrated", never as a percentage. |
 | `ReportSection` | `ReportSection.template`, `availability`, `fact_ids` | Template IDs are the stable layout keys (`individual-report/1`). A `LOCKED` section shows the product description only. |
+| `HighlightReveal` | a server-selected highlight `ReportSection` using `template`, `fact_ids` and `content_ids` | Design primitive for “What stands out”. The prototype may illustrate it, but production clients must never choose the salient fact themselves. |
 | `NoticeBar` | `ReportViewModel.notices[]` | Covers measured, proxy, reference (unavailable), traditional (not included), AI and privacy notices. |
 | `ActionBar` | `ReportViewModel.actions[]` (`kind`, `enabled`, `reason`) | A disabled action shows its reason key (for example `commerce_disabled`, `sharing_disabled`, `comparison_not_available`). |
 | `HandwritingCanvas` | `authorized_asset_ids`, `EvidenceBundle` regions and frames | Draws overlays only in the evidence coordinate frames. Absent when the image is not authorized. |
@@ -97,6 +99,17 @@ English and Swedish ship first. Designs must hold long Swedish compounds (for ex
 ## 9. Handoff checklist for a design tool
 
 Provide: this file, `contracts/product/v1/schemas/`, `fixtures/reports/` (synthetic), `packages/design-tokens/tokens.json`, the evidence-class and availability tables above, and `docs/roadmap/04-reports-design.md`. Mark every illustrative number in mockups. Generated code from a design tool is reviewed like any other change: dependencies, licences, state handling and security.
+
+## 9.1 Inktrospect design-session contract findings
+
+The selected **A — The Dossier** exploration exposed several useful contract boundaries. They are recorded here so the prototype can stay ambitious without silently inventing backend truth.
+
+- **First reveal / salience:** there is not yet a production field that selects “What stands out”. The intended resolution is a server-owned, versioned selection carried through the existing `ReportSection` structure (`template`, supporting `fact_ids`, reviewed `content_ids`). Until implemented, any chosen standout in Claude Design is explicitly illustrative; web/native clients must not rank facts themselves.
+- **Comparison:** `contracts/product/v1/schemas/comparison.schema.json` already exists. It is a deliberately skeletal T01 wire contract, not the completed T18 product. T18 extends/implements directional facts, common-feature coverage, per-input provenance, fixed family scales and invariant Me-vs-Me/pair semantics. Do not create a parallel Comparison DTO to satisfy a mockup.
+- **Feature labels:** the canonical feature database already contains English canonical names. `packages/report-web` currently falls back to humanizing IDs until T08 publishes reviewed presentation/localization content. Canonical English names are not a complete Swedish/UI copy catalogue.
+- **Fixed visual scales:** a slant fan may use the inherent geometric `-90°…+90°` canvas, while the current slant extractor only accepts observations within `-60°…+60°`; the design must make that distinction clear. Proposed arbitrary ranges such as a `0–20× x-height` margin bar have no current authority and remain illustrative until a reviewed versioned display-scale policy exists.
+- **Dates:** database/report `created_at` values describe system events (ingestion/analysis/report creation), not necessarily when handwriting was written or an imported photo was originally taken. History/Me-vs-Me must preserve those meanings and add separately labelled provenance if a true writing/photo date is introduced; never relabel ingestion time as capture time.
+- **Disabled-action copy:** committed report fixtures use `premium_not_yet_available` and `already_unlocked`; these must always resolve to reviewed localized user copy rather than leaking raw reason keys.
 
 ## 10. Acceptance (owner gate `design_acceptance`)
 
