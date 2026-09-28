@@ -31,6 +31,23 @@ test("print HTML carries every projected fact exactly as the interactive report 
   assert.ok(html.includes(`r${view.source_revision}`) && !html.includes("<script"));
 });
 
+test("server-owned highlight content renders from reviewed presentation IDs", () => {
+  const view = structuredClone(fixture("export-no-image"));
+  view.sections.unshift({
+    section_id: "section.highlight.primary",
+    template: "HIGHLIGHT_PRIMARY",
+    availability: "UNCALIBRATED",
+    fact_ids: ["fact.SLANT_RIGHT_FRACTION"],
+    content_ids: ["content.highlight.v1.slant.right.almost_all"],
+    premium_section_id: null,
+  });
+  const html = run({ view, layout: "A4", locale: "en", generated_at: GENERATED }, "--html").stdout.toString();
+  assert.ok(html.includes("What stands out"));
+  assert.ok(html.includes("Almost every accepted slant observation leans right."));
+  assert.ok(html.includes("Fraction of right-slanted strokes"));
+  assert.ok(!html.includes("content.highlight.v1."));
+});
+
 test("hostile strings are escaped and nothing can load or run", () => {
   const view = fixture("export-no-image");
   const target = view.facts.find((f: { availability: string }) => f.availability === "READY");
