@@ -807,8 +807,9 @@ contracts/product/v1/
 ### Coding sequence
 
 1. Implement fixed versioned mechanical display axes with domains, family weights and missingness; do not use per-user auto-max normalization.
-2. Add authored deterministic captions/geometric style labels and localization keys tied to evidence.
-3. Keep traditional packs inactive unless exact source/wording/runtime eligibility is separately approved; T26 structure does not supply active rules automatically.
+2. Publish reviewed localized presentation labels separately from canonical English feature names, and version any fixed display-scale registry; inherent geometric domains may be approved without pretending population calibration exists.
+3. Add authored deterministic captions/geometric style labels and localization keys tied to evidence.
+4. Keep traditional packs inactive unless exact source/wording/runtime eligibility is separately approved; T26 structure does not supply active rules automatically.
 
 ### Contract and integration handoff
 
@@ -951,7 +952,7 @@ PR #14 commit c5463a4 added contract-driven draft design tokens generated to CSS
 
 ### Remaining work
 
-- Run Claude Design against docs/design/CLAUDE_DESIGN_HANDOFF.md and the curated import manifest, compare three distinct directions, iterate the selected complete interactive responsive/native/print/share prototype, and obtain explicit owner design_acceptance recorded in docs/design/CLAUDE_DESIGN_ACCEPTANCE.md before promoting T10 or the token status.
+- Complete the selected Direction A — The Dossier interactive Inktrospect responsive/native/print/share prototype, resolve the documented illustrative contract findings without inventing client authority, and obtain explicit owner design_acceptance recorded in docs/design/CLAUDE_DESIGN_ACCEPTANCE.md before promoting T10 or the token status.
 
 ### Acceptance evidence
 
@@ -1433,7 +1434,7 @@ PR #14 established the working deterministic Free Next.js journey and T21 export
 ### Remaining work
 
 - Implement production account sign-in and cross-device/account recovery after the ADR-002 identity provider decision.
-- Finish owner-accepted T10 design integration across responsive history/evidence/report states.
+- Finish owner-accepted Inktrospect / The Dossier T10 design integration across responsive first-reveal, history, evidence and report states; consume only server-owned highlight selection once that contract is implemented.
 
 ### Acceptance evidence
 
@@ -1490,10 +1491,10 @@ contracts/product/v1/
 
 ### Coding sequence
 
-1. Implement native-unit differences, common valid masks, method/version compatibility and fixed family scales before any overall score.
+1. Extend the existing T01 Comparison wire schema/semantics with native-unit directional facts, common valid masks/coverage, per-input provenance, method/version compatibility and fixed family scales before any overall score; do not create a parallel comparison DTO.
 2. Resolve the existing cosine-range/schema conflict explicitly rather than clipping a value into a probability.
 3. Support same-owner Me-v-Me first and service contracts for separately granted partner inputs; T22 gates other-owner release.
-4. Distinguish capture/date/task/method variation from writing change and qualify any similarity index with an evaluated mapping.
+4. Distinguish system ingestion/analysis/report timestamps from separately sourced writing/photo dates, task/method variation and writing change; qualify any similarity index with an evaluated mapping.
 
 ### Contract and integration handoff
 
