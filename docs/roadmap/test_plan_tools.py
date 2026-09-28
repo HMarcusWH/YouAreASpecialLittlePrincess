@@ -56,8 +56,10 @@ class PlanTests(unittest.TestCase):
         ready = [task["id"] for task in plan_tools.ready_tasks(data)]
         if by_id["T08A"]["status"] == "PLANNED":
             self.assertIn("T08A", ready)
-        elif by_id["T08A"]["status"] == "DONE":
+        elif by_id["T08A"]["status"] == "DONE" and by_id["T18"]["status"] == "PLANNED":
             self.assertIn("T18", ready)
+        else:
+            self.assertNotIn("T18", ready)
         self.assertEqual(plan_tools.validate_plan(data), [])
 
     def test_active_tasks_are_distinct_from_ready_work(self):
