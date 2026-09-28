@@ -130,6 +130,15 @@
       "Comparison": {
         "additionalProperties": false,
         "properties": {
+          "candidate_feature_ids": {
+            "items": {
+              "$ref": "#/components/schemas/OpaqueId"
+            },
+            "maxItems": 512,
+            "minItems": 1,
+            "type": "array",
+            "uniqueItems": true
+          },
           "common_feature_ids": {
             "items": {
               "$ref": "#/components/schemas/OpaqueId"
@@ -155,14 +164,33 @@
           "contract_version": {
             "const": "1.0.0"
           },
+          "coverage": {
+            "$ref": "#/components/schemas/ComparisonCoverage"
+          },
           "created_at": {
             "$ref": "#/components/schemas/Rfc3339Utc"
+          },
+          "differences": {
+            "items": {
+              "$ref": "#/components/schemas/ComparisonDifference"
+            },
+            "maxItems": 7680,
+            "minItems": 0,
+            "type": "array"
+          },
+          "exclusions": {
+            "items": {
+              "$ref": "#/components/schemas/ComparisonExclusion"
+            },
+            "maxItems": 512,
+            "minItems": 0,
+            "type": "array"
           },
           "facts": {
             "items": {
               "$ref": "#/components/schemas/Fact"
             },
-            "maxItems": 1024,
+            "maxItems": 0,
             "minItems": 0,
             "type": "array"
           },
@@ -175,6 +203,14 @@
             "type": "array",
             "uniqueItems": true
           },
+          "inputs": {
+            "items": {
+              "$ref": "#/components/schemas/ComparisonInput"
+            },
+            "maxItems": 16,
+            "minItems": 2,
+            "type": "array"
+          },
           "kind": {
             "enum": [
               "PAIR",
@@ -185,6 +221,12 @@
           },
           "method_version": {
             "$ref": "#/components/schemas/Version"
+          },
+          "ordering_basis": {
+            "$ref": "#/components/schemas/ComparisonOrdering"
+          },
+          "presentation_version": {
+            "$ref": "#/components/schemas/Version"
           }
         },
         "required": [
@@ -192,14 +234,298 @@
           "comparison_id",
           "kind",
           "created_at",
+          "ordering_basis",
           "input_report_ids",
+          "inputs",
+          "candidate_feature_ids",
           "common_feature_ids",
+          "coverage",
+          "differences",
+          "exclusions",
           "facts",
           "method_version",
+          "presentation_version",
           "comparison_digest"
         ],
         "title": "Comparison",
         "type": "object"
+      },
+      "ComparisonCoverage": {
+        "additionalProperties": false,
+        "properties": {
+          "candidate_n": {
+            "maximum": 512,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "common_fraction": {
+            "maximum": 1,
+            "minimum": 0,
+            "type": "number"
+          },
+          "common_n": {
+            "maximum": 512,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "excluded_n": {
+            "maximum": 512,
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "candidate_n",
+          "common_n",
+          "excluded_n",
+          "common_fraction"
+        ],
+        "type": "object"
+      },
+      "ComparisonDifference": {
+        "additionalProperties": false,
+        "properties": {
+          "absolute_delta": {
+            "minimum": 0,
+            "type": "number"
+          },
+          "direction": {
+            "$ref": "#/components/schemas/ComparisonDirection"
+          },
+          "display_domain": {
+            "$ref": "#/components/schemas/ComparisonDisplayDomain"
+          },
+          "feature_id": {
+            "$ref": "#/components/schemas/OpaqueId"
+          },
+          "formatting_key": {
+            "maxLength": 128,
+            "type": "string"
+          },
+          "from_fact_id": {
+            "$ref": "#/components/schemas/OpaqueId"
+          },
+          "from_position": {
+            "maximum": 15,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "method_id": {
+            "$ref": "#/components/schemas/OpaqueId"
+          },
+          "method_version": {
+            "$ref": "#/components/schemas/Version"
+          },
+          "precision": {
+            "anyOf": [
+              {
+                "maximum": 12,
+                "minimum": 0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "signed_delta": {
+            "type": "number"
+          },
+          "to_fact_id": {
+            "$ref": "#/components/schemas/OpaqueId"
+          },
+          "to_position": {
+            "maximum": 15,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "unit": {
+            "$ref": "#/components/schemas/Unit"
+          },
+          "value_from": {
+            "type": "number"
+          },
+          "value_to": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "feature_id",
+          "from_position",
+          "to_position",
+          "from_fact_id",
+          "to_fact_id",
+          "unit",
+          "value_from",
+          "value_to",
+          "signed_delta",
+          "absolute_delta",
+          "direction",
+          "method_id",
+          "method_version",
+          "formatting_key",
+          "precision",
+          "display_domain"
+        ],
+        "type": "object"
+      },
+      "ComparisonDirection": {
+        "enum": [
+          "FROM_GREATER",
+          "TO_GREATER",
+          "EQUAL"
+        ],
+        "maxLength": 32,
+        "type": "string"
+      },
+      "ComparisonDisplayDomain": {
+        "additionalProperties": false,
+        "properties": {
+          "accepted_max": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "accepted_min": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "kind": {
+            "enum": [
+              "GEOMETRIC_CANVAS",
+              "MATHEMATICAL_DOMAIN"
+            ],
+            "maxLength": 32,
+            "type": "string"
+          },
+          "max": {
+            "type": "number"
+          },
+          "min": {
+            "type": "number"
+          },
+          "unit": {
+            "$ref": "#/components/schemas/Unit"
+          }
+        },
+        "required": [
+          "min",
+          "max",
+          "unit",
+          "kind",
+          "accepted_min",
+          "accepted_max"
+        ],
+        "type": "object"
+      },
+      "ComparisonExclusion": {
+        "additionalProperties": false,
+        "properties": {
+          "affected_positions": {
+            "items": {
+              "maximum": 15,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "maxItems": 16,
+            "minItems": 1,
+            "type": "array",
+            "uniqueItems": true
+          },
+          "feature_id": {
+            "$ref": "#/components/schemas/OpaqueId"
+          },
+          "reason": {
+            "$ref": "#/components/schemas/ComparisonExclusionReason"
+          }
+        },
+        "required": [
+          "feature_id",
+          "reason",
+          "affected_positions"
+        ],
+        "type": "object"
+      },
+      "ComparisonExclusionReason": {
+        "enum": [
+          "ABSENT",
+          "UNAVAILABLE",
+          "NON_NUMERIC",
+          "UNIT_MISMATCH",
+          "DOMAIN_UNIT_MISMATCH",
+          "METHOD_ID_MISMATCH",
+          "METHOD_VERSION_MISMATCH",
+          "FORMATTING_MISMATCH"
+        ],
+        "maxLength": 32,
+        "type": "string"
+      },
+      "ComparisonInput": {
+        "additionalProperties": false,
+        "properties": {
+          "analysis_created_at": {
+            "$ref": "#/components/schemas/Rfc3339Utc"
+          },
+          "analysis_id": {
+            "$ref": "#/components/schemas/OpaqueId"
+          },
+          "position": {
+            "maximum": 15,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "report_created_at": {
+            "$ref": "#/components/schemas/Rfc3339Utc"
+          },
+          "report_digest": {
+            "$ref": "#/components/schemas/Sha256"
+          },
+          "report_id": {
+            "$ref": "#/components/schemas/OpaqueId"
+          },
+          "revision": {
+            "maximum": 1000000,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "run_id": {
+            "$ref": "#/components/schemas/OpaqueId"
+          },
+          "versions": {
+            "$ref": "#/components/schemas/VersionSet"
+          }
+        },
+        "required": [
+          "position",
+          "report_id",
+          "revision",
+          "report_digest",
+          "report_created_at",
+          "analysis_id",
+          "run_id",
+          "analysis_created_at",
+          "versions"
+        ],
+        "type": "object"
+      },
+      "ComparisonOrdering": {
+        "enum": [
+          "REQUEST_ORDER",
+          "REPORT_CREATED_AT"
+        ],
+        "maxLength": 32,
+        "type": "string"
       },
       "CoordinateFrame": {
         "additionalProperties": false,

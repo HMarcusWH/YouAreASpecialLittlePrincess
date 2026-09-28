@@ -33,7 +33,7 @@ Use `python docs/roadmap/plan_tools.py --ready`, `--active` or `--task ID`. Edit
 | [T15 — Evidence-bound OpenAI adapter](#t15) | DONE | T01, T09, T26, T27 | premium-backend |
 | [T16 — Model evaluation and generation policy](#t16) | PLANNED | T06, T15 | evaluation |
 | [T17 — Interactive Free web product](#t17) | IN_PROGRESS | T02, T04, T08A, T09, T10, T28 | frontend |
-| [T18 — Deterministic pair and history comparison](#t18) | PLANNED | T08A, T09 | statistics-report |
+| [T18 — Deterministic pair and history comparison](#t18) | IN_PROGRESS | T08A, T09 | statistics-report |
 | [T19 — Cross-platform purchase ledger entitlements and metered jobs](#t19) | IN_PROGRESS | T02, T03, T09, T15, T27 | commerce |
 | [T20 — Premium and paid-pair web experience](#t20) | PLANNED | T15, T16, T17, T18, T19, T21, T24 | frontend-premium |
 | [T21 — Same-content PDF and share-card rendering](#t21) | IMPLEMENTED_PENDING_REVIEW | T09, T10, T17 | report-frontend |
@@ -1537,7 +1537,7 @@ No approval is created by this task brief. Mock/disabled implementation is not a
 <a id="t18"></a>
 ## T18 — Deterministic pair and history comparison
 
-**Status:** `PLANNED` · **Owner:** statistics-report · **Milestone:** comparison
+**Status:** `IN_PROGRESS` · **Owner:** statistics-report · **Milestone:** comparison
 
 **Hard predecessors:** [T08A](#t08a), [T09](#t09)
 **Platforms:** shared, backend
@@ -1569,6 +1569,14 @@ contracts/product/v1/
 ### Contract and integration handoff
 
 ComparisonDocument fixtures with directional facts, coverage and authorized evidence for web/native/export/Premium.
+
+### Implementation evidence
+
+T18 implementation started on task/T18-deterministic-comparison from main 50a4c90b448d95560b045031f01514200b6f75fc. The scoped PR extends the existing Comparison contract and implements server-side native-unit pair/history comparison using T08A fixed non-population domains; exact-head acceptance evidence is pending.
+
+### Remaining work
+
+- Complete exact-head contract/domain/application invariant qualification and review; then record the final merged evidence before promoting T18 to DONE.
 
 ### Acceptance evidence
 

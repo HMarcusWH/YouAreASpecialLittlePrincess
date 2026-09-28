@@ -39,8 +39,8 @@
     "TEXT_BLOCK_HORIZONTAL_CENTER",
     "TEXT_BLOCK_VERTICAL_CENTER"
   ],
-  "comparison_digest": "49965ff78c7fcb261f7f9166a5796274b860817567b38ce192bee23896862c17",
-  "comparison_id": "comparison_pair_ab",
+  "comparison_digest": "968aeb8bd232b15fe2566b0ad1437a88e332b75cd0ea0d9cf4ee5a175746b132",
+  "comparison_id": "comparison_history",
   "contract_version": "1.0.0",
   "coverage": {
     "candidate_n": 18,
@@ -76,6 +76,31 @@
       "value_to": 0.8882968997084526
     },
     {
+      "absolute_delta": 0.15000000000000002,
+      "direction": "FROM_GREATER",
+      "display_domain": {
+        "accepted_max": null,
+        "accepted_min": null,
+        "kind": "MATHEMATICAL_DOMAIN",
+        "max": 1,
+        "min": 0,
+        "unit": "normalized"
+      },
+      "feature_id": "INK_DARKNESS_MEAN",
+      "formatting_key": "measurement.normalized",
+      "from_fact_id": "fact.INK_DARKNESS_MEAN",
+      "from_position": 1,
+      "method_id": "grayscale_darkness_v1",
+      "method_version": "1.0.0",
+      "precision": 3,
+      "signed_delta": -0.15000000000000002,
+      "to_fact_id": "fact.INK_DARKNESS_MEAN",
+      "to_position": 2,
+      "unit": "normalized",
+      "value_from": 0.8882968997084526,
+      "value_to": 0.7382968997084526
+    },
+    {
       "absolute_delta": 0.1,
       "direction": "TO_GREATER",
       "display_domain": {
@@ -99,6 +124,31 @@
       "unit": "ratio",
       "value_from": 0.0015009005403241946,
       "value_to": 0.10150090054032421
+    },
+    {
+      "absolute_delta": 0.05000000000000001,
+      "direction": "FROM_GREATER",
+      "display_domain": {
+        "accepted_max": null,
+        "accepted_min": null,
+        "kind": "MATHEMATICAL_DOMAIN",
+        "max": 1,
+        "min": 0,
+        "unit": "ratio"
+      },
+      "feature_id": "INK_SATURATION_FRACTION",
+      "formatting_key": "measurement.ratio",
+      "from_fact_id": "fact.INK_SATURATION_FRACTION",
+      "from_position": 1,
+      "method_id": "grayscale_darkness_v1",
+      "method_version": "1.0.0",
+      "precision": 2,
+      "signed_delta": -0.05000000000000001,
+      "to_fact_id": "fact.INK_SATURATION_FRACTION",
+      "to_position": 2,
+      "unit": "ratio",
+      "value_from": 0.10150090054032421,
+      "value_to": 0.0515009005403242
     },
     {
       "absolute_delta": 0.09999999999999998,
@@ -126,6 +176,31 @@
       "value_to": 0.6053763440860215
     },
     {
+      "absolute_delta": 0.14999999999999997,
+      "direction": "FROM_GREATER",
+      "display_domain": {
+        "accepted_max": null,
+        "accepted_min": null,
+        "kind": "MATHEMATICAL_DOMAIN",
+        "max": 1,
+        "min": 0,
+        "unit": "ratio"
+      },
+      "feature_id": "LINE_LENGTH_MEAN_REL",
+      "formatting_key": "measurement.ratio",
+      "from_fact_id": "fact.LINE_LENGTH_MEAN_REL",
+      "from_position": 1,
+      "method_id": "line_width_page_ratio_v1",
+      "method_version": "1.0.0",
+      "precision": 2,
+      "signed_delta": -0.14999999999999997,
+      "to_fact_id": "fact.LINE_LENGTH_MEAN_REL",
+      "to_position": 2,
+      "unit": "ratio",
+      "value_from": 0.6053763440860215,
+      "value_to": 0.4553763440860215
+    },
+    {
       "absolute_delta": 0.09999999999999998,
       "direction": "TO_GREATER",
       "display_domain": {
@@ -149,6 +224,31 @@
       "unit": "score_0_1",
       "value_from": 0.2108843537414966,
       "value_to": 0.3108843537414966
+    },
+    {
+      "absolute_delta": 0.14999999999999997,
+      "direction": "FROM_GREATER",
+      "display_domain": {
+        "accepted_max": null,
+        "accepted_min": null,
+        "kind": "MATHEMATICAL_DOMAIN",
+        "max": 1,
+        "min": 0,
+        "unit": "score_0_1"
+      },
+      "feature_id": "MARGIN_SYMMETRY",
+      "formatting_key": "measurement.score_0_1",
+      "from_fact_id": "fact.MARGIN_SYMMETRY",
+      "from_position": 1,
+      "method_id": "margin_balance_index_v1",
+      "method_version": "1.0.0",
+      "precision": 2,
+      "signed_delta": -0.14999999999999997,
+      "to_fact_id": "fact.MARGIN_SYMMETRY",
+      "to_position": 2,
+      "unit": "score_0_1",
+      "value_from": 0.3108843537414966,
+      "value_to": 0.16088435374149662
     },
     {
       "absolute_delta": 0.09999999999999998,
@@ -176,6 +276,31 @@
       "value_to": 0.6876577840112201
     },
     {
+      "absolute_delta": 0.15000000000000002,
+      "direction": "FROM_GREATER",
+      "display_domain": {
+        "accepted_max": null,
+        "accepted_min": null,
+        "kind": "MATHEMATICAL_DOMAIN",
+        "max": 1,
+        "min": 0,
+        "unit": "ratio"
+      },
+      "feature_id": "PAGE_HORIZONTAL_DENSITY",
+      "formatting_key": "measurement.ratio",
+      "from_fact_id": "fact.PAGE_HORIZONTAL_DENSITY",
+      "from_position": 1,
+      "method_id": "text_bounds_canvas_ratio_v1",
+      "method_version": "1.0.0",
+      "precision": 2,
+      "signed_delta": -0.15000000000000002,
+      "to_fact_id": "fact.PAGE_HORIZONTAL_DENSITY",
+      "to_position": 2,
+      "unit": "ratio",
+      "value_from": 0.6876577840112201,
+      "value_to": 0.5376577840112201
+    },
+    {
       "absolute_delta": 0.09999999999999998,
       "direction": "TO_GREATER",
       "display_domain": {
@@ -199,6 +324,31 @@
       "unit": "ratio",
       "value_from": 0.5917721518987342,
       "value_to": 0.6917721518987342
+    },
+    {
+      "absolute_delta": 0.15000000000000002,
+      "direction": "FROM_GREATER",
+      "display_domain": {
+        "accepted_max": null,
+        "accepted_min": null,
+        "kind": "MATHEMATICAL_DOMAIN",
+        "max": 1,
+        "min": 0,
+        "unit": "ratio"
+      },
+      "feature_id": "PAGE_VERTICAL_DENSITY",
+      "formatting_key": "measurement.ratio",
+      "from_fact_id": "fact.PAGE_VERTICAL_DENSITY",
+      "from_position": 1,
+      "method_id": "text_bounds_canvas_ratio_v1",
+      "method_version": "1.0.0",
+      "precision": 2,
+      "signed_delta": -0.15000000000000002,
+      "to_fact_id": "fact.PAGE_VERTICAL_DENSITY",
+      "to_position": 2,
+      "unit": "ratio",
+      "value_from": 0.6917721518987342,
+      "value_to": 0.5417721518987342
     },
     {
       "absolute_delta": 17.999999999999996,
@@ -226,6 +376,31 @@
       "value_to": 38.075050431612254
     },
     {
+      "absolute_delta": 26.999999999999996,
+      "direction": "FROM_GREATER",
+      "display_domain": {
+        "accepted_max": 60,
+        "accepted_min": -60,
+        "kind": "GEOMETRIC_CANVAS",
+        "max": 90,
+        "min": -90,
+        "unit": "degrees"
+      },
+      "feature_id": "SLANT_ANGLE_MEAN",
+      "formatting_key": "measurement.degrees",
+      "from_fact_id": "fact.SLANT_ANGLE_MEAN",
+      "from_position": 1,
+      "method_id": "oriented_component_axis_v1",
+      "method_version": "1.0.0",
+      "precision": 1,
+      "signed_delta": -26.999999999999996,
+      "to_fact_id": "fact.SLANT_ANGLE_MEAN",
+      "to_position": 2,
+      "unit": "degrees",
+      "value_from": 38.075050431612254,
+      "value_to": 11.075050431612258
+    },
+    {
       "absolute_delta": 18.0,
       "direction": "TO_GREATER",
       "display_domain": {
@@ -249,6 +424,31 @@
       "unit": "degrees",
       "value_from": 20.71525089687971,
       "value_to": 38.71525089687971
+    },
+    {
+      "absolute_delta": 27.0,
+      "direction": "FROM_GREATER",
+      "display_domain": {
+        "accepted_max": 60,
+        "accepted_min": -60,
+        "kind": "GEOMETRIC_CANVAS",
+        "max": 90,
+        "min": -90,
+        "unit": "degrees"
+      },
+      "feature_id": "SLANT_ANGLE_MEDIAN",
+      "formatting_key": "measurement.degrees",
+      "from_fact_id": "fact.SLANT_ANGLE_MEDIAN",
+      "from_position": 1,
+      "method_id": "oriented_component_axis_v1",
+      "method_version": "1.0.0",
+      "precision": 1,
+      "signed_delta": -27.0,
+      "to_fact_id": "fact.SLANT_ANGLE_MEDIAN",
+      "to_position": 2,
+      "unit": "degrees",
+      "value_from": 38.71525089687971,
+      "value_to": 11.71525089687971
     },
     {
       "absolute_delta": 0.09999999999999998,
@@ -276,6 +476,31 @@
       "value_to": 0.9393804484051045
     },
     {
+      "absolute_delta": 0.15000000000000002,
+      "direction": "FROM_GREATER",
+      "display_domain": {
+        "accepted_max": null,
+        "accepted_min": null,
+        "kind": "MATHEMATICAL_DOMAIN",
+        "max": 1,
+        "min": 0,
+        "unit": "score_0_1"
+      },
+      "feature_id": "SLANT_CONSISTENCY",
+      "formatting_key": "measurement.score_0_1",
+      "from_fact_id": "fact.SLANT_CONSISTENCY",
+      "from_position": 1,
+      "method_id": "oriented_component_axis_v1",
+      "method_version": "1.0.0",
+      "precision": 2,
+      "signed_delta": -0.15000000000000002,
+      "to_fact_id": "fact.SLANT_CONSISTENCY",
+      "to_position": 2,
+      "unit": "score_0_1",
+      "value_from": 0.9393804484051045,
+      "value_to": 0.7893804484051045
+    },
+    {
       "absolute_delta": 0.10000000000000003,
       "direction": "TO_GREATER",
       "display_domain": {
@@ -299,6 +524,31 @@
       "unit": "ratio",
       "value_from": 0.2692307692307692,
       "value_to": 0.36923076923076925
+    },
+    {
+      "absolute_delta": 0.15000000000000002,
+      "direction": "FROM_GREATER",
+      "display_domain": {
+        "accepted_max": null,
+        "accepted_min": null,
+        "kind": "MATHEMATICAL_DOMAIN",
+        "max": 1,
+        "min": 0,
+        "unit": "ratio"
+      },
+      "feature_id": "SLANT_EXTREME_FRACTION",
+      "formatting_key": "measurement.ratio",
+      "from_fact_id": "fact.SLANT_EXTREME_FRACTION",
+      "from_position": 1,
+      "method_id": "oriented_component_axis_v1",
+      "method_version": "1.0.0",
+      "precision": 2,
+      "signed_delta": -0.15000000000000002,
+      "to_fact_id": "fact.SLANT_EXTREME_FRACTION",
+      "to_position": 2,
+      "unit": "ratio",
+      "value_from": 0.36923076923076925,
+      "value_to": 0.21923076923076923
     },
     {
       "absolute_delta": 0.1,
@@ -326,6 +576,31 @@
       "value_to": 0.1
     },
     {
+      "absolute_delta": 0.05,
+      "direction": "FROM_GREATER",
+      "display_domain": {
+        "accepted_max": null,
+        "accepted_min": null,
+        "kind": "MATHEMATICAL_DOMAIN",
+        "max": 1,
+        "min": 0,
+        "unit": "ratio"
+      },
+      "feature_id": "SLANT_LEFT_FRACTION",
+      "formatting_key": "measurement.ratio",
+      "from_fact_id": "fact.SLANT_LEFT_FRACTION",
+      "from_position": 1,
+      "method_id": "oriented_component_axis_v1",
+      "method_version": "1.0.0",
+      "precision": 2,
+      "signed_delta": -0.05,
+      "to_fact_id": "fact.SLANT_LEFT_FRACTION",
+      "to_position": 2,
+      "unit": "ratio",
+      "value_from": 0.1,
+      "value_to": 0.05
+    },
+    {
       "absolute_delta": 18.0,
       "direction": "TO_GREATER",
       "display_domain": {
@@ -349,6 +624,31 @@
       "unit": "degrees",
       "value_from": 5.07681240002939,
       "value_to": 23.07681240002939
+    },
+    {
+      "absolute_delta": 27.0,
+      "direction": "FROM_GREATER",
+      "display_domain": {
+        "accepted_max": 60,
+        "accepted_min": -60,
+        "kind": "GEOMETRIC_CANVAS",
+        "max": 90,
+        "min": -90,
+        "unit": "degrees"
+      },
+      "feature_id": "SLANT_P05",
+      "formatting_key": "measurement.degrees",
+      "from_fact_id": "fact.SLANT_P05",
+      "from_position": 1,
+      "method_id": "oriented_component_axis_v1",
+      "method_version": "1.0.0",
+      "precision": 1,
+      "signed_delta": -27.0,
+      "to_fact_id": "fact.SLANT_P05",
+      "to_position": 2,
+      "unit": "degrees",
+      "value_from": 23.07681240002939,
+      "value_to": -3.9231875999706096
     },
     {
       "absolute_delta": 18.0,
@@ -376,6 +676,31 @@
       "value_to": 52.60893307811425
     },
     {
+      "absolute_delta": 27.0,
+      "direction": "FROM_GREATER",
+      "display_domain": {
+        "accepted_max": 60,
+        "accepted_min": -60,
+        "kind": "GEOMETRIC_CANVAS",
+        "max": 90,
+        "min": -90,
+        "unit": "degrees"
+      },
+      "feature_id": "SLANT_P95",
+      "formatting_key": "measurement.degrees",
+      "from_fact_id": "fact.SLANT_P95",
+      "from_position": 1,
+      "method_id": "oriented_component_axis_v1",
+      "method_version": "1.0.0",
+      "precision": 1,
+      "signed_delta": -27.0,
+      "to_fact_id": "fact.SLANT_P95",
+      "to_position": 2,
+      "unit": "degrees",
+      "value_from": 52.60893307811425,
+      "value_to": 25.608933078114248
+    },
+    {
       "absolute_delta": 0.09999999999999998,
       "direction": "FROM_GREATER",
       "display_domain": {
@@ -399,6 +724,31 @@
       "unit": "ratio",
       "value_from": 0.9615384615384616,
       "value_to": 0.8615384615384616
+    },
+    {
+      "absolute_delta": 0.04999999999999993,
+      "direction": "TO_GREATER",
+      "display_domain": {
+        "accepted_max": null,
+        "accepted_min": null,
+        "kind": "MATHEMATICAL_DOMAIN",
+        "max": 1,
+        "min": 0,
+        "unit": "ratio"
+      },
+      "feature_id": "SLANT_RIGHT_FRACTION",
+      "formatting_key": "measurement.ratio",
+      "from_fact_id": "fact.SLANT_RIGHT_FRACTION",
+      "from_position": 1,
+      "method_id": "oriented_component_axis_v1",
+      "method_version": "1.0.0",
+      "precision": 2,
+      "signed_delta": 0.04999999999999993,
+      "to_fact_id": "fact.SLANT_RIGHT_FRACTION",
+      "to_position": 2,
+      "unit": "ratio",
+      "value_from": 0.8615384615384616,
+      "value_to": 0.9115384615384615
     },
     {
       "absolute_delta": 0.1,
@@ -426,6 +776,31 @@
       "value_to": 0.13846153846153847
     },
     {
+      "absolute_delta": 0.05,
+      "direction": "FROM_GREATER",
+      "display_domain": {
+        "accepted_max": null,
+        "accepted_min": null,
+        "kind": "MATHEMATICAL_DOMAIN",
+        "max": 1,
+        "min": 0,
+        "unit": "ratio"
+      },
+      "feature_id": "SLANT_VERTICAL_FRACTION",
+      "formatting_key": "measurement.ratio",
+      "from_fact_id": "fact.SLANT_VERTICAL_FRACTION",
+      "from_position": 1,
+      "method_id": "oriented_component_axis_v1",
+      "method_version": "1.0.0",
+      "precision": 2,
+      "signed_delta": -0.05,
+      "to_fact_id": "fact.SLANT_VERTICAL_FRACTION",
+      "to_position": 2,
+      "unit": "ratio",
+      "value_from": 0.13846153846153847,
+      "value_to": 0.08846153846153847
+    },
+    {
       "absolute_delta": 0.09999999999999998,
       "direction": "TO_GREATER",
       "display_domain": {
@@ -449,6 +824,31 @@
       "unit": "score_0_1",
       "value_from": 0.8128064635741235,
       "value_to": 0.9128064635741234
+    },
+    {
+      "absolute_delta": 0.15000000000000002,
+      "direction": "FROM_GREATER",
+      "display_domain": {
+        "accepted_max": null,
+        "accepted_min": null,
+        "kind": "MATHEMATICAL_DOMAIN",
+        "max": 1,
+        "min": 0,
+        "unit": "score_0_1"
+      },
+      "feature_id": "STROKE_UNIFORMITY",
+      "formatting_key": "measurement.score_0_1",
+      "from_fact_id": "fact.STROKE_UNIFORMITY",
+      "from_position": 1,
+      "method_id": "medial_axis_diameter_v1",
+      "method_version": "1.0.0",
+      "precision": 2,
+      "signed_delta": -0.15000000000000002,
+      "to_fact_id": "fact.STROKE_UNIFORMITY",
+      "to_position": 2,
+      "unit": "score_0_1",
+      "value_from": 0.9128064635741234,
+      "value_to": 0.7628064635741234
     },
     {
       "absolute_delta": 0.09999999999999998,
@@ -476,6 +876,31 @@
       "value_to": 0.4373071528751753
     },
     {
+      "absolute_delta": 0.14999999999999997,
+      "direction": "FROM_GREATER",
+      "display_domain": {
+        "accepted_max": null,
+        "accepted_min": null,
+        "kind": "MATHEMATICAL_DOMAIN",
+        "max": 1,
+        "min": 0,
+        "unit": "normalized_x"
+      },
+      "feature_id": "TEXT_BLOCK_HORIZONTAL_CENTER",
+      "formatting_key": "measurement.normalized_x",
+      "from_fact_id": "fact.TEXT_BLOCK_HORIZONTAL_CENTER",
+      "from_position": 1,
+      "method_id": "text_bounds_canvas_ratio_v1",
+      "method_version": "1.0.0",
+      "precision": 3,
+      "signed_delta": -0.14999999999999997,
+      "to_fact_id": "fact.TEXT_BLOCK_HORIZONTAL_CENTER",
+      "to_position": 2,
+      "unit": "normalized_x",
+      "value_from": 0.4373071528751753,
+      "value_to": 0.28730715287517533
+    },
+    {
       "absolute_delta": 0.09999999999999998,
       "direction": "TO_GREATER",
       "display_domain": {
@@ -499,13 +924,39 @@
       "unit": "normalized_y",
       "value_from": 0.49841772151898733,
       "value_to": 0.5984177215189873
+    },
+    {
+      "absolute_delta": 0.14999999999999997,
+      "direction": "FROM_GREATER",
+      "display_domain": {
+        "accepted_max": null,
+        "accepted_min": null,
+        "kind": "MATHEMATICAL_DOMAIN",
+        "max": 1,
+        "min": 0,
+        "unit": "normalized_y"
+      },
+      "feature_id": "TEXT_BLOCK_VERTICAL_CENTER",
+      "formatting_key": "measurement.normalized_y",
+      "from_fact_id": "fact.TEXT_BLOCK_VERTICAL_CENTER",
+      "from_position": 1,
+      "method_id": "text_bounds_canvas_ratio_v1",
+      "method_version": "1.0.0",
+      "precision": 3,
+      "signed_delta": -0.14999999999999997,
+      "to_fact_id": "fact.TEXT_BLOCK_VERTICAL_CENTER",
+      "to_position": 2,
+      "unit": "normalized_y",
+      "value_from": 0.5984177215189873,
+      "value_to": 0.44841772151898734
     }
   ],
   "exclusions": [],
   "facts": [],
   "input_report_ids": [
     "report_comparison_a",
-    "report_comparison_b"
+    "report_comparison_b",
+    "report_comparison_c"
   ],
   "inputs": [
     {
@@ -551,10 +1002,32 @@
         "quality_policy": "quality-policy/1",
         "template": "individual-report/2"
       }
+    },
+    {
+      "analysis_created_at": "2026-09-28T14:00:00Z",
+      "analysis_id": "analysis_comparison_c",
+      "position": 2,
+      "report_created_at": "2026-09-28T14:00:00Z",
+      "report_digest": "6e2ebfea79c009958f4293ee36fa36ee4ed4f61fadd174e93bd6383604d9b74e",
+      "report_id": "report_comparison_c",
+      "revision": 1,
+      "run_id": "run_comparison_c",
+      "versions": {
+        "analysis_config": "494ff873c4bf7a309da8a78664999b2714980d90728c9c2c49b9012ae5494e68",
+        "benchmark_release": null,
+        "content_schema": "1.0.0",
+        "engine": "0.1.0",
+        "feature_schema": "1.0.0-draft",
+        "feature_set": null,
+        "method_manifest": "a4606d9925680ff135c6dd2c332bec51e3a2cf878383275a83fa8ecb0d20c835",
+        "normalization": null,
+        "quality_policy": "quality-policy/1",
+        "template": "individual-report/2"
+      }
     }
   ],
-  "kind": "PAIR",
+  "kind": "HISTORY",
   "method_version": "comparison-native-delta/1",
-  "ordering_basis": "REQUEST_ORDER",
+  "ordering_basis": "REPORT_CREATED_AT",
   "presentation_version": "presentation/1"
 }

@@ -24,7 +24,7 @@
       "version": "premium-interpretation-db/1"
     }
   },
-  "bundle_sha256": "41b5b9eb732c373d5a892dd4b9ab553fec7ea7b7a708c15d52edc92181aa43e6",
+  "bundle_sha256": "9e344db6faf98ef0c45b2c846ef5189c963293865a75e96d76093089ba8149d4",
   "canonicalization": "utf8-json-sort-keys-no-nonfinite-v1",
   "contract_id": "princess-product-contracts",
   "contract_version": "1.0.0",
@@ -50,12 +50,12 @@
     {
       "path": "schemas/common.schema.json",
       "schema_id": "common.schema.json",
-      "sha256": "3f00948bab67e7c0308f19670e8ad8e52b27f1da6f07c9f76bb843e66d38a79d"
+      "sha256": "56597632ee397d35a9e85f3014e69cddb75ab0cd26460c8f8db6381cc8ded27f"
     },
     {
       "path": "schemas/comparison.schema.json",
       "schema_id": "comparison.schema.json",
-      "sha256": "8022cb1416f956e8b75e2fa3e7c382107476f02cf47cf023f0f1640bc0a40c24",
+      "sha256": "75c8e66c103ab1f8a801b35ee370b45882cc3d594fa6561d2b130cb9429f4615",
       "title": "Comparison"
     },
     {
