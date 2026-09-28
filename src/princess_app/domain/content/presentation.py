@@ -214,8 +214,13 @@ def select_highlights(facts: Sequence[Mapping[str, Any]], limit: int = 3) -> tup
     order = {family: index for index, family in enumerate(_DATA["family_order"])}
     nominees = list(family_nominees(facts))
     nominees.sort(key=lambda candidate: (-candidate.strength, order[candidate.family], candidate.candidate_id))
-    primary = next((candidate for candidate in nominees if candidate.family in _DATA["primary_families"]), None)
+    primary_families = set(_DATA["primary_families"])
+    primary = next((candidate for candidate in nominees if candidate.family in primary_families), None)
     if primary is None:
         return ()
-    secondaries = [candidate for candidate in nominees if candidate != primary]
+    substantive = [candidate for candidate in nominees
+                   if candidate != primary and candidate.family in primary_families]
+    fallback = [candidate for candidate in nominees
+                if candidate != primary and candidate.family not in primary_families]
+    secondaries = [*substantive, *fallback]
     return tuple([primary, *secondaries[:max(0, limit - 1)]])
