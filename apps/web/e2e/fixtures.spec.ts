@@ -31,9 +31,10 @@ test("the v2 fixture renders the real server-owned first reveal", async ({ page 
   expect(primary?.fact_ids).toEqual(["fact.SLANT_RIGHT_FRACTION"]);
 
   await page.goto("/fixtures/free-v2");
-  await expect(page.getByRole("heading", { level: 2, name: "What stands out" })).toBeVisible();
-  await expect(page.getByText("Almost every accepted slant observation leans right.")).toBeVisible();
-  await expect(page.getByText("Fraction of right-slanted strokes")).toBeVisible();
+  const reveal = page.getByRole("region", { name: "What stands out" });
+  await expect(reveal).toBeVisible();
+  await expect(reveal.getByText("Almost every accepted slant observation leans right.")).toBeVisible();
+  await expect(reveal.getByRole("rowheader", { name: "Fraction of right-slanted strokes" })).toBeVisible();
   await expect(page.getByText("content.highlight.v1.slant.right.almost_all")).toHaveCount(0);
 });
 
