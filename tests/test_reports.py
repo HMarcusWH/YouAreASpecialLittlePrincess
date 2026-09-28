@@ -99,8 +99,8 @@ def test_current_template_persists_broad_server_owned_highlights():
     ]
     assert [section["content_ids"][0] for section in highlights] == [
         "content.highlight.v1.slant.right.almost_all",
-        "content.highlight.v1.ink.saturation_low",
         "content.highlight.v1.layout.margins_asymmetric",
+        "content.highlight.v1.baseline.angle_stable",
     ]
     assert all(section["fact_ids"] for section in highlights)
     assert data["analysis"]["versions"]["template"] == "individual-report/2"
