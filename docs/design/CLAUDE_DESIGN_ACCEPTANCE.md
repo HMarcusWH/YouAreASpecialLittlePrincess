@@ -7,7 +7,8 @@ This file is the review checklist for the Claude Design prototype. Its presence 
 ## Prototype identity
 
 - Claude Design project/prototype reference: **PENDING**
-- Design direction selected: **PENDING**
+- Working public brand: **Inktrospect** (repository/package namespaces remain unchanged)
+- Design direction selected: **A — The Dossier**
 - Repository baseline used for handoff: `9b9a313fe0acb8b7b90cf6233da21cc6a793210f`
 - Prototype revision reviewed: **PENDING**
 
@@ -19,6 +20,7 @@ This file is the review checklist for the Claude Design prototype. Its presence 
 - [ ] Permission and upload, including separate optional permissions
 - [ ] Crop/orientation/error states
 - [ ] Processing lifecycle and refresh recovery
+- [ ] First reveal / “What stands out”, including no-eligible-highlight and image-not-retained states
 - [ ] Complete and partial Free report
 - [ ] No-reference / uncalibrated / image-revoked report states
 - [ ] Premium offer and explicit AI-image-processing permission
