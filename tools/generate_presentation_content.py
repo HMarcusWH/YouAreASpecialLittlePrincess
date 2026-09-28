@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import stat
 from pathlib import Path
 from typing import Any
 
@@ -20,9 +21,28 @@ def _pairs(items):
 
 
 def _load_json(path: Path) -> dict[str, Any]:
+    path = path.absolute()
+    for component in (path, *path.parents):
+        if component.is_symlink():
+            raise ValueError(f"symlink is not reviewed presentation input: {path.name}")
+    try:
+        mode = path.stat().st_mode
+    except FileNotFoundError as exc:
+        raise ValueError(f"missing presentation input: {path.name}") from exc
+    if not stat.S_ISREG(mode):
+        raise ValueError(f"presentation input is not a regular file: {path.name}")
     if path.stat().st_size > 262_144:
         raise ValueError(f"presentation input too large: {path.name}")
-    return json.loads(path.read_text(encoding="utf-8"), object_pairs_hook=_pairs)
+    try:
+        return json.loads(
+            path.read_text(encoding="utf-8"),
+            object_pairs_hook=_pairs,
+            parse_constant=lambda value: (_ for _ in ()).throw(
+                ValueError(f"non-finite JSON token {value}")
+            ),
+        )
+    except (UnicodeDecodeError, json.JSONDecodeError, RecursionError) as exc:
+        raise ValueError(f"invalid presentation JSON: {path.name}") from exc
 
 
 SOURCE = ROOT / "content" / "presentation" / "v1" / "presentation.json"
