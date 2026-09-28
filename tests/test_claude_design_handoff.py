@@ -39,7 +39,7 @@ def test_state_matrix_covers_t10_required_design_acceptance_surface():
     matrix = load("claude-design-state-matrix.json")
     screens = {row["id"]: set(row["states"]) for row in matrix["screens"]}
     required_screens = {
-        "landing", "permission_upload", "crop_orientation_preview", "processing", "free_report",
+        "landing", "permission_upload", "crop_orientation_preview", "processing", "first_reveal", "free_report",
         "premium_offer_consent", "purchase", "premium_generation", "premium_report",
         "pair_invitation_comparison", "history", "share_preview_revocation", "export_preview", "settings",
     }
@@ -48,6 +48,7 @@ def test_state_matrix_covers_t10_required_design_acceptance_surface():
     assert {"pending", "ask_to_buy", "cancelled", "failed", "restored", "account_mismatch"} <= screens["purchase"]
     assert {"refused", "failed_credit_released", "not_applicable_no_authorized_image"} <= screens["premium_generation"]
     assert {"partial_missing", "uncalibrated", "reference_unavailable", "image_revoked"} <= screens["free_report"]
+    assert {"prototype_illustrative_selection", "planned_server_owned_highlight", "no_eligible_highlight", "source_image_not_retained"} == screens["first_reveal"]
 
     assert set(matrix["availability_states"]) == {
         "READY", "UNCALIBRATED", "MISSING", "NOT_IMPLEMENTED", "INELIGIBLE",
@@ -83,6 +84,8 @@ def test_handoff_does_not_self_approve_design_or_tokens():
     assert tokens["version"] == "design-tokens/0.1-draft"
     assert "**Status: PENDING_OWNER_REVIEW**" in acceptance
     assert "Decision: **PENDING**" in acceptance
-    assert "three genuinely different visual/interaction directions" in handoff
+    assert "Direction A — The Dossier" in handoff
+    assert "Do **not** restart visual-direction exploration" in handoff
+    assert "Design direction selected: **A — The Dossier**" in acceptance
     assert "Synthetic data only" in handoff
     assert "Only after explicit owner acceptance" in handoff

@@ -802,22 +802,26 @@ Planned targets unless present in the code tree:
 src/princess_app/domain/content/
 content/
 contracts/product/v1/
+src/princess_app/domain/reports/
 ```
 
 ### Coding sequence
 
 1. Implement fixed versioned mechanical display axes with domains, family weights and missingness; do not use per-user auto-max normalization.
-2. Add authored deterministic captions/geometric style labels and localization keys tied to evidence.
-3. Keep traditional packs inactive unless exact source/wording/runtime eligibility is separately approved; T26 structure does not supply active rules automatically.
+2. Publish reviewed localized presentation labels separately from canonical English feature names, and version any fixed display-scale registry; inherent geometric domains may be approved without pretending population calibration exists.
+3. Define a deterministic, versioned first-reveal/highlight selection policy and reviewed localized content IDs over eligible report facts; report assembly may emit an optional highlight section, while clients only render the server-selected result and honest no-eligible fallback.
+4. Add authored deterministic captions/geometric style labels and localization keys tied to evidence.
+5. Keep traditional packs inactive unless exact source/wording/runtime eligibility is separately approved; T26 structure does not supply active rules automatically.
 
 ### Contract and integration handoff
 
-Normalization/content release IDs and deterministic outputs for T09/T13/T18.
+Normalization/content release IDs, reviewed presentation labels/scales, and deterministic highlight selection/content outputs for report assembly plus T13/T17/T18/native consumers.
 
 ### Acceptance evidence
 
 - Monotonicity, unit/scale equivalence and partial-dependency behavior are tested.
 - No arbitrary psychological weights or double-counted correlated summaries; evidence labels travel to every view.
+- First-reveal selection is deterministic, versioned, support-fact bound and absent when no eligible highlight exists; clients never rank report facts themselves.
 
 ### Required failure and regression cases
 
@@ -951,7 +955,7 @@ PR #14 commit c5463a4 added contract-driven draft design tokens generated to CSS
 
 ### Remaining work
 
-- Run Claude Design against docs/design/CLAUDE_DESIGN_HANDOFF.md and the curated import manifest, compare three distinct directions, iterate the selected complete interactive responsive/native/print/share prototype, and obtain explicit owner design_acceptance recorded in docs/design/CLAUDE_DESIGN_ACCEPTANCE.md before promoting T10 or the token status.
+- Complete the selected Direction A — The Dossier interactive Inktrospect responsive/native/print/share prototype; keep backend-owned gaps explicitly PLANNED/ILLUSTRATIVE and hand them to T08/T18 rather than implementing client authority; obtain explicit owner design_acceptance recorded in docs/design/CLAUDE_DESIGN_ACCEPTANCE.md before promoting T10 or the token status.
 
 ### Acceptance evidence
 
@@ -1433,7 +1437,7 @@ PR #14 established the working deterministic Free Next.js journey and T21 export
 ### Remaining work
 
 - Implement production account sign-in and cross-device/account recovery after the ADR-002 identity provider decision.
-- Finish owner-accepted T10 design integration across responsive history/evidence/report states.
+- Finish owner-accepted Inktrospect / The Dossier T10 design integration across responsive first-reveal, history, evidence and report states; render the T08 server-owned highlight when present and an honest fallback when absent, never client-side salience.
 
 ### Acceptance evidence
 
@@ -1490,10 +1494,10 @@ contracts/product/v1/
 
 ### Coding sequence
 
-1. Implement native-unit differences, common valid masks, method/version compatibility and fixed family scales before any overall score.
+1. Extend the existing T01 Comparison wire schema/semantics with native-unit directional facts, common valid masks/coverage, per-input provenance, method/version compatibility and fixed family scales before any overall score; do not create a parallel comparison DTO.
 2. Resolve the existing cosine-range/schema conflict explicitly rather than clipping a value into a probability.
 3. Support same-owner Me-v-Me first and service contracts for separately granted partner inputs; T22 gates other-owner release.
-4. Distinguish capture/date/task/method variation from writing change and qualify any similarity index with an evaluated mapping.
+4. Distinguish system ingestion/analysis/report timestamps from separately sourced writing/photo dates, task/method variation and writing change; qualify any similarity index with an evaluated mapping.
 
 ### Contract and integration handoff
 

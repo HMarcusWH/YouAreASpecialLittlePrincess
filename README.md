@@ -2,7 +2,9 @@
 > **Building the app:** [complete roadmap](ROADMAP.md) · [coding-agent entry](AGENTS.md) · [documentation index](docs/roadmap/00-index.md) · [detailed task briefs](docs/roadmap/06-agent-backlog.md) · [Claude Design handoff](docs/design/CLAUDE_DESIGN_HANDOFF.md).
 > **Status:** active development, not publicly released. `docs/roadmap/tasks.json` is the machine authority for current task state and gates.
 
-# You Are A Special Little Princess
+# Inktrospect
+
+> Repository/internal codename: **You Are A Special Little Princess**. Existing `Princess` / `princess_*` package and service namespaces remain implementation details while the public brand is finalized through T10 design acceptance.
 
 A privacy-conscious consumer handwriting-analysis product built around deterministic
 handwriting measurements, structured evidence and clearly separated interpretive
@@ -27,7 +29,7 @@ separately labelled and are not validated psychological assessment.
 | Commerce | Internal ledger/reservation/fulfilment machinery implemented; real Stripe/App Store/Play verification remains gated |
 | Recovery/notifications | Tombstones, restore reconciliation and notification state machine implemented; production providers/topology remain incomplete |
 | Pilot tooling | Synthetic-qualified, human mode fail-closed behind rights/participant gates |
-| Product design | Claude Design handoff prepared; owner `design_acceptance` still pending |
+| Product design | Working public brand **Inktrospect**; Direction A — The Dossier selected and app prototype in progress; owner `design_acceptance` still pending |
 | Native clients | Planned; T29 unlocks after T10 design acceptance |
 
 Current task status is intentionally not duplicated here; run:

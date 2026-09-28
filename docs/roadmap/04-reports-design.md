@@ -74,6 +74,8 @@ Recommended order:
 
 The Free experience should stand on its own. Do not deliberately degrade deterministic accuracy or withhold a basic measured feature just to force an API purchase.
 
+**First reveal / salience:** the selected Inktrospect “What stands out” design is a product requirement, but no client may choose a salient fact ad hoc. The current `ReportSection` contract already has the right transport primitives (`template`, `fact_ids`, `content_ids`), so a future versioned server selection should use that shape rather than adding a second client-owned truth. Until that server-owned selection and reviewed content exist, prototype standout copy is labelled illustrative. A sample with no eligible highlight must have an honest fallback rather than a fabricated superlative.
+
 ## 5. Premium report
 
 Premium extends the same report with a short executive synthesis, a small set of evidence-linked cross-feature explanations, nuanced descriptions of supported contrasts, and approved traditional associations where applicable. It may provide reflective questions, not diagnoses or advice for consequential decisions.
@@ -90,7 +92,7 @@ Pair report: two authorized sample labels; common-feature/quality coverage; side
 
 Preserve direction and units. 'A has wider spacing than B' is not 'A is more independent than B.' Similarity is not compatibility, common authorship or relationship success. Do not award a winner for mental health, intelligence or personality.
 
-Me-v-Me: explain collection dates versus upload dates; show the same writing task/method when possible; separate capture, instrument and pipeline differences from observed changes. Avoid relative percentage change when the old denominator is zero or near zero. Display an absolute difference or no interpretable trend instead.
+Me-v-Me: explain collection dates versus upload dates; show the same writing task/method when possible; separate capture, instrument and pipeline differences from observed changes. Avoid relative percentage change when the old denominator is zero or near zero. Display an absolute difference or no interpretable trend instead. Existing database/report `created_at` timestamps are system-event times and must not be relabelled as the date the handwriting was written or an imported photograph was originally taken; any future writing/photo date is a separately sourced provenance field.
 
 Friend comparison should invite the other person to upload/authorize their own writing. A shared report does not implicitly authorize reuse in another comparison, corpus contribution, or model call. Revocation invalidates private shared projections and regenerated exports on our systems.
 
@@ -98,6 +100,7 @@ Friend comparison should invite the other person to upload/authorize their own w
 
 - **Radar:** fixed, versioned axes and fixed scale mapping, normally no more than six to eight readable dimensions. Missing axes do not become zero; use an explicit incomplete state or bars instead of a misleading polygon. Do not rescale each person to their own maximum.
 - **Distribution:** actual observations or bins with count/weight definitions and scope. Do not generate a Gaussian-looking histogram from a mean/std pair. A population plot uses reference aggregates, not exposed private member vectors.
+- **Fixed geometric display domains:** an inherent geometric canvas may be specified independently of population calibration when its meaning is explicit. For example, a slant fan can show `-90°…+90°` as geometry while marking that the current extractor accepts only `-60°…+60°` observations. Arbitrary product ranges (for example a proposed margin bar maximum) require a reviewed versioned display-scale policy and must not be inferred from one user's values.
 - **Baseline trace:** stored points with frame/units, not an illustrative curve unrelated to the input. Coordinate conversion must survive crop, perspective correction, resizing and deskew.
 - **Spacing:** actual accepted gaps and linked line/word regions. Avoid treating overlapping boxes or uncertain segmentation as zero spacing.
 - **Reference bar:** percentile of a named eligible metric plus cohort N/version and uncertainty context; a raw 0–100 engineering score must never masquerade as a percentile.

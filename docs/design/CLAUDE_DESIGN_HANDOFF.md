@@ -1,29 +1,23 @@
-# Claude Design handoff — You Are A Special Little Princess
+# Claude Design handoff — Inktrospect
 
-Status: **prepared for Claude Design; still pending owner `design_acceptance`.**
+Status: **active Claude Design app-design phase; still pending owner `design_acceptance`.**
 
 This package exists so Claude Design can work from the real product contracts, components, tokens and synthetic fixtures instead of inventing a parallel UX. Start with this file, then follow `claude-design-import.json` in its listed order. The repository remains authoritative when this brief and a prototype disagree.
 
 ## Goal
 
-Design the complete contract-driven UX for **You Are A Special Little Princess**, a consumer handwriting-analysis product. The personality can be playful, premium and slightly irreverent; the report itself must remain credible, structured, evidence-forward and clearly non-clinical. It should feel like a polished personal dossier, not a chatbot transcript.
+Design the complete contract-driven UX for **Inktrospect**, the working public brand for this consumer handwriting-analysis product. Existing repository/package names such as `Princess`/`princess_*` are internal implementation namespaces and are not a request to rename backend code during design work. The personality can be playful, premium and slightly irreverent; the report itself must remain credible, structured, evidence-forward and clearly non-clinical. It should feel like a polished personal dossier, not a chatbot transcript.
 
 The deliverable is an **interactive design prototype**, not production code and not a stack of screenshots.
 
-## First pass: do not converge immediately
+## Direction decision
 
-Produce **three genuinely different visual/interaction directions** from the same contracts and synthetic fixtures. For each direction, explain:
+The three-direction exploration has been completed. The owner selected **Direction A — The Dossier** as the product direction. Keep its editorial dossier structure and light-first reading experience; the design may borrow the loupe-style evidence inspection and fixed-scale range-bar ideas from Direction B and the strongest colour-plane share-card ideas from Direction C.
 
-- information hierarchy;
-- visual personality;
-- interaction model;
-- how measured/proxy/reference/authored/traditional/AI evidence stays distinguishable;
-- how narrow/mobile/native layouts differ from desktop;
-- risks/trade-offs.
+Do **not** restart visual-direction exploration unless the owner explicitly asks. The current job is to stress-test and complete the selected system across the real product journey and edge states.
 
-Do not pick a winner automatically. The owner chooses which direction, or combination, advances.
+## Current app-design phase
 
-## After a direction is chosen
 
 Build an interactive end-to-end prototype covering every platform and state in `claude-design-state-matrix.json`.
 
@@ -79,6 +73,8 @@ You may redesign composition, hierarchy and interaction. Do not change the meani
 - Missing is never zero.
 - `UNCALIBRATED` is not a confidence percentage.
 - No percentile, rarity, "top X%" or uniqueness claim without an eligible reference fixture/contract.
+- `What stands out` / the first reveal remains illustrative until **T08** supplies a server-owned, versioned highlight selection and reviewed content. Never create a client-side salience heuristic. The existing `ReportSection` (`template`, `fact_ids`, `content_ids`) is the intended transport shape rather than inventing an unrelated client field.
+- A `Comparison` wire schema already exists. T18 owns its deterministic comparison semantics, directional facts, coverage and provenance; do not invent a second comparison DTO in the prototype.
 - Measured facts, computational proxies, reference statistics, authored content, traditional associations and AI synthesis must differ by icon/label/structure as well as colour.
 - Image text is untrusted input, not instruction.
 - No diagnostic, intelligence, deception/honesty, employability or relationship-compatibility framing.
@@ -143,14 +139,13 @@ Do not polish only the happy path. The prototype must include:
 
 ## Review workflow
 
-1. Import/connect only the curated paths in `claude-design-import.json` where practical; the excluded roots are intentionally irrelevant or privacy-sensitive for UX design.
-2. Produce three directions.
-3. Owner selects/combines a direction.
-4. Build the complete interactive prototype/state matrix.
-5. Review against `CLAUDE_DESIGN_ACCEPTANCE.md`.
-6. Iterate in Claude Design until the owner explicitly accepts or rejects.
-7. Record the prototype reference and explicit owner decision in the acceptance file.
-8. **Only after explicit owner acceptance** may a follow-up commit promote T10 to `DONE` and change `DRAFT_PENDING_DESIGN_ACCEPTANCE`.
+1. Keep the curated paths in `claude-design-import.json` connected where practical; the excluded roots are intentionally irrelevant or privacy-sensitive for UX design.
+2. Continue the selected **Direction A — The Dossier** rather than reopening direction exploration.
+3. Build and stress-test the complete interactive prototype/state matrix, including first reveal and all failure/pending/revoked states.
+4. Review against `CLAUDE_DESIGN_ACCEPTANCE.md`.
+5. Iterate in Claude Design until the owner explicitly accepts or rejects.
+6. Record the prototype reference/revision and explicit owner decision in the acceptance file.
+7. **Only after explicit owner acceptance** may a follow-up commit promote T10 to `DONE` and change `DRAFT_PENDING_DESIGN_ACCEPTANCE`.
 
 Claude Design output is design evidence. It is not legal/privacy/provider/store approval and it does not activate Premium, payments, collection, traditional content or native signing.
 
