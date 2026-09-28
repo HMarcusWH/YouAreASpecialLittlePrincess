@@ -4,7 +4,7 @@
 
 [Documentation index](00-index.md) · [Machine authority](tasks.json) · [Build sequence](20-end-to-end-build-sequence.md) · [Release gates](21-release-readiness-checklists.md)
 
-Plan 2.1; code baseline `e8e174a2311f8d4327850218405819de8f87277e`. Statuses are implementation/history records, not production approvals. READY is computed from completed hard predecessors.
+Plan 2.2; code baseline `e8e174a2311f8d4327850218405819de8f87277e`. Statuses are implementation/history records, not production approvals. READY is computed from completed hard predecessors.
 
 Use `python docs/roadmap/plan_tools.py --ready`, `--active` or `--task ID`. Edit tasks.json and run `--write` then `--check` when maintaining the plan.
 
@@ -22,7 +22,8 @@ Use `python docs/roadmap/plan_tools.py --ready`, `--active` or `--task ID`. Edit
 | [T05 — Evidence payload and chart observations](#t05) | DONE | T01 | engine |
 | [T06 — Calibration suitability core repair](#t06) | PLANNED | T05, T11 | evaluation |
 | [T07 — Bounded classical topology shape expansion](#t07) | PLANNED | T05, T06 | engine |
-| [T08 — Normalization and reviewed content](#t08) | PLANNED | T01, T05, T06 | content-engine |
+| [T08A — Report presentation and first-reveal policy](#t08a) | PLANNED | T01, T05, T09 | content-report |
+| [T08 — Calibrated normalization and reviewed interpretation content](#t08) | PLANNED | T06, T08A | content-engine |
 | [T09 — Report assembly and authorized projections](#t09) | DONE | T01, T05 | report-backend |
 | [T10 — Contract-driven multi-platform design handoff](#t10) | IMPLEMENTED_PENDING_REVIEW | T01 | design |
 | [T11 — Owned pilot recruitment and annotation](#t11) | IN_PROGRESS | T03, T04 | product-data-human |
@@ -31,8 +32,8 @@ Use `python docs/roadmap/plan_tools.py --ready`, `--active` or `--task ID`. Edit
 | [T14 — Benchmark publish withdraw drift rollback](#t14) | PLANNED | T03, T13 | data-platform |
 | [T15 — Evidence-bound OpenAI adapter](#t15) | DONE | T01, T09, T26, T27 | premium-backend |
 | [T16 — Model evaluation and generation policy](#t16) | PLANNED | T06, T15 | evaluation |
-| [T17 — Interactive Free web product](#t17) | IN_PROGRESS | T02, T04, T09, T10, T28 | frontend |
-| [T18 — Deterministic pair and history comparison](#t18) | PLANNED | T08, T09 | statistics-report |
+| [T17 — Interactive Free web product](#t17) | IN_PROGRESS | T02, T04, T08A, T09, T10, T28 | frontend |
+| [T18 — Deterministic pair and history comparison](#t18) | PLANNED | T08A, T09 | statistics-report |
 | [T19 — Cross-platform purchase ledger entitlements and metered jobs](#t19) | IN_PROGRESS | T02, T03, T09, T15, T27 | commerce |
 | [T20 — Premium and paid-pair web experience](#t20) | PLANNED | T15, T16, T17, T18, T19, T21, T24 | frontend-premium |
 | [T21 — Same-content PDF and share-card rendering](#t21) | IMPLEMENTED_PENDING_REVIEW | T09, T10, T17 | report-frontend |
@@ -778,12 +779,79 @@ No task-specific production gate; all repository privacy/security and scope boun
 
 [Back to task table](#task-table) · [Documentation index](00-index.md) · [Execution sequence](20-end-to-end-build-sequence.md)
 
+<a id="t08a"></a>
+## T08A — Report presentation and first-reveal policy
+
+**Status:** `PLANNED` · **Owner:** content-report · **Milestone:** free
+
+**Hard predecessors:** [T01](#t01), [T05](#t05), [T09](#t09)
+**Platforms:** shared, backend
+**Connector ports:** None
+
+### Required reading
+
+- [docs/roadmap/01-data-architecture.md](01-data-architecture.md)
+- [docs/roadmap/02-corpus-benchmarks.md](02-corpus-benchmarks.md)
+- [docs/roadmap/04-reports-design.md](04-reports-design.md)
+- [docs/roadmap/16-testing-evals-and-quality-gates.md](16-testing-evals-and-quality-gates.md)
+
+### Owned implementation surfaces
+
+Planned targets unless present in the code tree:
+
+```text
+src/princess_app/domain/content/
+src/princess_app/domain/reports/
+content/presentation/
+contracts/product/v1/
+```
+
+### Coding sequence
+
+1. Publish reviewed English/Swedish presentation labels and deterministic captions separately from canonical feature names; version every presentation/content identifier consumed by reports.
+2. Define a versioned registry of intrinsic or otherwise predeclared non-population mechanical display domains. Do not derive per-user maxima or imply empirical calibration; calibrated/population-relative mappings remain T08.
+3. Define a deterministic, versioned first-reveal/highlight eligibility and selection policy over eligible saved report facts, with reviewed content IDs, supporting fact IDs and an explicit no-eligible-highlight outcome.
+4. Carry the optional server-owned highlight through the existing ReportSection transport while preserving fact availability/evidence class. Clients render the selected result or fallback and never rank facts themselves.
+
+### Contract and integration handoff
+
+Versioned presentation labels/captions, non-population display domains and deterministic first-reveal selection/content outputs for report assembly, T17/T18/T21 and native consumers.
+
+### Acceptance evidence
+
+- The same eligible saved facts and policy/content versions produce the same highlight and support-fact binding regardless of client or input ordering.
+- No eligible highlight yields an explicit absent/fallback state; missing or ineligible facts are never promoted to make the layout look complete.
+- Presentation labels and captions are reviewed for English/Swedish and evidence/availability semantics travel with every rendered result.
+- Intrinsic display domains do not claim population position, rarity, percentile or calibrated confidence.
+
+### Required failure and regression cases
+
+- Missing/ineligible fact selected, tie/order-dependent salience, client-side ranking, unsupported percentile/rarity wording, per-user auto-max scale and missing localization key.
+
+### Deliverables
+
+- Versioned presentation-label/caption registry and localization fixtures
+- Deterministic first-reveal policy and report fixtures
+- Reviewed non-population display-domain registry
+
+### Rollback and compatibility
+
+- Pin presentation/highlight versions in saved reports; disable the highlight and use the honest fallback without rewriting canonical facts.
+
+### Validation and human gates
+
+Validation profiles: [docs](#validation-docs), [contracts](#validation-contracts), [backend](#validation-backend). Planned suites must be implemented and their actual command documented by the owning task; they are not passing tests today.
+
+No task-specific production gate; all repository privacy/security and scope boundaries still apply.
+
+[Back to task table](#task-table) · [Documentation index](00-index.md) · [Execution sequence](20-end-to-end-build-sequence.md)
+
 <a id="t08"></a>
-## T08 — Normalization and reviewed content
+## T08 — Calibrated normalization and reviewed interpretation content
 
 **Status:** `PLANNED` · **Owner:** content-engine · **Milestone:** reference
 
-**Hard predecessors:** [T01](#t01), [T05](#t05), [T06](#t06)
+**Hard predecessors:** [T06](#t06), [T08A](#t08a)
 **Platforms:** core, shared
 **Connector ports:** None
 
@@ -802,34 +870,31 @@ Planned targets unless present in the code tree:
 src/princess_app/domain/content/
 content/
 contracts/product/v1/
-src/princess_app/domain/reports/
 ```
 
 ### Coding sequence
 
-1. Implement fixed versioned mechanical display axes with domains, family weights and missingness; do not use per-user auto-max normalization.
-2. Publish reviewed localized presentation labels separately from canonical English feature names, and version any fixed display-scale registry; inherent geometric domains may be approved without pretending population calibration exists.
-3. Define a deterministic, versioned first-reveal/highlight selection policy and reviewed localized content IDs over eligible report facts; report assembly may emit an optional highlight section, while clients only render the server-selected result and honest no-eligible fallback.
-4. Add authored deterministic captions/geometric style labels and localization keys tied to evidence.
-5. Keep traditional packs inactive unless exact source/wording/runtime eligibility is separately approved; T26 structure does not supply active rules automatically.
+1. Implement empirically qualified normalization and family-scale mappings from the T06 supported-context/calibration release, preserving explicit missingness and forbidding per-user auto-max normalization.
+2. Version calibrated scale mappings and any justified family weighting; test monotonicity, unit/scale equivalence and partial-dependency behavior against the approved calibration evidence.
+3. Add calibration-sensitive authored/traditional content only where its evidence/source/wording/runtime eligibility is separately reviewed; T26 structure does not activate traditional packs automatically.
 
 ### Contract and integration handoff
 
-Normalization/content release IDs, reviewed presentation labels/scales, and deterministic highlight selection/content outputs for report assembly plus T13/T17/T18/native consumers.
+Calibrated normalization/content release IDs and empirically justified mappings for T13/reference consumers; T08A presentation/highlight IDs remain stable inputs.
 
 ### Acceptance evidence
 
-- Monotonicity, unit/scale equivalence and partial-dependency behavior are tested.
-- No arbitrary psychological weights or double-counted correlated summaries; evidence labels travel to every view.
-- First-reveal selection is deterministic, versioned, support-fact bound and absent when no eligible highlight exists; clients never rank report facts themselves.
+- Calibration-dependent mappings are versioned, monotonic where required and preserve missingness; uncalibrated inputs never masquerade as calibrated scores.
+- No arbitrary psychological weights or double-counted correlated summaries; any family weighting is justified by recorded T06/T08 evidence.
+- Traditional packs remain inactive unless exact source/wording/runtime eligibility is separately approved.
 
 ### Required failure and regression cases
 
-- Zero denominator, constant scale, missing axis plotted zero, repeated signal overweighting, unsupported traditional inversion.
+- Zero denominator, constant scale, missing axis plotted zero, repeated signal overweighting, unsupported calibrated mapping and unsupported traditional inversion.
 
 ### Deliverables
 
-- Versioned formulas/caption pack and localization fixtures
+- Versioned calibrated normalization/content release and qualification fixtures
 
 ### Rollback and compatibility
 
@@ -837,7 +902,7 @@ Normalization/content release IDs, reviewed presentation labels/scales, and dete
 
 ### Validation and human gates
 
-Validation profiles: [core](#validation-core), [docs](#validation-docs), [contracts](#validation-contracts). Planned suites must be implemented and their actual command documented by the owning task; they are not passing tests today.
+Validation profiles: [core](#validation-core), [docs](#validation-docs), [contracts](#validation-contracts), [empirical](#validation-empirical). Planned suites must be implemented and their actual command documented by the owning task; they are not passing tests today.
 
 - `traditional_content_if_enabled`: Separate source/wording/eligibility approval before any traditional runtime activation.
 
@@ -955,7 +1020,7 @@ PR #14 commit c5463a4 added contract-driven draft design tokens generated to CSS
 
 ### Remaining work
 
-- Complete the selected Direction A — The Dossier interactive Inktrospect responsive/native/print/share prototype; keep backend-owned gaps explicitly PLANNED/ILLUSTRATIVE and hand them to T08/T18 rather than implementing client authority; obtain explicit owner design_acceptance recorded in docs/design/CLAUDE_DESIGN_ACCEPTANCE.md before promoting T10 or the token status.
+- Complete the selected Direction A — The Dossier interactive Inktrospect responsive/native/print/share prototype; keep backend-owned gaps explicitly PLANNED/ILLUSTRATIVE and hand them to T08A/T18 rather than implementing client authority; obtain explicit owner design_acceptance recorded in docs/design/CLAUDE_DESIGN_ACCEPTANCE.md before promoting T10 or the token status.
 
 ### Acceptance evidence
 
@@ -1394,7 +1459,7 @@ No approval is created by this task brief. Mock/disabled implementation is not a
 
 **Status:** `IN_PROGRESS` · **Owner:** frontend · **Milestone:** free
 
-**Hard predecessors:** [T02](#t02), [T04](#t04), [T09](#t09), [T10](#t10), [T28](#t28)
+**Hard predecessors:** [T02](#t02), [T04](#t04), [T08A](#t08a), [T09](#t09), [T10](#t10), [T28](#t28)
 **Platforms:** web
 **Connector ports:** IdentityProvider, AnalyticsSink
 
@@ -1437,7 +1502,7 @@ PR #14 established the working deterministic Free Next.js journey and T21 export
 ### Remaining work
 
 - Implement production account sign-in and cross-device/account recovery after the ADR-002 identity provider decision.
-- Finish owner-accepted Inktrospect / The Dossier T10 design integration across responsive first-reveal, history, evidence and report states; render the T08 server-owned highlight when present and an honest fallback when absent, never client-side salience.
+- Finish owner-accepted Inktrospect / The Dossier T10 design integration across responsive first-reveal, history, evidence and report states; render the T08A server-owned highlight when present and the approved no-highlight fallback when absent; never perform salience selection client-side.
 
 ### Acceptance evidence
 
@@ -1472,7 +1537,7 @@ No approval is created by this task brief. Mock/disabled implementation is not a
 
 **Status:** `PLANNED` · **Owner:** statistics-report · **Milestone:** comparison
 
-**Hard predecessors:** [T08](#t08), [T09](#t09)
+**Hard predecessors:** [T08A](#t08a), [T09](#t09)
 **Platforms:** shared, backend
 **Connector ports:** None
 
@@ -1494,10 +1559,10 @@ contracts/product/v1/
 
 ### Coding sequence
 
-1. Extend the existing T01 Comparison wire schema/semantics with native-unit directional facts, common valid masks/coverage, per-input provenance, method/version compatibility and fixed family scales before any overall score; do not create a parallel comparison DTO.
+1. Extend the existing T01 Comparison wire schema/semantics with native-unit directional facts, common valid masks/coverage, per-input provenance, method/version compatibility and T08A fixed non-population mechanical display domains; do not create a parallel comparison DTO.
 2. Resolve the existing cosine-range/schema conflict explicitly rather than clipping a value into a probability.
 3. Support same-owner Me-v-Me first and service contracts for separately granted partner inputs; T22 gates other-owner release.
-4. Distinguish system ingestion/analysis/report timestamps from separately sourced writing/photo dates, task/method variation and writing change; qualify any similarity index with an evaluated mapping.
+4. Distinguish system ingestion/analysis/report timestamps from separately sourced writing/photo dates, task/method variation and writing change; withhold any calibrated or aggregate similarity score unless an evaluated mapping exists.
 
 ### Contract and integration handoff
 
@@ -1507,6 +1572,7 @@ ComparisonDocument fixtures with directional facts, coverage and authorized evid
 
 - A/B swap preserves distance and reverses directional labels; self-distance is zero where defined.
 - Reference absence still permits valid descriptive comparisons; no authorship/romance/mental-health inference.
+- Calibrated or aggregate similarity scores remain absent unless their mapping has evaluation evidence; descriptive native-unit comparison does not require a reference cohort.
 
 ### Required failure and regression cases
 

@@ -12,13 +12,13 @@ python docs/roadmap/plan_tools.py --active
 python docs/roadmap/plan_tools.py --task T11
 ```
 
-At the current post-PR #23 baseline, `--ready` yields **no new planned task**. `--active` yields **T10, T11, T17, T19, T21 and T24**. T29 is the next native unlock but remains unready until T10 is explicitly accepted. Human recruitment, provider accounts/live calls, real charges, signing and store publication remain separately gated.
+At the current post-PR #25 baseline, `--ready` yields **T08A**. `--active` yields **T10, T11, T17, T19, T21 and T24**. T29 is the next native unlock but remains unready until T10 is explicitly accepted. Human recruitment, provider accounts/live calls, real charges, signing and store publication remain separately gated.
 
 ## Current handoff
 
 The [post-PR14 reconciliation](23-post-pr14-reconciliation.md) is retained as historical evidence. Current status comes from [tasks.json](tasks.json) and the generated backlog.
 
-- **READY planned work:** none.
+- **READY planned work:** T08A (report presentation and first-reveal policy).
 - **Active incomplete work:** T11 (human pilot gates/real evidence), T17 (production identity plus accepted-design integration), T19 (real payment rails/sandbox evidence and product policy) and T24 (deployment/recovery/live providers).
 - **Implemented pending review:** T10 (Direction A — The Dossier selected for the Inktrospect prototype; complete prototype + explicit owner design acceptance remain) and T21 (final design/integration/render review).
 - **Completed since PR #14:** T15 provider-independent Premium adapter/runtime work is DONE; live model activation/evaluation remains separately gated.
@@ -31,8 +31,8 @@ Do not collapse this into a single percentage. `--ready` answers what new planne
 
 1. **Close the foundation:** T00A fixes the four recorded review gaps. T03 drafts purpose/retention/collection contracts independently. T01 then freezes product schemas and Free isolation. T26 remains reviewed/inactive and is consumed, not rebuilt.
 2. **Expose stable seams:** T27 defines application-owned connector ports/fakes; T28 establishes isolated reproducible environments and build matrices. T05 produces actual evidence while T10 develops contract-driven visual/native design. T02 adds persistence/identity/authorization using the ports and environment.
-3. **Make a usable Free slice:** T04 implements safe uploads and durable jobs. T09 assembles report snapshots from T01/T05 without requiring a real reference release or model. T17 integrates the web journey. T29 builds the mobile shell/platform seam and compatibility spike; it need not wait for every paid journey to exist.
-4. **Run empirical and Premium lanes:** T11 collects approved pilot evidence after safe intake; T06 calibrates; T08 adds reviewed normalization/content; T12/T13/T14 build the reference/release pipeline. T15 implements the evidence-bound model adapter against T09/T26 with mocks; T16 performs approved evals. These lanes meet before production claims are enabled.
+3. **Make a usable Free slice:** T04 implements safe uploads and durable jobs. T09 assembles report snapshots from T01/T05 without requiring a real reference release or model. T08A adds reviewed presentation labels/non-population display domains and the server-owned first reveal without waiting for empirical calibration. T17 integrates the web journey. T29 builds the mobile shell/platform seam and compatibility spike; it need not wait for every paid journey to exist.
+4. **Run empirical and Premium lanes:** T11 collects approved pilot evidence after safe intake; T06 calibrates; T08 consumes T06 plus T08A to add calibrated normalization and calibration-sensitive content; T12/T13/T14 build the reference/release pipeline. T15 implements the evidence-bound model adapter against T09/T26 with mocks; T16 performs approved evals. These lanes meet before production claims are enabled.
 5. **Integrate commerce and presentation:** after T15 establishes the Premium attempt/result contract, T19 implements the shared ledger and Stripe/Apple/Google server adapters without waiting for native UI completion. T18 adds deterministic comparisons; T21 lands shared exports; T24 establishes notification/support operations and the redacted feedback backend; T20 then closes the web paid journey against those real exports, paid-state semantics and feedback API; T22 adds scoped sharing/invitations.
 6. **Complete native journeys:** after T20 publishes the shared paid-state fixtures/semantics and T24 provides server-side push operations, T30/T31 integrate capture, account-backed reports/history, native purchases, Premium, comparison, export, links, push and deletion against the established services. A native shell is not task completion. Use internal PR slices for each feature; the task stays open until its full integrated acceptance passes.
 7. **Qualify and release:** T23 runs full multi-platform QA/security/privacy/recovery evidence. T32/T33 assemble App Store/Play readiness and actual review/testing evidence. T25 checks owner gates and publishes the approved scope in staged releases. No circular dependency from store approval back to building the API.
