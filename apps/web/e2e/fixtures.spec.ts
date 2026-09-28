@@ -24,6 +24,19 @@ test("the free view renders every projected fact and no Premium section", async 
   await expect(page.locator("[data-evidence=AI_SYNTHESIS]")).toHaveCount(0);
 });
 
+test("the v2 fixture renders the real server-owned first reveal", async ({ page }) => {
+  const view = fixture("free-v2");
+  const primary = view.sections.find((section: { template: string }) => section.template === "HIGHLIGHT_PRIMARY");
+  expect(primary?.content_ids).toEqual(["content.highlight.v1.slant.right.almost_all"]);
+  expect(primary?.fact_ids).toEqual(["fact.SLANT_RIGHT_FRACTION"]);
+
+  await page.goto("/fixtures/free-v2");
+  await expect(page.getByRole("heading", { level: 2, name: "What stands out" })).toBeVisible();
+  await expect(page.getByText("Almost every accepted slant observation leans right.")).toBeVisible();
+  await expect(page.getByText("Fraction of right-slanted strokes")).toBeVisible();
+  await expect(page.getByText("content.highlight.v1.slant.right.almost_all")).toHaveCount(0);
+});
+
 test("missing measurements are explained, never shown as zero", async ({ page }) => {
   const view = fixture("free");
   const missing = view.facts.filter((f: { availability: string }) => f.availability === "MISSING");

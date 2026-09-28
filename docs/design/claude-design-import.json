@@ -42,7 +42,10 @@
     "fixtures/reports/view.export-no-image.json",
     "fixtures/reports/evidence-bundle.json",
     "fixtures/reports/report-document.json",
-    "fixtures/reports/report-document.premium.json"
+    "fixtures/reports/report-document.premium.json",
+    "fixtures/reports/view.free-v2.json",
+    "fixtures/reports/evidence-bundle.v2.json",
+    "fixtures/reports/report-document.v2.json"
   ],
   "existing_web_implementation": [
     "apps/web/app/globals.css",

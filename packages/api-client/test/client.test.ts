@@ -11,8 +11,8 @@ const fixture = (name: string) =>
   JSON.parse(readFileSync(new URL(`../../../fixtures/reports/${name}`, import.meta.url), "utf8"));
 
 test("every shared view fixture passes the runtime guard", () => {
-  for (const name of ["view.free.json", "view.owner-premium.json", "view.owner-image-revoked.json",
-                      "view.share.json", "view.export-no-image.json"]) {
+  for (const name of ["view.free.json", "view.free-v2.json", "view.owner-premium.json",
+                      "view.owner-image-revoked.json", "view.share.json", "view.export-no-image.json"]) {
     const view = parseReportView(fixture(name));
     assert.ok(view.facts.length >= 0 && view.contract_version.startsWith("1."), name);
   }

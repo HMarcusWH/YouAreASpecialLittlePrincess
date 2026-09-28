@@ -215,7 +215,9 @@
     "revoked_image": "fixtures/reports/view.owner-image-revoked.json",
     "share": "fixtures/reports/view.share.json",
     "export_no_image": "fixtures/reports/view.export-no-image.json",
-    "evidence": "fixtures/reports/evidence-bundle.json"
+    "evidence": "fixtures/reports/evidence-bundle.json",
+    "first_reveal": "fixtures/reports/view.free-v2.json",
+    "first_reveal_evidence": "fixtures/reports/evidence-bundle.v2.json"
   },
   "planned_owners": {
     "pair_invitation_comparison": [

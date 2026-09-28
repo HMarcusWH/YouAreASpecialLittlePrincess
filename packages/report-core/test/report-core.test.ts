@@ -106,6 +106,22 @@ test("frame mapping matches the Python domain implementation", () => {
   assert.throws(() => mapToAncestor(parity.frames, "frame_upload", "frame_analysis", 0, 0));
 });
 
+test("v2 free fixture carries reviewed server-owned highlights", () => {
+  const view = fixture<ReportViewModel>("view.free-v2.json");
+  const highlights = view.sections.filter((section) => section.template === "HIGHLIGHT_PRIMARY"
+    || section.template === "HIGHLIGHT_SECONDARY");
+  assert.deepEqual(highlights.map((section) => section.content_ids[0]), [
+    "content.highlight.v1.slant.right.almost_all",
+    "content.highlight.v1.layout.margins_asymmetric",
+    "content.highlight.v1.baseline.angle_stable",
+  ]);
+  assert.deepEqual(highlights.map((section) => section.fact_ids), [
+    ["fact.SLANT_RIGHT_FRACTION"],
+    ["fact.MARGIN_SYMMETRY"],
+    ["fact.BASELINE_ANGLE_STD"],
+  ]);
+});
+
 test("free view fixture carries no premium sections and only referenced facts", () => {
   const view = fixture<ReportViewModel>("view.free.json");
   assert.ok(view.sections.every((s) => s.premium_section_id === null));
