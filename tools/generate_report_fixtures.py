@@ -120,6 +120,10 @@ def build() -> dict[str, str]:
         "evidence-bundle.json": dump(evidence.to_dict()),
         "report-document.json": dump(report.to_dict()),
         "report-document.premium.json": dump(premium.to_dict()),
+        "report-document.highlight.json": dump(highlight_report.to_dict()),
+        "view.highlight.json": dump(need(project_report(
+            highlight_report, ProjectionRequest("FREE", CREATED, actions=OWNER_ACTIONS)
+        ), "highlight view").to_dict()),
     }
     for name, (source, request) in views.items():
         outputs[name] = dump(need(project_report(source, request), name).to_dict())
