@@ -85,6 +85,25 @@ def test_image_proxy_family_can_be_secondary_but_never_primary():
     assert any(candidate.family == "ink" for candidate in selected[1:])
 
 
+def test_image_proxy_is_secondary_fallback_not_routine_slot():
+    source = json.loads(generator.SOURCE.read_text(encoding="utf-8"))
+    wanted = {
+        "slant.right.almost_all",
+        "layout.margins_asymmetric",
+        "baseline.rising",
+        "ink.saturation_low",
+    }
+    facts_by_id = {}
+    for row in source["candidates"]:
+        if row["candidate_id"] not in wanted:
+            continue
+        for item in witness_facts(row):
+            facts_by_id[item["fact_id"]] = item
+    selected = select_highlights(list(facts_by_id.values()), limit=3)
+    assert len(selected) == 3
+    assert {candidate.family for candidate in selected} == {"slant", "layout", "baseline"}
+    assert all(candidate.family != "ink" for candidate in selected)
+
 def test_selection_is_order_invariant_and_returns_distinct_families():
     source = json.loads(generator.SOURCE.read_text(encoding="utf-8"))
     wanted = {
