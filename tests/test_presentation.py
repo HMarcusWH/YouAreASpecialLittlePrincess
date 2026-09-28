@@ -41,7 +41,11 @@ def test_presentation_compiler_outputs_are_exact_and_reviewed():
     compiled = generator.compiled_registry(source)
     expected = generator.render(compiled)
     assert all(path.read_text(encoding="utf-8") == expected for path in generator.OUTPUTS)
-    assert generator.TS_OUTPUT.read_text(encoding="utf-8") == generator.render_typescript(compiled)
+    expected_ts = generator.render_typescript(compiled)
+    assert generator.TS_OUTPUT.read_text(encoding="utf-8") == expected_ts
+    client = generator.client_registry(compiled)
+    assert "candidates" not in client and "primary_families" not in client and "family_order" not in client
+    assert "candidate_id" not in expected_ts and "minimum_observations" not in expected_ts
 
 
 def test_registry_access_is_defensive():
