@@ -73,6 +73,9 @@ function SectionBlock({ section, facts, locale }: { section: ReportSection; fact
             <EvidenceBadge evidence="AUTHORED_CONTENT" locale={locale} /> {value}
           </p>
         ))}
+        {section.availability === "UNCALIBRATED" && (
+          <p className="pr-hint">{t(locale, "availability.UNCALIBRATED")}</p>
+        )}
         {rows.length > 0 && (
           <div className="pr-table-wrap">
             <table className="pr-facts">
