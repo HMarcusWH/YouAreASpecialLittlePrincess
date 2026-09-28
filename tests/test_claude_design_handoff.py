@@ -49,6 +49,7 @@ def test_state_matrix_covers_t10_required_design_acceptance_surface():
     assert {"refused", "failed_credit_released", "not_applicable_no_authorized_image"} <= screens["premium_generation"]
     assert {"partial_missing", "uncalibrated", "reference_unavailable", "image_revoked"} <= screens["free_report"]
     assert {"prototype_illustrative_selection", "planned_server_owned_highlight", "no_eligible_highlight", "source_image_not_retained"} == screens["first_reveal"]
+    assert matrix["planned_owners"]["first_reveal"] == ["T08A"]
 
     assert set(matrix["availability_states"]) == {
         "READY", "UNCALIBRATED", "MISSING", "NOT_IMPLEMENTED", "INELIGIBLE",
