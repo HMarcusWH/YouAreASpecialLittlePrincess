@@ -29,11 +29,13 @@ from princess_app.domain.reports import (  # noqa: E402
     project_report,
     revise_report,
 )
+from princess_app.domain.reports.template import HIGHLIGHT_TEMPLATE_VERSION  # noqa: E402
 
 FIXTURES = ROOT / "fixtures" / "reports"
 SOURCE = FIXTURES / "source"
 CREATED = datetime(2026, 9, 27, 12, 0, tzinfo=timezone.utc)
-OWNER_ACTIONS = {"COMPARE": None, "EXPORT": None, "SHARE": None, "SAVE": None, "DELETE": None,
+OWNER_ACTIONS = {"COMPARE": "comparison_not_available", "EXPORT": None, "SHARE": "sharing_not_available",
+                 "SAVE": "save_not_available", "DELETE": "delete_from_settings",
                  "PURCHASE": "premium_not_yet_available"}
 SYNTHETIC_LINES = ("the quick brown fox jumps", "over a very lazy dog", "writing sample fixture")
 
@@ -83,11 +85,21 @@ def build() -> dict[str, str]:
     evidence = need(build_evidence_bundle(payload, reference, "evidence_fixture_1"), "evidence bundle")
     report = need(assemble_report(report_id="report_fixture_1", analysis=reference, result=result,
                                   created_at=CREATED, locale="sv-SE", evidence=evidence), "report")
+
+    reference_v2 = json.loads(json.dumps(reference))
+    reference_v2["analysis_id"] = "analysis_fixture_v2"
+    reference_v2["run_id"] = "run_fixture_v2"
+    reference_v2["versions"]["template"] = HIGHLIGHT_TEMPLATE_VERSION
+    evidence_v2 = need(build_evidence_bundle(payload, reference_v2, "evidence_fixture_v2"), "v2 evidence bundle")
+    report_v2 = need(assemble_report(report_id="report_fixture_v2", analysis=reference_v2, result=result,
+                                     created_at=CREATED, locale="sv-SE", evidence=evidence_v2), "v2 report")
+
     premium = need(revise_report(report, created_at=CREATED.replace(hour=13), premium_overlay_id="overlay_fixture_1"),
                    "premium revision")
     UNLOCKED = PremiumAuthorization("report_fixture_1", "overlay_fixture_1", PremiumAccess.UNLOCKED)
     views = {
         "view.free.json": (report, ProjectionRequest("FREE", CREATED, actions=OWNER_ACTIONS)),
+        "view.free-v2.json": (report_v2, ProjectionRequest("FREE", CREATED, actions=OWNER_ACTIONS)),
         "view.owner-premium.json": (premium, ProjectionRequest(
             "OWNER", CREATED, premium=UNLOCKED,
             actions={**OWNER_ACTIONS, "PURCHASE": "already_unlocked"})),
@@ -111,7 +123,9 @@ def build() -> dict[str, str]:
     outputs = {
         "frame-parity.json": dump(parity),
         "evidence-bundle.json": dump(evidence.to_dict()),
+        "evidence-bundle.v2.json": dump(evidence_v2.to_dict()),
         "report-document.json": dump(report.to_dict()),
+        "report-document.v2.json": dump(report_v2.to_dict()),
         "report-document.premium.json": dump(premium.to_dict()),
     }
     for name, (source, request) in views.items():

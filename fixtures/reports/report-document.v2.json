@@ -1,46 +1,30 @@
 {
-  "actions": [
-    {
-      "action_id": "action.compare",
-      "enabled": false,
-      "kind": "COMPARE",
-      "reason": "comparison_not_available"
-    },
-    {
-      "action_id": "action.export",
-      "enabled": true,
-      "kind": "EXPORT",
-      "reason": null
-    },
-    {
-      "action_id": "action.share",
-      "enabled": false,
-      "kind": "SHARE",
-      "reason": "sharing_not_available"
-    },
-    {
-      "action_id": "action.save",
-      "enabled": false,
-      "kind": "SAVE",
-      "reason": "save_not_available"
-    },
-    {
-      "action_id": "action.delete",
-      "enabled": false,
-      "kind": "DELETE",
-      "reason": "delete_from_settings"
-    },
-    {
-      "action_id": "action.purchase",
-      "enabled": false,
-      "kind": "PURCHASE",
-      "reason": "already_unlocked"
+  "analysis": {
+    "analysis_id": "analysis_fixture_v2",
+    "contract_version": "1.0.0",
+    "created_at": "2026-09-27T12:00:00Z",
+    "input_asset_id": "asset_fixture_1",
+    "input_sha256": "46abc778393d1570137b4c395912856da5c02233643e51b6d13facf18151c99a",
+    "owner_id": "owner_fixture_1",
+    "processed_sha256": "aecd336d36edf312cfdd887f8d0d133f0ee200a25346a82044d47e46e3cdb450",
+    "run_id": "run_fixture_v2",
+    "versions": {
+      "analysis_config": "494ff873c4bf7a309da8a78664999b2714980d90728c9c2c49b9012ae5494e68",
+      "benchmark_release": null,
+      "content_schema": "1.0.0",
+      "engine": "0.1.0",
+      "feature_schema": "1.0.0-draft",
+      "feature_set": null,
+      "method_manifest": "a4606d9925680ff135c6dd2c332bec51e3a2cf878383275a83fa8ecb0d20c835",
+      "normalization": null,
+      "quality_policy": "quality-policy/1",
+      "template": "individual-report/2"
     }
-  ],
-  "authorized_asset_ids": [
-    "asset_fixture_1"
-  ],
+  },
   "contract_version": "1.0.0",
+  "created_at": "2026-09-27T12:00:00Z",
+  "document_digest": "6409df44b8052f1909396c46ebd4fc15f20c6d84cd82135f9bc3e7a32e386b36",
+  "evidence_bundle_id": "evidence_fixture_v2",
   "facts": [
     {
       "availability": "READY",
@@ -2111,7 +2095,7 @@
       "value": 0.0015009005403241946
     }
   ],
-  "generated_at": "2026-09-27T12:00:00Z",
+  "kind": "INDIVIDUAL",
   "locale": "sv-SE",
   "notices": [
     {
@@ -2135,18 +2119,52 @@
       "notice_id": "notice.traditional"
     },
     {
-      "class": "AI",
-      "localization_key": "notice.ai_synthesis",
-      "notice_id": "notice.ai"
-    },
-    {
       "class": "PRIVACY",
       "localization_key": "notice.private_report",
       "notice_id": "notice.privacy"
     }
   ],
-  "projection": "OWNER",
+  "premium_overlay_id": null,
+  "reference_claims": [],
+  "report_id": "report_fixture_v2",
+  "revision": 1,
   "sections": [
+    {
+      "availability": "UNCALIBRATED",
+      "content_ids": [
+        "content.highlight.v1.slant.right.almost_all"
+      ],
+      "fact_ids": [
+        "fact.SLANT_RIGHT_FRACTION"
+      ],
+      "premium_section_id": null,
+      "section_id": "section.highlight.primary",
+      "template": "HIGHLIGHT_PRIMARY"
+    },
+    {
+      "availability": "UNCALIBRATED",
+      "content_ids": [
+        "content.highlight.v1.layout.margins_asymmetric"
+      ],
+      "fact_ids": [
+        "fact.MARGIN_SYMMETRY"
+      ],
+      "premium_section_id": null,
+      "section_id": "section.highlight.secondary.1",
+      "template": "HIGHLIGHT_SECONDARY"
+    },
+    {
+      "availability": "UNCALIBRATED",
+      "content_ids": [
+        "content.highlight.v1.baseline.angle_stable"
+      ],
+      "fact_ids": [
+        "fact.BASELINE_ANGLE_STD"
+      ],
+      "premium_section_id": null,
+      "section_id": "section.highlight.secondary.2",
+      "template": "HIGHLIGHT_SECONDARY"
+    },
     {
       "availability": "READY",
       "content_ids": [],
@@ -2283,15 +2301,12 @@
       "template": "REFERENCE"
     },
     {
-      "availability": "READY",
+      "availability": "LOCKED",
       "content_ids": [],
       "fact_ids": [],
-      "premium_section_id": "premium.overlay_fixture_1",
+      "premium_section_id": null,
       "section_id": "section.premium",
       "template": "PREMIUM"
     }
-  ],
-  "source_digest": "d2328fcd77a6db9ce93e6e1157cedda1d0e6c66cffe9a2a5cf7c9d6c10a4e5ae",
-  "source_report_id": "report_fixture_1",
-  "source_revision": 2
+  ]
 }

@@ -1,6 +1,6 @@
 {
   "contract_version": "claude-design-import/v1",
-  "source_baseline_sha": "8582215ee9a6b444a4c9c5faa7af3ac3c423d4a6",
+  "source_baseline_sha": "30dea9cb94c22c406f83f69da57f6f7ae79a44b3",
   "entrypoint": "docs/design/CLAUDE_DESIGN_HANDOFF.md",
   "read_first": [
     "docs/design/CLAUDE_DESIGN_HANDOFF.md",
@@ -31,8 +31,7 @@
   "semantic_contracts": [
     "contracts/product/v1/schemas/",
     "packages/contracts/src/",
-    "packages/api-client/src/",
-    "contracts/product/v1/presentation-content.v1.json"
+    "packages/api-client/src/"
   ],
   "synthetic_fixtures": [
     "fixtures/reports/README.md",
@@ -43,7 +42,10 @@
     "fixtures/reports/view.export-no-image.json",
     "fixtures/reports/evidence-bundle.json",
     "fixtures/reports/report-document.json",
-    "fixtures/reports/report-document.premium.json"
+    "fixtures/reports/report-document.premium.json",
+    "fixtures/reports/view.free-v2.json",
+    "fixtures/reports/evidence-bundle.v2.json",
+    "fixtures/reports/report-document.v2.json"
   ],
   "existing_web_implementation": [
     "apps/web/app/globals.css",
@@ -74,10 +76,13 @@
     "src/princess_app/adapters/openai/",
     "apps/workers/",
     "contracts/consent/",
-    "*.zip"
+    "*.zip",
+    "content/presentation/",
+    "contracts/product/v1/presentation-content.v1.json"
   ],
   "rules": [
     "Use repository contracts and synthetic fixtures as product truth; do not invent fields or unsupported statistics.",
+    "Use the generated @princess/report-core presentation surface for reviewed labels, localized content and display domains; do not import server-owned highlight candidates, thresholds, weights or family ordering.",
     "Treat packages/report-web as existing DOM/print implementation context, not a requirement to reuse DOM patterns on native.",
     "Treat native canvases as design simulations until T29-T31 implement them.",
     "Do not upload real handwriting, participant data, production dumps, secrets or private provider payloads.",

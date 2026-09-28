@@ -6,7 +6,7 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 
 export const metadata: Metadata = {
-  title: "Princess — handwriting measured",
+  title: "Inktrospect — handwriting measured",
   description: "A private, measured report of your handwriting.",
   robots: { index: false, follow: false },
 };
@@ -17,7 +17,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <body>
         <a className="skip-link" href="#main">Skip to content</a>
         <header className="site-header">
-          <a href="/" className="brand">Princess</a>
+          <a href="/" className="brand">Inktrospect</a>
           <nav aria-label="Main">
             <a href="/start">New analysis</a>
             <a href="/reports">My reports</a>

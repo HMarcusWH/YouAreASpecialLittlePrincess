@@ -56,6 +56,17 @@ def codes(outcome):
     return {issue.code for issue in outcome.issues}
 
 
+def test_shared_owner_fixture_actions_match_current_implemented_flows():
+    assert ACTIONS == {
+        "COMPARE": "comparison_not_available",
+        "EXPORT": None,
+        "SHARE": "sharing_not_available",
+        "SAVE": "save_not_available",
+        "DELETE": "delete_from_settings",
+        "PURCHASE": "premium_not_yet_available",
+    }
+
+
 def test_template_covers_every_free_feature_exactly_once():
     listed = [f for _, _, ids in FACT_SECTIONS for f in ids]
     assert len(listed) == len(set(listed))

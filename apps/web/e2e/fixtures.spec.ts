@@ -7,6 +7,13 @@ import { expect, test } from "@playwright/test";
 const fixture = (name: string) =>
   JSON.parse(readFileSync(new URL(`../../../fixtures/reports/view.${name}.json`, import.meta.url), "utf8"));
 
+test("public web chrome uses the Inktrospect brand", async ({ page }) => {
+  await page.goto("/");
+  await expect(page).toHaveTitle("Inktrospect — handwriting measured");
+  await expect(page.locator(".site-header .brand")).toHaveText("Inktrospect");
+  await expect(page.locator(".site-header")).not.toContainText("Princess");
+});
+
 test("the free view renders every projected fact and no Premium section", async ({ page }) => {
   const view = fixture("free");
   await page.goto("/fixtures/free");
@@ -15,6 +22,20 @@ test("the free view renders every projected fact and no Premium section", async 
     new Set(view.sections.flatMap((s: { fact_ids: string[] }) => s.fact_ids)).size);
   await expect(page.locator(".pr-premium")).toHaveCount(0);
   await expect(page.locator("[data-evidence=AI_SYNTHESIS]")).toHaveCount(0);
+});
+
+test("the v2 fixture renders the real server-owned first reveal", async ({ page }) => {
+  const view = fixture("free-v2");
+  const primary = view.sections.find((section: { template: string }) => section.template === "HIGHLIGHT_PRIMARY");
+  expect(primary?.content_ids).toEqual(["content.highlight.v1.slant.right.almost_all"]);
+  expect(primary?.fact_ids).toEqual(["fact.SLANT_RIGHT_FRACTION"]);
+
+  await page.goto("/fixtures/free-v2");
+  const reveal = page.getByRole("region", { name: "What stands out" });
+  await expect(reveal).toBeVisible();
+  await expect(reveal.getByText("Almost every accepted slant observation leans right.")).toBeVisible();
+  await expect(reveal.getByRole("rowheader", { name: "Fraction of right-slanted strokes" })).toBeVisible();
+  await expect(page.getByText("content.highlight.v1.slant.right.almost_all")).toHaveCount(0);
 });
 
 test("missing measurements are explained, never shown as zero", async ({ page }) => {
@@ -49,6 +70,21 @@ test("share and export previews disclose that the source image is omitted", asyn
 
 test("disabled actions explain why with localized product copy", async ({ page }) => {
   await page.goto("/fixtures/free");
+
+  for (const [name, reason] of [
+    ["Compare", "Comparison is not available yet."],
+    ["Share", "Share links are not available yet."],
+    ["Save", "Reports are saved to your account automatically."],
+    ["Delete", "Delete the sample in Settings to remove this report."],
+  ] as const) {
+    const action = page.getByRole("button", { name });
+    await expect(action).toBeDisabled();
+    const reasonId = await action.getAttribute("aria-describedby");
+    expect(reasonId).toBeTruthy();
+    await expect(page.locator(`[id="${reasonId}"]`)).toHaveText(reason);
+  }
+  await expect(page.getByRole("button", { name: "Export PDF" })).toBeEnabled();
+
   let purchase = page.getByRole("button", { name: "Get Premium" });
   await expect(purchase).toBeDisabled();
   let describedBy = await purchase.getAttribute("aria-describedby");

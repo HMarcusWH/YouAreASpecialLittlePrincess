@@ -35,7 +35,7 @@ Canonical JSON is UTF-8 JSON with stable object-key ordering and finite values o
 - **T10/T17/T29–T31** consume generated TypeScript/API facts. Clients may lay them out differently but do not calculate a second measurement, percentile, entitlement or report truth.
 - **T15** creates a bounded `PremiumPacket` from a saved report and T26; provider output must validate as `PremiumOutput` and then pass packet-level validation before storage.
 - **T19** owns purchase/credit state. Entitlements authorize operations; they never rewrite measurements or report facts.
-- **T08A** owns `presentation-content.v1.json`: reviewed EN/SV labels, non-population display domains and deterministic highlight candidate/content definitions. It contains no population ranks and no client-side selector authority.
+- **T08A** owns `presentation-content.v1.json`: reviewed EN/SV labels, non-population display domains and deterministic server-side highlight candidate/content definitions. This full handoff is not a client/design selector surface. Clients and design tooling consume the generated `@princess/report-core` presentation registry, which contains labels/content/domains but deliberately omits candidates, thresholds, weights and family ordering.
 
 The generated TypeScript is intentionally toolchain-neutral in T01. T28 owns the pinned pnpm/Node workspace and TypeScript compilation environment; it must consume this exact generated surface rather than regenerating a different model.
 

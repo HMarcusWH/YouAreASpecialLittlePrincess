@@ -31,8 +31,12 @@ def test_claude_design_import_paths_exist_and_exclude_irrelevant_private_surface
     assert "migrations/" in excluded
     assert "research/" in excluded
     assert "src/princess_app/adapters/openai/" in excluded
+    assert "content/presentation/" in excluded
+    assert "contracts/product/v1/presentation-content.v1.json" in excluded
     assert not any(path.startswith("migrations/") for path in listed)
     assert not any(path.startswith("research/") for path in listed)
+    assert "contracts/product/v1/presentation-content.v1.json" not in listed
+    assert not any(path.startswith("content/presentation/") for path in listed)
 
 
 def test_state_matrix_covers_t10_required_design_acceptance_surface():
@@ -48,7 +52,7 @@ def test_state_matrix_covers_t10_required_design_acceptance_surface():
     assert {"pending", "ask_to_buy", "cancelled", "failed", "restored", "account_mismatch"} <= screens["purchase"]
     assert {"refused", "failed_credit_released", "not_applicable_no_authorized_image"} <= screens["premium_generation"]
     assert {"partial_missing", "uncalibrated", "reference_unavailable", "image_revoked"} <= screens["free_report"]
-    assert {"prototype_illustrative_selection", "server_owned_highlight_available", "no_eligible_highlight", "source_image_not_retained"} == screens["first_reveal"]
+    assert {"legacy_v1_without_highlight", "server_owned_highlight_available", "no_eligible_highlight", "source_image_not_retained"} == screens["first_reveal"]
     assert matrix["planned_owners"]["first_reveal"] == ["T17"]
 
     assert set(matrix["availability_states"]) == {
@@ -74,6 +78,20 @@ def test_every_required_fixture_mapping_points_to_checked_in_synthetic_fixture()
         if path.suffix == ".json":
             value = json.loads(path.read_text(encoding="utf-8"))
             assert isinstance(value, dict)
+
+
+def test_handoff_baseline_is_consistent_and_client_presentation_surface_stays_stripped():
+    manifest = load("claude-design-import.json")
+    acceptance = (DESIGN / "CLAUDE_DESIGN_ACCEPTANCE.md").read_text(encoding="utf-8")
+    baseline = manifest["source_baseline_sha"]
+    assert len(baseline) == 40 and all(char in "0123456789abcdef" for char in baseline)
+    assert f"`{baseline}`" in acceptance
+
+    client_surface = (ROOT / "packages/report-core/src/presentation.generated.ts").read_text(encoding="utf-8")
+    assert "content.highlight.v1.slant.right.almost_all" in client_surface
+    assert "GEOMETRIC_CANVAS" in client_surface
+    for server_only in ("candidate_id", '"clauses"', '"strength"', '"family_order"'):
+        assert server_only not in client_surface
 
 
 def test_handoff_does_not_self_approve_design_or_tokens():

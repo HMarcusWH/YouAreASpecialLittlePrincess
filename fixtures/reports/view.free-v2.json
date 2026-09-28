@@ -34,7 +34,7 @@
       "action_id": "action.purchase",
       "enabled": false,
       "kind": "PURCHASE",
-      "reason": "already_unlocked"
+      "reason": "premium_not_yet_available"
     }
   ],
   "authorized_asset_ids": [
@@ -2135,18 +2135,49 @@
       "notice_id": "notice.traditional"
     },
     {
-      "class": "AI",
-      "localization_key": "notice.ai_synthesis",
-      "notice_id": "notice.ai"
-    },
-    {
       "class": "PRIVACY",
       "localization_key": "notice.private_report",
       "notice_id": "notice.privacy"
     }
   ],
-  "projection": "OWNER",
+  "projection": "FREE",
   "sections": [
+    {
+      "availability": "UNCALIBRATED",
+      "content_ids": [
+        "content.highlight.v1.slant.right.almost_all"
+      ],
+      "fact_ids": [
+        "fact.SLANT_RIGHT_FRACTION"
+      ],
+      "premium_section_id": null,
+      "section_id": "section.highlight.primary",
+      "template": "HIGHLIGHT_PRIMARY"
+    },
+    {
+      "availability": "UNCALIBRATED",
+      "content_ids": [
+        "content.highlight.v1.layout.margins_asymmetric"
+      ],
+      "fact_ids": [
+        "fact.MARGIN_SYMMETRY"
+      ],
+      "premium_section_id": null,
+      "section_id": "section.highlight.secondary.1",
+      "template": "HIGHLIGHT_SECONDARY"
+    },
+    {
+      "availability": "UNCALIBRATED",
+      "content_ids": [
+        "content.highlight.v1.baseline.angle_stable"
+      ],
+      "fact_ids": [
+        "fact.BASELINE_ANGLE_STD"
+      ],
+      "premium_section_id": null,
+      "section_id": "section.highlight.secondary.2",
+      "template": "HIGHLIGHT_SECONDARY"
+    },
     {
       "availability": "READY",
       "content_ids": [],
@@ -2283,15 +2314,15 @@
       "template": "REFERENCE"
     },
     {
-      "availability": "READY",
+      "availability": "LOCKED",
       "content_ids": [],
       "fact_ids": [],
-      "premium_section_id": "premium.overlay_fixture_1",
+      "premium_section_id": null,
       "section_id": "section.premium",
       "template": "PREMIUM"
     }
   ],
-  "source_digest": "d2328fcd77a6db9ce93e6e1157cedda1d0e6c66cffe9a2a5cf7c9d6c10a4e5ae",
-  "source_report_id": "report_fixture_1",
-  "source_revision": 2
+  "source_digest": "6409df44b8052f1909396c46ebd4fc15f20c6d84cd82135f9bc3e7a32e386b36",
+  "source_report_id": "report_fixture_v2",
+  "source_revision": 1
 }

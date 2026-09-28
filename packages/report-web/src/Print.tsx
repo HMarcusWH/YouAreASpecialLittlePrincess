@@ -70,7 +70,7 @@ export function ShareCard({ view, locale, shape }: { view: ReportViewModel; loca
   const facts = cardFacts(view, shape === "story" ? 6 : 4);
   return (
     <div className={`pr-card pr-card-${shape}`} lang={locale}>
-      <p className="pr-card-brand">Princess</p>
+      <p className="pr-card-brand">Inktrospect</p>
       <p className="pr-card-context">{p(locale, "card.context")}</p>
       <dl className="pr-card-facts">
         {facts.map((fact) => {
