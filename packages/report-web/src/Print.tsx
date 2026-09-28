@@ -77,7 +77,7 @@ export function ShareCard({ view, locale, shape }: { view: ReportViewModel; loca
           const formatted = formatFact(fact, locale);
           return (
             <div key={fact.fact_id} className="pr-card-fact" data-fact-id={fact.fact_id}>
-              <dt>{featureName(fact.feature_id)}</dt>
+              <dt>{featureName(fact.feature_id, locale)}</dt>
               <dd>{formatted.state === "VALUE" ? formatted.text : t(locale, formatted.reasonKey)}</dd>
               <dd className="pr-card-label">
                 {t(locale, `evidence.${fact.evidence_class}`)}
