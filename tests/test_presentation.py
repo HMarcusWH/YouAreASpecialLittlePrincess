@@ -245,7 +245,7 @@ def test_duplicate_json_keys_fail_closed(tmp_path):
         raise AssertionError("duplicate JSON keys must fail closed")
 
 
-def test_display_domains_are_non_population_and_slant_canvas_keeps_acceptance_boundary():
+def test_display_domain_access_is_defensive():\n    first = display_domain("SLANT_ANGLE_MEAN")\n    assert first is not None\n    first["min"] = 0\n    assert display_domain("SLANT_ANGLE_MEAN")["min"] == -90\n\ndef test_display_domains_are_non_population_and_slant_canvas_keeps_acceptance_boundary():
     registry = presentation_registry()
     assert {row["kind"] for row in registry["display_domains"].values()} <= {
         "GEOMETRIC_CANVAS", "MATHEMATICAL_DOMAIN",
