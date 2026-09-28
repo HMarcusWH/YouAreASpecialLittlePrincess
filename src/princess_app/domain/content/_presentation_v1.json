@@ -662,7 +662,8 @@
         "feature": "GLYPH_ASPECT_RATIO_MEAN",
         "center": 1,
         "max_distance": 0.2,
-        "invert": true
+        "invert": true,
+        "weight": 0.45
       },
       "priority": 0
     },
@@ -762,7 +763,8 @@
         "feature": "GLYPH_ASPECT_RATIO_CV",
         "min": 0,
         "max": 0.18,
-        "invert": true
+        "invert": true,
+        "weight": 0.65
       },
       "priority": 0
     },
@@ -1028,7 +1030,8 @@
         "op": "normalize",
         "feature": "SLANT_CONSISTENCY",
         "min": 0.85,
-        "max": 1
+        "max": 1,
+        "weight": 0.7
       },
       "priority": 0
     },
@@ -1127,7 +1130,8 @@
         "op": "abs_normalize",
         "feature": "BASELINE_ANGLE_MEAN",
         "max_abs": 0.5,
-        "invert": true
+        "invert": true,
+        "weight": 0.5
       },
       "priority": 0
     },
@@ -1153,7 +1157,8 @@
         "feature": "BASELINE_ANGLE_STD",
         "min": 0,
         "max": 0.5,
-        "invert": true
+        "invert": true,
+        "weight": 0.65
       },
       "priority": 0
     },
@@ -1204,7 +1209,8 @@
         "feature": "BASELINE_WAVINESS",
         "min": 0,
         "max": 0.15,
-        "invert": true
+        "invert": true,
+        "weight": 0.65
       },
       "priority": 0
     },
@@ -1331,7 +1337,8 @@
         "feature": "LINE_SPACING_CV",
         "min": 0,
         "max": 0.08,
-        "invert": true
+        "invert": true,
+        "weight": 0.65
       },
       "priority": 0
     },
@@ -1382,7 +1389,8 @@
         "feature": "WORD_SPACING_CV",
         "min": 0,
         "max": 0.12,
-        "invert": true
+        "invert": true,
+        "weight": 0.65
       },
       "priority": 0
     },
@@ -1484,7 +1492,8 @@
         "feature": "TEXT_BLOCK_HORIZONTAL_CENTER",
         "center": 0.5,
         "max_distance": 0.05,
-        "invert": true
+        "invert": true,
+        "weight": 0.45
       },
       "priority": 0
     },
@@ -1559,7 +1568,8 @@
         "op": "normalize",
         "feature": "MARGIN_SYMMETRY",
         "min": 0.85,
-        "max": 1
+        "max": 1,
+        "weight": 0.65
       },
       "priority": 0
     },
@@ -1662,7 +1672,8 @@
         "feature": "LINE_LENGTH_VARIABILITY",
         "min": 0,
         "max": 0.08,
-        "invert": true
+        "invert": true,
+        "weight": 0.65
       },
       "priority": 0
     },
@@ -1837,7 +1848,8 @@
         "op": "normalize",
         "feature": "STROKE_UNIFORMITY",
         "min": 0.85,
-        "max": 1
+        "max": 1,
+        "weight": 0.65
       },
       "priority": 0
     },
@@ -1889,7 +1901,8 @@
         "feature": "INK_DARKNESS_CV",
         "min": 0,
         "max": 0.12,
-        "invert": true
+        "invert": true,
+        "weight": 0.65
       },
       "priority": 0
     },
