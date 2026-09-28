@@ -38,8 +38,10 @@ def witness_facts(candidate: dict) -> list[dict]:
 def test_presentation_compiler_outputs_are_exact_and_reviewed():
     source = json.loads(generator.SOURCE.read_text(encoding="utf-8"))
     generator.validate(source)
-    expected = generator.render(generator.compiled_registry(source))
+    compiled = generator.compiled_registry(source)
+    expected = generator.render(compiled)
     assert all(path.read_text(encoding="utf-8") == expected for path in generator.OUTPUTS)
+    assert generator.TS_OUTPUT.read_text(encoding="utf-8") == generator.render_typescript(compiled)
 
 
 def test_registry_access_is_defensive():
