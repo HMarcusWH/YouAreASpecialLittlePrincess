@@ -4,7 +4,7 @@ import type { Action, EvidenceBundle, Fact, Notice, ReportSection, ReportViewMod
 import { formatFact } from "@princess/report-core";
 
 import { EvidenceView } from "./EvidenceView.tsx";
-import { featureName, sectionTitle, t, type Locale } from "./messages.ts";
+import { contentText, featureName, sectionTitle, t, type Locale } from "./messages.ts";
 
 const EVIDENCE_ICON: Record<Fact["evidence_class"], string> = {
   MEASURED: "◆", COMPUTATIONAL_PROXY: "◇", REFERENCE_STATISTIC: "▲", AUTHORED_CONTENT: "✎",
@@ -44,7 +44,7 @@ export function FactValue({ fact, locale }: { fact: Fact; locale: Locale }) {
 function FactRow({ fact, locale }: { fact: Fact; locale: Locale }) {
   return (
     <tr data-fact-id={fact.fact_id}>
-      <th scope="row">{featureName(fact.feature_id)}</th>
+      <th scope="row">{featureName(fact.feature_id, locale)}</th>
       <td><FactValue fact={fact} locale={locale} /></td>
       <td><EvidenceBadge evidence={fact.evidence_class} locale={locale} /></td>
       <td className="pr-quality" title={t(locale, "quality.observations")}>n = {fact.quality.n_observations}</td>
@@ -56,6 +56,34 @@ function SectionBlock({ section, facts, locale }: { section: ReportSection; fact
                                                     locale: Locale }) {
   const rows = section.fact_ids.map((id) => facts.get(id)).filter((f): f is Fact => f !== undefined);
   const headingId = `section-${section.section_id}`;
+  const highlight = section.template === "HIGHLIGHT_PRIMARY" || section.template === "HIGHLIGHT_SECONDARY";
+  const copy = section.content_ids
+    .map((contentId) => contentText(contentId, locale))
+    .filter((value): value is string => value !== undefined);
+  if (highlight) {
+    const title = section.template === "HIGHLIGHT_PRIMARY"
+      ? t(locale, "report.what_stands_out")
+      : t(locale, "report.also_noticeable");
+    return (
+      <section className="pr-section pr-highlight" aria-labelledby={headingId} data-section={section.section_id}
+               data-availability={section.availability}>
+        <h2 id={headingId}>{title}</h2>
+        {copy.map((value, index) => (
+          <p className="pr-highlight-copy" key={`${section.section_id}-copy-${index}`}>
+            <EvidenceBadge evidence="AUTHORED_CONTENT" locale={locale} /> {value}
+          </p>
+        ))}
+        {rows.length > 0 && (
+          <div className="pr-table-wrap">
+            <table className="pr-facts">
+              <caption className="pr-visually-hidden">{title}: {t(locale, "report.facts")}</caption>
+              <tbody>{rows.map((fact) => <FactRow key={fact.fact_id} fact={fact} locale={locale} />)}</tbody>
+            </table>
+          </div>
+        )}
+      </section>
+    );
+  }
   return (
     <section className="pr-section" aria-labelledby={headingId} data-section={section.section_id}
              data-availability={section.availability}>
