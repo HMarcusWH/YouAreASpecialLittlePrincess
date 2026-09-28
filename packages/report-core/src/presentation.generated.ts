@@ -116,32 +116,32 @@ export const PRESENTATION = {
       "sv": "Beräknad konsekvens i strecklutning"
     },
     "BASELINE_ANGLE_MEAN": {
-      "en": "Mean baseline angle",
-      "sv": "Genomsnittlig baslinjevinkel"
+      "en": "Estimated mean baseline angle",
+      "sv": "Uppskattad genomsnittlig baslinjevinkel"
     },
     "BASELINE_ANGLE_MEDIAN": {
-      "en": "Median baseline angle",
-      "sv": "Median för baslinjevinkel"
+      "en": "Estimated median baseline angle",
+      "sv": "Uppskattad median för baslinjevinkel"
     },
     "BASELINE_ANGLE_STD": {
-      "en": "Baseline angle variability",
-      "sv": "Variation i baslinjevinkel"
+      "en": "Estimated baseline-angle variability",
+      "sv": "Variation i uppskattad baslinjevinkel"
     },
     "BASELINE_ABS_SLOPE": {
-      "en": "Absolute baseline slope",
-      "sv": "Absolut baslinjelutning"
+      "en": "Estimated absolute baseline slope",
+      "sv": "Uppskattad absolut baslinjelutning"
     },
     "BASELINE_WAVINESS": {
-      "en": "Within-line baseline waviness",
-      "sv": "Baslinjens vågighet inom rader"
+      "en": "Estimated within-line baseline waviness",
+      "sv": "Uppskattad baslinjevågighet inom rader"
     },
     "BASELINE_CURVATURE": {
-      "en": "Baseline curvature",
-      "sv": "Baslinjens krökning"
+      "en": "Estimated baseline curvature",
+      "sv": "Uppskattad baslinjekrökning"
     },
     "BASELINE_STABILITY": {
-      "en": "Derived baseline stability",
-      "sv": "Beräknad baslinjestabilitet"
+      "en": "Derived estimated-baseline stability",
+      "sv": "Beräknad stabilitet i uppskattad baslinje"
     },
     "LINE_SPACING_PX": {
       "en": "Mean interline whitespace",
