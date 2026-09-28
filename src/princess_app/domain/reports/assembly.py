@@ -23,9 +23,9 @@ from princess_contracts import generated as g
 
 from ..analysis import method_versions, rfc3339
 from ..content import presentation_registry, select_highlights
-from .template import (BASE_TEMPLATE_VERSION, FACT_SECTIONS, HIGHLIGHT_PRESENTATION_VERSION,
-                       PREMIUM_SECTION, REFERENCE_SECTION, SUPPORTED_TEMPLATE_VERSIONS,
-                       TEMPLATE_VERSION, formatting_for)
+from .template import (BASE_TEMPLATE_VERSION, FACT_SECTIONS, HIGHLIGHT_POLICY_VERSION,
+                       HIGHLIGHT_PRESENTATION_VERSION, PREMIUM_SECTION, REFERENCE_SECTION,
+                       SUPPORTED_TEMPLATE_VERSIONS, TEMPLATE_VERSION, formatting_for)
 
 MAX_SOURCE_REGIONS = 128
 EVIDENCE_CLASS = {"MEASURED_VISUAL_FEATURE": "MEASURED", "COMPUTATIONAL_PROXY": "COMPUTATIONAL_PROXY"}
@@ -122,7 +122,8 @@ def _highlight_availability(facts: Sequence[Mapping[str, Any]]) -> str:
 
 def _highlight_sections(facts: Sequence[Mapping[str, Any]]) -> list[dict[str, Any]]:
     registry = presentation_registry()
-    if registry["version"] != HIGHLIGHT_PRESENTATION_VERSION:
+    if (registry["version"] != HIGHLIGHT_PRESENTATION_VERSION
+            or registry["policy_version"] != HIGHLIGHT_POLICY_VERSION):
         raise ValueError("highlight template/presentation authority drift")
     by_id = {f["fact_id"]: f for f in facts}
     selected = select_highlights(facts, limit=3)
