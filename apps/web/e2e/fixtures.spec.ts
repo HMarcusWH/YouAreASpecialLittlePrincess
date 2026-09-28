@@ -47,13 +47,21 @@ test("share and export previews disclose that the source image is omitted", asyn
   }
 });
 
-test("disabled actions explain why", async ({ page }) => {
+test("disabled actions explain why with localized product copy", async ({ page }) => {
   await page.goto("/fixtures/free");
-  const purchase = page.getByRole("button", { name: "Get Premium" });
+  let purchase = page.getByRole("button", { name: "Get Premium" });
   await expect(purchase).toBeDisabled();
-  const describedBy = await purchase.getAttribute("aria-describedby");
+  let describedBy = await purchase.getAttribute("aria-describedby");
   expect(describedBy).toBeTruthy();
-  await expect(page.locator(`[id="${describedBy}"]`)).not.toBeEmpty();
+  await expect(page.locator(`[id="${describedBy}"]`)).toHaveText("Premium is not available yet.");
+
+  await page.goto("/fixtures/owner-premium");
+  purchase = page.getByRole("button", { name: "Get Premium" });
+  await expect(purchase).toBeDisabled();
+  describedBy = await purchase.getAttribute("aria-describedby");
+  expect(describedBy).toBeTruthy();
+  await expect(page.locator(`[id="${describedBy}"]`))
+    .toHaveText("Premium is already unlocked for this report.");
 });
 
 test("keyboard users reach the content first and focus is visible", async ({ page }) => {
