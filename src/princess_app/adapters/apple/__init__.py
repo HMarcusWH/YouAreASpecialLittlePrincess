@@ -36,7 +36,6 @@ from ...ports.base import (
     Unauthenticated,
     Unsupported,
     check_mode_allowed,
-    require_opaque_id,
     require_utc,
 )
 
