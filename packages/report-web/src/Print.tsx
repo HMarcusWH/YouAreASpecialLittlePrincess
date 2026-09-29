@@ -45,7 +45,7 @@ export function PrintReport({ view, locale, generatedAt }: { view: ReportViewMod
           {" · "}{p(locale, "print.generated")} {generatedAt}
         </p>
       </header>
-      <ReportView view={{ ...view, actions: [] }} locale={locale} />
+      <ReportView view={{ ...view, actions: [] }} locale={locale} showHeader={false} />
       <section className="pr-section pr-colophon" aria-labelledby="colophon">
         <h2 id="colophon">{p(locale, "print.method")}</h2>
         <p>{p(locale, "print.method_text")}</p>
