@@ -2,7 +2,7 @@
 // every client renders, honest missing states, accessibility basics.
 import { readFileSync } from "node:fs";
 
-import { expect, test } from "@playwright/test";
+import { expect, test } from "@playwright/test";\nimport { tokens } from "@princess/design-tokens";
 
 const fixture = (name: string) =>
   JSON.parse(readFileSync(new URL(`../../../fixtures/reports/view.${name}.json`, import.meta.url), "utf8"));
@@ -134,7 +134,7 @@ test("dark mode swaps the surface token", async ({ page }) => {
   await page.emulateMedia({ colorScheme: "dark" });
   await page.goto("/fixtures/free");
   const background = await page.evaluate(() => getComputedStyle(document.body).backgroundColor);
-  expect(background).toBe("rgb(20, 18, 23)");
+  expect(background).toBe(cssRgb(tokens.color.dark.surface));
 });
 
 test("security headers are set and unknown proxy routes are refused", async ({ page, request }) => {
