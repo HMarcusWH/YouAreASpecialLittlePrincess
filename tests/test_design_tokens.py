@@ -51,6 +51,18 @@ def test_themes_define_the_same_roles_and_every_evidence_class_is_themed():
         assert f"evidence-{cls}" in TOKENS["color"]["light"]
 
 
+def test_accepted_dossier_token_identity_and_core_visual_roles():
+    assert TOKENS["version"] == "design-tokens/1.0"
+    assert TOKENS["status"] == "ACCEPTED"
+    assert TOKENS["color"]["light"]["surface"] == "#F3EEE4"
+    assert TOKENS["color"]["light"]["accent"] == "#A8361B"
+    assert TOKENS["color"]["dark"]["surface"] == "#171512"
+    assert TOKENS["color"]["dark"]["accent"] == "#F08A6C"
+    assert "Newsreader" in TOKENS["font"]["family-text"]
+    assert "IBM Plex Mono" in TOKENS["font"]["family-numeric"]
+    assert TOKENS["target"]["min-touch"] == "44px"
+
+
 def test_reduced_motion_zeroes_every_duration_and_generated_files_are_current():
     css = generator.outputs()[generator.OUT / "tokens.css"]
     for name in TOKENS["motion"]["duration"]:

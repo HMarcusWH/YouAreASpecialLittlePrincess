@@ -108,7 +108,7 @@ def test_handoff_baseline_is_consistent_and_client_presentation_surface_stays_st
     baseline = manifest["source_baseline_sha"]
     assert len(baseline) == 40 and all(char in "0123456789abcdef" for char in baseline)
     assert f"`{baseline}`" in acceptance
-    assert baseline == "8163770f19cbbf3b5cf60fb77d0d52003dc2cfaf"
+    assert baseline == "53bcb9743eeb7fa96fc9affb68fc949c30fd25c0"
 
     client_surface = (ROOT / "packages/report-core/src/presentation.generated.ts").read_text(encoding="utf-8")
     assert "content.highlight.v1.slant.right.almost_all" in client_surface
@@ -117,17 +117,19 @@ def test_handoff_baseline_is_consistent_and_client_presentation_surface_stays_st
         assert server_only not in client_surface
 
 
-def test_handoff_does_not_self_approve_design_or_tokens():
+def test_handoff_records_explicit_owner_acceptance_and_accepted_tokens():
     tokens = json.loads((ROOT / "packages/design-tokens/tokens.json").read_text(encoding="utf-8"))
     acceptance = (DESIGN / "CLAUDE_DESIGN_ACCEPTANCE.md").read_text(encoding="utf-8")
+    accepted = (DESIGN / "ACCEPTED_DOSSIER_REFERENCE.md").read_text(encoding="utf-8")
     handoff = (DESIGN / "CLAUDE_DESIGN_HANDOFF.md").read_text(encoding="utf-8")
 
-    assert tokens["status"] == "DRAFT_PENDING_DESIGN_ACCEPTANCE"
-    assert tokens["version"] == "design-tokens/0.1-draft"
-    assert "**Status: PENDING_OWNER_REVIEW**" in acceptance
-    assert "Decision: **PENDING**" in acceptance
+    assert tokens["status"] == "ACCEPTED"
+    assert tokens["version"] == "design-tokens/1.0"
+    assert "**Status: ACCEPTED_WITH_CHANGES**" in acceptance
+    assert "Decision: **ACCEPTED_WITH_CHANGES**" in acceptance
+    assert "Inktrospect mobile app design (2).zip" in acceptance
+    assert "89b43380609dec56bdb82c284f0f6beb4c097692273ef13a3b23deb143ff7db5" in acceptance
+    assert "89b43380609dec56bdb82c284f0f6beb4c097692273ef13a3b23deb143ff7db5" in accepted
     assert "Direction A — The Dossier" in handoff
-    assert "Do **not** restart visual-direction exploration" in handoff
-    assert "Design direction selected: **A — The Dossier**" in acceptance
+    assert "owner accepted with changes" in handoff
     assert "Synthetic data only" in handoff
-    assert "Only after explicit owner acceptance" in handoff
