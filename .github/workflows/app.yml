@@ -95,6 +95,15 @@ jobs:
           NEXT_TELEMETRY_DISABLED: "1"
       - name: Fixture browser and accessibility journeys
         run: pnpm --filter @princess/web e2e
+      - name: Generate T21 Dossier render-inspection bundle
+        run: pnpm --filter @princess/render inspect:artifacts
+      - name: Upload T21 Dossier render-inspection bundle
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: t21-render-inspection-${{ github.sha }}
+          path: apps/render/artifacts/t21-render-inspection/
+          if-no-files-found: error
+          retention-days: 14
 
   live-web:
     runs-on: ubuntu-24.04
