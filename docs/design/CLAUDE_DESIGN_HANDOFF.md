@@ -137,17 +137,15 @@ Do not polish only the happy path. The prototype must include:
 - export rendering/failure;
 - disabled commerce/sharing.
 
-## Review workflow
+## Accepted-reference workflow
 
-1. Keep the curated paths in `claude-design-import.json` connected where practical; the excluded roots are intentionally irrelevant or privacy-sensitive for UX design.
-2. Continue the selected **Direction A — The Dossier** rather than reopening direction exploration.
-3. Build and stress-test the complete interactive prototype/state matrix, including first reveal, implemented T18 comparison mechanics, T22-planned invitation states and all failure/pending/revoked states.
-4. Review against `CLAUDE_DESIGN_ACCEPTANCE.md`.
-5. Iterate in Claude Design until the owner explicitly accepts or rejects.
-6. Record the prototype reference/revision and explicit owner decision in the acceptance file.
-7. **Only after explicit owner acceptance** may a follow-up commit promote T10 to `DONE` and change `DRAFT_PENDING_DESIGN_ACCEPTANCE`.
+1. Keep the curated paths in `claude-design-import.json` as the source map for implementation and any future design revision.
+2. Preserve **Direction A — The Dossier** unless a later explicit owner-approved redesign supersedes it.
+3. Use current repository contracts and fixtures for T08A First Reveal and T18 comparison mechanics; keep T22 invitation/other-owner states planned until implemented.
+4. Treat `CLAUDE_DESIGN_ACCEPTANCE.md` and `ACCEPTED_DOSSIER_REFERENCE.md` as the binding acceptance record.
+5. Version any material token/template redesign and obtain a new explicit owner decision rather than silently mutating `design-tokens/1.0`.
 
-Claude Design output is design evidence. It is not legal/privacy/provider/store approval and it does not activate Premium, payments, collection, traditional content or native signing.
+Claude Design output remains design evidence. T10 acceptance is not legal/privacy/provider/store approval and does not activate Premium, payments, participant collection, traditional content, native signing or public release.
 
 ## Handoff to implementation
 

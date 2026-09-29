@@ -1,0 +1,33 @@
+name: Temporary T10 backlog regeneration
+
+on:
+  push:
+    branches: [task/T10-accept-dossier]
+
+permissions:
+  contents: write
+
+jobs:
+  generate:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: task/T10-accept-dossier
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.11'
+      - run: python docs/roadmap/plan_tools.py --write
+      - name: Commit generated backlog
+        shell: bash
+        run: |
+          git add docs/roadmap/06-agent-backlog.md
+          if git diff --cached --quiet; then
+            echo "No generated backlog changes"
+            exit 0
+          fi
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git commit -m "docs(T10): regenerate accepted backlog"
+          git push origin HEAD:task/T10-accept-dossier
