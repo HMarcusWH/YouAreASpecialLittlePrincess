@@ -38,7 +38,7 @@ from princess_app.ports.base import CallContext, Environment, SystemClock
 from princess_graphology import __version__ as ENGINE_VERSION
 
 NOTICE = "notice.consent-choices:1"
-PURPOSE = "third_party_ai_processing"
+PURPOSE = "image_retention"
 SCOPE = Scope("SUBJECT_WIDE")
 SUBJECT_CAPTURE = "recovery-capture-owner"
 SUBJECT_ACCOUNT = "recovery-deleted-account"
