@@ -1,10 +1,10 @@
 # Design handoff — Inktrospect contract-driven report experience (T10)
 
-Status: **DRAFT, pending the `design_acceptance` owner gate.** The working public brand is **Inktrospect** and the selected Claude Design direction is **A — The Dossier**; repository/package namespaces such as `Princess`/`princess_*` remain internal for now. This file and `packages/design-tokens/` give T17 (web), T21 (PDF/cards) and T29–T31 (native) stable names to build against. Every value, layout and label here remains unaccepted until owner review. None of it is a shipping promise about a statistic or feature.
+Status: **ACCEPTED_WITH_CHANGES; T10 `design_acceptance` closed 2026-09-29.** The working public brand is **Inktrospect** and the selected Claude Design direction is **A — The Dossier**; repository/package namespaces such as `Princess`/`princess_*` remain internal for now. This file and `packages/design-tokens/` give T17 (web), T21 (PDF/cards) and T29–T31 (native) stable names to build against. The accepted visual/token system is bound in `ACCEPTED_DOSSIER_REFERENCE.md`. Repository contracts remain authoritative for statistics, availability and feature implementation.
 
 Sources: [report design](../roadmap/04-reports-design.md), [web client](../roadmap/10-web-client-and-api-integration.md), [mobile](../roadmap/11-mobile-architecture.md), [commerce](../roadmap/14-payments-entitlements-and-commerce.md) and the generated contracts in `contracts/product/v1/`.
 
-Claude Design review package: [handoff brief](CLAUDE_DESIGN_HANDOFF.md) · [owner acceptance record](CLAUDE_DESIGN_ACCEPTANCE.md) · [`claude-design-import.json`](claude-design-import.json) · [`claude-design-state-matrix.json`](claude-design-state-matrix.json). The handoff prepares the design session only; it does not satisfy `design_acceptance` by itself.
+Claude Design review package: [handoff brief](CLAUDE_DESIGN_HANDOFF.md) · [owner acceptance record](CLAUDE_DESIGN_ACCEPTANCE.md) · [`claude-design-import.json`](claude-design-import.json) · [`claude-design-state-matrix.json`](claude-design-state-matrix.json). The acceptance record and accepted-design reference close the T10 design gate; downstream implementation remains owned by T17/T21/T22/T29–T31.
 
 ## 1. Rules that shape every screen
 
@@ -113,4 +113,4 @@ The selected **A — The Dossier** exploration exposed several useful contract b
 
 ## 10. Acceptance (owner gate `design_acceptance`)
 
-The owner accepts clickable responsive and native designs covering §2, with the accessibility states in §6 and the overflow cases in §7. Until then the token status stays `DRAFT_PENDING_DESIGN_ACCEPTANCE`, and this task cannot be marked `DONE`.
+The owner accepted Direction A — The Dossier with the changes/limitations recorded in [ACCEPTED_DOSSIER_REFERENCE.md](ACCEPTED_DOSSIER_REFERENCE.md) and [CLAUDE_DESIGN_ACCEPTANCE.md](CLAUDE_DESIGN_ACCEPTANCE.md). The canonical token authority is now `design-tokens/1.0`. T17/T21/T22/T29–T31 still own implementation and platform/render qualification.
