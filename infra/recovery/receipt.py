@@ -34,11 +34,17 @@ def validate(data: dict[str, Any]) -> list[str]:
     if not isinstance(data.get("backup_sha256"), str) or not SHA256.fullmatch(data["backup_sha256"]):
         errors.append("receipt_backup_sha256")
     for name in ("backup_size_bytes", "restore_elapsed_ms", "recovery_elapsed_ms"):
-        if not isinstance(data.get(name), int) or data[name] < 0:
+        minimum = 1 if name == "backup_size_bytes" else 0
+        if not isinstance(data.get(name), int) or data[name] < minimum:
             errors.append(f"receipt_{name}")
     for name in ("alembic_revision_before", "alembic_revision_after"):
         if not isinstance(data.get(name), str) or not data[name] or len(data[name]) > 128:
             errors.append(f"receipt_{name}")
+    if data.get("alembic_revision_before") != data.get("alembic_revision_after"):
+        errors.append("receipt_alembic_revision_changed")
+    if isinstance(data.get("restore_elapsed_ms"), int) and isinstance(data.get("recovery_elapsed_ms"), int):
+        if data["recovery_elapsed_ms"] < data["restore_elapsed_ms"]:
+            errors.append("receipt_elapsed_order")
     resurrection = data.get("resurrection_observed")
     if resurrection != {"capture": True, "account": True, "permission": True}:
         errors.append("receipt_resurrection")
