@@ -13,7 +13,7 @@
 | ADR-003 | PostgreSQL + SQLAlchemy/Alembic; local DB tests and non-owner roles | Managed host/region/backups/PITR/pooling contract and timed restore evidence | T24 |
 | ADR-004 | S3-shaped private storage port with provider capability tests | Production object/tombstone provider, jurisdiction, checksum/version/copy/delete semantics and egress pricing | T24 |
 | ADR-005 | Expo/RN/Router native app; shared contract/state/tokens, native platform UX | Exact SDK/native bridge/build compatibility, minimum OS, generated-native ownership, signing/build provider approval | T29 |
-| ADR-006 | Internal ledger; Stripe web candidate; direct StoreKit/Play server verification as default | Real rails, native bridge/library selection, catalog/consumable portability/terms/storefront policy | T19/T29–T31 |
+| ADR-006 | Internal ledger; production-disabled Stripe HTTPS web adapter implemented; direct StoreKit/Play server verification remains the native default | Stripe sandbox/account evidence and refund support, native server adapters/bridge selection, catalog/consumable portability/terms/storefront policy, processor approval | T19/T29–T31 |
 | ADR-007 | Outbox-driven transactional mail; Resend candidate or equivalent | Sender domains, identity email separation, retention/region, signed bounce/complaint behavior and contract | T24 |
 | ADR-008 | OTel-compatible operational telemetry; explicit product-event allowlist | Production export destination, SDK privacy, retention, thresholds, alerts and support access | T24 |
 | ADR-009 | Layered quotas, web challenge candidate, native integrity signals | Production edge/global abuse controls plus native/account/device policy | T24/T29–T31 |

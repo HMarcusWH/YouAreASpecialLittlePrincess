@@ -176,4 +176,4 @@ Reconciliation runbook (fakes today; the same calls apply to real adapters):
 5. Reservations stuck in `RESERVED` belong to live Premium jobs. Check the job state before releasing anything by hand, and use `release_reservation` so the ledger entry is written.
 4. Never delete ledger rows. Corrections are compensating entries.
 
-Scheduling these loops (which process, how often, alerts) belongs to T24. Real Stripe, App Store Server API and Play Developer API adapters, sandbox evidence, prices, tax and refund terms are blocked on `price_account_terms_before_charges` and `processor_retention_contracts`. Composition refuses non-fake payment providers until then.
+Scheduling these loops (which process, how often, alerts) belongs to T24. PR #35 implements the Stripe HTTPS adapter but does not activate it: composition still refuses every non-fake PaymentProvider. Stripe sandbox/account evidence and refund-request behavior, the App Store Server API and Play Developer API adapters, prices, tax/refund/storefront policy and processor approval remain blocked on `price_account_terms_before_charges` and `processor_retention_contracts`.
