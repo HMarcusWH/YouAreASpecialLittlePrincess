@@ -35,6 +35,11 @@ def checked_settings() -> tuple[dict[str, str], Path]:
     if workdir == Path("/") or not workdir.name.startswith("princess-recovery"):
         raise DrillFailure("recovery workdir must be a dedicated princess-recovery* directory")
     workdir.mkdir(parents=True, exist_ok=True)
+    # The recovery mount is shared by two intentionally non-root container
+    # identities: princess (UID 10001) and the pinned postgres image. This is a
+    # disposable synthetic test directory under runner temp, never a production
+    # secret/data directory, so make only this dedicated mount writable.
+    workdir.chmod(0o777)
     env = dict(os.environ)
     env["PRINCESS_RECOVERY_WORKDIR"] = str(workdir)
     return env, workdir
