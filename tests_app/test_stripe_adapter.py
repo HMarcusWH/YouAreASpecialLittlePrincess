@@ -218,6 +218,25 @@ def test_verified_irrelevant_event_is_a_noop_and_relevant_shape_fails_closed():
         setup.provider.verify_and_normalize_event(body, headers, setup.ctx())
 
 
+def test_expired_checkout_without_payment_intent_is_a_verified_noop():
+    setup = Setup(lambda r: httpx.Response(500))
+    payload = {
+        "id": "evt_expired_1",
+        "type": "checkout.session.expired",
+        "created": int(setup.clock.now().timestamp()),
+        "livemode": False,
+        "data": {"object": {
+            "object": "checkout.session",
+            "payment_intent": None,
+            "metadata": {"environment": "test"},
+        }},
+    }
+    body, headers = setup.signed_event(payload)
+    event = setup.provider.verify_and_normalize_event(body, headers, setup.ctx())
+    assert event.transaction_refs == ()
+    assert event.environment is Environment.TEST
+
+
 def test_authoritative_lookup_binds_product_account_environment_and_refund_state():
     setup = Setup(lambda r: httpx.Response(200, json=pi()))
     observed = setup.provider.retrieve_authoritative_purchase("pi_test_1", "acct_1", setup.ctx())

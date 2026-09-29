@@ -395,6 +395,8 @@ class StripePaymentProvider:
             raw = obj.get("payment_intent")
         if isinstance(raw, Mapping):
             raw = raw.get("id")
+        if raw is None and event_type == "checkout.session.expired":
+            return ()
         return (_provider_id(raw, "pi_", "malformed_event"),)
 
     def _event_environment(self, event_type: str, obj: Mapping[str, Any]) -> Environment:
