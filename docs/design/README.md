@@ -4,7 +4,7 @@ Status: **ACCEPTED_WITH_CHANGES; T10 `design_acceptance` closed 2026-09-29.** Th
 
 Sources: [report design](../roadmap/04-reports-design.md), [web client](../roadmap/10-web-client-and-api-integration.md), [mobile](../roadmap/11-mobile-architecture.md), [commerce](../roadmap/14-payments-entitlements-and-commerce.md) and the generated contracts in `contracts/product/v1/`.
 
-Claude Design review package: [handoff brief](CLAUDE_DESIGN_HANDOFF.md) · [owner acceptance record](CLAUDE_DESIGN_ACCEPTANCE.md) · [`claude-design-import.json`](claude-design-import.json) · [`claude-design-state-matrix.json`](claude-design-state-matrix.json). The acceptance record and accepted-design reference close the T10 design gate; downstream implementation remains owned by T17/T21/T22/T29–T31.
+Claude Design package: [handoff brief](CLAUDE_DESIGN_HANDOFF.md) · [accepted Dossier reference](ACCEPTED_DOSSIER_REFERENCE.md) · [owner acceptance record](CLAUDE_DESIGN_ACCEPTANCE.md) · [`claude-design-import.json`](claude-design-import.json) · [`claude-design-state-matrix.json`](claude-design-state-matrix.json). The acceptance record and accepted-design reference close the T10 design gate; downstream implementation remains owned by T17/T21/T22/T29–T31.
 
 ## 1. Rules that shape every screen
 

@@ -1,4 +1,4 @@
-"""T10 Claude Design handoff stays complete, curated and non-self-approving."""
+"""T10 Claude Design handoff stays complete, curated and bound to explicit owner acceptance."""
 from __future__ import annotations
 
 import json
