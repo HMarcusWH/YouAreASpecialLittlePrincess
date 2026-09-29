@@ -16,6 +16,7 @@ import pytest
 
 from princess_app.adapters.fakes import FakeClock
 from princess_app.adapters.stripe import StripePaymentProvider
+from princess_app.domain.commerce import CATALOG
 from princess_app.ports import payments
 from princess_app.ports.base import (
     AmbiguousOutcome,

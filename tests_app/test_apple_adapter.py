@@ -133,7 +133,7 @@ def test_wrong_bundle_environment_and_untrusted_certificate_fail_closed():
         setup.provider.verify_purchase(setup.sign(setup.txn(environment="Production")), ACCOUNT, setup.ctx())
 
     other_key = ec.generate_private_key(ec.SECP256R1())
-    other_root = certificate("Other", "Other", other_key.public_key(), other_key, ca=True)
+    certificate("Other", "Other", other_key.public_key(), other_key, ca=True)
     other_leaf_key = ec.generate_private_key(ec.SECP256R1())
     other_leaf = certificate("OtherLeaf", "Other", other_leaf_key.public_key(), other_key, ca=False)
     token = jwt.encode(
