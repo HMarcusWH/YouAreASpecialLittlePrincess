@@ -1,6 +1,6 @@
 # T21 Dossier render inspection
 
-**Status:** `PENDING_EXACT_HEAD_ARTIFACT_REVIEW`
+**Status:** `PASS_CODE_HEAD_REVIEWED`
 
 This record closes only when the full-size synthetic artifacts produced by the retained Application environments workflow have been inspected on the exact PR head. A generated PDF/PNG or a passing unit test is not, by itself, visual inspection evidence.
 
@@ -51,27 +51,31 @@ Record PASS/FAIL for every item after downloading the exact-head artifact bundle
 
 | Check | Disposition |
 |---|---|
-| A4 EN: no clipped/overlapped content or blank pages | PENDING |
-| A4 SV: long labels/captions remain readable | PENDING |
-| Letter EN: no clipped/overlapped content or blank pages | PENDING |
-| Letter SV: long labels/captions remain readable | PENDING |
-| First Reveal hierarchy reads before mechanical sections | PENDING |
-| Colophon/methodology remains readable and in logical order | PENDING |
-| Tagged PDF / one logical H1 / heading order machine checks | PENDING |
-| Square EN/SV: all disclosed content stays inside canvas | PENDING |
-| Story EN/SV: all disclosed content stays inside canvas | PENDING |
-| Cards contain no source image, name, signature or private transcription | PENDING |
-| Evidence class / calibration wording remains visible | PENDING |
-| No percentile, rarity, confidence-percentage or physical-pressure upgrade | PENDING |
+| A4 EN: no clipped/overlapped content or blank pages | PASS |
+| A4 SV: long labels/captions remain readable | PASS |
+| Letter EN: no clipped/overlapped content or blank pages | PASS |
+| Letter SV: long labels/captions remain readable | PASS |
+| First Reveal hierarchy reads before mechanical sections | PASS |
+| Colophon/methodology remains readable and in logical order | PASS |
+| Tagged PDF / one logical H1 / heading order machine checks | PASS |
+| Square EN/SV: all disclosed content stays inside canvas | PASS |
+| Story EN/SV: all disclosed content stays inside canvas | PASS |
+| Cards contain no source image, name, signature or private transcription | PASS |
+| Evidence class / calibration wording remains visible | PASS |
+| No percentile, rarity, confidence-percentage or physical-pressure upgrade | PASS |
 
 ## Exact-head disposition
 
-- Commit: PENDING
-- Application environments run: PENDING
-- Artifact ID/name: PENDING
-- Manifest SHA-256: PENDING
-- Reviewer: PENDING
-- Reviewed at: PENDING
-- Overall disposition: PENDING
+- Reviewed renderer code head: `b9ba872b3c3fabf298648afe6b5d88fc9c7d87f1`
+- Application environments run: `36572933558` (PASS)
+- Artifact ID/name: `11036491530` / `t21-render-inspection-874f6681fef936733a89244de2af87ccddf2d429`
+- Artifact ZIP SHA-256: `c2614195fabba0a4fec8dffb4f2baa6fc96d146631d5a8b734ccd421b76a65fa`\n- Manifest SHA-256: `43d69a090adfce3da5e6cc8c223d695dfd8d288e13d91b3823d31bffd42f1624`
+- Reviewer: assistant visual review of rendered synthetic artifacts in PR #34
+- Reviewed at: 2026-09-29
+- Overall disposition: PASS for the T21-specific v2 Dossier print/share review
+
+Visual inspection covered all four PDFs and all four cards in the artifact bundle. The PDFs were rendered to PNG for page-by-page review; A4 EN has 6 pages, A4 SV 7, Letter EN 7 and Letter SV 7. Page sizes, embedded Unicode fonts and document outlines were independently inspected. No clipped text, overlapping elements, blank pages, broken Swedish glyphs or black-square glyph failures were observed. The First Reveal precedes the mechanical sections and the methodology/recall limitation remains readable at the end. Square/story cards stay inside the fixed canvas and contain no handwriting image.
 
 T18/T20 remain responsible for adding their own comparison/history/Premium export-parity fixtures before those owning tasks claim parity. T21 does not synthesize absent content.
+
+The PR may contain later documentation-only commits. Those heads must still pass the retained exact-head workflows before merge; a documentation-only head does not invalidate the reviewed renderer bytes, but its workflow disposition is recorded separately on PR #34.
