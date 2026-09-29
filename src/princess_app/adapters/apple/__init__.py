@@ -35,6 +35,7 @@ from ...ports.base import (
     Unsupported,
     check_mode_allowed,
     require_opaque_id,
+    require_utc,
 )
 
 PRODUCTION_BASE_URL = "https://api.storekit.apple.com"
@@ -97,7 +98,9 @@ class AppleAppStorePaymentProvider:
             port=port.PORT,
             provider="apple-app-store-server",
             mode=mode,
-            capabilities=frozenset({port.VERIFY_PROOF, port.SIGNED_EVENTS, port.AUTHORITATIVE_LOOKUP}),
+            capabilities=frozenset({
+                port.VERIFY_PROOF, port.SIGNED_EVENTS, port.AUTHORITATIVE_LOOKUP, port.RECONCILE,
+            }),
         )
 
     def __repr__(self) -> str:
@@ -175,7 +178,59 @@ class AppleAppStorePaymentProvider:
         raise Unsupported("capability_not_supported", detail="apple:refund_request")
 
     def reconcile(self, since: datetime, ctx: CallContext) -> Sequence[port.TransactionObservation]:
-        raise Unsupported("capability_not_supported", detail="apple:reconcile")
+        self.profile.require(port.RECONCILE)
+        self._check_context(ctx)
+        require_utc(since, "since")
+        now = self._clock.now()
+        if since >= now:
+            return ()
+        max_age = timedelta(days=180 if self.profile.mode is ProviderMode.LIVE else 30)
+        if now - since > max_age:
+            raise InvalidInput("apple_reconcile_window_exceeded")
+        body = {
+            "startDate": int(since.timestamp() * 1000),
+            "endDate": int(now.timestamp() * 1000),
+            "onlyFailures": False,
+        }
+        refs: list[str] = []
+        seen: set[str] = set()
+        token: str | None = None
+        for _ in range(25):
+            response = self._request(
+                "POST",
+                "/inApps/v1/notifications/history",
+                ctx,
+                json=body,
+                params={"paginationToken": token} if token else None,
+            )
+            payload = self._json(response)
+            history = payload.get("notificationHistory")
+            if not isinstance(history, list):
+                raise PermanentFailure("apple_history_response_invalid")
+            for item in history:
+                if not isinstance(item, Mapping) or not isinstance(item.get("signedPayload"), str):
+                    raise PermanentFailure("apple_history_response_invalid")
+                outer = self._verify_jws(item["signedPayload"])
+                data = outer.get("data")
+                nested = data.get("signedTransactionInfo") if isinstance(data, Mapping) else None
+                if nested is None:
+                    continue
+                if not isinstance(nested, str):
+                    raise PermanentFailure("apple_history_response_invalid")
+                txn = self._verify_jws(nested)
+                self._validate_transaction_identity(txn)
+                ref = _provider_id(txn.get("transactionId"), "apple_transaction_invalid")
+                if ref not in seen:
+                    seen.add(ref)
+                    refs.append(ref)
+                    if len(refs) > 500:
+                        raise PermanentFailure("apple_reconcile_ref_limit")
+            if payload.get("hasMore") is not True:
+                return tuple(self.retrieve_authoritative_purchase(ref, "", ctx) for ref in refs)
+            token = payload.get("paginationToken")
+            if not isinstance(token, str) or not token:
+                raise PermanentFailure("apple_history_response_invalid")
+        raise PermanentFailure("apple_reconcile_page_limit")
 
     def close(self) -> None:
         self._client.close()
@@ -302,15 +357,18 @@ class AppleAppStorePaymentProvider:
             raise InvalidInput("environment_mismatch")
         ctx.check_deadline(self._clock)
 
-    def _request(self, method: str, path: str, ctx: CallContext) -> httpx.Response:
+    def _request(self, method: str, path: str, ctx: CallContext, **kwargs) -> httpx.Response:
         self._check_context(ctx)
         budget = max(0.1, min(self._timeout_s, ctx.remaining(self._clock) / timedelta(seconds=1)))
+        headers = dict(kwargs.pop("headers", {}) or {})
+        headers["Authorization"] = f"Bearer {self._server_token()}"
         try:
             return self._client.request(
                 method,
                 path,
-                headers={"Authorization": f"Bearer {self._server_token()}"},
+                headers=headers,
                 timeout=httpx.Timeout(budget, connect=min(5.0, budget)),
+                **kwargs,
             )
         except (httpx.ConnectError, httpx.ConnectTimeout, httpx.PoolTimeout):
             raise TransientUnavailable("provider_unreachable") from None

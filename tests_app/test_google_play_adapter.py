@@ -28,12 +28,18 @@ class Setup:
         self.service_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
         self.pubsub_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
         self.purchase = self.product()
+        self.voided_pages = []
         self.seen = []
 
         def handler(request):
             self.seen.append(request)
             if request.url.host == "oauth2.googleapis.com":
                 return httpx.Response(200, json={"access_token": "access-test", "expires_in": 3600})
+            if request.url.path.endswith("/purchases/voidedpurchases"):
+                index = 1 if request.url.params.get("token") else 0
+                return httpx.Response(200, json=self.voided_pages[index] if self.voided_pages else {
+                    "voidedPurchases": [], "tokenPagination": {},
+                })
             if "/purchases/productsv2/tokens/" in request.url.path:
                 return httpx.Response(200, json=self.purchase)
             if request.url.path.endswith(":consume") or request.url.path.endswith(":acknowledge"):
@@ -225,11 +231,22 @@ def test_service_account_assertion_and_access_token_are_server_side_only():
     assert "access-test" not in repr(setup.provider)
 
 
-def test_refund_and_bulk_reconcile_remain_explicitly_unsupported():
+def test_voided_purchase_reconcile_requeries_authoritative_product_state():
+    setup = Setup()
+    setup.purchase = setup.product(refundable=0)
+    setup.voided_pages = [{
+        "voidedPurchases": [{"purchaseToken": TOKEN, "voidedTimeMillis": "1"}],
+        "tokenPagination": {},
+    }]
+    rows = setup.provider.reconcile(setup.clock.now() - timedelta(hours=1), setup.ctx())
+    assert len(rows) == 1 and rows[0].state is payments.PurchaseState.REFUNDED
+    voided = next(r for r in setup.seen if r.url.path.endswith("/purchases/voidedpurchases"))
+    assert voided.url.params.get("type") == "0" and voided.url.params.get("startTime")
+
+
+def test_refund_remains_explicitly_unsupported():
     setup = Setup()
     with pytest.raises(Unsupported):
         setup.provider.request_refund_if_supported(TOKEN, setup.ctx())
-    with pytest.raises(Unsupported):
-        setup.provider.reconcile(setup.clock.now(), setup.ctx())
     with pytest.raises(InvalidInput):
         setup.provider.verify_purchase(TOKEN, ACCOUNT, setup.ctx(Environment.PRODUCTION))

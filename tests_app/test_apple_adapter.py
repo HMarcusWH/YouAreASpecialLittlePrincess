@@ -56,11 +56,17 @@ class Setup:
         self.api_key = ec.generate_private_key(ec.SECP256R1())
         self.seen = []
         self.transaction = self.txn()
+        self.history_pages = []
 
         def handler(request):
             self.seen.append(request)
             if request.url.path == "/inApps/v1/transactions/2000000000001":
                 return httpx.Response(200, json={"signedTransactionInfo": self.sign(self.transaction)})
+            if request.url.path == "/inApps/v1/notifications/history":
+                index = 1 if request.url.params.get("paginationToken") else 0
+                return httpx.Response(200, json=self.history_pages[index] if self.history_pages else {
+                    "notificationHistory": [], "hasMore": False, "paginationToken": "done",
+                })
             return httpx.Response(404, json={})
 
         self.provider = AppleAppStorePaymentProvider(
@@ -188,13 +194,31 @@ def test_authoritative_lookup_uses_server_jwt_and_reverifies_signed_transaction(
     assert claims["iss"] == "issuer-test" and claims["bid"] == BUNDLE
 
 
-def test_unimplemented_server_completion_refund_and_reconcile_are_explicit():
+def test_notification_history_reconcile_reverifies_current_transaction_state():
+    setup = Setup()
+    now = int(setup.clock.now().timestamp() * 1000)
+    nested = setup.sign(setup.transaction)
+    outer = setup.sign({
+        "notificationUUID": "history-1",
+        "notificationType": "ONE_TIME_CHARGE",
+        "signedDate": now,
+        "data": {"bundleId": BUNDLE, "environment": "Sandbox", "signedTransactionInfo": nested},
+    })
+    setup.history_pages = [
+        {"notificationHistory": [{"signedPayload": outer}], "hasMore": False, "paginationToken": "done"}
+    ]
+    rows = setup.provider.reconcile(setup.clock.now() - timedelta(hours=1), setup.ctx())
+    assert len(rows) == 1 and rows[0].transaction_ref == "2000000000001"
+    history_request = next(r for r in setup.seen if r.url.path == "/inApps/v1/notifications/history")
+    body = json.loads(history_request.content)
+    assert body["startDate"] < body["endDate"] and body["onlyFailures"] is False
+
+
+def test_unimplemented_server_completion_and_refund_are_explicit():
     setup = Setup()
     with pytest.raises(Unsupported):
         setup.provider.complete_store_purchase("2000000000001", payments.CompletionAction.CLIENT_FINISH, setup.ctx())
     with pytest.raises(Unsupported):
         setup.provider.request_refund_if_supported("2000000000001", setup.ctx())
-    with pytest.raises(Unsupported):
-        setup.provider.reconcile(setup.clock.now(), setup.ctx())
     with pytest.raises(InvalidInput):
         setup.provider.verify_purchase(setup.sign(setup.transaction), ACCOUNT, setup.ctx(Environment.PRODUCTION))

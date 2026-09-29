@@ -33,6 +33,7 @@ from ...ports.base import (
     Unsupported,
     check_mode_allowed,
     require_opaque_id,
+    require_utc,
 )
 
 DEFAULT_BASE_URL = "https://androidpublisher.googleapis.com"
@@ -116,6 +117,7 @@ class GooglePlayPaymentProvider:
                 port.AUTHORITATIVE_LOOKUP,
                 port.SERVER_CONSUME,
                 port.SERVER_ACKNOWLEDGE,
+                port.RECONCILE,
             }),
         )
 
@@ -222,7 +224,50 @@ class GooglePlayPaymentProvider:
         raise Unsupported("capability_not_supported", detail="google_play:refund_request")
 
     def reconcile(self, since: datetime, ctx: CallContext) -> Sequence[port.TransactionObservation]:
-        raise Unsupported("capability_not_supported", detail="google_play:reconcile")
+        self.profile.require(port.RECONCILE)
+        self._check_context(ctx)
+        require_utc(since, "since")
+        now = self._clock.now()
+        if since >= now:
+            return ()
+        if now - since > timedelta(days=30):
+            raise InvalidInput("google_reconcile_window_exceeded")
+        refs: list[str] = []
+        seen: set[str] = set()
+        page_token: str | None = None
+        for _ in range(25):
+            params = {
+                "startTime": str(int(since.timestamp() * 1000)),
+                "endTime": str(int(now.timestamp() * 1000)),
+                "type": "0",
+            }
+            if page_token:
+                params = {"token": page_token, "type": "0"}
+            payload = self._api_json(
+                "GET",
+                f"/androidpublisher/v3/applications/{quote(self.package_name, safe='')}/purchases/voidedpurchases",
+                ctx,
+                params=params,
+            )
+            rows = payload.get("voidedPurchases", [])
+            if not isinstance(rows, list):
+                raise PermanentFailure("google_voided_response_invalid")
+            for row in rows:
+                if not isinstance(row, Mapping):
+                    raise PermanentFailure("google_voided_response_invalid")
+                ref = _purchase_token(row.get("purchaseToken"))
+                if ref not in seen:
+                    seen.add(ref)
+                    refs.append(ref)
+                    if len(refs) > 500:
+                        raise PermanentFailure("google_reconcile_ref_limit")
+            pagination = payload.get("tokenPagination")
+            page_token = pagination.get("nextPageToken") if isinstance(pagination, Mapping) else None
+            if not page_token:
+                return tuple(self.retrieve_authoritative_purchase(ref, "", ctx) for ref in refs)
+            if not isinstance(page_token, str):
+                raise PermanentFailure("google_voided_response_invalid")
+        raise PermanentFailure("google_reconcile_page_limit")
 
     def close(self) -> None:
         self._client.close()
@@ -392,10 +437,10 @@ class GooglePlayPaymentProvider:
         self._access_token_expiry = self._clock.now() + timedelta(seconds=min(expires, 3600))
         return token
 
-    def _api_json(self, method: str, path: str, ctx: CallContext) -> Mapping[str, Any]:
-        response = self._raw_request(
-            method, path, ctx, headers={"Authorization": f"Bearer {self._access(ctx)}"}
-        )
+    def _api_json(self, method: str, path: str, ctx: CallContext, **kwargs) -> Mapping[str, Any]:
+        headers = dict(kwargs.pop("headers", {}) or {})
+        headers["Authorization"] = f"Bearer {self._access(ctx)}"
+        response = self._raw_request(method, path, ctx, headers=headers, **kwargs)
         return self._json(response)
 
     def _api_empty(self, method: str, path: str, ctx: CallContext) -> None:
