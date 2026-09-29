@@ -5,6 +5,7 @@ import * as Linking from "expo-linking";
 import * as Notifications from "expo-notifications";
 import * as SecureStore from "expo-secure-store";
 import * as Sharing from "expo-sharing";
+import * as WebBrowser from "expo-web-browser";
 import {
   endConnection, fetchProducts, finishTransaction, getAvailablePurchases, initConnection, requestPurchase,
 } from "expo-iap";
@@ -17,5 +18,6 @@ export const nativeModuleCompatibility = {
   sharing: Sharing,
   linking: Linking,
   notifications: Notifications,
+  webBrowser: WebBrowser,
   iap: { initConnection, endConnection, fetchProducts, requestPurchase, finishTransaction, getAvailablePurchases },
 } as const;

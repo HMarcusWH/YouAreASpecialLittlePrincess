@@ -57,3 +57,17 @@ export interface PushRegistration {
 export interface AbuseAttestationClient {
   attest(operation: string, nonce: string): Promise<{ status: "ACCEPTED" | "REJECTED" | "UNAVAILABLE"; token: string | null }>;
 }
+
+export type NativeAuthorizationRequest = {
+  authorizationUrl: string;
+  redirectUrl: string;
+  expectedState: string;
+};
+
+export type NativeAuthorizationResult =
+  | { status: "SUCCESS"; callbackUrl: string }
+  | { status: "CANCELLED" | "DISMISSED" | "FAILED"; callbackUrl: null };
+
+export interface NativeIdentityTransport {
+  authorize(request: NativeAuthorizationRequest): Promise<NativeAuthorizationResult>;
+}

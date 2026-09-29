@@ -1,6 +1,7 @@
 import type {
   AbuseAttestationClient, CaptureClient, DeepLinkRouter, FileShareClient, LocalCapture, NativePurchaseClient,
-  NativeRoute, PermissionState, PushRegistration, PurchaseObservation, SecureSessionStore, StoreProduct,
+  NativeAuthorizationRequest, NativeAuthorizationResult, NativeIdentityTransport, NativeRoute, PermissionState,
+  PushRegistration, PurchaseObservation, SecureSessionStore, StoreProduct,
 } from "./contracts.ts";
 
 export class FakeSecureSessionStore implements SecureSessionStore {
@@ -97,5 +98,15 @@ export class FakeAbuseAttestation implements AbuseAttestationClient {
   status: "ACCEPTED" | "REJECTED" | "UNAVAILABLE" = "UNAVAILABLE";
   async attest(_operation: string, _nonce: string) {
     return { status: this.status, token: this.status === "ACCEPTED" ? "attestation_test" : null };
+  }
+}
+
+export class FakeNativeIdentityTransport implements NativeIdentityTransport {
+  requests: NativeAuthorizationRequest[] = [];
+  next: NativeAuthorizationResult = { status: "CANCELLED", callbackUrl: null };
+
+  async authorize(request: NativeAuthorizationRequest) {
+    this.requests.push(request);
+    return this.next;
   }
 }

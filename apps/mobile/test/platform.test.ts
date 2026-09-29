@@ -3,7 +3,7 @@ import test from "node:test";
 
 import {
   AllowlistedDeepLinkRouter, FakeAbuseAttestation, FakeCaptureClient, FakeFileShareClient,
-  FakeNativePurchaseClient, FakePushRegistration, FakeSecureSessionStore,
+  FakeNativeIdentityTransport, FakeNativePurchaseClient, FakePushRegistration, FakeSecureSessionStore,
 } from "../src/platform/fakes.ts";
 
 test("secure session fake clears credential material on switch/logout", async () => {
@@ -59,4 +59,30 @@ test("push/account switch and file cleanup fakes expose lifecycle state", async 
 
   const abuse = new FakeAbuseAttestation();
   assert.equal((await abuse.attest("upload", "nonce")).status, "UNAVAILABLE");
+});
+
+test("unavailable camera fails closed", async () => {
+  const capture = new FakeCaptureClient();
+  capture.camera = "UNAVAILABLE";
+  capture.next = {
+    localUri: "file:///should-not-return.jpg", width: 100, height: 100, mimeType: "image/jpeg",
+    source: "CAMERA", originalMimeType: "image/heic", fileName: "blocked.heic", orientationMetadata: "UNKNOWN",
+  };
+  assert.equal(await capture.takePhoto(), null);
+});
+
+test("identity transport is external-user-agent shaped and carries no provider secret", async () => {
+  const identity = new FakeNativeIdentityTransport();
+  identity.next = {
+    status: "SUCCESS",
+    callbackUrl: "inktrospect-dev://auth/callback?code=test&state=state_1",
+  };
+  const result = await identity.authorize({
+    authorizationUrl: "https://identity.example/authorize?code_challenge=test",
+    redirectUrl: "inktrospect-dev://auth/callback",
+    expectedState: "state_1",
+  });
+  assert.equal(result.status, "SUCCESS");
+  assert.equal(identity.requests.length, 1);
+  assert.ok(!JSON.stringify(identity.requests[0]).toLowerCase().includes("client_secret"));
 });
