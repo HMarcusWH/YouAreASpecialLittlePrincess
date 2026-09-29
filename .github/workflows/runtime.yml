@@ -5,7 +5,6 @@ on:
     paths:
       - "infra/runtime/**"
       - "infra/recovery/**"
-      - "infra/recovery/**"
       - "infra/environments/**"
       - "src/princess_app/**"
       - "apps/api/**"
@@ -20,6 +19,7 @@ on:
     branches: [main]
     paths:
       - "infra/runtime/**"
+      - "infra/recovery/**"
       - "infra/environments/**"
       - "src/princess_app/**"
       - "apps/api/**"
