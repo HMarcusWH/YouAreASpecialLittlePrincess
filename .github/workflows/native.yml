@@ -84,11 +84,6 @@ jobs:
           node-version: "22.22.2"
       - run: corepack enable && corepack install
       - run: pnpm install --frozen-lockfile
-      - name: Select Swift 6.2-capable Xcode
-        run: |
-          sudo xcode-select -s /Applications/Xcode_26.3.app/Contents/Developer
-          xcodebuild -version
-          swift --version
       - run: pnpm --filter @princess/mobile prebuild:ios
       - name: Install generated iOS pods
         working-directory: apps/mobile/ios
