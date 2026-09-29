@@ -31,7 +31,7 @@ Each screen lists the states the design must cover, beyond the happy path.
 | Purchase | web checkout or native store | pending payment; Ask to Buy / pending store purchase; cancelled; failed; restored; claim `account_mismatch` |
 | Premium generation | `POST /v1/reports/{id}/premium`, `GET /v1/premium-jobs/{id}` | queued; running; succeeded (revision with an overlay); refused; failed with the credit released; not applicable (no authorized image) |
 | Premium report | projection `PREMIUM`/`OWNER` with overlay | AI-labelled synthesis next to the unchanged Free facts; omitted questions explained; refund after spend (decision pending the owner) |
-| Pair invitation and comparison | T18 deterministic `Comparison` contract/fixtures; T22 invitation/other-owner release still planned | Me-vs-Me/pair mechanical comparison contract exists; invitation sent/accepted/declined/revoked remain planned; insufficient common coverage is represented explicitly |
+| Pair invitation and comparison | T18 deterministic `Comparison` contract/fixtures; T22 invitation/other-owner release still planned | pair/history mechanics and insufficient-common-coverage are implemented contract states; invitation sent/accepted/declined/revoked remain explicitly planned until T22 |
 | History | T17 | empty; several revisions; a deleted capture |
 | Share preview and revocation | projection `SHARE` (`view.share.json`) | exact disclosed fields preview; sharing disabled; link revoked |
 | Export preview | projection `EXPORT` (`view.export-no-image.json`) | A4 and Letter; "source image omitted"; rendering; failed |

@@ -121,11 +121,13 @@
     {
       "id": "pair_invitation_comparison",
       "states": [
+        "comparison_pair_available",
+        "comparison_history_available",
+        "insufficient_common_coverage",
         "planned_invitation_sent",
-        "planned_accepted",
-        "planned_declined",
-        "planned_insufficient_common_coverage",
-        "planned_revoked"
+        "planned_invitation_accepted",
+        "planned_invitation_declined",
+        "planned_invitation_revoked"
       ]
     },
     {
