@@ -232,7 +232,7 @@ def create_app(services: Services) -> FastAPI:
         return {"status": "ok"}
 
     @app.get("/health/ready", include_in_schema=False)
-    def health_ready() -> dict[str, str] | JSONResponse:
+    def health_ready() -> JSONResponse:
         """Readiness is intentionally limited to the application database."""
         if services.readiness is None:
             return JSONResponse({"status": "not_ready"}, status_code=503)
@@ -240,7 +240,7 @@ def create_app(services: Services) -> FastAPI:
             services.readiness()
         except PortError:
             return JSONResponse({"status": "not_ready"}, status_code=503)
-        return {"status": "ok"}
+        return JSONResponse({"status": "ok"})
 
     def call_context(request: Request) -> CallContext:
         supplied = request.headers.get("x-correlation-id", "")
