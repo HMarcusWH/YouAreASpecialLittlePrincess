@@ -74,7 +74,9 @@ jobs:
         run: |
           set -euo pipefail
           docker run --rm --read-only --tmpfs /tmp:rw,exec,nosuid,size=512m --shm-size=512m \
-            -e HOME=/tmp --entrypoint node "$PRINCESS_EXPORT_IMAGE" -e '
+            --entrypoint /usr/bin/env "$PRINCESS_EXPORT_IMAGE" \
+            -i PATH=/usr/local/bin:/usr/bin:/bin HOME=/tmp PRINCESS_CHROMIUM=/opt/chromium/chrome \
+            node -e '
               const { chromium } = require("/opt/princess/apps/render/node_modules/playwright-core");
               (async () => {
                 const browser = await chromium.launch({ executablePath: process.env.PRINCESS_CHROMIUM });
