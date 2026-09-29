@@ -133,9 +133,16 @@ jobs:
           else:
               raise SystemExit("readiness did not fail closed after PostgreSQL stopped")
           PY
-      - name: Runtime topology unit coverage
+      - name: Final-image source syntax check without filesystem writes
         run: |
-          docker run --rm --entrypoint python "$PRINCESS_BACKEND_IMAGE" -m compileall -q /opt/princess/src /opt/princess/apps
+          docker run --rm --read-only --tmpfs /tmp --entrypoint python "$PRINCESS_BACKEND_IMAGE" -c '
+          from pathlib import Path
+          roots = (Path("/opt/princess/src"), Path("/opt/princess/apps"))
+          files = [path for root in roots for path in root.rglob("*.py")]
+          for path in files:
+              compile(path.read_text(encoding="utf-8"), str(path), "exec")
+          print(f"compiled {len(files)} source files without writing bytecode")
+          '
       - name: Record local image identifiers
         run: |
           docker image inspect -f 'backend {{.Id}}' "$PRINCESS_BACKEND_IMAGE"
