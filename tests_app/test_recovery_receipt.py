@@ -49,6 +49,15 @@ def test_recovery_receipt_accepts_only_the_privacy_safe_pass_shape(tmp_path):
     data = valid_receipt()
     data["second_replay"]["reapplied"] = 1
     assert "receipt_second_replay" in receipt.validate(data)
+    data = valid_receipt()
+    data["backup_size_bytes"] = 0
+    assert "receipt_backup_size_bytes" in receipt.validate(data)
+    data = valid_receipt()
+    data["alembic_revision_after"] = "different"
+    assert "receipt_alembic_revision_changed" in receipt.validate(data)
+    data = valid_receipt()
+    data["recovery_elapsed_ms"] = data["restore_elapsed_ms"] - 1
+    assert "receipt_elapsed_order" in receipt.validate(data)
 
 
 def test_receipt_schema_and_runtime_validator_have_the_same_top_level_contract():
@@ -75,4 +84,14 @@ def test_destructive_restore_runner_refuses_unqualified_image_and_workdir(monkey
     monkeypatch.setenv("PRINCESS_BACKEND_IMAGE", "princess-backend:" + "a" * 40)
     monkeypatch.setenv("PRINCESS_RECOVERY_WORKDIR", str(tmp_path / "wrong-name"))
     with pytest.raises(run_restore_drill.DrillFailure, match="dedicated princess-recovery"):
+        run_restore_drill.checked_settings()
+
+
+def test_ci_recovery_image_must_match_github_sha(monkeypatch, tmp_path):
+    sha = "a" * 40
+    monkeypatch.setenv("PRINCESS_RECOVERY_ALLOW_RESET", "1")
+    monkeypatch.setenv("GITHUB_SHA", sha)
+    monkeypatch.setenv("PRINCESS_BACKEND_IMAGE", "princess-backend:" + "b" * 40)
+    monkeypatch.setenv("PRINCESS_RECOVERY_WORKDIR", str(tmp_path / "princess-recovery-ci"))
+    with pytest.raises(run_restore_drill.DrillFailure, match="does not match GITHUB_SHA"):
         run_restore_drill.checked_settings()
