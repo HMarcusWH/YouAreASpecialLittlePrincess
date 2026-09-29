@@ -61,12 +61,14 @@ jobs:
             python -c "import fastapi, sqlalchemy, princess_graphology, princess_app"
           '
           docker run --rm --entrypoint sh "$PRINCESS_EXPORT_IMAGE" -c '
+            set -e
             node --version | grep -Fx "v22.22.2"
             test -x "$PRINCESS_CHROMIUM"
-            node -e "require.resolve('playwright-core',{paths:['/opt/princess/apps/render']})"
             ! command -v npm
             ! command -v pip
           '
+          docker run --rm --entrypoint node "$PRINCESS_EXPORT_IMAGE" -e \
+            "require.resolve('playwright-core',{paths:['/opt/princess/apps/render']})"
       - name: Qualify raw Chromium launch inside the final export image
         shell: bash
         run: |
