@@ -211,3 +211,11 @@ def test_free_distribution_excludes_the_application_and_provider_dependencies():
         "princess_graphology*", "princess_contracts*"]
     deps = {re.split(r"[<>=!~ ]", d, maxsplit=1)[0] for d in pyproject["project"]["dependencies"]}
     assert deps == {"numpy", "opencv-python-headless", "scipy", "scikit-learn", "scikit-image"}
+
+
+def test_dormant_render_and_reference_boundaries_have_no_granted_secrets_or_egress():
+    for env in Environment:
+        loaded = load_manifest(ROOT, env)
+        for component in ("render_worker", "reference_worker"):
+            assert loaded.components[component].secrets == frozenset()
+            assert loaded.components[component].egress == frozenset()
