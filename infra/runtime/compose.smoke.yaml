@@ -104,7 +104,7 @@ services:
       PRINCESS_DATABASE_URL: postgresql://princess_smoke_worker:smoke-only-worker@db:5432/princess_test?connect_timeout=2
       PRINCESS_STORAGE_READ_KEY: smoke-storage-key-0123456789
       PRINCESS_LOCAL_STORAGE_DIR: /data/storage
-      HOME: /tmp/princess-home
+      HOME: /tmp
     volumes:
       - runtime-data:/data
     read_only: true
