@@ -1636,7 +1636,9 @@ Planned targets unless present in the code tree:
 ```text
 src/princess_app/domain/commerce/
 src/princess_app/application/commerce/
-src/princess_app/adapters/payments/
+src/princess_app/adapters/stripe/
+src/princess_app/adapters/apple/
+src/princess_app/adapters/google/
 apps/api/
 migrations/
 ```
@@ -1644,7 +1646,7 @@ migrations/
 ### Coding sequence
 
 1. Create internal catalog/provider mappings, verified event inbox, unique financial transactions, immutable credit lots/ledger, reservation and fulfilment states.
-2. Implement fake then sandbox Stripe checkout/webhooks, Apple signed/server-notification verification and Play token/RTDN verification with environment/account binding.
+2. Qualify production-disabled Stripe hosted checkout/webhooks/authoritative lookup/reconcile, then implement Apple signed/server-notification verification and Play token/RTDN verification with environment/account binding.
 3. Grant a durable credit atomically then promptly finish/consume/acknowledge via the product-appropriate provider path; never wait for AI completion.
 4. Reserve one eligible credit per intended Premium job; fence publication, release/compensate failure and reconcile ambiguous provider outcomes.
 5. Implement repeated restore, refunds/voided events, account deletion and cross-platform origin-policy enforcement; backend work does not depend on native UI completion.
@@ -1655,13 +1657,13 @@ Server-owned catalog, purchase claims/status, credit/fulfilment APIs and reconci
 
 ### Implementation evidence
 
-PR #14 commit 6d7fc25 plus review repairs implemented the server-owned catalog draft, verified event inbox, immutable financial ledger, origin-rail credit lots, reservations, metered Premium publication/spend and reconciliation semantics using fake rails.
+PR #14 commit 6d7fc25 plus review repairs implemented the server-owned catalog draft, verified event inbox, immutable financial ledger, origin-rail credit lots, reservations, metered Premium publication/spend and reconciliation semantics using fake rails. PR #35 adds a production-disabled StripePaymentProvider using the reviewed backend httpx lock: server-catalog hosted Checkout with provider idempotency, raw-body Stripe-Signature verification, relevant-event normalization, authoritative PaymentIntent lookup, bounded reconciliation, account/product/environment/refund-state mapping and typed/redacted failures. In-process transport tests plus a PostgreSQL CommerceService integration prove redirect-without-grant and duplicate signed-event convergence to one ledger grant; application composition remains explicitly fake-only.
 
 ### Remaining work
 
-- Implement and test real/sandbox Stripe checkout and signed webhook verification.
+- Exercise the implemented production-disabled Stripe adapter against an approved Stripe sandbox/account and record checkout/webhook/authoritative-lookup/reconcile evidence; implement approved Stripe refund-request behavior before activation.
 - Implement App Store server purchase/notification verification and Google Play token/RTDN verification with environment/account binding.
-- Record sandbox grant/completion/refund/replay reconciliation evidence for all approved rails.
+- Record sandbox grant/completion/refund/replay reconciliation evidence for the approved native rails and cross-rail policy once provider accounts and terms permit it.
 - Resolve approved products/prices/tax/refund/storefront/credit-portability policy, including the owner decision for refund-after-spend Premium access, without inventing approvals.
 
 ### Acceptance evidence

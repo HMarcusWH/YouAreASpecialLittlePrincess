@@ -18,7 +18,7 @@ PR #14 remains the historical architecture-reconciliation baseline documented in
 
 At the current branch baseline, **T00, T00A, T01, T02, T03, T04, T05, T08A, T09, T10, T15, T18, T26, T27 and T28 are `DONE`**. T21 remains `IMPLEMENTED_PENDING_REVIEW` only because hard predecessor T17 is still `IN_PROGRESS`; T21's v2 Dossier print/share implementation and full-size render review are complete. T11, T17, T19, T24 and T29 are `IN_PROGRESS`. T18 provides deterministic native-unit pair/history comparison with explicit coverage/provenance and no aggregate similarity score. T29 has started with its provider-independent native foundation implemented; signed-device/IAP and live-processor evidence remain gated.
 
-This baseline still does **not** establish a validated reference cohort/statistics release, live Premium/model approval, real payment rails, production identity/object-storage/mail/push providers, native iOS/Android clients, deployed production recovery evidence, store approval or public release. Those are downstream tasks and human/provider gates, not gaps to conceal by changing status.
+This baseline still does **not** establish a validated reference cohort/statistics release, live Premium/model approval, approved/live payment rails, production identity/object-storage/mail/push providers, native iOS/Android clients, deployed production recovery evidence, store approval or public release. The Stripe adapter is implementation-only and remains production-disabled. Those are downstream tasks and human/provider gates, not gaps to conceal by changing status.
 
 ## Non-negotiable product boundaries
 
@@ -43,7 +43,7 @@ These are the proposed engineering defaults of this plan, not claims that SDKs, 
 | Rendering | Shared web report components in an isolated Playwright print/card worker. Native screens consume the same projection and shared formatting rules, not DOM components. |
 | Jobs | PostgreSQL durable job/outbox records, short leases and fenced publication. No long CPU/model work inside database transactions or HTTP request handlers. |
 | Connectors | Typed application-owned ports; provider SDKs live behind adapters. Fakes are mandatory. Identity, storage, payments, model, mail, push, abuse, analytics and telemetry have explicit specifications. |
-| Commerce | One internal immutable purchase/credit/fulfilment ledger; web Stripe candidate, iOS StoreKit, Android Play Billing. Provider verification precedes grants. Storefront rules control cross-platform credit use and steering. |
+| Commerce | One internal immutable purchase/credit/fulfilment ledger; production-disabled Stripe HTTPS adapter for web, iOS StoreKit, Android Play Billing. Provider verification precedes grants. Stripe sandbox/live composition, prices/refunds and native server adapters remain gated. |
 
 The complete import graph, runtime boundaries and build paths are in [09](docs/roadmap/09-connectors-and-provider-boundaries.md). Provider version pins are chosen and tested in their owning tasks, not fabricated in this roadmap.
 
