@@ -48,6 +48,23 @@ test("the v2 fixture renders the real server-owned first reveal", async ({ page 
   await expect(page.getByText("content.highlight.v1.slant.right.almost_all")).toHaveCount(0);
 });
 
+test("legacy v1 reports remain readable without a first reveal", async ({ page }) => {
+  await page.goto("/fixtures/free");
+  await expect(page.locator(".pr-first-reveal")).toHaveCount(0);
+  await expect(page.getByRole("heading", { level: 1, name: "Free report" })).toBeVisible();
+  await expect(page.getByText("Mechanical dossier")).toBeVisible();
+});
+
+test("the no-eligible first reveal renders only the reviewed fallback", async ({ page }) => {
+  await page.goto("/fixtures/free-v2-no-highlight");
+  const reveal = page.locator(".pr-first-reveal");
+  await expect(reveal).toBeVisible();
+  await expect(reveal.getByRole("heading", { name: "What stands out" })).toBeVisible();
+  await expect(reveal.getByText("No single mechanical pattern met the first-reveal rules for this sample.")).toBeVisible();
+  await expect(reveal.locator("tr[data-fact-id]")).toHaveCount(0);
+  await expect(page.getByText("content.highlight.v1.none")).toHaveCount(0);
+});
+
 test("missing measurements are explained, never shown as zero", async ({ page }) => {
   const view = fixture("free");
   const missing = view.facts.filter((f: { availability: string }) => f.availability === "MISSING");
@@ -132,10 +149,19 @@ test("keyboard users reach the content first and focus is visible", async ({ pag
   expect(outline).not.toBe("none");
 });
 
-test("Swedish labels fit a 320px screen without horizontal page scroll", async ({ page }) => {
+test("Swedish v2 Dossier labels fit a 320px screen without horizontal page scroll", async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 800 });
-  await page.goto("/fixtures/free?locale=sv");
+  await page.goto("/fixtures/free-v2?locale=sv");
   await expect(page.getByRole("heading", { level: 1, name: "Gratisrapport" })).toBeVisible();
+  const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+  expect(overflow).toBeLessThanOrEqual(0);
+});
+
+test("the v2 Dossier remains usable at 200% text size", async ({ page }) => {
+  await page.setViewportSize({ width: 640, height: 900 });
+  await page.goto("/fixtures/free-v2?locale=sv");
+  await page.addStyleTag({ content: "html { font-size: 200% !important; }" });
+  await expect(page.getByText("Personlig dossier")).toBeVisible();
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
   expect(overflow).toBeLessThanOrEqual(0);
 });

@@ -29,7 +29,7 @@ from princess_app.domain.reports import (  # noqa: E402
     project_report,
     revise_report,
 )
-from princess_app.domain.reports.template import HIGHLIGHT_TEMPLATE_VERSION  # noqa: E402
+from princess_app.domain.reports.template import BASE_TEMPLATE_VERSION, HIGHLIGHT_TEMPLATE_VERSION  # noqa: E402
 
 FIXTURES = ROOT / "fixtures" / "reports"
 SOURCE = FIXTURES / "source"
@@ -61,7 +61,8 @@ def capture() -> None:
         analysis_id="analysis_fixture_1", run_id="run_fixture_1", owner_id="owner_fixture_1",
         input_asset_id="asset_fixture_1", input_sha256=digest,
         processed_sha256=result.metadata["input_pixels_sha256"], created_at=CREATED,
-        engine_version=__version__, analysis_config_sha256=hashlib.sha256(b"max_dimension=700").hexdigest())
+        engine_version=__version__, analysis_config_sha256=hashlib.sha256(b"max_dimension=700").hexdigest(),
+        template=BASE_TEMPLATE_VERSION)
     SOURCE.mkdir(parents=True, exist_ok=True)
     (SOURCE / "engine-result.synthetic.json").write_text(dump(result.to_dict()), encoding="utf-8")
     (SOURCE / "evidence-payload.synthetic.json").write_text(dump(payload), encoding="utf-8")

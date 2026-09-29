@@ -26,7 +26,7 @@ from princess_app.domain.reports import (
 )
 from princess_app.domain.reports.template import (BASE_TEMPLATE_VERSION, FACT_SECTIONS,
                                                     HIGHLIGHT_POLICY_VERSION, HIGHLIGHT_PRESENTATION_VERSION,
-                                                    HIGHLIGHT_TEMPLATE_VERSION)
+                                                    HIGHLIGHT_TEMPLATE_VERSION, TEMPLATE_VERSION)
 from princess_app.ports.base import Conflict, NotAuthorized, NotFound
 from princess_contracts import compile_document, validate_projection
 from princess_graphology import GraphologyEngine
@@ -117,6 +117,27 @@ def test_compound_highlight_is_uncalibrated_when_any_support_is_uncalibrated():
     )
     assert highlight["content_ids"] == ["content.highlight.v1.size.width_more_variable"]
     assert highlight["availability"] == "UNCALIBRATED"
+
+def test_new_analysis_references_default_to_v2_while_v1_remains_explicit():
+    assert TEMPLATE_VERSION == HIGHLIGHT_TEMPLATE_VERSION == "individual-report/2"
+    current = analysis_reference(
+        analysis_id="analysis_default_v2", run_id="run_default_v2", owner_id="owner_fixture_1",
+        input_asset_id="asset_default_v2", input_sha256="0" * 64,
+        processed_sha256=RESULT["metadata"]["input_pixels_sha256"], created_at=T0,
+        engine_version="0.1.0", analysis_config_sha256="1" * 64,
+    )
+    assert current["versions"]["template"] == HIGHLIGHT_TEMPLATE_VERSION
+
+    legacy = analysis_reference(
+        analysis_id="analysis_explicit_v1", run_id="run_explicit_v1", owner_id="owner_fixture_1",
+        input_asset_id="asset_explicit_v1", input_sha256="0" * 64,
+        processed_sha256=RESULT["metadata"]["input_pixels_sha256"], created_at=T0,
+        engine_version="0.1.0", analysis_config_sha256="1" * 64, template=BASE_TEMPLATE_VERSION,
+    )
+    legacy_report = report(analysis=legacy, evidence=None).to_dict()
+    assert legacy_report["analysis"]["versions"]["template"] == BASE_TEMPLATE_VERSION
+    assert not any(section["section_id"].startswith("section.highlight.") for section in legacy_report["sections"])
+
 
 def test_highlight_template_pins_presentation_authority():
     from princess_app.domain.content import HIGHLIGHT_POLICY_VERSION as RUNTIME_POLICY_VERSION, PRESENTATION_VERSION

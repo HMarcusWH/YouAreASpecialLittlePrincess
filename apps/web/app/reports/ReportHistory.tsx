@@ -4,6 +4,7 @@ type Locale = "en" | "sv";
 
 const COPY = {
   en: {
+    eyebrow: "Report archive",
     title: "Your reports",
     intro: "Reports saved to this current session or account. Cross-device account recovery is not available until sign-in is configured.",
     empty: "You do not have any saved reports yet.",
@@ -14,6 +15,7 @@ const COPY = {
     kinds: { INDIVIDUAL: "Individual report", PAIR: "Pair report", HISTORY: "History report" },
   },
   sv: {
+    eyebrow: "Rapportarkiv",
     title: "Dina rapporter",
     intro: "Rapporter som sparats i den här sessionen eller på det här kontot. Återställning mellan enheter är inte tillgänglig förrän inloggning är konfigurerad.",
     empty: "Du har inga sparade rapporter ännu.",
@@ -30,7 +32,8 @@ export function ReportHistory({ page, locale }: { page: ReportPage; locale: Loca
   const formatter = new Intl.DateTimeFormat(locale === "sv" ? "sv-SE" : "en-GB", { dateStyle: "medium" });
   return (
     <div className="stack report-history" lang={locale}>
-      <header>
+      <header className="report-history-header">
+        <p className="page-eyebrow">{c.eyebrow}</p>
         <h1>{c.title}</h1>
         <p className="muted">{c.intro}</p>
       </header>
@@ -43,11 +46,11 @@ export function ReportHistory({ page, locale }: { page: ReportPage; locale: Loca
         <ol className="report-list">
           {page.items.map((item) => (
             <li key={item.report_id} className="panel report-list-item">
-              <div>
-                <h2>{c.kinds[item.kind]}</h2>
+              <div className="report-list-copy">
+                <p className="page-eyebrow">{c.kinds[item.kind]}</p>
+                <h2>{c.revision} {item.revision}</h2>
                 <p className="muted">
                   <time dateTime={item.created_at}>{formatter.format(new Date(item.created_at))}</time>
-                  {" · "}{c.revision} {item.revision}
                 </p>
               </div>
               <a className="button button-secondary"

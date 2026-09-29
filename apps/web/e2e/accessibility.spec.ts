@@ -4,7 +4,9 @@ import { analyzeAccessibility, expectAccessible } from "./support/accessibility.
 
 for (const [name, url] of [
   ["start", "/start"],
-  ["free report", "/fixtures/free"],
+  ["legacy free report", "/fixtures/free"],
+  ["v2 Dossier report", "/fixtures/free-v2"],
+  ["v2 Dossier no-highlight fallback", "/fixtures/free-v2-no-highlight"],
   ["report history", "/fixtures/history"],
   ["empty report history", "/fixtures/history?empty=1"],
   ["stored evidence integrity warning", "/fixtures/evidence-errors?error=stored_evidence_invalid"],
@@ -19,7 +21,7 @@ for (const [name, url] of [
 
 test("representative Swedish narrow report remains accessible", async ({ page }, testInfo) => {
   await page.setViewportSize({ width: 320, height: 800 });
-  await page.goto("/fixtures/free?locale=sv");
+  await page.goto("/fixtures/free-v2?locale=sv");
   await expect(page.getByRole("heading", { level: 1, name: "Gratisrapport" })).toBeVisible();
   await expectAccessible(page, testInfo);
 });
