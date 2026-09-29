@@ -6,6 +6,7 @@ import path from "node:path";
 import { notFound } from "next/navigation";
 
 import { parseEvidenceBundle, parseReportView } from "@princess/api-client";
+import type { ReportSection } from "@princess/contracts";
 import { ReportView } from "@princess/report-web";
 
 export const dynamic = "force-dynamic";
@@ -20,14 +21,14 @@ export default async function Fixture({ params, searchParams }: {
   const file = path.join(process.cwd(), "..", "..", "fixtures", "reports", `view.${sourceName}.json`);
   let view = parseReportView(JSON.parse(await readFile(file, "utf8")));
   if (name === "free-v2-no-highlight") {
-    const firstReveal = {
+    const firstReveal: ReportSection = {
       section_id: "section.highlight.primary",
       template: "HIGHLIGHT_PRIMARY",
       availability: "INELIGIBLE",
       fact_ids: [],
       content_ids: ["content.highlight.v1.none"],
       premium_section_id: null,
-    } as const;
+    };
     view = {
       ...view,
       sections: [firstReveal, ...view.sections.filter((section) =>
