@@ -4,7 +4,7 @@
 
 # Inktrospect
 
-> Repository/internal codename: **You Are A Special Little Princess**. Existing `Princess` / `princess_*` package and service namespaces remain implementation details while the public brand is finalized through T10 design acceptance.
+> Repository/internal codename: **You Are A Special Little Princess**. Existing `Princess` / `princess_*` package and service namespaces remain implementation details; the owner-accepted public product brand is **Inktrospect**.
 
 A privacy-conscious consumer handwriting-analysis product built around deterministic
 handwriting measurements, structured evidence and clearly separated interpretive
@@ -29,8 +29,8 @@ separately labelled and are not validated psychological assessment.
 | Commerce | Internal ledger/reservation/fulfilment machinery implemented; real Stripe/App Store/Play verification remains gated |
 | Recovery/notifications | Tombstones, restore reconciliation and notification state machine implemented; production providers/topology remain incomplete |
 | Pilot tooling | Synthetic-qualified, human mode fail-closed behind rights/participant gates |
-| Product design | Working public brand **Inktrospect**; Direction A — The Dossier selected and app prototype in progress; owner `design_acceptance` still pending |
-| Native clients | Planned; T29 unlocks after T10 design acceptance |
+| Product design | **Inktrospect / Direction A — The Dossier accepted with changes**; canonical semantic tokens are `design-tokens/1.0` |
+| Native clients | Planned; T29 is the next READY task after T10 design acceptance |
 
 Current task status is intentionally not duplicated here; run:
 

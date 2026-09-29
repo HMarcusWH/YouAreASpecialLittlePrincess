@@ -73,7 +73,7 @@ Later merged work changed the current disposition without rewriting this histori
 - T17 gained saved history/evidence/accessibility qualification and account mail-preference UI; production identity and accepted-design integration remain.
 - T24 gained single-device/feedback restore tombstones, web mail preferences and deterministic Premium provider-attempt reconciliation; production storage/providers/recovery/operations remain.
 - T11 is IN_PROGRESS with synthetic-qualified, fail-closed pilot tooling; real recruitment/annotation remains gated.
-- T10 now has a production-aware Claude Design handoff but still requires explicit owner `design_acceptance`.
-- T08A was later split from T08 and completed with versioned EN/SV presentation content, broad deterministic server-owned highlight selection and an `individual-report/2` capability that remains client-inactive until T17 integration. T18 is now READY; T08 still waits on T06 calibrated evidence. T29 remains the next native unlock after T10 acceptance.
+- T10 now has an owner-accepted-with-changes Inktrospect / Direction A — The Dossier handoff; the accepted artifact digest and limitations are recorded under `docs/design/`.
+- T08A was later split from T08 and completed with versioned EN/SV presentation content, broad deterministic server-owned highlight selection and an `individual-report/2` capability that remains client-inactive until T17 integration. T18 is DONE; T08 still waits on T06 calibrated evidence. T10 acceptance now makes T29 READY.
 
 Current authority remains [tasks.json](tasks.json).
