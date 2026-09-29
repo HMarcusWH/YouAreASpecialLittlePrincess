@@ -17,7 +17,7 @@ function run(input: unknown, ...args: string[]) {
 }
 
 test("print HTML carries every projected fact exactly as the interactive report formats it", () => {
-  const view = fixture("export-no-image");
+  const view = fixture("export-v2-no-image");
   const out = run({ view, layout: "A4", locale: "en", generated_at: GENERATED }, "--html");
   assert.equal(out.status, 0, out.stderr);
   const html = out.stdout.toString();
@@ -32,7 +32,7 @@ test("print HTML carries every projected fact exactly as the interactive report 
 });
 
 test("server-owned highlight content renders from reviewed presentation IDs", () => {
-  const view = structuredClone(fixture("export-no-image"));
+  const view = structuredClone(fixture("export-v2-no-image"));
   view.sections.unshift({
     section_id: "section.highlight.primary",
     template: "HIGHLIGHT_PRIMARY",
@@ -49,7 +49,7 @@ test("server-owned highlight content renders from reviewed presentation IDs", ()
 });
 
 test("hostile strings are escaped and nothing can load or run", () => {
-  const view = fixture("export-no-image");
+  const view = fixture("export-v2-no-image");
   const target = view.facts.find((f: { availability: string }) => f.availability === "READY");
   target.value = "<img src=https://evil.example/x onerror=alert(1)><script>alert(2)</script>";
   target.formatting_key = "text";
@@ -59,7 +59,7 @@ test("hostile strings are escaped and nothing can load or run", () => {
 });
 
 test("PDFs are tagged, sized per layout and contain pages", { timeout: 120_000 }, () => {
-  const view = fixture("export-no-image");
+  const view = fixture("export-v2-no-image");
   const sizes: Record<string, [number, number]> = { A4: [595.92, 842.88], LETTER: [612, 792] };
   for (const [layout, [w, h]] of Object.entries(sizes)) {
     const out = run({ view, layout, locale: "sv", generated_at: GENERATED });
@@ -75,7 +75,7 @@ test("PDFs are tagged, sized per layout and contain pages", { timeout: 120_000 }
 });
 
 test("share cards are fixed-size PNGs of the redacted SHARE projection", { timeout: 120_000 }, () => {
-  const view = fixture("share");
+  const view = fixture("share-v2");
   for (const [layout, height] of [["CARD_SQUARE", 1080], ["CARD_STORY", 1920]] as const) {
     const out = run({ view, layout, locale: "en", generated_at: GENERATED });
     assert.equal(out.status, 0, out.stderr);
@@ -90,17 +90,26 @@ test("share cards are fixed-size PNGs of the redacted SHARE projection", { timeo
   assert.ok(!html.includes("<img") && (html.match(/data-fact-id/g) ?? []).length <= 4);
 });
 
+test("legacy v1 export remains renderable after renderer v2", () => {
+  const view = fixture("export-no-image");
+  const out = run({ view, layout: "A4", locale: "en", generated_at: GENERATED }, "--html");
+  assert.equal(out.status, 0, out.stderr);
+  const html = out.stdout.toString();
+  assert.ok(html.includes("Inktrospect"));
+  assert.ok(!html.includes("What stands out"));
+});
+
 test("projection/layout mismatches and bad input fail with a code", () => {
   const free = fixture("free");
   const wrong = run({ view: free, layout: "A4", locale: "en", generated_at: GENERATED }, "--html");
   assert.equal(wrong.status, 1);
   assert.equal(wrong.stderr, "documents_render_export_projections_only");
-  const card = run({ view: fixture("export-no-image"), layout: "CARD_SQUARE", locale: "en", generated_at: GENERATED },
+  const card = run({ view: fixture("export-v2-no-image"), layout: "CARD_SQUARE", locale: "en", generated_at: GENERATED },
                    "--html");
   assert.equal(card.stderr, "cards_render_share_projections_only");
   assert.equal(run({ view: free, layout: "POSTER", locale: "en", generated_at: GENERATED }).status, 2);
   assert.equal(run({ view: free, layout: "A4", locale: "de", generated_at: GENERATED }).status, 2);
-  const corrupt = structuredClone(fixture("export-no-image"));
+  const corrupt = structuredClone(fixture("export-v2-no-image"));
   corrupt.contract_version = "9.0.0";
   assert.equal(run({ view: corrupt, layout: "A4", locale: "en", generated_at: GENERATED }).status, 1);
 });
