@@ -1018,7 +1018,7 @@ Owner-reviewed design tokens, reusable component boundaries and fixture/property
 
 ### Implementation evidence
 
-PR #14 commit c5463a4 added contract-driven draft design tokens generated to CSS/TypeScript/Swift/Kotlin and a complete state/component handoff. PR #23 packages the production-aware Claude Design handoff. PR #30 candidate handoff reconciliation updates the design package through merged T08A/T18 product truth and post-PR29 baseline 8163770f19cbbf3b5cf60fb77d0d52003dc2cfaf while deliberately preserving PENDING_OWNER_REVIEW and DRAFT_PENDING_DESIGN_ACCEPTANCE until an explicit owner decision.
+Pre-acceptance implementation history: PR #14 commit c5463a4 added contract-driven draft tokens and the state/component handoff; PR #23 packaged the production-aware Claude Design handoff; PR #30 reconciled the design package with merged T08A/T18 product truth and intentionally left PENDING_OWNER_REVIEW / DRAFT_PENDING_DESIGN_ACCEPTANCE until the owner decision. Final accepted state is recorded separately in completion_evidence.
 
 ### Acceptance evidence
 
