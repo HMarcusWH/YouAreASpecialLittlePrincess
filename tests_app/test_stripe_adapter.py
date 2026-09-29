@@ -280,25 +280,51 @@ def test_unknown_product_or_missing_environment_cannot_be_grant_ready():
     assert observation.environment is Environment.LOCAL
 
 
-def test_reconcile_is_bounded_paginated_and_uses_authoritative_payment_intents():
+def test_reconcile_uses_event_time_so_late_refunds_of_old_purchases_are_seen():
     calls = []
+
+    def event(event_id, event_type, ref):
+        obj = {"object": "charge", "payment_intent": ref} if event_type == "charge.refunded" else {
+            "object": "payment_intent", "id": ref, "metadata": {"environment": "test"}
+        }
+        return {
+            "object": "event", "id": event_id, "type": event_type, "livemode": False,
+            "created": int(Setup(lambda r: None).clock.now().timestamp()),
+            "data": {"object": obj},
+        }
 
     def handler(request):
         calls.append(request)
-        params = dict(request.url.params.multi_items())
-        if "starting_after" not in params:
-            return httpx.Response(200, json={"object": "list", "data": [pi("pi_test_1")], "has_more": True})
-        assert params["starting_after"] == "pi_test_1"
-        return httpx.Response(200, json={"object": "list", "data": [pi("pi_test_2")], "has_more": False})
+        if request.url.path == "/v1/events":
+            params = dict(request.url.params.multi_items())
+            if "starting_after" not in params:
+                return httpx.Response(200, json={
+                    "object": "list",
+                    "data": [event("evt_test_10", "payment_intent.succeeded", "pi_test_1")],
+                    "has_more": True,
+                })
+            assert params["starting_after"] == "evt_test_10"
+            return httpx.Response(200, json={
+                "object": "list",
+                "data": [event("evt_test_11", "charge.refunded", "pi_test_2")],
+                "has_more": False,
+            })
+        if request.url.path == "/v1/payment_intents/pi_test_1":
+            return httpx.Response(200, json=pi("pi_test_1"))
+        if request.url.path == "/v1/payment_intents/pi_test_2":
+            return httpx.Response(200, json=pi("pi_test_2", refunded=True, amount_refunded=999))
+        raise AssertionError(request.url)
 
     setup = Setup(handler)
     observations = setup.provider.reconcile(setup.clock.now() - timedelta(hours=1), setup.ctx())
-    assert [o.transaction_ref for o in observations] == ["pi_test_1", "pi_test_2"]
-    assert all(o.state is payments.PurchaseState.PURCHASED for o in observations)
-    assert len(calls) == 2
-    first = dict(calls[0].url.params.multi_items())
-    assert first["limit"] == "100" and first["expand[]"] == "data.latest_charge"
-    assert first["created[gte]"].isdigit()
+    assert [(o.transaction_ref, o.state) for o in observations] == [
+        ("pi_test_1", payments.PurchaseState.PURCHASED),
+        ("pi_test_2", payments.PurchaseState.REFUNDED),
+    ]
+    event_calls = [request for request in calls if request.url.path == "/v1/events"]
+    assert len(event_calls) == 2
+    first = dict(event_calls[0].url.params.multi_items())
+    assert first["limit"] == "100" and first["created[gte]"].isdigit()
 
 
 @pytest.mark.parametrize("response,error", [

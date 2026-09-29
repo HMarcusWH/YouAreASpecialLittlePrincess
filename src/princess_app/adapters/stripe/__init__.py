@@ -54,6 +54,7 @@ from ...ports.base import (
 DEFAULT_BASE_URL = "https://api.stripe.com/v1"
 DEFAULT_SIGNATURE_TOLERANCE_S = 300
 _MAX_RECONCILE_PAGES = 10
+_MAX_RECONCILE_REFS = 200
 _PROVIDER_ID = re.compile(r"^[A-Za-z0-9_]{3,255}$")
 
 _CHECKOUT_EVENT_TYPES = frozenset({
@@ -280,32 +281,53 @@ class StripePaymentProvider:
         raise Unsupported("capability_not_supported", detail="stripe-http:refund_request")
 
     def reconcile(self, since: datetime, ctx: CallContext) -> Sequence[port.TransactionObservation]:
+        """Reconcile provider events in the window, then re-read each PaymentIntent.
+
+        Listing PaymentIntents by creation time is insufficient: a refund today
+        may target a purchase created weeks ago. Stripe Events are the bounded
+        change feed; event payloads only identify candidates and authoritative
+        PaymentIntent lookup still decides the observation.
+        """
         self.profile.require(port.RECONCILE)
         self._check_context(ctx)
         require_utc(since, "since")
-        observations: list[port.TransactionObservation] = []
+        refs: list[str] = []
+        seen: set[str] = set()
         starting_after: str | None = None
         for _ in range(_MAX_RECONCILE_PAGES):
             params: list[tuple[str, str]] = [
                 ("created[gte]", str(int(since.timestamp()))),
                 ("limit", "100"),
-                ("expand[]", "data.latest_charge"),
             ]
             if starting_after is not None:
                 params.append(("starting_after", starting_after))
-            payload = self._request_json("GET", "/payment_intents", ctx, params=params)
+            payload = self._request_json("GET", "/events", ctx, params=params)
             data = payload.get("data")
             if not isinstance(data, list):
                 raise PermanentFailure("stripe_response_invalid")
-            page = [self._observation(item, "") for item in data if isinstance(item, dict)]
-            if len(page) != len(data):
-                raise PermanentFailure("stripe_response_invalid")
-            observations.extend(page)
+            for event in data:
+                if not isinstance(event, Mapping):
+                    raise PermanentFailure("stripe_response_invalid")
+                self._check_livemode(event)
+                event_type = event.get("type")
+                obj = ((event.get("data") or {}).get("object") if isinstance(event.get("data"), Mapping) else None)
+                if not isinstance(event_type, str) or not isinstance(obj, Mapping):
+                    raise PermanentFailure("stripe_response_invalid")
+                try:
+                    candidates = self._event_refs(event_type, obj)
+                except InvalidInput:
+                    raise PermanentFailure("stripe_response_invalid") from None
+                for ref in candidates:
+                    if ref not in seen:
+                        seen.add(ref)
+                        refs.append(ref)
+                        if len(refs) > _MAX_RECONCILE_REFS:
+                            raise PermanentFailure("stripe_reconcile_ref_limit")
             if payload.get("has_more") is not True:
-                return observations
+                return [self.retrieve_authoritative_purchase(ref, "", ctx) for ref in refs]
             if not data:
                 raise PermanentFailure("stripe_response_invalid")
-            starting_after = _provider_id(data[-1].get("id"), "pi_", "stripe_response_invalid")
+            starting_after = _provider_id(data[-1].get("id"), "evt_", "stripe_response_invalid")
         raise PermanentFailure("stripe_reconcile_page_limit")
 
     def close(self) -> None:
