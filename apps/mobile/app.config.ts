@@ -8,7 +8,6 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   scheme: "inktrospect-dev",
   orientation: "default",
   userInterfaceStyle: "automatic",
-  newArchEnabled: true,
   experiments: { typedRoutes: true },
   ios: {
     supportsTablet: true,
