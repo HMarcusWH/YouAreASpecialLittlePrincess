@@ -2,13 +2,17 @@
 from __future__ import annotations
 
 import hashlib
+import hmac
+import json
 import threading
 from datetime import timedelta
 
+import httpx
 import pytest
 from sqlalchemy import text
 
 from princess_app.adapters.fakes import FakePaymentProvider, FakePremiumModel, SequentialIds
+from princess_app.adapters.stripe import StripePaymentProvider
 from princess_app.adapters.postgres.access import PostgresReportAccess
 from princess_app.adapters.postgres.commerce import (
     PostgresImageSource,
@@ -37,6 +41,7 @@ from princess_app.ports.base import (
     InvalidInput,
     NotAuthorized,
     NotFound,
+    ProviderMode,
     TransientUnavailable,
     Unauthenticated,
 )
@@ -110,6 +115,89 @@ def test_web_purchase_grants_once_from_verified_events_only(shop, world):  # noq
     tampered = body.replace(b"checkout.session.completed", b"checkout.session.complete")
     with pytest.raises(Unauthenticated):  # the signature covers the unmodified raw body
         shop.service.ingest_event(STRIPE, tampered, headers, sha, shop.env.ctx())
+
+
+def test_real_stripe_adapter_reconciles_into_the_existing_ledger_once(shop, world):  # noqa: F811
+    owner = account(world, "sub-stripe-adapter").principal_id
+    account_ref = shop.service.payment_account(owner)
+    secret = "whsec-test-only"
+    seen = []
+
+    def handler(request):
+        seen.append(request)
+        if request.method == "POST" and request.url.path == "/v1/checkout/sessions":
+            return httpx.Response(200, json={
+                "object": "checkout.session", "id": "cs_realish_1", "livemode": False,
+                "url": "https://checkout.stripe.com/c/pay/cs_realish_1",
+                "expires_at": int(shop.env.clock.now().timestamp()) + 1800,
+            })
+        if request.method == "GET" and request.url.path == "/v1/payment_intents/pi_realish_1":
+            return httpx.Response(200, json={
+                "object": "payment_intent", "id": "pi_realish_1", "livemode": False, "status": "succeeded",
+                "created": int(shop.env.clock.now().timestamp()),
+                "metadata": {
+                    "internal_product_id": PREMIUM_SINGLE,
+                    "store_product_id": sku(STRIPE),
+                    "account_ref": account_ref,
+                    "environment": "test",
+                    "intent_ref": "intent_realish_1",
+                },
+                "latest_charge": {
+                    "object": "charge", "id": "ch_realish_1", "refunded": False,
+                    "amount": 999, "amount_refunded": 0,
+                },
+            })
+        raise AssertionError(f"unexpected Stripe request: {request.method} {request.url}")
+
+    stripe = StripePaymentProvider(
+        api_key="sk_test_not-real",
+        webhook_secret=secret,
+        api_version="test-pinned-version",
+        success_url="https://app.example.test/purchase/success",
+        cancel_url="https://app.example.test/purchase/cancel",
+        catalog=CATALOG,
+        clock=shop.env.clock,
+        environment=Environment.TEST,
+        mode=ProviderMode.SANDBOX,
+        activation_approved=True,
+        transport=httpx.MockTransport(handler),
+    )
+    service = CommerceService(
+        ledger=shop.ledger,
+        providers={**shop.providers, STRIPE: stripe},
+        permissions=shop.env.permissions,
+        reports=lambda principal: PostgresReportStore(shop.env.app_db, principal),
+        clock=shop.env.clock,
+        ids=SequentialIds(),
+        environment=Environment.TEST,
+    )
+
+    session = service.start_web_checkout(owner, PREMIUM_SINGLE, "intent_realish_1", shop.env.ctx())
+    assert session.provider_session_ref == "cs_realish_1"
+    assert service.balance(owner, Platform.WEB).available == 0
+
+    payload = {
+        "id": "evt_realish_1",
+        "type": "checkout.session.completed",
+        "created": int(shop.env.clock.now().timestamp()),
+        "livemode": False,
+        "data": {"object": {
+            "object": "checkout.session",
+            "payment_intent": "pi_realish_1",
+            "metadata": {"environment": "test"},
+        }},
+    }
+    raw = json.dumps(payload, separators=(",", ":")).encode()
+    timestamp = int(shop.env.clock.now().timestamp())
+    signature = hmac.new(secret.encode(), str(timestamp).encode() + b"." + raw, hashlib.sha256).hexdigest()
+    headers = {"Stripe-Signature": f"t={timestamp},v1={signature}"}
+    digest = hashlib.sha256(raw).hexdigest()
+
+    assert service.ingest_event(STRIPE, raw, headers, digest, shop.env.ctx()) == ["granted"]
+    assert service.ingest_event(STRIPE, raw, headers, digest, shop.env.ctx()) == ["already_granted"]
+    assert service.balance(owner, Platform.WEB).available == 1
+    assert shop.entries(owner) == ["GRANT"]
+    assert sum(request.url.path == "/v1/payment_intents/pi_realish_1" for request in seen) == 2
 
 
 def test_store_claims_reject_pending_foreign_and_malformed_purchases(shop, world):  # noqa: F811
