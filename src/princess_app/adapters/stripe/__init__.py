@@ -93,6 +93,7 @@ class StripePaymentProvider:
         environment: Environment,
         mode: ProviderMode,
         activation_approved: bool = False,
+        refund_request_approved: bool = False,
         base_url: str = DEFAULT_BASE_URL,
         timeout_s: float = 20.0,
         signature_tolerance_s: int = DEFAULT_SIGNATURE_TOLERANCE_S,
@@ -125,22 +126,26 @@ class StripePaymentProvider:
         self._cancel_url = cancel_url
         self._timeout_s = float(timeout_s)
         self._signature_tolerance_s = signature_tolerance_s
+        self._refund_request_approved = bool(refund_request_approved)
         self._client = httpx.Client(
             base_url=base_url.rstrip("/"),
             transport=transport,
             follow_redirects=False,
             headers={"Authorization": f"Bearer {api_key}", "Stripe-Version": api_version},
         )
+        capabilities = {
+            port.WEB_CHECKOUT,
+            port.SIGNED_EVENTS,
+            port.AUTHORITATIVE_LOOKUP,
+            port.RECONCILE,
+        }
+        if self._refund_request_approved:
+            capabilities.add(port.REFUND_REQUEST)
         self.profile = CapabilityProfile(
             port=port.PORT,
             provider="stripe-http",
             mode=mode,
-            capabilities=frozenset({
-                port.WEB_CHECKOUT,
-                port.SIGNED_EVENTS,
-                port.AUTHORITATIVE_LOOKUP,
-                port.RECONCILE,
-            }),
+            capabilities=frozenset(capabilities),
         )
 
     def __repr__(self) -> str:
@@ -278,7 +283,21 @@ class StripePaymentProvider:
 
     def request_refund_if_supported(self, transaction_ref: str, ctx: CallContext) -> None:
         self.profile.require(port.REFUND_REQUEST)
-        raise Unsupported("capability_not_supported", detail="stripe-http:refund_request")
+        self._check_context(ctx)
+        ref = _provider_id(transaction_ref, "pi_", "invalid_transaction_ref")
+        payload = self._request_json(
+            "POST",
+            "/refunds",
+            ctx,
+            data=[("payment_intent", ref)],
+            headers={"Idempotency-Key": f"refund:{ref}"},
+            mutating=True,
+        )
+        if payload.get("object") != "refund" or payload.get("payment_intent") != ref:
+            raise PermanentFailure("stripe_refund_response_invalid")
+        status = payload.get("status")
+        if status not in {"pending", "succeeded"}:
+            raise PermanentFailure("stripe_refund_failed")
 
     def reconcile(self, since: datetime, ctx: CallContext) -> Sequence[port.TransactionObservation]:
         """Reconcile provider events in the window, then re-read each PaymentIntent.

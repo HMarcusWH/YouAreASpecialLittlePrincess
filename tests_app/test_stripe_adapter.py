@@ -355,7 +355,7 @@ def test_mutating_timeout_is_ambiguous_but_connect_failure_is_retryable():
         unreachable.provider.create_web_checkout("intent_1", PRODUCT, "acct_1", unreachable.ctx())
 
 
-def test_stripe_does_not_claim_native_or_refund_capabilities():
+def test_stripe_does_not_claim_native_or_unapproved_refund_capabilities():
     setup = Setup(lambda r: httpx.Response(500))
     assert payments.VERIFY_PROOF not in setup.provider.profile.capabilities
     assert payments.REFUND_REQUEST not in setup.provider.profile.capabilities
@@ -363,3 +363,35 @@ def test_stripe_does_not_claim_native_or_refund_capabilities():
         setup.provider.verify_purchase("proof", "acct_1", setup.ctx())
     with pytest.raises(Unsupported):
         setup.provider.request_refund_if_supported("pi_test_1", setup.ctx())
+
+
+def test_approved_full_refund_uses_payment_intent_and_provider_idempotency():
+    seen = []
+    def handler(request):
+        seen.append(request)
+        return httpx.Response(200, json={
+            "object": "refund", "id": "re_test_1", "payment_intent": "pi_test_1", "status": "succeeded",
+        })
+    setup = Setup(handler)
+    setup.provider.close()
+    setup.provider = StripePaymentProvider(
+        api_key=KEY,
+        webhook_secret=WEBHOOK,
+        api_version=API_VERSION,
+        success_url="https://app.example.test/success",
+        cancel_url="https://app.example.test/cancel",
+        catalog=CATALOG,
+        clock=setup.clock,
+        environment=Environment.TEST,
+        mode=ProviderMode.SANDBOX,
+        activation_approved=True,
+        refund_request_approved=True,
+        transport=httpx.MockTransport(handler),
+    )
+    assert payments.REFUND_REQUEST in setup.provider.profile.capabilities
+    setup.provider.request_refund_if_supported("pi_test_1", setup.ctx())
+    [request] = seen
+    assert request.url.path == "/v1/refunds"
+    assert request.headers["idempotency-key"] == "refund:pi_test_1"
+    form = parse_qs(request.content.decode())
+    assert form == {"payment_intent": ["pi_test_1"]}
