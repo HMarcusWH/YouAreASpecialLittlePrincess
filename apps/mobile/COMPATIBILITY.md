@@ -51,7 +51,8 @@ SDK 58 was beta when the spike began; T29 therefore selected the stable SDK 57 l
 | Design | accepted `design-tokens/1.0` | Shared semantics; native primitives, no DOM/WebView |
 | Capture | image picker/camera + image-manipulator | Produces local derivative metadata only; server verifies/authorizes/analyzes |
 | HEIC/HEIF | picker input can be re-encoded to JPEG derivative | Does not expand backend accepted media authority |
-| Identity transport | external-user-agent adapter via expo-web-browser | Provider-neutral HTTPS auth + allowlisted redirect/state checks; no embedded password/provider secret |\n| Secure session | expo-secure-store adapter | Credential material only; report/image payloads excluded |
+| Identity transport | external-user-agent adapter via expo-web-browser | Provider-neutral HTTPS auth + allowlisted redirect/state checks; no embedded password/provider secret |
+| Secure session | expo-secure-store adapter | Credential material only; report/image payloads excluded |
 | Purchase | typed NativePurchaseClient + expo-iap module compatibility | Client never mints credits; T19 server verification/ledger remains authority |
 | Deep links | allowlisted route resolver + Expo linking module | Link selects resource; server authorization still required |
 | Files/share | typed share port + Expo module compatibility | Authorized exports only; temporary-file cleanup required |
@@ -84,7 +85,9 @@ Node-side native tests cover:
 - logout/account switch clears push/session state;
 - late prior-account responses are discarded by SessionEpoch;
 - authorized-file sharing exposes explicit cleanup;
-- provider-neutral external-user-agent identity requests contain no embedded client secret;\n- abuse attestation unavailable remains unavailable rather than authorizing;\n- exact compatibility validation rejects unsupported native dependency/version drift.
+- provider-neutral external-user-agent identity requests contain no embedded client secret;
+- abuse attestation unavailable remains unavailable rather than authorizing;
+- exact compatibility validation rejects unsupported native dependency/version drift.
 
 T30/T31 add real process death, physical-device camera/HEIC, sandbox purchase, push, link association, screen-reader/text-scale and signed-build lifecycle evidence.
 
