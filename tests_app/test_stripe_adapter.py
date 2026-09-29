@@ -131,9 +131,10 @@ def test_construction_is_gated_mode_checked_and_redacted():
     with pytest.raises(InvalidInput):
         StripePaymentProvider(**common, environment=Environment.PRODUCTION, mode=ProviderMode.SANDBOX,
                               activation_approved=True)
+    unsafe = {**common, "success_url": "http://unsafe.invalid"}
     with pytest.raises(InvalidInput):
-        StripePaymentProvider(**common, environment=Environment.TEST, mode=ProviderMode.SANDBOX,
-                              activation_approved=True, success_url="http://unsafe.invalid")
+        StripePaymentProvider(**unsafe, environment=Environment.TEST, mode=ProviderMode.SANDBOX,
+                              activation_approved=True)
     setup = Setup(lambda r: httpx.Response(500))
     assert KEY not in repr(setup.provider) and WEBHOOK not in repr(setup.provider)
 

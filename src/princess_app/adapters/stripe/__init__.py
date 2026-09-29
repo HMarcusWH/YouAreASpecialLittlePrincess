@@ -26,7 +26,7 @@ import json
 import re
 from datetime import datetime, timedelta, timezone
 from typing import Any, Mapping, Sequence
-from urllib.parse import quote, urlsplit
+from urllib.parse import quote, urlencode, urlsplit
 
 import httpx
 
@@ -451,8 +451,15 @@ class StripePaymentProvider:
         self._check_context(ctx)
         budget = max(0.1, min(self._timeout_s, ctx.remaining(self._clock) / timedelta(seconds=1)))
         timeout = httpx.Timeout(budget, connect=min(5.0, budget))
+        request_headers = dict(headers or {})
+        content = None
+        if data is not None:
+            content = urlencode(data).encode("utf-8")
+            request_headers.setdefault("Content-Type", "application/x-www-form-urlencoded")
         try:
-            response = self._client.request(method, path, data=data, params=params, headers=headers, timeout=timeout)
+            response = self._client.request(
+                method, path, content=content, params=params, headers=request_headers, timeout=timeout
+            )
         except (httpx.ConnectError, httpx.ConnectTimeout, httpx.PoolTimeout):
             raise TransientUnavailable("provider_unreachable") from None
         except (httpx.TimeoutException, httpx.TransportError):
