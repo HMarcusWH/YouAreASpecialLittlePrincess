@@ -63,9 +63,22 @@ jobs:
           docker run --rm --entrypoint sh "$PRINCESS_EXPORT_IMAGE" -c '
             node --version | grep -Fx "v22.22.2"
             test -x "$PRINCESS_CHROMIUM"
+            node -e "require.resolve('playwright-core',{paths:['/opt/princess/apps/render']})"
             ! command -v npm
             ! command -v pip
           '
+      - name: Qualify raw Chromium launch inside the final export image
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker run --rm --read-only --tmpfs /tmp:rw,exec,nosuid,size=512m --shm-size=512m \
+            -e HOME=/tmp --entrypoint node "$PRINCESS_EXPORT_IMAGE" -e '
+              const { chromium } = require("/opt/princess/apps/render/node_modules/playwright-core");
+              (async () => {
+                const browser = await chromium.launch({ executablePath: process.env.PRINCESS_CHROMIUM });
+                await browser.close();
+              })().catch((error) => { console.error(error); process.exit(1); });
+            '
       - name: Render real PDF and PNG inside the final export image
         shell: bash
         run: |
@@ -80,8 +93,8 @@ jobs:
           view=json.load(open("fixtures/reports/view.share-v2.json"))
           print(json.dumps({"view":view,"layout":"CARD_SQUARE","locale":"en","generated_at":"2026-09-29T12:00:00Z"}))
           PY
-          docker run --rm -i --read-only --tmpfs /tmp:rw,exec,nosuid,size=512m --shm-size=512m             -e HOME=/tmp/princess-home --entrypoint python "$PRINCESS_EXPORT_IMAGE" -c             'import json,sys; from princess_app.adapters.render import SubprocessRenderer; p=json.load(sys.stdin); sys.stdout.buffer.write(SubprocessRenderer().render(p["view"],p["layout"],p["locale"],p["generated_at"]))'             </tmp/a4.json >/tmp/report.pdf
-          docker run --rm -i --read-only --tmpfs /tmp:rw,exec,nosuid,size=512m --shm-size=512m             -e HOME=/tmp/princess-home --entrypoint python "$PRINCESS_EXPORT_IMAGE" -c             'import json,sys; from princess_app.adapters.render import SubprocessRenderer; p=json.load(sys.stdin); sys.stdout.buffer.write(SubprocessRenderer().render(p["view"],p["layout"],p["locale"],p["generated_at"]))'             </tmp/card.json >/tmp/card.png
+          docker run --rm -i --read-only --tmpfs /tmp:rw,exec,nosuid,size=512m --shm-size=512m             -e HOME=/tmp --entrypoint python "$PRINCESS_EXPORT_IMAGE" -c             'import json,sys; from princess_app.adapters.render import SubprocessRenderer; p=json.load(sys.stdin); sys.stdout.buffer.write(SubprocessRenderer().render(p["view"],p["layout"],p["locale"],p["generated_at"]))'             </tmp/a4.json >/tmp/report.pdf
+          docker run --rm -i --read-only --tmpfs /tmp:rw,exec,nosuid,size=512m --shm-size=512m             -e HOME=/tmp --entrypoint python "$PRINCESS_EXPORT_IMAGE" -c             'import json,sys; from princess_app.adapters.render import SubprocessRenderer; p=json.load(sys.stdin); sys.stdout.buffer.write(SubprocessRenderer().render(p["view"],p["layout"],p["locale"],p["generated_at"]))'             </tmp/card.json >/tmp/card.png
           python3 - <<'PY'
           assert open("/tmp/report.pdf","rb").read(5) == b"%PDF-"
           assert open("/tmp/card.png","rb").read(8) == b"\x89PNG\r\n\x1a\n"
