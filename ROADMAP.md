@@ -16,7 +16,7 @@ The numerical core still has **272 canonical feature definitions and 64 register
 
 PR #14 remains the historical architecture-reconciliation baseline documented in [23](docs/roadmap/23-post-pr14-reconciliation.md). Subsequent merged work completed T15, qualified the Free web accessibility/live journey, added account mail preferences and stronger restore reconciliation, started gated T11 pilot tooling, and prepared the Claude Design T10 handoff. The product/design owner accepted **Inktrospect / Direction A — The Dossier** with recorded changes on 2026-09-29; the exact prototype digest and limitations are bound in `docs/design/ACCEPTED_DOSSIER_REFERENCE.md`.
 
-At the current baseline, **T00, T00A, T01, T02, T03, T04, T05, T08A, T09, T10, T15, T18, T26, T27 and T28 are `DONE`**. T21 is `IMPLEMENTED_PENDING_REVIEW`; T11, T17, T19 and T24 are `IN_PROGRESS`. T18 provides deterministic native-unit pair/history comparison with explicit coverage/provenance and no aggregate similarity score. With T10 closed, **T29 is now the next READY planned task**.
+At the current branch baseline, **T00, T00A, T01, T02, T03, T04, T05, T08A, T09, T10, T15, T18, T26, T27 and T28 are `DONE`**. T21 is `IMPLEMENTED_PENDING_REVIEW`; T11, T17, T19, T24 and T29 are `IN_PROGRESS`. T18 provides deterministic native-unit pair/history comparison with explicit coverage/provenance and no aggregate similarity score. T29 has started with its provider-independent native foundation implemented; signed-device/IAP and live-processor evidence remain gated.
 
 This baseline still does **not** establish a validated reference cohort/statistics release, live Premium/model approval, real payment rails, production identity/object-storage/mail/push providers, native iOS/Android clients, deployed production recovery evidence, store approval or public release. Those are downstream tasks and human/provider gates, not gaps to conceal by changing status.
 
@@ -73,7 +73,7 @@ python docs/roadmap/plan_tools.py --task T11
 
 These documentation commands are repository tooling. Product test commands marked `TO_IMPLEMENT` in task briefs are not executable claims. After changing task data, run `--write` to regenerate the human backlog, then `--check`.
 
-At the current baseline, `--ready` yields **T29**; `--active` surfaces T11, T17, T19, T21 and T24. The T10 design gate is closed. Follow [20](docs/roadmap/20-end-to-end-build-sequence.md) for the current handoff; [23](docs/roadmap/23-post-pr14-reconciliation.md) is retained as the historical PR #14 reconciliation snapshot.
+At the current T29 branch state, T29 is **IN_PROGRESS**; `--active` surfaces T11, T17, T19, T21, T24 and T29. The native foundation is implemented/compiling, while signed-device/IAP and live processor evidence remain gated. Follow [20](docs/roadmap/20-end-to-end-build-sequence.md) for the current handoff; [23](docs/roadmap/23-post-pr14-reconciliation.md) is retained as the historical PR #14 reconciliation snapshot.
 
 ## Definition of ready
 

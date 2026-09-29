@@ -1,0 +1,102 @@
+name: Native foundation
+
+on:
+  pull_request:
+    paths:
+      - "apps/mobile/**"
+      - "packages/api-client/**"
+      - "packages/contracts/**"
+      - "packages/report-core/**"
+      - "packages/design-tokens/**"
+      - "pnpm-lock.yaml"
+      - ".github/workflows/native.yml"
+      - "docs/adr/ADR-005-mobile-framework.md"
+      - "docs/roadmap/11-mobile-architecture.md"
+      - "docs/roadmap/tasks.json"
+  push:
+    branches: [main]
+    paths:
+      - "apps/mobile/**"
+      - "packages/api-client/**"
+      - "packages/contracts/**"
+      - "packages/report-core/**"
+      - "packages/design-tokens/**"
+      - "pnpm-lock.yaml"
+      - ".github/workflows/native.yml"
+
+permissions:
+  contents: read
+
+env:
+  CI: "1"
+
+jobs:
+  static:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: "22.22.2"
+      - run: corepack enable && corepack install
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @princess/mobile compat:check
+      # Keep this compatibility check reproducible against the exact installed Expo SDK.
+      # The preceding compat:check independently verifies every exact package version and license.
+      - run: EXPO_OFFLINE=1 pnpm --filter @princess/mobile exec expo install --check
+      - run: pnpm --filter @princess/mobile typecheck
+      - run: pnpm --filter @princess/mobile test
+      - run: pnpm --filter @princess/mobile config:public
+
+  android-development:
+    needs: static
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: "22.22.2"
+      - run: corepack enable && corepack install
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @princess/mobile prebuild:android
+      - name: Build Android debug APK with native modules
+        working-directory: apps/mobile/android
+        run: ./gradlew :app:assembleDebug --no-daemon
+      - name: Record Android development artifact digest
+        run: sha256sum apps/mobile/android/app/build/outputs/apk/debug/app-debug.apk
+
+  ios-simulator:
+    needs: static
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Verify Xcode 26.6 / Swift 6.3 compatibility toolchain
+        run: |
+          sudo xcode-select -s /Applications/Xcode_26.6.app/Contents/Developer
+          xcodebuild -version
+          swift --version
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: "22.22.2"
+      - run: corepack enable && corepack install
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @princess/mobile prebuild:ios
+      - name: Install generated iOS pods
+        working-directory: apps/mobile/ios
+        run: pod install
+      - name: Build iOS simulator with native modules and no signing
+        working-directory: apps/mobile/ios
+        run: >-
+          xcodebuild
+          -workspace Inktrospect.xcworkspace
+          -scheme Inktrospect
+          -sdk iphonesimulator
+          -configuration Debug
+          CODE_SIGNING_ALLOWED=NO
+          build

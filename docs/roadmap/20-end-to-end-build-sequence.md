@@ -12,17 +12,17 @@ python docs/roadmap/plan_tools.py --active
 python docs/roadmap/plan_tools.py --task T11
 ```
 
-At the current implementation baseline, `--ready` yields **T29**. `--active` yields **T11, T17, T19, T21 and T24**. T10 and T18 are DONE. Human recruitment, provider accounts/live calls, real charges, signing and store publication remain separately gated.
+At the current implementation baseline, `--ready` yields no newly startable planned task. `--active` yields **T11, T17, T19, T21, T24 and T29**. T10 and T18 are DONE. T29's provider-independent native foundation is implemented/qualified across Android and iOS simulator builds; signed-device/IAP and live processor evidence remain separately gated.
 
 ## Current handoff
 
 The [post-PR14 reconciliation](23-post-pr14-reconciliation.md) is retained as historical evidence. Current status comes from [tasks.json](tasks.json) and the generated backlog.
 
-- **READY planned work:** T29 (shared native foundation and compatibility spike).
-- **Active incomplete work:** T11 (human pilot gates/real evidence), T17 (production identity plus accepted-design integration), T19 (real payment rails/sandbox evidence and product policy) and T24 (deployment/recovery/live providers).
+- **READY planned work:** none at this graph state while T29 is actively claimed.
+- **Active incomplete work:** T11 (human pilot gates/real evidence), T17 (production identity plus accepted-design integration), T19 (real payment rails/sandbox evidence and product policy), T24 (deployment/recovery/live providers) and T29 (signed-device/IAP plus live-processor evidence).
 - **Implemented pending review:** T21 (final accepted-design integration/render review).
 - **Completed since PR #14:** T10 accepted Inktrospect/Dossier design handoff, T15 provider-independent Premium adapter/runtime work, T08A calibration-independent presentation/first-reveal policy and T18 deterministic pair/history comparison are DONE; live model activation/evaluation and population calibration remain separately gated.
-- **Next native task:** T29 is READY because T01/T02/T10/T27/T28 are DONE.
+- **Native foundation:** T29 is IN_PROGRESS after establishing the shared Expo/RN scaffold, native ports, exact dependency matrix and cross-platform compile qualification.
 - **Optional enhancement:** T07 remains non-blocking if omitted from the approved marketed scope.
 
 Do not collapse this into a single percentage. `--ready` answers what new planned task may start; `--active` answers what already-started tasks still need work.

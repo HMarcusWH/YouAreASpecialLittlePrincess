@@ -129,9 +129,20 @@
       "description": "Offline Chromium PDF/share-card renderer tests, export job/API tests and live PDF download journey. Accessibility automation is owned by web_browser; pixel-diff coverage remains future work."
     },
     "native": {
-      "state": "TO_IMPLEMENT",
-      "commands": [],
-      "description": "T29 establishes JS/native test commands and signed-build matrix; T30/T31 add real device and sandbox purchase/lifecycle evidence."
+      "state": "EXISTS",
+      "commands": [
+        "pnpm install --frozen-lockfile",
+        "pnpm --filter @princess/mobile compat:check",
+        "pnpm --filter @princess/mobile exec expo install --check",
+        "pnpm --filter @princess/mobile typecheck",
+        "pnpm --filter @princess/mobile test",
+        "pnpm --filter @princess/mobile config:public",
+        "pnpm --filter @princess/mobile prebuild:android",
+        "(cd apps/mobile/android && ./gradlew :app:assembleDebug --no-daemon)",
+        "pnpm --filter @princess/mobile prebuild:ios",
+        "(cd apps/mobile/ios && pod install && xcodebuild -workspace Inktrospect.xcworkspace -scheme Inktrospect -sdk iphonesimulator -configuration Debug CODE_SIGNING_ALLOWED=NO build)"
+      ],
+      "description": "T29 native foundation profile: exact package/license manifest checks, TypeScript/unit/config validation, CNG prebuild and Android/iOS development/simulator compilation. T30/T31 still own real signed-device, sandbox purchase, push, process-death and complete lifecycle evidence."
     },
     "release": {
       "state": "TO_IMPLEMENT",
@@ -2053,7 +2064,7 @@
     {
       "id": "T29",
       "title": "Shared native foundation and compatibility spike",
-      "status": "PLANNED",
+      "status": "IN_PROGRESS",
       "depends_on": [
         "T01",
         "T02",
@@ -2118,6 +2129,11 @@
       ],
       "rollback": [
         "Rebuild native binaries for changed modules/entitlements; do not rely on OTA to bypass native/store compatibility."
+      ],
+      "implementation_evidence": "T29 provider-independent native foundation is implemented on task/T29-native-foundation from main 4c7d6df4b6830fc6553fde9bf84e5a20f9223120. Expo 57.0.25 / React Native 0.86.3 / Expo Router 57.0.23 / expo-iap 5.6.3 are exact-pinned and locked; accepted design-tokens/1.0 feed native primitives; typed/fake platform ports cover external-user-agent identity, capture, secure sessions, purchase observations, deep links, files/share, push and abuse; real Expo capture/secure-store/native module imports compile; account-switch epoch fencing tests pass. Android spike run 36512024914 passed Expo compatibility/type/tests/config/CNG/:app:assembleDebug. Permanent Native foundation run 36545832751 passed static checks plus Android debug APK build (sha256 6802b2e6b3d7cdf09541cdb90d7c83422094e2953b63818ac1f7cb7d6ddc89fe) and iOS simulator CNG/CocoaPods/xcodebuild under Xcode 26.6 / Swift 6.3 with signing disabled.",
+      "remaining_work": [
+        "Exercise IAP and native modules in a real owner-authorized signed development build/physical-device context after native_signing_accounts is available; Expo Go and compile-only/simulator evidence are insufficient.",
+        "Approve/live-compose native identity/push/abuse/provider processing only after processor_retention_contracts; keep production provider credentials out of the app/repository."
       ]
     },
     {

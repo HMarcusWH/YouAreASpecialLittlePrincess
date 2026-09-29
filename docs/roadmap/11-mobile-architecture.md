@@ -8,7 +8,7 @@ Build an Expo/React Native application with Expo Router, native screens and plat
 
 Target the complete phone journey plus adaptive iPad/Android-tablet layouts; exact minimum OS/device support must be recorded and tested at T29. Apple Watch, tvOS, macOS-specific clients, Wear OS and Android TV are not implied deliverables. A change to the supported device matrix is explicit, not a silent store exclusion.
 
-Use development builds for native purchase libraries and platform capabilities; Expo Go alone is not an IAP test environment (source E06 in [22](22-research-and-source-refresh.md)). T29 performs a compatibility spike for the exact Expo/RN/Router/native IAP versions, records licenses and bridge support, then locks them. EAS is a build-service candidate, not a requirement to send signing keys or customer data to a new processor without approval. Local Xcode/Gradle builds remain documented.
+Use development builds for native purchase libraries and platform capabilities; Expo Go alone is not an IAP test environment (source E06 in [22](22-research-and-source-refresh.md)). T29 pinned Expo 57.0.25 / RN 0.86.3 / Router 57.0.23 / expo-iap 5.6.3 and the checked-in lockfile; `apps/mobile/scripts/check-compatibility.mjs` verifies exact installed versions and license metadata. EAS is a build-service candidate, not a requirement to send signing keys or customer data to a new processor without approval. Local Xcode/Gradle builds remain documented.
 
 ## Planned module layout
 
@@ -24,7 +24,7 @@ packages/report-core/             semantic presentation/formatting
 packages/design-tokens/           shared values; platform-specific rendering
 ```
 
-Choose Expo configuration/prebuild ownership explicitly: generated native projects should not also accumulate unexplained hand-edits. Native changes belong in tested config plugins or an explicitly adopted committed-native workflow. Record the choice in ADR-005. Rebuild development/store binaries when native modules or entitlements change.
+T29 chose **Expo CNG/prebuild + reviewed config plugins**: generated native projects must not accumulate unexplained hand-edits. Native changes belong in tested config plugins or an explicitly adopted committed-native workflow. Record the choice in ADR-005. Rebuild development/store binaries when native modules or entitlements change.
 
 ## Native boundary interfaces
 

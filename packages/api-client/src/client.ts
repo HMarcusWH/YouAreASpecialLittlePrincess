@@ -100,7 +100,8 @@ export class PrincessApi {
     if (body !== undefined) headers["content-type"] = "application/json";
     if (this.token) headers.authorization = `Bearer ${this.token}`;
     if (this.correlationId) headers["x-correlation-id"] = this.correlationId;
-    const init: RequestInit = { method, headers, cache: "no-store", credentials: "same-origin" };
+    // Keep the shared transport native-compatible: RequestInit.cache is a browser-only extension.
+    const init: RequestInit = { method, headers, credentials: "same-origin" };
     if (body !== undefined) init.body = JSON.stringify(body);
     const response = await this.doFetch(`${this.base}${path}`, init);
     if (response.status === 204) return null;
