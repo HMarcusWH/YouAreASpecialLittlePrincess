@@ -240,9 +240,14 @@ class GooglePlayPaymentProvider:
                 "startTime": str(int(since.timestamp() * 1000)),
                 "endTime": str(int(now.timestamp() * 1000)),
                 "type": "0",
+                "includeQuantityBasedPartialRefund": "true",
             }
             if page_token:
-                params = {"token": page_token, "type": "0"}
+                params = {
+                    "pageSelection.token": page_token,
+                    "type": "0",
+                    "includeQuantityBasedPartialRefund": "true",
+                }
             payload = self._api_json(
                 "GET",
                 f"/androidpublisher/v3/applications/{quote(self.package_name, safe='')}/purchases/voidedpurchases",

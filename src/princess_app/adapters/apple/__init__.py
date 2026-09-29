@@ -18,6 +18,7 @@ import jwt
 from cryptography import x509
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import ec, padding, rsa
+from cryptography.x509.oid import ObjectIdentifier
 
 from ...ports import payments as port
 from ...ports.base import (
@@ -42,6 +43,7 @@ PRODUCTION_BASE_URL = "https://api.storekit.apple.com"
 SANDBOX_BASE_URL = "https://api.storekit-sandbox.apple.com"
 AUDIENCE = "appstoreconnect-v1"
 _PROVIDER_ID = re.compile(r"^[A-Za-z0-9._:-]{1,255}$")
+_APPLE_WWDR_INTERMEDIATE_OID = ObjectIdentifier("1.2.840.113635.100.6.2.1")
 
 
 class AppleAppStorePaymentProvider:
@@ -317,28 +319,29 @@ class AppleAppStorePaymentProvider:
         return payload
 
     def _verify_chain(self, certs: Sequence[x509.Certificate]) -> None:
+        # Apple documents App Store JWS x5c as leaf -> WWDR intermediate -> Apple root.
+        # Do not accept a shorter caller-supplied chain merely because a configured
+        # root can verify it: the intermediate identity/constraints are part of
+        # the provider attestation we are validating.
+        if len(certs) != 3:
+            raise Unauthenticated("apple_jws_certificate_chain")
+        leaf, intermediate, presented_root = certs
         now = self._clock.now()
         for cert in certs:
             if now < cert.not_valid_before_utc or now > cert.not_valid_after_utc:
                 raise Unauthenticated("apple_certificate_expired")
-        try:
-            leaf_constraints = certs[0].extensions.get_extension_for_class(x509.BasicConstraints).value
-            if leaf_constraints.ca:
-                raise Unauthenticated("apple_leaf_is_ca")
-        except x509.ExtensionNotFound:
-            pass
-        for child, issuer in zip(certs, certs[1:]):
-            _verify_issued_by(child, issuer)
-        tail = certs[-1]
-        for root in self._roots:
-            if tail.fingerprint(hashes.SHA256()) == root.fingerprint(hashes.SHA256()):
-                return
-            try:
-                _verify_issued_by(tail, root)
-                return
-            except Unauthenticated:
-                continue
-        raise Unauthenticated("apple_untrusted_chain")
+
+        _require_leaf_signing_certificate(leaf)
+        _require_ca_certificate(intermediate, require_wwdr_extension=True)
+        _require_ca_certificate(presented_root)
+
+        _verify_issued_by(leaf, intermediate)
+        _verify_issued_by(intermediate, presented_root)
+        if not any(
+            presented_root.fingerprint(hashes.SHA256()) == root.fingerprint(hashes.SHA256())
+            for root in self._roots
+        ):
+            raise Unauthenticated("apple_untrusted_chain")
 
     def _server_token(self) -> str:
         now = int(self._clock.now().timestamp())
@@ -404,6 +407,31 @@ def _load_certificate(value: str | bytes) -> x509.Certificate:
         return x509.load_der_x509_certificate(raw)
     except ValueError:
         raise InvalidInput("apple_trust_root_invalid") from None
+
+
+def _require_leaf_signing_certificate(cert: x509.Certificate) -> None:
+    try:
+        constraints = cert.extensions.get_extension_for_class(x509.BasicConstraints).value
+        usage = cert.extensions.get_extension_for_class(x509.KeyUsage).value
+    except x509.ExtensionNotFound:
+        raise Unauthenticated("apple_certificate_constraints") from None
+    if constraints.ca or not usage.digital_signature:
+        raise Unauthenticated("apple_certificate_constraints")
+
+
+def _require_ca_certificate(cert: x509.Certificate, *, require_wwdr_extension: bool = False) -> None:
+    try:
+        constraints = cert.extensions.get_extension_for_class(x509.BasicConstraints).value
+        usage = cert.extensions.get_extension_for_class(x509.KeyUsage).value
+    except x509.ExtensionNotFound:
+        raise Unauthenticated("apple_certificate_constraints") from None
+    if not constraints.ca or not usage.key_cert_sign:
+        raise Unauthenticated("apple_certificate_constraints")
+    if require_wwdr_extension:
+        try:
+            cert.extensions.get_extension_for_oid(_APPLE_WWDR_INTERMEDIATE_OID)
+        except x509.ExtensionNotFound:
+            raise Unauthenticated("apple_intermediate_identity") from None
 
 
 def _verify_issued_by(child: x509.Certificate, issuer: x509.Certificate) -> None:

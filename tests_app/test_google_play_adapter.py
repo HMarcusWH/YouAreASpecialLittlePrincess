@@ -36,7 +36,7 @@ class Setup:
             if request.url.host == "oauth2.googleapis.com":
                 return httpx.Response(200, json={"access_token": "access-test", "expires_in": 3600})
             if request.url.path.endswith("/purchases/voidedpurchases"):
-                index = 1 if request.url.params.get("token") else 0
+                index = 1 if request.url.params.get("pageSelection.token") else 0
                 return httpx.Response(200, json=self.voided_pages[index] if self.voided_pages else {
                     "voidedPurchases": [], "tokenPagination": {},
                 })
@@ -242,6 +242,25 @@ def test_voided_purchase_reconcile_requeries_authoritative_product_state():
     assert len(rows) == 1 and rows[0].state is payments.PurchaseState.REFUNDED
     voided = next(r for r in setup.seen if r.url.path.endswith("/purchases/voidedpurchases"))
     assert voided.url.params.get("type") == "0" and voided.url.params.get("startTime")
+    assert voided.url.params.get("includeQuantityBasedPartialRefund") == "true"
+
+
+def test_voided_purchase_reconcile_uses_documented_token_paging():
+    setup = Setup()
+    setup.purchase = setup.product(refundable=0)
+    setup.voided_pages = [
+        {
+            "voidedPurchases": [{"purchaseToken": TOKEN, "voidedTimeMillis": "1", "voidedQuantity": 1}],
+            "tokenPagination": {"nextPageToken": "page-2"},
+        },
+        {"voidedPurchases": [], "tokenPagination": {}},
+    ]
+    rows = setup.provider.reconcile(setup.clock.now() - timedelta(hours=1), setup.ctx())
+    assert len(rows) == 1 and rows[0].transaction_ref == TOKEN
+    calls = [r for r in setup.seen if r.url.path.endswith("/purchases/voidedpurchases")]
+    assert len(calls) == 2
+    assert calls[1].url.params.get("pageSelection.token") == "page-2"
+    assert calls[1].url.params.get("includeQuantityBasedPartialRefund") == "true"
 
 
 def test_refund_remains_explicitly_unsupported():

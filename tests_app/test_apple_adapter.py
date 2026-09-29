@@ -11,7 +11,7 @@ import pytest
 from cryptography import x509
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import ec
-from cryptography.x509.oid import NameOID
+from cryptography.x509.oid import NameOID, ObjectIdentifier
 
 from princess_app.adapters.apple import AppleAppStorePaymentProvider
 from princess_app.adapters.fakes import FakeClock
@@ -31,9 +31,11 @@ ACCOUNT = "11111111-1111-4111-8111-111111111111"
 PRODUCT = "se.princess.premium.single.draft"
 
 
-def certificate(subject, issuer, public_key, issuer_key, *, ca):
+def certificate(subject, issuer, public_key, issuer_key, *, ca, apple_intermediate=False,
+                key_cert_sign=None):
     now = datetime(2026, 1, 1, tzinfo=timezone.utc)
-    return (
+    can_sign = ca if key_cert_sign is None else key_cert_sign
+    builder = (
         x509.CertificateBuilder()
         .subject_name(x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, subject)]))
         .issuer_name(x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, issuer)]))
@@ -42,8 +44,27 @@ def certificate(subject, issuer, public_key, issuer_key, *, ca):
         .not_valid_before(now - timedelta(days=1))
         .not_valid_after(now + timedelta(days=30))
         .add_extension(x509.BasicConstraints(ca=ca, path_length=None), critical=True)
-        .sign(issuer_key, hashes.SHA256())
+        .add_extension(
+            x509.KeyUsage(
+                digital_signature=not ca,
+                content_commitment=False,
+                key_encipherment=False,
+                data_encipherment=False,
+                key_agreement=False,
+                key_cert_sign=can_sign,
+                crl_sign=can_sign,
+                encipher_only=None,
+                decipher_only=None,
+            ),
+            critical=True,
+        )
     )
+    if apple_intermediate:
+        builder = builder.add_extension(
+            x509.UnrecognizedExtension(ObjectIdentifier("1.2.840.113635.100.6.2.1"), b"\x05\x00"),
+            critical=False,
+        )
+    return builder.sign(issuer_key, hashes.SHA256())
 
 
 class Setup:
@@ -51,8 +72,15 @@ class Setup:
         self.clock = FakeClock()
         self.root_key = ec.generate_private_key(ec.SECP256R1())
         self.root = certificate("Root", "Root", self.root_key.public_key(), self.root_key, ca=True)
+        self.intermediate_key = ec.generate_private_key(ec.SECP256R1())
+        self.intermediate = certificate(
+            "WWDR", "Root", self.intermediate_key.public_key(), self.root_key,
+            ca=True, apple_intermediate=True,
+        )
         self.leaf_key = ec.generate_private_key(ec.SECP256R1())
-        self.leaf = certificate("Leaf", "Root", self.leaf_key.public_key(), self.root_key, ca=False)
+        self.leaf = certificate(
+            "Leaf", "WWDR", self.leaf_key.public_key(), self.intermediate_key, ca=False
+        )
         self.api_key = ec.generate_private_key(ec.SECP256R1())
         self.seen = []
         self.transaction = self.txn()
@@ -91,7 +119,10 @@ class Setup:
         return CallContext("corr_apple", env, self.clock.now() + timedelta(seconds=30))
 
     def sign(self, payload):
-        x5c = [base64.b64encode(self.leaf.public_bytes(serialization.Encoding.DER)).decode()]
+        x5c = [
+            base64.b64encode(cert.public_bytes(serialization.Encoding.DER)).decode()
+            for cert in (self.leaf, self.intermediate, self.root)
+        ]
         return jwt.encode(payload, self.leaf_key, algorithm="ES256", headers={"x5c": x5c})
 
     def txn(self, *, account=ACCOUNT, product=PRODUCT, environment="Sandbox", revoked=False):
@@ -139,17 +170,50 @@ def test_wrong_bundle_environment_and_untrusted_certificate_fail_closed():
         setup.provider.verify_purchase(setup.sign(setup.txn(environment="Production")), ACCOUNT, setup.ctx())
 
     other_key = ec.generate_private_key(ec.SECP256R1())
-    certificate("Other", "Other", other_key.public_key(), other_key, ca=True)
+    other_root = certificate("Other", "Other", other_key.public_key(), other_key, ca=True)
+    other_intermediate_key = ec.generate_private_key(ec.SECP256R1())
+    other_intermediate = certificate(
+        "OtherWWDR", "Other", other_intermediate_key.public_key(), other_key,
+        ca=True, apple_intermediate=True,
+    )
     other_leaf_key = ec.generate_private_key(ec.SECP256R1())
-    other_leaf = certificate("OtherLeaf", "Other", other_leaf_key.public_key(), other_key, ca=False)
+    other_leaf = certificate(
+        "OtherLeaf", "OtherWWDR", other_leaf_key.public_key(), other_intermediate_key, ca=False
+    )
     token = jwt.encode(
         setup.transaction,
         other_leaf_key,
         algorithm="ES256",
-        headers={"x5c": [base64.b64encode(other_leaf.public_bytes(serialization.Encoding.DER)).decode()]},
+        headers={"x5c": [
+            base64.b64encode(cert.public_bytes(serialization.Encoding.DER)).decode()
+            for cert in (other_leaf, other_intermediate, other_root)
+        ]},
     )
     with pytest.raises(Unauthenticated):
         setup.provider.verify_purchase(token, ACCOUNT, setup.ctx())
+
+
+def test_intermediate_must_be_a_key_signing_wwdr_ca():
+    setup = Setup()
+    bad_intermediate = certificate(
+        "WWDR", "Root", setup.intermediate_key.public_key(), setup.root_key,
+        ca=True, apple_intermediate=True, key_cert_sign=False,
+    )
+    bad_leaf = certificate(
+        "Leaf", "WWDR", setup.leaf_key.public_key(), setup.intermediate_key, ca=False
+    )
+    token = jwt.encode(
+        setup.transaction,
+        setup.leaf_key,
+        algorithm="ES256",
+        headers={"x5c": [
+            base64.b64encode(cert.public_bytes(serialization.Encoding.DER)).decode()
+            for cert in (bad_leaf, bad_intermediate, setup.root)
+        ]},
+    )
+    with pytest.raises(Unauthenticated) as err:
+        setup.provider.verify_purchase(token, ACCOUNT, setup.ctx())
+    assert err.value.code == "apple_certificate_constraints"
 
 
 def test_v2_notification_verifies_outer_and_nested_jws():
