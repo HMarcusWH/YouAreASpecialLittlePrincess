@@ -75,6 +75,7 @@ def test_destructive_restore_runner_refuses_missing_opt_in(monkeypatch, tmp_path
 
 
 def test_destructive_restore_runner_refuses_unqualified_image_and_workdir(monkeypatch, tmp_path):
+    monkeypatch.delenv("GITHUB_SHA", raising=False)
     monkeypatch.setenv("PRINCESS_RECOVERY_ALLOW_RESET", "1")
     monkeypatch.setenv("PRINCESS_BACKEND_IMAGE", "princess-backend:latest")
     monkeypatch.setenv("PRINCESS_RECOVERY_WORKDIR", str(tmp_path / "princess-recovery-test"))
