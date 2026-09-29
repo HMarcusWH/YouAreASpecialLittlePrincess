@@ -26,6 +26,8 @@ export class FakeNativePurchaseClient implements NativePurchaseClient {
   observations: PurchaseObservation[] = [];
   finished: string[] = [];
   nextState: PurchaseObservation["state"] = "STARTED";
+  private readonly issuedProofs = new Set<string>();
+  private readonly serverGrantedProofs = new Set<string>();
 
   async listProducts(productIds: readonly string[]) {
     return productIds.flatMap((id) => {
@@ -36,18 +38,27 @@ export class FakeNativePurchaseClient implements NativePurchaseClient {
 
   async beginPurchase(productId: string) {
     const proof = this.nextState === "PROOF_READY" ? "proof:" + productId : null;
+    if (proof) this.issuedProofs.add(proof);
     const observation = { productId, state: this.nextState, proof } satisfies PurchaseObservation;
     this.observations.push(observation);
     return observation;
   }
 
   async recoverPendingTransactions() {
-    return this.observations.filter((item) => item.state === "PENDING" || item.state === "PROOF_READY");
+    return this.observations.filter((item) =>
+      (item.state === "PENDING" || item.state === "PROOF_READY")
+      && (item.proof === null || !this.finished.includes(item.proof)));
+  }
+
+  recordServerGrant(proof: string) {
+    if (!this.issuedProofs.has(proof)) throw new Error("unknown_purchase_proof");
+    this.serverGrantedProofs.add(proof);
   }
 
   async finishAfterServerGrant(proof: string) {
-    if (!proof.startsWith("proof:")) throw new Error("server_grant_proof_required");
-    this.finished.push(proof);
+    if (!this.issuedProofs.has(proof)) throw new Error("unknown_purchase_proof");
+    if (!this.serverGrantedProofs.has(proof)) throw new Error("server_grant_required");
+    if (!this.finished.includes(proof)) this.finished.push(proof);
   }
 }
 

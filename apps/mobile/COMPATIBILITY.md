@@ -51,7 +51,7 @@ SDK 58 was beta when the spike began; T29 therefore selected the stable SDK 57 l
 | Design | accepted `design-tokens/1.0` | Shared semantics; native primitives, no DOM/WebView |
 | Capture | image picker/camera + image-manipulator | Produces local derivative metadata only; server verifies/authorizes/analyzes |
 | HEIC/HEIF | picker input can be re-encoded to JPEG derivative | Does not expand backend accepted media authority |
-| Identity transport | external-user-agent adapter via expo-web-browser | Provider-neutral HTTPS auth + allowlisted redirect/state checks; no embedded password/provider secret |
+| Identity transport | external-user-agent adapter via expo-web-browser | Provider-neutral HTTPS auth + allowlisted redirect and strict callback target/state checks; no embedded password/provider secret |
 | Secure session | expo-secure-store adapter | Credential material only; report/image payloads excluded |
 | Purchase | typed NativePurchaseClient + expo-iap module compatibility | Client never mints credits; T19 server verification/ledger remains authority |
 | Deep links | allowlisted route resolver + Expo linking module | Link selects resource; server authorization still required |
@@ -80,12 +80,12 @@ Node-side native tests cover:
 
 - denied or unavailable camera permission does not fabricate a capture;
 - client purchase states never grant application credit;
-- finish requires server-grant proof in the fake contract;
+- an emitted store proof cannot finish until the fake records the authoritative server-grant transition; the fake does not perform server verification or mint credits;
 - malformed/foreign-scheme deep links fail closed;
 - logout/account switch clears push/session state;
 - late prior-account responses are discarded by SessionEpoch;
 - authorized-file sharing exposes explicit cleanup;
-- provider-neutral external-user-agent identity requests contain no embedded client secret;
+- provider-neutral external-user-agent identity requests contain no embedded client secret, and returned callbacks must match the requested scheme/host/port/path plus state;
 - abuse attestation unavailable remains unavailable rather than authorizing;
 - exact compatibility validation rejects unsupported native dependency/version drift.
 
@@ -97,7 +97,7 @@ T30/T31 add real process death, physical-device camera/HEIC, sandbox purchase, p
 
 ## Permanent workflow qualification
 
-PR #32 exact-head native run **36545832751** passed all three retained jobs:
+PR #32 native run **36545832751** passed all three retained jobs on its then-current PR merge ref, whose branch head was `abcc2514ca4029f305c9f899cbf8754400fa2c4f`. This is retained qualification evidence for that native state; it is **not** exact-head evidence for later commits. Each later PR head must carry its own workflow evidence before being described as fully green:
 
 - **static:** frozen install, exact version/license check, Expo compatibility, TypeScript, unit tests and public config;
 - **android-development:** clean CNG/prebuild + debug APK compile with native modules; APK SHA-256 `6802b2e6b3d7cdf09541cdb90d7c83422094e2953b63818ac1f7cb7d6ddc89fe`;

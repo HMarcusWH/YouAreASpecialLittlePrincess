@@ -24,18 +24,32 @@ test("capture fake preserves permission denial rather than fabricating a capture
   assert.equal(await capture.takePhoto(), null);
 });
 
-test("purchase fake never grants a credit and only finishes after server proof", async () => {
+test("purchase fake models store proof then authoritative grant before finish", async () => {
+  const pending = new FakeNativePurchaseClient();
+  pending.products.set("credit_1", { productId: "credit_1", displayPrice: "TEST" });
+  pending.nextState = "PENDING";
+  const pendingObservation = await pending.beginPurchase("credit_1");
+  assert.equal(pendingObservation.state, "PENDING");
+  assert.equal(pendingObservation.proof, null);
+  assert.equal(pending.finished.length, 0);
+
   const purchase = new FakeNativePurchaseClient();
   purchase.products.set("credit_1", { productId: "credit_1", displayPrice: "TEST" });
-  purchase.nextState = "PENDING";
-  assert.equal((await purchase.beginPurchase("credit_1")).state, "PENDING");
-  assert.equal(purchase.finished.length, 0);
-  await assert.rejects(() => purchase.finishAfterServerGrant("client-only"), /server_grant_proof_required/);
   purchase.nextState = "PROOF_READY";
-  const proof = await purchase.beginPurchase("credit_1");
-  assert.ok(proof.proof);
-  await purchase.finishAfterServerGrant(proof.proof);
+  const observation = await purchase.beginPurchase("credit_1");
+  assert.ok(observation.proof);
+  const proof = observation.proof;
+
+  await assert.rejects(() => purchase.finishAfterServerGrant(proof), /server_grant_required/);
+  assert.equal(purchase.finished.length, 0);
+
+  purchase.recordServerGrant(proof);
+  await purchase.finishAfterServerGrant(proof);
+  await purchase.finishAfterServerGrant(proof);
   assert.deepEqual(purchase.finished, ["proof:credit_1"]);
+  assert.deepEqual(await purchase.recoverPendingTransactions(), []);
+
+  assert.throws(() => purchase.recordServerGrant("proof:unknown"), /unknown_purchase_proof/);
 });
 
 test("deep link router fails closed for foreign schemes and malformed resources", () => {
