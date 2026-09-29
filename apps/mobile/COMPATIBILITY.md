@@ -29,7 +29,7 @@ This report records executed T29 compatibility evidence. It is not App Store/Pla
 | Node | repository 22.22.x line |
 | pnpm | 10.33.0 |
 
-The package manifest is exact-pinned and `pnpm-lock.yaml` is authoritative for the full graph. `pnpm --filter @princess/mobile compat:check` verifies exact installed versions and package license metadata.
+The package manifest is exact-pinned and `pnpm-lock.yaml` is authoritative for the full graph. `pnpm --filter @princess/mobile compat:check` verifies exact installed versions and package license metadata. The retained CI also runs `expo install --check` with `EXPO_OFFLINE=1`, so this supplemental Expo compatibility check is evaluated against the exact installed SDK package rather than a mutable remote recommendation table.
 
 SDK 58 was beta when the spike began; T29 therefore selected the stable SDK 57 line. The compatibility target is intentionally versioned, not “latest”.
 

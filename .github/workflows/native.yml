@@ -43,7 +43,9 @@ jobs:
       - run: corepack enable && corepack install
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter @princess/mobile compat:check
-      - run: pnpm --filter @princess/mobile exec expo install --check
+      # Keep this compatibility check reproducible against the exact installed Expo SDK.
+      # The preceding compat:check independently verifies every exact package version and license.
+      - run: EXPO_OFFLINE=1 pnpm --filter @princess/mobile exec expo install --check
       - run: pnpm --filter @princess/mobile typecheck
       - run: pnpm --filter @princess/mobile test
       - run: pnpm --filter @princess/mobile config:public
