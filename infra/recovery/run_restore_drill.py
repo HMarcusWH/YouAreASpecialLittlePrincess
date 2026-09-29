@@ -28,6 +28,9 @@ def checked_settings() -> tuple[dict[str, str], Path]:
     image = os.environ.get("PRINCESS_BACKEND_IMAGE", "")
     if not IMAGE.fullmatch(image):
         raise DrillFailure("PRINCESS_BACKEND_IMAGE must be the exact PR/main sha-tagged backend image")
+    github_sha = os.environ.get("GITHUB_SHA")
+    if github_sha and image != f"princess-backend:{github_sha}":
+        raise DrillFailure("PRINCESS_BACKEND_IMAGE does not match GITHUB_SHA")
     raw = os.environ.get("PRINCESS_RECOVERY_WORKDIR", "")
     if not raw:
         raise DrillFailure("PRINCESS_RECOVERY_WORKDIR is required")
