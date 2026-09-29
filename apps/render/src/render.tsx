@@ -57,9 +57,12 @@ function escapeHtml(text: string): string {
 export async function renderBytes(input: RenderInput, browser?: Browser): Promise<Buffer> {
   const html = renderHtml(input);
   const owned = browser === undefined;
-  const instance = browser ?? await chromium.launch(
-    process.env.PRINCESS_CHROMIUM ? { executablePath: process.env.PRINCESS_CHROMIUM } : {});
+  let instance: Browser | undefined = browser;
+  let phase = "browser_launch_failed";
   try {
+    instance ??= await chromium.launch(
+      process.env.PRINCESS_CHROMIUM ? { executablePath: process.env.PRINCESS_CHROMIUM } : {});
+    phase = "browser_context_failed";
     const card = input.layout === "CARD_SQUARE" || input.layout === "CARD_STORY";
     const context = await instance.newContext({
       javaScriptEnabled: false, offline: true, colorScheme: "light",
@@ -67,15 +70,23 @@ export async function renderBytes(input: RenderInput, browser?: Browser): Promis
     });
     await context.route("**/*", (route) => route.abort());
     const page = await context.newPage();
+    phase = "page_content_failed";
     await page.setContent(html, { waitUntil: "load", timeout: 15_000 });
+    phase = "browser_output_failed";
     const bytes = card
       ? await page.screenshot({ type: "png", fullPage: false })
       : await page.pdf({ format: input.layout === "LETTER" ? "Letter" : "A4", printBackground: true, tagged: true,
                          outline: true, margin: { top: "18mm", bottom: "18mm", left: "16mm", right: "16mm" } });
+    phase = "render_cleanup_failed";
     await context.close();
     if (bytes.byteLength > MAX_OUTPUT_BYTES) throw new Error("output_too_large");
     return Buffer.from(bytes);
+  } catch (error) {
+    if (error instanceof Error && /^[a-z_]{1,64}$/.test(error.message)) throw error;
+    throw new Error(phase);
   } finally {
-    if (owned) await instance.close();
+    // A child-process browser is disposable. Once bytes are produced, a close
+    // error must not turn a valid artifact into a failure; process exit reaps it.
+    if (owned && instance) await instance.close().catch(() => undefined);
   }
 }
