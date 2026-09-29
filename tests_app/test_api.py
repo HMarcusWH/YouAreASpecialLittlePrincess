@@ -2,8 +2,10 @@
 from __future__ import annotations
 
 import json
+from dataclasses import replace
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from types import MappingProxyType
 
 import pytest
 from fastapi.testclient import TestClient
@@ -21,7 +23,7 @@ from princess_app.application.commerce import CommerceService
 from princess_app.application.identity import IdentityService
 from princess_app.application.permissions import PermissionService
 from princess_app.domain.commerce import CATALOG
-from princess_app.ports.base import Environment
+from princess_app.ports.base import Environment, ProviderMode, Unsupported
 from princess_app.ports.payments import PaymentRail
 from princess_contracts import compile_document
 from test_persistence import publish_report
@@ -204,6 +206,30 @@ def test_every_api_route_is_a_registered_telemetry_template(client):
     api, _ = client
     paths = {route.path for route in api.app.routes if route.path.startswith("/v1/")}
     assert paths and paths <= ROUTE_TEMPLATES
+
+
+def test_real_payment_provider_composition_stays_fail_closed(app_url, tmp_path):
+    from princess_api.compose import compose
+    from princess_app.config import load_runtime_config
+
+    root = Path(__file__).resolve().parents[1]
+    env = {
+        "PRINCESS_ENV": "test",
+        "PRINCESS_COMPONENT": "api",
+        "PRINCESS_DATABASE_URL": app_url,
+        "PRINCESS_SESSION_SECRET": "session-secret-0123456789",
+        "PRINCESS_IDENTITY_AUDIENCE": "princess-test",
+        "PRINCESS_STORAGE_SIGNING_KEY": "signing-key-0123456789",
+    }
+    config = load_runtime_config(env, root)
+    providers = dict(config.manifest.providers)
+    providers["PaymentProvider"] = ProviderMode.SANDBOX
+    blocked = replace(config, manifest=replace(config.manifest, providers=MappingProxyType(providers)))
+
+    with pytest.raises(Unsupported) as err:
+        compose(blocked)
+    assert err.value.code == "payment_adapters_not_configured"
+    assert err.value.detail == "price_account_terms_before_charges"
 
 
 def test_composed_local_stack_upload_to_report(app_url, worker_db, tmp_path, monkeypatch, capsys):
