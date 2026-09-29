@@ -2370,12 +2370,11 @@ A tested native scaffold/platform seam and build matrix; not a completed paid cl
 
 ### Implementation evidence
 
-T29 native foundation is implemented on task/T29-native-foundation from main 4c7d6df4b6830fc6553fde9bf84e5a20f9223120: Expo SDK 57.0.25 / React Native 0.86.3 / Expo Router 57.0.23 exact dependency graph is locked; accepted design-tokens/1.0 feed native primitives; typed/fake platform ports cover capture, secure sessions, purchase observations, deep links, files/share, push and abuse; real Expo capture/secure-store/native module imports compile; account-switch epoch fencing tests pass. Compatibility run 36512024914 passed Expo compatibility, mobile typecheck/tests/public config, Android CNG prebuild and :app:assembleDebug with expo-iap 5.6.3/OpenIAP 3.5.2 present.
+T29 provider-independent native foundation is implemented on task/T29-native-foundation from main 4c7d6df4b6830fc6553fde9bf84e5a20f9223120. Expo 57.0.25 / React Native 0.86.3 / Expo Router 57.0.23 / expo-iap 5.6.3 are exact-pinned and locked; accepted design-tokens/1.0 feed native primitives; typed/fake platform ports cover capture, secure sessions, purchase observations, deep links, files/share, push and abuse; real Expo capture/secure-store/native module imports compile; account-switch epoch fencing tests pass. Android spike run 36512024914 passed Expo compatibility/type/tests/config/CNG/:app:assembleDebug. Permanent Native foundation run 36545832751 passed static checks plus Android debug APK build (sha256 6802b2e6b3d7cdf09541cdb90d7c83422094e2953b63818ac1f7cb7d6ddc89fe) and iOS simulator CNG/CocoaPods/xcodebuild under Xcode 26.6 / Swift 6.3 with signing disabled.
 
 ### Remaining work
 
-- Qualify the permanent Native foundation workflow on the final PR head, including iOS simulator prebuild/build.
-- Exercise IAP and native modules in a real signed development build/physical-device context after native_signing_accounts is available; Expo Go and compile-only evidence are insufficient.
+- Exercise IAP and native modules in a real owner-authorized signed development build/physical-device context after native_signing_accounts is available; Expo Go and compile-only/simulator evidence are insufficient.
 - Approve/live-compose native identity/push/abuse/provider processing only after processor_retention_contracts; keep production provider credentials out of the app/repository.
 
 ### Acceptance evidence
