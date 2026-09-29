@@ -69,7 +69,8 @@ Record PASS/FAIL for every item after downloading the exact-head artifact bundle
 - Reviewed renderer code head: `b9ba872b3c3fabf298648afe6b5d88fc9c7d87f1`
 - Application environments run: `36572933558` (PASS)
 - Artifact ID/name: `11036491530` / `t21-render-inspection-874f6681fef936733a89244de2af87ccddf2d429`
-- Artifact ZIP SHA-256: `c2614195fabba0a4fec8dffb4f2baa6fc96d146631d5a8b734ccd421b76a65fa`\n- Manifest SHA-256: `43d69a090adfce3da5e6cc8c223d695dfd8d288e13d91b3823d31bffd42f1624`
+- Artifact ZIP SHA-256: `c2614195fabba0a4fec8dffb4f2baa6fc96d146631d5a8b734ccd421b76a65fa`
+- Manifest SHA-256: `43d69a090adfce3da5e6cc8c223d695dfd8d288e13d91b3823d31bffd42f1624`
 - Reviewer: assistant visual review of rendered synthetic artifacts in PR #34
 - Reviewed at: 2026-09-29
 - Overall disposition: PASS for the T21-specific v2 Dossier print/share review
