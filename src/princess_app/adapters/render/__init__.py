@@ -29,7 +29,10 @@ class SubprocessRenderer:
                  chromium: str | None = None) -> None:
         self.command = list(command or ["node", str(DEFAULT_BUNDLE)])
         self.timeout_s = timeout_s
-        self.chromium = chromium
+        # Runtime images provide an explicitly qualified Chromium path. Tests
+        # and callers may still override it; local development falls back to
+        # Playwright's ordinary executable discovery when neither is present.
+        self.chromium = chromium if chromium is not None else os.environ.get("PRINCESS_CHROMIUM")
 
     def _env(self) -> dict[str, str]:
         env = {"PATH": os.environ.get("PATH", "/usr/bin:/bin"), "HOME": os.environ.get("HOME", "/tmp")}
