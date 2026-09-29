@@ -47,7 +47,7 @@ The accepted-token/documentation implementation was qualified at `4a786230fcb9d7
 
 ## Downstream ownership
 
-- **T17:** production web Dossier integration, `individual-report/2` activation, production identity/cross-device recovery.
+- **T17:** PR #33 integrates the production web Dossier and activates `individual-report/2` for new analyses; production identity/cross-device recovery remains.
 - **T21:** accepted Dossier print/share styling and actual full-size rendered-page/card inspection; add T18/T20 parity only from owning-task content.
 - **T22:** sharing/invitations and other-owner comparison authorization/release.
 - **T29:** native scaffold/platform seams consuming the accepted semantic tokens, not web DOM.

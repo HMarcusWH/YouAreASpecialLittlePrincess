@@ -857,7 +857,7 @@ Validation profiles: [docs](#validation-docs), [contracts](#validation-contracts
 
 No task-specific production gate; all repository privacy/security and scope boundaries still apply.
 
-Historical completion evidence: PR #27 implements presentation/1 with reviewed EN/SV labels for all 64 Free features, 54 reachable mechanical highlight states across six families, correlation/family diversity, image-proxy hero exclusion, deterministic server-side selection, explicit individual-report/2 highlight capability, v1 revision compatibility, share-scope non-expansion, generated-registry drift checks and adversarial rule validation. The v1 client default remains active until T17 renders/activates v2; exact-head workflow and review evidence are recorded on PR #27 before merge.
+Historical completion evidence: PR #27 implements presentation/1 with reviewed EN/SV labels for all 64 Free features, 54 reachable mechanical highlight states across six families, correlation/family diversity, image-proxy hero exclusion, deterministic server-side selection, explicit individual-report/2 highlight capability, v1 revision compatibility, share-scope non-expansion, generated-registry drift checks and adversarial rule validation. PR #33 promotes new analyses to individual-report/2 while preserving explicit legacy v1 compatibility; the T08A exact-head workflow and review evidence remain recorded on PR #27 before merge.
 
 [Back to task table](#task-table) · [Documentation index](00-index.md) · [Execution sequence](20-end-to-end-build-sequence.md)
 
@@ -1510,12 +1510,11 @@ Working Free web journey and reusable web report components tied to saved projec
 
 ### Implementation evidence
 
-PR #14 established the working deterministic Free Next.js journey and T21 export integration. This T17 slice adds canonical ReportSummary/ReportPage contracts, owner-scoped paginated report history, report-scoped EvidenceBundle reads with stored digest/lineage validation, current-principal history UI, stored baseline/spacing/slant evidence views and cross-owner/browser regression coverage. PR #18 adds a reviewed pinned axe dependency and generated lockfile, automated WCAG A/AA browser-state coverage with a proven negative control, explicit fixture/live Playwright modes, and a mandatory isolated live Free upload-to-export CI journey that refreshes the queued run before deterministic worker execution.
+PR #14 established the working deterministic Free Next.js journey and T21 export integration. This T17 slice adds canonical ReportSummary/ReportPage contracts, owner-scoped paginated report history, report-scoped EvidenceBundle reads with stored digest/lineage validation, current-principal history UI, stored baseline/spacing/slant evidence views and cross-owner/browser regression coverage. PR #18 adds a reviewed pinned axe dependency and generated lockfile, automated WCAG A/AA browser-state coverage with a proven negative control, explicit fixture/live Playwright modes, and a mandatory isolated live Free upload-to-export CI journey that refreshes the queued run before deterministic worker execution. PR #33 promotes new analyses to individual-report/2 while preserving explicit legacy-v1 reports/revisions, applies the owner-accepted Inktrospect Dossier hierarchy to First Reveal/report/evidence/history, and adds browser/accessibility coverage for positive highlight, reviewed no-eligible fallback, narrow Swedish, 200% text and dark/reduced-motion states without introducing client-side salience.
 
 ### Remaining work
 
 - Implement production account sign-in and cross-device/account recovery after the ADR-002 identity provider decision.
-- Finish owner-accepted Inktrospect / The Dossier T10 design integration across responsive first-reveal, history, evidence and report states; render the T08A server-owned highlight when present and the approved no-highlight fallback when absent; never perform salience selection client-side.
 
 ### Acceptance evidence
 

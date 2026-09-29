@@ -13,7 +13,7 @@ Every file here comes from a **programmatically drawn synthetic page** (OpenCV H
 | `report-document.v2.json` | Revision 1 synthetic `individual-report/2` document with server-owned T08A highlight sections |
 | `report-document.premium.json` | Revision 2 of the legacy v1 report with a Premium overlay reference attached |
 | `view.free.json` | Legacy v1 `FREE` projection with owner actions matching the currently implemented UI/API capability boundary |
-| `view.free-v2.json` | v2 `FREE` projection carrying the real server-selected first reveal; this is a design/T17 fixture, not default activation |
+| `view.free-v2.json` | v2 `FREE` projection carrying the real server-selected first reveal; representative of the current default for new analyses |
 | `view.owner-premium.json` | `OWNER` projection of revision 2 with Premium unlocked; unavailable owner actions remain disabled with reasons |
 | `view.share.json` | `SHARE` projection scoped to slant and baseline, no image, no actions |
 | `view.export-no-image.json` | `EXPORT` projection with the source image omitted |

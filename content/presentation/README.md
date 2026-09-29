@@ -11,4 +11,4 @@ This directory is the reviewed source for T08A mechanical presentation content.
 
 Do not add client-side salience selection. Clients render the server-selected content/support IDs or the explicit no-eligible fallback.
 
-The TypeScript surface exposes reviewed labels, localized content and fixed display domains only. It deliberately contains no salience selector; selection remains server-owned. `packages/report-web` can render server-selected highlight sections, while T17 still owns activation of `individual-report/2` and the final Dossier design.
+The TypeScript surface exposes reviewed labels, localized content and fixed display domains only. It deliberately contains no salience selector; selection remains server-owned. `packages/report-web` renders the server-selected highlight sections, and T17 now makes `individual-report/2` the default for new analyses while preserving legacy v1 reports. Selection remains server-owned.
