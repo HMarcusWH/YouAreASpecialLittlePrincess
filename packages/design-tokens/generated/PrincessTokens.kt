@@ -2,18 +2,18 @@
 package se.princess.tokens
 
 object PrincessTokens {
-    const val VERSION = "design-tokens/0.1-draft"
+    const val VERSION = "design-tokens/1.0"
 
     object Light {
-        const val SURFACE: Long = 0xFFFFFFFF
-        const val SURFACE_SUNKEN: Long = 0xFFF5F2EE
-        const val SURFACE_RAISED: Long = 0xFFFFFFFF
-        const val TEXT: Long = 0xFF1D1B20
-        const val TEXT_MUTED: Long = 0xFF57515E
-        const val BORDER: Long = 0xFFD9D3DE
-        const val BORDER_STRONG: Long = 0xFF7A7383
-        const val ACCENT: Long = 0xFF5E35A8
-        const val ACCENT_CONTRAST: Long = 0xFFFFFFFF
+        const val SURFACE: Long = 0xFFF3EEE4
+        const val SURFACE_SUNKEN: Long = 0xFFEAE3D6
+        const val SURFACE_RAISED: Long = 0xFFFBF8F2
+        const val TEXT: Long = 0xFF1C1A17
+        const val TEXT_MUTED: Long = 0xFF5E574C
+        const val BORDER: Long = 0xFFD8CFBF
+        const val BORDER_STRONG: Long = 0xFF8A8070
+        const val ACCENT: Long = 0xFFA8361B
+        const val ACCENT_CONTRAST: Long = 0xFFFBF8F2
         const val FOCUS: Long = 0xFF0B5CC2
         const val EVIDENCE_MEASURED: Long = 0xFF1B5E96
         const val EVIDENCE_PROXY: Long = 0xFF7A5200
@@ -29,15 +29,15 @@ object PrincessTokens {
     }
 
     object Dark {
-        const val SURFACE: Long = 0xFF141217
-        const val SURFACE_SUNKEN: Long = 0xFF0E0D10
-        const val SURFACE_RAISED: Long = 0xFF1F1C23
-        const val TEXT: Long = 0xFFECE6F0
-        const val TEXT_MUTED: Long = 0xFFB8B0C0
-        const val BORDER: Long = 0xFF3A3540
-        const val BORDER_STRONG: Long = 0xFF8D8596
-        const val ACCENT: Long = 0xFFC9AAFF
-        const val ACCENT_CONTRAST: Long = 0xFF1D1B20
+        const val SURFACE: Long = 0xFF171512
+        const val SURFACE_SUNKEN: Long = 0xFF100F0C
+        const val SURFACE_RAISED: Long = 0xFF201D18
+        const val TEXT: Long = 0xFFEDE7DA
+        const val TEXT_MUTED: Long = 0xFFB5AC9C
+        const val BORDER: Long = 0xFF34302A
+        const val BORDER_STRONG: Long = 0xFF7D7466
+        const val ACCENT: Long = 0xFFF08A6C
+        const val ACCENT_CONTRAST: Long = 0xFF171512
         const val FOCUS: Long = 0xFF86B6FF
         const val EVIDENCE_MEASURED: Long = 0xFF8CC2EF
         const val EVIDENCE_PROXY: Long = 0xFFE6C46A
@@ -62,6 +62,7 @@ object PrincessTokens {
         const val S6: Int = 32
         const val S7: Int = 48
         const val S8: Int = 64
+        const val S9: Int = 96
     }
 
     object MotionMs {
