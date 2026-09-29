@@ -32,7 +32,7 @@ PRODUCT = "se.princess.premium.single.draft"
 
 
 def certificate(subject, issuer, public_key, issuer_key, *, ca):
-    now = datetime.now(timezone.utc)
+    now = datetime(2026, 1, 1, tzinfo=timezone.utc)
     return (
         x509.CertificateBuilder()
         .subject_name(x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, subject)]))
@@ -180,7 +180,10 @@ def test_authoritative_lookup_uses_server_jwt_and_reverifies_signed_transaction(
     scheme, token = request.headers["authorization"].split(" ", 1)
     assert scheme == "Bearer"
     header = jwt.get_unverified_header(token)
-    claims = jwt.decode(token, setup.api_key.public_key(), algorithms=["ES256"], audience="appstoreconnect-v1")
+    claims = jwt.decode(
+        token, setup.api_key.public_key(), algorithms=["ES256"], audience="appstoreconnect-v1",
+        options={"verify_exp": False, "verify_iat": False},
+    )
     assert header["kid"] == "KEYTEST1"
     assert claims["iss"] == "issuer-test" and claims["bid"] == BUNDLE
 

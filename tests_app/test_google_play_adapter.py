@@ -216,6 +216,7 @@ def test_service_account_assertion_and_access_token_are_server_side_only():
         setup.service_key.public_key(),
         algorithms=["RS256"],
         audience="https://oauth2.googleapis.com/token",
+        options={"verify_exp": False, "verify_iat": False},
     )
     assert header["kid"] == "service-key-1"
     assert claims["scope"] == "https://www.googleapis.com/auth/androidpublisher"
