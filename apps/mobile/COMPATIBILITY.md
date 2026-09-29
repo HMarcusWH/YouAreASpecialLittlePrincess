@@ -88,6 +88,10 @@ Node-side native tests cover:
 
 T30/T31 add real process death, physical-device camera/HEIC, sandbox purchase, push, link association, screen-reader/text-scale and signed-build lifecycle evidence.
 
+## Permanent validation workflow
+
+`.github/workflows/native.yml` is the retained T29 validation surface. It runs exact package/license checks, Expo compatibility, mobile typecheck/unit/config checks, Android CNG + debug APK compilation, and iOS CNG + CocoaPods + simulator compilation. PR #32 is the first qualification of that permanent workflow.
+
 ## Remaining gates
 
 T29 remains **IN_PROGRESS** because its task contract requires development builds to exercise real native modules and signed-development references. Expo Go is explicitly insufficient for IAP.
