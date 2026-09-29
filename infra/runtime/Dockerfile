@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1.7
+# syntax=docker/dockerfile:1.7@sha256:a57df69d0ea827fb7266491f2813635de6f17269be881f696fbfdf2d83dda33e
 ARG PYTHON_IMAGE=python:3.12.14-slim-bookworm@sha256:782412e85d0f0984994c290652577d4018aff08145c85b262bb63dc0c7522254
 ARG NODE_IMAGE=node:22.22.2-bookworm-slim@sha256:9f6d5975c7dca860947d3915877f85607946403fc55349f39b4bc3688448bb6e
 
@@ -23,7 +23,7 @@ FROM ${PYTHON_IMAGE} AS backend-runtime
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     PYTHONPATH=/opt/princess/src:/opt/princess/apps/api \
-    HOME=/tmp/princess-home
+    HOME=/tmp
 WORKDIR /opt/princess
 COPY infra/runtime/python-py312.lock /tmp/python-py312.lock
 RUN python -m pip install --no-cache-dir --require-hashes --only-binary=:all: --no-deps \
