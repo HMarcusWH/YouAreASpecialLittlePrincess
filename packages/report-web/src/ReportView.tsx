@@ -144,14 +144,37 @@ export function ReportView({ view, locale, evidence, onAction }: {
   onAction?: (kind: Action["kind"]) => void;
 }) {
   const facts = new Map(view.facts.map((f) => [f.fact_id, f]));
+  const isHighlight = (section: ReportSection) =>
+    section.template === "HIGHLIGHT_PRIMARY" || section.template === "HIGHLIGHT_SECONDARY";
+  const highlights = view.sections.filter(isHighlight);
+  const reportSections = view.sections.filter((section) => !isHighlight(section));
+
   return (
-    <article className="pr-report" data-projection={view.projection} lang={locale}>
-      <header className="pr-header">
+    <article className="pr-report pr-dossier" data-projection={view.projection} lang={locale}>
+      <header className="pr-header pr-dossier-header">
+        <p className="pr-eyebrow">{t(locale, "report.dossier")}</p>
         <h1>{t(locale, `projection.${view.projection}`)}</h1>
         <p className="pr-hint">{t(locale, "report.revision")} {view.source_revision}</p>
       </header>
+
+      {highlights.length > 0 && (
+        <section className="pr-first-reveal" aria-label={t(locale, "report.first_reveal")}>
+          <p className="pr-eyebrow">{t(locale, "report.first_reveal")}</p>
+          {highlights.map((section) => (
+            <SectionBlock key={section.section_id} section={section} facts={facts} locale={locale} />
+          ))}
+        </section>
+      )}
+
       <NoticeBar notices={view.notices} locale={locale} />
-      {view.sections.map((s) => <SectionBlock key={s.section_id} section={s} facts={facts} locale={locale} />)}
+
+      <section className="pr-dossier-body" aria-label={t(locale, "report.mechanical_dossier")}>
+        <p className="pr-eyebrow">{t(locale, "report.mechanical_dossier")}</p>
+        {reportSections.map((section) => (
+          <SectionBlock key={section.section_id} section={section} facts={facts} locale={locale} />
+        ))}
+      </section>
+
       {evidence === null && (
         <section className="pr-evidence" aria-labelledby="evidence-unavailable-title">
           <h2 id="evidence-unavailable-title">{t(locale, "evidence.title")}</h2>

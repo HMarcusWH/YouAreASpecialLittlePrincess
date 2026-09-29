@@ -60,3 +60,41 @@
 .pr-evidence-table { width: 100%; border-collapse: collapse; font-size: var(--font-size-sm); }
 .pr-evidence-table th, .pr-evidence-table td { text-align: start; padding: var(--space-2) var(--space-3);
   border-bottom: 1px solid var(--color-border); vertical-align: top; overflow-wrap: anywhere; }
+
+
+/* Accepted T10 Direction A — The Dossier interactive treatment.
+   Print/card ownership remains T21; these rules are deliberately screen-only. */
+@media screen {
+  .pr-dossier { max-width: 68rem; }
+  .pr-dossier-header { max-width: 46rem; padding: var(--space-5) 0 var(--space-6);
+    border-bottom: 1px solid var(--color-border-strong); }
+  .pr-dossier-header h1 { font-size: var(--font-size-display-sm); line-height: var(--font-line-height-display);
+    letter-spacing: var(--font-tracking-display); font-weight: var(--font-weight-light); margin: var(--space-2) 0; }
+  .pr-eyebrow { margin: 0; color: var(--color-accent); font-size: var(--font-size-cap);
+    font-family: var(--font-family-numeric); font-weight: var(--font-weight-bold);
+    letter-spacing: var(--font-tracking-cap); text-transform: uppercase; }
+  .pr-first-reveal { max-width: 54rem; margin: var(--space-7) 0; padding: var(--space-5) var(--space-6);
+    background: var(--color-surface-raised); border: 1px solid var(--color-border);
+    border-left: 4px solid var(--color-accent); border-radius: var(--radius-sm); }
+  .pr-first-reveal > .pr-eyebrow { margin-bottom: var(--space-4); }
+  .pr-first-reveal .pr-highlight { margin: 0; padding: var(--space-4) 0;
+    border-top: 1px solid var(--color-border); }
+  .pr-first-reveal .pr-highlight:first-of-type { padding-top: 0; border-top: 0; }
+  .pr-first-reveal .pr-highlight:last-of-type { padding-bottom: 0; }
+  .pr-first-reveal .pr-highlight h2 { font-size: var(--font-size-2xl); line-height: var(--font-line-height-tight); }
+  .pr-highlight-copy { font-size: var(--font-size-lg); line-height: var(--font-line-height-relaxed);
+    max-width: 46rem; }
+  .pr-dossier-body { max-width: 54rem; margin-top: var(--space-7); }
+  .pr-dossier-body > .pr-eyebrow { margin-bottom: var(--space-5); }
+  .pr-dossier-body > .pr-section { padding-top: var(--space-5); border-top: 1px solid var(--color-border); }
+  .pr-notices { max-width: 54rem; }
+  .pr-evidence { max-width: 60rem; }
+  .pr-actions { max-width: 54rem; padding-top: var(--space-4); border-top: 1px solid var(--color-border); }
+}
+
+@media screen and (max-width: 480px) {
+  .pr-dossier-header { padding-top: var(--space-2); }
+  .pr-dossier-header h1 { font-size: var(--font-size-3xl); }
+  .pr-first-reveal { padding: var(--space-4); margin: var(--space-6) 0; }
+  .pr-first-reveal .pr-highlight h2 { font-size: var(--font-size-xl); }
+}
