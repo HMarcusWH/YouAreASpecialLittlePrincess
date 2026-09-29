@@ -11,6 +11,12 @@ const designTokens = JSON.parse(
   readFileSync(new URL("../../../packages/design-tokens/tokens.json", import.meta.url), "utf8"),
 );
 
+const cssRgb = (hex: string) => {
+  const value = hex.replace("#", "");
+  const channels = [0, 2, 4].map((offset) => Number.parseInt(value.slice(offset, offset + 2), 16));
+  return `rgb(${channels.join(", ")})`;
+};
+
 test("public web chrome uses the Inktrospect brand", async ({ page }) => {
   await page.goto("/");
   await expect(page).toHaveTitle("Inktrospect — handwriting measured");
