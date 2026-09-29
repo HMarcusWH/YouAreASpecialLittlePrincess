@@ -15,8 +15,10 @@ Every file here comes from a **programmatically drawn synthetic page** (OpenCV H
 | `view.free.json` | Legacy v1 `FREE` projection with owner actions matching the currently implemented UI/API capability boundary |
 | `view.free-v2.json` | v2 `FREE` projection carrying the real server-selected first reveal; representative of the current default for new analyses |
 | `view.owner-premium.json` | `OWNER` projection of revision 2 with Premium unlocked; unavailable owner actions remain disabled with reasons |
-| `view.share.json` | `SHARE` projection scoped to slant and baseline, no image, no actions |
-| `view.export-no-image.json` | `EXPORT` projection with the source image omitted |
+| `view.share.json` | Legacy-v1 `SHARE` projection scoped to slant and baseline, no image, no actions |
+| `view.share-v2.json` | Current-v2 `SHARE` projection with the same explicit slant/baseline disclosure scope |
+| `view.export-no-image.json` | Legacy-v1 `EXPORT` projection with the source image omitted |
+| `view.export-v2-no-image.json` | Current-v2 `EXPORT` projection with the server-owned First Reveal and source image omitted |
 | `view.owner-image-revoked.json` | `OWNER` projection after the source image was revoked, with the same current owner-action capability boundary |
 
 The outputs are regenerated with no engine dependency, so numpy/OpenCV version differences cannot make them drift:
