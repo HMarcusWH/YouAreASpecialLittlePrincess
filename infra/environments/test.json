@@ -66,12 +66,8 @@
       ]
     },
     "render_worker": {
-      "secrets": [
-        "PRINCESS_STORAGE_READ_KEY"
-      ],
-      "egress": [
-        "object_store"
-      ]
+      "secrets": [],
+      "egress": []
     },
     "export_worker": {
       "secrets": [
@@ -84,14 +80,8 @@
       ]
     },
     "reference_worker": {
-      "secrets": [
-        "PRINCESS_DATABASE_URL",
-        "PRINCESS_STORAGE_READ_KEY"
-      ],
-      "egress": [
-        "database",
-        "object_store"
-      ]
+      "secrets": [],
+      "egress": []
     },
     "notification_worker": {
       "secrets": [
