@@ -167,7 +167,7 @@ Rules the code enforces (`src/princess_app/application/commerce.py`, `adapters/p
 - A refund revokes the unspent credit and any active reservation and cancels the reservation's queued or leased job, which blocks the provider call or publication. After a spend it records `REFUND_AFTER_SPEND`. Who keeps access to delivered Premium content after a refund is an owner decision. Late notifications for a deleted account grant nothing.
 - By default, credits can be spent only on their origin platform (web credits on web, and so on). Cross-store portability needs an approved, dated policy record.
 
-Reconciliation runbook (fakes today; the same calls apply to real adapters):
+Reconciliation runbook (fakes plus the production-disabled Stripe/Apple/Google adapters; live composition is still gated):
 
 1. Missed or delayed webhooks: run `CommerceService.reconcile(rail, since, ctx)`. It re-reads authoritative provider state and applies it idempotently, so refunds and settled pending purchases converge.
 2. Grants whose store completion is outstanding: run `complete_pending` with the worker login. Alert on the age of the oldest `financial_transaction` with `completed_at IS NULL`.
@@ -176,4 +176,4 @@ Reconciliation runbook (fakes today; the same calls apply to real adapters):
 5. Reservations stuck in `RESERVED` belong to live Premium jobs. Check the job state before releasing anything by hand, and use `release_reservation` so the ledger entry is written.
 4. Never delete ledger rows. Corrections are compensating entries.
 
-Scheduling these loops (which process, how often, alerts) belongs to T24. PR #35 implements the Stripe HTTPS adapter but does not activate it: composition still refuses every non-fake PaymentProvider. Stripe sandbox/account evidence and refund-request behavior, the App Store Server API and Play Developer API adapters, prices, tax/refund/storefront policy and processor approval remain blocked on `price_account_terms_before_charges` and `processor_retention_contracts`.
+Scheduling these loops (which process, how often, alerts) belongs to T24. PR #35 implements the Stripe base adapter and PR #36 adds separately approved Stripe refund requests plus production-disabled App Store Server API and Play Developer API adapters. Composition still refuses every non-fake PaymentProvider. Real provider-account sandbox/TestFlight/license-test evidence, prices, tax/refund/storefront policy and processor approval remain blocked on `price_account_terms_before_charges` and `processor_retention_contracts`.

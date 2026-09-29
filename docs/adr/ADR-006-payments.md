@@ -2,7 +2,7 @@
 
 [Index](README.md) · [Commerce](../roadmap/14-payments-entitlements-and-commerce.md) · [Payment ports](../connectors/payments.md).
 
-Status: IMPLEMENTATION_DEFAULT for the internal ledger, Stripe web checkout and native platform billing. PR #35 implements the production-disabled Stripe HTTPS adapter and connector tests; production composition, retained Stripe sandbox evidence, refund-request behavior, the App Store/Play server adapters, catalog/prices/terms and processor approval remain pending.
+Status: IMPLEMENTATION_DEFAULT for the internal ledger, Stripe web checkout and native platform billing. PR #35 implements the production-disabled Stripe HTTPS adapter; PR #36 completes the code-side provider set with explicitly approved Stripe refund requests plus production-disabled App Store and Google Play server adapters, including signed notifications, authoritative lookup, completion semantics and bounded backfill reconciliation. Production composition, retained provider sandbox/TestFlight/license-test evidence, catalog/prices/terms and processor approval remain pending.
 
 Use StoreKit for baseline iOS digital purchases, Play Billing for baseline Android digital purchases and a hosted web checkout adapter. Initial consumable analysis credits are a product hypothesis, not approved price/SKU terms. Preserve credit origin/storefront and configurable spend eligibility; do not assume unrestricted cross-platform consumable portability for a non-game service.
 
