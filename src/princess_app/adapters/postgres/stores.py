@@ -17,7 +17,7 @@ from typing import Any, Iterator, Mapping
 
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import Connection, Engine
-from sqlalchemy.exc import DBAPIError, IntegrityError
+from sqlalchemy.exc import DBAPIError, IntegrityError, SQLAlchemyError
 
 from princess_contracts import ValidatedDocument, canonical_digest, compile_document
 
@@ -26,7 +26,7 @@ from ...application.permissions import replayed
 from ...application.reports import ReportHistoryEntry
 from ...domain.permissions import Decision, PermissionEvent, Scope
 from ...domain.reports import check_revision
-from ...ports.base import Conflict, InvalidInput, NotAuthorized, NotFound
+from ...ports.base import Conflict, InvalidInput, NotAuthorized, NotFound, TransientUnavailable
 
 
 def make_engine(url: str) -> Engine:
@@ -38,6 +38,17 @@ def make_engine(url: str) -> Engine:
 class Database:
     def __init__(self, engine: Engine) -> None:
         self.engine = engine
+
+    def ping(self) -> None:
+        """Check only database reachability; never inspect tenant/application rows."""
+        try:
+            with self.engine.connect() as conn:
+                if conn.execute(text("SELECT 1")).scalar_one() != 1:
+                    raise TransientUnavailable("database_unavailable")
+        except TransientUnavailable:
+            raise
+        except SQLAlchemyError:
+            raise TransientUnavailable("database_unavailable") from None
 
     @contextmanager
     def session(self, principal_id: str | None = None, *, auth: tuple[str, str] | None = None) -> Iterator[Connection]:

@@ -105,7 +105,8 @@ def compose(config: RuntimeConfig) -> Services:
                     tombstones=tombstone_log(),
                     # Registration and preferences only; delivery is the notification worker's.
                     notifications=NotificationService(repo=PostgresNotificationRepository(db), clock=clock,
-                                                      ids=UuidIds(), environment=config.environment))
+                                                      ids=UuidIds(), environment=config.environment),
+                    readiness=db.ping)
 
 
 def local_store(config: RuntimeConfig, clock) -> LocalObjectStore:

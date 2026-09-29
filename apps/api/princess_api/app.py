@@ -101,6 +101,8 @@ class Services:
     # Deletions recorded outside the database, replayed after a restore.
     tombstones: TombstoneLog | None = None
     notifications: NotificationService | None = None
+    # Operational readiness is injected by composition and must remain provider-free.
+    readiness: Callable[[], None] | None = None
 
 
 class _Strict(BaseModel):
@@ -223,6 +225,22 @@ def create_app(services: Services) -> FastAPI:
         if isinstance(exc, RateLimited) and exc.retry_after_s is not None:
             headers["Retry-After"] = str(int(exc.retry_after_s))
         return JSONResponse({"error": exc.code}, status_code=status, headers=headers)
+
+    @app.get("/health/live", include_in_schema=False)
+    def health_live() -> dict[str, str]:
+        """Process liveness only: no database or provider I/O."""
+        return {"status": "ok"}
+
+    @app.get("/health/ready", include_in_schema=False)
+    def health_ready() -> dict[str, str] | JSONResponse:
+        """Readiness is intentionally limited to the application database."""
+        if services.readiness is None:
+            return JSONResponse({"status": "not_ready"}, status_code=503)
+        try:
+            services.readiness()
+        except PortError:
+            return JSONResponse({"status": "not_ready"}, status_code=503)
+        return {"status": "ok"}
 
     def call_context(request: Request) -> CallContext:
         supplied = request.headers.get("x-correlation-id", "")
