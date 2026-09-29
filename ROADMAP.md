@@ -73,7 +73,7 @@ python docs/roadmap/plan_tools.py --task T11
 
 These documentation commands are repository tooling. Product test commands marked `TO_IMPLEMENT` in task briefs are not executable claims. After changing task data, run `--write` to regenerate the human backlog, then `--check`.
 
-At the current baseline, `--ready` yields **T29**; `--active` surfaces T11, T17, T19, T21 and T24. The T10 design gate is closed. Follow [20](docs/roadmap/20-end-to-end-build-sequence.md) for the current handoff; [23](docs/roadmap/23-post-pr14-reconciliation.md) is retained as the historical PR #14 reconciliation snapshot.
+At the current T29 branch state, T29 is **IN_PROGRESS**; `--active` surfaces T11, T17, T19, T21, T24 and T29. The native foundation is implemented/compiling, while signed-device/IAP and live processor evidence remain gated. Follow [20](docs/roadmap/20-end-to-end-build-sequence.md) for the current handoff; [23](docs/roadmap/23-post-pr14-reconciliation.md) is retained as the historical PR #14 reconciliation snapshot.
 
 ## Definition of ready
 

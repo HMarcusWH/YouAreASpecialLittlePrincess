@@ -129,9 +129,20 @@
       "description": "Offline Chromium PDF/share-card renderer tests, export job/API tests and live PDF download journey. Accessibility automation is owned by web_browser; pixel-diff coverage remains future work."
     },
     "native": {
-      "state": "TO_IMPLEMENT",
-      "commands": [],
-      "description": "T29 establishes JS/native test commands and signed-build matrix; T30/T31 add real device and sandbox purchase/lifecycle evidence."
+      "state": "EXISTS",
+      "commands": [
+        "pnpm install --frozen-lockfile",
+        "pnpm --filter @princess/mobile compat:check",
+        "pnpm --filter @princess/mobile exec expo install --check",
+        "pnpm --filter @princess/mobile typecheck",
+        "pnpm --filter @princess/mobile test",
+        "pnpm --filter @princess/mobile config:public",
+        "pnpm --filter @princess/mobile prebuild:android",
+        "(cd apps/mobile/android && ./gradlew :app:assembleDebug --no-daemon)",
+        "pnpm --filter @princess/mobile prebuild:ios",
+        "(cd apps/mobile/ios && pod install && xcodebuild -workspace Inktrospect.xcworkspace -scheme Inktrospect -sdk iphonesimulator -configuration Debug CODE_SIGNING_ALLOWED=NO build)"
+      ],
+      "description": "T29 native foundation profile: exact package/license manifest checks, TypeScript/unit/config validation, CNG prebuild and Android/iOS development/simulator compilation. T30/T31 still own real signed-device, sandbox purchase, push, process-death and complete lifecycle evidence."
     },
     "release": {
       "state": "TO_IMPLEMENT",
@@ -2119,11 +2130,11 @@
       "rollback": [
         "Rebuild native binaries for changed modules/entitlements; do not rely on OTA to bypass native/store compatibility."
       ],
-      "implementation_evidence": "T29 implementation started on task/T29-native-foundation from main 4c7d6df4b6830fc6553fde9bf84e5a20f9223120. The branch contains an Expo SDK 57 / React Native 0.86 native workspace, accepted Dossier token consumption, typed/fake platform ports, real capture/secure-store/native-module compatibility imports and account-switch lifecycle tests. Exact package/prebuild/native-build qualification is in progress.",
+      "implementation_evidence": "T29 native foundation is implemented on task/T29-native-foundation from main 4c7d6df4b6830fc6553fde9bf84e5a20f9223120: Expo SDK 57.0.25 / React Native 0.86.3 / Expo Router 57.0.23 exact dependency graph is locked; accepted design-tokens/1.0 feed native primitives; typed/fake platform ports cover capture, secure sessions, purchase observations, deep links, files/share, push and abuse; real Expo capture/secure-store/native module imports compile; account-switch epoch fencing tests pass. Compatibility run 36512024914 passed Expo compatibility, mobile typecheck/tests/public config, Android CNG prebuild and :app:assembleDebug with expo-iap 5.6.3/OpenIAP 3.5.2 present.",
       "remaining_work": [
-        "Resolve and lock the exact Expo SDK 57 native-module set; qualify TypeScript/tests, Expo config/prebuild and real native development builds.",
-        "Record the compatibility/build/device matrix and establish the native validation profile/workflow.",
-        "Physical-device IAP and signed-development references remain gated on native_signing_accounts; live provider composition remains gated on processor_retention_contracts."
+        "Qualify the permanent Native foundation workflow on the final PR head, including iOS simulator prebuild/build.",
+        "Exercise IAP and native modules in a real signed development build/physical-device context after native_signing_accounts is available; Expo Go and compile-only evidence are insufficient.",
+        "Approve/live-compose native identity/push/abuse/provider processing only after processor_retention_contracts; keep production provider credentials out of the app/repository."
       ]
     },
     {

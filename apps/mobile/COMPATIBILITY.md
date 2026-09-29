@@ -1,47 +1,104 @@
 # T29 native compatibility matrix
 
-Status: **implementation spike in progress**. This report is updated from executed build evidence; it is not signing, processor, App Store or Play approval.
+Status: **provider-independent foundation implemented; gated native evidence remains**.
 
-## Selected stable baseline
+This report records executed T29 compatibility evidence. It is not App Store/Play approval, production signing approval, processor approval or a claim that the T30/T31 client journeys are complete.
 
-- Expo SDK: **57 stable** (not the SDK 58 beta)
-- React Native: **0.86.3**
-- React: **19.2.3**
-- Expo Router: **57.x**
-- Node: repository **22.22.x** line
-- Package manager: repository-pinned pnpm 10.33.0
-- Native project ownership: **Continuous Native Generation / Expo prebuild + reviewed config plugins**. Generated `ios/` and `android/` directories are not committed.
-- Minimum iOS: **16.4**
-- Minimum Android: **7 / API 24**, compile/target SDK 36
-- Device scope: iPhone + iPad and Android phone + tablet; watches/TV/desktop clients are out of scope.
+## Exact pinned baseline
 
-Expo SDK 58 was still beta when this spike was opened, so T29 intentionally targets the stable SDK 57 line. Expo's SDK 57 August update moved to RN 0.86.3 to resolve documented Hermes/startup regressions.
+| Component | Exact version |
+|---|---:|
+| Expo | 57.0.25 |
+| React Native | 0.86.3 |
+| React | 19.2.3 |
+| Expo Router | 57.0.23 |
+| expo-iap | 5.6.3 |
+| OpenIAP Android dependency observed in prebuild | 3.5.2 |
+| expo-dev-client | 57.0.19 |
+| expo-secure-store | 57.0.4 |
+| expo-image-picker | 57.0.20 |
+| expo-image-manipulator | 57.0.20 |
+| expo-file-system | 57.0.7 |
+| expo-sharing | 57.0.22 |
+| expo-linking | 57.0.11 |
+| expo-notifications | 57.0.21 |
+| react-native-screens | 4.26.2 |
+| react-native-safe-area-context | 5.7.0 |
+| react-native-reanimated | 4.5.1 |
+| react-native-worklets | 0.10.1 |
+| Node | repository 22.22.x line |
+| pnpm | 10.33.0 |
 
-## Native capabilities
+The package manifest is exact-pinned and `pnpm-lock.yaml` is authoritative for the full graph. `pnpm --filter @princess/mobile compat:check` verifies exact installed versions and package license metadata.
+
+SDK 58 was beta when the spike began; T29 therefore selected the stable SDK 57 line. The compatibility target is intentionally versioned, not “latest”.
+
+## Build ownership and device matrix
+
+- Native project ownership: **Expo Continuous Native Generation / prebuild plus reviewed config plugins**.
+- Generated `apps/mobile/ios/` and `apps/mobile/android/` are build artifacts and remain uncommitted.
+- Native changes must be represented in `app.config.ts` / reviewed plugins or the ownership ADR must change explicitly.
+- Local Xcode/Gradle builds remain supported; EAS is optional and is not approved here as a processor/signing custodian.
+- Minimum iOS target: **16.4**.
+- Minimum Android: **API 24**, compile/target **API 36**.
+- Layout scope: iPhone + iPad; Android phone + tablet; portrait/landscape adaptation. Watches/TV/desktop-native clients are excluded.
+
+## Capability boundary
 
 | Capability | T29 implementation | Authority boundary |
 |---|---|---|
-| Navigation | Expo Router stack | Route selection never grants report access |
-| Accepted design | `design-tokens/1.0` | Shared semantics, native primitives; no DOM/WebView |
-| Capture | `expo-image-picker` + `expo-image-manipulator` | Local derivative only; server revalidates bytes/pixels/media/permissions |
-| HEIC/HEIF | Picker input is re-encoded as JPEG derivative | T04 server remains final accepted-format authority |
-| Secure session | `expo-secure-store` | Credential material only; no report/image cache |
-| IAP bridge | `expo-iap` compatibility import/config plugin | Native client never mints credits; T19 backend verification is authoritative |
-| Deep links | Expo Linking / Router | Allowlisted route only; server authorization follows |
-| Files/share | Expo FileSystem + Sharing compatibility | Authorized export only; temporary-file cleanup required |
-| Push | Expo Notifications compatibility | Opaque references only; T24/T30/T31 own bindings/live provider |
-| Abuse | typed fake/port | Challenge is a risk input, never authorization |
+| Navigation | Expo Router native stack | Route selection never grants report access |
+| Design | accepted `design-tokens/1.0` | Shared semantics; native primitives, no DOM/WebView |
+| Capture | image picker/camera + image-manipulator | Produces local derivative metadata only; server verifies/authorizes/analyzes |
+| HEIC/HEIF | picker input can be re-encoded to JPEG derivative | Does not expand backend accepted media authority |
+| Secure session | expo-secure-store adapter | Credential material only; report/image payloads excluded |
+| Purchase | typed NativePurchaseClient + expo-iap module compatibility | Client never mints credits; T19 server verification/ledger remains authority |
+| Deep links | allowlisted route resolver + Expo linking module | Link selects resource; server authorization still required |
+| Files/share | typed share port + Expo module compatibility | Authorized exports only; temporary-file cleanup required |
+| Push | typed registration port + Expo notifications compatibility | Opaque references only; no handwriting/results/balances |
+| Abuse | typed attestation fake/port | Risk signal only, never authorization |
 
-## Build ownership
+## Executed Android evidence
 
-T29 adopts CNG/prebuild. Native changes belong in reviewed app config/config plugins. Generated `ios/` and `android/` projects remain build artifacts, not hand-edited source. Local Gradle/Xcode builds remain the documented fallback; no EAS processor/signing approval is implied.
+GitHub Actions run **36512024914** passed:
 
-## Required evidence before T29 can be DONE
+- exact SDK compatibility check;
+- mobile TypeScript compile;
+- native platform/session unit tests;
+- public Expo config generation;
+- clean Android CNG/prebuild;
+- `./gradlew :app:assembleDebug --no-daemon`.
 
-T29 requires development builds that exercise real native modules; Expo Go is insufficient for IAP and Android remote push. The repository may qualify prebuild/compile compatibility without owner production credentials, but **physical-device IAP / signed-development references require the `native_signing_accounts` gate**. Live provider composition also remains behind `processor_retention_contracts`.
+The log shows `expo-iap 5.6.3` compiled and OpenIAP `3.5.2` was inserted by the plugin. Android build properties were `minSdkVersion 24`, `compileSdkVersion 36`, `targetSdkVersion 36`. Gradle ended with **BUILD SUCCESSFUL**.
 
-This PR therefore remains **T29 IN_PROGRESS** unless those gated references are genuinely attached before merge.
+This is compile/prebuild compatibility evidence. The debug APK uses the build environment's development/debug signing context; it is **not** production signing evidence and does not prove a physical-device store transaction.
+
+## Negative/lifecycle evidence
+
+Node-side native tests cover:
+
+- denied camera permission does not fabricate a capture;
+- client purchase states never grant application credit;
+- finish requires server-grant proof in the fake contract;
+- malformed/foreign-scheme deep links fail closed;
+- logout/account switch clears push/session state;
+- late prior-account responses are discarded by SessionEpoch;
+- authorized-file sharing exposes explicit cleanup;
+- abuse attestation unavailable remains unavailable rather than authorizing.
+
+T30/T31 add real process death, physical-device camera/HEIC, sandbox purchase, push, link association, screen-reader/text-scale and signed-build lifecycle evidence.
+
+## Remaining gates
+
+T29 remains **IN_PROGRESS** because its task contract requires development builds to exercise real native modules and signed-development references. Expo Go is explicitly insufficient for IAP.
+
+Remaining external evidence:
+
+1. **native_signing_accounts** — real signed development/device build and store/IAP exercise.
+2. **processor_retention_contracts** — approved live composition for identity/push/abuse/provider processing where an external processor is involved.
+
+No coding agent may fabricate those approvals.
 
 ## Rollback
 
-Native module/config changes require a native rebuild. Never rely on OTA JavaScript delivery to repair an incompatible native binary.
+Changing a native module, plugin, entitlement or minimum OS requires rebuilding native binaries. OTA JavaScript delivery must never be used to bypass an incompatible native binary/store review requirement.

@@ -30,7 +30,7 @@ separately labelled and are not validated psychological assessment.
 | Recovery/notifications | Tombstones, restore reconciliation and notification state machine implemented; production providers/topology remain incomplete |
 | Pilot tooling | Synthetic-qualified, human mode fail-closed behind rights/participant gates |
 | Product design | **Inktrospect / Direction A — The Dossier accepted with changes**; canonical semantic tokens are `design-tokens/1.0` |
-| Native clients | Planned; **T29 is READY** after accepted T10 design closure |
+| Native clients | **T29 IN_PROGRESS** — Expo/RN foundation, native ports and Android development compile implemented; signed-device/IAP/provider evidence remains gated |
 
 Current task status is intentionally not duplicated here; run:
 
