@@ -177,3 +177,16 @@ Reconciliation runbook (fakes plus the production-disabled Stripe/Apple/Google a
 4. Never delete ledger rows. Corrections are compensating entries.
 
 Scheduling these loops (which process, how often, alerts) belongs to T24. PR #35 implements the Stripe base adapter and PR #36 adds separately approved Stripe refund requests plus production-disabled App Store Server API and Play Developer API adapters. Composition still refuses every non-fake PaymentProvider. Real provider-account sandbox/TestFlight/license-test evidence, prices, tax/refund/storefront policy and processor approval remain blocked on `price_account_terms_before_charges` and `processor_retention_contracts`.
+
+
+## Provider-neutral runtime images (T24)
+
+`infra/runtime/` now defines the source-tree backend/export image boundary,
+fixed component dispatcher, fail-closed composition preflight, database-only
+readiness probe and disposable role-separated smoke topology. The runtime Python
+lock is a reviewed Python 3.12/Linux x86_64 subset of the existing application
+lock and excludes build/test tooling.
+
+This is packaging/qualification evidence, not a hosting decision. Current
+production provider modes still intentionally fail startup where live adapters
+are not approved/composed. See [runtime topology](runtime/README.md).

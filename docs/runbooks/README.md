@@ -115,3 +115,17 @@ $NOTIFY_ENV python apps/workers/notifications/run_worker.py unsuppress --recipie
 - Account and identity recovery (ADR-002).
 
 Each needs its provider or hosting decision before it can list real commands.
+
+
+## Runtime startup/readiness qualification
+
+The provider-neutral T24 image boundary lives under `infra/runtime/`.
+`entrypoint.py` first runs the same fail-closed preflight used by
+`probe.py startup`; a manifest that is structurally valid but names provider
+modes the current role cannot compose is not considered ready.
+
+For API diagnosis, `/health/live` proves only that the process responds and
+`/health/ready` checks PostgreSQL only. Do not add provider calls to either
+route. Worker readiness uses `python infra/runtime/probe.py database`.
+Production host/registry/alert commands remain **PENDING DEPLOYMENT** until
+those providers are selected and qualified.

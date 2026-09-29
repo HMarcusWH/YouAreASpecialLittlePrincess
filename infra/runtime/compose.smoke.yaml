@@ -1,0 +1,136 @@
+name: princess-runtime-smoke
+
+services:
+  db:
+    image: postgres@sha256:5d143123fdf80462d1778cd4f24b9f7ca13c87174bca19141fb194c5a1ebca59
+    environment:
+      POSTGRES_USER: princess_admin
+      POSTGRES_PASSWORD: smoke-only-admin
+      POSTGRES_DB: princess_test
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U princess_admin -d princess_test"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  migrations:
+    image: ${PRINCESS_BACKEND_IMAGE:-princess-backend:smoke}
+    environment:
+      PRINCESS_ENV: test
+      PRINCESS_COMPONENT: migrations
+      PRINCESS_MIGRATION_DATABASE_URL: postgresql://princess_admin:smoke-only-admin@db:5432/princess_test?connect_timeout=2
+    depends_on:
+      db:
+        condition: service_healthy
+    read_only: true
+    tmpfs:
+      - /tmp
+
+  role-bootstrap:
+    image: postgres@sha256:5d143123fdf80462d1778cd4f24b9f7ca13c87174bca19141fb194c5a1ebca59
+    command: ["psql", "postgresql://princess_admin:smoke-only-admin@db:5432/princess_test", "-f", "/runtime/smoke_roles.sql"]
+    volumes:
+      - ./smoke_roles.sql:/runtime/smoke_roles.sql:ro
+    depends_on:
+      db:
+        condition: service_healthy
+
+  api:
+    image: ${PRINCESS_BACKEND_IMAGE:-princess-backend:smoke}
+    environment:
+      PRINCESS_ENV: test
+      PRINCESS_COMPONENT: api
+      PRINCESS_DATABASE_URL: postgresql://princess_smoke_api:smoke-only-api@db:5432/princess_test?connect_timeout=2
+      PRINCESS_SESSION_SECRET: smoke-session-secret-0123456789
+      PRINCESS_IDENTITY_AUDIENCE: princess-smoke
+      PRINCESS_STORAGE_SIGNING_KEY: smoke-storage-key-0123456789
+      PRINCESS_LOCAL_STORAGE_DIR: /data/storage
+      PRINCESS_TOMBSTONE_DIR: /data/tombstones
+      PRINCESS_PUBLIC_API_BASE: http://127.0.0.1:18000
+    ports:
+      - "18000:8000"
+    volumes:
+      - runtime-data:/data
+    read_only: true
+    tmpfs:
+      - /tmp
+    healthcheck:
+      test: ["CMD", "python", "/opt/princess/infra/runtime/probe.py", "database"]
+      interval: 2s
+      timeout: 4s
+      retries: 30
+
+  analysis-worker:
+    image: ${PRINCESS_BACKEND_IMAGE:-princess-backend:smoke}
+    environment:
+      PRINCESS_ENV: test
+      PRINCESS_COMPONENT: analysis_worker
+      PRINCESS_DATABASE_URL: postgresql://princess_smoke_worker:smoke-only-worker@db:5432/princess_test?connect_timeout=2
+      PRINCESS_STORAGE_READ_KEY: smoke-storage-key-0123456789
+      PRINCESS_LOCAL_STORAGE_DIR: /data/storage
+      PRINCESS_TOMBSTONE_DIR: /data/tombstones
+    volumes:
+      - runtime-data:/data
+    read_only: true
+    tmpfs:
+      - /tmp
+    healthcheck:
+      test: ["CMD", "python", "/opt/princess/infra/runtime/probe.py", "database"]
+      interval: 2s
+      timeout: 4s
+      retries: 30
+
+  premium-worker:
+    image: ${PRINCESS_BACKEND_IMAGE:-princess-backend:smoke}
+    environment:
+      PRINCESS_ENV: test
+      PRINCESS_COMPONENT: premium_worker
+      PRINCESS_DATABASE_URL: postgresql://princess_smoke_worker:smoke-only-worker@db:5432/princess_test?connect_timeout=2
+      PRINCESS_STORAGE_READ_KEY: smoke-storage-key-0123456789
+    read_only: true
+    tmpfs:
+      - /tmp
+    healthcheck:
+      test: ["CMD", "python", "/opt/princess/infra/runtime/probe.py", "database"]
+      interval: 2s
+      timeout: 4s
+      retries: 30
+
+  export-worker:
+    image: ${PRINCESS_EXPORT_IMAGE:-princess-export:smoke}
+    environment:
+      PRINCESS_ENV: test
+      PRINCESS_COMPONENT: export_worker
+      PRINCESS_DATABASE_URL: postgresql://princess_smoke_worker:smoke-only-worker@db:5432/princess_test?connect_timeout=2
+      PRINCESS_STORAGE_READ_KEY: smoke-storage-key-0123456789
+      PRINCESS_LOCAL_STORAGE_DIR: /data/storage
+      HOME: /tmp
+    volumes:
+      - runtime-data:/data
+    read_only: true
+    tmpfs:
+      - /tmp:rw,exec,nosuid,size=512m
+    shm_size: 512mb
+    healthcheck:
+      test: ["CMD", "python", "/opt/princess/infra/runtime/probe.py", "database"]
+      interval: 2s
+      timeout: 4s
+      retries: 30
+
+  notification-worker:
+    image: ${PRINCESS_BACKEND_IMAGE:-princess-backend:smoke}
+    environment:
+      PRINCESS_ENV: test
+      PRINCESS_COMPONENT: notification_worker
+      PRINCESS_DATABASE_URL: postgresql://princess_smoke_worker:smoke-only-worker@db:5432/princess_test?connect_timeout=2
+    read_only: true
+    tmpfs:
+      - /tmp
+    healthcheck:
+      test: ["CMD", "python", "/opt/princess/infra/runtime/probe.py", "database"]
+      interval: 2s
+      timeout: 4s
+      retries: 30
+
+volumes:
+  runtime-data:
