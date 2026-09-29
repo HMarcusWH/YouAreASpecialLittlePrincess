@@ -26,6 +26,10 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       cameraPermission: "Take a handwriting photo to analyze.",
     }],
     "expo-notifications",
+    "expo-sharing",
+    "expo-splash-screen",
+    "expo-status-bar",
+    "expo-web-browser",
     "expo-iap",
     ["expo-build-properties", {
       ios: { deploymentTarget: "16.4" },

@@ -22,14 +22,8 @@ jobs:
           node-version: '22.22.2'
       - run: corepack enable && corepack install
       - run: pnpm install --no-frozen-lockfile
-      - name: Resolve Expo SDK 57 compatible native modules
-        run: >-
-          pnpm --filter @princess/mobile exec expo install
-          expo-dev-client expo-secure-store expo-image-picker expo-image-manipulator
-          expo-file-system expo-sharing expo-linking expo-notifications expo-build-properties
-          expo-constants expo-splash-screen expo-status-bar expo-system-ui expo-web-browser
-          react-native-safe-area-context react-native-screens expo-iap@5.6.3
-      - run: pnpm install --no-frozen-lockfile
+      - name: Verify locked Expo SDK 57 compatibility
+        run: pnpm --filter @princess/mobile exec expo install --check
       - run: pnpm --filter @princess/mobile typecheck
       - run: pnpm --filter @princess/mobile test
       - run: pnpm --filter @princess/mobile config:public
