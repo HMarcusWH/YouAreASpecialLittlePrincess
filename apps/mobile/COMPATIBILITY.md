@@ -92,6 +92,16 @@ T30/T31 add real process death, physical-device camera/HEIC, sandbox purchase, p
 
 `.github/workflows/native.yml` is the retained T29 validation surface. It runs exact package/license checks, Expo compatibility, mobile typecheck/unit/config checks, Android CNG + debug APK compilation, and iOS CNG + CocoaPods + simulator compilation. PR #32 is the first qualification of that permanent workflow.
 
+## Permanent workflow qualification
+
+PR #32 exact-head native run **36545832751** passed all three retained jobs:
+
+- **static:** frozen install, exact version/license check, Expo compatibility, TypeScript, unit tests and public config;
+- **android-development:** clean CNG/prebuild + debug APK compile with native modules; APK SHA-256 `6802b2e6b3d7cdf09541cdb90d7c83422094e2953b63818ac1f7cb7d6ddc89fe`;
+- **ios-simulator:** Xcode 26.6 / Swift 6.3 toolchain check, clean iOS CNG/prebuild, CocoaPods install and simulator `xcodebuild` with `CODE_SIGNING_ALLOWED=NO`; log ended `** BUILD SUCCEEDED **`.
+
+The iOS build graph includes `ExpoIap` / OpenIAP alongside the capture, secure-store, notifications, linking, sharing and other selected native modules. This is strong compile/integration evidence on both platforms but still not a signed physical-device store transaction.
+
 ## Remaining gates
 
 T29 remains **IN_PROGRESS** because its task contract requires development builds to exercise real native modules and signed-development references. Expo Go is explicitly insufficient for IAP.
