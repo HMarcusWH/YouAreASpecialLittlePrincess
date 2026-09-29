@@ -44,7 +44,7 @@ Use `python docs/roadmap/plan_tools.py --ready`, `--active` or `--task ID`. Edit
 | [T26 — Populate premium selector/question database](#t26) | DONE | — | product-content-contracts |
 | [T27 — Connector ports fakes and provider decisions](#t27) | DONE | T01 | application-architecture |
 | [T28 — Environment workspace and build foundation](#t28) | DONE | T00A, T27 | platform |
-| [T29 — Shared native foundation and compatibility spike](#t29) | PLANNED | T01, T02, T10, T27, T28 | mobile-platform |
+| [T29 — Shared native foundation and compatibility spike](#t29) | IN_PROGRESS | T01, T02, T10, T27, T28 | mobile-platform |
 | [T30 — Complete iOS and iPad client integration](#t30) | PLANNED | T29, T04, T09, T15, T16, T18, T19, T20, T21, T22, T24 | mobile-apple |
 | [T31 — Complete Android phone and tablet client integration](#t31) | PLANNED | T29, T04, T09, T15, T16, T18, T19, T20, T21, T22, T24 | mobile-android |
 | [T32 — App Store readiness and review evidence](#t32) | PLANNED | T30, T23, T24 | apple-release-human |
@@ -168,7 +168,20 @@ tools/run_web_e2e.sh
 <a id="validation-native"></a>
 ### native
 
-State: `TO_IMPLEMENT`. T29 establishes JS/native test commands and signed-build matrix; T30/T31 add real device and sandbox purchase/lifecycle evidence.
+State: `EXISTS`. T29 native foundation profile: exact package/license manifest checks, TypeScript/unit/config validation, CNG prebuild and Android/iOS development/simulator compilation. T30/T31 still own real signed-device, sandbox purchase, push, process-death and complete lifecycle evidence.
+
+```bash
+pnpm install --frozen-lockfile
+pnpm --filter @princess/mobile compat:check
+pnpm --filter @princess/mobile exec expo install --check
+pnpm --filter @princess/mobile typecheck
+pnpm --filter @princess/mobile test
+pnpm --filter @princess/mobile config:public
+pnpm --filter @princess/mobile prebuild:android
+(cd apps/mobile/android && ./gradlew :app:assembleDebug --no-daemon)
+pnpm --filter @princess/mobile prebuild:ios
+(cd apps/mobile/ios && pod install && xcodebuild -workspace Inktrospect.xcworkspace -scheme Inktrospect -sdk iphonesimulator -configuration Debug CODE_SIGNING_ALLOWED=NO build)
+```
 
 <a id="validation-release"></a>
 ### release
@@ -2316,7 +2329,7 @@ Historical completion evidence: PR #14 commits 6fc9579/991069e implemented revie
 <a id="t29"></a>
 ## T29 — Shared native foundation and compatibility spike
 
-**Status:** `PLANNED` · **Owner:** mobile-platform · **Milestone:** mobile
+**Status:** `IN_PROGRESS` · **Owner:** mobile-platform · **Milestone:** mobile
 
 **Hard predecessors:** [T01](#t01), [T02](#t02), [T10](#t10), [T27](#t27), [T28](#t28)
 **Platforms:** ios, android
@@ -2354,6 +2367,16 @@ packages/design-tokens/
 ### Contract and integration handoff
 
 A tested native scaffold/platform seam and build matrix; not a completed paid client or store approval.
+
+### Implementation evidence
+
+T29 native foundation is implemented on task/T29-native-foundation from main 4c7d6df4b6830fc6553fde9bf84e5a20f9223120: Expo SDK 57.0.25 / React Native 0.86.3 / Expo Router 57.0.23 exact dependency graph is locked; accepted design-tokens/1.0 feed native primitives; typed/fake platform ports cover capture, secure sessions, purchase observations, deep links, files/share, push and abuse; real Expo capture/secure-store/native module imports compile; account-switch epoch fencing tests pass. Compatibility run 36512024914 passed Expo compatibility, mobile typecheck/tests/public config, Android CNG prebuild and :app:assembleDebug with expo-iap 5.6.3/OpenIAP 3.5.2 present.
+
+### Remaining work
+
+- Qualify the permanent Native foundation workflow on the final PR head, including iOS simulator prebuild/build.
+- Exercise IAP and native modules in a real signed development build/physical-device context after native_signing_accounts is available; Expo Go and compile-only evidence are insufficient.
+- Approve/live-compose native identity/push/abuse/provider processing only after processor_retention_contracts; keep production provider credentials out of the app/repository.
 
 ### Acceptance evidence
 
