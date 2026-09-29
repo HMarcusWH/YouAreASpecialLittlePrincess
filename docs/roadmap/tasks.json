@@ -826,7 +826,7 @@
     {
       "id": "T10",
       "title": "Contract-driven multi-platform design handoff",
-      "status": "IMPLEMENTED_PENDING_REVIEW",
+      "status": "DONE",
       "depends_on": [
         "T01"
       ],
@@ -880,10 +880,8 @@
       "rollback": [
         "Version tokens/templates and preserve content/contract semantics during design revisions."
       ],
-      "implementation_evidence": "PR #14 commit c5463a4 added contract-driven draft design tokens generated to CSS/TypeScript/Swift/Kotlin and a complete state/component handoff. PR #23 packages the production-aware Claude Design handoff. PR #30 candidate handoff reconciliation updates the design package through merged T08A/T18 product truth and post-PR29 baseline 8163770f19cbbf3b5cf60fb77d0d52003dc2cfaf while deliberately preserving PENDING_OWNER_REVIEW and DRAFT_PENDING_DESIGN_ACCEPTANCE until an explicit owner decision.",
-      "remaining_work": [
-        "Complete/review the selected Direction A — The Dossier interactive responsive/native/print/share prototype against the reconciled T08A/T18 state matrix, bind the exact prototype reference/revision, and obtain explicit owner design_acceptance in docs/design/CLAUDE_DESIGN_ACCEPTANCE.md before promoting T10 or the token status."
-      ]
+      "implementation_evidence": "Pre-acceptance implementation history: PR #14 commit c5463a4 added contract-driven draft tokens and the state/component handoff; PR #23 packaged the production-aware Claude Design handoff; PR #30 reconciled the design package with merged T08A/T18 product truth and intentionally left PENDING_OWNER_REVIEW / DRAFT_PENDING_DESIGN_ACCEPTANCE until the owner decision. Final accepted state is recorded separately in completion_evidence.",
+      "completion_evidence": "Owner explicitly accepted Direction A — The Dossier with changes on 2026-09-29, bound to Inktrospect mobile app design (2).zip sha256:89b43380609dec56bdb82c284f0f6beb4c097692273ef13a3b23deb143ff7db5 (prototype internal sync 2026-09-28T19:26:00Z) and repo reconciliation baseline 53bcb9743eeb7fa96fc9affb68fc949c30fd25c0. Accepted semantic design tokens are design-tokens/1.0; limitations/downstream ownership are recorded in docs/design/ACCEPTED_DOSSIER_REFERENCE.md and docs/design/CLAUDE_DESIGN_ACCEPTANCE.md. Qualification head 4a786230fcb9d70c1c8f75bba8b02c73ec2aad25 passed CI run 36506833905 on Python 3.10/3.11/3.12 including full pytest/fault injection/wheel smoke, Roadmap integrity run 36506833900 including derived T29 readiness, and Application environments run 36506833890 including backend/PostgreSQL, web/render/accessibility and live Free upload-to-export."
     },
     {
       "id": "T11",

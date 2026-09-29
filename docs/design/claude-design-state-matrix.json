@@ -1,6 +1,6 @@
 {
   "contract_version": "claude-design-state-matrix/v1",
-  "status": "REVIEW_INPUT_NOT_ACCEPTANCE",
+  "status": "ACCEPTED_WITH_CHANGES_REFERENCE",
   "platforms": [
     "web_desktop",
     "web_320",

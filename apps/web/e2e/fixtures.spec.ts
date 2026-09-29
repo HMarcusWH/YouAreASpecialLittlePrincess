@@ -7,6 +7,16 @@ import { expect, test } from "@playwright/test";
 const fixture = (name: string) =>
   JSON.parse(readFileSync(new URL(`../../../fixtures/reports/view.${name}.json`, import.meta.url), "utf8"));
 
+const designTokens = JSON.parse(
+  readFileSync(new URL("../../../packages/design-tokens/tokens.json", import.meta.url), "utf8"),
+);
+
+const cssRgb = (hex: string) => {
+  const value = hex.replace("#", "");
+  const channels = [0, 2, 4].map((offset) => Number.parseInt(value.slice(offset, offset + 2), 16));
+  return `rgb(${channels.join(", ")})`;
+};
+
 test("public web chrome uses the Inktrospect brand", async ({ page }) => {
   await page.goto("/");
   await expect(page).toHaveTitle("Inktrospect — handwriting measured");
@@ -134,7 +144,7 @@ test("dark mode swaps the surface token", async ({ page }) => {
   await page.emulateMedia({ colorScheme: "dark" });
   await page.goto("/fixtures/free");
   const background = await page.evaluate(() => getComputedStyle(document.body).backgroundColor);
-  expect(background).toBe("rgb(20, 18, 23)");
+  expect(background).toBe(cssRgb(designTokens.color.dark.surface));
 });
 
 test("security headers are set and unknown proxy routes are refused", async ({ page, request }) => {

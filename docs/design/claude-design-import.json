@@ -1,9 +1,10 @@
 {
   "contract_version": "claude-design-import/v1",
-  "source_baseline_sha": "8163770f19cbbf3b5cf60fb77d0d52003dc2cfaf",
+  "source_baseline_sha": "53bcb9743eeb7fa96fc9affb68fc949c30fd25c0",
   "entrypoint": "docs/design/CLAUDE_DESIGN_HANDOFF.md",
   "read_first": [
     "docs/design/CLAUDE_DESIGN_HANDOFF.md",
+    "docs/design/ACCEPTED_DOSSIER_REFERENCE.md",
     "docs/design/README.md",
     "docs/design/claude-design-state-matrix.json",
     "docs/roadmap/04-reports-design.md",
@@ -90,6 +91,6 @@
     "Treat packages/report-web as existing DOM/print implementation context, not a requirement to reuse DOM patterns on native.",
     "Treat native canvases as design simulations until T29-T31 implement them.",
     "Do not upload real handwriting, participant data, production dumps, secrets or private provider payloads.",
-    "Keep packages/design-tokens/tokens.json in DRAFT_PENDING_DESIGN_ACCEPTANCE until the owner explicitly accepts the prototype."
+    "Use owner-accepted packages/design-tokens/tokens.json design-tokens/1.0 as the semantic visual authority; do not substitute prototype-local token values."
   ]
 }

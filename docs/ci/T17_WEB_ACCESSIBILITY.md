@@ -38,4 +38,4 @@ The final PR head must independently pass the repository's complete CI again aft
 
 ## Remaining T17 work
 
-T17 remains `IN_PROGRESS`. Production account sign-in/cross-device recovery still depends on the ADR-002 identity-provider decision, and final owner-accepted T10 design integration remains a human gate.
+T17 remains `IN_PROGRESS`. Production account sign-in/cross-device recovery still depends on the ADR-002 identity-provider decision. The T10 design gate is now closed; integrating the accepted Inktrospect/Dossier system across first-reveal, history, evidence and report states remains T17 engineering work.

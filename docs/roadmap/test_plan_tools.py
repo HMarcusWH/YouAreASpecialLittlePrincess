@@ -62,6 +62,14 @@ class PlanTests(unittest.TestCase):
             self.assertNotIn("T18", ready)
         self.assertEqual(plan_tools.validate_plan(data), [])
 
+    def test_repository_t10_completion_unlocks_t29_native_foundation(self):
+        data = json.loads((Path(__file__).with_name("tasks.json")).read_text(encoding="utf-8"))
+        by_id = {task["id"]: task for task in data["tasks"]}
+        self.assertEqual(by_id["T10"]["status"], "DONE")
+        self.assertEqual(by_id["T29"]["depends_on"], ["T01", "T02", "T10", "T27", "T28"])
+        ready = [task["id"] for task in plan_tools.ready_tasks(data)]
+        self.assertIn("T29", ready)
+
     def test_active_tasks_are_distinct_from_ready_work(self):
         data = plan()
         data["tasks"][1] = task("T00A", ["T00"], status="IN_PROGRESS")

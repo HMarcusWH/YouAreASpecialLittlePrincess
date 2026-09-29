@@ -25,7 +25,7 @@ Use `python docs/roadmap/plan_tools.py --ready`, `--active` or `--task ID`. Edit
 | [T08A — Report presentation and first-reveal policy](#t08a) | DONE | T01, T05, T09 | content-report |
 | [T08 — Calibrated normalization and reviewed interpretation content](#t08) | PLANNED | T06, T08A | content-engine |
 | [T09 — Report assembly and authorized projections](#t09) | DONE | T01, T05 | report-backend |
-| [T10 — Contract-driven multi-platform design handoff](#t10) | IMPLEMENTED_PENDING_REVIEW | T01 | design |
+| [T10 — Contract-driven multi-platform design handoff](#t10) | DONE | T01 | design |
 | [T11 — Owned pilot recruitment and annotation](#t11) | IN_PROGRESS | T03, T04 | product-data-human |
 | [T12 — Candidate corpus ETL and deduplication](#t12) | PLANNED | T04, T06, T11 | data |
 | [T13 — Reference statistics and distinctiveness](#t13) | PLANNED | T08, T12 | statistics |
@@ -980,7 +980,7 @@ Historical completion evidence: PR #14 commit 4a70fef implemented immutable self
 <a id="t10"></a>
 ## T10 — Contract-driven multi-platform design handoff
 
-**Status:** `IMPLEMENTED_PENDING_REVIEW` · **Owner:** design · **Milestone:** free
+**Status:** `DONE` · **Owner:** design · **Milestone:** free
 
 **Hard predecessors:** [T01](#t01)
 **Platforms:** web, ios, android, render
@@ -1018,11 +1018,7 @@ Owner-reviewed design tokens, reusable component boundaries and fixture/property
 
 ### Implementation evidence
 
-PR #14 commit c5463a4 added contract-driven draft design tokens generated to CSS/TypeScript/Swift/Kotlin and a complete state/component handoff. PR #23 packages the production-aware Claude Design handoff. PR #30 candidate handoff reconciliation updates the design package through merged T08A/T18 product truth and post-PR29 baseline 8163770f19cbbf3b5cf60fb77d0d52003dc2cfaf while deliberately preserving PENDING_OWNER_REVIEW and DRAFT_PENDING_DESIGN_ACCEPTANCE until an explicit owner decision.
-
-### Remaining work
-
-- Complete/review the selected Direction A — The Dossier interactive responsive/native/print/share prototype against the reconciled T08A/T18 state matrix, bind the exact prototype reference/revision, and obtain explicit owner design_acceptance in docs/design/CLAUDE_DESIGN_ACCEPTANCE.md before promoting T10 or the token status.
+Pre-acceptance implementation history: PR #14 commit c5463a4 added contract-driven draft tokens and the state/component handoff; PR #23 packaged the production-aware Claude Design handoff; PR #30 reconciled the design package with merged T08A/T18 product truth and intentionally left PENDING_OWNER_REVIEW / DRAFT_PENDING_DESIGN_ACCEPTANCE until the owner decision. Final accepted state is recorded separately in completion_evidence.
 
 ### Acceptance evidence
 
@@ -1049,6 +1045,8 @@ Validation profiles: [docs](#validation-docs), [contracts](#validation-contracts
 - `design_acceptance`: Owner acceptance of real contract-driven web/native/report design.
 
 No approval is created by this task brief. Mock/disabled implementation is not authorization for live collection, charges, signing or release.
+
+Historical completion evidence: Owner explicitly accepted Direction A — The Dossier with changes on 2026-09-29, bound to Inktrospect mobile app design (2).zip sha256:89b43380609dec56bdb82c284f0f6beb4c097692273ef13a3b23deb143ff7db5 (prototype internal sync 2026-09-28T19:26:00Z) and repo reconciliation baseline 53bcb9743eeb7fa96fc9affb68fc949c30fd25c0. Accepted semantic design tokens are design-tokens/1.0; limitations/downstream ownership are recorded in docs/design/ACCEPTED_DOSSIER_REFERENCE.md and docs/design/CLAUDE_DESIGN_ACCEPTANCE.md. Qualification head 4a786230fcb9d70c1c8f75bba8b02c73ec2aad25 passed CI run 36506833905 on Python 3.10/3.11/3.12 including full pytest/fault injection/wheel smoke, Roadmap integrity run 36506833900 including derived T29 readiness, and Application environments run 36506833890 including backend/PostgreSQL, web/render/accessibility and live Free upload-to-export.
 
 [Back to task table](#task-table) · [Documentation index](00-index.md) · [Execution sequence](20-end-to-end-build-sequence.md)
 
