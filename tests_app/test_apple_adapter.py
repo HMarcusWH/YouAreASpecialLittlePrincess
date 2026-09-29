@@ -160,6 +160,13 @@ def test_purchase_jws_binds_account_product_bundle_and_environment():
     assert revoked.state is payments.PurchaseState.REVOKED and revoked.refunded_at is not None
 
 
+def test_app_account_token_must_be_a_canonical_uuid():
+    setup = Setup()
+    with pytest.raises(InvalidInput) as err:
+        setup.provider.verify_purchase(setup.sign(setup.txn(account="not-a-uuid")), ACCOUNT, setup.ctx())
+    assert err.value.code == "apple_account_token_invalid"
+
+
 def test_wrong_bundle_environment_and_untrusted_certificate_fail_closed():
     setup = Setup()
     bad = setup.txn()

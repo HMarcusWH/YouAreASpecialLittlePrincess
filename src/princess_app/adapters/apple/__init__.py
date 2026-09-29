@@ -9,6 +9,7 @@ from __future__ import annotations
 import base64
 import json
 import re
+import uuid
 from datetime import datetime, timedelta, timezone
 from typing import Any, Mapping, Sequence
 from urllib.parse import quote
@@ -252,7 +253,7 @@ class AppleAppStorePaymentProvider:
         if account_ref is None:
             binding = port.AccountBinding.UNKNOWN
         elif isinstance(account_ref, str):
-            require_opaque_id(account_ref, "account_ref")
+            account_ref = _app_account_token(account_ref)
             binding = (port.AccountBinding.MATCHED if expected_account_ref and account_ref == expected_account_ref
                        else port.AccountBinding.MISMATCHED if expected_account_ref else port.AccountBinding.UNKNOWN)
         else:
@@ -451,6 +452,17 @@ def _verify_issued_by(child: x509.Certificate, issuer: x509.Certificate) -> None
         raise
     except Exception:
         raise Unauthenticated("apple_certificate_chain") from None
+
+
+def _app_account_token(value: str) -> str:
+    try:
+        parsed = uuid.UUID(value)
+    except (ValueError, AttributeError):
+        raise InvalidInput("apple_account_token_invalid") from None
+    canonical = str(parsed)
+    if value.lower() != canonical:
+        raise InvalidInput("apple_account_token_invalid")
+    return canonical
 
 
 def _provider_id(value: Any, code: str) -> str:

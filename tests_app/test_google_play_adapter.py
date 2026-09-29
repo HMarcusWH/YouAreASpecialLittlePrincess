@@ -152,6 +152,14 @@ def test_productsv2_verification_binds_purchase_token_account_and_product():
     assert setup.provider.verify_purchase(TOKEN, ACCOUNT, setup.ctx()).state is payments.PurchaseState.REFUNDED
 
 
+def test_obfuscated_account_binding_honors_play_length_limit():
+    setup = Setup()
+    setup.purchase = setup.product(account="a" * 65)
+    with pytest.raises(InvalidInput) as err:
+        setup.provider.verify_purchase(TOKEN, ACCOUNT, setup.ctx())
+    assert err.value.code == "google_account_binding_invalid"
+
+
 def test_sandbox_requires_a_test_purchase_and_unknown_product_never_grants():
     setup = Setup()
     setup.purchase = setup.product()

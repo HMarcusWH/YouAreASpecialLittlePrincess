@@ -306,6 +306,8 @@ class GooglePlayPaymentProvider:
         if account_ref is None:
             binding = port.AccountBinding.UNKNOWN
         elif isinstance(account_ref, str):
+            if len(account_ref) > 64:
+                raise InvalidInput("google_account_binding_invalid")
             require_opaque_id(account_ref, "account_ref")
             binding = (port.AccountBinding.MATCHED if expected_account_ref and account_ref == expected_account_ref
                        else port.AccountBinding.MISMATCHED if expected_account_ref else port.AccountBinding.UNKNOWN)
