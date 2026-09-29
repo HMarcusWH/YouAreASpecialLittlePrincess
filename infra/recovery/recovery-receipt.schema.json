@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "recovery-receipt.schema.json",
+  "title": "RecoveryReceiptV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version", "environment", "synthetic_fixture", "production_claim",
+    "database_backup_format", "backup_sha256", "backup_size_bytes",
+    "alembic_revision_before", "alembic_revision_after", "restore_elapsed_ms",
+    "recovery_elapsed_ms", "resurrection_observed", "tombstone_replay",
+    "second_replay", "object_erasure_verified", "corrupt_backup_rejected",
+    "rpo_target", "rto_target", "result"
+  ],
+  "properties": {
+    "version": {"const": "recovery-receipt/1"},
+    "environment": {"const": "test"},
+    "synthetic_fixture": {"const": true},
+    "production_claim": {"const": false},
+    "database_backup_format": {"const": "postgres-custom"},
+    "backup_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "backup_size_bytes": {"type": "integer", "minimum": 1},
+    "alembic_revision_before": {"type": "string", "minLength": 1, "maxLength": 128},
+    "alembic_revision_after": {"type": "string", "minLength": 1, "maxLength": 128},
+    "restore_elapsed_ms": {"type": "integer", "minimum": 0},
+    "recovery_elapsed_ms": {"type": "integer", "minimum": 0},
+    "resurrection_observed": {
+      "type": "object", "additionalProperties": false,
+      "required": ["capture", "account", "permission"],
+      "properties": {
+        "capture": {"const": true}, "account": {"const": true}, "permission": {"const": true}
+      }
+    },
+    "tombstone_replay": {"$ref": "#/$defs/counts"},
+    "second_replay": {"$ref": "#/$defs/counts"},
+    "object_erasure_verified": {"const": true},
+    "corrupt_backup_rejected": {"const": true},
+    "rpo_target": {"type": "null"},
+    "rto_target": {"type": "null"},
+    "result": {"const": "PASS"}
+  },
+  "$defs": {
+    "counts": {
+      "type": "object", "additionalProperties": false,
+      "required": ["reapplied", "already", "unknown", "unreadable"],
+      "properties": {
+        "reapplied": {"type": "integer", "minimum": 0},
+        "already": {"type": "integer", "minimum": 0},
+        "unknown": {"type": "integer", "minimum": 0},
+        "unreadable": {"type": "integer", "minimum": 0}
+      }
+    }
+  }
+}
