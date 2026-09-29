@@ -4,8 +4,11 @@ import type { SecureSessionStore } from "../platform/contracts.ts";
 
 export class NativeSessionBoundary {
   readonly epoch = new SessionEpoch();
+  private readonly store: SecureSessionStore;
 
-  constructor(private readonly store: SecureSessionStore) {}
+  constructor(store: SecureSessionStore) {
+    this.store = store;
+  }
 
   async switchPrincipal(nextCredential: string | null) {
     this.epoch.switchPrincipal();

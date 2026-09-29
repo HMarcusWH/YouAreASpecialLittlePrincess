@@ -51,7 +51,11 @@ export class FakeNativePurchaseClient implements NativePurchaseClient {
 }
 
 export class AllowlistedDeepLinkRouter implements DeepLinkRouter {
-  constructor(private readonly allowedSchemes: ReadonlySet<string>) {}
+  private readonly allowedSchemes: ReadonlySet<string>;
+
+  constructor(allowedSchemes: ReadonlySet<string>) {
+    this.allowedSchemes = allowedSchemes;
+  }
 
   resolve(raw: string): NativeRoute | null {
     let url: URL;
