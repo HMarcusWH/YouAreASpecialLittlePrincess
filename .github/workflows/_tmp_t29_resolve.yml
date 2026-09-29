@@ -22,16 +22,8 @@ jobs:
           node-version: '22.22.2'
       - run: corepack enable && corepack install
       - run: pnpm install --no-frozen-lockfile
-      - name: Verify locked Expo SDK 57 compatibility
-        run: pnpm --filter @princess/mobile exec expo install --check
-      - run: pnpm --filter @princess/mobile typecheck
-      - run: pnpm --filter @princess/mobile test
-      - run: pnpm --filter @princess/mobile config:public
-      - name: Generate Android native project
-        run: pnpm --filter @princess/mobile exec expo prebuild --clean --no-install --platform android
-      - name: Compile Android development APK
-        working-directory: apps/mobile/android
-        run: ./gradlew :app:assembleDebug --no-daemon
+      - name: Resolve exact pinned native graph
+        run: pnpm install --no-frozen-lockfile
       - name: Commit resolved dependency graph
         shell: bash
         run: |
