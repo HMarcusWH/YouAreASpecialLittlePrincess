@@ -190,3 +190,19 @@ lock and excludes build/test tooling.
 This is packaging/qualification evidence, not a hosting decision. Current
 production provider modes still intentionally fail startup where live adapters
 are not approved/composed. See [runtime topology](runtime/README.md).
+
+
+## Provider-neutral restore rehearsal (T24)
+
+`infra/recovery/` now rehearses a real PostgreSQL custom-format
+`pg_dump`/`pg_restore` cycle using only synthetic test data. PostgreSQL is
+rolled back while the object/tombstone plane deliberately stays at the newer
+point in time. The drill proves that an old database really resurrects a
+deleted capture, account and permission grant, then runs the ordinary
+`princess_api.ops replay-tombstones` and erasure machinery to remove that
+resurrection again. A second replay must be idempotent.
+
+The generated `recovery-receipt/1` contains only hashes, timings and counts.
+CI timings are observations, **not** approved production RPO/RTO values. This
+does not select a managed PostgreSQL host or object/tombstone provider and does
+not prove their PITR, retention, version-deletion or regional guarantees.
