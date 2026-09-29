@@ -107,7 +107,11 @@ def build() -> dict[str, str]:
         "view.share.json": (premium, ProjectionRequest(
             "SHARE", CREATED, premium=UNLOCKED,
             share_scope=frozenset({"section.slant", "section.baseline"}))),
+        "view.share-v2.json": (report_v2, ProjectionRequest(
+            "SHARE", CREATED, share_scope=frozenset({"section.slant", "section.baseline"}))),
         "view.export-no-image.json": (report, ProjectionRequest("EXPORT", CREATED, include_source_image=False)),
+        "view.export-v2-no-image.json": (report_v2, ProjectionRequest(
+            "EXPORT", CREATED, include_source_image=False)),
         "view.owner-image-revoked.json": (report, ProjectionRequest(
             "OWNER", CREATED, source_image_available=False, actions=OWNER_ACTIONS)),
     }
