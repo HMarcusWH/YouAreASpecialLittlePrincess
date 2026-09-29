@@ -1,0 +1,31 @@
+{
+  "name": "@princess/mobile",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "expo-router/entry",
+  "scripts": {
+    "start": "expo start --dev-client",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "node --test \"test/**/*.test.ts\"",
+    "config:public": "expo config --type public",
+    "prebuild:android": "expo prebuild --clean --no-install --platform android",
+    "prebuild:ios": "expo prebuild --clean --no-install --platform ios"
+  },
+  "dependencies": {
+    "@princess/api-client": "workspace:*",
+    "@princess/contracts": "workspace:*",
+    "@princess/design-tokens": "workspace:*",
+    "@princess/report-core": "workspace:*",
+    "expo": "~57.0.17",
+    "expo-router": "~57.0.23",
+    "react": "19.2.3",
+    "react-native": "0.86.3"
+  },
+  "devDependencies": {
+    "@types/react": "~19.2.2",
+    "typescript": "~6.0.3"
+  }
+}
