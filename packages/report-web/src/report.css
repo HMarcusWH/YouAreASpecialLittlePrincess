@@ -28,7 +28,7 @@
   color: var(--color-text); font: inherit; }
 .pr-action button:disabled { color: var(--color-text-muted); border-style: dashed; }
 .pr-visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-@media print { .pr-actions { display: none; } .pr-report { max-width: none; } }
+@media print { .pr-actions, .pr-eyebrow { display: none; } .pr-report { max-width: none; } }
 /* Print mode: expanded, static, paged. */
 .pr-print { font-size: 10.5pt; }
 .pr-print .pr-section { break-inside: avoid-page; }
