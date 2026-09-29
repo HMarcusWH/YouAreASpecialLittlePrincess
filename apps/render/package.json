@@ -9,7 +9,9 @@
   "scripts": {
     "build": "esbuild src/cli.tsx --bundle --platform=node --target=node22 --format=esm --outfile=dist/render.mjs --loader:.css=text --jsx=automatic --external:playwright-core --banner:js=\"import { createRequire } from 'node:module'; const require = createRequire(import.meta.url);\" --log-level=warning",
     "typecheck": "tsc -p tsconfig.json",
-    "test": "pnpm run build && node --test \"test/**/*.test.ts\""
+    "test": "pnpm run build && node --test \"test/**/*.test.ts\"",
+    "inspect:test": "pnpm run build && node --test \"test/inspection.test.ts\"",
+    "inspect:artifacts": "pnpm run build && node scripts/render-inspection.mjs"
   },
   "dependencies": {
     "@princess/api-client": "workspace:*",

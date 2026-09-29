@@ -8,7 +8,7 @@ import { PrintReport, ShareCard, type Locale } from "@princess/report-web";
 import { chromium, type Browser } from "playwright-core";
 import { renderToStaticMarkup } from "react-dom/server";
 
-export const TEMPLATE_VERSION = "render-template/1";
+export const TEMPLATE_VERSION = "render-template/2";
 export type Layout = "A4" | "LETTER" | "CARD_SQUARE" | "CARD_STORY";
 const LAYOUTS = new Set<Layout>(["A4", "LETTER", "CARD_SQUARE", "CARD_STORY"]);
 const CARD_SIZE = { CARD_SQUARE: { width: 1080, height: 1080 }, CARD_STORY: { width: 1080, height: 1920 } } as const;

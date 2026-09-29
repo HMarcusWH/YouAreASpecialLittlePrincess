@@ -9,7 +9,8 @@ import { ReportView } from "./ReportView.tsx";
 
 const PRINT_TEXT: Record<Locale, Record<string, string>> = {
   en: {
-    "print.report": "Report", "print.generated": "Rendered", "print.method": "How this was made",
+    "print.report": "Report", "print.generated": "Rendered", "print.dossier": "Personal dossier",
+    "print.method": "How this was made",
     "print.method_text": "Every value comes from deterministic image measurement of your photo. Computed proxies are " +
       "engineering indices without calibration. Nothing is ranked against other writers unless a named reference " +
       "group is shown. This is not a personality, health or ability assessment.",
@@ -17,7 +18,8 @@ const PRINT_TEXT: Record<Locale, Record<string, string>> = {
     "card.context": "Handwriting measurements — not a personality test",
   },
   sv: {
-    "print.report": "Rapport", "print.generated": "Renderad", "print.method": "Så här togs den fram",
+    "print.report": "Rapport", "print.generated": "Renderad", "print.dossier": "Personlig dossier",
+    "print.method": "Så här togs den fram",
     "print.method_text": "Alla värden kommer från deterministisk bildmätning av ditt foto. Beräknade närmevärden är " +
       "tekniska index utan kalibrering. Inget rangordnas mot andra skribenter om ingen namngiven referensgrupp visas. " +
       "Detta är ingen bedömning av personlighet, hälsa eller förmåga.",
@@ -34,7 +36,16 @@ export function PrintReport({ view, locale, generatedAt }: { view: ReportViewMod
                                                              generatedAt: string }) {
   return (
     <div className="pr-print">
-      <ReportView view={{ ...view, actions: [] }} locale={locale} />
+      <header className="pr-print-cover">
+        <p className="pr-print-brand">Inktrospect</p>
+        <p className="pr-print-kicker">{p(locale, "print.dossier")}</p>
+        <h1>{t(locale, `projection.${view.projection}`)}</h1>
+        <p className="pr-print-meta">
+          {p(locale, "print.report")} {view.source_report_id} · {t(locale, "report.revision")} {view.source_revision}
+          {" · "}{p(locale, "print.generated")} {generatedAt}
+        </p>
+      </header>
+      <ReportView view={{ ...view, actions: [] }} locale={locale} showHeader={false} />
       <section className="pr-section pr-colophon" aria-labelledby="colophon">
         <h2 id="colophon">{p(locale, "print.method")}</h2>
         <p>{p(locale, "print.method_text")}</p>
@@ -70,8 +81,10 @@ export function ShareCard({ view, locale, shape }: { view: ReportViewModel; loca
   const facts = cardFacts(view, shape === "story" ? 6 : 4);
   return (
     <div className={`pr-card pr-card-${shape}`} lang={locale}>
-      <p className="pr-card-brand">Inktrospect</p>
-      <p className="pr-card-context">{p(locale, "card.context")}</p>
+      <header className="pr-card-header">
+        <p className="pr-card-brand">Inktrospect</p>
+        <p className="pr-card-context">{p(locale, "card.context")}</p>
+      </header>
       <dl className="pr-card-facts">
         {facts.map((fact) => {
           const formatted = formatFact(fact, locale);

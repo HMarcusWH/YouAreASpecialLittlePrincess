@@ -28,21 +28,47 @@
   color: var(--color-text); font: inherit; }
 .pr-action button:disabled { color: var(--color-text-muted); border-style: dashed; }
 .pr-visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-@media print { .pr-actions, .pr-eyebrow { display: none; } .pr-report { max-width: none; } }
+@media print {
+  .pr-actions, .pr-eyebrow { display: none; }
+  .pr-report { max-width: none; }
+}
 /* Print mode: expanded, static, paged. */
-.pr-print { font-size: 10.5pt; }
+.pr-print { font-size: 10.5pt; color: var(--color-text); }
+.pr-print-cover { margin: 0 0 var(--space-7); padding: 0 0 var(--space-6);
+  border-bottom: 2px solid var(--color-accent); break-after: avoid; }
+.pr-print-brand { margin: 0; color: var(--color-accent); font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-sm); letter-spacing: var(--font-tracking-cap); text-transform: uppercase; }
+.pr-print-kicker { margin: var(--space-4) 0 var(--space-2); font-family: var(--font-family-numeric);
+  font-size: var(--font-size-cap); letter-spacing: var(--font-tracking-cap); text-transform: uppercase; }
+.pr-print-cover h1 { margin: 0 0 var(--space-3); font-size: var(--font-size-display-sm);
+  line-height: var(--font-line-height-display); font-weight: var(--font-weight-light);
+  letter-spacing: var(--font-tracking-display); }
+.pr-print-meta { margin: 0; color: var(--color-text-muted); font-size: var(--font-size-sm);
+  font-family: var(--font-family-numeric); overflow-wrap: anywhere; }
+.pr-print .pr-first-reveal { margin: 0 0 var(--space-6); padding: var(--space-5);
+  border: 1px solid var(--color-border); border-left: 4px solid var(--color-accent);
+  background: var(--color-surface-raised); break-inside: avoid-page; }
+.pr-print .pr-first-reveal .pr-highlight { margin: 0; padding: var(--space-3) 0;
+  border-top: 1px solid var(--color-border); break-inside: avoid-page; }
+.pr-print .pr-first-reveal .pr-highlight:first-of-type { border-top: 0; padding-top: 0; }
 .pr-print .pr-section { break-inside: avoid-page; }
-.pr-print .pr-facts tr { break-inside: avoid; }
+.pr-print .pr-section > h2, .pr-print .pr-evidence-block > h3 { break-after: avoid-page; }
+.pr-print .pr-facts tr, .pr-print .pr-evidence-table tr, .pr-print figure { break-inside: avoid; }
 .pr-print .pr-table-wrap { overflow: visible; }
-.pr-colophon { border-top: 1px solid var(--color-border); padding-top: var(--space-4); }
+.pr-print table { table-layout: fixed; }
+.pr-print th, .pr-print td { overflow-wrap: anywhere; }
+.pr-colophon { border-top: 1px solid var(--color-border); padding-top: var(--space-4); break-inside: avoid-page; }
 /* Share cards: fixed canvases, redacted by construction (no image, no names). */
 .pr-card { display: flex; flex-direction: column; justify-content: space-between; padding: 72px; box-sizing: border-box;
-  background: var(--color-surface-sunken); color: var(--color-text); font-family: var(--font-family-text); }
+  overflow: hidden; border: 1px solid var(--color-border-strong);
+  background: linear-gradient(155deg, var(--color-surface-raised) 0 38%, var(--color-surface-sunken) 38% 100%);
+  color: var(--color-text); font-family: var(--font-family-text); }
 .pr-card-square { width: 1080px; height: 1080px; }
 .pr-card-story { width: 1080px; height: 1920px; }
-.pr-card-brand { font-size: 64px; font-weight: var(--font-weight-bold); margin: 0; color: var(--color-accent); }
-.pr-card-context { font-size: 32px; margin: 0; color: var(--color-text-muted); }
-.pr-card-facts { display: grid; gap: 36px; margin: 0; }
+.pr-card-header { display: grid; gap: 16px; padding-bottom: 36px; border-bottom: 4px solid var(--color-accent); }
+.pr-card-brand { font-size: 64px; line-height: 1; font-weight: var(--font-weight-bold); margin: 0; color: var(--color-accent); }
+.pr-card-context { max-width: 760px; font-size: 32px; line-height: 1.25; margin: 0; color: var(--color-text-muted); }
+.pr-card-facts { display: grid; gap: 36px; margin: 0; align-content: center; }
 .pr-card-fact dt { font-size: 34px; color: var(--color-text-muted); overflow-wrap: anywhere; }
 .pr-card-fact dd { margin: 0; font-size: 60px; font-family: var(--font-family-numeric); font-variant-numeric: tabular-nums; }
 .pr-card-fact dd.pr-card-label { font-size: 28px; font-family: var(--font-family-text); color: var(--color-evidence-proxy); }

@@ -1797,12 +1797,12 @@ Export request/status and scoped artifact retrieval APIs with fact-equivalent pr
 
 ### Implementation evidence
 
-PR #14 commits 7a39bcf/ddb06bf plus review repairs implemented the offline Chromium PDF/PNG renderer, bounded export jobs, projection re-derivation/fencing, authorized storage/retrieval, share-card grants and a real live PDF download.
+PR #14 commits 7a39bcf/ddb06bf plus review repairs implemented the offline Chromium PDF/PNG renderer, bounded export jobs, projection re-derivation/fencing, authorized storage/retrieval, share-card grants and a real live PDF download. PR #34 upgrades the current-v2 Dossier renderer to render-template/2 with cache invalidation, generated v2 EXPORT/SHARE parity fixtures, A4/Letter EN/SV geometry/heading/reading-order checks, fixed square/story card bounds, retained full-size synthetic artifacts and manual visual inspection recorded in docs/release/t21-render-inspection.md. Code head b9ba872b3c3fabf298648afe6b5d88fc9c7d87f1 passed CI 36572934032, Roadmap integrity 36572933495 and Application environments 36572933558; artifact 11036491530 was inspected with no clipping, overlaps, blank pages or source-image leakage observed.
 
 ### Remaining work
 
-- Complete final design/integration review against the owner-accepted T10 design, including actual rendered-page inspection, clipping/reading-order and accessibility evidence.
-- When T18/T20 add comparison/history/Premium content, add their parity fixtures before those owning tasks claim export parity; do not generate missing content inside T21.
+- Completion status remains pending until hard predecessor T17 is DONE; no additional T21-specific implementation/design/render review is currently identified.
+- When T18/T20 add comparison/history/Premium content, those owning tasks must add their own parity fixtures before claiming export parity; T21 does not generate absent content.
 
 ### Acceptance evidence
 

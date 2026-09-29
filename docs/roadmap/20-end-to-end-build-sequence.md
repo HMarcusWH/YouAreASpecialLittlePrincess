@@ -20,7 +20,7 @@ The [post-PR14 reconciliation](23-post-pr14-reconciliation.md) is retained as hi
 
 - **READY planned work:** none at this graph state while T29 is actively claimed.
 - **Active incomplete work:** T11 (human pilot gates/real evidence), T17 (production identity plus accepted-design integration), T19 (real payment rails/sandbox evidence and product policy), T24 (deployment/recovery/live providers) and T29 (signed-device/IAP plus live-processor evidence).
-- **Implemented pending review:** T21 (final accepted-design integration/render review).
+- **Implemented pending review:** T21 (task-specific accepted-design Dossier print/share integration and full-size render review are complete; machine closure waits on hard predecessor T17).
 - **Completed since PR #14:** T10 accepted Inktrospect/Dossier design handoff, T15 provider-independent Premium adapter/runtime work, T08A calibration-independent presentation/first-reveal policy and T18 deterministic pair/history comparison are DONE; live model activation/evaluation and population calibration remain separately gated.
 - **Native foundation:** T29 is IN_PROGRESS after establishing the shared Expo/RN scaffold, native ports, exact dependency matrix and cross-platform compile qualification.
 - **Optional enhancement:** T07 remains non-blocking if omitted from the approved marketed scope.

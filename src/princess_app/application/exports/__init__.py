@@ -48,7 +48,7 @@ from ...domain.permissions import Scope
 from ..permissions import PermissionService
 from ..reports import ReportAccessResolver, ReportReader, ReportStore, ShareAccess
 
-TEMPLATE_VERSION = "render-template/1"
+TEMPLATE_VERSION = "render-template/2"
 DOCUMENT_LAYOUTS = frozenset({"A4", "LETTER"})
 CARD_LAYOUTS = frozenset({"CARD_SQUARE", "CARD_STORY"})
 MEDIA_TYPES = {"A4": "application/pdf", "LETTER": "application/pdf",

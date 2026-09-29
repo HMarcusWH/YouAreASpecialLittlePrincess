@@ -139,9 +139,9 @@ export function ActionBar({ actions, locale, onAction }: { actions: readonly Act
   );
 }
 
-export function ReportView({ view, locale, evidence, onAction }: {
+export function ReportView({ view, locale, evidence, onAction, showHeader = true }: {
   view: ReportViewModel; locale: Locale; evidence?: EvidenceBundle | null;
-  onAction?: (kind: Action["kind"]) => void;
+  onAction?: (kind: Action["kind"]) => void; showHeader?: boolean;
 }) {
   const facts = new Map(view.facts.map((f) => [f.fact_id, f]));
   const isHighlight = (section: ReportSection) =>
@@ -151,11 +151,13 @@ export function ReportView({ view, locale, evidence, onAction }: {
 
   return (
     <article className="pr-report pr-dossier" data-projection={view.projection} lang={locale}>
-      <header className="pr-header pr-dossier-header">
-        <p className="pr-eyebrow">{t(locale, "report.dossier")}</p>
-        <h1>{t(locale, `projection.${view.projection}`)}</h1>
-        <p className="pr-hint">{t(locale, "report.revision")} {view.source_revision}</p>
-      </header>
+      {showHeader && (
+        <header className="pr-header pr-dossier-header">
+          <p className="pr-eyebrow">{t(locale, "report.dossier")}</p>
+          <h1>{t(locale, `projection.${view.projection}`)}</h1>
+          <p className="pr-hint">{t(locale, "report.revision")} {view.source_revision}</p>
+        </header>
+      )}
 
       {highlights.length > 0 && (
         <section className="pr-first-reveal" aria-label={t(locale, "report.first_reveal")}>
