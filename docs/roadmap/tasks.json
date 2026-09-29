@@ -2053,7 +2053,7 @@
     {
       "id": "T29",
       "title": "Shared native foundation and compatibility spike",
-      "status": "PLANNED",
+      "status": "IN_PROGRESS",
       "depends_on": [
         "T01",
         "T02",
@@ -2118,6 +2118,12 @@
       ],
       "rollback": [
         "Rebuild native binaries for changed modules/entitlements; do not rely on OTA to bypass native/store compatibility."
+      ],
+      "implementation_evidence": "T29 implementation started on task/T29-native-foundation from main 4c7d6df4b6830fc6553fde9bf84e5a20f9223120. The branch contains an Expo SDK 57 / React Native 0.86 native workspace, accepted Dossier token consumption, typed/fake platform ports, real capture/secure-store/native-module compatibility imports and account-switch lifecycle tests. Exact package/prebuild/native-build qualification is in progress.",
+      "remaining_work": [
+        "Resolve and lock the exact Expo SDK 57 native-module set; qualify TypeScript/tests, Expo config/prebuild and real native development builds.",
+        "Record the compatibility/build/device matrix and establish the native validation profile/workflow.",
+        "Physical-device IAP and signed-development references remain gated on native_signing_accounts; live provider composition remains gated on processor_retention_contracts."
       ]
     },
     {
