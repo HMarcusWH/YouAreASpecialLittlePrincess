@@ -14,7 +14,7 @@ from princess_app.adapters.postgres.access import PostgresReportAccess
 from princess_app.adapters.postgres.exports import PostgresExportRepository
 from princess_app.adapters.postgres.stores import PostgresReportStore
 from princess_app.adapters.render import SubprocessRenderer
-from princess_app.application.exports import ExportService, ExportWorker, render_asset_id
+from princess_app.application.exports import TEMPLATE_VERSION, ExportService, ExportWorker, render_asset_id
 from princess_app.application.reports import ReportReader
 from princess_app.domain.permissions import Decision, Scope
 from princess_app.ports.base import (
@@ -47,6 +47,10 @@ class FakeRenderer:
             raise self.fail_with
         digest = hashlib.sha256(json.dumps(view, sort_keys=True).encode()).hexdigest().encode()
         return (b"%PDF-1.7\n" if layout in ("A4", "LETTER") else b"\x89PNG\r\n\x1a\n") + digest
+
+
+def test_renderer_template_v2_is_the_cache_authority():
+    assert TEMPLATE_VERSION == "render-template/2"
 
 
 class ExportIds(SequentialIds):

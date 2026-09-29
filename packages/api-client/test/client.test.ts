@@ -12,7 +12,8 @@ const fixture = (name: string) =>
 
 test("every shared view fixture passes the runtime guard", () => {
   for (const name of ["view.free.json", "view.free-v2.json", "view.owner-premium.json",
-                      "view.owner-image-revoked.json", "view.share.json", "view.export-no-image.json"]) {
+                      "view.owner-image-revoked.json", "view.share.json", "view.share-v2.json",
+                      "view.export-no-image.json", "view.export-v2-no-image.json"]) {
     const view = parseReportView(fixture(name));
     assert.ok(view.facts.length >= 0 && view.contract_version.startsWith("1."), name);
   }
