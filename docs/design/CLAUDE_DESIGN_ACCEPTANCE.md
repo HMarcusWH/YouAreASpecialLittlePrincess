@@ -81,6 +81,14 @@ The product/design owner explicitly accepted Direction A — The Dossier on 2026
 - Prototype webfont loading is not approval of remote font hosting/licensing; the accepted typography direction is represented by `design-tokens/1.0`.
 - Prototype sign-in/provider and system purchase/share sheets remain implementation placeholders owned by their downstream tasks.
 
+## Qualification evidence
+
+Acceptance/token/documentation head `4a786230fcb9d70c1c8f75bba8b02c73ec2aad25` passed:
+
+- CI run `36506833905`: Python 3.10/3.11/3.12, generated-contract/token checks, full pytest, consent/product-contract fault injection, research checks and installed-wheel smoke.
+- Roadmap integrity run `36506833900`: task graph/backlog/link tooling, including T10 DONE → T29 derived READY regression.
+- Application environments run `36506833890`: backend/PostgreSQL, TypeScript, render/package tests, browser/accessibility fixtures and isolated live Free upload → report → PDF export.
+
 ## Owner decision
 
 Decision: **ACCEPTED_WITH_CHANGES**

@@ -41,6 +41,10 @@ The canonical accepted semantic tokens are `packages/design-tokens/tokens.json` 
 7. **Identity remains a separate implementation decision.** Prototype sign-in is a placeholder; ADR-002/provider work remains T17/T24 scope.
 8. **Commercial/provider/system sheets remain schematic.** T19/T20/T24/T30/T31 own real provider behavior, policy and platform UI integration.
 
+## Repository qualification
+
+The accepted-token/documentation implementation was qualified at `4a786230fcb9d70c1c8f75bba8b02c73ec2aad25` with CI `36506833905`, Roadmap integrity `36506833900` and Application environments `36506833890` all passing. The browser qualification includes dark-mode consumption of the canonical token source rather than a hard-coded pre-Dossier color.
+
 ## Downstream ownership
 
 - **T17:** production web Dossier integration, `individual-report/2` activation, production identity/cross-device recovery.
