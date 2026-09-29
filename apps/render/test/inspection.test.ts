@@ -36,10 +36,10 @@ test("v2 Dossier print markup has bounded geometry and logical reading order", {
 
         const result = await page.evaluate(() => {
           const root = document.documentElement;
-          const headings = [...document.querySelectorAll("h1,h2,h3")].map((node) => Number(node.tagName.slice(1)));
-          const blocks = [...document.querySelectorAll(
+          const headings = Array.from(document.querySelectorAll("h1,h2,h3")).map((node) => Number(node.tagName.slice(1)));
+          const blocks = Array.from(document.querySelectorAll(
             ".pr-print-cover,.pr-first-reveal,.pr-dossier-body,.pr-colophon,table"
-          )];
+          ));
           const clipped = blocks.filter((node) => {
             const box = node.getBoundingClientRect();
             return box.left < -1 || box.right > window.innerWidth + 1;

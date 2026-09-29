@@ -13,7 +13,7 @@
       "method_version": "1.0.0",
       "precision": 1,
       "quality": {
-        "confidence": 1,
+        "confidence": 1.0,
         "confidence_kind": "EXACT_CONDITIONAL",
         "missing_reason": null,
         "n_observations": 1,
@@ -35,7 +35,7 @@
       "method_version": "1.0.0",
       "precision": 1,
       "quality": {
-        "confidence": 1,
+        "confidence": 1.0,
         "confidence_kind": "EXACT_CONDITIONAL",
         "missing_reason": null,
         "n_observations": 1,
@@ -57,7 +57,7 @@
       "method_version": "1.0.0",
       "precision": 2,
       "quality": {
-        "confidence": 1,
+        "confidence": 1.0,
         "confidence_kind": "EXACT_CONDITIONAL",
         "missing_reason": null,
         "n_observations": 1,
@@ -79,7 +79,7 @@
       "method_version": "1.0.0",
       "precision": 2,
       "quality": {
-        "confidence": 1,
+        "confidence": 1.0,
         "confidence_kind": "EXACT_CONDITIONAL",
         "missing_reason": null,
         "n_observations": 1,
@@ -279,7 +279,7 @@
         "component_60"
       ],
       "unit": "px",
-      "value": 18
+      "value": 18.0
     },
     {
       "availability": "UNCALIBRATED",
@@ -1023,7 +1023,7 @@
         "component_59"
       ],
       "unit": "ratio",
-      "value": 0
+      "value": 0.0
     },
     {
       "availability": "UNCALIBRATED",
@@ -1403,7 +1403,7 @@
         "line_2"
       ],
       "unit": "px",
-      "value": 47
+      "value": 47.0
     },
     {
       "availability": "UNCALIBRATED",
