@@ -54,6 +54,12 @@ def test_state_matrix_covers_t10_required_design_acceptance_surface():
     assert {"partial_missing", "uncalibrated", "reference_unavailable", "image_revoked"} <= screens["free_report"]
     assert {"legacy_v1_without_highlight", "server_owned_highlight_available", "no_eligible_highlight", "source_image_not_retained"} == screens["first_reveal"]
     assert matrix["planned_owners"]["first_reveal"] == ["T17"]
+    assert {
+        "comparison_pair_available", "comparison_history_available", "insufficient_common_coverage",
+        "planned_invitation_sent", "planned_invitation_accepted",
+        "planned_invitation_declined", "planned_invitation_revoked",
+    } == screens["pair_invitation_comparison"]
+    assert matrix["planned_owners"]["pair_invitation_comparison"] == ["T22"]
 
     assert set(matrix["availability_states"]) == {
         "READY", "UNCALIBRATED", "MISSING", "NOT_IMPLEMENTED", "INELIGIBLE",
@@ -80,12 +86,29 @@ def test_every_required_fixture_mapping_points_to_checked_in_synthetic_fixture()
             assert isinstance(value, dict)
 
 
+def test_t18_comparison_handoff_uses_real_fixtures_but_keeps_t22_invitation_planned():
+    manifest = load("claude-design-import.json")
+    matrix = load("claude-design-state-matrix.json")
+    fixtures = set(manifest["synthetic_fixtures"])
+    assert {
+        "fixtures/comparisons/pair-ab.json",
+        "fixtures/comparisons/history.json",
+        "fixtures/comparisons/no-overlap.json",
+    } <= fixtures
+    mapping = matrix["required_fixture_mapping"]
+    assert mapping["comparison_pair"] == "fixtures/comparisons/pair-ab.json"
+    assert mapping["comparison_history"] == "fixtures/comparisons/history.json"
+    assert mapping["comparison_no_overlap"] == "fixtures/comparisons/no-overlap.json"
+    assert matrix["planned_owners"]["pair_invitation_comparison"] == ["T22"]
+
+
 def test_handoff_baseline_is_consistent_and_client_presentation_surface_stays_stripped():
     manifest = load("claude-design-import.json")
     acceptance = (DESIGN / "CLAUDE_DESIGN_ACCEPTANCE.md").read_text(encoding="utf-8")
     baseline = manifest["source_baseline_sha"]
     assert len(baseline) == 40 and all(char in "0123456789abcdef" for char in baseline)
     assert f"`{baseline}`" in acceptance
+    assert baseline == "8163770f19cbbf3b5cf60fb77d0d52003dc2cfaf"
 
     client_surface = (ROOT / "packages/report-core/src/presentation.generated.ts").read_text(encoding="utf-8")
     assert "content.highlight.v1.slant.right.almost_all" in client_surface

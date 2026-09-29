@@ -9,7 +9,7 @@ This file is the review checklist for the Claude Design prototype. Its presence 
 - Claude Design project/prototype reference: **PENDING**
 - Working public brand: **Inktrospect** (repository/package namespaces remain unchanged)
 - Design direction selected: **A — The Dossier**
-- Repository baseline used for handoff: `30dea9cb94c22c406f83f69da57f6f7ae79a44b3`
+- Repository baseline used for handoff: `8163770f19cbbf3b5cf60fb77d0d52003dc2cfaf`
 - Prototype revision reviewed: **PENDING**
 
 ## Owner review checklist
@@ -27,7 +27,7 @@ This file is the review checklist for the Claude Design prototype. Its presence 
 - [ ] Purchase pending / Ask to Buy / cancelled / failed / restored / account mismatch
 - [ ] Premium generation queued / running / success / refusal / failure / not-applicable
 - [ ] Premium report keeps Free facts unchanged and labels AI synthesis
-- [ ] Pair/invitation states are clearly marked planned where implementation is not present
+- [ ] T18 pair/history/no-overlap comparison mechanics are shown from the real fixtures, while T22 invitation and other-owner authorization/release states remain clearly marked planned
 - [ ] History empty / revisions / deleted capture
 - [ ] Share preview / disabled / revoked
 - [ ] A4 / Letter export preview, image omission and failure
@@ -69,6 +69,14 @@ This file is the review checklist for the Claude Design prototype. Its presence 
 - [ ] Free remains useful and available during paid failures
 - [ ] Native design does not imply client measurement/credit authority
 - [ ] Planned features are labelled planned/illustrative rather than implemented
+
+## Acceptance-candidate repository state
+
+- Repository reconciliation baseline: `8163770f19cbbf3b5cf60fb77d0d52003dc2cfaf` (merged PR #29 / T18 deterministic comparison).
+- T08A First Reveal mechanics and the v2 report fixture are implemented product truth.
+- T18 pair/history/no-overlap comparison mechanics and fixtures are implemented product truth.
+- T17 still owns production Dossier rendering/activation; T22 still owns invitation and other-owner comparison release.
+- Design tokens remain `DRAFT_PENDING_DESIGN_ACCEPTANCE` until the owner explicitly accepts one concrete prototype reference/revision.
 
 ## Owner decision
 

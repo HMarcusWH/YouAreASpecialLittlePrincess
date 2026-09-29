@@ -1,6 +1,6 @@
 {
   "contract_version": "claude-design-import/v1",
-  "source_baseline_sha": "30dea9cb94c22c406f83f69da57f6f7ae79a44b3",
+  "source_baseline_sha": "8163770f19cbbf3b5cf60fb77d0d52003dc2cfaf",
   "entrypoint": "docs/design/CLAUDE_DESIGN_HANDOFF.md",
   "read_first": [
     "docs/design/CLAUDE_DESIGN_HANDOFF.md",
@@ -86,6 +86,7 @@
   "rules": [
     "Use repository contracts and synthetic fixtures as product truth; do not invent fields or unsupported statistics.",
     "Use the generated @princess/report-core presentation surface for reviewed labels, localized content and display domains; do not import server-owned highlight candidates, thresholds, weights or family ordering.",
+    "Treat T18 deterministic comparison mechanics and fixtures as implemented product truth; only T22 invitation/other-owner authorization/release remains PLANNED.",
     "Treat packages/report-web as existing DOM/print implementation context, not a requirement to reuse DOM patterns on native.",
     "Treat native canvases as design simulations until T29-T31 implement them.",
     "Do not upload real handwriting, participant data, production dumps, secrets or private provider payloads.",

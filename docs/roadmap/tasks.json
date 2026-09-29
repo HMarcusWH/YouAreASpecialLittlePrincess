@@ -880,9 +880,9 @@
       "rollback": [
         "Version tokens/templates and preserve content/contract semantics during design revisions."
       ],
-      "implementation_evidence": "PR #14 commit c5463a4 added contract-driven draft design tokens generated to CSS/TypeScript/Swift/Kotlin and a complete state/component handoff. The repository explicitly keeps the tokens DRAFT_PENDING_DESIGN_ACCEPTANCE. PR #23 packages a production-aware Claude Design handoff with an exact curated code/import manifest, complete responsive/native/print/share state matrix, synthetic fixture mapping, product-truth constraints and a pending owner acceptance record. The design tokens intentionally remain design-tokens/0.1-draft / DRAFT_PENDING_DESIGN_ACCEPTANCE.",
+      "implementation_evidence": "PR #14 commit c5463a4 added contract-driven draft design tokens generated to CSS/TypeScript/Swift/Kotlin and a complete state/component handoff. PR #23 packages the production-aware Claude Design handoff. PR #30 candidate handoff reconciliation updates the design package through merged T08A/T18 product truth and post-PR29 baseline 8163770f19cbbf3b5cf60fb77d0d52003dc2cfaf while deliberately preserving PENDING_OWNER_REVIEW and DRAFT_PENDING_DESIGN_ACCEPTANCE until an explicit owner decision.",
       "remaining_work": [
-        "Complete the selected Direction A — The Dossier interactive Inktrospect responsive/native/print/share prototype; keep backend-owned gaps explicitly PLANNED/ILLUSTRATIVE and hand them to T08A/T18 rather than implementing client authority; obtain explicit owner design_acceptance recorded in docs/design/CLAUDE_DESIGN_ACCEPTANCE.md before promoting T10 or the token status."
+        "Complete/review the selected Direction A — The Dossier interactive responsive/native/print/share prototype against the reconciled T08A/T18 state matrix, bind the exact prototype reference/revision, and obtain explicit owner design_acceptance in docs/design/CLAUDE_DESIGN_ACCEPTANCE.md before promoting T10 or the token status."
       ]
     },
     {
