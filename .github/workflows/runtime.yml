@@ -5,6 +5,7 @@ on:
     paths:
       - "infra/runtime/**"
       - "infra/recovery/**"
+      - "infra/operations/**"
       - "infra/environments/**"
       - "src/princess_app/**"
       - "apps/api/**"
@@ -20,6 +21,7 @@ on:
     paths:
       - "infra/runtime/**"
       - "infra/recovery/**"
+      - "infra/operations/**"
       - "infra/environments/**"
       - "src/princess_app/**"
       - "apps/api/**"
@@ -120,6 +122,46 @@ jobs:
               with urllib.request.urlopen(f"http://127.0.0.1:18000/health/{path}", timeout=5) as r:
                   assert r.status == 200 and json.load(r) == {"status":"ok"}
           PY
+
+          snapshot="$(docker compose -f infra/runtime/compose.smoke.yaml run --rm --entrypoint python api -m princess_api.ops snapshot)"
+          printf '%s\n' "$snapshot" | python3 -c '
+          import json,sys
+          doc=json.load(sys.stdin)
+          assert doc["version"]=="operational-snapshot/1"
+          assert doc["environment"]=="test"
+          assert doc["schema_revision"]=="0011_operational_snapshot"
+          assert set(doc["capabilities"])=={"premium_generation","commerce","uploads","sharing","notifications"}
+          assert all(set(o)=={"source","category","state","count","oldest_age_s","max_attempts"} for o in doc["observations"])
+          '
+          docker compose -f infra/runtime/compose.smoke.yaml run --rm --entrypoint python api \
+            -m princess_api.ops verify-disabled --switch commerce --switch premium_generation
+          docker compose -f infra/runtime/compose.smoke.yaml run --rm --entrypoint python api \
+            -m princess_api.ops check --policy /opt/princess/infra/operations/alert-policy.test.json
+
+          docker compose -f infra/runtime/compose.smoke.yaml stop analysis-worker
+          docker compose -f infra/runtime/compose.smoke.yaml exec -T db psql -U princess_admin -d princess_test \
+            -v ON_ERROR_STOP=1 -c "
+              INSERT INTO app.principal (principal_id, kind, created_at)
+              VALUES ('prn_ops_alert', 'ACCOUNT', now() - interval '2 minutes');
+              INSERT INTO app.job
+                (job_id, kind, owner_id, subject_ref, state, dedupe_key, created_at, updated_at)
+              VALUES
+                ('job_ops_alert', 'analysis', 'prn_ops_alert', 'subject_ops', 'QUEUED',
+                 'ops-alert', now() - interval '2 minutes', now() - interval '2 minutes');
+            "
+          set +e
+          alert_json="$(docker compose -f infra/runtime/compose.smoke.yaml run --rm --entrypoint python api \
+            -m princess_api.ops check --policy /opt/princess/infra/operations/alert-policy.test.json)"
+          alert_status=$?
+          set -e
+          test "$alert_status" -eq 2
+          printf '%s\n' "$alert_json" | python3 -c '
+          import json,sys
+          doc=json.load(sys.stdin)
+          assert doc["result"]=="ALERT"
+          assert [a["alert_code"] for a in doc["alerts"]]==["test.analysis_queue_stale"]
+          '
+
           docker compose -f infra/runtime/compose.smoke.yaml stop db
           python3 - <<'PY'
           import json, time, urllib.error, urllib.request
