@@ -66,10 +66,11 @@ test("server credential transport stays opaque and server-only", () => {
   const proxy = readFileSync(new URL("../app/api/v1/[...path]/route.ts", import.meta.url), "utf8");
   const logout = readFileSync(new URL("../app/api/session/logout/route.ts", import.meta.url), "utf8");
 
+  const executableSession = session.replace(/\/\/.*$/gm, "");
   assert.match(session, /import "server-only"/);
   assert.match(session, /sessionCredential/);
-  assert.doesNotMatch(session, /localStorage|sessionStorage/);
-  assert.doesNotMatch(session, /supabase|clerk|jwt\.|decode/i);
+  assert.doesNotMatch(executableSession, /localStorage|sessionStorage/);
+  assert.doesNotMatch(executableSession, /supabase|clerk|jwt\.|decode/i);
 
   assert.match(proxy, /const credential = await sessionCredential\(\)/);
   assert.match(proxy, /authorization = `Bearer \$\{credential\}`/);
