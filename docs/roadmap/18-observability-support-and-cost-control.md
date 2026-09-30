@@ -43,3 +43,21 @@ Maintain deployment manifests with API/schema/engine/model/prompt/benchmark/rule
 ## Product analytics contract
 
 Track only allowlisted events such as capture started, upload completed, report opened, offer viewed, checkout started, purchase verified, Premium published, export created, share dialog opened, invitation redeemed and deletion requested/completed. Separate counts at each step; a share-sheet callback is not confirmed social publication. Analytics outage does not block core transactions, and denial of optional tracking does not reduce paid functionality.
+
+
+## Qualified operational snapshot boundary
+
+T24 now exposes `operational-snapshot/1` from a fixed cross-tenant aggregate
+database function plus reviewed manifest/tombstone state. RLS remains in force
+for ordinary runtime reads; the SECURITY DEFINER function returns aggregates
+only and collapses non-enum job/topic values to `other`.
+
+The snapshot and `operational-alert-policy/1` are exporter-neutral. The
+checked-in test policy proves both PASS and ALERT paths in the final runtime
+image, including exact fixed alert codes. Production/staging policies are not
+checked in with invented thresholds: threshold values, routing, ownership and
+retention require deployed evidence and owner/provider decisions.
+
+A later telemetry adapter should translate these already-bounded observations
+into the existing TelemetryExporter port rather than issuing parallel ad hoc
+SQL or scraping private application tables.
