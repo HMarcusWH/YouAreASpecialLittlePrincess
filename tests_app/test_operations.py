@@ -60,6 +60,7 @@ def test_operational_function_aggregates_across_rls_without_granting_raw_cross_t
     assert found[("jobs", "other", "queued")].count == 1
     assert found[("outbox", "other", "pending")].count == 1
     rendered = json.dumps([row.to_dict() for row in rows], sort_keys=True)
+    assert alice.principal_id not in rendered and bob.principal_id not in rendered
     assert "ops-alice" not in rendered and "ops-bob" not in rendered
     assert "future-user-text-kind" not in rendered
     assert "user.free.text" not in rendered and "secret" not in rendered
