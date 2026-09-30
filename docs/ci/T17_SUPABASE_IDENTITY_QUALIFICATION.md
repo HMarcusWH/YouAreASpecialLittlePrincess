@@ -98,11 +98,11 @@ provider network calls. A synthetic PASS is never managed-project evidence.
 A technical PASS does not establish any of these:
 
 ```text
-provider selected                     OWNER DECISION
-processor terms                       REVIEWED
-region/data handling                  REVIEWED
-retention/deletion                    REVIEWED
-support/subprocessors                 REVIEWED
+provider selected                     OWNER DECISION REQUIRED
+processor terms                       SEPARATE REVIEW REQUIRED
+region/data handling                  SEPARATE REVIEW REQUIRED
+retention/deletion                    SEPARATE REVIEW REQUIRED
+support/subprocessors                 SEPARATE REVIEW REQUIRED
 ```
 
 Record those decisions separately with owner/date/scope evidence. The qualification receipt deliberately cannot
