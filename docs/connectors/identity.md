@@ -71,3 +71,10 @@ the project uses an out-of-profile signing configuration, a secret/service-role 
 session/authentication freshness, the signing key does not rotate for the live witness, reauthentication is not
 genuinely newer, or the existing adapter rejects any credential, qualification fails. Fix/review the account
 configuration; do not weaken the candidate verifier or durable freshness fence to manufacture a PASS.
+
+
+### Bounded Supabase JWKS network source
+
+PR #48 adds `SupabaseJwksSource` as a reusable network primitive for the already-reviewed candidate profile. The JWKS URL is derived only from the explicitly configured HTTPS issuer; token headers cannot supply `jku`, `x5u` or another key URL. Redirects are refused, decoded response bytes and key count are bounded, and HTTP/network failures are translated to typed redacted port errors. The qualification harness reuses this source so live qualification and later runtime composition cannot drift onto different JWKS-fetch policies.
+
+This is **composition preparation only**. `apps/api/princess_api/compose.py` and runtime preflight still reject every non-fake IdentityProvider. Supabase remains a CANDIDATE until the owner/provider/account gates above are actually satisfied; this network source is not a provider selection, managed-project PASS or production activation.
