@@ -17,14 +17,15 @@ AUD = "princess-api"
 
 def idp():
     clock = FakeClock()
-    return clock, FakeIdentityProvider(clock=clock)
+    return clock, FakeIdentityProvider(audience=AUD, clock=clock)
 
 
 def test_valid_token_yields_identity_without_invented_attributes():
     clock, provider = idp()
     token = provider.issue_token("user-1", AUD, session_id="s1")
-    identity = provider.verify_credential(token, AUD, ctx(clock))
+    identity = provider.verify_credential(token, ctx(clock))
     assert identity.binding_key == (provider.issuer, "user-1")
+    assert not hasattr(identity, "audience")
     assert identity.email is None and identity.email_verified is None  # unknown, not False
     assert identity.auth_time is None  # token issuance never invents reauthentication freshness
     assert provider.profile.supports(identity_port.VERIFY_CREDENTIAL)
@@ -50,7 +51,7 @@ def test_identity_rejections(case, code):
     elif case == "deleted":
         provider.delete_provider_account(provider.issuer, "user-1", ctx(clock))
     with pytest.raises(Unauthenticated) as err:
-        provider.verify_credential(token, AUD, ctx(clock))
+        provider.verify_credential(token, ctx(clock))
     assert err.value.code == code
 
 
@@ -59,21 +60,21 @@ def test_provider_deletion_requires_matching_issuer():
     token = provider.issue_token("user-1", AUD)
     with pytest.raises(InvalidInput):
         provider.delete_provider_account("https://other-issuer.invalid", "user-1", ctx(clock))
-    assert provider.verify_credential(token, AUD, ctx(clock)).subject == "user-1"
+    assert provider.verify_credential(token, ctx(clock)).subject == "user-1"
 
 
 def test_unverified_email_is_reported_as_supplied():
     clock, provider = idp()
     token = provider.issue_token("user-1", AUD, email="a@example.invalid", email_verified=False)
-    assert provider.verify_credential(token, AUD, ctx(clock)).email_verified is False
+    assert provider.verify_credential(token, ctx(clock)).email_verified is False
 
 def test_fake_auth_time_is_explicit_and_cannot_be_after_token_issuance():
     clock, provider = idp()
     authenticated = provider.issue_token("user-1", AUD, auth_time=clock.now())
-    assert provider.verify_credential(authenticated, AUD, ctx(clock)).auth_time == clock.now()
+    assert provider.verify_credential(authenticated, ctx(clock)).auth_time == clock.now()
     future = provider.issue_token("user-1", AUD, auth_time=clock.now() + timedelta(seconds=1))
     with pytest.raises(Unauthenticated) as err:
-        provider.verify_credential(future, AUD, ctx(clock))
+        provider.verify_credential(future, ctx(clock))
     assert err.value.code == "invalid_auth_time"
 
 

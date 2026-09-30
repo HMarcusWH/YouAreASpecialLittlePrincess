@@ -43,7 +43,7 @@ def setup():
     clock = FakeClock()
     key = rsa_key()
     source = Jwks(jwk(key, "k1"))
-    provider = OidcIdentityProvider(issuer=ISS, jwks_source=source, clock=clock, environment=Environment.STAGING,
+    provider = OidcIdentityProvider(issuer=ISS, audience=AUD, jwks_source=source, clock=clock, environment=Environment.STAGING,
                                     mode=ProviderMode.SANDBOX)
     return clock, key, source, provider
 
@@ -61,14 +61,14 @@ def ctx(clock):
 
 def test_valid_token_maps_only_supplied_claims(setup):
     clock, key, _, provider = setup
-    identity = provider.verify_credential(token(clock, key), AUD, ctx(clock))
+    identity = provider.verify_credential(token(clock, key), ctx(clock))
     assert identity.binding_key == (ISS, "user-1") and identity.session_id == "s1"
     assert provider.profile.supports(identity_port.VERIFY_CREDENTIAL)
     # No auth_time claim means the sign-in time is unknown (never iat), so the
     # logout/deletion fence fails closed for such tokens.
     assert identity.email is None and identity.email_verified is None and identity.auth_time is None
     signed_in = int(clock.now().timestamp()) - 60
-    assert provider.verify_credential(token(clock, key, auth_time=signed_in), AUD, ctx(clock)).auth_time is not None
+    assert provider.verify_credential(token(clock, key, auth_time=signed_in), ctx(clock)).auth_time is not None
 
 
 @pytest.mark.parametrize("typ", ["at+jwt", "application/at+jwt", "AT+JWT"])
@@ -78,7 +78,7 @@ def test_access_tokens_are_not_id_tokens(setup, typ):
     claims = {"iss": ISS, "aud": AUD, "sub": "user-1", "iat": now, "exp": now + 600}
     access = jwt.encode(claims, key, algorithm="RS256", headers={"kid": "k1", "typ": typ})
     with pytest.raises(Unauthenticated) as err:
-        provider.verify_credential(access, AUD, ctx(clock))
+        provider.verify_credential(access, ctx(clock))
     assert err.value.code == "not_an_id_token"
 
 
@@ -91,7 +91,7 @@ def test_access_tokens_are_not_id_tokens(setup, typ):
 def test_claim_rejections(setup, overrides, code):
     clock, key, _, provider = setup
     with pytest.raises(Unauthenticated) as err:
-        provider.verify_credential(token(clock, key, **overrides), AUD, ctx(clock))
+        provider.verify_credential(token(clock, key, **overrides), ctx(clock))
     assert err.value.code == code
 
 
@@ -100,22 +100,22 @@ def test_not_before_and_future_issued_at_are_rejected(setup):
     future = int(clock.now().timestamp()) + 3600
     for overrides in ({"nbf": future}, {"iat": future}):
         with pytest.raises(Unauthenticated) as err:
-            provider.verify_credential(token(clock, key, **overrides), AUD, ctx(clock))
+            provider.verify_credential(token(clock, key, **overrides), ctx(clock))
         assert err.value.code == "not_yet_valid"
 
 def test_auth_time_is_optional_but_malformed_or_future_freshness_is_rejected(setup):
     clock, key, _, provider = setup
-    assert provider.verify_credential(token(clock, key), AUD, ctx(clock)).auth_time is None
+    assert provider.verify_credential(token(clock, key), ctx(clock)).auth_time is None
     for value in ("not-a-time", int(clock.now().timestamp()) + 3600):
         with pytest.raises(Unauthenticated) as err:
-            provider.verify_credential(token(clock, key, auth_time=value), AUD, ctx(clock))
+            provider.verify_credential(token(clock, key, auth_time=value), ctx(clock))
         assert err.value.code == "invalid_auth_time"
 
 
 def test_token_issuance_time_is_never_substituted_for_authentication_time(setup):
     clock, key, _, provider = setup
     clock.advance(30)
-    identity = provider.verify_credential(token(clock, key, iat=int(clock.now().timestamp())), AUD, ctx(clock))
+    identity = provider.verify_credential(token(clock, key, iat=int(clock.now().timestamp())), ctx(clock))
     assert identity.auth_time is None
 
 
@@ -130,7 +130,7 @@ def test_algorithm_confusion_and_none_are_rejected(setup):
     unsigned = jwt.encode(claims, None, algorithm="none", headers={"kid": "k1"})
     for bad in (forged_hs, unsigned, "not.a.jwt"):
         with pytest.raises(Unauthenticated):
-            provider.verify_credential(bad, AUD, ctx(clock))
+            provider.verify_credential(bad, ctx(clock))
 
 
 def test_token_supplied_key_urls_are_never_followed(setup):
@@ -140,49 +140,49 @@ def test_token_supplied_key_urls_are_never_followed(setup):
     evil = jwt.encode({"iss": ISS, "aud": AUD, "sub": "u", "iat": now, "exp": now + 60}, attacker, algorithm="RS256",
                       headers={"kid": "k1", "jku": "https://evil.invalid/jwks.json"})
     with pytest.raises(Unauthenticated):
-        provider.verify_credential(evil, AUD, ctx(clock))
+        provider.verify_credential(evil, ctx(clock))
     assert source.calls == 1  # only the configured source was consulted
 
 
 def test_key_rotation_refreshes_once_and_throttles(setup):
     clock, key, source, provider = setup
-    provider.verify_credential(token(clock, key), AUD, ctx(clock))
+    provider.verify_credential(token(clock, key), ctx(clock))
     rotated = rsa_key()
     source.keys = [jwk(key, "k1"), jwk(rotated, "k2")]
     clock.advance(61)
-    assert provider.verify_credential(token(clock, rotated, kid="k2"), AUD, ctx(clock)).subject == "user-1"
+    assert provider.verify_credential(token(clock, rotated, kid="k2"), ctx(clock)).subject == "user-1"
     calls = source.calls
     for _ in range(5):
         with pytest.raises(Unauthenticated):
-            provider.verify_credential(token(clock, rotated, kid="unknown"), AUD, ctx(clock))
+            provider.verify_credential(token(clock, rotated, kid="unknown"), ctx(clock))
     assert source.calls == calls  # unknown kids cannot force a refresh storm
 
 
 def test_symmetric_keys_in_jwks_are_ignored():
     clock = FakeClock()
     source = Jwks({"kty": "oct", "kid": "k1", "k": "c2VjcmV0", "alg": "HS256"})
-    provider = OidcIdentityProvider(issuer=ISS, jwks_source=source, clock=clock, environment=Environment.STAGING,
+    provider = OidcIdentityProvider(issuer=ISS, audience=AUD, jwks_source=source, clock=clock, environment=Environment.STAGING,
                                     mode=ProviderMode.SANDBOX)
     now = int(clock.now().timestamp())
     forged = jwt.encode({"iss": ISS, "aud": AUD, "sub": "u", "iat": now, "exp": now + 60}, "secret",
                         algorithm="HS256", headers={"kid": "k1"})
     with pytest.raises(Unauthenticated):
-        provider.verify_credential(forged, AUD, ctx(clock))
+        provider.verify_credential(forged, ctx(clock))
 
 
 def test_es256_keys_and_mode_rules_and_unsupported_operations():
     clock = FakeClock()
     key = ec.generate_private_key(ec.SECP256R1())
-    provider = OidcIdentityProvider(issuer=ISS, jwks_source=Jwks(jwk(key, "e1", "ES256")), clock=clock,
+    provider = OidcIdentityProvider(issuer=ISS, audience=AUD, jwks_source=Jwks(jwk(key, "e1", "ES256")), clock=clock,
                                     environment=Environment.STAGING, mode=ProviderMode.SANDBOX)
-    assert provider.verify_credential(token(clock, key, kid="e1", alg="ES256"), AUD, ctx(clock)).subject == "user-1"
+    assert provider.verify_credential(token(clock, key, kid="e1", alg="ES256"), ctx(clock)).subject == "user-1"
     with pytest.raises(Unsupported):
         provider.revoke_session("s1", ctx(clock))
     with pytest.raises(InvalidInput):
-        OidcIdentityProvider(issuer=ISS, jwks_source=Jwks(), clock=clock, environment=Environment.PRODUCTION,
+        OidcIdentityProvider(issuer=ISS, audience=AUD, jwks_source=Jwks(), clock=clock, environment=Environment.PRODUCTION,
                              mode=ProviderMode.SANDBOX)
     with pytest.raises(ValueError):
-        OidcIdentityProvider(issuer=ISS, jwks_source=Jwks(), clock=clock, environment=Environment.STAGING,
+        OidcIdentityProvider(issuer=ISS, audience=AUD, jwks_source=Jwks(), clock=clock, environment=Environment.STAGING,
                              mode=ProviderMode.SANDBOX, allowed_algorithms=frozenset({"HS256"}))
 
 

@@ -179,9 +179,9 @@ AUD = "princess-api"
 
 def identity():
     clock = FakeClock()
-    provider = FakeIdentityProvider(clock=clock)
+    provider = FakeIdentityProvider(audience=AUD, clock=clock)
     store = InMemoryIdentityStore()
-    return clock, provider, store, IdentityService(provider, store, clock, SequentialIds(), AUD)
+    return clock, provider, store, IdentityService(provider, store, clock, SequentialIds())
 
 
 def ctx(clock):
@@ -308,11 +308,10 @@ def test_identity_service_rejects_future_auth_time_before_rebinding_state(monkey
     principal = svc.authenticate(provider.issue_token("sub-a", AUD), ctx(clock))
     svc.delete_account(principal, ctx(clock))
 
-    def impossible_freshness(_credential, expected_audience, _ctx):
+    def impossible_freshness(_credential, _ctx):
         return VerifiedIdentity(
             issuer=provider.issuer,
             subject="sub-a",
-            audience=expected_audience,
             expires_at=clock.now() + timedelta(hours=1),
             auth_time=clock.now() + timedelta(seconds=60),
         )

@@ -34,10 +34,10 @@ T0 = datetime(2026, 9, 27, 12, 0, tzinfo=timezone.utc)
 @pytest.fixture
 def client(app_db):
     clock = FakeClock(T0)
-    provider = FakeIdentityProvider(clock=clock)
+    provider = FakeIdentityProvider(audience="princess-api", clock=clock)
     services = Services(
         environment=Environment.TEST, clock=clock,
-        identity=IdentityService(provider, PostgresIdentityStore(app_db), clock, SequentialIds(), "princess-api"),
+        identity=IdentityService(provider, PostgresIdentityStore(app_db), clock, SequentialIds()),
         permissions=PermissionService(PostgresPermissionStore(app_db), clock, SequentialIds(),
                                       allow_draft_policy=True),
         report_store_for=lambda pid: PostgresReportStore(app_db, pid),
@@ -179,10 +179,10 @@ def test_guest_logout_everywhere_ends_the_capability(client):
 
 def test_dev_token_route_only_exists_in_local_and_test(app_db):
     clock = FakeClock(T0)
-    provider = FakeIdentityProvider(clock=clock, environment=Environment.PREVIEW)
+    provider = FakeIdentityProvider(audience="princess-api", clock=clock, environment=Environment.PREVIEW)
     services = Services(
         environment=Environment.PREVIEW, clock=clock,
-        identity=IdentityService(provider, PostgresIdentityStore(app_db), clock, SequentialIds(), "princess-api"),
+        identity=IdentityService(provider, PostgresIdentityStore(app_db), clock, SequentialIds()),
         permissions=PermissionService(PostgresPermissionStore(app_db), clock, SequentialIds(),
                                       allow_draft_policy=True),
         report_store_for=lambda pid: PostgresReportStore(app_db, pid), dev_identity=provider)
@@ -325,7 +325,7 @@ def _load_script(path: Path):
 
 def commerce_client(app_db, *, selling):  # noqa: D103
     clock = FakeClock(T0)
-    provider = FakeIdentityProvider(clock=clock)
+    provider = FakeIdentityProvider(audience="princess-api", clock=clock)
     permissions = PermissionService(PostgresPermissionStore(app_db), clock, SequentialIds(), allow_draft_policy=True)
     rails = {rail: FakePaymentProvider(rail, catalog=CATALOG, clock=clock, environment=Environment.TEST)
              for rail in PaymentRail}
@@ -334,7 +334,7 @@ def commerce_client(app_db, *, selling):  # noqa: D103
                                clock=clock, ids=SequentialIds(), environment=Environment.TEST)
     services = Services(
         environment=Environment.TEST, clock=clock,
-        identity=IdentityService(provider, PostgresIdentityStore(app_db), clock, SequentialIds(), "princess-api"),
+        identity=IdentityService(provider, PostgresIdentityStore(app_db), clock, SequentialIds()),
         permissions=permissions, report_store_for=lambda pid: PostgresReportStore(app_db, pid),
         kill_switches={"commerce": selling, "premium_generation": selling}, dev_identity=provider,
         commerce=commerce)
@@ -398,10 +398,10 @@ def test_push_bindings_and_mail_preferences_over_http(client, app_db):
     from princess_app.application.notifications import NotificationService
 
     _, clock = client
-    provider = FakeIdentityProvider(clock=clock)
+    provider = FakeIdentityProvider(audience="princess-api", clock=clock)
     api = TestClient(create_app(Services(
         environment=Environment.TEST, clock=clock,
-        identity=IdentityService(provider, PostgresIdentityStore(app_db), clock, SequentialIds(), "princess-api"),
+        identity=IdentityService(provider, PostgresIdentityStore(app_db), clock, SequentialIds()),
         permissions=PermissionService(PostgresPermissionStore(app_db), clock, SequentialIds(),
                                       allow_draft_policy=True),
         report_store_for=lambda pid: PostgresReportStore(app_db, pid), dev_identity=provider,
