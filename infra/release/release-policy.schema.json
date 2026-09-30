@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:princess:release:release-policy:1",
+  "title": "ReleasePolicy",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "rollout_order",
+    "database_downgrade_on_application_rollback",
+    "queue_state_requirement",
+    "api_route_exclusion_prefixes",
+    "exclude_health_routes",
+    "compatibility"
+  ],
+  "properties": {
+    "version": {
+      "const": "release-policy/1"
+    },
+    "rollout_order": {
+      "type": "array",
+      "prefixItems": [
+        {
+          "const": "MIGRATE_DATABASE_FORWARD"
+        },
+        {
+          "const": "DEPLOY_APPLICATION"
+        }
+      ],
+      "items": false,
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "database_downgrade_on_application_rollback": {
+      "const": false
+    },
+    "queue_state_requirement": {
+      "const": "DRAINED_OR_FENCED"
+    },
+    "api_route_exclusion_prefixes": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 128
+      }
+    },
+    "exclude_health_routes": {
+      "type": "boolean"
+    },
+    "compatibility": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "require_product_contract_major",
+        "require_base_route_subset",
+        "require_two_way_report_readability",
+        "require_same_runtime_platform"
+      ],
+      "properties": {
+        "require_product_contract_major": {
+          "const": true
+        },
+        "require_base_route_subset": {
+          "const": true
+        },
+        "require_two_way_report_readability": {
+          "const": true
+        },
+        "require_same_runtime_platform": {
+          "const": true
+        }
+      }
+    }
+  }
+}

@@ -157,3 +157,19 @@ The checked-in test policy has synthetic thresholds solely for CI. **PENDING
 DEPLOYMENT:** staging/production thresholds, named alert owners/escalation,
 dashboard/export destination and edge/global limits must be approved from
 actual deployed behavior; do not copy CI thresholds into an SLO.
+
+
+## Application artifact rollback without database downgrade
+
+The provider-neutral qualification contract is in `infra/release/`. Before an application rollback:
+
+1. Halt admission for the affected capability where a reviewed switch exists.
+2. Drain or fence candidate-only queued/in-flight work. `rollout-qualification/1` assumes `DRAINED_OR_FENCED`; it does not claim that an old worker can consume every job payload emitted by a newer runtime.
+3. Keep the database at the candidate Alembic head. **Do not run a database downgrade as part of application rollback.**
+4. Promote the immediately previous application artifact built from its own source/lock/Dockerfile.
+5. Verify API readiness and execute the qualified Free analysis/report-read smoke against the still-forward database.
+6. Keep deletion tombstones, financial compensating history, provider-attempt journals and revocations forward.
+
+CI proves this choreography with the current candidate/base pair and with the historical #38 runtime across the real
+`0010_provider_attempt → 0011_operational_snapshot` expansion. It does not select a production host/registry or
+replace provider-backed staging rollout exercises.

@@ -1,0 +1,19 @@
+{
+  "version": "release-policy/1",
+  "rollout_order": [
+    "MIGRATE_DATABASE_FORWARD",
+    "DEPLOY_APPLICATION"
+  ],
+  "database_downgrade_on_application_rollback": false,
+  "queue_state_requirement": "DRAINED_OR_FENCED",
+  "api_route_exclusion_prefixes": [
+    "/v1/dev/"
+  ],
+  "exclude_health_routes": true,
+  "compatibility": {
+    "require_product_contract_major": true,
+    "require_base_route_subset": true,
+    "require_two_way_report_readability": true,
+    "require_same_runtime_platform": true
+  }
+}
