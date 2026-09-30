@@ -4,25 +4,105 @@
   "title": "OperationalAlertPolicyV1",
   "type": "object",
   "additionalProperties": false,
-  "required": ["version", "environment", "rules"],
+  "required": [
+    "version",
+    "environment",
+    "rules"
+  ],
   "properties": {
-    "version": {"const": "operational-alert-policy/1"},
-    "environment": {"enum": ["local", "test", "preview", "staging", "production"]},
+    "version": {
+      "const": "operational-alert-policy/1"
+    },
+    "environment": {
+      "enum": [
+        "local",
+        "test",
+        "preview",
+        "staging",
+        "production"
+      ]
+    },
     "rules": {
       "type": "array",
       "maxItems": 64,
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["alert_code", "source", "category", "state", "measure", "operator", "threshold"],
+        "required": [
+          "alert_code",
+          "source",
+          "category",
+          "state",
+          "measure",
+          "operator",
+          "threshold"
+        ],
         "properties": {
-          "alert_code": {"type": "string", "pattern": "^[a-z][a-z0-9_.-]{0,63}$"},
-          "source": {"type": "string"},
-          "category": {"type": "string"},
-          "state": {"type": "string"},
-          "measure": {"enum": ["count", "oldest_age_s", "max_attempts"]},
-          "operator": {"enum": ["gt", "gte"]},
-          "threshold": {"type": "integer", "minimum": 0, "maximum": 2147483647}
+          "alert_code": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_.-]{0,63}$"
+          },
+          "source": {
+            "enum": [
+              "jobs",
+              "outbox",
+              "notifications",
+              "payment_events",
+              "commerce_completion",
+              "credit_reservations",
+              "premium_attempts",
+              "exports",
+              "privacy"
+            ]
+          },
+          "category": {
+            "enum": [
+              "analysis",
+              "premium",
+              "export",
+              "other",
+              "privacy",
+              "notification",
+              "mail",
+              "push",
+              "stripe",
+              "apple_app_store",
+              "google_play",
+              "all",
+              "tombstone"
+            ]
+          },
+          "state": {
+            "enum": [
+              "queued",
+              "leased",
+              "pending",
+              "failed",
+              "reserved",
+              "started",
+              "ambiguous",
+              "missing",
+              "unreadable"
+            ]
+          },
+          "measure": {
+            "enum": [
+              "count",
+              "oldest_age_s",
+              "max_attempts"
+            ]
+          },
+          "operator": {
+            "enum": [
+              "gt",
+              "gte"
+            ]
+          },
+          "threshold": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2147483647
+          }
         }
       }
     }
