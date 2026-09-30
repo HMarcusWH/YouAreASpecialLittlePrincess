@@ -70,6 +70,7 @@ class SupabaseJwksSource:
                 transport=self._transport,
                 timeout=self._timeout_s,
                 follow_redirects=False,
+                trust_env=False,
             ) as client:
                 with client.stream("GET", self.url, headers={"Accept": "application/json"}) as response:
                     status = response.status_code
