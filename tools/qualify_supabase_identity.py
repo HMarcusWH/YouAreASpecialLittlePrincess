@@ -119,11 +119,21 @@ def _repo_commit() -> str:
             text=True,
             timeout=5,
         )
+        status = subprocess.run(
+            ["git", "status", "--porcelain"],
+            cwd=ROOT,
+            check=True,
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
     except (OSError, subprocess.SubprocessError) as exc:
         raise QualificationError("princess_commit_unavailable") from exc
     commit = result.stdout.strip().lower()
     if not COMMIT.fullmatch(commit):
         raise QualificationError("princess_commit_invalid")
+    if status.stdout.strip():
+        raise QualificationError("princess_checkout_dirty")
     return commit
 
 
