@@ -13,6 +13,7 @@ from qualify_supabase_identity import (
     QualificationError,
     SOURCE_REVISION,
     _api_key_kind,
+    _fetch_jwks,
     _refresh_access_token,
     qualify,
     validate_receipt,
@@ -274,6 +275,19 @@ def test_access_token_lifetime_is_account_evidence_and_must_be_stable():
             refreshed_token=refreshed,
             reauth_token=bad_reauth,
         )
+
+
+def test_live_jwks_fetch_reuses_bounded_redirect_refusing_source():
+    def ok(_: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, json={"keys": []})
+
+    assert _fetch_jwks(ISSUER, transport=httpx.MockTransport(ok)) == {"keys": []}
+
+    def redirect(_: httpx.Request) -> httpx.Response:
+        return httpx.Response(302, headers={"location": "https://evil.invalid/jwks.json"})
+
+    with pytest.raises(QualificationError, match="jwks_request_failed"):
+        _fetch_jwks(ISSUER, transport=httpx.MockTransport(redirect))
 
 
 def test_live_refresh_uses_low_privilege_api_key_and_returns_only_access_token():
