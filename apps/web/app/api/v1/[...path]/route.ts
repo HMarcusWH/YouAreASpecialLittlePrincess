@@ -3,7 +3,7 @@
 // interprets business data: authorization happens in the API.
 import { NextResponse } from "next/server";
 
-import { apiBase, devLoginEnabled, sameOrigin, sessionToken } from "../../../../lib/session.ts";
+import { apiBase, devLoginEnabled, sameOrigin, sessionCredential } from "../../../../lib/session.ts";
 
 const ID = "[A-Za-z0-9][A-Za-z0-9._:-]{0,127}";
 const ROUTES: ReadonlyArray<[string, RegExp]> = [
@@ -82,8 +82,8 @@ async function forward(request: Request, params: Promise<{ path: string[] }>): P
     headers["content-type"] = request.headers.get("content-type") ?? "application/octet-stream";
     body = bytes;
   } else {
-    const token = await sessionToken();
-    if (token) headers.authorization = `Bearer ${token}`;
+    const credential = await sessionCredential();
+    if (credential) headers.authorization = `Bearer ${credential}`;
     if (method === "POST" || method === "PUT") {
       const bytes = await readLimited(request, MAX_JSON_BYTES);
       if (bytes === null) return NextResponse.json({ error: "payload_too_large" }, { status: 413 });
