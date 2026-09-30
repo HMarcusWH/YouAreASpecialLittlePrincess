@@ -299,8 +299,10 @@ def test_identity_lifecycle_on_postgres(world, app_db):
     identity.delete_account(principal, ctx(clock))
     with pytest.raises(Unauthenticated):
         identity.authenticate(token, ctx(clock))
+    with pytest.raises(Unauthenticated):
+        identity.authenticate(provider.issue_token("sub-a", AUD), ctx(clock))
     clock.advance(1)
-    fresh = identity.authenticate(provider.issue_token("sub-a", AUD), ctx(clock))
+    fresh = identity.authenticate(provider.issue_token("sub-a", AUD, auth_time=clock.now()), ctx(clock))
     assert fresh.principal_id != principal.principal_id
     with pytest.raises(Unauthenticated):
         identity.authenticate(token, ctx(clock))

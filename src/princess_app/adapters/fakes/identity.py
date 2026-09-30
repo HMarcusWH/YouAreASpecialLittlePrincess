@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 from ...ports import identity as port
 from ...ports.base import CallContext, InvalidInput, Unauthenticated
@@ -19,12 +19,13 @@ class _Token:
     session_id: str | None
     email: str | None
     email_verified: bool | None
+    auth_time: datetime | None
 
 
 class FakeIdentityProvider(FakeAdapter):
     port_name = port.PORT
     provider = "fake-oidc"
-    default_capabilities = frozenset({port.VERIFY_ID_TOKEN, port.REVOKE_SESSION, port.DELETE_PROVIDER_ACCOUNT})
+    default_capabilities = frozenset({port.VERIFY_CREDENTIAL, port.REVOKE_SESSION, port.DELETE_PROVIDER_ACCOUNT})
 
     def __init__(self, *, issuer: str = "https://idp.fake.invalid", **kwargs) -> None:
         super().__init__(**kwargs)
@@ -38,11 +39,14 @@ class FakeIdentityProvider(FakeAdapter):
 
     # --- test controls -------------------------------------------------
     def issue_token(self, subject: str, audience: str, *, ttl_s: int = 3600, session_id: str | None = None,
-                    email: str | None = None, email_verified: bool | None = None) -> str:
+                    email: str | None = None, email_verified: bool | None = None,
+                    auth_time: datetime | None = None) -> str:
         token_id = self._ids.new_id("tok")
         now = self.clock.now()
-        self._tokens[token_id] = _Token(self._kid, subject, audience, now, now + timedelta(seconds=ttl_s),
-                                        session_id, email, email_verified)
+        self._tokens[token_id] = _Token(
+            self._kid, subject, audience, now, now + timedelta(seconds=ttl_s),
+            session_id, email, email_verified, auth_time,
+        )
         return f"fakeid.{self._kid}.{token_id}"
 
     def rotate_keys(self) -> None:
@@ -52,7 +56,7 @@ class FakeIdentityProvider(FakeAdapter):
 
     # --- port -----------------------------------------------------------
     def verify_credential(self, credential: str, expected_audience: str, ctx: CallContext) -> port.VerifiedIdentity:
-        self.profile.require(port.VERIFY_ID_TOKEN)
+        self.profile.require(port.VERIFY_CREDENTIAL)
 
         def effect() -> port.VerifiedIdentity:
             parts = credential.split(".") if isinstance(credential, str) else []
@@ -69,10 +73,12 @@ class FakeIdentityProvider(FakeAdapter):
                 raise Unauthenticated("session_revoked")
             if token.subject in self._deleted_subjects:
                 raise Unauthenticated("account_deleted")
+            if token.auth_time is not None and token.auth_time > token.issued_at:
+                raise Unauthenticated("invalid_auth_time")
             return port.VerifiedIdentity(
                 issuer=self.issuer, subject=token.subject, audience=token.audience,
                 expires_at=token.expires_at, session_id=token.session_id, email=token.email,
-                email_verified=token.email_verified, auth_time=token.issued_at)
+                email_verified=token.email_verified, auth_time=token.auth_time)
 
         return self._run("verify_credential", ctx, effect)
 

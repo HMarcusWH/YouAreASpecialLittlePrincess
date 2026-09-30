@@ -6,7 +6,8 @@
   Transfer to an account requires the guest capability *and* an
   authenticated account, is atomic, and retires the guest capability.
 * Logout-everywhere and deletion set ``revoked_before``; credentials whose
-  authentication time is not after it are refused even if still unexpired.
+  trustworthy provider authentication time is not after it are refused even if
+  newly issued. Token issuance time is never substituted for authentication time.
 """
 from __future__ import annotations
 
@@ -96,6 +97,10 @@ class IdentityService:
         if credential.startswith(GUEST_PREFIX):
             return self.authenticate_guest(credential)
         identity = self._provider.verify_credential(credential, self._audience, ctx)
+        if identity.auth_time is not None and identity.auth_time > self._clock.now():
+            # Defense in depth across future provider adapters: impossible
+            # authentication freshness must not create/rebind application state.
+            raise Unauthenticated("identity_auth_time_invalid")
         principal = self._store.principal_for_binding(identity.issuer, identity.subject)
         if principal is None:
             try:

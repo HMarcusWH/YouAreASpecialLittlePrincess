@@ -565,7 +565,10 @@ def create_app(services: Services) -> FastAPI:
 
         @app.post("/v1/dev/id-tokens", status_code=201)
         def dev_token(body: DevTokenBody) -> dict:
-            """Local/test only: mint a fake provider ID token for a synthetic subject."""
-            return {"id_token": dev.issue_token(body.subject, services.audience, session_id=f"dev-{body.subject}")}
+            """Local/test only: mint a fake credential for one synthetic sign-in."""
+            return {"id_token": dev.issue_token(
+                body.subject, services.audience, session_id=f"dev-{body.subject}",
+                auth_time=services.clock.now(),
+            )}
 
     return app

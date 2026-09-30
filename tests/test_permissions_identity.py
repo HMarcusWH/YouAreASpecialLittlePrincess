@@ -22,6 +22,7 @@ from princess_app.domain.permissions import (
     evaluate,
 )
 from princess_app.ports.base import CallContext, Conflict, Environment, InvalidInput, NotAuthorized, Unauthenticated
+from princess_app.ports.identity import VerifiedIdentity
 
 ROOT = Path(__file__).resolve().parents[1]
 SPECIMEN = Scope("SPECIMEN", "capture_1")
@@ -197,30 +198,49 @@ def test_first_login_creates_one_principal_and_email_never_links():
     assert a.principal_id == again.principal_id != b.principal_id
 
 
-def test_logout_everywhere_rejects_older_but_unexpired_tokens():
+def test_logout_everywhere_requires_real_reauthentication_freshness():
     clock, provider, store, svc = identity()
     token = provider.issue_token("sub-a", AUD, ttl_s=3600)
     principal = svc.authenticate(token, ctx(clock))
     clock.advance(10)
     svc.logout_everywhere(principal, ctx(clock))
+
     with pytest.raises(Unauthenticated) as err:
         svc.authenticate(token, ctx(clock))
     assert err.value.code == "session_revoked"
+
+    # A newly issued token is not proof of a new authentication ceremony.
+    with pytest.raises(Unauthenticated) as err:
+        svc.authenticate(provider.issue_token("sub-a", AUD), ctx(clock))
+    assert err.value.code == "session_revoked"
+
+    with pytest.raises(Unauthenticated) as err:
+        svc.authenticate(provider.issue_token("sub-a", AUD, auth_time=clock.now() - timedelta(seconds=1)), ctx(clock))
+    assert err.value.code == "session_revoked"
+
     clock.advance(1)
-    assert svc.authenticate(provider.issue_token("sub-a", AUD), ctx(clock)).principal_id == principal.principal_id
+    fresh = provider.issue_token("sub-a", AUD, auth_time=clock.now())
+    assert svc.authenticate(fresh, ctx(clock)).principal_id == principal.principal_id
 
 
-def test_deleted_account_cannot_authenticate_with_a_valid_token():
+def test_deleted_account_requires_real_reauthentication_before_fresh_rebind():
     clock, provider, store, svc = identity()
     token = provider.issue_token("sub-a", AUD)
     principal = svc.authenticate(token, ctx(clock))
     svc.delete_account(principal, ctx(clock))
     assert store.outbox == [("account.deletion_requested", principal.principal_id)]
+
     with pytest.raises(Unauthenticated) as err:
         svc.authenticate(token, ctx(clock))
     assert err.value.code == "account_deleted"
+
+    # Token refresh/issuance alone cannot resurrect the binding as a fresh account.
+    with pytest.raises(Unauthenticated) as err:
+        svc.authenticate(provider.issue_token("sub-a", AUD), ctx(clock))
+    assert err.value.code == "account_deleted"
+
     clock.advance(1)
-    fresh = svc.authenticate(provider.issue_token("sub-a", AUD), ctx(clock))
+    fresh = svc.authenticate(provider.issue_token("sub-a", AUD, auth_time=clock.now()), ctx(clock))
     assert fresh.principal_id != principal.principal_id and fresh.deleted_at is None
     with pytest.raises(Unauthenticated):
         svc.authenticate(token, ctx(clock))  # the pre-deletion token still cannot reach anything
@@ -266,7 +286,8 @@ def test_concurrent_fresh_logins_after_deletion_converge_on_one_new_account():
     principal = svc.authenticate(provider.issue_token("sub-a", AUD), ctx(clock))
     svc.delete_account(principal, ctx(clock))
     clock.advance(1)
-    first, second = provider.issue_token("sub-a", AUD), provider.issue_token("sub-a", AUD)
+    first = provider.issue_token("sub-a", AUD, auth_time=clock.now())
+    second = provider.issue_token("sub-a", AUD, auth_time=clock.now())
     real_lookup = store.principal_for_binding
     # Simulate the race: the second request read the tombstone before the first rebound it.
     tombstone = store.principals[principal.principal_id]
@@ -280,6 +301,27 @@ def test_concurrent_fresh_logins_after_deletion_converge_on_one_new_account():
     store.principal_for_binding = racing_lookup
     loser = svc.authenticate(second, ctx(clock))
     assert loser.principal_id == winner.principal_id != principal.principal_id
+
+
+def test_identity_service_rejects_future_auth_time_before_rebinding_state(monkeypatch):
+    clock, provider, store, svc = identity()
+    principal = svc.authenticate(provider.issue_token("sub-a", AUD), ctx(clock))
+    svc.delete_account(principal, ctx(clock))
+
+    def impossible_freshness(_credential, expected_audience, _ctx):
+        return VerifiedIdentity(
+            issuer=provider.issuer,
+            subject="sub-a",
+            audience=expected_audience,
+            expires_at=clock.now() + timedelta(hours=1),
+            auth_time=clock.now() + timedelta(seconds=60),
+        )
+
+    monkeypatch.setattr(provider, "verify_credential", impossible_freshness)
+    with pytest.raises(Unauthenticated) as err:
+        svc.authenticate("signed-provider-credential", ctx(clock))
+    assert err.value.code == "identity_auth_time_invalid"
+    assert store.principal_for_binding(provider.issuer, "sub-a").principal_id == principal.principal_id
 
 
 def test_replayed_requests_cannot_reverse_a_newer_decision():

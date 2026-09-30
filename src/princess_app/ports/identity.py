@@ -14,8 +14,12 @@ from .base import CallContext, CapabilityProfile, InvalidInput, require_utc
 
 PORT = "IdentityProvider"
 
-# Capability names.
-VERIFY_ID_TOKEN = "verify_id_token"
+# Capability names. The port verifies one provider credential selected by ADR-002;
+# the current generic OIDC adapter remains ID-token-shaped until that decision.
+VERIFY_CREDENTIAL = "verify_credential"
+# Source-compatibility alias for code written before the production credential
+# profile was reviewed. New code should use VERIFY_CREDENTIAL.
+VERIFY_ID_TOKEN = VERIFY_CREDENTIAL
 REVOKE_SESSION = "revoke_session"
 DELETE_PROVIDER_ACCOUNT = "delete_provider_account"
 
@@ -31,6 +35,9 @@ class VerifiedIdentity:
     # unknown, never "false" or "unverified".
     email: str | None = None
     email_verified: bool | None = None
+    # Time of the actual provider authentication/reauthentication ceremony when
+    # the provider supplies trustworthy evidence. Token issuance (iat) is not a
+    # substitute; None means freshness is unknown and local revocation fails closed.
     auth_time: datetime | None = None
 
     def __post_init__(self) -> None:
@@ -57,8 +64,9 @@ class IdentityProvider(Protocol):
                           ctx: CallContext) -> VerifiedIdentity:
         """Verify a bearer credential for ``expected_audience``.
 
-        Raises ``Unauthenticated`` for bad signature, wrong issuer/audience,
-        expiry, unknown key or revoked session.
+        The selected provider profile defines the exact credential kind. A
+        verifier must never invent authentication freshness from token issuance.
+        Raises ``Unauthenticated`` for invalid provider credentials.
         """
         ...
 
