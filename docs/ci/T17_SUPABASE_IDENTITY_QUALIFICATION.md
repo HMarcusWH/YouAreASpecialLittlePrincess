@@ -1,40 +1,72 @@
 # T17 Supabase identity account qualification
 
-**Status: tooling implemented; actual managed-project qualification PENDING.**
+**Status: qualification tooling hardened; actual managed-project qualification PENDING.**
 
-This document defines the safe evidence boundary for the T17 Supabase Auth candidate. It does **not** select Supabase, approve a processor/region/contract, activate production identity, or claim that any managed project has passed.
+This document defines the safe evidence boundary for the T17 Supabase Auth candidate. It does **not** select
+Supabase, approve a processor/region/contract, activate production identity, or claim that any managed project
+has passed.
 
-## What the harness does
+## Why the post-#46 hardening exists
 
-`tools/qualify_supabase_identity.py` is an explicit opt-in, offline qualification command. It consumes an operator-captured JWKS document plus three short-lived access JWTs:
+Merged PR #46 established the first opt-in qualification harness, but its managed-project shape still trusted an
+operator-supplied "refreshed access JWT" and did not retain every account-profile fact from the qualification
+checklist. `supabase-identity-qualification/2` closes that evidence gap without enabling login.
 
-1. an initial real authentication;
-2. a refresh of that same provider session;
-3. a later genuine reauthentication/new provider session.
+Synthetic CI remains offline. `MANAGED_PROJECT` mode is intentionally manual and provider-facing.
 
-It verifies all three through the existing `SupabaseIdentityProvider`, proves that refresh keeps the original signed authentication freshness and session ID, proves that genuine reauthentication advances freshness on a new session, and exercises the Princess `revoked_before` fence between the refresh and reauthentication timestamps.
+## Managed-project witness
 
-The harness makes **no network calls** and performs **no provider mutation or revocation**. Capturing/refreshing/reauthenticating the provider credentials is an owner-authorized external step.
+The managed run uses an owner-authorized qualification project and:
 
-## Safety boundary
+1. reads an initial access JWT plus its refresh token from protected files;
+2. accepts only a Supabase publishable key (or legacy `anon` key), never a secret/service-role key;
+3. fetches the actual project JWKS from the configured issuer;
+4. performs one real `grant_type=refresh_token` exchange;
+5. proves the refreshed JWT keeps the same `session_id` and AMR-derived `auth_time` while `iat` advances;
+6. stops and asks the operator to rotate the asymmetric signing key and complete a genuine new sign-in;
+7. fetches JWKS again and proves the new sign-in uses a different trusted `kid`, while the prior signing key
+   remains published/trusted;
+8. proves the new sign-in has a new session and newer authentication freshness;
+9. places the Princess `revoked_before` fence between refresh and reauthentication, rejects the old refreshed
+   session as `session_revoked`, and accepts the genuinely reauthenticated session.
 
-Never commit or upload the input files. They may contain bearer credentials or account-specific JWKS material. Run from a protected workstation/runner and destroy the token files after the receipt is produced.
+The tool never performs password login, key rotation, provider logout or provider-account deletion. Those human
+provider actions remain external and owner-authorized.
 
-The receipt `supabase-identity-qualification/1` contains only:
+## Configuration facts recorded
 
-- an operator-chosen safe project alias;
-- evidence kind (`SYNTHETIC_TEST` or `MANAGED_PROJECT`);
-- hashes of issuer and JWKS, not their raw values;
-- configured audience/role and observed algorithms/counts;
-- boolean relationship/fence witnesses;
-- relative timing deltas;
-- the pinned reviewed `supabase/auth` source revision.
+A PASS receipt records only safe account-profile facts:
 
-It contains no JWT, refresh token, subject, session ID, absolute authentication timestamp, issuer URL, JWKS body or production secret. `provider_selection_claim` and `production_activation` are always false.
+- checked date and Princess commit;
+- safe project alias;
+- reviewed `supabase/auth` source revision;
+- issuer host plus issuer/JWKS URL hashes;
+- configured audience and authenticated role;
+- explicitly inspected anonymous-sign-in policy and OAuth-server status;
+- Custom Access Token Hook state (`disabled` is required);
+- asymmetric JWKS algorithms, key IDs, key count and before/after hashes;
+- observed access-token algorithms and configured token lifetime as witnessed by `exp - iat`;
+- AMR method names, never AMR timestamps;
+- live refresh, signing-key-rotation, reauthentication and logout-fence witnesses.
 
-## Actual managed-project command
+It contains no access JWT, refresh token, rotated refresh token, subject, session ID, absolute authentication
+timestamp, API key, issuer URL, JWKS body or provider secret. `provider_selection_claim` and
+`production_activation` are always false.
 
-The command is intentionally gated:
+## Protected inputs
+
+Never commit or upload these files:
+
+- initial access JWT;
+- refresh token;
+- publishable/legacy-anon API key;
+- post-refresh genuine reauthentication access JWT.
+
+For managed mode, the reauthentication token file may be absent or stale when the tool starts. After the live
+refresh completes, the tool pauses. Replace/write that file only after the required signing-key rotation and
+genuine new sign-in, then press Enter.
+
+## Managed-project command
 
 ```bash
 PRINCESS_SUPABASE_QUALIFY=1 \
@@ -45,25 +77,41 @@ python tools/qualify_supabase_identity.py \
   --audience '<exact-reviewed-audience>' \
   --role '<exact-reviewed-role>' \
   --custom-access-token-hook disabled \
-  --jwks-file /protected/jwks.json \
+  --anonymous-sign-ins <enabled|disabled> \
+  --oauth-server <enabled|disabled> \
+  --api-key-file /protected/publishable.key \
   --initial-token-file /protected/initial.jwt \
-  --refreshed-token-file /protected/refreshed.jwt \
+  --refresh-token-file /protected/refresh.token \
   --reauth-token-file /protected/reauth.jwt \
   --output /protected/supabase-identity-qualification.json
 ```
 
-The three credentials must be collected in that order. Leave enough time between refresh and reauthentication for the timestamps to be strictly ordered. If the project has an enabled or unknown Custom Access Token Hook, an HS256/shared-secret profile, or token/session semantics different from the code-qualified candidate, stop and review rather than weakening the harness.
+Use a dedicated owner-authorized qualification project/profile for the signing-key rotation drill. Do not weaken
+the verifier to accommodate HS256/shared-secret signing, an enabled/unknown Custom Access Token Hook, unknown
+account-policy settings, unchanged signing `kid`, stale reauthentication material, or refresh/AMR/session drift.
 
-## Evidence still required before T17 can progress to activation
+Synthetic regression tests use `--pre-rotation-jwks-file`, `--jwks-file` and `--refreshed-token-file` instead of
+provider network calls. A synthetic PASS is never managed-project evidence.
 
-A PASS receipt is only technical account-profile evidence. Separately record and approve:
+## Human/account gates still separate
 
-- explicit ADR-002 provider selection;
-- managed-project deployed issuer/audience/roles and signing/JWKS settings;
-- Custom Access Token Hook state;
-- processor/subprocessor terms, region, retention/deletion and support obligations;
-- provider logout/deletion lifecycle behavior;
-- web PKCE callback/origin configuration and cross-device recovery;
-- native Apple/Google/private-relay behavior where applicable.
+A technical PASS does not establish any of these:
 
-Only after those gates may a later PR compose the provider or add production PKCE/access+refresh handling.
+```text
+provider selected                     OWNER DECISION
+processor terms                       REVIEWED
+region/data handling                  REVIEWED
+retention/deletion                    REVIEWED
+support/subprocessors                 REVIEWED
+```
+
+Record those decisions separately with owner/date/scope evidence. The qualification receipt deliberately cannot
+turn them into approval claims.
+
+## Still not activation
+
+Even after a real `MANAGED_PROJECT` PASS, T17 still needs the explicit ADR-002 provider decision plus provider
+logout/deletion lifecycle, web PKCE/callback/origin integration, cross-device/account recovery, and applicable
+native Apple/Google/private-relay evidence.
+
+Production login remains disabled until those gates close.
