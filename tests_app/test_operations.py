@@ -53,6 +53,7 @@ def test_operational_function_aggregates_across_rls_without_granting_raw_cross_t
         assert conn.execute(text("SELECT count(*) FROM app.outbox_event")).scalar_one() == 0
 
     repo = PostgresOperationalRepository(app_db)
+    assert repo.schema_revision() == "0011_operational_snapshot"
     rows = repo.observations(T0 + timedelta(seconds=120))
     found = {(r.source, r.category, r.state): r for r in rows}
     assert found[("jobs", "analysis", "queued")].count == 1
