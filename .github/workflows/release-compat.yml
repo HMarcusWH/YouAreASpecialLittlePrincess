@@ -1,0 +1,179 @@
+name: Release compatibility
+
+on:
+  pull_request:
+    paths:
+      - "infra/release/**"
+      - "infra/runtime/**"
+      - "migrations/**"
+      - "apps/api/**"
+      - "apps/workers/**"
+      - "apps/render/**"
+      - "src/princess_app/**"
+      - "src/princess_contracts/**"
+      - "contracts/product/**"
+      - "schema/graphology_feature_database_v1.json"
+      - "schema/method_capabilities/**"
+      - "schema/premium_interpretation_database_v1.json"
+      - "requirements/app-py312.*"
+      - "tools/build_runtime_release.py"
+      - "tools/check_release_compatibility.py"
+      - "tests/test_release_compatibility.py"
+      - ".github/workflows/release-compat.yml"
+  push:
+    branches: [main]
+    paths:
+      - "infra/release/**"
+      - "infra/runtime/**"
+      - "migrations/**"
+      - "apps/api/**"
+      - "apps/workers/**"
+      - "apps/render/**"
+      - "src/princess_app/**"
+      - "src/princess_contracts/**"
+      - "contracts/product/**"
+      - "schema/graphology_feature_database_v1.json"
+      - "schema/method_capabilities/**"
+      - "schema/premium_interpretation_database_v1.json"
+      - "requirements/app-py312.*"
+      - "tools/build_runtime_release.py"
+      - "tools/check_release_compatibility.py"
+      - "tests/test_release_compatibility.py"
+      - ".github/workflows/release-compat.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  qualify:
+    runs-on: ubuntu-24.04
+    env:
+      CANDIDATE_SHA: ${{ github.sha }}
+      ROLLBACK_BASE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
+      CANDIDATE_HEAD_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+      EVENT_KIND: ${{ github.event_name == 'pull_request' && 'PREMERGE' || 'PUSH' }}
+      PRINCESS_CANDIDATE_IMAGE: princess-candidate:${{ github.sha }}
+      PRINCESS_ROLLBACK_IMAGE: princess-rollback:${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
+      PRINCESS_HISTORICAL_IMAGE: princess-historical:36c8e88c2b149a77841607f61619ed0243876920
+
+    steps:
+      - name: Checkout exact candidate
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          path: candidate
+          persist-credentials: false
+
+      - name: Checkout exact rollback base
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
+          path: rollback-base
+          persist-credentials: false
+
+      - name: Checkout historical expansion witness
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: 36c8e88c2b149a77841607f61619ed0243876920
+          path: historical
+          persist-credentials: false
+
+      - name: Build environment-neutral release manifests
+        shell: bash
+        run: |
+          set -euo pipefail
+          policy="$GITHUB_WORKSPACE/candidate/infra/release/release-policy.json"
+          python3 candidate/tools/build_runtime_release.py --root candidate --source-sha "$CANDIDATE_SHA"             --policy "$policy" --output "$RUNNER_TEMP/candidate-runtime-release.json"
+          python3 candidate/tools/build_runtime_release.py --root rollback-base --source-sha "$ROLLBACK_BASE_SHA"             --policy "$policy" --output "$RUNNER_TEMP/rollback-runtime-release.json"
+          python3 candidate/tools/check_release_compatibility.py             --base "$RUNNER_TEMP/rollback-runtime-release.json"             --candidate "$RUNNER_TEMP/candidate-runtime-release.json" --policy "$policy"             --event-kind "$EVENT_KIND" --candidate-head-sha "$CANDIDATE_HEAD_SHA"             --output "$RUNNER_TEMP/static-rollout-qualification.json"
+          python3 - <<'PY'
+          import json, os
+          path = os.path.join(os.environ["RUNNER_TEMP"], "static-rollout-qualification.json")
+          assert json.load(open(path, encoding="utf-8"))["result"] == "STATIC_PASS"
+          PY
+
+      - name: Build each backend artifact from its own source
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker build --platform linux/amd64 --target backend-runtime             -f candidate/infra/runtime/Dockerfile -t "$PRINCESS_CANDIDATE_IMAGE" candidate
+          docker build --platform linux/amd64 --target backend-runtime             -f rollback-base/infra/runtime/Dockerfile -t "$PRINCESS_ROLLBACK_IMAGE" rollback-base
+          docker build --platform linux/amd64 --target backend-runtime             -f historical/infra/runtime/Dockerfile -t "$PRINCESS_HISTORICAL_IMAGE" historical
+
+      - name: Qualify current application rollback on candidate database
+        shell: bash
+        run: |
+          set -euo pipefail
+          compose_file="$GITHUB_WORKSPACE/candidate/infra/release/compose.compat.yaml"
+          cleanup() { docker compose -f "$compose_file" down -v --remove-orphans >/dev/null 2>&1 || true; }
+          trap cleanup EXIT
+          cleanup
+          export PRINCESS_MIGRATION_IMAGE="$PRINCESS_CANDIDATE_IMAGE"
+          export PRINCESS_RUNTIME_IMAGE="$PRINCESS_CANDIDATE_IMAGE"
+          docker compose -f "$compose_file" up -d --wait db
+          docker compose -f "$compose_file" run --rm migrations
+          revision="$(docker compose -f "$compose_file" exec -T db             psql -U princess_admin -d princess_test -Atc 'SELECT version_num FROM alembic_version')"
+          test "$revision" = "0011_operational_snapshot"
+          docker compose -f "$compose_file" run --rm role-bootstrap
+          docker compose -f "$compose_file" up -d --wait api analysis-worker
+          python3 candidate/infra/release/free_rollback_smoke.py create             --state "$RUNNER_TEMP/candidate-report-state.json"
+          docker compose -f "$compose_file" stop api analysis-worker
+          export PRINCESS_RUNTIME_IMAGE="$PRINCESS_ROLLBACK_IMAGE"
+          docker compose -f "$compose_file" up -d --force-recreate --wait api analysis-worker
+          python3 candidate/infra/release/free_rollback_smoke.py read             --state "$RUNNER_TEMP/candidate-report-state.json"
+          python3 candidate/infra/release/free_rollback_smoke.py create             --state "$RUNNER_TEMP/base-report-state.json"
+          docker compose -f "$compose_file" stop api analysis-worker
+          export PRINCESS_RUNTIME_IMAGE="$PRINCESS_CANDIDATE_IMAGE"
+          docker compose -f "$compose_file" up -d --force-recreate --wait api analysis-worker
+          python3 candidate/infra/release/free_rollback_smoke.py read             --state "$RUNNER_TEMP/base-report-state.json"
+
+      - name: Qualify historical real expansion 0010 to 0011
+        shell: bash
+        run: |
+          set -euo pipefail
+          compose_file="$GITHUB_WORKSPACE/candidate/infra/release/compose.compat.yaml"
+          cleanup() { docker compose -f "$compose_file" down -v --remove-orphans >/dev/null 2>&1 || true; }
+          trap cleanup EXIT
+          cleanup
+          export PRINCESS_MIGRATION_IMAGE="$PRINCESS_HISTORICAL_IMAGE"
+          export PRINCESS_RUNTIME_IMAGE="$PRINCESS_HISTORICAL_IMAGE"
+          docker compose -f "$compose_file" up -d --wait db
+          docker compose -f "$compose_file" run --rm migrations
+          before="$(docker compose -f "$compose_file" exec -T db             psql -U princess_admin -d princess_test -Atc 'SELECT version_num FROM alembic_version')"
+          test "$before" = "0010_provider_attempt"
+          docker compose -f "$compose_file" run --rm role-bootstrap
+          docker compose -f "$compose_file" up -d --wait api analysis-worker
+          python3 candidate/infra/release/free_rollback_smoke.py create             --state "$RUNNER_TEMP/historical-before-state.json"
+          docker compose -f "$compose_file" stop api analysis-worker
+          export PRINCESS_MIGRATION_IMAGE="$PRINCESS_CANDIDATE_IMAGE"
+          docker compose -f "$compose_file" run --rm migrations
+          after="$(docker compose -f "$compose_file" exec -T db             psql -U princess_admin -d princess_test -Atc 'SELECT version_num FROM alembic_version')"
+          test "$after" = "0011_operational_snapshot"
+          export PRINCESS_RUNTIME_IMAGE="$PRINCESS_HISTORICAL_IMAGE"
+          docker compose -f "$compose_file" up -d --force-recreate --wait api analysis-worker
+          python3 candidate/infra/release/free_rollback_smoke.py read             --state "$RUNNER_TEMP/historical-before-state.json"
+          python3 candidate/infra/release/free_rollback_smoke.py create             --state "$RUNNER_TEMP/historical-after-state.json"
+
+      - name: Emit final rollout qualification receipt
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 candidate/tools/check_release_compatibility.py             --base "$RUNNER_TEMP/rollback-runtime-release.json"             --candidate "$RUNNER_TEMP/candidate-runtime-release.json"             --policy candidate/infra/release/release-policy.json             --event-kind "$EVENT_KIND" --candidate-head-sha "$CANDIDATE_HEAD_SHA"             --candidate-on-candidate-db PASS --rollback-base-on-candidate-db PASS             --base-write-candidate-read PASS --candidate-write-base-read PASS             --historical-expand-witness PASS --output "$RUNNER_TEMP/rollout-qualification.json"
+          python3 - <<'PY'
+          import json, os
+          path = os.path.join(os.environ["RUNNER_TEMP"], "rollout-qualification.json")
+          receipt = json.load(open(path, encoding="utf-8"))
+          assert receipt["result"] == "PASS"
+          assert receipt["database_downgrade_performed"] is False
+          PY
+
+      - name: Upload release qualification evidence
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: t24-rollout-qualification-${{ github.sha }}
+          path: |
+            ${{ runner.temp }}/candidate-runtime-release.json
+            ${{ runner.temp }}/rollback-runtime-release.json
+            ${{ runner.temp }}/rollout-qualification.json
+          if-no-files-found: error
+          retention-days: 14

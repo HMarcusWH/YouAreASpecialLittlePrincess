@@ -226,3 +226,15 @@ alert code.
 
 No production alert threshold, exporter, dashboard vendor, pager route or SLO
 is selected by this slice.
+
+
+## Release/rollback qualification (T24)
+
+`infra/release/` contains the provider-neutral application rollout contract. CI generates an exact
+`runtime-release/1` for the candidate and rollback-base checkouts, migrates the database forward with the
+candidate migration artifact, and proves that the immediately previous API/Free-analysis runtime can run on that
+forward schema. The database is never downgraded as part of application rollback.
+
+The qualification also replays the real #38 → #39 additive migration witness (`0010_provider_attempt` →
+`0011_operational_snapshot`) with the #38 runtime on both sides of the migration. Receipts are CI artifacts,
+not committed release declarations. See [release qualification](release/README.md).

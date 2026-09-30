@@ -42,9 +42,11 @@ CI should separate documentation, core, contract generation, backend/PostgreSQL 
 
 ## Schema and client rollout
 
-Mobile clients cannot all upgrade atomically. T01 defines a supported API/schema compatibility window; T24 deploys expand/contract migrations and backward-compatible responses before rolling out client changes. Store the minimum supported client version and deprecation policy; do not force users into a broken purchase state because a server rollout removed an old endpoint.
+Mobile clients cannot all upgrade atomically. T01 owns versioned product DTOs, while T24 now qualifies a narrower provider-neutral application rollback property: migrate the database forward first, deploy the new application, and keep the forward database if application code must roll back. The immediately previous runtime must therefore tolerate the candidate schema. Application rollback never runs a database downgrade.
 
-Deploy API/worker versions against explicit schema compatibility, drain or fence old jobs, canary resource limits and keep rollback artifacts. A rollback may restore code/template/model pointers only to still-authorized data/benchmark versions. Reversing a migration must not undo deletion tombstones or financial compensating entries.
+The repository does **not** yet implement client-build/API-version negotiation. Product `contract_version = 1.0.0`, FastAPI `0.1.0` and the native scaffold `0.1.0` are different authorities and none means "clients older than X are unsupported." A real minimum installed-client support window and deprecation mechanism remain release/native work; T24 must not invent one. Until then, removal of a public method+route used by an installed client fails rollback qualification, and a candidate-only endpoint must not become mandatory during the rollback window without separate evidence.
+
+Deploy API/worker versions against explicit schema compatibility, stop affected admission and drain or fence candidate-only queued work before rollback, canary resource limits and keep rollback artifacts. A rollback may restore code/template/model pointers only to still-authorized data/benchmark versions. Database state stays forward so deletion tombstones, financial history, newer rows, provider-attempt journals and revocations are not undone.
 
 ## Required evidence
 

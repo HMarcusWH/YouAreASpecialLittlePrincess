@@ -1,0 +1,12 @@
+{
+  "version": "compatibility-witnesses/1",
+  "witnesses": [
+    {
+      "name": "t24-0010-to-0011",
+      "runtime_sha": "36c8e88c2b149a77841607f61619ed0243876920",
+      "database_before": "0010_provider_attempt",
+      "database_after": "0011_operational_snapshot",
+      "expected": "PASS"
+    }
+  ]
+}

@@ -186,7 +186,11 @@ pnpm --filter @princess/mobile prebuild:ios
 <a id="validation-release"></a>
 ### release
 
-State: `TO_IMPLEMENT`. T23/T24/T32/T33 add real recovery, security, signed-store and rollout evidence; T25 requires human approval.
+State: `EXISTS_IN_THIS_PR`. Provider-neutral runtime-release/rollback contract tests exist; .github/workflows/release-compat.yml supplies the Docker/PostgreSQL cross-version qualification. This is not production rollout approval.
+
+```bash
+python -m pytest -q tests/test_release_compatibility.py
+```
 
 <a id="t00"></a>
 ## T00 — Green baseline and dependency policy
@@ -2018,7 +2022,7 @@ Operable staged infrastructure and recovery/notification/support evidence, not p
 
 ### Implementation evidence
 
-PR #14 slices 19b00a0, 3b2087e, 5a22ba4 and final repair d2e1063 implemented redacted report feedback, ops commands/runbooks, append-only restore tombstones for deletions/withdrawals/logout-everywhere, and an outbox-driven notification state machine with kill switch and fake mail/push adapters. This repair adds transactionally queued outbox events plus external restore tombstones for single-device logout and feedback withdrawal, with temporal replay guards that preserve newer re-registration/resubmission. PR #20 exposes the existing account report-ready mail preference through the typed client and exact same-origin web proxy, with guest refusal, persistence, CSRF/route-boundary and accessibility coverage in the isolated live-web journey; no mail provider is activated. PR #21 adds deterministic restore-stable Premium attempt IDs, a sanitized durable provider-attempt journal, fake-qualified authoritative attempt lookup, and an explicit fail-closed restored-Premium reconciliation pass that prevents automatic second generation after backup restore; the current OpenAI store=false adapter remains lookup-unsupported and live activation stays gated. The T24 runtime-topology slice adds reviewed linux/amd64 source-tree backend/export images, a fixed role dispatcher, provider-free startup preflight, DB-only API/worker readiness, zero-authority dormant render/reference manifest grants, a separate non-owner smoke-role bootstrap and synthetic Docker Compose qualification; it does not select or activate production hosting/providers. The provider-neutral recovery rehearsal adds a destructive-test-fenced real PostgreSQL custom-format pg_dump/pg_restore cycle with synthetic private state: it leaves object/tombstone storage forward in time, proves the restored database genuinely resurrects a deleted capture/account/permission grant, reuses the existing tombstone replay and erasure paths to remove them again, rejects a corrupted backup and emits a privacy-safe recovery-receipt/1 with observed timings rather than invented RPO/RTO claims. The operational-posture slice adds migration 0011 with a fixed SECURITY DEFINER aggregate function, operational-snapshot/1, a strict exporter-neutral alert-policy contract, provider-independent snapshot/check/verify-disabled operator commands and final-runtime CI proving both PASS and stale-queue ALERT paths. The normal runtime role remains RLS-scoped for raw rows; no dynamic control plane, production threshold, dashboard vendor or SLO is introduced.
+PR #14 slices 19b00a0, 3b2087e, 5a22ba4 and final repair d2e1063 implemented redacted report feedback, ops commands/runbooks, append-only restore tombstones for deletions/withdrawals/logout-everywhere, and an outbox-driven notification state machine with kill switch and fake mail/push adapters. This repair adds transactionally queued outbox events plus external restore tombstones for single-device logout and feedback withdrawal, with temporal replay guards that preserve newer re-registration/resubmission. PR #20 exposes the existing account report-ready mail preference through the typed client and exact same-origin web proxy, with guest refusal, persistence, CSRF/route-boundary and accessibility coverage in the isolated live-web journey; no mail provider is activated. PR #21 adds deterministic restore-stable Premium attempt IDs, a sanitized durable provider-attempt journal, fake-qualified authoritative attempt lookup, and an explicit fail-closed restored-Premium reconciliation pass that prevents automatic second generation after backup restore; the current OpenAI store=false adapter remains lookup-unsupported and live activation stays gated. The T24 runtime-topology slice adds reviewed linux/amd64 source-tree backend/export images, a fixed role dispatcher, provider-free startup preflight, DB-only API/worker readiness, zero-authority dormant render/reference manifest grants, a separate non-owner smoke-role bootstrap and synthetic Docker Compose qualification; it does not select or activate production hosting/providers. The provider-neutral recovery rehearsal adds a destructive-test-fenced real PostgreSQL custom-format pg_dump/pg_restore cycle with synthetic private state: it leaves object/tombstone storage forward in time, proves the restored database genuinely resurrects a deleted capture/account/permission grant, reuses the existing tombstone replay and erasure paths to remove them again, rejects a corrupted backup and emits a privacy-safe recovery-receipt/1 with observed timings rather than invented RPO/RTO claims. The operational-posture slice adds migration 0011 with a fixed SECURITY DEFINER aggregate function, operational-snapshot/1, a strict exporter-neutral alert-policy contract, provider-independent snapshot/check/verify-disabled operator commands and final-runtime CI proving both PASS and stale-queue ALERT paths. The normal runtime role remains RLS-scoped for raw rows; no dynamic control plane, production threshold, dashboard vendor or SLO is introduced. The release/rollback qualification slice adds environment-neutral runtime-release/1 manifests, method+route and two-way report compatibility gates, a separate candidate-migration/runtime-under-test Compose topology, cross-runtime Free report write/read smoke and the pinned real #38 0010→0011 expansion witness. Application rollback is explicitly forward-database-only and candidate-only queued work is required to be drained or fenced; no client-build minimum, registry digest, production provider or database downgrade is invented.
 
 ### Remaining work
 
@@ -2026,7 +2030,7 @@ PR #14 slices 19b00a0, 3b2087e, 5a22ba4 and final repair d2e1063 implemented red
 - Select and qualify the production PostgreSQL plus object/tombstone providers, approve RPO/RTO from their actual backup/PITR/version-deletion capabilities, bind the qualified recovery choreography to them and retain a provider-backed timed restore/PITR drill.
 - Implement live transactional mail plus signed bounce/complaint handling; integrate APNs/FCM with T29–T31 once native signing/accounts exist.
 - Implement broader key rotation/compromise handling, account/identity recovery and store-rollout halt procedures.
-- Bind operational-snapshot/1 to the selected telemetry/dashboard stack, approve real staging/production thresholds and named escalation owners from deployed evidence, add hosting-edge/global rate limits, bind the qualified runtime images to the selected production host/registry/network/secret manager, and retain alert-route plus rollout/rollback exercises.
+- Bind operational-snapshot/1 and the provider-neutral rollout receipts to the selected telemetry/dashboard and production host/registry/network/secret-manager stack, approve real staging/production thresholds and named escalation owners from deployed evidence, add hosting-edge/global rate limits, and retain provider-backed alert-route plus staged rollout/halt exercises.
 - Add a lease heartbeat only if measured production latency makes the current lease unsafe.
 
 ### Acceptance evidence
@@ -2034,15 +2038,18 @@ PR #14 slices 19b00a0, 3b2087e, 5a22ba4 and final repair d2e1063 implemented red
 - A restore cannot resurrect erased data or duplicate credits/provider calls.
 - Provider outage preserves Free and safe business state; no private writing in dashboards or crash logs.
 - Report feedback is owner/report-bound, redacted to an allowlisted contract, removable under the approved lifecycle and inaccessible to generic analytics/telemetry roles.
+- Application rollback keeps the database forward and the immediately previous API/Free-analysis runtime can read and write against the candidate schema after queues are drained or fenced.
 
 ### Required failure and regression cases
 
 - Mail/push outage, queue restoration, stale token, budget breaker, key revocation, expired DB connection, refund reconciliation and rollback to withdrawn benchmark.
 - Feedback containing raw writing/full report payload, cross-owner report feedback, support-role overreach, duplicate submission, and deletion followed by backup/queue resurrection.
+- Removed public method+route, incompatible product-contract major, one-way report-template change, candidate write unreadable by rollback runtime and historical additive-schema incompatibility.
 
 ### Deliverables
 
 - Deployment manifests, notification adapters, dashboards and tested runbooks
+- Provider-neutral runtime release manifests and rollout-qualification receipts
 
 ### Rollback and compatibility
 
