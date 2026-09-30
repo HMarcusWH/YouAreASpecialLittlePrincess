@@ -138,6 +138,17 @@ jobs:
           docker compose -f infra/runtime/compose.smoke.yaml run --rm --entrypoint python api \
             -m princess_api.ops check --policy /opt/princess/infra/operations/alert-policy.test.json
 
+          telemetry_json="$(docker compose -f infra/runtime/compose.smoke.yaml run --rm --entrypoint python api \
+            -m princess_api.ops emit-telemetry)"
+          printf '%s\n' "$telemetry_json" | python3 -c '
+          import json,sys
+          doc=json.load(sys.stdin)
+          assert doc["result"]=="PASS" and doc["alert_count"]==0
+          assert doc["metric_counts"]["operational.count"]==26
+          assert doc["metric_counts"]["operational.capability"]==5
+          assert "operational.alert" not in doc["metric_counts"]
+          '
+
           docker compose -f infra/runtime/compose.smoke.yaml stop analysis-worker
           docker compose -f infra/runtime/compose.smoke.yaml exec -T db psql -U princess_admin -d princess_test \
             -v ON_ERROR_STOP=1 -c "
@@ -160,6 +171,16 @@ jobs:
           doc=json.load(sys.stdin)
           assert doc["result"]=="ALERT"
           assert [a["alert_code"] for a in doc["alerts"]]==["test.analysis_queue_stale"]
+          '
+
+          telemetry_alert_json="$(docker compose -f infra/runtime/compose.smoke.yaml run --rm --entrypoint python api \
+            -m princess_api.ops emit-telemetry --policy /opt/princess/infra/operations/alert-policy.test.json)"
+          printf '%s\n' "$telemetry_alert_json" | python3 -c '
+          import json,sys
+          doc=json.load(sys.stdin)
+          assert doc["result"]=="PASS" and doc["alert_count"]==1
+          assert doc["metric_counts"]["operational.count"]==26
+          assert doc["metric_counts"]["operational.alert"]==1
           '
 
           docker compose -f infra/runtime/compose.smoke.yaml stop db
