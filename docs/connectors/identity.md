@@ -47,8 +47,27 @@ The candidate advertises only `VERIFY_CREDENTIAL`. `REVOKE_SESSION` and `DELETE_
 
 ## Supabase managed-project qualification boundary
 
-The production-disabled candidate has an offline account-profile qualification harness at `tools/qualify_supabase_identity.py`. It accepts only protected file inputs for three access credentials (initial sign-in, same-session refresh, later genuine reauthentication) and one JWKS document; it performs no provider network call, mutation, logout or deletion. `PRINCESS_SUPABASE_QUALIFY=1` is required to run it.
+The production-disabled candidate has the opt-in account-profile qualification harness at
+`tools/qualify_supabase_identity.py`. Synthetic CI remains offline. A `MANAGED_PROJECT` run is deliberately
+manual: it uses a protected initial access JWT, refresh token and low-privilege Supabase publishable/legacy-anon
+API key, fetches the configured issuer's JWKS, and performs one real refresh grant itself. Secret/service-role
+keys are refused.
 
-A PASS `supabase-identity-qualification/1` receipt proves only the technical relationship witnessed by those supplied credentials under the code-qualified candidate profile: subject/session continuity across refresh, unchanged AMR-derived authentication freshness on refresh, advanced freshness/new session on reauthentication, and the Princess local revocation-fence behavior. The receipt hashes issuer/JWKS instead of publishing them and contains no credential or provider user/session identifier. It does not select Supabase, prove processor terms, or activate any runtime adapter.
+After the refresh witness passes, the harness requires the operator to rotate the asymmetric signing key in the
+owner-authorized qualification project and complete a genuine new sign-in. It then fetches JWKS again and only
+passes when the original/refresh credentials share a session and authentication freshness, the reauthentication
+uses a new session and newer AMR-derived freshness, the signing `kid` has changed, and both old/new signing keys
+remain trusted by the final JWKS. The same run exercises Princess's local `revoked_before` fence: the refreshed
+old session is rejected and the post-fence genuine authentication is accepted.
 
-If the Custom Access Token Hook is enabled/unknown, the project uses an out-of-profile signing configuration, the three credentials do not show the required ordered relationship, or the existing adapter rejects any credential, qualification fails. Fix/review the account configuration; do not weaken the candidate verifier or the durable freshness fence to manufacture a PASS.
+The `supabase-identity-qualification/2` receipt records checked date/Princess commit, issuer host and hashes,
+audience/role, inspected anonymous-sign-in and OAuth-server settings, Custom Access Token Hook state, token
+lifetime, JWKS algorithms/key IDs/hashes, AMR method names and boolean refresh/rotation/reauth/fence witnesses.
+It contains no access/refresh token, API key, subject, session ID, absolute authentication timestamp, raw issuer
+URL or JWKS body. A PASS still does not select Supabase, prove processor terms, or activate any runtime adapter.
+
+If the Custom Access Token Hook is enabled/unknown, the account-policy settings were not explicitly inspected,
+the project uses an out-of-profile signing configuration, a secret/service-role key is supplied, refresh changes
+session/authentication freshness, the signing key does not rotate for the live witness, reauthentication is not
+genuinely newer, or the existing adapter rejects any credential, qualification fails. Fix/review the account
+configuration; do not weaken the candidate verifier or durable freshness fence to manufacture a PASS.
