@@ -1499,6 +1499,7 @@ packages/api-client/
 packages/report-core/
 packages/report-web/
 packages/design-tokens/
+src/princess_app/adapters/supabase/
 ```
 
 ### Coding sequence
@@ -1514,11 +1515,11 @@ Working Free web journey and reusable web report components tied to saved projec
 
 ### Implementation evidence
 
-PR #14 established the working deterministic Free Next.js journey and T21 export integration. This T17 slice adds canonical ReportSummary/ReportPage contracts, owner-scoped paginated report history, report-scoped EvidenceBundle reads with stored digest/lineage validation, current-principal history UI, stored baseline/spacing/slant evidence views and cross-owner/browser regression coverage. PR #18 adds a reviewed pinned axe dependency and generated lockfile, automated WCAG A/AA browser-state coverage with a proven negative control, explicit fixture/live Playwright modes, and a mandatory isolated live Free upload-to-export CI journey that refreshes the queued run before deterministic worker execution. PR #33 promotes new analyses to individual-report/2 while preserving explicit legacy-v1 reports/revisions, applies the owner-accepted Inktrospect Dossier hierarchy to First Reveal/report/evidence/history, and adds browser/accessibility coverage for positive highlight, reviewed no-eligible fallback, narrow Swedish, 200% text and dark/reduced-motion states without introducing client-side salience. The production-identity review then found that the deterministic fake had been equating token issuance with authentication freshness even though the generic OIDC adapter deliberately leaves missing auth_time unknown. This credential-freshness repair separates those concepts, rejects impossible future auth_time before application state mutation and keeps the current ID-token-shaped OIDC profile narrow pending ADR-002. The provider-owned credential-policy slice then removes the remaining OIDC-specific audience assumption from the application boundary: IdentityService no longer receives an audience and VerifiedIdentity no longer carries one. The current fake/OIDC adapters retain their own configured audience checks, so provider-specific context policy can later differ without weakening application authorization.
+PR #14 established the working deterministic Free Next.js journey and T21 export integration. This T17 slice adds canonical ReportSummary/ReportPage contracts, owner-scoped paginated report history, report-scoped EvidenceBundle reads with stored digest/lineage validation, current-principal history UI, stored baseline/spacing/slant evidence views and cross-owner/browser regression coverage. PR #18 adds a reviewed pinned axe dependency and generated lockfile, automated WCAG A/AA browser-state coverage with a proven negative control, explicit fixture/live Playwright modes, and a mandatory isolated live Free upload-to-export CI journey that refreshes the queued run before deterministic worker execution. PR #33 promotes new analyses to individual-report/2 while preserving explicit legacy-v1 reports/revisions, applies the owner-accepted Inktrospect Dossier hierarchy to First Reveal/report/evidence/history, and adds browser/accessibility coverage for positive highlight, reviewed no-eligible fallback, narrow Swedish, 200% text and dark/reduced-motion states without introducing client-side salience. The production-identity review then found that the deterministic fake had been equating token issuance with authentication freshness even though the generic OIDC adapter deliberately leaves missing auth_time unknown. This credential-freshness repair separates those concepts, rejects impossible future auth_time before application state mutation and keeps the current ID-token-shaped OIDC profile narrow pending ADR-002. The provider-owned credential-policy slice then removes the remaining OIDC-specific audience assumption from the application boundary: IdentityService no longer receives an audience and VerifiedIdentity no longer carries one. The current fake/OIDC adapters retain their own configured audience checks, so provider-specific context policy can later differ without weakening application authorization. The next provider-specific slice code-qualifies a production-disabled Supabase Auth candidate against pinned supabase/auth source semantics: one first-party asymmetric access-JWT profile with configured audience/roles, canonical UUID subject/session, non-anonymous state and conservative timestamped-AMR freshness. Refresh-token issuance time is not promoted to authentication time; missing/unknown AMR remains unknown, and Custom Access Token Hooks/HS256 projects stay outside the qualified profile. API composition and environment manifests remain provider-free.
 
 ### Remaining work
 
-- Select and approve the ADR-002 provider plus exact production API credential/session profile; prove trustworthy reauthentication/logout/deletion freshness compatible with the durable revoked_before fence (or implement a separately reviewed provider-revocation/application-session design), then implement production web sign-in and cross-device/account recovery.
+- Select and approve the ADR-002 provider. If Supabase is selected, exercise the code-qualified candidate against an authorized project and retain exact deployed issuer/audience/role/asymmetric-JWKS/Custom-Access-Token-Hook/AMR/refresh evidence plus processor, region, retention, deletion and support review; then implement production web PKCE/session refresh, provider lifecycle coordination and cross-device/account recovery.
 
 ### Acceptance evidence
 
@@ -1526,16 +1527,19 @@ PR #14 established the working deterministic Free Next.js journey and T21 export
 - No server keys or paid hidden data in client payloads; supported browser/accessibility journeys pass.
 - Logout/deletion freshness is fail-closed: newly issued credentials without proven post-revocation authentication cannot restore access or rebind a deleted identity.
 - IdentityService consumes only already-verified provider identity facts; audience/authorized-party/token-context rules are enforced by the selected adapter and cannot be bypassed by application callers.
+- Supabase candidate refresh cannot cross the durable revoked_before fence unless signed timestamped AMR proves a reviewed authentication/reauthentication ceremony after the fence.
 
 ### Required failure and regression cases
 
 - Auth expiry, late prior-account response, cross-owner URL, revoked report, corrupt payload, upload failure, long labels and zero/missing charts.
 - Fresh token issuance without auth_time after logout/deletion, stale auth_time, future auth_time, and assuming a configured session secret or provider sid means provider revocation occurred.
 - Application-supplied audience overriding adapter policy, wrong-audience OIDC/fake credential accepted after the refactor, and treating a VerifiedIdentity audience field as downstream authorization.
+- Supabase HS256/shared-secret project, multi/foreign audience, service/admin role, anonymous session, OAuth-server client_id profile, missing/malformed session UUID, malformed/future AMR and unaudited Custom Access Token Hook.
 
 ### Deliverables
 
 - Web client and browser/accessibility contract tests
+- Production-disabled Supabase Auth candidate verifier and synthetic qualification fixtures
 
 ### Rollback and compatibility
 

@@ -2,7 +2,7 @@
 
 [Index](00-index.md) · [Original evidence register](07-evidence-register.md) · [Provider decisions](19-provider-decision-register.md) · [Connector index](../connectors/README.md).
 
-**Checked for this planning pass:** 2026-09-26. These sources support integration design, not an assertion that our accounts, region configuration, products or binaries have been approved. Provider rules, SDK support, submission deadlines and pricing must be rechecked at the owning task and release candidate. No exact model, tariff or store exception is approved by this document.
+**Checked for this planning pass:** 2026-09-26. **Identity candidate source refresh:** 2026-09-30. These sources support integration design, not an assertion that our accounts, region configuration, products or binaries have been approved. Provider rules, SDK support, submission deadlines and pricing must be rechecked at the owning task and release candidate. No exact model, tariff or store exception is approved by this document.
 
 ## Repository evidence
 
@@ -42,7 +42,7 @@ T00A records the four later code-review findings on PR #10: locked-distribution 
 | E21 | [Cloudflare R2 presigned URLs](https://developers.cloudflare.com/r2/api/s3/presigned-urls/) | Presigned operations are bearer capabilities and provider-specific in detail. Bind verified immutable bytes before analysis; size/checksum/version semantics need capability tests, not assumed S3 equivalence. |
 | E22 | [FastAPI BackgroundTasks](https://fastapi.tiangolo.com/tutorial/background-tasks/) | Do not use in-process after-response work as the durable analysis/model queue. Separate durable worker execution from HTTP completion. |
 | E23 | [OpenID Connect Core](https://openid.net/specs/openid-connect-core-1_0.html) | Validate issuer, audience, expiry and appropriate token/session semantics. Map provider subjects to internal principals; provider identity is not object authorization. |
-| E24 | [OAuth for Native Apps, RFC 8252](https://www.rfc-editor.org/rfc/rfc8252) | Use external user-agent authorization and the appropriate native redirect/PKCE flow. Do not collect social-provider passwords in embedded webviews. |
+| E24 | [OAuth for Native Apps, RFC 8252](https://www.rfc-editor.org/rfc/rfc8252) | Use external user-agent authorization and the appropriate native redirect/PKCE flow. Do not collect social-provider passwords in embedded webviews. |\n| E32 | [Supabase Auth token service at pinned source](https://github.com/supabase/auth/blob/ce9a8eee0cc042be8c7a42981a7ddae631e41d91/internal/tokens/service.go), [session AMR model](https://github.com/supabase/auth/blob/ce9a8eee0cc042be8c7a42981a7ddae631e41d91/internal/models/sessions.go) and [authentication methods](https://github.com/supabase/auth/blob/ce9a8eee0cc042be8c7a42981a7ddae631e41d91/internal/models/factor.go) | Current source emits stock access JWTs with project audience, role, session ID, AAL/AMR and anonymous state; AMR timestamps come from persisted session authentication claims, while refresh reissues from that session state. Custom Access Token Hooks may rewrite claims, and HS256 remains supported for compatibility, so Princess qualifies only an account-confirmed stock-claims + asymmetric-signing profile. The pinned source does not prove a future managed project's deployed version or settings. |
 
 ## Clients and operations
 
@@ -62,4 +62,4 @@ The Next.js, Expo/native module, managed identity/database, S3 storage, email, t
 
 Recheck minimum/target SDKs, App Store/Play submission rules, native billing-library support, native-library page-size compatibility, privacy forms, age/content rating, login requirements, storefront credit portability, developer-account testing and provider data controls at release. Exact versions, prices and region availability must come from that dated verification, not from an old prose example.
 
-Sources E01–E31 are public technical/policy inputs. Design choices elsewhere in the roadmap are labelled implementation defaults or acceptance requirements. Original R/P/S references in chapter 07 remain historical evidence; they do not override current source JSON or the explicit v2 amendments in [00](00-index.md).
+Sources E01–E32 are public technical/policy inputs. Design choices elsewhere in the roadmap are labelled implementation defaults or acceptance requirements. Original R/P/S references in chapter 07 remain historical evidence; they do not override current source JSON or the explicit v2 amendments in [00](00-index.md).
