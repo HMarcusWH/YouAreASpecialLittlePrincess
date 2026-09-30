@@ -2,7 +2,7 @@
 
 Next.js 16 / React 19, presentation only (ADR-001). The FastAPI service owns authorization, consent, jobs, the ledger and reports; this app never talks to the database, a payment provider or a model.
 
-- **Session**: `app/api/session/*` keeps the API credential (guest capability or, in local/test, a fake-provider ID token) in an HttpOnly, SameSite=Lax cookie. Client code never sees it.
+- **Credential session boundary**: `lib/session-policy.ts` owns the opaque credential cookie issue/clear policy and `lib/session.ts` is server-only. Guest credentials and local/test fake-provider credentials use the same HttpOnly, SameSite=Lax, host-only cookie; it is Secure outside local/test. Client code never sees or parses the credential. Local-device sign-out clears only this transport; sign-out-everywhere is a separate FastAPI revocation operation.
 - **Proxy**: `app/api/v1/[...path]` forwards only allowlisted routes to `PRINCESS_API_BASE`, attaches the credential server-side and rejects cross-origin mutations. The signed local upload PUT is forwarded only in local and test.
 - **Validation**: payloads go through `@princess/api-client` runtime guards (`parseReportView`, `parseRunStatus`) before rendering. They are never cast into contract types.
 - **Rendering**: `@princess/report-web` renders the saved `ReportViewModel` only: no computed percentiles, no model text, and "not measured" instead of zero. Colours and spacing come from `@princess/design-tokens`.
