@@ -1,0 +1,33 @@
+{
+  "version": "operational-alert-policy/1",
+  "environment": "test",
+  "rules": [
+    {
+      "alert_code": "test.analysis_queue_stale",
+      "source": "jobs",
+      "category": "analysis",
+      "state": "queued",
+      "measure": "oldest_age_s",
+      "operator": "gt",
+      "threshold": 60
+    },
+    {
+      "alert_code": "test.tombstone_store_missing",
+      "source": "privacy",
+      "category": "tombstone",
+      "state": "missing",
+      "measure": "count",
+      "operator": "gt",
+      "threshold": 0
+    },
+    {
+      "alert_code": "test.tombstone_log_unreadable",
+      "source": "privacy",
+      "category": "tombstone",
+      "state": "unreadable",
+      "measure": "count",
+      "operator": "gt",
+      "threshold": 0
+    }
+  ]
+}
