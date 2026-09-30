@@ -116,6 +116,43 @@ def test_candidate_context_claims_fail_closed(setup, overrides, code):
     assert err.value.code == code
 
 
+def test_expiry_future_iat_and_missing_required_profile_claims(setup):
+    clock, key, _, provider = setup
+    with pytest.raises(Unauthenticated) as err:
+        provider.verify_credential(token(clock, key, exp=1), ctx(clock))
+    assert err.value.code == "expired"
+
+    future = int(clock.now().timestamp()) + 3600
+    with pytest.raises(Unauthenticated) as err:
+        provider.verify_credential(token(clock, key, iat=future), ctx(clock))
+    assert err.value.code == "not_yet_valid"
+
+    for missing in ("role", "aal", "is_anonymous"):
+        with pytest.raises(Unauthenticated) as err:
+            provider.verify_credential(token(clock, key, **{missing: None}), ctx(clock))
+        assert err.value.code == "invalid_token"
+
+
+def test_audience_and_role_are_adapter_configuration_not_protocol_constants():
+    clock = FakeClock()
+    key = rsa_key()
+    provider = SupabaseIdentityProvider(
+        issuer=ISS,
+        audience="princess-members",
+        allowed_roles=frozenset({"member"}),
+        jwks_source=Jwks(jwk(key, "k1")),
+        clock=clock,
+        environment=Environment.STAGING,
+        mode=ProviderMode.SANDBOX,
+        stock_claims_profile=True,
+    )
+    identity = provider.verify_credential(
+        token(clock, key, aud="princess-members", role="member"),
+        ctx(clock),
+    )
+    assert identity.subject == SUB
+
+
 def test_nbf_is_optional_but_validated_when_present(setup):
     clock, key, _, provider = setup
     assert provider.verify_credential(token(clock, key), ctx(clock)).subject == SUB
@@ -145,7 +182,14 @@ def test_refresh_iat_does_not_advance_authentication_freshness(setup):
     assert refreshed.auth_time < clock.now()
 
 
-@pytest.mark.parametrize("amr", [None, [], ["oauth"], ["future-method"], [{"method": "token_refresh", "timestamp": 1}]])
+@pytest.mark.parametrize("amr", [
+    None,
+    [],
+    ["oauth"],
+    ["future-method"],
+    [{"method": "future-method", "timestamp": 1}],
+    [{"method": "token_refresh", "timestamp": 1}],
+])
 def test_missing_string_unknown_or_refresh_only_amr_does_not_invent_freshness(setup, amr):
     clock, key, _, provider = setup
     identity = provider.verify_credential(token(clock, key, amr=amr), ctx(clock))
