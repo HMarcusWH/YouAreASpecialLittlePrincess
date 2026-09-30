@@ -190,5 +190,5 @@ def test_cross_environment_calls_are_rejected_before_reading_keys(setup):
     clock, key, source, provider = setup
     production = CallContext("corr-2", Environment.PRODUCTION, clock.now() + timedelta(seconds=30))
     with pytest.raises(InvalidInput):
-        provider.verify_credential(token(clock, key), AUD, production)
+        provider.verify_credential(token(clock, key), production)
     assert source.calls == 0
