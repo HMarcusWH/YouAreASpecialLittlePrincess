@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { apiBase, devLoginEnabled, sameOrigin, sessionCookie } from "../../../../lib/session.ts";
+import { apiBase, credentialCookie, devLoginEnabled, sameOrigin } from "../../../../lib/session.ts";
 
 /** Local/test only: sign in as a synthetic subject through the fake identity provider. */
 export async function POST(request: Request) {
@@ -16,6 +16,6 @@ export async function POST(request: Request) {
   if (!upstream.ok) return NextResponse.json({ error: "login_unavailable" }, { status: 502 });
   const { id_token: token } = (await upstream.json()) as { id_token: string };
   const response = NextResponse.json({ signed_in: true }, { status: 201 });
-  response.cookies.set(sessionCookie(token));
+  response.cookies.set(credentialCookie(token));
   return response;
 }

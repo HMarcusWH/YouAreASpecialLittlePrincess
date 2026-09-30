@@ -3,7 +3,7 @@
 // interprets business data: authorization happens in the API.
 import { NextResponse } from "next/server";
 
-import { apiBase, devLoginEnabled, sameOrigin, sessionToken } from "../../../../lib/session.ts";
+import { apiBase, devLoginEnabled, sameOrigin, sessionCredential } from "../../../../lib/session.ts";
 
 const ID = "[A-Za-z0-9][A-Za-z0-9._:-]{0,127}";
 const ROUTES: ReadonlyArray<[string, RegExp]> = [
