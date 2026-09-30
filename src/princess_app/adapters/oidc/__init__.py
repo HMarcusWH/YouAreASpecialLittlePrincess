@@ -1,10 +1,10 @@
-"""Generic OIDC ID-token verification behind the IdentityProvider port (T02).
+"""Current provider-neutral OIDC ID-token profile behind IdentityProvider.
 
-The vendor (ADR-002) is still pending; this adapter implements the
-provider-neutral part: JWKS from a *configured* source only, asymmetric
-algorithms only, issuer/audience/expiry/not-before checks against the
-injected clock, and one throttled JWKS refresh on an unknown key ID. Token
-headers such as ``jku``/``x5u``/``jwk`` are never followed.
+ADR-002 still owns the production credential decision. This adapter deliberately
+remains ID-token-shaped and rejects RFC 9068 access-token types until that
+decision is made. It verifies only a configured issuer/JWKS source, asymmetric
+algorithms, audience/time claims and bounded key refresh. Token headers such as
+``jku``/``x5u``/``jwk`` are never followed.
 """
 from __future__ import annotations
 
@@ -56,7 +56,7 @@ class OidcIdentityProvider:
         self._last_refresh: datetime | None = None
         self.refresh_count = 0
         self.profile = CapabilityProfile(port=port.PORT, provider="oidc", mode=mode,
-                                         capabilities=frozenset({port.VERIFY_ID_TOKEN}))
+                                         capabilities=frozenset({port.VERIFY_CREDENTIAL}))
 
     def _refresh(self) -> None:
         with provider_errors():
@@ -88,7 +88,7 @@ class OidcIdentityProvider:
         return key
 
     def verify_credential(self, credential: str, expected_audience: str, ctx: CallContext) -> port.VerifiedIdentity:
-        self.profile.require(port.VERIFY_ID_TOKEN)
+        self.profile.require(port.VERIFY_CREDENTIAL)
         if ctx.environment is not self.environment:
             raise InvalidInput("environment_mismatch")
         ctx.check_deadline(self._clock)
@@ -127,10 +127,16 @@ class OidcIdentityProvider:
             raise Unauthenticated("invalid_subject")
         email = claims.get("email") if isinstance(claims.get("email"), str) else None
         verified = claims.get("email_verified") if type(claims.get("email_verified")) is bool else None
+        raw_auth_time = claims.get("auth_time")
+        auth_time = _time(raw_auth_time)
+        if raw_auth_time is not None and auth_time is None:
+            raise Unauthenticated("invalid_auth_time")
+        if auth_time is not None and (auth_time > now + self._leeway or auth_time > issued + self._leeway):
+            raise Unauthenticated("invalid_auth_time")
         return port.VerifiedIdentity(issuer=self.issuer, subject=subject, audience=expected_audience,
                                      expires_at=expires, session_id=claims.get("sid") if isinstance(
                                          claims.get("sid"), str) else None, email=email, email_verified=verified,
-                                     auth_time=_time(claims.get("auth_time")))
+                                     auth_time=auth_time)
 
     def revoke_session(self, session_id: str, ctx: CallContext) -> None:
         raise Unsupported("capability_not_supported", detail="oidc:revoke_session")

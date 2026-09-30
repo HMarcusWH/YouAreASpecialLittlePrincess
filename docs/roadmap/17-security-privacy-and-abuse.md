@@ -8,6 +8,8 @@ Treat uploaded bytes, image text, filenames, client metadata, deep links, store 
 
 Protect account/sample/run/report/region links with composite constraints and non-owner runtime-role tests. No API/worker uses a database superuser or BYPASSRLS role for ordinary access. A sharing grant is an explicit field projection, not a right to query private rows. Partner comparison requires both authorized inputs and a separate disclosure scope.
 
+Session freshness is separate from token freshness. Logout-everywhere and account deletion set a durable local `revoked_before` fence; a provider merely minting a new token after that time is not proof that the person reauthenticated. Only a trustworthy authentication-time/session mechanism selected under ADR-002 may reopen the account after the fence. Unknown freshness fails closed, impossible future authentication times are rejected before account state changes, and provider-side session revocation must not be claimed unless the selected adapter actually performs it.
+
 ## Safe media intake
 
 Allow only reviewed raster formats and normalize through constrained decoding. Enforce compressed bytes, decoded pixels, dimensions, animation/frame count, decode time, CPU/memory and worker concurrency. MIME extension/client headers are hints, not verification. Strip unnecessary EXIF/location metadata from derived images. Preserve transform lineage and author-approved original retention separately.

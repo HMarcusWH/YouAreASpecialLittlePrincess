@@ -11,6 +11,7 @@ from cryptography.hazmat.primitives.asymmetric import ec, rsa
 
 from princess_app.adapters.fakes import FakeClock
 from princess_app.adapters.oidc import OidcIdentityProvider
+from princess_app.ports import identity as identity_port
 from princess_app.ports.base import CallContext, Environment, InvalidInput, ProviderMode, Unauthenticated, Unsupported
 
 ISS = "https://idp.example.invalid/"
@@ -62,6 +63,7 @@ def test_valid_token_maps_only_supplied_claims(setup):
     clock, key, _, provider = setup
     identity = provider.verify_credential(token(clock, key), AUD, ctx(clock))
     assert identity.binding_key == (ISS, "user-1") and identity.session_id == "s1"
+    assert provider.profile.supports(identity_port.VERIFY_CREDENTIAL)
     # No auth_time claim means the sign-in time is unknown (never iat), so the
     # logout/deletion fence fails closed for such tokens.
     assert identity.email is None and identity.email_verified is None and identity.auth_time is None
@@ -100,6 +102,22 @@ def test_not_before_and_future_issued_at_are_rejected(setup):
         with pytest.raises(Unauthenticated) as err:
             provider.verify_credential(token(clock, key, **overrides), AUD, ctx(clock))
         assert err.value.code == "not_yet_valid"
+
+def test_auth_time_is_optional_but_malformed_or_future_freshness_is_rejected(setup):
+    clock, key, _, provider = setup
+    assert provider.verify_credential(token(clock, key), AUD, ctx(clock)).auth_time is None
+    for value in ("not-a-time", int(clock.now().timestamp()) + 3600):
+        with pytest.raises(Unauthenticated) as err:
+            provider.verify_credential(token(clock, key, auth_time=value), AUD, ctx(clock))
+        assert err.value.code == "invalid_auth_time"
+
+
+def test_token_issuance_time_is_never_substituted_for_authentication_time(setup):
+    clock, key, _, provider = setup
+    clock.advance(30)
+    identity = provider.verify_credential(token(clock, key, iat=int(clock.now().timestamp())), AUD, ctx(clock))
+    assert identity.auth_time is None
+
 
 
 def test_algorithm_confusion_and_none_are_rejected(setup):

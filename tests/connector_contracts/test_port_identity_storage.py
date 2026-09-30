@@ -2,11 +2,13 @@
 from __future__ import annotations
 
 import hashlib
+from datetime import timedelta
 
 import pytest
 from port_harness import ctx
 
 from princess_app.adapters.fakes import FakeClock, FakeIdentityProvider, FakeObjectStore
+from princess_app.ports import identity as identity_port
 from princess_app.ports import storage
 from princess_app.ports.base import Conflict, InvalidInput, NotFound, Unauthenticated, Unsupported
 
@@ -24,6 +26,9 @@ def test_valid_token_yields_identity_without_invented_attributes():
     identity = provider.verify_credential(token, AUD, ctx(clock))
     assert identity.binding_key == (provider.issuer, "user-1")
     assert identity.email is None and identity.email_verified is None  # unknown, not False
+    assert identity.auth_time is None  # token issuance never invents reauthentication freshness
+    assert provider.profile.supports(identity_port.VERIFY_CREDENTIAL)
+    assert identity_port.VERIFY_ID_TOKEN == identity_port.VERIFY_CREDENTIAL  # source-compat alias
 
 
 @pytest.mark.parametrize("case,code", [
@@ -61,6 +66,16 @@ def test_unverified_email_is_reported_as_supplied():
     clock, provider = idp()
     token = provider.issue_token("user-1", AUD, email="a@example.invalid", email_verified=False)
     assert provider.verify_credential(token, AUD, ctx(clock)).email_verified is False
+
+def test_fake_auth_time_is_explicit_and_cannot_be_after_token_issuance():
+    clock, provider = idp()
+    authenticated = provider.issue_token("user-1", AUD, auth_time=clock.now())
+    assert provider.verify_credential(authenticated, AUD, ctx(clock)).auth_time == clock.now()
+    future = provider.issue_token("user-1", AUD, auth_time=clock.now() + timedelta(seconds=1))
+    with pytest.raises(Unauthenticated) as err:
+        provider.verify_credential(future, AUD, ctx(clock))
+    assert err.value.code == "invalid_auth_time"
+
 
 
 def store(**kw):

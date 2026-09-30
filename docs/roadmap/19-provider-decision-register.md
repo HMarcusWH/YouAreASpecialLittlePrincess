@@ -9,7 +9,7 @@
 | Decision | Direction | Open before production activation | Current owner/task |
 |---|---|---|---|
 | ADR-001 | Next.js web presentation and thin session layer; FastAPI remains business authority | Production deployment profile plus final identity/session integration | T17/T24 |
-| ADR-002 | Managed OIDC identity behind an internal principal/identity binding | Choose/approve provider for production sign-in, recovery, native Apple/Google login, deletion, region and cost | T17/T29–T31 |
+| ADR-002 | Managed identity behind an internal principal/identity binding | Choose/approve provider and exact API credential/session profile; prove reauthentication/logout freshness compatible with local revocation, recovery, native Apple/Google login, deletion, region and cost | T17/T29–T31 |
 | ADR-003 | PostgreSQL + SQLAlchemy/Alembic; local DB tests and non-owner roles | Managed host/region/backups/PITR/pooling contract and timed restore evidence | T24 |
 | ADR-004 | S3-shaped private storage port with provider capability tests | Production object/tombstone provider, jurisdiction, checksum/version/copy/delete semantics and egress pricing | T24 |
 | ADR-005 | Expo/RN/Router native app; shared contract/state/tokens, native platform UX | Exact SDK/native bridge/build compatibility, minimum OS, generated-native ownership, signing/build provider approval | T29 |
