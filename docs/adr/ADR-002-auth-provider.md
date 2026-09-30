@@ -18,6 +18,21 @@ For the Supabase candidate, the reviewed implementation source is `supabase/auth
 
 ## Managed-project qualification harness
 
-T17 now provides `tools/qualify_supabase_identity.py` and the evidence boundary in `docs/ci/T17_SUPABASE_IDENTITY_QUALIFICATION.md`. The harness is deliberately offline and opt-in: an authorized operator supplies ephemeral initial/refresh/reauth access-token files plus the project JWKS, and the existing `SupabaseIdentityProvider` verifies the exact candidate profile. The harness proves same-session refresh does not advance signed authentication freshness, genuine reauthentication does, and Princess's durable `revoked_before` fence rejects the refreshed old session while accepting the post-fence authentication.
+T17 provides `tools/qualify_supabase_identity.py` and the evidence boundary in
+`docs/ci/T17_SUPABASE_IDENTITY_QUALIFICATION.md`. Synthetic regression coverage is offline. Managed-project
+qualification is an explicit owner-authorized live procedure: the tool performs the provider refresh itself with
+protected refresh material and a low-privilege publishable/legacy-anon API key, witnesses unchanged signed
+authentication freshness in the same session, then requires an external asymmetric signing-key rotation and
+genuine new sign-in before completing the receipt.
 
-The generated privacy-safe receipt contains no raw token, subject, session ID, issuer URL, JWKS body or provider secret and always records `provider_selection_claim=false` and `production_activation=false`. Synthetic tests qualify the harness only. **No managed Supabase project has been qualified by the repository merely because this tooling exists.** Provider selection, processor/region/retention/deletion approval and actual managed-project evidence remain owner/provider gates before composition or production PKCE/refresh integration.
+A managed PASS requires a new trusted signing `kid`, a new provider session, advanced AMR-derived authentication
+freshness and a successful Princess revocation-fence witness. It also records the actual access-token lifetime,
+JWKS algorithms/key IDs/hashes and explicitly inspected anonymous-sign-in/OAuth-server settings. Enabled/unknown
+Custom Access Token Hooks, symmetric signing, elevated API keys, stale reauthentication material and unknown
+account-policy settings fail closed.
+
+The generated `supabase-identity-qualification/2` receipt contains no raw access/refresh token, API key, subject,
+session ID, issuer URL, JWKS body or provider secret and always records `provider_selection_claim=false` and
+`production_activation=false`. **No managed Supabase project is qualified merely because this tooling exists.**
+Provider selection, processor/region/retention/deletion approval and the actual managed-project run remain
+owner/provider gates before composition or production PKCE/refresh integration.
