@@ -39,14 +39,18 @@ ACCESS_TOKEN_TYPES = frozenset({"at+jwt", "application/at+jwt"})
 class OidcIdentityProvider:
     port_name = port.PORT
 
-    def __init__(self, *, issuer: str, jwks_source: JwksSource, clock: Clock, environment: Environment,
-                 mode: ProviderMode, allowed_algorithms: frozenset[str] = frozenset({"RS256", "ES256"}),
+    def __init__(self, *, issuer: str, audience: str, jwks_source: JwksSource, clock: Clock,
+                 environment: Environment, mode: ProviderMode,
+                 allowed_algorithms: frozenset[str] = frozenset({"RS256", "ES256"}),
                  leeway_s: int = 30, min_refresh_interval_s: int = 60) -> None:
         self.environment = Environment.parse(environment)
         check_mode_allowed(self.environment, mode)
         if not allowed_algorithms or not allowed_algorithms <= ASYMMETRIC:
             raise ValueError("only asymmetric JWS algorithms may be configured")
+        if not isinstance(audience, str) or not audience or len(audience) > 512:
+            raise InvalidInput("invalid_identity_audience")
         self.issuer = issuer
+        self.audience = audience
         self._source = jwks_source
         self._clock = clock
         self._algorithms = allowed_algorithms
@@ -87,7 +91,7 @@ class OidcIdentityProvider:
             raise Unauthenticated("unknown_signing_key")
         return key
 
-    def verify_credential(self, credential: str, expected_audience: str, ctx: CallContext) -> port.VerifiedIdentity:
+    def verify_credential(self, credential: str, ctx: CallContext) -> port.VerifiedIdentity:
         self.profile.require(port.VERIFY_CREDENTIAL)
         if ctx.environment is not self.environment:
             raise InvalidInput("environment_mismatch")
@@ -105,7 +109,7 @@ class OidcIdentityProvider:
         if key.algorithm_name != alg:
             raise Unauthenticated("algorithm_key_mismatch")
         try:
-            claims = jwt.decode(credential, key.key, algorithms=[alg], audience=expected_audience, issuer=self.issuer,
+            claims = jwt.decode(credential, key.key, algorithms=[alg], audience=self.audience, issuer=self.issuer,
                                 options={"require": ["exp", "iat", "iss", "aud", "sub"], "verify_exp": False,
                                          "verify_nbf": False, "verify_iat": False})
         except jwt.InvalidAudienceError:
@@ -133,7 +137,7 @@ class OidcIdentityProvider:
             raise Unauthenticated("invalid_auth_time")
         if auth_time is not None and (auth_time > now + self._leeway or auth_time > issued + self._leeway):
             raise Unauthenticated("invalid_auth_time")
-        return port.VerifiedIdentity(issuer=self.issuer, subject=subject, audience=expected_audience,
+        return port.VerifiedIdentity(issuer=self.issuer, subject=subject,
                                      expires_at=expires, session_id=claims.get("sid") if isinstance(
                                          claims.get("sid"), str) else None, email=email, email_verified=verified,
                                      auth_time=auth_time)

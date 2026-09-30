@@ -28,7 +28,6 @@ DELETE_PROVIDER_ACCOUNT = "delete_provider_account"
 class VerifiedIdentity:
     issuer: str
     subject: str
-    audience: str
     expires_at: datetime
     session_id: str | None = None
     # Attributes are present only if the provider supplied them; ``None`` means
@@ -41,7 +40,7 @@ class VerifiedIdentity:
     auth_time: datetime | None = None
 
     def __post_init__(self) -> None:
-        for name in ("issuer", "subject", "audience"):
+        for name in ("issuer", "subject"):
             value = getattr(self, name)
             if not isinstance(value, str) or not value or len(value) > 512:
                 raise InvalidInput("invalid_identity_claim", detail=name)
@@ -60,12 +59,12 @@ class VerifiedIdentity:
 class IdentityProvider(Protocol):
     profile: CapabilityProfile
 
-    def verify_credential(self, credential: str, expected_audience: str,
-                          ctx: CallContext) -> VerifiedIdentity:
-        """Verify a bearer credential for ``expected_audience``.
+    def verify_credential(self, credential: str, ctx: CallContext) -> VerifiedIdentity:
+        """Verify one provider credential under this adapter's configured policy.
 
-        The selected provider profile defines the exact credential kind. A
-        verifier must never invent authentication freshness from token issuance.
+        Issuer/audience/authorized-party/token-type rules belong to the selected
+        adapter. The application receives only already-verified identity facts.
+        A verifier must never invent authentication freshness from token issuance.
         Raises ``Unauthenticated`` for invalid provider credentials.
         """
         ...

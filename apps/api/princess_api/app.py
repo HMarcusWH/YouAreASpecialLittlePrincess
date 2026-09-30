@@ -88,7 +88,6 @@ class Services:
     kill_switches: dict[str, bool] = field(default_factory=dict)
     # Present only when the identity provider is a fake (never in production).
     dev_identity: FakeIdentityProvider | None = None
-    audience: str = "princess-api"
     intake: IntakeService | None = None
     # Local/test only: a fake/filesystem store exposing ``accept_signed_put``
     # in place of a provider's presigned PUT endpoint.
@@ -567,7 +566,7 @@ def create_app(services: Services) -> FastAPI:
         def dev_token(body: DevTokenBody) -> dict:
             """Local/test only: mint a fake credential for one synthetic sign-in."""
             return {"id_token": dev.issue_token(
-                body.subject, services.audience, session_id=f"dev-{body.subject}",
+                body.subject, session_id=f"dev-{body.subject}",
                 auth_time=services.clock.now(),
             )}
 

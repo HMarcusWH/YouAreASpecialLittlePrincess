@@ -84,19 +84,18 @@ class IdentityStore(Protocol):
 
 class IdentityService:
     def __init__(self, provider: IdentityProvider, store: IdentityStore, clock: Clock, ids: IdGenerator,
-                 audience: str, guest_admission: GuestAdmission = GuestAdmission()) -> None:
+                 guest_admission: GuestAdmission = GuestAdmission()) -> None:
         self._provider = provider
         self._store = store
         self._clock = clock
         self._ids = ids
-        self._audience = audience
         self._guest_admission = guest_admission
 
     # --- authentication --------------------------------------------------
     def authenticate(self, credential: str, ctx: CallContext) -> Principal:
         if credential.startswith(GUEST_PREFIX):
             return self.authenticate_guest(credential)
-        identity = self._provider.verify_credential(credential, self._audience, ctx)
+        identity = self._provider.verify_credential(credential, ctx)
         if identity.auth_time is not None and identity.auth_time > self._clock.now():
             # Defense in depth across future provider adapters: impossible
             # authentication freshness must not create/rebind application state.

@@ -54,8 +54,8 @@ def load(name):
 @pytest.fixture
 def world(app_db):
     clock = FakeClock(T0)
-    provider = FakeIdentityProvider(clock=clock)
-    identity = IdentityService(provider, PostgresIdentityStore(app_db), clock, SequentialIds(), AUD)
+    provider = FakeIdentityProvider(audience=AUD, clock=clock)
+    identity = IdentityService(provider, PostgresIdentityStore(app_db), clock, SequentialIds())
     return clock, provider, identity
 
 
@@ -331,8 +331,9 @@ def test_concurrent_first_login_converges_on_one_principal(world):
 
 def test_guest_creation_is_admitted_per_window(app_db):
     clock = FakeClock(T0)
-    identity = IdentityService(FakeIdentityProvider(clock=clock), PostgresIdentityStore(app_db), clock,
-                               SequentialIds(), AUD, guest_admission=GuestAdmission(limit=2, window_seconds=60))
+    identity = IdentityService(FakeIdentityProvider(audience=AUD, clock=clock),
+                               PostgresIdentityStore(app_db), clock, SequentialIds(),
+                               guest_admission=GuestAdmission(limit=2, window_seconds=60))
     identity.create_guest()
     identity.create_guest()
     with pytest.raises(RateLimited) as limited:
