@@ -130,3 +130,30 @@ For API diagnosis, `/health/live` proves only that the process responds and
 route. Worker readiness uses `python infra/runtime/probe.py database`.
 Production host/registry/alert commands remain **PENDING DEPLOYMENT** until
 those providers are selected and qualified.
+
+
+## Provider-neutral operational posture and halt verification
+
+The backend runtime exposes three read-only operator commands:
+
+```sh
+$API_ENV python -m princess_api.ops snapshot
+$API_ENV python -m princess_api.ops check --policy <reviewed-policy.json>
+$API_ENV python -m princess_api.ops verify-disabled --switch commerce --switch premium_generation
+```
+
+`snapshot` emits `operational-snapshot/1`: fixed aggregate queue/outbox,
+notification, commerce, Premium-attempt and export observations; current schema
+revision; reviewed capability switches; and tombstone-log presence/readability.
+It contains no principal/report/job/payment/object IDs or provider payloads.
+
+`check` evaluates only allowlisted dimensions/measures/operators. It does not
+run arbitrary SQL or expressions and never changes business state.
+`verify-disabled` is a store/incident-halt proof only: manifest/redeployment
+remains the authority and there is intentionally no operator command that can
+enable a capability.
+
+The checked-in test policy has synthetic thresholds solely for CI. **PENDING
+DEPLOYMENT:** staging/production thresholds, named alert owners/escalation,
+dashboard/export destination and edge/global limits must be approved from
+actual deployed behavior; do not copy CI thresholds into an SLO.

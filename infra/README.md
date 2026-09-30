@@ -206,3 +206,23 @@ The generated `recovery-receipt/1` contains only hashes, timings and counts.
 CI timings are observations, **not** approved production RPO/RTO values. This
 does not select a managed PostgreSQL host or object/tombstone provider and does
 not prove their PITR, retention, version-deletion or regional guarantees.
+
+
+## Provider-neutral operational posture (T24)
+
+`infra/operations/` defines `operational-snapshot/1` and a fixed alert-policy
+contract. Migration `0011_operational_snapshot` adds a SECURITY DEFINER
+aggregate function that returns only bounded counts, ages and attempt maxima.
+The normal API role still cannot raw-read another tenant's rows; unconstrained
+job kinds/outbox topics are collapsed to reviewed categories before leaving
+PostgreSQL.
+
+`python -m princess_api.ops snapshot` and `check --policy ...` deliberately
+avoid composing external providers, so they remain usable during provider
+incidents. `verify-disabled` proves reviewed manifest switches are off but
+cannot mutate them. Runtime CI exercises a passing synthetic policy and then
+injects a stale queue item and requires the same policy to fail with a fixed
+alert code.
+
+No production alert threshold, exporter, dashboard vendor, pager route or SLO
+is selected by this slice.
