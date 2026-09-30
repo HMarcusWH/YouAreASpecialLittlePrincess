@@ -1999,6 +1999,9 @@ src/princess_app/domain/feedback/
 src/princess_app/application/feedback/
 src/princess_app/adapters/feedback/
 migrations/
+apps/api/princess_api/ops.py
+src/princess_app/application/operations.py
+src/princess_app/adapters/postgres/operations.py
 ```
 
 ### Coding sequence
