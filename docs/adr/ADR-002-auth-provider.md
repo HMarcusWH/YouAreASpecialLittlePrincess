@@ -14,3 +14,10 @@ Acceptance: wrong issuer/audience/role/profile, symmetric/rotated keys, expired 
 
 
 For the Supabase candidate, the reviewed implementation source is `supabase/auth@ce9a8eee0cc042be8c7a42981a7ddae631e41d91`, not evidence about any future managed project's deployed version. Its current stock access-token path emits session AMR from persisted authentication claims, so a refresh changes JWT issuance time without automatically advancing Princess `auth_time`. The candidate adapter encodes that property and fails closed when usable AMR freshness is absent. Actual project qualification must confirm issuer, audience, roles, asymmetric signing/JWKS, Custom Access Token Hook state and refresh/reauthentication behavior before composition.
+
+
+## Managed-project qualification harness
+
+T17 now provides `tools/qualify_supabase_identity.py` and the evidence boundary in `docs/ci/T17_SUPABASE_IDENTITY_QUALIFICATION.md`. The harness is deliberately offline and opt-in: an authorized operator supplies ephemeral initial/refresh/reauth access-token files plus the project JWKS, and the existing `SupabaseIdentityProvider` verifies the exact candidate profile. The harness proves same-session refresh does not advance signed authentication freshness, genuine reauthentication does, and Princess's durable `revoked_before` fence rejects the refreshed old session while accepting the post-fence authentication.
+
+The generated privacy-safe receipt contains no raw token, subject, session ID, issuer URL, JWKS body or provider secret and always records `provider_selection_claim=false` and `production_activation=false`. Synthetic tests qualify the harness only. **No managed Supabase project has been qualified by the repository merely because this tooling exists.** Provider selection, processor/region/retention/deletion approval and actual managed-project evidence remain owner/provider gates before composition or production PKCE/refresh integration.
