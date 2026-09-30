@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - "infra/runtime/**"
+      - "infra/recovery/**"
       - "infra/environments/**"
       - "src/princess_app/**"
       - "apps/api/**"
@@ -18,6 +19,7 @@ on:
     branches: [main]
     paths:
       - "infra/runtime/**"
+      - "infra/recovery/**"
       - "infra/environments/**"
       - "src/princess_app/**"
       - "apps/api/**"
@@ -133,6 +135,20 @@ jobs:
           else:
               raise SystemExit("readiness did not fail closed after PostgreSQL stopped")
           PY
+      - name: Rehearse real PostgreSQL backup/restore
+        env:
+          PRINCESS_RECOVERY_ALLOW_RESET: "1"
+          PRINCESS_RECOVERY_WORKDIR: ${{ runner.temp }}/princess-recovery-${{ github.sha }}
+        run: |
+          python3 infra/recovery/run_restore_drill.py
+          python3 infra/recovery/receipt.py validate "$PRINCESS_RECOVERY_WORKDIR/recovery-receipt.json"
+      - name: Upload privacy-safe recovery receipt
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: t24-recovery-receipt-${{ github.sha }}
+          path: ${{ runner.temp }}/princess-recovery-${{ github.sha }}/recovery-receipt.json
+          if-no-files-found: error
+          retention-days: 14
       - name: Final-image source syntax check without filesystem writes
         run: |
           docker run --rm --read-only --tmpfs /tmp --entrypoint python "$PRINCESS_BACKEND_IMAGE" -c '
