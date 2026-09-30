@@ -25,3 +25,21 @@ Fakes provide expired/wrong-audience/unverified-email/rotated-key/revoked-sessio
 Live configuration requires an approved tenant, exact credential profile/audiences, callback/deep-link domains, a tested reauthentication/logout/deletion model, region/data handling and deletion support. No identity admin secret belongs in mobile/web bundles. Log opaque binding/operation IDs and safe error codes, not tokens or login URLs containing credentials. Provider replacement migrates identity bindings through an explicit linking/recovery process, not by silently changing principal IDs. The checked-in `PRINCESS_SESSION_SECRET` name is configuration surface only; there is currently no application-issued session-token implementation and its presence is not evidence that one exists.
 
 Primary protocol references: E23/E24 and platform rules in [source refresh](../roadmap/22-research-and-source-refresh.md).
+
+
+## Supabase Auth candidate profile (T17, production disabled)
+
+`src/princess_app/adapters/supabase/SupabaseIdentityProvider` code-qualifies one narrow **candidate** profile; it does not select or activate Supabase for production. The reviewed upstream behavior is pinned to `supabase/auth@ce9a8eee0cc042be8c7a42981a7ddae631e41d91` (checked 2026-09-30). A future managed project must still prove its actual version/configuration, processor terms, region/retention/deletion behavior and account settings.
+
+The candidate accepts first-party Supabase **access JWTs** only when all of these are true:
+
+- project signing is asymmetric and the key comes from the configured JWKS source; HS256/shared-secret projects are outside this profile;
+- issuer, singleton audience and permitted role are explicit adapter configuration, not universal Supabase constants;
+- `sub` and `session_id` are canonical UUIDs, `aal` is `aal1` or `aal2`, and `is_anonymous` is false;
+- `client_id` is absent, so Supabase OAuth-server client credentials are not silently accepted as the first-party session profile;
+- `exp` and `iat` are required; `nbf` is optional but validated when present;
+- the account uses the reviewed stock claims profile. An enabled Custom Access Token Hook is **not qualified** by this adapter unless a later review proves that the hook preserves every Princess-trusted claim. Construction therefore requires an explicit `stock_claims_profile=True` assertion; that flag is configuration evidence, not provider approval.
+
+Authentication freshness is derived from signed AMR objects, never token `iat`. The reviewed Supabase Auth source stores authentication-method claims on the session and emits their timestamps into access-token AMR; token refresh reissues a JWT from that persisted session AMR rather than turning the refresh timestamp into a new authentication ceremony. Princess accepts timestamped reviewed authentication/reauthentication methods as freshness evidence, ignores unknown/string-only/refresh-only entries for freshness, rejects malformed/future/post-`iat` timestamps, and returns `auth_time=None` when no usable freshness exists. That allows a valid never-revoked session to authenticate while preserving the existing fail-closed `revoked_before` behavior after logout/deletion.
+
+The candidate advertises only `VERIFY_CREDENTIAL`. `REVOKE_SESSION` and `DELETE_PROVIDER_ACCOUNT` remain unsupported: Supabase logout/admin APIs have not yet been bound to Princess's durable provider-session/deletion choreography. API composition still refuses every non-fake IdentityProvider, and no Supabase key, URL or project configuration is present in the environment manifests.
