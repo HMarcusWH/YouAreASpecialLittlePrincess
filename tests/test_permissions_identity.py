@@ -22,6 +22,7 @@ from princess_app.domain.permissions import (
     evaluate,
 )
 from princess_app.ports.base import CallContext, Conflict, Environment, InvalidInput, NotAuthorized, Unauthenticated
+from princess_app.ports.identity import VerifiedIdentity
 
 ROOT = Path(__file__).resolve().parents[1]
 SPECIMEN = Scope("SPECIMEN", "capture_1")
@@ -302,14 +303,24 @@ def test_concurrent_fresh_logins_after_deletion_converge_on_one_new_account():
     assert loser.principal_id == winner.principal_id != principal.principal_id
 
 
-def test_identity_service_rejects_future_auth_time_before_rebinding_state():
+def test_identity_service_rejects_future_auth_time_before_rebinding_state(monkeypatch):
     clock, provider, store, svc = identity()
     principal = svc.authenticate(provider.issue_token("sub-a", AUD), ctx(clock))
     svc.delete_account(principal, ctx(clock))
-    forged = provider.issue_token("sub-a", AUD, auth_time=clock.now() + timedelta(seconds=60))
+
+    def impossible_freshness(_credential, expected_audience, _ctx):
+        return VerifiedIdentity(
+            issuer=provider.issuer,
+            subject="sub-a",
+            audience=expected_audience,
+            expires_at=clock.now() + timedelta(hours=1),
+            auth_time=clock.now() + timedelta(seconds=60),
+        )
+
+    monkeypatch.setattr(provider, "verify_credential", impossible_freshness)
     with pytest.raises(Unauthenticated) as err:
-        svc.authenticate(forged, ctx(clock))
-    assert err.value.code in {"invalid_auth_time", "identity_auth_time_invalid"}
+        svc.authenticate("signed-provider-credential", ctx(clock))
+    assert err.value.code == "identity_auth_time_invalid"
     assert store.principal_for_binding(provider.issuer, "sub-a").principal_id == principal.principal_id
 
 
