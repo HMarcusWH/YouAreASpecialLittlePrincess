@@ -58,6 +58,14 @@ image, including exact fixed alert codes. Production/staging policies are not
 checked in with invented thresholds: threshold values, routing, ownership and
 retention require deployed evidence and owner/provider decisions.
 
-A later telemetry adapter should translate these already-bounded observations
-into the existing TelemetryExporter port rather than issuing parallel ad hoc
-SQL or scraping private application tables.
+T24 now maps these already-bounded observations into the existing
+TelemetryExporter port without issuing parallel SQL or widening its generic
+attribute allowlist. The mapping exports a complete fixed count-gauge universe,
+including zero for empty database groups, plus bounded age/attempt, capability
+and reviewed fired-alert records. The final backend image exercises the mapping
+through the existing fake exporter.
+
+This is still provider-neutral evidence. The actual exporter/dashboard vendor,
+sampling/retention, staging/production thresholds, routing and named escalation
+owners require ADR-008/provider decisions and deployed evidence; sandbox/live
+modes do not silently fall back to the fake exporter.

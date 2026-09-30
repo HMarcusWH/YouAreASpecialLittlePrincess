@@ -27,9 +27,11 @@ from princess_app.application.operations import (
     load_alert_policy,
     verify_disabled,
 )
+from princess_app.application.operational_telemetry import operational_records
+from princess_app.application.telemetry import BufferedTelemetry
 from princess_app.application.tombstones import replay
 from princess_app.config import load_runtime_config
-from princess_app.ports.base import CallContext, SystemClock
+from princess_app.ports.base import CallContext, ProviderMode, SystemClock, Unsupported
 from princess_app.ports.payments import PaymentRail
 
 from princess_graphology import __version__ as ENGINE_VERSION
@@ -56,6 +58,15 @@ def _operational_snapshot(config):
     )
 
 
+
+def _fake_telemetry_exporter(config):
+    """Compose only the already-reviewed fake. Never fall back from sandbox/live."""
+    if config.provider_mode("TelemetryExporter") is not ProviderMode.FAKE:
+        raise Unsupported("telemetry_adapter_not_configured", detail="ADR-008 exporter vendor pending")
+    from princess_app.adapters.fakes import FakeTelemetryExporter
+    return FakeTelemetryExporter(environment=config.environment)
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="princess_api.ops")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -71,6 +82,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     check.add_argument("--policy", type=Path, required=True)
     disabled = sub.add_parser("verify-disabled", help="prove reviewed manifest switches are disabled; never mutates")
     disabled.add_argument("--switch", action="append", choices=CAPABILITY_NAMES, required=True)
+    emit = sub.add_parser("emit-telemetry", help="export the bounded operational snapshot through TelemetryExporter")
+    emit.add_argument("--policy", type=Path, help="optional reviewed alert policy; fired alerts are exported too")
     args = parser.parse_args(argv)
 
     config = load_runtime_config(os.environ, ROOT)
@@ -84,11 +97,38 @@ def main(argv: Sequence[str] | None = None) -> int:
         sys.stdout.write(json.dumps(result, sort_keys=True) + "\n")
         return 0 if not on else 2
 
-    if args.command in ("snapshot", "check"):
+    if args.command in ("snapshot", "check", "emit-telemetry"):
         snapshot = _operational_snapshot(config)
         if args.command == "snapshot":
             sys.stdout.write(json.dumps(snapshot.to_dict(), sort_keys=True) + "\n")
             return 0
+        if args.command == "emit-telemetry":
+            alerts = ()
+            if args.policy is not None:
+                policy = load_alert_policy(args.policy, expected_environment=config.environment)
+                alerts = evaluate_alerts(snapshot, policy)
+            exporter = _fake_telemetry_exporter(config)
+            records = operational_records(snapshot, alerts)
+            buffered = BufferedTelemetry(
+                exporter, capacity=max(1, len(records)), batch_size=max(1, len(records)),
+            )
+            for record in records:
+                buffered.record(record.kind, record.name, record.attributes, record.value)
+            exported = buffered.flush()
+            metric_counts = dict(Counter(record.name for record in exporter.exported))
+            passed = exported == len(records) and buffered.dropped == 0 and buffered.export_failures == 0
+            result = {
+                "command": "emit-telemetry",
+                "result": "PASS" if passed else "FAIL",
+                "record_count": len(records),
+                "exported": exported,
+                "dropped": buffered.dropped,
+                "export_failures": buffered.export_failures,
+                "alert_count": len(alerts),
+                "metric_counts": metric_counts,
+            }
+            sys.stdout.write(json.dumps(result, sort_keys=True) + "\n")
+            return 0 if passed else 2
         policy = load_alert_policy(args.policy, expected_environment=config.environment)
         alerts = evaluate_alerts(snapshot, policy)
         result = {

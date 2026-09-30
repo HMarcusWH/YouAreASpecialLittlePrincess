@@ -33,3 +33,27 @@ Only the synthetic **test** alert policy has concrete thresholds. Production
 thresholds, dashboard destinations, alert routing and named owners remain
 deployment/owner decisions and must be based on observed staging behavior. This
 directory does not select an observability vendor and does not create an SLO.
+
+
+## Telemetry mapping
+
+The provider-neutral operator surface can now map the same bounded snapshot into
+the existing `TelemetryExporter` contract:
+
+```sh
+$API_ENV python -m princess_api.ops emit-telemetry
+$API_ENV python -m princess_api.ops emit-telemetry --policy /opt/princess/infra/operations/alert-policy.test.json
+```
+
+The mapping does not query PostgreSQL itself and does not widen the generic
+telemetry attribute allowlist. Each of the fixed `VALID_KEYS` dimensions emits
+an `operational.count` gauge on every snapshot, using zero when the database
+omits an empty group. Non-null ages/attempt counts, the five reviewed capability
+states and optional reviewed fired alerts are emitted separately. This prevents
+a formerly non-zero queue series from remaining stale merely because the next
+snapshot is empty.
+
+Only the existing fake exporter composes in local/test/preview. Sandbox/live
+TelemetryExporter modes fail explicitly until ADR-008 selects and qualifies an
+actual exporter/dashboard stack. Telemetry remains best effort and never becomes
+API readiness or business-state authority.
