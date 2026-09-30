@@ -14,6 +14,9 @@ checklist. `supabase-identity-qualification/2` closes that evidence gap without 
 
 Synthetic CI remains offline. `MANAGED_PROJECT` mode is intentionally manual and provider-facing.
 
+
+PR #48 factors the live JWKS read through the reusable `SupabaseJwksSource`: one fixed endpoint derived from the reviewed issuer, no redirects, bounded bytes/key count, and typed/redacted provider errors. Synthetic qualification remains offline through injected fixtures/transports. This refactor does not select or compose Supabase.
+
 ## Managed-project witness
 
 The managed run uses an owner-authorized qualification project and:
