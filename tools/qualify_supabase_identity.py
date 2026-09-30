@@ -137,10 +137,12 @@ def qualify(
     refresh_iat = _dt(refresh_claims.get("iat"), "refresh_iat")
     reauth_iat = _dt(reauth_claims.get("iat"), "reauth_iat")
 
-    clock = MutableClock(max(initial_iat, refresh_iat, reauth_iat))
+    clock = MutableClock(initial_iat)
     provider = _provider(issuer=issuer, audience=audience, role=role, jwks=jwks, clock=clock)
     initial = provider.verify_credential(initial_token, _context(clock))
+    clock.set(refresh_iat)
     refreshed = provider.verify_credential(refreshed_token, _context(clock))
+    clock.set(reauth_iat)
     reauth = provider.verify_credential(reauth_token, _context(clock))
 
     if initial.subject != refreshed.subject or initial.subject != reauth.subject:
