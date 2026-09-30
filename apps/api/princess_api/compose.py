@@ -65,9 +65,9 @@ def compose(config: RuntimeConfig) -> Services:
     audience = config.secret("PRINCESS_IDENTITY_AUDIENCE")
     if config.provider_mode("IdentityProvider") is not ProviderMode.FAKE:
         raise Unsupported("identity_adapter_not_configured", detail="ADR-002 vendor pending")
-    provider = FakeIdentityProvider(clock=clock, environment=config.environment)
+    provider = FakeIdentityProvider(audience=audience, clock=clock, environment=config.environment)
     admission = GuestAdmission(limit=int(os.environ.get("PRINCESS_GUEST_ADMISSIONS_PER_MINUTE", "300")))
-    identity = IdentityService(provider, PostgresIdentityStore(db), clock, UuidIds(), audience,
+    identity = IdentityService(provider, PostgresIdentityStore(db), clock, UuidIds(),
                                guest_admission=admission)
     permissions = PermissionService(
         PostgresPermissionStore(db), clock, UuidIds(),
@@ -99,7 +99,7 @@ def compose(config: RuntimeConfig) -> Services:
                             permissions=permissions)
     return Services(environment=config.environment, clock=clock, identity=identity, permissions=permissions,
                     report_store_for=reports, kill_switches=kill_switches,
-                    dev_identity=provider, audience=audience, intake=intake, dev_store=store, commerce=commerce,
+                    dev_identity=provider, intake=intake, dev_store=store, commerce=commerce,
                     report_access=access, exports=exports,
                     feedback=FeedbackService(reports=reports, repo=PostgresFeedbackRepository(db), clock=clock),
                     tombstones=tombstone_log(),

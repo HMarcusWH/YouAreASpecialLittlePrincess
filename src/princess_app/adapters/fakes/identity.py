@@ -27,8 +27,12 @@ class FakeIdentityProvider(FakeAdapter):
     provider = "fake-oidc"
     default_capabilities = frozenset({port.VERIFY_CREDENTIAL, port.REVOKE_SESSION, port.DELETE_PROVIDER_ACCOUNT})
 
-    def __init__(self, *, issuer: str = "https://idp.fake.invalid", **kwargs) -> None:
+    def __init__(self, *, audience: str = "princess-api",
+                 issuer: str = "https://idp.fake.invalid", **kwargs) -> None:
         super().__init__(**kwargs)
+        if not isinstance(audience, str) or not audience or len(audience) > 512:
+            raise InvalidInput("invalid_identity_audience")
+        self.audience = audience
         self.issuer = issuer
         self._ids = SequentialIds()
         self._kid = "kid-1"
@@ -38,13 +42,14 @@ class FakeIdentityProvider(FakeAdapter):
         self._deleted_subjects: set[str] = set()
 
     # --- test controls -------------------------------------------------
-    def issue_token(self, subject: str, audience: str, *, ttl_s: int = 3600, session_id: str | None = None,
-                    email: str | None = None, email_verified: bool | None = None,
-                    auth_time: datetime | None = None) -> str:
+    def issue_token(self, subject: str, audience: str | None = None, *, ttl_s: int = 3600,
+                    session_id: str | None = None, email: str | None = None,
+                    email_verified: bool | None = None, auth_time: datetime | None = None) -> str:
         token_id = self._ids.new_id("tok")
         now = self.clock.now()
+        token_audience = self.audience if audience is None else audience
         self._tokens[token_id] = _Token(
-            self._kid, subject, audience, now, now + timedelta(seconds=ttl_s),
+            self._kid, subject, token_audience, now, now + timedelta(seconds=ttl_s),
             session_id, email, email_verified, auth_time,
         )
         return f"fakeid.{self._kid}.{token_id}"
@@ -55,7 +60,7 @@ class FakeIdentityProvider(FakeAdapter):
         self._kid = f"kid-{self._kid_generation}"
 
     # --- port -----------------------------------------------------------
-    def verify_credential(self, credential: str, expected_audience: str, ctx: CallContext) -> port.VerifiedIdentity:
+    def verify_credential(self, credential: str, ctx: CallContext) -> port.VerifiedIdentity:
         self.profile.require(port.VERIFY_CREDENTIAL)
 
         def effect() -> port.VerifiedIdentity:
@@ -65,7 +70,7 @@ class FakeIdentityProvider(FakeAdapter):
             token = self._tokens[parts[2]]
             if parts[1] != token.kid or token.kid != self._kid:
                 raise Unauthenticated("unknown_signing_key")
-            if token.audience != expected_audience:
+            if token.audience != self.audience:
                 raise Unauthenticated("wrong_audience")
             if self.clock.now() >= token.expires_at:
                 raise Unauthenticated("expired")
@@ -76,8 +81,8 @@ class FakeIdentityProvider(FakeAdapter):
             if token.auth_time is not None and token.auth_time > token.issued_at:
                 raise Unauthenticated("invalid_auth_time")
             return port.VerifiedIdentity(
-                issuer=self.issuer, subject=token.subject, audience=token.audience,
-                expires_at=token.expires_at, session_id=token.session_id, email=token.email,
+                issuer=self.issuer, subject=token.subject, expires_at=token.expires_at,
+                session_id=token.session_id, email=token.email,
                 email_verified=token.email_verified, auth_time=token.auth_time)
 
         return self._run("verify_credential", ctx, effect)
