@@ -129,7 +129,7 @@ def test_synthetic_qualification_proves_refresh_rotation_reauth_and_emits_redact
     assert receipt["same_session_initial_refresh"] is True
     assert receipt["refresh_auth_time_unchanged"] is True
     assert receipt["reauth_new_session"] is True
-    assert receipt["live_key_rotation_observed"] is True
+    assert receipt["signing_key_rotation_observed"] is True
     assert receipt["pre_rotation_signing_kid"] == "k1"
     assert receipt["post_rotation_signing_kid"] == "k2"
     assert receipt["access_token_lifetime_s"] == 3600
@@ -206,7 +206,7 @@ def test_reauth_must_be_newer_new_session_and_new_signing_key():
         auth_time=reauth_at,
         session_id=SESSION_2,
     )
-    with pytest.raises(QualificationError, match="live_key_rotation_not_observed"):
+    with pytest.raises(QualificationError, match="signing_key_rotation_not_observed"):
         qualify_fixture(
             pre_rotation_jwks=jwks,
             jwks=jwks,
@@ -325,7 +325,7 @@ def test_receipt_validator_rejects_scope_or_witness_tampering():
         ("production_activation", True),
         ("provider_selection_claim", True),
         ("logout_fence_refresh_rejected", False),
-        ("live_key_rotation_observed", False),
+        ("signing_key_rotation_observed", False),
         ("source_revision", "0" * 40),
     ):
         changed = dict(receipt)
@@ -387,3 +387,74 @@ def test_cli_requires_explicit_gate_and_file_only_synthetic_credentials(tmp_path
     receipt = json.loads(output.read_text(encoding="utf-8"))
     assert receipt["result"] == "PASS"
     assert all(secret not in output.read_text(encoding="utf-8") for secret in (initial, refreshed, reauth))
+
+
+def test_managed_cli_sequences_live_refresh_then_rotation_then_reauth(tmp_path, monkeypatch):
+    import builtins
+    import qualify_supabase_identity as cli
+
+    pre_rotation_jwks, jwks, initial, refreshed, reauth = fixture()
+    initial_path = tmp_path / "initial.jwt"
+    refresh_path = tmp_path / "refresh.token"
+    api_key_path = tmp_path / "publishable.key"
+    reauth_path = tmp_path / "reauth.jwt"
+    output = tmp_path / "receipt.json"
+    initial_path.write_text(initial, encoding="utf-8")
+    refresh_path.write_text("refresh-secret", encoding="utf-8")
+    api_key_path.write_text("sb_publishable_test", encoding="utf-8")
+    reauth_path.write_text("stale-token", encoding="utf-8")
+
+    class Tty:
+        @staticmethod
+        def isatty():
+            return True
+
+    jwks_values = iter((pre_rotation_jwks, jwks))
+    monkeypatch.setenv("PRINCESS_SUPABASE_QUALIFY", "1")
+    monkeypatch.setattr(cli.sys, "stdin", Tty())
+    monkeypatch.setattr(cli, "_repo_commit", lambda: COMMIT)
+    monkeypatch.setattr(cli, "_fetch_jwks", lambda issuer: next(jwks_values))
+    monkeypatch.setattr(
+        cli,
+        "_refresh_access_token",
+        lambda issuer, *, api_key, refresh_token: (refreshed, 3600),
+    )
+
+    def confirm():
+        reauth_path.write_text(reauth, encoding="utf-8")
+        return ""
+
+    monkeypatch.setattr(builtins, "input", confirm)
+    argv = [
+        "--project-alias",
+        "managed-supabase",
+        "--evidence-kind",
+        "MANAGED_PROJECT",
+        "--issuer",
+        ISSUER,
+        "--audience",
+        AUDIENCE,
+        "--role",
+        ROLE,
+        "--custom-access-token-hook",
+        "disabled",
+        "--anonymous-sign-ins",
+        "disabled",
+        "--oauth-server",
+        "disabled",
+        "--api-key-file",
+        str(api_key_path),
+        "--initial-token-file",
+        str(initial_path),
+        "--refresh-token-file",
+        str(refresh_path),
+        "--reauth-token-file",
+        str(reauth_path),
+        "--output",
+        str(output),
+    ]
+    assert cli.main(argv) == 0
+    receipt = json.loads(output.read_text(encoding="utf-8"))
+    assert receipt["evidence_kind"] == "MANAGED_PROJECT"
+    assert receipt["refresh_source"] == "LIVE_PROVIDER_REFRESH"
+    assert receipt["signing_key_rotation_observed"] is True
