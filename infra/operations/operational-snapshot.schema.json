@@ -4,22 +4,63 @@
   "title": "OperationalSnapshotV1",
   "type": "object",
   "additionalProperties": false,
-  "required": ["version", "environment", "observed_at", "schema_revision", "capabilities", "observations", "privacy"],
+  "required": [
+    "version",
+    "environment",
+    "observed_at",
+    "schema_revision",
+    "capabilities",
+    "observations",
+    "privacy"
+  ],
   "properties": {
-    "version": {"const": "operational-snapshot/1"},
-    "environment": {"enum": ["local", "test", "preview", "staging", "production"]},
-    "observed_at": {"type": "string", "format": "date-time"},
-    "schema_revision": {"type": "string", "minLength": 1, "maxLength": 128},
+    "version": {
+      "const": "operational-snapshot/1"
+    },
+    "environment": {
+      "enum": [
+        "local",
+        "test",
+        "preview",
+        "staging",
+        "production"
+      ]
+    },
+    "observed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "schema_revision": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
     "capabilities": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["premium_generation", "commerce", "uploads", "sharing", "notifications"],
+      "required": [
+        "premium_generation",
+        "commerce",
+        "uploads",
+        "sharing",
+        "notifications"
+      ],
       "properties": {
-        "premium_generation": {"type": "boolean"},
-        "commerce": {"type": "boolean"},
-        "uploads": {"type": "boolean"},
-        "sharing": {"type": "boolean"},
-        "notifications": {"type": "boolean"}
+        "premium_generation": {
+          "type": "boolean"
+        },
+        "commerce": {
+          "type": "boolean"
+        },
+        "uploads": {
+          "type": "boolean"
+        },
+        "sharing": {
+          "type": "boolean"
+        },
+        "notifications": {
+          "type": "boolean"
+        }
       }
     },
     "observations": {
@@ -28,25 +69,99 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["source", "category", "state", "count", "oldest_age_s", "max_attempts"],
+        "required": [
+          "source",
+          "category",
+          "state",
+          "count",
+          "oldest_age_s",
+          "max_attempts"
+        ],
         "properties": {
-          "source": {"enum": ["jobs", "outbox", "notifications", "payment_events", "commerce_completion", "credit_reservations", "premium_attempts", "exports", "privacy"]},
-          "category": {"type": "string", "minLength": 1, "maxLength": 32},
-          "state": {"type": "string", "minLength": 1, "maxLength": 32},
-          "count": {"type": "integer", "minimum": 0},
-          "oldest_age_s": {"type": ["integer", "null"], "minimum": 0},
-          "max_attempts": {"type": ["integer", "null"], "minimum": 0}
+          "source": {
+            "enum": [
+              "jobs",
+              "outbox",
+              "notifications",
+              "payment_events",
+              "commerce_completion",
+              "credit_reservations",
+              "premium_attempts",
+              "exports",
+              "privacy"
+            ]
+          },
+          "category": {
+            "enum": [
+              "analysis",
+              "premium",
+              "export",
+              "other",
+              "privacy",
+              "notification",
+              "mail",
+              "push",
+              "stripe",
+              "apple_app_store",
+              "google_play",
+              "all",
+              "tombstone"
+            ]
+          },
+          "state": {
+            "enum": [
+              "queued",
+              "leased",
+              "pending",
+              "failed",
+              "reserved",
+              "started",
+              "ambiguous",
+              "missing",
+              "unreadable"
+            ]
+          },
+          "count": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "oldest_age_s": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "max_attempts": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0
+          }
         }
       }
     },
     "privacy": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["tombstone_store_present", "tombstone_entries", "tombstone_unreadable"],
+      "required": [
+        "tombstone_store_present",
+        "tombstone_entries",
+        "tombstone_unreadable"
+      ],
       "properties": {
-        "tombstone_store_present": {"type": "boolean"},
-        "tombstone_entries": {"type": "integer", "minimum": 0},
-        "tombstone_unreadable": {"type": "integer", "minimum": 0}
+        "tombstone_store_present": {
+          "type": "boolean"
+        },
+        "tombstone_entries": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "tombstone_unreadable": {
+          "type": "integer",
+          "minimum": 0
+        }
       }
     }
   }
