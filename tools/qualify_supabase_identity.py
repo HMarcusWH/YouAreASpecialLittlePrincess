@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Offline Supabase Auth account-profile qualification; emits no credential material."""
+"""Supabase Auth account-profile qualification; emits no credential material."""
 from __future__ import annotations
 
 import argparse
@@ -7,12 +7,15 @@ import hashlib
 import json
 import os
 import re
+import subprocess
 import sys
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlsplit
 
+import httpx
 import jwt
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -25,10 +28,14 @@ from princess_app.adapters.supabase import SupabaseIdentityProvider  # noqa: E40
 from princess_app.application.identity import IdentityService, InMemoryIdentityStore  # noqa: E402
 from princess_app.ports.base import CallContext, Environment, ProviderMode, Unauthenticated  # noqa: E402
 
-VERSION = "supabase-identity-qualification/1"
+VERSION = "supabase-identity-qualification/2"
 SOURCE_REVISION = "ce9a8eee0cc042be8c7a42981a7ddae631e41d91"
 ALIAS = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:-]{0,63}$")
+COMMIT = re.compile(r"^[0-9a-f]{40}$")
 EVIDENCE_KINDS = ("SYNTHETIC_TEST", "MANAGED_PROJECT")
+ACCOUNT_POLICY_STATES = ("disabled", "enabled")
+REFRESH_SOURCES = ("SUPPLIED_SYNTHETIC_REFRESH", "LIVE_PROVIDER_REFRESH")
+ASYMMETRIC = frozenset({"RS256", "RS512", "ES256", "ES512", "EdDSA"})
 
 
 class QualificationError(ValueError):
@@ -91,6 +98,115 @@ def _load_jwks(path: Path) -> dict[str, Any]:
     return value
 
 
+def _issuer_host(issuer: str) -> str:
+    host = urlsplit(issuer).hostname
+    if not host:
+        raise QualificationError("issuer_host_invalid")
+    return host
+
+
+def _jwks_url(issuer: str) -> str:
+    return issuer.rstrip("/") + "/.well-known/jwks.json"
+
+
+def _repo_commit() -> str:
+    try:
+        result = subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            cwd=ROOT,
+            check=True,
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+    except (OSError, subprocess.SubprocessError) as exc:
+        raise QualificationError("princess_commit_unavailable") from exc
+    commit = result.stdout.strip().lower()
+    if not COMMIT.fullmatch(commit):
+        raise QualificationError("princess_commit_invalid")
+    return commit
+
+
+def _api_key_kind(value: str) -> str:
+    if value.startswith("sb_publishable_") and len(value) <= 512:
+        return "publishable"
+    if value.startswith("sb_secret_"):
+        raise QualificationError("elevated_api_key_not_allowed")
+    try:
+        claims = jwt.decode(value, options={"verify_signature": False, "verify_exp": False})
+    except jwt.InvalidTokenError as exc:
+        raise QualificationError("unsupported_api_key_profile") from exc
+    if not isinstance(claims, dict):
+        raise QualificationError("unsupported_api_key_profile")
+    role = claims.get("role")
+    if role == "anon":
+        return "legacy_anon"
+    if role == "service_role":
+        raise QualificationError("elevated_api_key_not_allowed")
+    raise QualificationError("unsupported_api_key_profile")
+
+
+def _fetch_jwks(
+    issuer: str,
+    *,
+    transport: httpx.BaseTransport | None = None,
+    timeout_s: float = 10.0,
+) -> dict[str, Any]:
+    try:
+        with httpx.Client(transport=transport, timeout=timeout_s, follow_redirects=False) as client:
+            response = client.get(_jwks_url(issuer), headers={"Accept": "application/json"})
+    except httpx.HTTPError as exc:
+        raise QualificationError("jwks_request_failed") from exc
+    if response.status_code != 200:
+        raise QualificationError(f"jwks_http_{response.status_code}")
+    try:
+        value = response.json()
+    except ValueError as exc:
+        raise QualificationError("jwks_invalid") from exc
+    if not isinstance(value, dict) or not isinstance(value.get("keys"), list):
+        raise QualificationError("jwks_invalid")
+    return value
+
+
+def _refresh_access_token(
+    issuer: str,
+    *,
+    api_key: str,
+    refresh_token: str,
+    transport: httpx.BaseTransport | None = None,
+    timeout_s: float = 10.0,
+) -> tuple[str, int]:
+    _api_key_kind(api_key)
+    if not refresh_token or len(refresh_token) > 65536:
+        raise QualificationError("refresh_token_invalid")
+    endpoint = issuer.rstrip("/") + "/token"
+    try:
+        with httpx.Client(transport=transport, timeout=timeout_s, follow_redirects=False) as client:
+            response = client.post(
+                endpoint,
+                params={"grant_type": "refresh_token"},
+                headers={"apikey": api_key, "Accept": "application/json"},
+                json={"refresh_token": refresh_token},
+            )
+    except httpx.HTTPError as exc:
+        raise QualificationError("refresh_request_failed") from exc
+    if response.status_code != 200:
+        raise QualificationError(f"refresh_http_{response.status_code}")
+    try:
+        payload = response.json()
+    except ValueError as exc:
+        raise QualificationError("refresh_response_invalid") from exc
+    if not isinstance(payload, dict):
+        raise QualificationError("refresh_response_invalid")
+    access_token = payload.get("access_token")
+    expires_in = payload.get("expires_in")
+    if not isinstance(access_token, str) or not access_token or len(access_token) > 65536:
+        raise QualificationError("refresh_access_token_missing")
+    if type(expires_in) is not int or expires_in <= 0:
+        raise QualificationError("refresh_expires_in_invalid")
+    return access_token, expires_in
+
+
 def _context(clock: MutableClock) -> CallContext:
     return CallContext("supabase-qualification", Environment.STAGING, clock.now() + timedelta(minutes=1))
 
@@ -110,25 +226,73 @@ def _provider(
     )
 
 
+def _token_lifetime(claims: dict[str, Any], name: str) -> int:
+    issued = _dt(claims.get("iat"), f"{name}_iat")
+    expires = _dt(claims.get("exp"), f"{name}_exp")
+    seconds = int((expires - issued).total_seconds())
+    if seconds <= 0:
+        raise QualificationError(f"{name}_lifetime_invalid")
+    return seconds
+
+
+def _amr_methods(claims: dict[str, Any]) -> list[str]:
+    raw = claims.get("amr")
+    if not isinstance(raw, list):
+        return []
+    methods: set[str] = set()
+    for entry in raw:
+        if isinstance(entry, str):
+            methods.add(entry)
+        elif isinstance(entry, dict) and isinstance(entry.get("method"), str):
+            methods.add(str(entry["method"]))
+    return sorted(methods)
+
+
+def _jwks_key_ids(jwks: dict[str, Any]) -> list[str]:
+    return sorted({
+        str(key["kid"])
+        for key in jwks.get("keys", [])
+        if isinstance(key, dict) and isinstance(key.get("kid"), str) and key["kid"]
+    })
+
+
 def qualify(
     *,
     project_alias: str,
     evidence_kind: str,
+    princess_commit: str,
     issuer: str,
     audience: str,
     role: str,
     custom_access_token_hook: str,
+    anonymous_sign_in_policy: str,
+    oauth_server_status: str,
+    pre_rotation_jwks: dict[str, Any],
     jwks: dict[str, Any],
     initial_token: str,
     refreshed_token: str,
     reauth_token: str,
+    refresh_source: str,
+    refresh_response_expires_in_s: int,
 ) -> dict[str, Any]:
     if not ALIAS.fullmatch(project_alias):
         raise QualificationError("project_alias_invalid")
     if evidence_kind not in EVIDENCE_KINDS:
         raise QualificationError("evidence_kind_invalid")
+    if not COMMIT.fullmatch(princess_commit):
+        raise QualificationError("princess_commit_invalid")
     if custom_access_token_hook != "disabled":
         raise QualificationError("custom_access_token_hook_not_qualified")
+    if anonymous_sign_in_policy not in ACCOUNT_POLICY_STATES:
+        raise QualificationError("anonymous_sign_in_policy_unreviewed")
+    if oauth_server_status not in ACCOUNT_POLICY_STATES:
+        raise QualificationError("oauth_server_status_unreviewed")
+    if refresh_source not in REFRESH_SOURCES:
+        raise QualificationError("refresh_source_invalid")
+    if evidence_kind == "MANAGED_PROJECT" and refresh_source != "LIVE_PROVIDER_REFRESH":
+        raise QualificationError("managed_project_requires_live_refresh")
+    if type(refresh_response_expires_in_s) is not int or refresh_response_expires_in_s <= 0:
+        raise QualificationError("refresh_expires_in_invalid")
 
     initial_header, initial_claims = _peek(initial_token)
     refresh_header, refresh_claims = _peek(refreshed_token)
@@ -136,6 +300,30 @@ def qualify(
     initial_iat = _dt(initial_claims.get("iat"), "initial_iat")
     refresh_iat = _dt(refresh_claims.get("iat"), "refresh_iat")
     reauth_iat = _dt(reauth_claims.get("iat"), "reauth_iat")
+
+    initial_lifetime = _token_lifetime(initial_claims, "initial")
+    refresh_lifetime = _token_lifetime(refresh_claims, "refresh")
+    reauth_lifetime = _token_lifetime(reauth_claims, "reauth")
+    if len({initial_lifetime, refresh_lifetime, reauth_lifetime}) != 1:
+        raise QualificationError("access_token_lifetime_drift")
+    if abs(refresh_response_expires_in_s - refresh_lifetime) > 1:
+        raise QualificationError("refresh_expires_in_mismatch")
+
+    initial_kid = initial_header.get("kid")
+    refresh_kid = refresh_header.get("kid")
+    reauth_kid = reauth_header.get("kid")
+    if not all(isinstance(kid, str) and kid for kid in (initial_kid, refresh_kid, reauth_kid)):
+        raise QualificationError("signing_key_id_missing")
+    if refresh_kid != initial_kid:
+        raise QualificationError("refresh_signing_key_changed_before_rotation_witness")
+    if reauth_kid == refresh_kid:
+        raise QualificationError("live_key_rotation_not_observed")
+    pre_rotation_kids = set(_jwks_key_ids(pre_rotation_jwks))
+    final_kids = set(_jwks_key_ids(jwks))
+    if initial_kid not in pre_rotation_kids:
+        raise QualificationError("pre_rotation_jwks_missing_initial_key")
+    if initial_kid not in final_kids or reauth_kid not in final_kids:
+        raise QualificationError("rotation_jwks_missing_trusted_key")
 
     clock = MutableClock(initial_iat)
     provider = _provider(issuer=issuer, audience=audience, role=role, jwks=jwks, clock=clock)
@@ -164,9 +352,6 @@ def qualify(
     if reauth.auth_time <= refresh_iat:
         raise QualificationError("reauth_must_follow_refresh_for_fence_witness")
 
-    # Place the application fence strictly after refresh issuance but strictly
-    # before the new authentication ceremony. This proves Princess semantics
-    # without mutating or revoking the provider account.
     fence = refresh_iat + (reauth.auth_time - refresh_iat) / 2
     clock.set(initial_iat)
     provider = _provider(issuer=issuer, audience=audience, role=role, jwks=jwks, clock=clock)
@@ -189,28 +374,51 @@ def qualify(
         raise QualificationError("reauth_principal_continuity_failed")
 
     key_algs = sorted({
-        str(key.get("alg")) for key in jwks.get("keys", [])
+        str(key.get("alg"))
+        for key in jwks.get("keys", [])
         if isinstance(key, dict) and isinstance(key.get("alg"), str)
     })
+    if not key_algs or any(alg not in ASYMMETRIC for alg in key_algs):
+        raise QualificationError("jwks_not_asymmetric")
     token_algs = sorted({
-        str(initial_header.get("alg")), str(refresh_header.get("alg")), str(reauth_header.get("alg"))
+        str(initial_header.get("alg")),
+        str(refresh_header.get("alg")),
+        str(reauth_header.get("alg")),
     })
+    if any(alg not in ASYMMETRIC for alg in token_algs):
+        raise QualificationError("token_not_asymmetric")
+
     receipt = {
         "version": VERSION,
         "provider": "supabase-auth",
         "project_alias": project_alias,
         "evidence_kind": evidence_kind,
+        "checked_date": datetime.now(timezone.utc).date().isoformat(),
+        "princess_commit": princess_commit,
         "provider_selection_claim": False,
         "production_activation": False,
         "source_revision": SOURCE_REVISION,
+        "issuer_host": _issuer_host(issuer),
         "issuer_sha256": _text_hash(issuer),
+        "jwks_url_sha256": _text_hash(_jwks_url(issuer)),
         "audience": audience,
         "allowed_role": role,
         "custom_access_token_hook": "disabled",
+        "anonymous_sign_in_policy": anonymous_sign_in_policy,
+        "oauth_server_status": oauth_server_status,
+        "stock_claims_profile": True,
+        "pre_rotation_jwks_sha256": _canonical_hash(pre_rotation_jwks),
         "jwks_sha256": _canonical_hash(jwks),
         "jwks_key_count": len(jwks.get("keys", [])),
+        "jwks_key_ids": _jwks_key_ids(jwks),
         "jwks_algorithms": key_algs,
         "observed_token_algorithms": token_algs,
+        "access_token_lifetime_s": initial_lifetime,
+        "refresh_source": refresh_source,
+        "refresh_response_expires_in_s": refresh_response_expires_in_s,
+        "amr_methods_initial": _amr_methods(initial_claims),
+        "amr_methods_refreshed": _amr_methods(refresh_claims),
+        "amr_methods_reauth": _amr_methods(reauth_claims),
         "same_subject_initial_refresh": True,
         "same_session_initial_refresh": True,
         "reauth_same_subject": True,
@@ -219,6 +427,13 @@ def qualify(
         "refresh_auth_time_unchanged": True,
         "reauth_iat_advanced": True,
         "reauth_auth_time_advanced": True,
+        "live_key_rotation_observed": True,
+        "pre_rotation_signing_kid": initial_kid,
+        "post_rotation_signing_kid": reauth_kid,
+        "post_rotation_jwks_contains_old_kid": True,
+        "post_rotation_jwks_contains_new_kid": True,
+        "anonymous_profile_excluded_by_adapter": True,
+        "oauth_client_profile_excluded_by_adapter": True,
         "logout_fence_refresh_rejected": True,
         "logout_fence_reauth_accepted": True,
         "refresh_iat_delta_s": int((refresh_iat - initial_iat).total_seconds()),
@@ -232,9 +447,21 @@ def qualify(
 
 def validate_receipt(data: dict[str, Any]) -> None:
     booleans = (
-        "same_subject_initial_refresh", "same_session_initial_refresh", "reauth_same_subject",
-        "reauth_new_session", "refresh_iat_advanced", "refresh_auth_time_unchanged",
-        "reauth_iat_advanced", "reauth_auth_time_advanced", "logout_fence_refresh_rejected",
+        "stock_claims_profile",
+        "same_subject_initial_refresh",
+        "same_session_initial_refresh",
+        "reauth_same_subject",
+        "reauth_new_session",
+        "refresh_iat_advanced",
+        "refresh_auth_time_unchanged",
+        "reauth_iat_advanced",
+        "reauth_auth_time_advanced",
+        "live_key_rotation_observed",
+        "post_rotation_jwks_contains_old_kid",
+        "post_rotation_jwks_contains_new_kid",
+        "anonymous_profile_excluded_by_adapter",
+        "oauth_client_profile_excluded_by_adapter",
+        "logout_fence_refresh_rejected",
         "logout_fence_reauth_accepted",
     )
     if data.get("version") != VERSION or data.get("provider") != "supabase-auth":
@@ -243,21 +470,123 @@ def validate_receipt(data: dict[str, Any]) -> None:
         raise QualificationError("receipt_scope")
     if data.get("source_revision") != SOURCE_REVISION:
         raise QualificationError("receipt_source_revision")
-    for name in ("issuer_sha256", "jwks_sha256"):
+    if not isinstance(data.get("checked_date"), str) or not re.fullmatch(r"\d{4}-\d{2}-\d{2}", data["checked_date"]):
+        raise QualificationError("receipt_checked_date")
+    if not isinstance(data.get("princess_commit"), str) or not COMMIT.fullmatch(data["princess_commit"]):
+        raise QualificationError("receipt_princess_commit")
+    if not isinstance(data.get("issuer_host"), str) or not data["issuer_host"]:
+        raise QualificationError("receipt_issuer_host")
+    for name in ("issuer_sha256", "jwks_url_sha256", "pre_rotation_jwks_sha256", "jwks_sha256"):
         value = data.get(name)
         if not isinstance(value, str) or not re.fullmatch(r"[0-9a-f]{64}", value):
             raise QualificationError(f"receipt_{name}")
     if data.get("evidence_kind") not in EVIDENCE_KINDS or data.get("custom_access_token_hook") != "disabled":
         raise QualificationError("receipt_profile")
+    if data.get("anonymous_sign_in_policy") not in ACCOUNT_POLICY_STATES:
+        raise QualificationError("receipt_anonymous_policy")
+    if data.get("oauth_server_status") not in ACCOUNT_POLICY_STATES:
+        raise QualificationError("receipt_oauth_server_status")
+    if data.get("refresh_source") not in REFRESH_SOURCES:
+        raise QualificationError("receipt_refresh_source")
+    if data.get("evidence_kind") == "MANAGED_PROJECT" and data.get("refresh_source") != "LIVE_PROVIDER_REFRESH":
+        raise QualificationError("receipt_managed_refresh")
     if any(data.get(name) is not True for name in booleans):
         raise QualificationError("receipt_witness")
-    for name in ("refresh_iat_delta_s", "reauth_iat_delta_s", "reauth_auth_time_delta_s"):
+    for name in (
+        "access_token_lifetime_s",
+        "refresh_response_expires_in_s",
+        "refresh_iat_delta_s",
+        "reauth_iat_delta_s",
+        "reauth_auth_time_delta_s",
+    ):
         if not isinstance(data.get(name), int) or data[name] <= 0:
             raise QualificationError(f"receipt_{name}")
-    if not isinstance(data.get("jwks_key_count"), int) or data["jwks_key_count"] < 1:
+    if not isinstance(data.get("jwks_key_count"), int) or data["jwks_key_count"] < 2:
         raise QualificationError("receipt_jwks_key_count")
+    kids = data.get("jwks_key_ids")
+    if not isinstance(kids, list) or len(kids) < 2 or any(not isinstance(kid, str) or not kid for kid in kids):
+        raise QualificationError("receipt_jwks_key_ids")
+    if data.get("pre_rotation_signing_kid") == data.get("post_rotation_signing_kid"):
+        raise QualificationError("receipt_rotation_kid")
+    for name in ("pre_rotation_signing_kid", "post_rotation_signing_kid"):
+        if data.get(name) not in kids:
+            raise QualificationError(f"receipt_{name}")
+    for name in ("jwks_algorithms", "observed_token_algorithms"):
+        algs = data.get(name)
+        if not isinstance(algs, list) or not algs or any(alg not in ASYMMETRIC for alg in algs):
+            raise QualificationError(f"receipt_{name}")
+    for name in ("amr_methods_initial", "amr_methods_refreshed", "amr_methods_reauth"):
+        methods = data.get(name)
+        if not isinstance(methods, list) or not methods or any(not isinstance(method, str) for method in methods):
+            raise QualificationError(f"receipt_{name}")
     if data.get("result") != "PASS":
         raise QualificationError("receipt_result")
+
+
+def _synthetic_or_managed_inputs(
+    args: argparse.Namespace,
+) -> tuple[dict[str, Any], dict[str, Any], str, str, str, str, int]:
+    initial_token = _read_secret(args.initial_token_file)
+    if args.evidence_kind == "SYNTHETIC_TEST":
+        if args.jwks_file is None or args.pre_rotation_jwks_file is None or args.refreshed_token_file is None:
+            raise QualificationError("synthetic_fixture_inputs_required")
+        if args.reauth_token_file is None:
+            raise QualificationError("reauth_token_file_required")
+        pre_rotation_jwks = _load_jwks(args.pre_rotation_jwks_file)
+        jwks = _load_jwks(args.jwks_file)
+        refreshed_token = _read_secret(args.refreshed_token_file)
+        reauth_token = _read_secret(args.reauth_token_file)
+        _, refresh_claims = _peek(refreshed_token)
+        return (
+            pre_rotation_jwks,
+            jwks,
+            initial_token,
+            refreshed_token,
+            reauth_token,
+            "SUPPLIED_SYNTHETIC_REFRESH",
+            _token_lifetime(refresh_claims, "refresh"),
+        )
+
+    if args.api_key_file is None or args.refresh_token_file is None or args.reauth_token_file is None:
+        raise QualificationError("managed_refresh_inputs_required")
+    if not sys.stdin.isatty():
+        raise QualificationError("managed_qualification_requires_tty")
+    api_key = _read_secret(args.api_key_file)
+    refresh_token = _read_secret(args.refresh_token_file)
+    reauth_before = None
+    if args.reauth_token_file.exists():
+        reauth_before = _text_hash(_read_secret(args.reauth_token_file))
+
+    pre_rotation_jwks = _fetch_jwks(args.issuer)
+    refreshed_token, expires_in = _refresh_access_token(
+        args.issuer,
+        api_key=api_key,
+        refresh_token=refresh_token,
+    )
+
+    print(
+        "LIVE REFRESH PASSED. In the authorized qualification project, rotate the asymmetric signing key, "
+        "wait for JWKS propagation, then perform a genuine new sign-in. Write only the new access JWT to "
+        f"{args.reauth_token_file} and press Enter."
+    )
+    try:
+        input()
+    except EOFError as exc:
+        raise QualificationError("managed_qualification_confirmation_missing") from exc
+
+    reauth_token = _read_secret(args.reauth_token_file)
+    if reauth_before is not None and _text_hash(reauth_token) == reauth_before:
+        raise QualificationError("reauth_token_file_not_replaced_after_refresh")
+    jwks = _fetch_jwks(args.issuer)
+    return (
+        pre_rotation_jwks,
+        jwks,
+        initial_token,
+        refreshed_token,
+        reauth_token,
+        "LIVE_PROVIDER_REFRESH",
+        expires_in,
+    )
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -268,9 +597,14 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--audience", required=True)
     parser.add_argument("--role", required=True)
     parser.add_argument("--custom-access-token-hook", choices=("disabled", "enabled", "unknown"), required=True)
-    parser.add_argument("--jwks-file", type=Path, required=True)
+    parser.add_argument("--anonymous-sign-ins", choices=("disabled", "enabled", "unknown"), required=True)
+    parser.add_argument("--oauth-server", choices=("disabled", "enabled", "unknown"), required=True)
+    parser.add_argument("--api-key-file", type=Path)
+    parser.add_argument("--refresh-token-file", type=Path)
+    parser.add_argument("--pre-rotation-jwks-file", type=Path)
+    parser.add_argument("--jwks-file", type=Path)
     parser.add_argument("--initial-token-file", type=Path, required=True)
-    parser.add_argument("--refreshed-token-file", type=Path, required=True)
+    parser.add_argument("--refreshed-token-file", type=Path)
     parser.add_argument("--reauth-token-file", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args(argv)
@@ -280,17 +614,32 @@ def main(argv: list[str] | None = None) -> int:
         return 2
 
     try:
+        (
+            pre_rotation_jwks,
+            jwks,
+            initial_token,
+            refreshed_token,
+            reauth_token,
+            refresh_source,
+            refresh_expires_in,
+        ) = _synthetic_or_managed_inputs(args)
         document = qualify(
             project_alias=args.project_alias,
             evidence_kind=args.evidence_kind,
+            princess_commit=_repo_commit(),
             issuer=args.issuer,
             audience=args.audience,
             role=args.role,
             custom_access_token_hook=args.custom_access_token_hook,
-            jwks=_load_jwks(args.jwks_file),
-            initial_token=_read_secret(args.initial_token_file),
-            refreshed_token=_read_secret(args.refreshed_token_file),
-            reauth_token=_read_secret(args.reauth_token_file),
+            anonymous_sign_in_policy=args.anonymous_sign_ins,
+            oauth_server_status=args.oauth_server,
+            pre_rotation_jwks=pre_rotation_jwks,
+            jwks=jwks,
+            initial_token=initial_token,
+            refreshed_token=refreshed_token,
+            reauth_token=reauth_token,
+            refresh_source=refresh_source,
+            refresh_response_expires_in_s=refresh_expires_in,
         )
         args.output.write_text(json.dumps(document, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     except (OSError, json.JSONDecodeError, QualificationError, Unauthenticated, ValueError) as exc:
