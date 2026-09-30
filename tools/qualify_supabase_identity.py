@@ -317,7 +317,7 @@ def qualify(
     if refresh_kid != initial_kid:
         raise QualificationError("refresh_signing_key_changed_before_rotation_witness")
     if reauth_kid == refresh_kid:
-        raise QualificationError("live_key_rotation_not_observed")
+        raise QualificationError("signing_key_rotation_not_observed")
     pre_rotation_kids = set(_jwks_key_ids(pre_rotation_jwks))
     final_kids = set(_jwks_key_ids(jwks))
     if initial_kid not in pre_rotation_kids:
@@ -427,7 +427,7 @@ def qualify(
         "refresh_auth_time_unchanged": True,
         "reauth_iat_advanced": True,
         "reauth_auth_time_advanced": True,
-        "live_key_rotation_observed": True,
+        "signing_key_rotation_observed": True,
         "pre_rotation_signing_kid": initial_kid,
         "post_rotation_signing_kid": reauth_kid,
         "post_rotation_jwks_contains_old_kid": True,
@@ -456,7 +456,7 @@ def validate_receipt(data: dict[str, Any]) -> None:
         "refresh_auth_time_unchanged",
         "reauth_iat_advanced",
         "reauth_auth_time_advanced",
-        "live_key_rotation_observed",
+        "signing_key_rotation_observed",
         "post_rotation_jwks_contains_old_kid",
         "post_rotation_jwks_contains_new_kid",
         "anonymous_profile_excluded_by_adapter",
