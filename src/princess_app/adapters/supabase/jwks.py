@@ -91,7 +91,7 @@ class SupabaseJwksSource:
                         chunks.append(chunk)
         except (RateLimited, TransientUnavailable, PermanentFailure):
             raise
-        except (httpx.TimeoutException, httpx.TransportError):
+        except httpx.HTTPError:
             raise TransientUnavailable("identity_jwks_unavailable") from None
 
         try:
