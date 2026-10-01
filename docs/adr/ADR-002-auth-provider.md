@@ -13,6 +13,15 @@ Our principal ID and `(issuer, subject)` binding own identity continuity. Email 
 Acceptance: wrong issuer/audience/role/profile, symmetric/rotated keys, expired credentials, malformed/unknown AMR, old/unknown authentication freshness after local revocation, provider/session revocation behavior, cross-owner access, guest migration races, native login recovery and account deletion all tested. Newly issued credentials without a proven new authentication must not bypass logout/deletion. Record exact credential profile, SDK/configuration and allowed callback domains. Production gate requires approved provider tenant/data handling and working web/native identity flows.
 
 
+## Provider decision evidence (2026-10-01)
+
+The current primary-source comparison is recorded in [T17 identity-provider decision evidence](../ci/T17_IDENTITY_PROVIDER_DECISION_EVIDENCE.md). It closes the public-document research gap but **does not select a provider**.
+
+Both Supabase and Clerk document web PKCE plus native Apple/Google paths compatible in principle with the existing web/native transport boundaries. The comparison also records material differences that must survive the Princess invariants before selection: Supabase offers selectable project regions and already has a Princess-qualified access-JWT/JWKS/freshness candidate; Clerk documents strong native/session tooling but automatically attempts OAuth account linking on matching verified email addresses, which requires an explicit compatibility decision because Princess does not treat email equality as account-merge proof. Clerk's signed factor-verification-age/reverification model is also not yet Princess-qualified against the durable `revoked_before` fence.
+
+Supabase therefore remains a code-qualified **CANDIDATE**, not an owner-selected provider. Clerk remains an alternative with public-source review complete but Princess-specific credential/freshness/principal-continuity qualification pending. Account-specific processor terms, region/data handling, retention/deletion/support, actual callback/native credentials and the Supabase `MANAGED_PROJECT` witness remain separate evidence gates.
+
+
 For the Supabase candidate, the reviewed implementation source is `supabase/auth@ce9a8eee0cc042be8c7a42981a7ddae631e41d91`, not evidence about any future managed project's deployed version. Its current stock access-token path emits session AMR from persisted authentication claims, so a refresh changes JWT issuance time without automatically advancing Princess `auth_time`. The candidate adapter encodes that property and fails closed when usable AMR freshness is absent. Actual project qualification must confirm issuer, audience, roles, asymmetric signing/JWKS, Custom Access Token Hook state and refresh/reauthentication behavior before composition.
 
 
