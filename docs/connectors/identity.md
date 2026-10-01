@@ -79,6 +79,16 @@ PR #48 adds `SupabaseJwksSource` as a reusable network primitive for the already
 
 `apps/api/princess_api/compose.py` and runtime preflight now recognize only the qualified staging/sandbox identity tuple. `tools/build_supabase_staging_runtime_binding.py` converts the protected v4 receipt plus the Git-safe account snapshot into a safe hash-bound runtime profile; startup then hashes the protected issuer and requires the qualified audience/role before constructing `SupabaseJwksSource` and `SupabaseIdentityProvider`. The staging environment manifest is deliberately unchanged so the v4 manifest binding remains valid. Full staging API startup still fails at the next unimplemented sandbox connector (currently ObjectStore); this slice is not application login, production/live qualification, or global processor-gate closure.
 
+### Staging runtime conformance harness
+
+`tools/verify_supabase_staging_runtime.py` is an explicit opt-in operator harness for the remaining staging witness. It accepts no password, Supabase API key, refresh token or admin credential. The operator supplies only the protected v4 qualification receipt, the protected exact issuer and one already-issued disposable staging access JWT, all through absolute files outside the Git checkout.
+
+The harness rebuilds the exact runtime binding through `build_binding()`, loads the reviewed staging manifest, constructs only the narrow immutable `RuntimeConfig` needed by the already-merged identity seam, and then calls `compose_identity_provider()`. It therefore exercises the real `SupabaseJwksSource -> SupabaseIdentityProvider -> IdentityService` path without pretending that complete staging API startup, PostgreSQL, ObjectStore, Payment or Abuse are ready. Repeat authentication must converge on one in-memory ACCOUNT principal, usable AMR-derived authentication freshness and a session ID must be present, and a live JWKS fetch must have occurred before a PASS receipt can exist.
+
+Protected inputs plus the full operational receipt must remain outside Git. The generated Git-safe index in [T17 Supabase staging runtime conformance](../ci/T17_SUPABASE_RUNTIME_CONFORMANCE.md) contains only evidence hashes, boolean witnesses and scope non-claims; it contains no raw access token, provider subject/session, Princess principal ID, raw issuer/project reference or JWKS. Tooling and synthetic CI do not constitute a live provider PASS.
+
+The harness intentionally does not perform provider cleanup because `REVOKE_SESSION` and `DELETE_PROVIDER_ACCOUNT` are still unsupported adapter capabilities and adding an admin/service credential to this verification-only slice would widen authority. After a live witness, an authorized operator must revoke/sign out the disposable provider session and delete the disposable Auth user separately, retaining only safe cleanup evidence. Already-issued access JWTs can remain cryptographically valid until expiry, so cleanup must not be described as instantaneous token invalidation.
+
 For managed evidence, `QUALIFICATION_ONLY` and `INTENDED_RUNTIME_PROFILE` are deliberately different receipt
 bindings. A disposable rotation project can prove the selected credential mechanics but cannot be cited as proof
 that the later runtime tenant/profile has matching settings. The full receipt remains protected; Git stores only
