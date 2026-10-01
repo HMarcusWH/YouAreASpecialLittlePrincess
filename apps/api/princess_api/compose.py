@@ -1,7 +1,8 @@
 """Compose the API from a validated runtime configuration.
 
-Only fake-mode identity is wired today; sandbox/live identity requires the
-ADR-002 vendor decision and fails explicitly instead of silently falling back.
+Identity is fake-only in local/test/preview. The owner-approved staging/sandbox
+Supabase verifier composes only when its protected receipt-derived binding
+matches the qualified profile; production/live still fails closed.
 Run locally with::
 
     PRINCESS_ENV=local PRINCESS_COMPONENT=api PRINCESS_DATABASE_URL=... \\
