@@ -117,6 +117,24 @@ likewise not activated by this policy.
 The real staging conformance PASS and the selected-account Auth-settings evidence are independent gates. Neither
 one substitutes for the other, and application-managed authentication remains disabled until both are closed.
 
+### Staging Auth evidence closeout
+
+The final staging evidence closeout is defined in [T17 Supabase staging Auth closeout](../ci/T17_SUPABASE_STAGING_AUTH_CLOSEOUT.md).
+It adds a third, separate cleanup evidence class after the live conformance witness: all sessions for the disposable
+conformance test user must be revoked through owner-authorized provider controls, that disposable Auth user must be
+deleted, and only aggregate/non-identifying cleanup facts may enter Git.
+
+`tools/build_supabase_staging_cleanup_evidence.py` validates the already-qualified project binding and refuses to
+claim cleanup when any required revocation/deletion fact is false, when application login/production is active, or
+when project decommission is falsely claimed. `tools/check_supabase_staging_auth_closeout.py` then requires all
+three Git-safe artifacts together: runtime conformance PASS, selected-account Auth-settings snapshot, and cleanup
+evidence. It also verifies that the existing owner record still says application login is not approved by the
+2026-10-01 narrow staging decision.
+
+The runtime conformance harness requires a clean checkout. Therefore generate the conformance PASS from a clean
+worktree before generating repository snapshots, or use separate clean worktrees anchored to the same merged
+baseline. Closeout tooling does not itself execute provider cleanup and does not create application-login authority.
+
 For managed evidence, `QUALIFICATION_ONLY` and `INTENDED_RUNTIME_PROFILE` are deliberately different receipt
 bindings. A disposable rotation project can prove the selected credential mechanics but cannot be cited as proof
 that the later runtime tenant/profile has matching settings. The full receipt remains protected; Git stores only
