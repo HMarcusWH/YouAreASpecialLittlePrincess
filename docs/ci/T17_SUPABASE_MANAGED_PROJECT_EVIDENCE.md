@@ -6,16 +6,19 @@ This is the Git-safe evidence index for the owner-selected Supabase Auth impleme
 qualification receipt itself and must never be filled with invented PASS data.
 
 The protected receipt is produced by `tools/qualify_supabase_identity.py` using
-`supabase-identity-qualification/3`. Keep that JSON outside Git. After an actual owner-authorized run, record only
+`supabase-identity-qualification/4`. Keep that JSON outside Git. After an actual owner-authorized run, record only
 the safe binding below plus the receipt SHA-256 and an opaque protected-evidence reference.
 
 ## Required evidence record
 
 ```text
 provider:                    supabase-auth
-receipt_version:             supabase-identity-qualification/3
+receipt_version:             supabase-identity-qualification/4
 evidence_kind:               MANAGED_PROJECT
 project_binding:             <QUALIFICATION_ONLY|INTENDED_RUNTIME_PROFILE>
+environment:                 <staging|production>
+provider_mode:               <sandbox|live>
+environment_manifest_sha256: PENDING
 checked_date:                PENDING
 princess_commit:             PENDING
 receipt_sha256:              PENDING
@@ -40,8 +43,8 @@ production_activation:       false
 `QUALIFICATION_ONLY` proves the reviewed Supabase credential/session mechanics on an owner-authorized
 qualification project. It does **not** prove the exact later runtime tenant/profile.
 
-`INTENDED_RUNTIME_PROFILE` means the rotated project/profile is the actual intended runtime identity profile.
-A PASS can close the technical exact-profile qualification gate, but still does not close
+`INTENDED_RUNTIME_PROFILE` means the rotated project/profile is the actual intended runtime identity profile for the recorded environment/provider mode.
+A staging/sandbox PASS can close only the staging exact-profile technical gate; production/live requires separate environment-bound evidence. Any PASS still does not close
 `processor_retention_contracts`, callback/native account configuration, provider lifecycle integration, secret
 provisioning or production activation.
 

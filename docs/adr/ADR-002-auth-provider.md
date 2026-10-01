@@ -40,13 +40,12 @@ JWKS algorithms/key IDs/hashes and explicitly inspected anonymous-sign-in/OAuth-
 Custom Access Token Hooks, symmetric signing, elevated API keys, stale reauthentication material and unknown
 account-policy settings fail closed.
 
-The v3 receipt also records an explicit `project_binding`. `QUALIFICATION_ONLY` proves the mechanics on a
-dedicated qualification project and cannot close the exact runtime-profile gate. `INTENDED_RUNTIME_PROFILE`
-means the actual intended runtime project/profile underwent the invasive rotation/reauth witness; even that PASS
+The v4 receipt records explicit `project_binding`, `environment`, `provider_mode`, and the SHA-256 of the reviewed environment manifest. `QUALIFICATION_ONLY` proves the mechanics on a
+dedicated qualification project and cannot close the exact runtime-profile gate. `INTENDED_RUNTIME_PROFILE` means the actual intended runtime project/profile for that environment underwent the invasive rotation/reauth witness. Staging/sandbox evidence does not qualify production/live; even an environment-bound PASS
 does not approve processor terms, secrets, callbacks/native configuration or production activation. The protected
 receipt stays outside Git; the repository retains only a safe digest/reference index.
 
-The generated `supabase-identity-qualification/3` receipt contains no raw access/refresh token, API key, subject,
+The generated `supabase-identity-qualification/4` receipt contains no raw access/refresh token, API key, subject,
 session ID, issuer URL, JWKS body or provider secret and always records `provider_selection_claim=false` and
 `production_activation=false`. **No managed Supabase project is qualified merely because this tooling exists.**
 The owner provider-selection gate is now closed. Processor/region/retention/deletion approval and the actual managed-project run remain

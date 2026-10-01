@@ -87,6 +87,8 @@ def qualify_fixture(**overrides):
         "project_alias": "synthetic-supabase",
         "evidence_kind": "SYNTHETIC_TEST",
         "project_binding": "QUALIFICATION_ONLY",
+        "environment": "staging",
+        "provider_mode": "sandbox",
         "princess_commit": COMMIT,
         "issuer": ISSUER,
         "audience": AUDIENCE,
@@ -112,6 +114,8 @@ def test_synthetic_qualification_proves_refresh_rotation_reauth_and_emits_redact
         project_alias="synthetic-supabase",
         evidence_kind="SYNTHETIC_TEST",
         project_binding="QUALIFICATION_ONLY",
+        environment="staging",
+        provider_mode="sandbox",
         princess_commit=COMMIT,
         issuer=ISSUER,
         audience=AUDIENCE,
@@ -128,8 +132,11 @@ def test_synthetic_qualification_proves_refresh_rotation_reauth_and_emits_redact
         refresh_response_expires_in_s=3600,
     )
     validate_receipt(receipt)
-    assert receipt["version"] == "supabase-identity-qualification/3"
+    assert receipt["version"] == "supabase-identity-qualification/4"
     assert receipt["project_binding"] == "QUALIFICATION_ONLY"
+    assert receipt["environment"] == "staging"
+    assert receipt["provider_mode"] == "sandbox"
+    assert len(receipt["environment_manifest_sha256"]) == 64
     assert receipt["source_revision"] == SOURCE_REVISION
     assert receipt["same_session_initial_refresh"] is True
     assert receipt["refresh_auth_time_unchanged"] is True
@@ -252,6 +259,32 @@ def test_project_binding_distinguishes_qualification_project_from_runtime_profil
 
     with pytest.raises(QualificationError, match="synthetic_cannot_bind_runtime_profile"):
         qualify_fixture(project_binding="INTENDED_RUNTIME_PROFILE")
+
+
+def test_environment_binding_matches_reviewed_manifests():
+    staging = qualify_fixture()
+    assert staging["environment"] == "staging"
+    assert staging["provider_mode"] == "sandbox"
+
+    production = qualify_fixture(environment="production", provider_mode="live")
+    assert production["environment"] == "production"
+    assert production["provider_mode"] == "live"
+    assert production["environment_manifest_sha256"] != staging["environment_manifest_sha256"]
+
+
+@pytest.mark.parametrize(
+    "environment,provider_mode,code",
+    [
+        ("staging", "live", "identity_mode_manifest_mismatch"),
+        ("production", "sandbox", "identity_mode_manifest_mismatch"),
+        ("local", "fake", "qualification_environment_not_managed"),
+        ("preview", "fake", "qualification_environment_not_managed"),
+        ("test", "sandbox", "qualification_environment_not_managed"),
+    ],
+)
+def test_environment_binding_refuses_wrong_or_non_managed_profiles(environment, provider_mode, code):
+    with pytest.raises(QualificationError, match=code):
+        qualify_fixture(environment=environment, provider_mode=provider_mode)
 
 
 def test_managed_project_requires_live_refresh_witness():
@@ -455,6 +488,11 @@ def test_receipt_validator_rejects_scope_or_witness_tampering():
         ("signing_key_rotation_observed", False),
         ("source_revision", "0" * 40),
         ("project_binding", "UNKNOWN"),
+        ("environment", "preview"),
+        ("provider_mode", "fake"),
+        ("provider_mode", "live"),
+        ("environment_manifest_sha256", "not-a-hash"),
+        ("environment_manifest_sha256", "0" * 64),
     ):
         changed = dict(receipt)
         changed[field] = value
@@ -483,6 +521,10 @@ def test_cli_requires_explicit_gate_and_file_only_synthetic_credentials(tmp_path
         "SYNTHETIC_TEST",
         "--project-binding",
         "QUALIFICATION_ONLY",
+        "--environment",
+        "staging",
+        "--provider-mode",
+        "sandbox",
         "--issuer",
         ISSUER,
         "--audience",
@@ -517,6 +559,79 @@ def test_cli_requires_explicit_gate_and_file_only_synthetic_credentials(tmp_path
     receipt = json.loads(output.read_text(encoding="utf-8"))
     assert receipt["result"] == "PASS"
     assert all(secret not in output.read_text(encoding="utf-8") for secret in (initial, refreshed, reauth))
+
+
+def test_managed_cli_rejects_scope_before_provider_io(tmp_path, monkeypatch):
+    import qualify_supabase_identity as cli
+
+    initial_path = tmp_path / "initial.jwt"
+    refresh_path = tmp_path / "refresh.token"
+    api_key_path = tmp_path / "publishable.key"
+    reauth_path = tmp_path / "reauth.jwt"
+    output = tmp_path / "receipt.json"
+    initial_path.write_text("must-not-be-read", encoding="utf-8")
+    refresh_path.write_text("must-not-be-read", encoding="utf-8")
+    api_key_path.write_text("must-not-be-read", encoding="utf-8")
+
+    class Tty:
+        @staticmethod
+        def isatty():
+            return True
+
+    monkeypatch.setenv("PRINCESS_SUPABASE_QUALIFY", "1")
+    monkeypatch.setattr(cli.sys, "stdin", Tty())
+    monkeypatch.setattr(
+        cli,
+        "_read_secret",
+        lambda path: (_ for _ in ()).throw(AssertionError(f"secret read before scope preflight: {path}")),
+    )
+    monkeypatch.setattr(
+        cli,
+        "_fetch_jwks",
+        lambda issuer: (_ for _ in ()).throw(AssertionError("JWKS fetch before scope preflight")),
+    )
+    monkeypatch.setattr(
+        cli,
+        "_refresh_access_token",
+        lambda *args, **kwargs: (_ for _ in ()).throw(AssertionError("refresh before scope preflight")),
+    )
+
+    argv = [
+        "--project-alias",
+        "managed-supabase",
+        "--evidence-kind",
+        "MANAGED_PROJECT",
+        "--project-binding",
+        "INTENDED_RUNTIME_PROFILE",
+        "--environment",
+        "staging",
+        "--provider-mode",
+        "live",
+        "--issuer",
+        ISSUER,
+        "--audience",
+        AUDIENCE,
+        "--role",
+        ROLE,
+        "--custom-access-token-hook",
+        "disabled",
+        "--anonymous-sign-ins",
+        "disabled",
+        "--oauth-server",
+        "disabled",
+        "--api-key-file",
+        str(api_key_path),
+        "--initial-token-file",
+        str(initial_path),
+        "--refresh-token-file",
+        str(refresh_path),
+        "--reauth-token-file",
+        str(reauth_path),
+        "--output",
+        str(output),
+    ]
+    assert cli.main(argv) == 1
+    assert not output.exists()
 
 
 def test_managed_cli_sequences_live_refresh_then_rotation_then_reauth(tmp_path, monkeypatch):
@@ -562,6 +677,10 @@ def test_managed_cli_sequences_live_refresh_then_rotation_then_reauth(tmp_path, 
         "MANAGED_PROJECT",
         "--project-binding",
         "QUALIFICATION_ONLY",
+        "--environment",
+        "staging",
+        "--provider-mode",
+        "sandbox",
         "--issuer",
         ISSUER,
         "--audience",
@@ -589,5 +708,7 @@ def test_managed_cli_sequences_live_refresh_then_rotation_then_reauth(tmp_path, 
     receipt = json.loads(output.read_text(encoding="utf-8"))
     assert receipt["evidence_kind"] == "MANAGED_PROJECT"
     assert receipt["project_binding"] == "QUALIFICATION_ONLY"
+    assert receipt["environment"] == "staging"
+    assert receipt["provider_mode"] == "sandbox"
     assert receipt["refresh_source"] == "LIVE_PROVIDER_REFRESH"
     assert receipt["signing_key_rotation_observed"] is True
