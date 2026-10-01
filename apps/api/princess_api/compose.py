@@ -10,6 +10,7 @@ Run locally with::
 """
 from __future__ import annotations
 
+import hashlib
 import os
 from pathlib import Path
 
@@ -32,6 +33,8 @@ from princess_app.adapters.postgres.stores import (
     PostgresReportStore,
     make_engine,
 )
+from princess_app.adapters.supabase import SupabaseIdentityProvider
+from princess_app.adapters.supabase.jwks import SupabaseJwksSource
 from princess_app.application.commerce import CommerceService
 from princess_app.application.exports import ExportService
 from princess_app.application.feedback import FeedbackService
@@ -40,6 +43,7 @@ from princess_app.application.intake import IntakeService
 from princess_app.application.notifications import NotificationService
 from princess_app.application.permissions import PermissionService
 from princess_app.config import RuntimeConfig, load_runtime_config
+from princess_app.config_supabase import parse_supabase_staging_runtime_binding
 from princess_app.domain.commerce import CATALOG
 from princess_app.ports.payments import PaymentRail
 from princess_app.ports.base import Environment, ProviderMode, SystemClock, Unsupported
@@ -57,15 +61,49 @@ class UuidIds:
         return f"{prefix}_{uuid.uuid4().hex}"
 
 
+def _manifest_sha256(environment: Environment) -> str:
+    path = ROOT / "infra" / "environments" / f"{environment.value}.json"
+    try:
+        return hashlib.sha256(path.read_bytes()).hexdigest()
+    except OSError:
+        raise Unsupported("identity_runtime_manifest_unreadable", detail=environment.value) from None
+
+
+def compose_identity_provider(config: RuntimeConfig, clock):
+    audience = config.secret("PRINCESS_IDENTITY_AUDIENCE")
+    mode = config.provider_mode("IdentityProvider")
+    if mode is ProviderMode.FAKE:
+        return FakeIdentityProvider(audience=audience, clock=clock, environment=config.environment)
+    if config.environment is Environment.STAGING and mode is ProviderMode.SANDBOX:
+        issuer = config.protected_value("PRINCESS_IDENTITY_ISSUER")
+        binding = parse_supabase_staging_runtime_binding(
+            config.protected_value("PRINCESS_IDENTITY_BINDING"),
+            issuer=issuer,
+            audience=audience,
+            current_manifest_sha256=_manifest_sha256(config.environment),
+        )
+        return SupabaseIdentityProvider(
+            issuer=issuer,
+            audience=audience,
+            allowed_roles=frozenset({binding.allowed_role}),
+            jwks_source=SupabaseJwksSource(issuer),
+            clock=clock,
+            environment=config.environment,
+            mode=mode,
+            stock_claims_profile=True,
+        )
+    raise Unsupported(
+        "identity_adapter_not_configured",
+        detail=f"{config.environment.value}:{mode.value}",
+    )
+
+
 def compose(config: RuntimeConfig) -> Services:
     if config.component != "api":
         raise Unsupported("wrong_component", detail=config.component)
     db = Database(make_engine(config.secret("PRINCESS_DATABASE_URL")))
     clock = SystemClock()
-    audience = config.secret("PRINCESS_IDENTITY_AUDIENCE")
-    if config.provider_mode("IdentityProvider") is not ProviderMode.FAKE:
-        raise Unsupported("identity_adapter_not_configured", detail="ADR-002 vendor pending")
-    provider = FakeIdentityProvider(audience=audience, clock=clock, environment=config.environment)
+    provider = compose_identity_provider(config, clock)
     admission = GuestAdmission(limit=int(os.environ.get("PRINCESS_GUEST_ADMISSIONS_PER_MINUTE", "300")))
     identity = IdentityService(provider, PostgresIdentityStore(db), clock, UuidIds(),
                                guest_admission=admission)
@@ -99,7 +137,8 @@ def compose(config: RuntimeConfig) -> Services:
                             permissions=permissions)
     return Services(environment=config.environment, clock=clock, identity=identity, permissions=permissions,
                     report_store_for=reports, kill_switches=kill_switches,
-                    dev_identity=provider, intake=intake, dev_store=store, commerce=commerce,
+                    dev_identity=provider if isinstance(provider, FakeIdentityProvider) else None,
+                    intake=intake, dev_store=store, commerce=commerce,
                     report_access=access, exports=exports,
                     feedback=FeedbackService(reports=reports, repo=PostgresFeedbackRepository(db), clock=clock),
                     tombstones=tombstone_log(),
