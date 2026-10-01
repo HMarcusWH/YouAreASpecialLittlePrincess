@@ -1,42 +1,49 @@
 # T17 Supabase managed-project evidence
 
-**Status: PENDING LIVE MANAGED_PROJECT RUN.**
+**Status: PASS — staging/sandbox `INTENDED_RUNTIME_PROFILE` qualified 2026-10-01. Production/live remains unqualified.**
 
 This is the Git-safe evidence index for the owner-selected Supabase Auth implementation provider. It is not the
 qualification receipt itself and must never be filled with invented PASS data.
 
-The protected receipt is produced by `tools/qualify_supabase_identity.py` using
-`supabase-identity-qualification/4`. Keep that JSON outside Git. After an actual owner-authorized run, record only
-the safe binding below plus the receipt SHA-256 and an opaque protected-evidence reference.
+The protected receipt was produced by `tools/qualify_supabase_identity.py` using
+`supabase-identity-qualification/4` and remains outside Git. The record below contains only the safe staging binding,
+receipt SHA-256 and an opaque protected-evidence reference. It does not qualify production/live or activate identity.
 
 ## Required evidence record
 
 ```text
 provider:                    supabase-auth
+project_alias:                princess-staging
 receipt_version:             supabase-identity-qualification/4
 evidence_kind:               MANAGED_PROJECT
-project_binding:             <QUALIFICATION_ONLY|INTENDED_RUNTIME_PROFILE>
-environment:                 <staging|production>
-provider_mode:               <sandbox|live>
-environment_manifest_sha256: PENDING
-checked_date:                PENDING
-princess_commit:             PENDING
-receipt_sha256:              PENDING
-protected_evidence_ref:      PENDING
+project_binding:             INTENDED_RUNTIME_PROFILE
+environment:                 staging
+provider_mode:               sandbox
+environment_manifest_sha256: bc9ef87478461e1a13098e116d34f46c7b84addefbdb65004a2e9a71aa642f1c
+checked_date:                2026-10-01
+princess_commit:             033b9b9c32ee296a28431fbe85d87f3c7ab9199d
+receipt_sha256:              c9e23770d23b5b066cf32596d26bde5564bdd440d460074deb61d0cab1be85fe
+protected_evidence_ref:      operator-local:princess-staging-v4-2026-10-01
 
-result:                      PENDING
-live_provider_refresh:       PENDING
-same_session_refresh:        PENDING
-refresh_auth_time_unchanged: PENDING
-signing_key_rotation:        PENDING
-genuine_new_session_reauth:  PENDING
-reauth_auth_time_advanced:   PENDING
-revoked_before_old_rejected: PENDING
-revoked_before_new_accepted: PENDING
+result:                      PASS
+live_provider_refresh:       PASS
+same_session_refresh:        PASS
+refresh_auth_time_unchanged: PASS
+signing_key_rotation:        PASS
+genuine_new_session_reauth:  PASS
+reauth_auth_time_advanced:   PASS
+revoked_before_old_rejected: PASS
+revoked_before_new_accepted: PASS
 
 provider_selection_claim:    false
 production_activation:       false
 ```
+
+## Qualified scope
+
+This PASS binds only the owner-authorized **staging / sandbox** identity profile used for the 2026-10-01 witness. The live run used the stock claims profile with anonymous sign-in disabled, OAuth Server disabled, no Custom Access Token Hook, and asymmetric ES256/P-256 signing. It proved live same-session refresh, unchanged AMR-derived authentication freshness across refresh, asymmetric signing-key rotation with both old and new keys trusted, genuine new-session password reauthentication with newer freshness, and both sides of the Princess `revoked_before` fence.
+
+It does **not** approve processor terms, region/data handling, retention/deletion/support, runtime composition, callbacks/native configuration, production credentials or production/live activation. Those remain separate gates.
 
 ## Project-binding meaning
 
