@@ -123,13 +123,6 @@ If any operational witness fails:
 - do not delete unrelated provider users/sessions;
 - treat provider-schema drift, account drift or runtime failure as a finding and repair/review that condition first.
 
-## Current connected-account preflight
-
-The connected Supabase account currently resolves the Princess project as active/healthy in `eu-west-1`, and its
-project reference hashes to the same Git-safe project binding already recorded by T17. This confirms the connected
-project identity only; it is **not** a substitute for the protected Auth-config export, disposable JWT conformance
-or provider cleanup evidence.
-
 ## Closeout command
 
 After all three real Git-safe artifacts have been added to an evidence branch:
