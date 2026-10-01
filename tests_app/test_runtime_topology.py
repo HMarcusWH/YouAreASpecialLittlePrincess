@@ -73,6 +73,9 @@ def test_staging_identity_support_moves_fail_closed_boundary_to_object_store(mon
     monkeypatch.setattr(binding_module, "QUALIFICATION_RECEIPT_SHA256", receipt_hash)
     monkeypatch.setattr(binding_module, "ACCOUNT_SNAPSHOT_SHA256", snapshot_hash)
     monkeypatch.setattr(binding_module, "PROJECT_REF_SHA256", project_hash)
+    monkeypatch.setattr(binding_module, "QUALIFIED_ISSUER_SHA256", hashlib.sha256(issuer.encode()).hexdigest())
+    monkeypatch.setattr(binding_module, "QUALIFIED_AUDIENCE_SHA256", hashlib.sha256(audience.encode()).hexdigest())
+    monkeypatch.setattr(binding_module, "QUALIFIED_ROLE_SHA256", hashlib.sha256(b"authenticated").hexdigest())
     monkeypatch.setattr(binding_module, "SOURCE_REVISION", source_revision)
     binding = {
         "version": binding_module.BINDING_VERSION,
