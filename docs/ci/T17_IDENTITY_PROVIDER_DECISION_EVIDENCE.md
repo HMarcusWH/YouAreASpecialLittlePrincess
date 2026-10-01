@@ -123,7 +123,7 @@ The owner selection closes only the provider-choice gate. The following evidence
 
 **Decision: SELECT SUPABASE AUTH AS ADR-002 IMPLEMENTATION PROVIDER**
 
-- decided by role: product/technical owner
+- approver: product/technical owner
 - decided on: 2026-10-01
 - purpose: bind the managed identity implementation direction for T17/T29-T31 and the future API adapter
 - scope: web, backend credential verification and future iOS/Android identity integration
