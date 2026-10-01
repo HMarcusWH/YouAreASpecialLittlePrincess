@@ -490,7 +490,9 @@ def test_receipt_validator_rejects_scope_or_witness_tampering():
         ("project_binding", "UNKNOWN"),
         ("environment", "preview"),
         ("provider_mode", "fake"),
+        ("provider_mode", "live"),
         ("environment_manifest_sha256", "not-a-hash"),
+        ("environment_manifest_sha256", "0" * 64),
     ):
         changed = dict(receipt)
         changed[field] = value
