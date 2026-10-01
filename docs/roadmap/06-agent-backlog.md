@@ -1517,10 +1517,10 @@ src/princess_app/config.py
 src/princess_app/config_supabase.py
 tools/build_supabase_staging_runtime_binding.py
 tools/verify_supabase_staging_runtime.py
-docs/ci/T17_SUPABASE_RUNTIME_CONFORMANCE.md
 tools/build_supabase_auth_settings_snapshot.py
 docs/ci/T17_SUPABASE_AUTH_OPERATIONAL_POLICY.md
 docs/ci/T17_SUPABASE_AUTH_SETTINGS_SNAPSHOT.json
+docs/ci/T17_SUPABASE_RUNTIME_CONFORMANCE.md
 ```
 
 ### Coding sequence
