@@ -3,11 +3,21 @@ from __future__ import annotations
 
 import hashlib
 import json
+from dataclasses import replace
+from pathlib import Path
+from types import MappingProxyType
 
 import pytest
 
 import princess_app.config_supabase as binding_module
-from princess_app.ports.base import InvalidInput
+import princess_api.compose as compose_module
+from princess_app.adapters.fakes import FakeClock
+from princess_app.adapters.supabase import SupabaseIdentityProvider
+from princess_app.config import load_runtime_config
+from princess_app.ports import identity as identity_port
+from princess_app.ports.base import InvalidInput, ProviderMode, Unsupported
+
+ROOT = Path(__file__).resolve().parents[1]
 
 
 def _sha(value: str) -> str:
@@ -122,3 +132,30 @@ def test_duplicate_binding_keys_are_rejected(monkeypatch):
     assert code(lambda: binding_module.parse_supabase_staging_runtime_binding(
         raw, issuer=issuer, audience=audience, current_manifest_sha256=manifest_hash
     )) == "identity_runtime_binding_duplicate_key"
+
+
+def test_api_composes_only_the_qualified_staging_sandbox_profile(monkeypatch):
+    issuer, audience, _, manifest_hash, binding = _fixture(monkeypatch)
+    monkeypatch.setattr(compose_module, "_manifest_sha256", lambda _environment: manifest_hash)
+    env = {
+        "PRINCESS_ENV": "staging",
+        "PRINCESS_COMPONENT": "api",
+        "PRINCESS_DATABASE_URL": "postgresql://svc:stage-secret@db/princess_staging",
+        "PRINCESS_SESSION_SECRET": "stage-session-0123456789",
+        "PRINCESS_IDENTITY_AUDIENCE": audience,
+        "PRINCESS_STORAGE_SIGNING_KEY": "stage-storage-0123456789",
+        "PRINCESS_IDENTITY_ISSUER": issuer,
+        "PRINCESS_IDENTITY_BINDING": json.dumps(binding),
+    }
+    config = load_runtime_config(env, ROOT)
+    provider = compose_module.compose_identity_provider(config, FakeClock())
+    assert isinstance(provider, SupabaseIdentityProvider)
+    assert provider.profile.capabilities == frozenset({identity_port.VERIFY_CREDENTIAL})
+    assert provider.allowed_roles == frozenset({binding["allowed_role"]})
+
+    providers = dict(config.manifest.providers)
+    providers["IdentityProvider"] = ProviderMode.LIVE
+    live = replace(config, manifest=replace(config.manifest, providers=MappingProxyType(providers)))
+    with pytest.raises(Unsupported) as err:
+        compose_module.compose_identity_provider(live, FakeClock())
+    assert err.value.code == "identity_adapter_not_configured"
