@@ -8,12 +8,12 @@ This document defines the safe evidence boundary for the owner-selected T17 Supa
 
 Merged PR #46 established the first opt-in qualification harness, but its managed-project shape still trusted an
 operator-supplied "refreshed access JWT" and did not retain every account-profile fact from the qualification
-checklist. `supabase-identity-qualification/2` closes that evidence gap without enabling login.
+checklist. `supabase-identity-qualification/3` keeps those witnesses and additionally binds every receipt to an explicit project purpose without enabling login.
 
 Synthetic CI remains offline. `MANAGED_PROJECT` mode is intentionally manual and provider-facing.
 
 
-PR #48 factors the live JWKS read through the reusable `SupabaseJwksSource`: one fixed endpoint derived from the reviewed issuer, no redirects, bounded bytes/key count, and typed/redacted provider errors. Synthetic qualification remains offline through injected fixtures/transports. This refactor does not select or compose Supabase.
+PR #48 factors the live JWKS read through the reusable `SupabaseJwksSource`: one fixed endpoint derived from the reviewed issuer, no redirects, bounded bytes/key count, and typed/redacted provider errors. The current qualification hardening applies the same policy shape to the live refresh exchange: HTTPS issuer validation, no redirects, `trust_env=False`, bounded response bytes and redacted transport failures. Synthetic qualification remains offline through injected fixtures/transports. None of this composes Supabase.
 
 ## Managed-project witness
 
@@ -74,6 +74,7 @@ PRINCESS_SUPABASE_QUALIFY=1 \
 python tools/qualify_supabase_identity.py \
   --project-alias <safe-alias> \
   --evidence-kind MANAGED_PROJECT \
+  --project-binding <QUALIFICATION_ONLY|INTENDED_RUNTIME_PROFILE> \
   --issuer '<exact-reviewed-issuer>' \
   --audience '<exact-reviewed-audience>' \
   --role '<exact-reviewed-role>' \
@@ -87,12 +88,34 @@ python tools/qualify_supabase_identity.py \
   --output /protected/supabase-identity-qualification.json
 ```
 
-Use a dedicated owner-authorized qualification project/profile for the signing-key rotation drill. Do not weaken
-the verifier to accommodate HS256/shared-secret signing, an enabled/unknown Custom Access Token Hook, unknown
-account-policy settings, unchanged signing `kid`, stale reauthentication material, or refresh/AMR/session drift.
+The receipt must declare what the managed project proves:
+
+- `QUALIFICATION_ONLY`: a dedicated/disposable project used to prove provider/profile semantics. A PASS does **not**
+  prove that the later runtime tenant/profile has the same settings.
+- `INTENDED_RUNTIME_PROFILE`: the project/profile is the actual intended runtime identity profile. A PASS can close
+  the technical exact-profile gate, but still does not approve processor terms, region/data handling, support,
+  production secrets, callbacks/native configuration or runtime activation.
+
+Use a dedicated owner-authorized `QUALIFICATION_ONLY` project when the signing-key rotation drill must not touch
+the intended runtime tenant. If that path is used, a later exact-profile binding/equivalence witness remains required
+before composition. Never relabel a `QUALIFICATION_ONLY` receipt as runtime-profile evidence.
+
+Do not weaken the verifier to accommodate HS256/shared-secret signing, an enabled/unknown Custom Access Token Hook,
+unknown account-policy settings, unchanged signing `kid`, stale reauthentication material, or refresh/AMR/session
+drift.
 
 Synthetic regression tests use `--pre-rotation-jwks-file`, `--jwks-file` and `--refreshed-token-file` instead of
 provider network calls. A synthetic PASS is never managed-project evidence.
+
+## Evidence retention
+
+The exact generated receipt remains protected operational evidence. Keep it outside Git (for example under the
+operator's protected evidence store), compute its SHA-256, and commit only the safe reference/digest summary in
+[T17 managed-project evidence](T17_SUPABASE_MANAGED_PROJECT_EVIDENCE.md). The receipt is intentionally redacted of
+tokens/subjects/session IDs, but still contains operational metadata such as issuer host, key IDs, token lifetime
+and account-policy settings that need not be public.
+
+Never commit the initial JWT, refresh token, publishable key, reauthentication JWT or raw receipt by default.
 
 ## Human/account gates still separate
 
