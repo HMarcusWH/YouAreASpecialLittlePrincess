@@ -235,6 +235,35 @@ def test_safe_index_output_is_one_canonical_git_path(tmp_path):
         conformance._safe_index_path(tmp_path / "looks-safe.md")
 
 
+def test_unexpected_failure_never_echoes_protected_material(monkeypatch, tmp_path, capsys):
+    qualification = tmp_path / "qualification.json"
+    issuer = tmp_path / "issuer.txt"
+    credential = tmp_path / "access.jwt"
+    receipt = tmp_path / "receipt.json"
+    qualification.write_text("{}", encoding="utf-8")
+    issuer.write_text("https://protected-project.supabase.co/auth/v1", encoding="utf-8")
+    credential.write_text("super-secret-access-token", encoding="utf-8")
+
+    def explode(*_args, **_kwargs):
+        raise RuntimeError("super-secret-access-token https://protected-project.supabase.co")
+
+    monkeypatch.setenv("PRINCESS_SUPABASE_STAGING_CONFORMANCE", "1")
+    monkeypatch.setattr(conformance, "build_binding", explode)
+    rc = conformance.main([
+        "--qualification-receipt-file", str(qualification),
+        "--issuer-file", str(issuer),
+        "--access-token-file", str(credential),
+        "--receipt-output", str(receipt),
+        "--safe-index-output", str(conformance.SAFE_INDEX_PATH),
+        "--protected-evidence-ref", "operator-local:test",
+    ])
+    rendered = capsys.readouterr().out
+    assert rc == 1
+    assert rendered.strip() == "FAIL: conformance_unexpected_failure"
+    assert "super-secret-access-token" not in rendered
+    assert "protected-project" not in rendered
+
+
 def test_current_staging_manifest_still_matches_qualified_hash():
     digest = hashlib.sha256((ROOT / "infra" / "environments" / "staging.json").read_bytes()).hexdigest()
     assert digest == binding_config.QUALIFIED_ENVIRONMENT_MANIFEST_SHA256
