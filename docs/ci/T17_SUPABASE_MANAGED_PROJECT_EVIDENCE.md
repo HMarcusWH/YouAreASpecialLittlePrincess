@@ -16,7 +16,7 @@ provider:                    supabase-auth
 receipt_version:             supabase-identity-qualification/4
 evidence_kind:               MANAGED_PROJECT
 project_binding:             <QUALIFICATION_ONLY|INTENDED_RUNTIME_PROFILE>
-relevant_environment:        <staging|production>
+environment:                 <staging|production>
 provider_mode:               <sandbox|live>
 environment_manifest_sha256: PENDING
 checked_date:                PENDING
