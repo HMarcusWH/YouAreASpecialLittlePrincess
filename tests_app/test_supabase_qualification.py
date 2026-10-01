@@ -87,6 +87,8 @@ def qualify_fixture(**overrides):
         "project_alias": "synthetic-supabase",
         "evidence_kind": "SYNTHETIC_TEST",
         "project_binding": "QUALIFICATION_ONLY",
+        "environment": "staging",
+        "provider_mode": "sandbox",
         "princess_commit": COMMIT,
         "issuer": ISSUER,
         "audience": AUDIENCE,
@@ -112,6 +114,8 @@ def test_synthetic_qualification_proves_refresh_rotation_reauth_and_emits_redact
         project_alias="synthetic-supabase",
         evidence_kind="SYNTHETIC_TEST",
         project_binding="QUALIFICATION_ONLY",
+        environment="staging",
+        provider_mode="sandbox",
         princess_commit=COMMIT,
         issuer=ISSUER,
         audience=AUDIENCE,
@@ -128,8 +132,11 @@ def test_synthetic_qualification_proves_refresh_rotation_reauth_and_emits_redact
         refresh_response_expires_in_s=3600,
     )
     validate_receipt(receipt)
-    assert receipt["version"] == "supabase-identity-qualification/3"
+    assert receipt["version"] == "supabase-identity-qualification/4"
     assert receipt["project_binding"] == "QUALIFICATION_ONLY"
+    assert receipt["environment"] == "staging"
+    assert receipt["provider_mode"] == "sandbox"
+    assert len(receipt["environment_manifest_sha256"]) == 64
     assert receipt["source_revision"] == SOURCE_REVISION
     assert receipt["same_session_initial_refresh"] is True
     assert receipt["refresh_auth_time_unchanged"] is True
@@ -252,6 +259,32 @@ def test_project_binding_distinguishes_qualification_project_from_runtime_profil
 
     with pytest.raises(QualificationError, match="synthetic_cannot_bind_runtime_profile"):
         qualify_fixture(project_binding="INTENDED_RUNTIME_PROFILE")
+
+
+def test_environment_binding_matches_reviewed_manifests():
+    staging = qualify_fixture()
+    assert staging["environment"] == "staging"
+    assert staging["provider_mode"] == "sandbox"
+
+    production = qualify_fixture(environment="production", provider_mode="live")
+    assert production["environment"] == "production"
+    assert production["provider_mode"] == "live"
+    assert production["environment_manifest_sha256"] != staging["environment_manifest_sha256"]
+
+
+@pytest.mark.parametrize(
+    "environment,provider_mode,code",
+    [
+        ("staging", "live", "identity_mode_manifest_mismatch"),
+        ("production", "sandbox", "identity_mode_manifest_mismatch"),
+        ("local", "fake", "qualification_environment_not_managed"),
+        ("preview", "fake", "qualification_environment_not_managed"),
+        ("test", "sandbox", "qualification_environment_not_managed"),
+    ],
+)
+def test_environment_binding_refuses_wrong_or_non_managed_profiles(environment, provider_mode, code):
+    with pytest.raises(QualificationError, match=code):
+        qualify_fixture(environment=environment, provider_mode=provider_mode)
 
 
 def test_managed_project_requires_live_refresh_witness():
@@ -455,6 +488,9 @@ def test_receipt_validator_rejects_scope_or_witness_tampering():
         ("signing_key_rotation_observed", False),
         ("source_revision", "0" * 40),
         ("project_binding", "UNKNOWN"),
+        ("environment", "preview"),
+        ("provider_mode", "fake"),
+        ("environment_manifest_sha256", "not-a-hash"),
     ):
         changed = dict(receipt)
         changed[field] = value
@@ -483,6 +519,10 @@ def test_cli_requires_explicit_gate_and_file_only_synthetic_credentials(tmp_path
         "SYNTHETIC_TEST",
         "--project-binding",
         "QUALIFICATION_ONLY",
+        "--environment",
+        "staging",
+        "--provider-mode",
+        "sandbox",
         "--issuer",
         ISSUER,
         "--audience",
@@ -562,6 +602,10 @@ def test_managed_cli_sequences_live_refresh_then_rotation_then_reauth(tmp_path, 
         "MANAGED_PROJECT",
         "--project-binding",
         "QUALIFICATION_ONLY",
+        "--environment",
+        "staging",
+        "--provider-mode",
+        "sandbox",
         "--issuer",
         ISSUER,
         "--audience",
@@ -589,5 +633,7 @@ def test_managed_cli_sequences_live_refresh_then_rotation_then_reauth(tmp_path, 
     receipt = json.loads(output.read_text(encoding="utf-8"))
     assert receipt["evidence_kind"] == "MANAGED_PROJECT"
     assert receipt["project_binding"] == "QUALIFICATION_ONLY"
+    assert receipt["environment"] == "staging"
+    assert receipt["provider_mode"] == "sandbox"
     assert receipt["refresh_source"] == "LIVE_PROVIDER_REFRESH"
     assert receipt["signing_key_rotation_observed"] is True
