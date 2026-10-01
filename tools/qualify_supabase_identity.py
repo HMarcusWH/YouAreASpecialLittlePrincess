@@ -584,13 +584,17 @@ def validate_receipt(data: dict[str, Any]) -> None:
         raise QualificationError("receipt_project_binding")
     environment = data.get("environment")
     provider_mode = data.get("provider_mode")
-    if environment not in {item.value for item in QUALIFICATION_ENVIRONMENTS}:
-        raise QualificationError("receipt_environment")
-    if provider_mode not in {item.value for item in ProviderMode}:
-        raise QualificationError("receipt_provider_mode")
+    if not isinstance(environment, str) or not isinstance(provider_mode, str):
+        raise QualificationError("receipt_environment_scope")
+    try:
+        _, _, expected_manifest_hash = _qualification_scope(environment, provider_mode)
+    except QualificationError as exc:
+        raise QualificationError("receipt_environment_scope") from exc
     manifest_hash = data.get("environment_manifest_sha256")
     if not isinstance(manifest_hash, str) or not re.fullmatch(r"[0-9a-f]{64}", manifest_hash):
         raise QualificationError("receipt_environment_manifest_sha256")
+    if manifest_hash != expected_manifest_hash:
+        raise QualificationError("receipt_environment_manifest_mismatch")
     if data.get("evidence_kind") == "SYNTHETIC_TEST" and data.get("project_binding") != "QUALIFICATION_ONLY":
         raise QualificationError("receipt_synthetic_runtime_binding")
     if data.get("anonymous_sign_in_policy") not in ACCOUNT_POLICY_STATES:
