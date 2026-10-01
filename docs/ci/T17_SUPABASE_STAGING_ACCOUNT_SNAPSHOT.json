@@ -1,0 +1,18 @@
+{
+  "snapshot_version": "supabase-account-settings/1",
+  "provider": "supabase",
+  "project_alias": "princess-staging",
+  "captured_date": "2026-10-01",
+  "source_kind": "SUPABASE_MANAGEMENT_API",
+  "source_actions": [
+    "get_project",
+    "get_organization"
+  ],
+  "project_ref_sha256": "730f049be2bb48fbca59f87518cece081ca02f313c465fd55498e84a9d590a99",
+  "organization_id_sha256": "af6e845d43e91676df1be68377f5a48c9de72d11a19e93372ef5d90eb5d4e75f",
+  "project_region": "eu-west-1",
+  "organization_plan": "free",
+  "organization_tier": "tier_free",
+  "contains_secrets": false,
+  "production_activation": false
+}
