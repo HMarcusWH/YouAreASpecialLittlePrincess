@@ -109,7 +109,7 @@ adapter/profile qualification.
 
 The owner selection closes only the provider-choice gate. The following evidence still blocks composition or later production activation:
 
-1. **Supabase managed-project evidence:** the protected `MANAGED_PROJECT` run remains PENDING.
+1. **Supabase managed-project evidence:** the protected `supabase-identity-qualification/3` `MANAGED_PROJECT` run remains PENDING. The receipt must state `QUALIFICATION_ONLY` or `INTENDED_RUNTIME_PROFILE`; only the latter (or a separately reviewed binding/equivalence witness) can close the exact runtime-profile technical gate.
 2. **Processor/account approval:** actual provider account, purpose, region, retention/deletion, support and
    subprocessors must be reviewed under `processor_retention_contracts`.
 3. **Actual web/native account configuration:** callback/deep-link domains, Apple/Google credentials, private
@@ -130,7 +130,7 @@ The owner selection closes only the provider-choice gate. The following evidence
 - evidence: this dated comparison plus the merged Princess Supabase verifier/JWKS/qualification-tooling evidence
 - relevant environment: implementation direction only; no local/test/preview/staging/production provider mode is activated by this decision
 - expiration/review trigger: reopen ADR-002 if managed-project qualification fails, the selected credential/claims/signing profile changes, provider linking/session semantics materially change, processor/region terms become unacceptable, or native Apple/Google/private-relay qualification cannot preserve Princess account continuity
-- limitations: no Supabase account, region, processor terms, retention/deletion/support obligations, MANAGED_PROJECT PASS, production credentials or release environment are approved by this decision
+- limitations: no Supabase account, region, processor terms, retention/deletion/support obligations, MANAGED_PROJECT PASS, exact runtime-profile binding, production credentials or release environment are approved by this decision
 
 The selected credential direction remains the already code-qualified first-party Supabase access-JWT profile:
 asymmetric JWKS, exact configured issuer/audience/role, canonical subject/session UUIDs, non-anonymous state,
