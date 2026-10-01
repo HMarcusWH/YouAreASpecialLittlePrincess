@@ -54,6 +54,14 @@ SECRET_CATEGORIES: Mapping[str, str] = {
     "PRINCESS_TELEMETRY_TOKEN": "telemetry",
 }
 
+# Evidence-bound provider-profile inputs are protected process configuration,
+# but deliberately not added to environment manifests: the already-qualified
+# staging identity receipt is bound to the current manifest SHA-256.
+PROTECTED_CONFIG_NAMES = frozenset({
+    "PRINCESS_IDENTITY_ISSUER",
+    "PRINCESS_IDENTITY_BINDING",
+})
+
 # Component -> secret categories it may hold (doc 15 secret/egress matrix).
 COMPONENT_SECRET_CATEGORIES: Mapping[str, frozenset[str]] = {
     "api": frozenset({"database", "session", "identity_verification", "storage_signing", "payment_server",
@@ -212,11 +220,17 @@ class RuntimeConfig:
     component: str
     manifest: EnvironmentManifest
     secrets: Mapping[str, str] = field(repr=False)
+    protected: Mapping[str, str] = field(repr=False)
 
     def secret(self, name: str) -> str:
         if name not in self.manifest.components[self.component].secrets:
             raise _fail("secret_not_granted", name)
         return self.secrets[name]
+
+    def protected_value(self, name: str) -> str:
+        if name not in PROTECTED_CONFIG_NAMES or name not in self.protected:
+            raise _fail("protected_config_not_granted", name)
+        return self.protected[name]
 
     def provider_mode(self, port: str) -> ProviderMode:
         return self.manifest.providers[port]
@@ -233,6 +247,19 @@ def load_runtime_config(env: Mapping[str, str], root: Path) -> RuntimeConfig:
     if component not in manifest.components:
         raise _fail("component_not_in_manifest", str(component)[:64])
     policy = manifest.components[component]
+    protected_values = {name: env.get(name) for name in PROTECTED_CONFIG_NAMES if env.get(name)}
+    staging_identity_profile = (
+        component == "api"
+        and environment is Environment.STAGING
+        and manifest.providers["IdentityProvider"] is ProviderMode.SANDBOX
+    )
+    if staging_identity_profile:
+        missing = sorted(name for name in PROTECTED_CONFIG_NAMES if not env.get(name))
+        if missing:
+            raise _fail("missing_protected_config", missing[0])
+    elif protected_values:
+        raise _fail("protected_config_not_allowed", sorted(protected_values)[0])
+
     stray = sorted(name for name in SECRET_CATEGORIES if env.get(name) and name not in policy.secrets)
     if stray:
         # A known secret the component is not granted must not even be present.
@@ -254,4 +281,11 @@ def load_runtime_config(env: Mapping[str, str], root: Path) -> RuntimeConfig:
                 raise _fail("database_url_not_postgresql", name)
             if parts.path.lstrip("/") != manifest.database_name:
                 raise _fail("database_url_names_another_database", name)
-    return RuntimeConfig(environment, component, manifest, MappingProxyType(secrets))
+    protected = {name: _Secret(value) for name, value in protected_values.items() if value is not None}
+    return RuntimeConfig(
+        environment,
+        component,
+        manifest,
+        MappingProxyType(secrets),
+        MappingProxyType(protected),
+    )
