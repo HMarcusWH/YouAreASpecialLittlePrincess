@@ -89,6 +89,34 @@ Protected inputs plus the full operational receipt must remain outside Git. The 
 
 The harness intentionally does not perform provider cleanup because `REVOKE_SESSION` and `DELETE_PROVIDER_ACCOUNT` are still unsupported adapter capabilities and adding an admin/service credential to this verification-only slice would widen authority. After a live witness, an authorized operator must revoke/sign out the disposable provider session and delete the disposable Auth user separately, retaining only safe cleanup evidence. Already-issued access JWTs can remain cryptographically valid until expiry, so cleanup must not be described as instantaneous token invalidation.
 
+### Selected-account Auth operational policy
+
+Before Princess activates application-managed Supabase sign-in or refresh, T17 requires exact selected-account Auth
+settings plus an explicit retry/backoff/abuse policy. Public Supabase defaults are not accepted as substitutes for
+the selected staging project's configuration.
+
+`tools/build_supabase_auth_settings_snapshot.py` is the evidence builder for that gate. The operator captures the
+selected project's `GET /v1/projects/{ref}/config/auth` response outside Git and supplies the raw project ref through
+a separate protected file. The builder verifies the already-qualified Princess project-ref SHA-256, extracts only
+reviewed non-secret operational fields, canonicalizes their safe projection, and emits the future
+`docs/ci/T17_SUPABASE_AUTH_SETTINGS_SNAPSHOT.json`. It performs no provider request and accepts no Management API
+access token, Supabase API key, password, access token or refresh token.
+
+The policy contract is in [T17 Supabase Auth operational policy](../ci/T17_SUPABASE_AUTH_OPERATIONAL_POLICY.md).
+Retry ownership remains application/caller-owned. Bad credentials/permanent failures are never automatically
+retried; provider rate limits must be honored before any later retry; transient transport failures may only receive
+bounded application-owned retry once the actual login/session transport is reviewed; and refresh must be
+single-flight per session rather than fanning out parallel refresh calls. No retry counts/delays are invented in
+this evidence slice before that transport exists.
+
+The selected-account snapshot also records whether Supabase's `Sb-Forwarded-For` Auth rate-limit feature is
+enabled, but this slice does not enable it or add a Supabase secret key. Any later use of forwarded end-user IPs
+requires its own least-privilege/trusted-proxy review. CAPTCHA/social/passkey/phone/other new sign-in methods are
+likewise not activated by this policy.
+
+The real staging conformance PASS and the selected-account Auth-settings evidence are independent gates. Neither
+one substitutes for the other, and application-managed authentication remains disabled until both are closed.
+
 For managed evidence, `QUALIFICATION_ONLY` and `INTENDED_RUNTIME_PROFILE` are deliberately different receipt
 bindings. A disposable rotation project can prove the selected credential mechanics but cannot be cited as proof
 that the later runtime tenant/profile has matching settings. The full receipt remains protected; Git stores only
