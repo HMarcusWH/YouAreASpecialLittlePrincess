@@ -1,12 +1,14 @@
 # T17 identity-provider decision evidence
 
-**Checked: 2026-10-01. Status: public-source comparison complete; Supabase Auth selected as implementation provider; staging/sandbox exact-profile technical qualification PASSED; scoped staging account/processor evidence ASSEMBLED with owner decision PENDING; production/live approval PENDING.**
+**Checked: 2026-10-01. Status: public-source comparison complete; Supabase Auth selected as implementation provider; staging/sandbox exact-profile technical qualification PASSED; narrow staging `VERIFY_CREDENTIAL` account/processor scope APPROVED; exact-tuple runtime composition implemented; production/live approval PENDING.**
 
 This is supporting evidence for [ADR-002](../adr/ADR-002-auth-provider.md) and the canonical
 [provider decision register](../roadmap/19-provider-decision-register.md). The product/technical owner selected
 Supabase Auth as the implementation provider on 2026-10-01 after reviewing this comparison. A separate protected
-v4 run subsequently qualified the intended staging/sandbox identity profile; this record still does not approve
-processor/region/contracts, runtime composition, production/live identity, or activation.
+v4 run subsequently qualified the intended staging/sandbox identity profile. The narrow staging verification
+scope is now separately approved and code can compose only that exact profile through a protected receipt-derived
+binding. This record still does not approve application-managed login, global processor-gate closure,
+production/live identity, or production activation.
 
 The comparison uses current first-party vendor documentation plus evidence already merged in this repository.
 Account-specific settings, contracts, negotiated support, actual provider behavior and owner decisions remain
@@ -108,10 +110,10 @@ adapter/profile qualification.
 
 ## Post-selection gates after this public-source pass
 
-The owner selection and separate 2026-10-01 v4 staging witness close the provider-choice and staging exact-profile technical gates. The following evidence still blocks staging composition or later production activation:
+The owner selection, separate 2026-10-01 v4 staging witness and narrow account/processor approval close the provider-choice, exact-profile and scoped staging-verification gates. Runtime code now supports only that exact tuple. The following evidence still blocks real staging conformance, application login or later production activation:
 
 1. **Supabase managed-project evidence:** COMPLETE for the intended staging/sandbox profile on 2026-10-01 using `supabase-identity-qualification/4`, `MANAGED_PROJECT`, `INTENDED_RUNTIME_PROFILE`, `environment=staging` and `provider_mode=sandbox`. Do not repeat the invasive staging rotation witness unless the qualified profile materially changes. Production/live remains a separate later managed-project qualification.
-2. **Processor/account approval:** the scoped staging review is now assembled in [T17 Supabase staging account/processor evidence](T17_SUPABASE_ACCOUNT_PROCESSOR_EVIDENCE.md), including the observed account region/plan, requested purpose/data scope and remaining retention/support/subprocessor constraints. Its explicit owner decision is still PENDING; this does not close `processor_retention_contracts` globally.
+2. **Processor/account approval:** APPROVED only for the narrow staging/sandbox `VERIFY_CREDENTIAL` test slice in [T17 Supabase staging account/processor evidence](T17_SUPABASE_ACCOUNT_PROCESSOR_EVIDENCE.md). This does not close `processor_retention_contracts` globally or authorize application-managed login.
 3. **Actual web/native account configuration:** callback/deep-link domains, Apple/Google credentials, private
    relay/relinking and cross-device recovery remain real account/device evidence.
 4. **Provider lifecycle integration:** provider logout/revocation and provider-account deletion are still not
@@ -135,18 +137,20 @@ The owner selection and separate 2026-10-01 v4 staging witness close the provide
 The selected credential direction remains the already code-qualified first-party Supabase access-JWT profile:
 asymmetric JWKS, exact configured issuer/audience/role, canonical subject/session UUIDs, non-anonymous state,
 stock claims profile, and AMR-derived authentication freshness. The intended staging/sandbox profile has now
-qualified that shape; staging composition must explicitly bind its runtime issuer/audience/role/JWKS configuration
-to the qualified evidence before use. Production/live remains separately unqualified.
+qualified that shape. The staging composition path now requires a protected runtime issuer plus a receipt-derived
+binding whose issuer hash, audience, allowed role, receipt digest, account snapshot and qualified manifest hashes
+match the recorded evidence before `SupabaseIdentityProvider` is constructed. Production/live remains separately unqualified.
 
 ## Decision state after this PR
 
 ```text
 Supabase Auth            SELECTED IMPLEMENTATION PROVIDER
 Supabase staging profile MANAGED_PROJECT PASS (staging/sandbox only)
-processor/account gate   EVIDENCE ASSEMBLED / OWNER DECISION PENDING
+processor/account gate   APPROVED — narrow staging VERIFY_CREDENTIAL scope only
 Clerk                    NOT SELECTED (comparison retained for ADR replacement review)
 production activation    PENDING
 ```
 
-This owner decision is intentionally narrower than `PRODUCTION_APPROVED`. It does not authorize live-account,
-signed-device, processor-contract, runtime composition or production login activity.
+This owner decision is intentionally narrower than `PRODUCTION_APPROVED`. It authorizes only the reviewed
+staging verification/test slice and its exact runtime composition. It does not authorize application-managed
+login/refresh, signed-device production processing, global processor-contract closure or production login activity.
