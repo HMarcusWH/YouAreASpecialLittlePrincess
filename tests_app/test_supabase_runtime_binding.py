@@ -38,6 +38,9 @@ def _fixture(monkeypatch):
     monkeypatch.setattr(binding_module, "QUALIFICATION_RECEIPT_SHA256", receipt_hash)
     monkeypatch.setattr(binding_module, "ACCOUNT_SNAPSHOT_SHA256", snapshot_hash)
     monkeypatch.setattr(binding_module, "PROJECT_REF_SHA256", project_hash)
+    monkeypatch.setattr(binding_module, "QUALIFIED_ISSUER_SHA256", _sha(issuer))
+    monkeypatch.setattr(binding_module, "QUALIFIED_AUDIENCE_SHA256", _sha(audience))
+    monkeypatch.setattr(binding_module, "QUALIFIED_ROLE_SHA256", _sha(role))
     monkeypatch.setattr(binding_module, "SOURCE_REVISION", source_revision)
     binding = {
         "version": binding_module.BINDING_VERSION,
@@ -109,6 +112,18 @@ def test_issuer_audience_role_and_manifest_drift_fail_closed(monkeypatch):
     assert code(lambda: binding_module.parse_supabase_staging_runtime_binding(
         json.dumps(binding), issuer=issuer, audience=audience, current_manifest_sha256=manifest_hash
     )) == "identity_runtime_binding_role"
+
+    _, _, _, _, binding = _fixture(monkeypatch)
+    binding["audience"] = "other-qualified-looking-audience"
+    assert code(lambda: binding_module.parse_supabase_staging_runtime_binding(
+        json.dumps(binding), issuer=issuer, audience=audience, current_manifest_sha256=manifest_hash
+    )) == "identity_runtime_binding_mismatch"
+
+    _, _, _, _, binding = _fixture(monkeypatch)
+    binding["allowed_role"] = "other-qualified-looking-role"
+    assert code(lambda: binding_module.parse_supabase_staging_runtime_binding(
+        json.dumps(binding), issuer=issuer, audience=audience, current_manifest_sha256=manifest_hash
+    )) == "identity_runtime_binding_mismatch"
 
 
 def test_other_supabase_project_and_binding_shape_are_rejected(monkeypatch):
