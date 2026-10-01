@@ -41,8 +41,9 @@ a publishable/anon key, a secret/service-role key, a password or a refresh token
 
 ## Operator command
 
-All protected paths must be absolute and resolve outside the Git checkout. The raw issuer is read from a protected
-file so it cannot leak through shell history/process arguments.
+Run the command from the repository root on a clean checkout. All protected paths must be absolute and resolve
+outside the Git checkout. The raw issuer is read from a protected file so it cannot leak through shell
+history/process arguments.
 
 ```bash
 PRINCESS_SUPABASE_STAGING_CONFORMANCE=1 \
