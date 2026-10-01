@@ -1576,7 +1576,7 @@ PR #14 established the working deterministic Free Next.js journey and T21 export
 - Offline Supabase managed-project qualification harness and privacy-safe receipt contract
 - Dated ADR-002 Supabase-vs-Clerk provider decision evidence with explicit unknown/account gates
 - Git-safe Supabase managed-project evidence index with protected receipt digest/reference and explicit project binding
-- Scoped Supabase staging account/processor evidence record with explicit pending human decision and production/global-gate non-claims
+- Scoped Supabase staging account/processor evidence record with explicit staging-only owner approval and production/global-gate non-claims
 - Git-safe Supabase staging account-settings snapshot binding region/plan to provider Management API evidence
 - Protected Supabase staging runtime-binding tool plus exact-tuple composition/preflight regression coverage
 
