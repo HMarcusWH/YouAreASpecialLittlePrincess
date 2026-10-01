@@ -1,6 +1,6 @@
 # T17 identity-provider decision evidence
 
-**Checked: 2026-10-01. Status: public-source comparison complete; Supabase Auth selected as implementation provider; staging/sandbox exact-profile technical qualification PASSED; processor/account and production/live approval PENDING.**
+**Checked: 2026-10-01. Status: public-source comparison complete; Supabase Auth selected as implementation provider; staging/sandbox exact-profile technical qualification PASSED; scoped staging account/processor evidence ASSEMBLED with owner decision PENDING; production/live approval PENDING.**
 
 This is supporting evidence for [ADR-002](../adr/ADR-002-auth-provider.md) and the canonical
 [provider decision register](../roadmap/19-provider-decision-register.md). The product/technical owner selected
@@ -111,8 +111,7 @@ adapter/profile qualification.
 The owner selection and separate 2026-10-01 v4 staging witness close the provider-choice and staging exact-profile technical gates. The following evidence still blocks staging composition or later production activation:
 
 1. **Supabase managed-project evidence:** COMPLETE for the intended staging/sandbox profile on 2026-10-01 using `supabase-identity-qualification/4`, `MANAGED_PROJECT`, `INTENDED_RUNTIME_PROFILE`, `environment=staging` and `provider_mode=sandbox`. Do not repeat the invasive staging rotation witness unless the qualified profile materially changes. Production/live remains a separate later managed-project qualification.
-2. **Processor/account approval:** actual provider account, purpose, region, retention/deletion, support and
-   subprocessors must be reviewed under `processor_retention_contracts`.
+2. **Processor/account approval:** the scoped staging review is now assembled in [T17 Supabase staging account/processor evidence](T17_SUPABASE_ACCOUNT_PROCESSOR_EVIDENCE.md), including the observed account region/plan, requested purpose/data scope and remaining retention/support/subprocessor constraints. Its explicit owner decision is still PENDING; this does not close `processor_retention_contracts` globally.
 3. **Actual web/native account configuration:** callback/deep-link domains, Apple/Google credentials, private
    relay/relinking and cross-device recovery remain real account/device evidence.
 4. **Provider lifecycle integration:** provider logout/revocation and provider-account deletion are still not
@@ -144,7 +143,7 @@ to the qualified evidence before use. Production/live remains separately unquali
 ```text
 Supabase Auth            SELECTED IMPLEMENTATION PROVIDER
 Supabase staging profile MANAGED_PROJECT PASS (staging/sandbox only)
-processor/account gate   PENDING
+processor/account gate   EVIDENCE ASSEMBLED / OWNER DECISION PENDING
 Clerk                    NOT SELECTED (comparison retained for ADR replacement review)
 production activation    PENDING
 ```
