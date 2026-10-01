@@ -109,7 +109,7 @@ adapter/profile qualification.
 
 The owner selection closes only the provider-choice gate. The following evidence still blocks composition or later production activation:
 
-1. **Supabase managed-project evidence:** the protected `supabase-identity-qualification/3` `MANAGED_PROJECT` run remains PENDING. The receipt must state `QUALIFICATION_ONLY` or `INTENDED_RUNTIME_PROFILE`; only the latter (or a separately reviewed binding/equivalence witness) can close the exact runtime-profile technical gate.
+1. **Supabase managed-project evidence:** the protected `supabase-identity-qualification/4` `MANAGED_PROJECT` run remains PENDING. The receipt must state `QUALIFICATION_ONLY` or `INTENDED_RUNTIME_PROFILE` plus its environment/provider mode; only environment-bound intended-runtime evidence (or a separately reviewed binding/equivalence witness) can close the exact runtime-profile technical gate.
 2. **Processor/account approval:** actual provider account, purpose, region, retention/deletion, support and
    subprocessors must be reviewed under `processor_retention_contracts`.
 3. **Actual web/native account configuration:** callback/deep-link domains, Apple/Google credentials, private
