@@ -1,6 +1,6 @@
 # T17 Supabase staging account/processor evidence
 
-**Status: EVIDENCE HARDENED — scoped owner decision PENDING.**
+**Status: APPROVED FOR NARROW STAGING VERIFICATION SCOPE — production/global gates remain open.**
 
 This is the Git-safe account/processor review record for the owner-selected Supabase Auth implementation provider.
 It is deliberately narrower than `processor_retention_contracts` as a repository-wide gate and narrower than
@@ -42,8 +42,8 @@ managed_project_evidence:            docs/ci/T17_SUPABASE_MANAGED_PROJECT_EVIDEN
 implementation_owner_task:           T17
 implementation_owner_role:           frontend
 production_approver_role:            product/technical owner
-owner_decision:                      PENDING
-approved_on:                         PENDING
+owner_decision:                      APPROVED
+approved_on:                         2026-10-01
 production_approved:                 false
 global_processor_gate_closed:        false
 ```
@@ -246,13 +246,14 @@ Re-review this record before any of the following:
 
 ## Owner decision
 
-The evidence above is ready for a human scope decision. Agents must leave this section pending until the
-product/technical owner explicitly approves or rejects the requested scope.
+The product/technical owner explicitly approved this narrow scope on 2026-10-01 by directing implementation of
+the reviewed staging-verification slice after the account/processor and dumbassery reviews. This approval is
+limited to the exact scope below; it is not application-login or production authorization.
 
 ```text
-decision:               PENDING
+decision:               APPROVED
 approver_role:          product/technical owner
-decided_on:             PENDING
+decided_on:             2026-10-01
 scope:                  staging/sandbox IdentityProvider VERIFY_CREDENTIAL
 test_operations:        operator-controlled disposable test-user authentication + session issuance/refresh
 application_login:      NOT APPROVED BY THIS DECISION
@@ -262,6 +263,6 @@ production_activation:  false
 global_gate_closure:    false
 ```
 
-Even an APPROVED staging decision here would close only this Supabase Auth staging test slice. It must not mark the
+This APPROVED staging decision closes only this Supabase Auth staging test slice. It must not mark the
 shared `processor_retention_contracts` gate globally complete, must not alter the pending consent/legal-basis
 records, and must not be cited as production/live authorization.
