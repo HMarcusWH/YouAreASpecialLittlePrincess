@@ -205,6 +205,13 @@ Management API access token, activate application login or invent missing values
 The selected-account Auth-settings snapshot is still **PENDING** until a real owner-authorized account export is
 run through that tool. Tooling/tests alone do not close this acceptance gate.
 
+The final staging evidence closeout also requires separate provider cleanup evidence. After the real conformance
+witness, the owner-authorized operator must revoke all sessions for the disposable conformance test user and delete
+that disposable Auth user. `tools/build_supabase_staging_cleanup_evidence.py` turns only the safe aggregate result
+into Git-safe evidence; it does not perform the provider action and cannot claim project decommission. The atomic
+closeout checker refuses PASS unless conformance, selected-account settings and cleanup evidence all validate while
+this owner decision still says application login is not approved.
+
 ## Cost model
 
 The source-bound account snapshot records the organization as Free. This staging decision therefore covers only
