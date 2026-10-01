@@ -1,66 +1,85 @@
 # T17 Supabase staging account/processor evidence
 
-**Status: EVIDENCE ASSEMBLED — scoped owner decision PENDING.**
+**Status: EVIDENCE HARDENED — scoped owner decision PENDING.**
 
 This is the Git-safe account/processor review record for the owner-selected Supabase Auth implementation provider.
 It is deliberately narrower than `processor_retention_contracts` as a repository-wide gate and narrower than
-production/live approval. Public provider documentation and observed account facts are evidence inputs; they do
-not create approval on their own.
+production/live approval. Public provider documentation, source review and observed account facts are evidence
+inputs; they do not create approval on their own.
 
-The requested decision in this record is limited to the already-qualified **staging / sandbox**
-`IdentityProvider` profile and its current `VERIFY_CREDENTIAL` capability using internal/disposable test
-identities. It does not authorize a public login rollout, social-provider credentials, handwriting processing,
-Supabase Storage, Premium AI, commerce, analytics, native store release, or production/live identity.
+The requested decision is limited to the already-qualified **staging / sandbox** identity profile. The Princess
+runtime adapter capability remains only `VERIFY_CREDENTIAL`. Separately, operator-controlled disposable test-user
+authentication and token refresh may be used only to mint credentials for staging qualification/conformance. That
+manual test activity is not the web/native application login transport and does not authorize public login,
+social-provider credentials, handwriting processing, Supabase Storage, Premium AI, commerce, analytics, native
+store release, or production/live identity.
 
 ## Account and qualification facts
 
 ```text
-provider:                         supabase-auth
-connector_port:                   IdentityProvider
-capability_scope:                 VERIFY_CREDENTIAL
-environment:                      staging
-provider_mode:                    sandbox
-project_alias:                    princess-staging
-project_binding:                  INTENDED_RUNTIME_PROFILE
-project_region:                   eu-west-1
-organization_plan:                Free
-checked_date:                     2026-10-01
+provider:                            supabase-auth
+provider_api_profile:                first-party Auth access JWT + public asymmetric JWKS
+reviewed_auth_source:                supabase/auth@ce9a8eee0cc042be8c7a42981a7ddae631e41d91
+connector_port:                      IdentityProvider
+runtime_capability_scope:            VERIFY_CREDENTIAL
+environment:                         staging
+provider_mode:                       sandbox
+platform_scope:                      backend credential verification only
+project_alias:                       princess-staging
+project_binding:                     INTENDED_RUNTIME_PROFILE
+project_region:                      eu-west-1
+organization_plan:                   Free
+checked_date:                        2026-10-01
 
-managed_project_receipt:          supabase-identity-qualification/4
-managed_project_result:           PASS
-managed_project_evidence:         docs/ci/T17_SUPABASE_MANAGED_PROJECT_EVIDENCE.md
+account_settings_snapshot:           docs/ci/T17_SUPABASE_STAGING_ACCOUNT_SNAPSHOT.json
+account_settings_snapshot_sha256:    905a943563fcce0c921b07f3c661032f2e732dbd968f8dcc6b6b31bf4e2c96a1
+account_settings_source:             Supabase Management API (get_project + get_organization)
 
-owner_decision:                   PENDING
-approver_role:                    product/technical owner
-approved_on:                      PENDING
-production_approved:              false
-global_processor_gate_closed:     false
+managed_project_receipt:             supabase-identity-qualification/4
+managed_project_result:              PASS
+managed_project_evidence:            docs/ci/T17_SUPABASE_MANAGED_PROJECT_EVIDENCE.md
+
+implementation_owner_task:           T17
+implementation_owner_role:           frontend
+production_approver_role:            product/technical owner
+owner_decision:                      PENDING
+approved_on:                         PENDING
+production_approved:                 false
+global_processor_gate_closed:        false
 ```
 
-The project region and account plan are account facts observed for the owner-authorized staging project. The region
-is a provider location control, not a claim that every backup, log, support path or subprocessor remains in that
-region.
+The linked account snapshot is a safe provider-returned fact artifact. It stores only the alias, region, account
+plan/tier, checked date and hashes of the provider project/organization identifiers; it contains no key, token,
+credential, raw issuer URL or private contract. Its SHA-256 above is over the canonical JSON (sorted keys, compact
+UTF-8) represented by that file. This makes the asserted account facts reviewable without exposing the provider
+identifiers.
 
-## Requested processing purpose
+The region is a provider location control, not a claim that every backup, log, support path or subprocessor remains
+in that region.
 
-The requested staging decision covers only technical identity processing needed to exercise the selected
-first-party Supabase access-token profile:
+## Requested processing purpose and scope
 
-- maintain internal/disposable staging Auth users used for qualification and integration tests;
-- authenticate those test users through the configured Supabase Auth method;
-- issue/refresh provider session material for those test users where required by the staged test;
-- let Princess verify first-party access JWTs against the fixed issuer/JWKS profile already qualified by #53.
+The requested staging decision covers two deliberately different things:
 
-FastAPI remains the application authorization authority. This decision would not authorize Supabase to decide
-report access, account merging, entitlement, measurement, or report contents.
+1. **Princess runtime capability:** server-side verification of the selected first-party Supabase access JWT through
+   the qualified `VERIFY_CREDENTIAL` adapter.
+2. **Operator/test credential acquisition:** owner/operator-controlled authentication of internal/disposable
+   staging test users and issuance/refresh of their provider session material solely to obtain credentials needed
+   by qualification and isolated staging conformance.
+
+The second item does **not** authorize an application-managed web/native sign-in, PKCE callback, browser refresh
+transport, social-provider flow or public account onboarding. Those remain later T17/T29-T31 work with their own
+configuration, rate-limit, callback, recovery and lifecycle evidence.
+
+FastAPI remains the application authorization authority. Neither scope authorizes Supabase to decide report
+access, account merging, entitlement, measurement, or report contents.
 
 ## Data categories in this staging scope
 
-Supabase Auth may process the minimum account/authentication data required by the configured test flow:
+Supabase Auth may process the minimum account/authentication data required by the operator-controlled test flow:
 
 - account/login identifiers such as email when that sign-in method is used;
-- authentication credentials handled by the provider for the configured sign-in method (for example a password
-  in the password test flow, or authorization artifacts in a later separately configured OAuth flow);
+- authentication credentials handled by the provider for the configured test sign-in method;
 - provider user/identity identifiers;
 - session and authentication metadata, including session IDs, AAL/AMR state and authentication timestamps;
 - access/refresh token material and signed token claims;
@@ -80,82 +99,138 @@ Explicitly outside this decision:
 - payment/store data;
 - product analytics;
 - support-human access to handwriting;
+- application-managed public login/PKCE/social-provider flows;
 - production/live identities or credentials.
 
 ## Region, retention and deletion evidence
 
-The account-level project region is `eu-west-1`. Supabase public documentation states that project region is a
-data-location control for core project services, while backups, logs, exported data and subprocessors can affect
-the broader residency analysis. Region selection therefore does not close the repository's general residency or
-processor gate.
+The source-bound account snapshot records `eu-west-1` for the staging project. Current Supabase GDPR guidance
+states that a project is deployed to one primary region and that the primary Postgres database, Auth service and
+Storage objects are hosted there, while backups, logs, exports and subprocessors can affect the wider residency
+analysis. Region selection therefore does not close the repository's general residency/processor gate.
 
-Current provider documentation and the existing ADR-002 comparison establish that provider-side Auth user
-deletion is a server/admin lifecycle distinct from Princess application deletion, and that provider credentials
-can remain valid until their normal lifetime unless the application/session design fences them. Princess keeps
-its durable `revoked_before` fence and treats provider-account deletion, provider session revocation and
-application data deletion as separate operations.
+Current provider documentation separates these lifecycles:
 
-Exact provider backup/log retention, contract-specific deletion obligations and any retention that survives Auth
-user deletion remain matters for the owner to accept from the provider terms/DPA before this record can move from
-PENDING to an approved staging decision.
+- global sign-out terminates the affected provider sessions and destroys their refresh tokens/session state;
+- access JWTs from revoked sessions can remain cryptographically valid until their `exp` time;
+- deleting an Auth user/provider account is distinct from Princess application-data deletion;
+- deleting the entire Supabase project is the provider-documented route that permanently removes project data,
+  including stored backups.
+
+Princess therefore keeps its durable local `revoked_before` fence and treats provider session revocation,
+provider-user deletion, project decommission and application data deletion as separate operations.
+
+For this staging scope, the retention/deletion obligation is:
+
+- use only disposable identity test data;
+- revoke provider sessions before deleting a disposable Auth user;
+- keep the Princess identity path disabled/fenced while already-issued access JWTs age out;
+- do not claim provider deletion complete merely because Princess deleted an identity binding;
+- if strict full-project cleanup is required, decommission/delete the staging project through an owner-authorized
+  provider operation and retain a safe completion reference;
+- record any provider-side residual log/contract retention as residual provider retention rather than silently
+  asserting immediate erasure.
 
 ## DPA, subprocessors and support
 
-Public evidence already referenced by the repository:
+Public evidence checked 2026-10-01:
 
 - Supabase DPA: https://supabase.com/legal/customer-resources/data-processing-addendum
-- security/data-residency overview: https://supabase.com/docs/guides/security
-- region documentation: https://supabase.com/docs/guides/platform/regions
+- Supabase Subprocessor List: https://supabase.com/legal/customer-resources/subprocessor-list
+- GDPR/data-residency guidance: https://supabase.com/docs/guides/security/gdpr-compliance
+- Database backups: https://supabase.com/docs/guides/platform/backups
+- Auth sign-out/session revocation: https://supabase.com/docs/guides/auth/signout
 - Auth user/deletion behavior: https://supabase.com/docs/guides/auth/managing-user-data
-- Auth rate limits: https://supabase.com/docs/guides/auth/rate-limits
+- Auth rate limits / production checklist: https://supabase.com/docs/guides/platform/going-into-prod
 - pricing/account-plan information: https://supabase.com/pricing
 
-The staging organization is on the Free plan. No negotiated support commitment is evidenced in the repository.
-The DPA/public resources are evidence inputs only; subprocessor/support/account terms are not treated as accepted
-until the owner explicitly records that decision here. Any later plan, region, DPA/subprocessor, support or
-material service change reopens this review.
+The current public DPA describes Supabase as processor/service provider for covered data, uses its published
+Subprocessor List, and ties processing duration to the agreement unless earlier deletion is requested through
+service functionality. The staging organization is on the Free plan according to the source-bound Management API
+snapshot. No negotiated support commitment is evidenced for this staging account; current public production
+guidance states that access to the Supabase support team is a Pro-plan benefit. The owner decision, if later
+recorded, must therefore accept **Free-plan staging without a negotiated support SLA** rather than inventing one.
+
+Subprocessor/DPA acceptance remains part of the explicit owner decision. Any later plan, region, DPA/subprocessor,
+support or material service change reopens this review.
 
 ## Secrets and least privilege
 
-The current selected adapter verifies credentials using the configured issuer/audience/allowed roles and the
-provider's public asymmetric JWKS. `VERIFY_CREDENTIAL` does not require a Supabase service-role/admin secret.
+The selected Princess runtime adapter verifies credentials using the configured issuer/audience/allowed roles and
+the provider's public asymmetric JWKS. `VERIFY_CREDENTIAL` requires no Supabase service-role/admin secret.
 
 The publishable key used during the managed qualification is not admin authority and is not evidence that a
 browser/native login implementation has been approved. Provider session revocation and provider-account deletion
-remain unsupported by the Princess adapter; a future server-side lifecycle adapter may require elevated
-credentials and must receive a separate least-privilege review before composition.
+remain unsupported by the Princess adapter. Operator cleanup uses owner-authorized provider controls outside the
+adapter; any future server-side lifecycle adapter that needs elevated credentials requires its own least-privilege
+review before composition.
 
 ## Rate limits, retries and failure behavior
 
-Supabase documents configurable Auth rate limits. Exact account endpoint values for later public login flows are
-not frozen by this record and must be captured before #56 activates those flows.
+For the current **runtime verification** capability:
 
-For the current server verification capability, Princess already has a fixed-issuer, redirect-refusing,
-size/key-count-bounded JWKS source with typed rate-limit/unavailable failures. Unknown keys, wrong
-issuer/audience/role/profile, cross-environment credentials and out-of-profile signing fail closed.
+- `SupabaseJwksSource` performs one bounded HTTPS GET per source refresh with a 10-second default timeout;
+- it performs no hidden HTTP retry;
+- provider 429 becomes typed `RateLimited`;
+- provider 5xx/network failure becomes typed `TransientUnavailable`;
+- redirects, malformed/oversized JWKS and other permanent failures fail closed;
+- the adapter owns bounded unknown-key refresh and will not repeatedly re-fetch inside its minimum refresh window;
+- connector retry ownership remains the application/caller, matching the port's `CapabilityProfile` default.
+
+Supabase also documents configurable Auth endpoint limits for sign-in/session operations. Public defaults are not
+substitutes for the selected account's settings. **Before any application-managed Supabase login or refresh flow is
+activated, T17 must capture the exact relevant selected-account Auth endpoint limits, the chosen retry/backoff
+owner and the abuse-control policy as acceptance evidence.** This requirement is task-bound; it is not deferred to
+a prospective PR number.
+
+## Cost model
+
+The source-bound account snapshot records the organization as Free. This staging decision therefore covers only
+the current internal/disposable test-user scope and creates no paid-spend authorization. Supabase Auth pricing is
+usage/MAU based under the provider's current pricing model; exact production plan, quotas, spend ownership and any
+upgrade must be re-reviewed before production/live activation.
 
 ## Sandbox evidence and unsupported cases
 
 The staging profile's live refresh/rotation/reauthentication/fence evidence is indexed in
-[T17 managed-project evidence](T17_SUPABASE_MANAGED_PROJECT_EVIDENCE.md). The selected adapter currently
+[T17 managed-project evidence](T17_SUPABASE_MANAGED_PROJECT_EVIDENCE.md). The selected Princess adapter currently
 advertises only `VERIFY_CREDENTIAL`.
 
 Still unsupported or separately gated:
 
-- provider-side session revocation;
-- provider-account deletion;
-- web callback/PKCE/access+refresh transport;
+- provider-side session revocation **through the Princess adapter**;
+- provider-account deletion **through the Princess adapter**;
+- application-managed web callback/PKCE/access+refresh transport;
 - Apple/Google provider configuration and private-relay recovery;
 - cross-device recovery/linking;
 - production/live identity;
 - full staging API boot while unrelated ObjectStore/Payment/Abuse providers remain uncomposed.
 
-## Incident, exit and review triggers
+## Incident and exit procedure
 
-On an identity-provider incident, disable the affected staging identity path rather than falling back to an
-unreviewed provider/profile or weakening credential verification. Princess internal principals remain the account
-continuity anchor; provider replacement requires proven relinking and never reconstructs ownership from matching
-email text.
+If the staged identity integration must be disabled or abandoned:
+
+1. Disable/refuse the Princess staging identity composition path; never fall back to an unreviewed provider/profile
+   or weaken JWT verification.
+2. Stop issuing or refreshing credentials for the disposable staging test population.
+3. Use owner-authorized Supabase controls to perform **global sign-out/session revocation** for affected disposable
+   users so refresh tokens/session state are destroyed.
+4. Keep the Princess `revoked_before` fence and the staging identity path disabled while already-issued access JWTs
+   age out, because Supabase documents that revoked-session access tokens remain valid until their `exp`.
+5. Delete the disposable Supabase Auth users through the provider's owner/admin controls once session revocation is
+   recorded. Do not equate that deletion with Princess report/asset/ledger deletion.
+6. Record safe completion evidence: action date, operator/owner role, affected test-population count (not user IDs),
+   session-revocation result, provider-user deletion result, and any residual provider retention noted under the
+   DPA/service documentation.
+7. If the whole staging project is being retired rather than only the identity slice, perform a **separate
+   owner-authorized project decommission/delete** and record its completion. Project deletion is destructive and is
+   never implied by this connector rollback.
+8. If any cleanup step cannot be evidenced, leave the exit state incomplete and keep the integration disabled.
+
+Princess internal principals remain the account-continuity anchor. Provider replacement requires proven relinking
+and never reconstructs ownership from matching email text.
+
+## Review triggers
 
 Re-review this record before any of the following:
 
@@ -166,6 +241,7 @@ Re-review this record before any of the following:
 - new data categories or sign-in methods are introduced;
 - provider revocation/deletion capabilities are composed;
 - staging use expands beyond internal/disposable test identities;
+- application-managed login/refresh is activated without the T17 rate-limit/retry evidence above;
 - any production/live composition or activation.
 
 ## Owner decision
@@ -177,13 +253,15 @@ product/technical owner explicitly approves or rejects the requested scope.
 decision:               PENDING
 approver_role:          product/technical owner
 decided_on:             PENDING
-scope:                  staging/sandbox IdentityProvider VERIFY_CREDENTIAL + internal/disposable test identities
-evidence:               this record + T17_SUPABASE_MANAGED_PROJECT_EVIDENCE.md
+scope:                  staging/sandbox IdentityProvider VERIFY_CREDENTIAL
+test_operations:        operator-controlled disposable test-user authentication + session issuance/refresh
+application_login:      NOT APPROVED BY THIS DECISION
+evidence:               this record + source-bound account snapshot + T17 managed-project evidence
 expiration/review:      material account/region/terms/profile/data-scope change
 production_activation:  false
 global_gate_closure:    false
 ```
 
-Even an APPROVED staging decision here would close only this Supabase Auth slice. It must not mark the shared
-`processor_retention_contracts` gate globally complete, must not alter the pending consent/legal-basis records,
-and must not be cited as production/live authorization.
+Even an APPROVED staging decision here would close only this Supabase Auth staging test slice. It must not mark the
+shared `processor_retention_contracts` gate globally complete, must not alter the pending consent/legal-basis
+records, and must not be cited as production/live authorization.
