@@ -1,8 +1,8 @@
 # T17 Supabase identity account qualification
 
-**Status: qualification tooling hardened; actual managed-project qualification PENDING.**
+**Status: staging/sandbox `INTENDED_RUNTIME_PROFILE` managed-project qualification PASSED 2026-10-01; production/live and activation remain PENDING.**
 
-This document defines the safe evidence boundary for the owner-selected T17 Supabase Auth implementation provider. It does **not itself make the selection**, approve a processor/region/contract, activate production identity, or claim that any managed project has passed. The separate owner decision is recorded in [T17 identity-provider decision evidence](T17_IDENTITY_PROVIDER_DECISION_EVIDENCE.md).
+This document defines the safe evidence boundary for the owner-selected T17 Supabase Auth implementation provider. The 2026-10-01 owner-authorized staging/sandbox run passed as `INTENDED_RUNTIME_PROFILE`; that closes only the staging exact-profile technical gate. It does **not** approve processor/region/contracts, compose runtime identity, activate production identity, or qualify production/live. The separate owner decision is recorded in [T17 identity-provider decision evidence](T17_IDENTITY_PROVIDER_DECISION_EVIDENCE.md).
 
 ## Why the post-#46 hardening exists
 
@@ -33,6 +33,12 @@ The managed run uses an owner-authorized qualification project and:
 
 The tool never performs password login, key rotation, provider logout or provider-account deletion. Those human
 provider actions remain external and owner-authorized.
+
+### 2026-10-01 staging witness
+
+The owner-authorized managed run completed against the intended staging identity profile with safe alias `princess-staging`, `environment=staging`, `provider_mode=sandbox`, and `project_binding=INTENDED_RUNTIME_PROFILE`. The protected receipt is bound to Princess commit `033b9b9c32ee296a28431fbe85d87f3c7ab9199d` and the checked-in staging manifest. The observed account profile had anonymous sign-in disabled, OAuth Server disabled, no Custom Access Token Hook, and asymmetric ES256/P-256 signing.
+
+The live witness passed a real provider refresh on the original password-authenticated session, preserved session continuity and AMR-derived authentication freshness while issuance time advanced, rotated to a new ES256 signing key while retaining the prior asymmetric key in JWKS, completed a genuine second password sign-in with a new session and newer authentication freshness, and passed the Princess `revoked_before` fence in both directions. The full v4 receipt remains outside Git; only its digest/reference and safe witness summary belong in the Git-safe evidence index.
 
 ## Configuration facts recorded
 
@@ -138,6 +144,6 @@ turn them into approval claims.
 
 ## Still not activation
 
-The ADR-002 provider-selection decision is now recorded. Even after a real `MANAGED_PROJECT` PASS, T17 still needs approved processor/account evidence plus provider logout/deletion lifecycle, web PKCE/callback/origin integration, cross-device/account recovery, and applicable native Apple/Google/private-relay evidence.
+The ADR-002 provider-selection decision is recorded and the 2026-10-01 staging/sandbox `MANAGED_PROJECT` PASS closes the staging exact-profile technical gate. T17 still needs scoped processor/account evidence plus provider logout/deletion lifecycle, web PKCE/callback/origin integration, cross-device/account recovery, and applicable native Apple/Google/private-relay evidence. Production/live requires its own later qualification and approval.
 
 Production login remains disabled until those gates close.

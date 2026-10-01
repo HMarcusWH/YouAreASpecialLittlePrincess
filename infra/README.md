@@ -75,7 +75,7 @@ PRINCESS_TEST_DATABASE_URL=postgresql://princess_admin:local-only-admin@127.0.0.
   .venv/bin/python -m pytest -q tests_app
 ```
 
-The API factory is `princess_api.compose:app_from_environment` (`uvicorn --factory`). Identity remains fake-only after the ADR-002 owner selected Supabase Auth: the exact managed project/account/profile and processor gate still require qualification before runtime composition. The generic OIDC verifier remains implemented and tested, but no production issuer is configured.
+The API factory is `princess_api.compose:app_from_environment` (`uvicorn --factory`). Identity remains fake-only after the ADR-002 owner selected Supabase Auth. The intended staging/sandbox identity profile passed the environment-bound v4 managed-project witness on 2026-10-01, but the scoped processor/account review and explicit staging composition/integration slice are still required before runtime use. No production/live issuer is configured.
 
 ## Intake and the analysis worker (T04)
 

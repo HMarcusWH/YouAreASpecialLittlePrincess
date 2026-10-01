@@ -1,11 +1,12 @@
 # T17 identity-provider decision evidence
 
-**Checked: 2026-10-01. Status: public-source comparison complete; Supabase Auth selected as implementation provider; account/profile qualification and production approval PENDING.**
+**Checked: 2026-10-01. Status: public-source comparison complete; Supabase Auth selected as implementation provider; staging/sandbox exact-profile technical qualification PASSED; processor/account and production/live approval PENDING.**
 
 This is supporting evidence for [ADR-002](../adr/ADR-002-auth-provider.md) and the canonical
 [provider decision register](../roadmap/19-provider-decision-register.md). The product/technical owner selected
-Supabase Auth as the implementation provider on 2026-10-01 after reviewing this comparison. This record does not
-approve a provider account/region/processor, claim a managed-project qualification PASS, or activate runtime identity.
+Supabase Auth as the implementation provider on 2026-10-01 after reviewing this comparison. A separate protected
+v4 run subsequently qualified the intended staging/sandbox identity profile; this record still does not approve
+processor/region/contracts, runtime composition, production/live identity, or activation.
 
 The comparison uses current first-party vendor documentation plus evidence already merged in this repository.
 Account-specific settings, contracts, negotiated support, actual provider behavior and owner decisions remain
@@ -130,7 +131,7 @@ The owner selection closes only the provider-choice gate. The following evidence
 - evidence: this dated comparison plus the merged Princess Supabase verifier/JWKS/qualification-tooling evidence
 - relevant environment: implementation direction only; no local/test/preview/staging/production provider mode is activated by this decision
 - expiration/review trigger: reopen ADR-002 if managed-project qualification fails, the selected credential/claims/signing profile changes, provider linking/session semantics materially change, processor/region terms become unacceptable, or native Apple/Google/private-relay qualification cannot preserve Princess account continuity
-- limitations: no Supabase account, region, processor terms, retention/deletion/support obligations, MANAGED_PROJECT PASS, exact runtime-profile binding, production credentials or release environment are approved by this decision
+- limitations: the separate 2026-10-01 v4 receipt proves the intended staging/sandbox exact identity profile only; region/processor terms, retention/deletion/support obligations, production/live credentials/profile and release environment remain unapproved
 
 The selected credential direction remains the already code-qualified first-party Supabase access-JWT profile:
 asymmetric JWKS, exact configured issuer/audience/role, canonical subject/session UUIDs, non-anonymous state,
@@ -141,7 +142,7 @@ profile before runtime composition.
 
 ```text
 Supabase Auth            SELECTED IMPLEMENTATION PROVIDER
-Supabase managed project QUALIFICATION PENDING
+Supabase staging profile MANAGED_PROJECT PASS (staging/sandbox only)
 processor/account gate   PENDING
 Clerk                    NOT SELECTED (comparison retained for ADR replacement review)
 production activation    PENDING
