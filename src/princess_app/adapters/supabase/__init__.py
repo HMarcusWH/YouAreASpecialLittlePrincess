@@ -1,6 +1,6 @@
-"""Production-disabled Supabase Auth access-token candidate for IdentityProvider.
+"""Supabase Auth access-token verifier for the reviewed Princess identity profile.
 
-This adapter qualifies one narrow first-party Supabase Auth profile only:
+This adapter accepts one narrow first-party Supabase Auth profile only:
 
 * asymmetric project signing keys from a configured JWKS source;
 * exact configured issuer and singleton audience;
@@ -9,8 +9,9 @@ This adapter qualifies one narrow first-party Supabase Auth profile only:
 * the stock claims profile (no unaudited Custom Access Token Hook);
 * authentication freshness derived only from timestamped, reviewed AMR methods.
 
-It is not composed by the API. ADR-002 still requires provider/account/data approval,
-actual project qualification and web/native lifecycle evidence before activation.
+The API composes this verifier only for the owner-approved staging/sandbox tuple
+when protected runtime values match the receipt-derived binding. Application-managed
+login and production/live identity remain separately gated.
 """
 from __future__ import annotations
 
