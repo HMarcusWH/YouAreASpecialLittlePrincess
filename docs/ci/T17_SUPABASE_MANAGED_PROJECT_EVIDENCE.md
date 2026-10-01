@@ -43,7 +43,7 @@ production_activation:       false
 
 This PASS binds only the owner-authorized **staging / sandbox** identity profile used for the 2026-10-01 witness. The live run used the stock claims profile with anonymous sign-in disabled, OAuth Server disabled, no Custom Access Token Hook, and asymmetric ES256/P-256 signing. It proved live same-session refresh, unchanged AMR-derived authentication freshness across refresh, asymmetric signing-key rotation with both old and new keys trusted, genuine new-session password reauthentication with newer freshness, and both sides of the Princess `revoked_before` fence.
 
-It does **not** approve processor terms, region/data handling, retention/deletion/support, runtime composition, callbacks/native configuration, production credentials or production/live activation. Those remain separate gates.
+This PASS itself does **not** approve processor terms, region/data handling, retention/deletion/support, callbacks/native configuration, production credentials or production/live activation. A separate 2026-10-01 owner decision now approves only the narrow staging `VERIFY_CREDENTIAL` test slice, and runtime composition must still prove its protected values match a receipt-derived binding before constructing the adapter.
 
 ## Project-binding meaning
 
