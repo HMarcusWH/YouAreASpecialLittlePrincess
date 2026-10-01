@@ -98,6 +98,8 @@ provider network calls. A synthetic PASS is never managed-project evidence.
 
 ## Human/account gates still separate
 
+The dated public-source Supabase-vs-Clerk comparison is in [T17 identity-provider decision evidence](T17_IDENTITY_PROVIDER_DECISION_EVIDENCE.md). That document informs ADR-002 but does not turn this technical qualification receipt into a provider-selection or production-approval claim.
+
 A technical PASS does not establish any of these:
 
 ```text
