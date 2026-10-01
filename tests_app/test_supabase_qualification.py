@@ -561,6 +561,79 @@ def test_cli_requires_explicit_gate_and_file_only_synthetic_credentials(tmp_path
     assert all(secret not in output.read_text(encoding="utf-8") for secret in (initial, refreshed, reauth))
 
 
+def test_managed_cli_rejects_scope_before_provider_io(tmp_path, monkeypatch):
+    import qualify_supabase_identity as cli
+
+    initial_path = tmp_path / "initial.jwt"
+    refresh_path = tmp_path / "refresh.token"
+    api_key_path = tmp_path / "publishable.key"
+    reauth_path = tmp_path / "reauth.jwt"
+    output = tmp_path / "receipt.json"
+    initial_path.write_text("must-not-be-read", encoding="utf-8")
+    refresh_path.write_text("must-not-be-read", encoding="utf-8")
+    api_key_path.write_text("must-not-be-read", encoding="utf-8")
+
+    class Tty:
+        @staticmethod
+        def isatty():
+            return True
+
+    monkeypatch.setenv("PRINCESS_SUPABASE_QUALIFY", "1")
+    monkeypatch.setattr(cli.sys, "stdin", Tty())
+    monkeypatch.setattr(
+        cli,
+        "_read_secret",
+        lambda path: (_ for _ in ()).throw(AssertionError(f"secret read before scope preflight: {path}")),
+    )
+    monkeypatch.setattr(
+        cli,
+        "_fetch_jwks",
+        lambda issuer: (_ for _ in ()).throw(AssertionError("JWKS fetch before scope preflight")),
+    )
+    monkeypatch.setattr(
+        cli,
+        "_refresh_access_token",
+        lambda *args, **kwargs: (_ for _ in ()).throw(AssertionError("refresh before scope preflight")),
+    )
+
+    argv = [
+        "--project-alias",
+        "managed-supabase",
+        "--evidence-kind",
+        "MANAGED_PROJECT",
+        "--project-binding",
+        "INTENDED_RUNTIME_PROFILE",
+        "--environment",
+        "staging",
+        "--provider-mode",
+        "live",
+        "--issuer",
+        ISSUER,
+        "--audience",
+        AUDIENCE,
+        "--role",
+        ROLE,
+        "--custom-access-token-hook",
+        "disabled",
+        "--anonymous-sign-ins",
+        "disabled",
+        "--oauth-server",
+        "disabled",
+        "--api-key-file",
+        str(api_key_path),
+        "--initial-token-file",
+        str(initial_path),
+        "--refresh-token-file",
+        str(refresh_path),
+        "--reauth-token-file",
+        str(reauth_path),
+        "--output",
+        str(output),
+    ]
+    assert cli.main(argv) == 1
+    assert not output.exists()
+
+
 def test_managed_cli_sequences_live_refresh_then_rotation_then_reauth(tmp_path, monkeypatch):
     import builtins
     import qualify_supabase_identity as cli
