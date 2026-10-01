@@ -28,6 +28,9 @@ from princess_app.config_supabase import (  # noqa: E402
     PROJECT_ALIAS,
     PROJECT_BINDING,
     PROJECT_REF_SHA256,
+    QUALIFIED_AUDIENCE_SHA256,
+    QUALIFIED_ISSUER_SHA256,
+    QUALIFIED_ROLE_SHA256,
     PROVIDER,
     PROVIDER_MODE,
     QUALIFICATION_RECEIPT_SHA256,
@@ -93,6 +96,12 @@ def build_binding(receipt_bytes: bytes, account_snapshot: dict[str, Any]) -> dic
         raise BindingError("receipt_audience_missing")
     if not isinstance(role, str) or not role:
         raise BindingError("receipt_role_missing")
+    if issuer_sha256 != QUALIFIED_ISSUER_SHA256:
+        raise BindingError("receipt_profile_binding_mismatch")
+    if hashlib.sha256(audience.encode("utf-8")).hexdigest() != QUALIFIED_AUDIENCE_SHA256:
+        raise BindingError("receipt_profile_binding_mismatch")
+    if hashlib.sha256(role.encode("utf-8")).hexdigest() != QUALIFIED_ROLE_SHA256:
+        raise BindingError("receipt_profile_binding_mismatch")
 
     return {
         "version": BINDING_VERSION,
