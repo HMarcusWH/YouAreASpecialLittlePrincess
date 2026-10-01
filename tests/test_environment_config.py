@@ -128,6 +128,36 @@ def test_ungranted_secrets_in_the_process_environment_are_refused():
     assert code(lambda: runtime(env)) == "ungranted_secret_present"
 
 
+def test_staging_identity_profile_inputs_are_protected_and_exactly_scoped():
+    staging = {
+        "PRINCESS_ENV": "staging",
+        "PRINCESS_COMPONENT": "api",
+        "PRINCESS_DATABASE_URL": "postgresql://svc:staging-password@db.internal/princess_staging",
+        "PRINCESS_SESSION_SECRET": "staging-session-0123456789",
+        "PRINCESS_IDENTITY_AUDIENCE": "staging-audience",
+        "PRINCESS_STORAGE_SIGNING_KEY": "staging-storage-0123456789",
+    }
+    assert code(lambda: runtime(staging)) == "missing_protected_config"
+
+    protected = {
+        **staging,
+        "PRINCESS_IDENTITY_ISSUER": "https://protected.supabase.co/auth/v1",
+        "PRINCESS_IDENTITY_BINDING": '{"safe":"binding"}',
+    }
+    config = runtime(protected)
+    assert config.protected_value("PRINCESS_IDENTITY_ISSUER").startswith("https://")
+    assert "protected.supabase.co" not in repr(config)
+    assert '{"safe":"binding"}' not in repr(config)
+
+    local = {
+        "PRINCESS_ENV": "local",
+        "PRINCESS_COMPONENT": "api",
+        **LOCAL_SECRETS,
+        "PRINCESS_IDENTITY_ISSUER": "https://protected.supabase.co/auth/v1",
+    }
+    assert code(lambda: runtime(local)) == "protected_config_not_allowed"
+
+
 def test_database_url_must_be_postgresql():
     env = {"PRINCESS_ENV": "local", "PRINCESS_COMPONENT": "api", **LOCAL_SECRETS,
            "PRINCESS_DATABASE_URL": "sqlite:///princess_local"}
