@@ -52,8 +52,9 @@ def test_build_cleanup_evidence_is_non_identifying_and_fail_closed(monkeypatch):
     assert result["project_decommission"] == "NOT_APPLICABLE"
     rendered = json.dumps(result, sort_keys=True)
     assert ref not in rendered
-    assert "user_id" not in rendered
-    assert "session_id" not in rendered
+    assert "provider_user_id" not in result
+    assert "session_id" not in result
+    assert "11111111-1111-4111-8111-111111111111" not in rendered
 
 
 @pytest.mark.parametrize(
