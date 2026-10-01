@@ -29,13 +29,15 @@ from princess_app.adapters.supabase.jwks import SupabaseJwksSource, supabase_jwk
 from princess_app.application.identity import IdentityService, InMemoryIdentityStore  # noqa: E402
 from princess_app.ports.base import CallContext, Environment, PortError, ProviderMode, Unauthenticated  # noqa: E402
 
-VERSION = "supabase-identity-qualification/2"
+VERSION = "supabase-identity-qualification/3"
 SOURCE_REVISION = "ce9a8eee0cc042be8c7a42981a7ddae631e41d91"
 ALIAS = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:-]{0,63}$")
 COMMIT = re.compile(r"^[0-9a-f]{40}$")
 EVIDENCE_KINDS = ("SYNTHETIC_TEST", "MANAGED_PROJECT")
 ACCOUNT_POLICY_STATES = ("disabled", "enabled")
 REFRESH_SOURCES = ("SUPPLIED_SYNTHETIC_REFRESH", "LIVE_PROVIDER_REFRESH")
+PROJECT_BINDINGS = ("QUALIFICATION_ONLY", "INTENDED_RUNTIME_PROFILE")
+MAX_REFRESH_RESPONSE_BYTES = 256 * 1024
 ASYMMETRIC = frozenset({"RS256", "RS512", "ES256", "ES512", "EdDSA"})
 
 
@@ -178,26 +180,57 @@ def _refresh_access_token(
     refresh_token: str,
     transport: httpx.BaseTransport | None = None,
     timeout_s: float = 10.0,
+    max_response_bytes: int = MAX_REFRESH_RESPONSE_BYTES,
 ) -> tuple[str, int]:
     _api_key_kind(api_key)
     if not refresh_token or len(refresh_token) > 65536:
         raise QualificationError("refresh_token_invalid")
+    if not isinstance(timeout_s, (int, float)) or isinstance(timeout_s, bool) or not 0 < float(timeout_s) <= 30:
+        raise QualificationError("refresh_timeout_invalid")
+    if type(max_response_bytes) is not int or not 4096 <= max_response_bytes <= 1024 * 1024:
+        raise QualificationError("refresh_response_limit_invalid")
+
+    _jwks_url(issuer)  # Reuse the reviewed HTTPS issuer-shape validation.
     endpoint = issuer.rstrip("/") + "/token"
     try:
-        with httpx.Client(transport=transport, timeout=timeout_s, follow_redirects=False) as client:
-            response = client.post(
+        with httpx.Client(
+            transport=transport,
+            timeout=float(timeout_s),
+            follow_redirects=False,
+            trust_env=False,
+        ) as client:
+            with client.stream(
+                "POST",
                 endpoint,
                 params={"grant_type": "refresh_token"},
                 headers={"apikey": api_key, "Accept": "application/json"},
                 json={"refresh_token": refresh_token},
-            )
+            ) as response:
+                status = response.status_code
+                if status == 429:
+                    raise QualificationError("refresh_rate_limited")
+                if 500 <= status <= 599:
+                    raise QualificationError("refresh_unavailable")
+                if 300 <= status <= 399:
+                    raise QualificationError("refresh_redirect_refused")
+                if status != 200:
+                    raise QualificationError("refresh_http_error")
+
+                chunks: list[bytes] = []
+                size = 0
+                for chunk in response.iter_bytes():
+                    size += len(chunk)
+                    if size > max_response_bytes:
+                        raise QualificationError("refresh_response_too_large")
+                    chunks.append(chunk)
+    except QualificationError:
+        raise
     except httpx.HTTPError as exc:
         raise QualificationError("refresh_request_failed") from exc
-    if response.status_code != 200:
-        raise QualificationError(f"refresh_http_{response.status_code}")
+
     try:
-        payload = response.json()
-    except ValueError as exc:
+        payload = json.loads(b"".join(chunks))
+    except (UnicodeDecodeError, ValueError) as exc:
         raise QualificationError("refresh_response_invalid") from exc
     if not isinstance(payload, dict):
         raise QualificationError("refresh_response_invalid")
@@ -263,6 +296,7 @@ def qualify(
     *,
     project_alias: str,
     evidence_kind: str,
+    project_binding: str,
     princess_commit: str,
     issuer: str,
     audience: str,
@@ -282,6 +316,10 @@ def qualify(
         raise QualificationError("project_alias_invalid")
     if evidence_kind not in EVIDENCE_KINDS:
         raise QualificationError("evidence_kind_invalid")
+    if project_binding not in PROJECT_BINDINGS:
+        raise QualificationError("project_binding_invalid")
+    if evidence_kind == "SYNTHETIC_TEST" and project_binding != "QUALIFICATION_ONLY":
+        raise QualificationError("synthetic_cannot_bind_runtime_profile")
     if not COMMIT.fullmatch(princess_commit):
         raise QualificationError("princess_commit_invalid")
     if custom_access_token_hook != "disabled":
@@ -396,6 +434,7 @@ def qualify(
         "provider": "supabase-auth",
         "project_alias": project_alias,
         "evidence_kind": evidence_kind,
+        "project_binding": project_binding,
         "checked_date": datetime.now(timezone.utc).date().isoformat(),
         "princess_commit": princess_commit,
         "provider_selection_claim": False,
@@ -485,6 +524,10 @@ def validate_receipt(data: dict[str, Any]) -> None:
             raise QualificationError(f"receipt_{name}")
     if data.get("evidence_kind") not in EVIDENCE_KINDS or data.get("custom_access_token_hook") != "disabled":
         raise QualificationError("receipt_profile")
+    if data.get("project_binding") not in PROJECT_BINDINGS:
+        raise QualificationError("receipt_project_binding")
+    if data.get("evidence_kind") == "SYNTHETIC_TEST" and data.get("project_binding") != "QUALIFICATION_ONLY":
+        raise QualificationError("receipt_synthetic_runtime_binding")
     if data.get("anonymous_sign_in_policy") not in ACCOUNT_POLICY_STATES:
         raise QualificationError("receipt_anonymous_policy")
     if data.get("oauth_server_status") not in ACCOUNT_POLICY_STATES:
@@ -596,6 +639,7 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--project-alias", required=True)
     parser.add_argument("--evidence-kind", choices=EVIDENCE_KINDS, required=True)
+    parser.add_argument("--project-binding", choices=PROJECT_BINDINGS, required=True)
     parser.add_argument("--issuer", required=True)
     parser.add_argument("--audience", required=True)
     parser.add_argument("--role", required=True)
@@ -629,6 +673,7 @@ def main(argv: list[str] | None = None) -> int:
         document = qualify(
             project_alias=args.project_alias,
             evidence_kind=args.evidence_kind,
+            project_binding=args.project_binding,
             princess_commit=_repo_commit(),
             issuer=args.issuer,
             audience=args.audience,
