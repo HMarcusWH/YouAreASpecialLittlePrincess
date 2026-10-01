@@ -151,8 +151,7 @@ snapshot. No negotiated support commitment is evidenced for this staging account
 guidance states that access to the Supabase support team is a Pro-plan benefit. The approved narrow staging
 decision therefore explicitly accepts **Free-plan staging without a negotiated support SLA** rather than inventing one.
 
-Subprocessor/DPA acceptance remains part of the explicit owner decision. Any later plan, region, DPA/subprocessor,
-support or material service change reopens this review.
+The scoped owner decision accepts the reviewed public DPA/subprocessor posture only for this staging test scope. Any later plan, region, DPA/subprocessor, support or material service change reopens this review.
 
 ## Secrets and least privilege
 
