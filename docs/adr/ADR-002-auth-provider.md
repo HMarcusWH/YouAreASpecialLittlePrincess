@@ -36,3 +36,6 @@ session ID, issuer URL, JWKS body or provider secret and always records `provide
 `production_activation=false`. **No managed Supabase project is qualified merely because this tooling exists.**
 Provider selection, processor/region/retention/deletion approval and the actual managed-project run remain
 owner/provider gates before composition or production PKCE/refresh integration.
+
+
+PR #48 additionally provides a fixed-issuer, redirect-refusing, size/key-count-bounded HTTPS JWKS source and makes the qualification harness use that same implementation. This removes a future runtime primitive gap without changing this ADR's decision state: API/runtime composition remains fake-only until the managed-project and owner/account gates are real evidence rather than repository assumptions.

@@ -25,8 +25,9 @@ if str(SRC) not in sys.path:
 
 from princess_app.adapters.fakes import SequentialIds  # noqa: E402
 from princess_app.adapters.supabase import SupabaseIdentityProvider  # noqa: E402
+from princess_app.adapters.supabase.jwks import SupabaseJwksSource, supabase_jwks_url  # noqa: E402
 from princess_app.application.identity import IdentityService, InMemoryIdentityStore  # noqa: E402
-from princess_app.ports.base import CallContext, Environment, ProviderMode, Unauthenticated  # noqa: E402
+from princess_app.ports.base import CallContext, Environment, PortError, ProviderMode, Unauthenticated  # noqa: E402
 
 VERSION = "supabase-identity-qualification/2"
 SOURCE_REVISION = "ce9a8eee0cc042be8c7a42981a7ddae631e41d91"
@@ -106,7 +107,7 @@ def _issuer_host(issuer: str) -> str:
 
 
 def _jwks_url(issuer: str) -> str:
-    return issuer.rstrip("/") + "/.well-known/jwks.json"
+    return supabase_jwks_url(issuer)
 
 
 def _repo_commit() -> str:
@@ -163,19 +164,11 @@ def _fetch_jwks(
     timeout_s: float = 10.0,
 ) -> dict[str, Any]:
     try:
-        with httpx.Client(transport=transport, timeout=timeout_s, follow_redirects=False) as client:
-            response = client.get(_jwks_url(issuer), headers={"Accept": "application/json"})
-    except httpx.HTTPError as exc:
+        return dict(SupabaseJwksSource(issuer, transport=transport, timeout_s=timeout_s)())
+    except PortError as exc:
+        if exc.code in {"identity_jwks_invalid", "identity_jwks_too_large"}:
+            raise QualificationError("jwks_invalid") from exc
         raise QualificationError("jwks_request_failed") from exc
-    if response.status_code != 200:
-        raise QualificationError(f"jwks_http_{response.status_code}")
-    try:
-        value = response.json()
-    except ValueError as exc:
-        raise QualificationError("jwks_invalid") from exc
-    if not isinstance(value, dict) or not isinstance(value.get("keys"), list):
-        raise QualificationError("jwks_invalid")
-    return value
 
 
 def _refresh_access_token(
