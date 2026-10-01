@@ -2,7 +2,7 @@
 
 **Status: staging/sandbox `INTENDED_RUNTIME_PROFILE` managed-project qualification PASSED 2026-10-01; production/live and activation remain PENDING.**
 
-This document defines the safe evidence boundary for the owner-selected T17 Supabase Auth implementation provider. The 2026-10-01 owner-authorized staging/sandbox run passed as `INTENDED_RUNTIME_PROFILE`; that closes only the staging exact-profile technical gate. It does **not** approve processor/region/contracts, compose runtime identity, activate production identity, or qualify production/live. The separate owner decision is recorded in [T17 identity-provider decision evidence](T17_IDENTITY_PROVIDER_DECISION_EVIDENCE.md).
+This document defines the safe evidence boundary for the owner-selected T17 Supabase Auth implementation provider. The 2026-10-01 owner-authorized staging/sandbox run passed as `INTENDED_RUNTIME_PROFILE`; that receipt by itself closes only the staging exact-profile technical gate. It does **not** create processor/region/contracts approval or production/live authorization. The separate narrow staging account/processor decision is now APPROVED in [T17 staging account/processor evidence](T17_SUPABASE_ACCOUNT_PROCESSOR_EVIDENCE.md), and runtime code uses a receipt-derived protected binding before composing this verifier.
 
 ## Why the post-#46 hardening exists
 
@@ -144,6 +144,6 @@ turn them into approval claims.
 
 ## Still not activation
 
-The ADR-002 provider-selection decision is recorded and the 2026-10-01 staging/sandbox `MANAGED_PROJECT` PASS closes the staging exact-profile technical gate. T17 still needs scoped processor/account evidence plus provider logout/deletion lifecycle, web PKCE/callback/origin integration, cross-device/account recovery, and applicable native Apple/Google/private-relay evidence. Production/live requires its own later qualification and approval.
+The ADR-002 provider-selection decision is recorded, the 2026-10-01 staging/sandbox `MANAGED_PROJECT` PASS closes the staging exact-profile technical gate, and the narrow staging `VERIFY_CREDENTIAL` account/processor scope is separately approved. T17 runtime code now composes only that exact tuple through a protected receipt-derived binding. T17 still needs a real isolated staging conformance receipt, application-managed login/rate-limit evidence, provider logout/deletion lifecycle, web PKCE/callback/origin integration, cross-device/account recovery, and applicable native Apple/Google/private-relay evidence. Production/live requires its own later qualification and approval.
 
 Production login remains disabled until those gates close.
