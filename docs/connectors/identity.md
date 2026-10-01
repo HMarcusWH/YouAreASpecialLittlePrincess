@@ -29,7 +29,7 @@ Primary protocol references: E23/E24 and platform rules in [source refresh](../r
 
 ## Selected Supabase Auth implementation profile (T17, production disabled)
 
-`src/princess_app/adapters/supabase/SupabaseIdentityProvider` code-qualifies the narrow profile selected by ADR-002; the separate 2026-10-01 owner decision selects Supabase as implementation provider, but this adapter does not activate Supabase for production. The reviewed upstream behavior is pinned to `supabase/auth@ce9a8eee0cc042be8c7a42981a7ddae631e41d91` (checked 2026-09-30). A future managed project must still prove its actual version/configuration, processor terms, region/retention/deletion behavior and account settings.
+`src/princess_app/adapters/supabase/SupabaseIdentityProvider` code-qualifies the narrow profile selected by ADR-002; the separate 2026-10-01 owner decision selects Supabase as implementation provider, but this adapter does not activate Supabase for production. The reviewed upstream behavior is pinned to `supabase/auth@ce9a8eee0cc042be8c7a42981a7ddae631e41d91` (checked 2026-09-30). The owner-authorized intended staging/sandbox profile subsequently passed the environment-bound v4 `MANAGED_PROJECT` witness on 2026-10-01. Processor terms, region/retention/deletion/support, runtime composition and production/live qualification remain separate gates.
 
 The selected profile accepts first-party Supabase **access JWTs** only when all of these are true:
 
@@ -64,7 +64,7 @@ The `supabase-identity-qualification/4` receipt records checked date/Princess co
 audience/role, inspected anonymous-sign-in and OAuth-server settings, Custom Access Token Hook state, token
 lifetime, JWKS algorithms/key IDs/hashes, AMR method names and boolean refresh/rotation/reauth/fence witnesses.
 It contains no access/refresh token, API key, subject, session ID, absolute authentication timestamp, raw issuer
-URL or JWKS body. A PASS still does not select Supabase, prove processor terms, or activate any runtime adapter.
+URL or JWKS body. A PASS still cannot itself select a provider, prove processor terms, or activate any runtime adapter. For the selected Supabase provider, the 2026-10-01 staging/sandbox `INTENDED_RUNTIME_PROFILE` run passed this receipt contract and closes only the staging exact-profile technical gate; production/live remains separately unqualified.
 
 If the Custom Access Token Hook is enabled/unknown, the account-policy settings were not explicitly inspected,
 the project uses an out-of-profile signing configuration, a secret/service-role key is supplied, refresh changes
@@ -77,7 +77,7 @@ configuration; do not weaken the candidate verifier or durable freshness fence t
 
 PR #48 adds `SupabaseJwksSource` as a reusable network primitive for the already-reviewed selected profile. The JWKS URL is derived only from the explicitly configured HTTPS issuer; token headers cannot supply `jku`, `x5u` or another key URL. Redirects are refused, decoded response bytes and key count are bounded, and HTTP/network failures are translated to typed redacted port errors. The qualification harness reuses this source so live qualification and later runtime composition cannot drift onto different JWKS-fetch policies.
 
-This is **composition preparation only**. `apps/api/princess_api/compose.py` and runtime preflight still reject every non-fake IdentityProvider. Supabase is owner-selected as the implementation provider, but the managed project/account/profile remains unqualified; this network source is not a managed-project PASS, processor approval or production activation.
+This remains **composition preparation only**. `apps/api/princess_api/compose.py` and runtime preflight still reject every non-fake IdentityProvider. Supabase is owner-selected and the intended staging/sandbox identity profile now has a real managed-project PASS, but runtime composition is still blocked on the scoped processor/account review plus an explicit staging adapter/configuration slice. This network source by itself is not processor approval, production/live qualification or production activation.
 
 For managed evidence, `QUALIFICATION_ONLY` and `INTENDED_RUNTIME_PROFILE` are deliberately different receipt
 bindings. A disposable rotation project can prove the selected credential mechanics but cannot be cited as proof
