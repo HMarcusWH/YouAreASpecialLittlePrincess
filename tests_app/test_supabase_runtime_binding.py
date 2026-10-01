@@ -130,6 +130,9 @@ def test_other_supabase_project_and_binding_shape_are_rejected(monkeypatch):
     issuer, audience, _, manifest_hash, binding = _fixture(monkeypatch)
     other = "https://different-project.supabase.co/auth/v1"
     binding["issuer_sha256"] = _sha(other)
+    # Pass the exact-issuer evidence layer deliberately so this regression
+    # still proves the independent project-ref pin rejects another project.
+    monkeypatch.setattr(binding_module, "QUALIFIED_ISSUER_SHA256", _sha(other))
     assert code(lambda: binding_module.parse_supabase_staging_runtime_binding(
         json.dumps(binding), issuer=other, audience=audience, current_manifest_sha256=manifest_hash
     )) == "identity_runtime_project_mismatch"
