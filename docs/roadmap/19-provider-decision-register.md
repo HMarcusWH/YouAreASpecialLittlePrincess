@@ -9,7 +9,7 @@
 | Decision | Direction | Open before production activation | Current owner/task |
 |---|---|---|---|
 | ADR-001 | Next.js web presentation and thin session layer; FastAPI remains business authority | Production deployment profile plus final identity/session integration | T17/T24 |
-| ADR-002 | Managed identity behind an internal principal/identity binding; Supabase Auth first-party access JWT is a code-qualified **CANDIDATE**, Clerk remains an alternative; managed qualification tooling can perform a live refresh + manual signing-key-rotation/reauth witness, but no project PASS is recorded | Choose/approve provider and exact account/profile; for Supabase run the protected live account harness and retain issuer/audience/role, token lifetime, asymmetric JWKS/key rotation, hook/anonymous/OAuth-server settings and AMR refresh/reauth evidence plus processor/region/retention/deletion, recovery, native Apple/Google login and cost approval | T17/T29–T31 |
+| ADR-002 | Managed identity behind an internal principal/identity binding; Supabase Auth first-party access JWT is a code-qualified **CANDIDATE**, Clerk remains an alternative; 2026-10-01 public-source comparison is recorded but no provider/account is selected | Choose/approve provider and exact account/profile. Supabase still needs the protected MANAGED_PROJECT PASS plus processor/region/retention/deletion/support and actual web/native recovery evidence. If Clerk remains under consideration, first prove that its automatic email-based OAuth linking can preserve Princess principal continuity and code-qualify Clerk JWT/JWKS/factor-freshness/revocation semantics against `revoked_before`; then close the same processor/account/native gates | T17/T29–T31 |
 | ADR-003 | PostgreSQL + SQLAlchemy/Alembic; local DB tests and non-owner roles | Managed host/region/backups/PITR/pooling contract and timed restore evidence | T24 |
 | ADR-004 | S3-shaped private storage port with provider capability tests | Production object/tombstone provider, jurisdiction, checksum/version/copy/delete semantics and egress pricing | T24 |
 | ADR-005 | Expo/RN/Router native app; shared contract/state/tokens, native platform UX | Exact SDK/native bridge/build compatibility, minimum OS, generated-native ownership, signing/build provider approval | T29 |
@@ -19,6 +19,8 @@
 | ADR-009 | Layered quotas, web challenge candidate, native integrity signals | Production edge/global abuse controls plus native/account/device policy | T24/T29–T31 |
 
 [ADR files](../adr/README.md) contain the rationale and exit/acceptance conditions. This table does not authorize account provisioning or paid usage.
+
+Decision support for ADR-002 is in [T17 identity-provider decision evidence](../ci/T17_IDENTITY_PROVIDER_DECISION_EVIDENCE.md). Public vendor documentation is research evidence, not an account approval or production authorization.
 
 ## Required provider decision record
 
