@@ -27,9 +27,10 @@ from princess_app.adapters.fakes import SequentialIds  # noqa: E402
 from princess_app.adapters.supabase import SupabaseIdentityProvider  # noqa: E402
 from princess_app.adapters.supabase.jwks import SupabaseJwksSource, supabase_jwks_url  # noqa: E402
 from princess_app.application.identity import IdentityService, InMemoryIdentityStore  # noqa: E402
+from princess_app.config import load_manifest  # noqa: E402
 from princess_app.ports.base import CallContext, Environment, PortError, ProviderMode, Unauthenticated  # noqa: E402
 
-VERSION = "supabase-identity-qualification/3"
+VERSION = "supabase-identity-qualification/4"
 SOURCE_REVISION = "ce9a8eee0cc042be8c7a42981a7ddae631e41d91"
 ALIAS = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:-]{0,63}$")
 COMMIT = re.compile(r"^[0-9a-f]{40}$")
@@ -37,6 +38,7 @@ EVIDENCE_KINDS = ("SYNTHETIC_TEST", "MANAGED_PROJECT")
 ACCOUNT_POLICY_STATES = ("disabled", "enabled")
 REFRESH_SOURCES = ("SUPPLIED_SYNTHETIC_REFRESH", "LIVE_PROVIDER_REFRESH")
 PROJECT_BINDINGS = ("QUALIFICATION_ONLY", "INTENDED_RUNTIME_PROFILE")
+QUALIFICATION_ENVIRONMENTS = frozenset({Environment.STAGING, Environment.PRODUCTION})
 MAX_REFRESH_RESPONSE_BYTES = 256 * 1024
 ASYMMETRIC = frozenset({"RS256", "RS512", "ES256", "ES512", "EdDSA"})
 
@@ -110,6 +112,31 @@ def _issuer_host(issuer: str) -> str:
 
 def _jwks_url(issuer: str) -> str:
     return supabase_jwks_url(issuer)
+
+
+def _qualification_scope(environment: str, provider_mode: str) -> tuple[Environment, ProviderMode, str]:
+    try:
+        env = Environment.parse(environment)
+    except PortError as exc:
+        raise QualificationError("qualification_environment_invalid") from exc
+    try:
+        mode = ProviderMode(provider_mode)
+    except ValueError as exc:
+        raise QualificationError("qualification_provider_mode_invalid") from exc
+    if env not in QUALIFICATION_ENVIRONMENTS:
+        raise QualificationError("qualification_environment_not_managed")
+    try:
+        manifest = load_manifest(ROOT, env)
+    except PortError as exc:
+        raise QualificationError("qualification_environment_manifest_invalid") from exc
+    if manifest.providers["IdentityProvider"] is not mode:
+        raise QualificationError("identity_mode_manifest_mismatch")
+    path = ROOT / "infra" / "environments" / f"{env.value}.json"
+    try:
+        digest = hashlib.sha256(path.read_bytes()).hexdigest()
+    except OSError as exc:
+        raise QualificationError("qualification_environment_manifest_unreadable") from exc
+    return env, mode, digest
 
 
 def _repo_commit() -> str:
@@ -243,12 +270,19 @@ def _refresh_access_token(
     return access_token, expires_in
 
 
-def _context(clock: MutableClock) -> CallContext:
-    return CallContext("supabase-qualification", Environment.STAGING, clock.now() + timedelta(minutes=1))
+def _context(clock: MutableClock, environment: Environment) -> CallContext:
+    return CallContext("supabase-qualification", environment, clock.now() + timedelta(minutes=1))
 
 
 def _provider(
-    *, issuer: str, audience: str, role: str, jwks: dict[str, Any], clock: MutableClock,
+    *,
+    issuer: str,
+    audience: str,
+    role: str,
+    jwks: dict[str, Any],
+    clock: MutableClock,
+    environment: Environment,
+    mode: ProviderMode,
 ) -> SupabaseIdentityProvider:
     return SupabaseIdentityProvider(
         issuer=issuer,
@@ -256,8 +290,8 @@ def _provider(
         allowed_roles=frozenset({role}),
         jwks_source=lambda: jwks,
         clock=clock,
-        environment=Environment.STAGING,
-        mode=ProviderMode.SANDBOX,
+        environment=environment,
+        mode=mode,
         stock_claims_profile=True,
     )
 
@@ -297,6 +331,8 @@ def qualify(
     project_alias: str,
     evidence_kind: str,
     project_binding: str,
+    environment: str,
+    provider_mode: str,
     princess_commit: str,
     issuer: str,
     audience: str,
@@ -320,6 +356,7 @@ def qualify(
         raise QualificationError("project_binding_invalid")
     if evidence_kind == "SYNTHETIC_TEST" and project_binding != "QUALIFICATION_ONLY":
         raise QualificationError("synthetic_cannot_bind_runtime_profile")
+    env, mode, environment_manifest_sha256 = _qualification_scope(environment, provider_mode)
     if not COMMIT.fullmatch(princess_commit):
         raise QualificationError("princess_commit_invalid")
     if custom_access_token_hook != "disabled":
@@ -367,12 +404,20 @@ def qualify(
         raise QualificationError("rotation_jwks_missing_trusted_key")
 
     clock = MutableClock(initial_iat)
-    provider = _provider(issuer=issuer, audience=audience, role=role, jwks=jwks, clock=clock)
-    initial = provider.verify_credential(initial_token, _context(clock))
+    provider = _provider(
+        issuer=issuer,
+        audience=audience,
+        role=role,
+        jwks=jwks,
+        clock=clock,
+        environment=env,
+        mode=mode,
+    )
+    initial = provider.verify_credential(initial_token, _context(clock, env))
     clock.set(refresh_iat)
-    refreshed = provider.verify_credential(refreshed_token, _context(clock))
+    refreshed = provider.verify_credential(refreshed_token, _context(clock, env))
     clock.set(reauth_iat)
-    reauth = provider.verify_credential(reauth_token, _context(clock))
+    reauth = provider.verify_credential(reauth_token, _context(clock, env))
 
     if initial.subject != refreshed.subject or initial.subject != reauth.subject:
         raise QualificationError("subject_continuity_failed")
@@ -395,22 +440,30 @@ def qualify(
 
     fence = refresh_iat + (reauth.auth_time - refresh_iat) / 2
     clock.set(initial_iat)
-    provider = _provider(issuer=issuer, audience=audience, role=role, jwks=jwks, clock=clock)
+    provider = _provider(
+        issuer=issuer,
+        audience=audience,
+        role=role,
+        jwks=jwks,
+        clock=clock,
+        environment=env,
+        mode=mode,
+    )
     service = IdentityService(provider, InMemoryIdentityStore(), clock, SequentialIds())
-    principal = service.authenticate(initial_token, _context(clock))
+    principal = service.authenticate(initial_token, _context(clock, env))
 
     clock.set(fence)
-    service.logout_everywhere(principal, _context(clock))
+    service.logout_everywhere(principal, _context(clock, env))
     refresh_rejected = False
     try:
-        service.authenticate(refreshed_token, _context(clock))
+        service.authenticate(refreshed_token, _context(clock, env))
     except Unauthenticated as exc:
         refresh_rejected = exc.code == "session_revoked"
     if not refresh_rejected:
         raise QualificationError("refresh_crossed_revocation_fence")
 
     clock.set(reauth_iat)
-    rebound = service.authenticate(reauth_token, _context(clock))
+    rebound = service.authenticate(reauth_token, _context(clock, env))
     if rebound.principal_id != principal.principal_id:
         raise QualificationError("reauth_principal_continuity_failed")
 
@@ -435,6 +488,9 @@ def qualify(
         "project_alias": project_alias,
         "evidence_kind": evidence_kind,
         "project_binding": project_binding,
+        "environment": env.value,
+        "provider_mode": mode.value,
+        "environment_manifest_sha256": environment_manifest_sha256,
         "checked_date": datetime.now(timezone.utc).date().isoformat(),
         "princess_commit": princess_commit,
         "provider_selection_claim": False,
@@ -526,6 +582,15 @@ def validate_receipt(data: dict[str, Any]) -> None:
         raise QualificationError("receipt_profile")
     if data.get("project_binding") not in PROJECT_BINDINGS:
         raise QualificationError("receipt_project_binding")
+    environment = data.get("environment")
+    provider_mode = data.get("provider_mode")
+    if environment not in {item.value for item in QUALIFICATION_ENVIRONMENTS}:
+        raise QualificationError("receipt_environment")
+    if provider_mode not in {item.value for item in ProviderMode}:
+        raise QualificationError("receipt_provider_mode")
+    manifest_hash = data.get("environment_manifest_sha256")
+    if not isinstance(manifest_hash, str) or not re.fullmatch(r"[0-9a-f]{64}", manifest_hash):
+        raise QualificationError("receipt_environment_manifest_sha256")
     if data.get("evidence_kind") == "SYNTHETIC_TEST" and data.get("project_binding") != "QUALIFICATION_ONLY":
         raise QualificationError("receipt_synthetic_runtime_binding")
     if data.get("anonymous_sign_in_policy") not in ACCOUNT_POLICY_STATES:
@@ -640,6 +705,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--project-alias", required=True)
     parser.add_argument("--evidence-kind", choices=EVIDENCE_KINDS, required=True)
     parser.add_argument("--project-binding", choices=PROJECT_BINDINGS, required=True)
+    parser.add_argument("--environment", choices=tuple(env.value for env in QUALIFICATION_ENVIRONMENTS), required=True)
+    parser.add_argument("--provider-mode", choices=tuple(mode.value for mode in ProviderMode), required=True)
     parser.add_argument("--issuer", required=True)
     parser.add_argument("--audience", required=True)
     parser.add_argument("--role", required=True)
@@ -674,6 +741,8 @@ def main(argv: list[str] | None = None) -> int:
             project_alias=args.project_alias,
             evidence_kind=args.evidence_kind,
             project_binding=args.project_binding,
+            environment=args.environment,
+            provider_mode=args.provider_mode,
             princess_commit=_repo_commit(),
             issuer=args.issuer,
             audience=args.audience,
