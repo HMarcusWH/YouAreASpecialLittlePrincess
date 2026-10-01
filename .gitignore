@@ -12,3 +12,4 @@ node_modules/
 .next/
 playwright-report/
 test-results/
+**/supabase-identity-qualification*.json
