@@ -732,6 +732,9 @@ def main(argv: list[str] | None = None) -> int:
         return 2
 
     try:
+        # Fail before reading managed credential files or making any provider call.
+        # qualify() repeats this check when validating the final receipt contract.
+        _qualification_scope(args.environment, args.provider_mode)
         (
             pre_rotation_jwks,
             jwks,
