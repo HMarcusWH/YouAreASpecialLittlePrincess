@@ -29,6 +29,9 @@ QUALIFICATION_RECEIPT_SHA256 = "c9e23770d23b5b066cf32596d26bde5564bdd440d460074d
 QUALIFIED_ENVIRONMENT_MANIFEST_SHA256 = "bc9ef87478461e1a13098e116d34f46c7b84addefbdb65004a2e9a71aa642f1c"
 ACCOUNT_SNAPSHOT_SHA256 = "905a943563fcce0c921b07f3c661032f2e732dbd968f8dcc6b6b31bf4e2c96a1"
 PROJECT_REF_SHA256 = "730f049be2bb48fbca59f87518cece081ca02f313c465fd55498e84a9d590a99"
+QUALIFIED_ISSUER_SHA256 = "0c619c9e3850c9bca069636be52c55b7e85165ae295fa682566797073e551cf0"
+QUALIFIED_AUDIENCE_SHA256 = "40c041842ccbe556bd30396b6ba8070418afa56119feebd79d2b74a15d176fc8"
+QUALIFIED_ROLE_SHA256 = "40c041842ccbe556bd30396b6ba8070418afa56119feebd79d2b74a15d176fc8"
 
 _HEX64 = re.compile(r"^[0-9a-f]{64}$")
 _ALLOWED_KEYS = frozenset({
@@ -117,6 +120,7 @@ def parse_supabase_staging_runtime_binding(
         "account_snapshot_sha256": ACCOUNT_SNAPSHOT_SHA256,
         "project_ref_sha256": PROJECT_REF_SHA256,
         "source_revision": SOURCE_REVISION,
+        "issuer_sha256": QUALIFIED_ISSUER_SHA256,
         "stock_claims_profile": True,
     }
     for key, value in expected.items():
@@ -140,12 +144,16 @@ def parse_supabase_staging_runtime_binding(
     role = data.get("allowed_role")
     if not isinstance(bound_audience, str) or not bound_audience or len(bound_audience) > 512:
         raise InvalidInput("identity_runtime_binding_audience")
+    if _sha256_text(bound_audience) != QUALIFIED_AUDIENCE_SHA256:
+        raise InvalidInput("identity_runtime_binding_mismatch", detail="audience")
     if audience != bound_audience:
         raise InvalidInput("identity_runtime_audience_mismatch")
     if not isinstance(role, str) or not role or len(role) > 128:
         raise InvalidInput("identity_runtime_binding_role")
     if role in {"anon", "service_role", "supabase_admin"}:
         raise InvalidInput("identity_runtime_binding_role")
+    if _sha256_text(role) != QUALIFIED_ROLE_SHA256:
+        raise InvalidInput("identity_runtime_binding_mismatch", detail="allowed_role")
 
     return SupabaseStagingRuntimeBinding(
         issuer_sha256=issuer_sha256,
