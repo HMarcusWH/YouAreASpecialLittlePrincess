@@ -1,6 +1,6 @@
 # T17 Supabase staging account/processor evidence
 
-**Status: EVIDENCE HARDENED — scoped owner decision PENDING.**
+**Status: APPROVED FOR NARROW STAGING VERIFICATION SCOPE — production/global gates remain open.**
 
 This is the Git-safe account/processor review record for the owner-selected Supabase Auth implementation provider.
 It is deliberately narrower than `processor_retention_contracts` as a repository-wide gate and narrower than
@@ -42,8 +42,8 @@ managed_project_evidence:            docs/ci/T17_SUPABASE_MANAGED_PROJECT_EVIDEN
 implementation_owner_task:           T17
 implementation_owner_role:           frontend
 production_approver_role:            product/technical owner
-owner_decision:                      PENDING
-approved_on:                         PENDING
+owner_decision:                      APPROVED
+approved_on:                         2026-10-01
 production_approved:                 false
 global_processor_gate_closed:        false
 ```
@@ -148,11 +148,10 @@ The current public DPA describes Supabase as processor/service provider for cove
 Subprocessor List, and ties processing duration to the agreement unless earlier deletion is requested through
 service functionality. The staging organization is on the Free plan according to the source-bound Management API
 snapshot. No negotiated support commitment is evidenced for this staging account; current public production
-guidance states that access to the Supabase support team is a Pro-plan benefit. The owner decision, if later
-recorded, must therefore accept **Free-plan staging without a negotiated support SLA** rather than inventing one.
+guidance states that access to the Supabase support team is a Pro-plan benefit. The approved narrow staging
+decision therefore explicitly accepts **Free-plan staging without a negotiated support SLA** rather than inventing one.
 
-Subprocessor/DPA acceptance remains part of the explicit owner decision. Any later plan, region, DPA/subprocessor,
-support or material service change reopens this review.
+The scoped owner decision accepts the reviewed public DPA/subprocessor posture only for this staging test scope. Any later plan, region, DPA/subprocessor, support or material service change reopens this review.
 
 ## Secrets and least privilege
 
@@ -164,6 +163,19 @@ browser/native login implementation has been approved. Provider session revocati
 remain unsupported by the Princess adapter. Operator cleanup uses owner-authorized provider controls outside the
 adapter; any future server-side lifecycle adapter that needs elevated credentials requires its own least-privilege
 review before composition.
+
+### Protected runtime binding
+
+The raw issuer contains the provider project reference and remains outside Git. The existing staging manifest is
+also left byte-identical because the v4 qualification receipt binds its SHA-256. Runtime activation therefore uses
+a separate protected profile channel rather than changing the manifest or committing the issuer.
+
+`tools/build_supabase_staging_runtime_binding.py` consumes the exact protected v4 receipt plus the Git-safe account
+snapshot and emits only safe binding fields: receipt/account/manifest/project hashes, source revision, issuer hash,
+audience, allowed role and the stock-claims assertion. The API receives the raw issuer and this binding through
+protected process configuration. Startup hashes the issuer, checks the qualified audience/role and evidence
+anchors, and composes Supabase only for the exact `(staging, sandbox)` tuple. The binding does not authorize login,
+refresh, provider lifecycle operations or production.
 
 ## Rate limits, retries and failure behavior
 
@@ -246,13 +258,14 @@ Re-review this record before any of the following:
 
 ## Owner decision
 
-The evidence above is ready for a human scope decision. Agents must leave this section pending until the
-product/technical owner explicitly approves or rejects the requested scope.
+The product/technical owner explicitly approved this narrow scope on 2026-10-01 by directing implementation of
+the reviewed staging-verification slice after the account/processor and dumbassery reviews. This approval is
+limited to the exact scope below; it is not application-login or production authorization.
 
 ```text
-decision:               PENDING
+decision:               APPROVED
 approver_role:          product/technical owner
-decided_on:             PENDING
+decided_on:             2026-10-01
 scope:                  staging/sandbox IdentityProvider VERIFY_CREDENTIAL
 test_operations:        operator-controlled disposable test-user authentication + session issuance/refresh
 application_login:      NOT APPROVED BY THIS DECISION
@@ -262,6 +275,6 @@ production_activation:  false
 global_gate_closure:    false
 ```
 
-Even an APPROVED staging decision here would close only this Supabase Auth staging test slice. It must not mark the
+This APPROVED staging decision closes only this Supabase Auth staging test slice. It must not mark the
 shared `processor_retention_contracts` gate globally complete, must not alter the pending consent/legal-basis
 records, and must not be cited as production/live authorization.

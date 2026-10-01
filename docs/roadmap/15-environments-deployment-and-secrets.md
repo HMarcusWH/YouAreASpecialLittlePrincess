@@ -32,6 +32,8 @@ Use managed PostgreSQL/private object storage selected through ADRs; no Kubernet
 
 Use short-lived workload credentials where supported. Store secrets in a managed secret system, rotate them, log access without values and maintain emergency revocation procedures. Never put secret examples containing realistic values in `.env.example`. Browser/native build artifacts must be scanned for server secrets.
 
+Evidence-bound provider profile values that are unsafe to commit but are not credentials (for example the qualified Supabase staging issuer containing the project reference) remain protected runtime configuration. They are accepted only by an explicitly reviewed environment/component/provider tuple and must be validated against Git-safe evidence hashes. Do not add them to a checked-in manifest when doing so would invalidate an existing qualification receipt's manifest binding; do not read arbitrary process variables directly inside an adapter to bypass T28 startup validation.
+
 ## Reproducible build policy
 
 Retain T00's exact Python manifests, hash locks, no-dependency local installation and toolchain verification. T00A closes the post-merge dependency-policy gaps before new application packages are integrated. New runtime environments get their own complete locks and tests; do not force OpenAI, native build tools or unused ML packages into the Free distribution.

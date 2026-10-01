@@ -1,6 +1,8 @@
 """T24 runtime preflight and health semantics."""
 from __future__ import annotations
 
+import hashlib
+import json
 import socket
 import sys
 from pathlib import Path
@@ -11,6 +13,7 @@ from fastapi.testclient import TestClient
 
 from princess_api.app import Services, create_app
 from princess_app.adapters.fakes import FakeClock
+import princess_app.config_supabase as binding_module
 from princess_app.ports.base import Environment, InvalidInput, TransientUnavailable, Unsupported
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -55,6 +58,56 @@ def test_production_manifest_is_not_mistaken_for_currently_composable_api():
     with pytest.raises(Unsupported) as err:
         preflight(env, ROOT)
     assert err.value.code == "runtime_provider_not_configured"
+
+
+def test_staging_identity_support_moves_fail_closed_boundary_to_object_store(monkeypatch):
+    project_ref = "runtime-staging-ref"
+    issuer = f"https://{project_ref}.supabase.co/auth/v1"
+    audience = "runtime-staging-audience"
+    manifest_hash = hashlib.sha256((ROOT / "infra" / "environments" / "staging.json").read_bytes()).hexdigest()
+    receipt_hash = "2" * 64
+    snapshot_hash = "3" * 64
+    project_hash = hashlib.sha256(project_ref.encode()).hexdigest()
+    source_revision = "4" * 40
+    monkeypatch.setattr(binding_module, "QUALIFIED_ENVIRONMENT_MANIFEST_SHA256", manifest_hash)
+    monkeypatch.setattr(binding_module, "QUALIFICATION_RECEIPT_SHA256", receipt_hash)
+    monkeypatch.setattr(binding_module, "ACCOUNT_SNAPSHOT_SHA256", snapshot_hash)
+    monkeypatch.setattr(binding_module, "PROJECT_REF_SHA256", project_hash)
+    monkeypatch.setattr(binding_module, "QUALIFIED_ISSUER_SHA256", hashlib.sha256(issuer.encode()).hexdigest())
+    monkeypatch.setattr(binding_module, "QUALIFIED_AUDIENCE_SHA256", hashlib.sha256(audience.encode()).hexdigest())
+    monkeypatch.setattr(binding_module, "QUALIFIED_ROLE_SHA256", hashlib.sha256(b"authenticated").hexdigest())
+    monkeypatch.setattr(binding_module, "SOURCE_REVISION", source_revision)
+    binding = {
+        "version": binding_module.BINDING_VERSION,
+        "provider": binding_module.PROVIDER,
+        "project_alias": binding_module.PROJECT_ALIAS,
+        "project_binding": binding_module.PROJECT_BINDING,
+        "environment": binding_module.ENVIRONMENT,
+        "provider_mode": binding_module.PROVIDER_MODE,
+        "qualification_receipt_sha256": receipt_hash,
+        "qualified_environment_manifest_sha256": manifest_hash,
+        "account_snapshot_sha256": snapshot_hash,
+        "project_ref_sha256": project_hash,
+        "source_revision": source_revision,
+        "issuer_sha256": hashlib.sha256(issuer.encode()).hexdigest(),
+        "audience": audience,
+        "allowed_role": "authenticated",
+        "stock_claims_profile": True,
+    }
+    env = {
+        "PRINCESS_ENV": "staging",
+        "PRINCESS_COMPONENT": "api",
+        "PRINCESS_DATABASE_URL": "postgresql://runtime:stage-secret@db:5432/princess_staging",
+        "PRINCESS_SESSION_SECRET": "stage-session-0123456789",
+        "PRINCESS_IDENTITY_AUDIENCE": audience,
+        "PRINCESS_STORAGE_SIGNING_KEY": "stage-storage-0123456789",
+        "PRINCESS_IDENTITY_ISSUER": issuer,
+        "PRINCESS_IDENTITY_BINDING": json.dumps(binding),
+    }
+    with pytest.raises(Unsupported) as err:
+        preflight(env, ROOT)
+    assert err.value.code == "runtime_provider_not_configured"
+    assert err.value.detail == "api:ObjectStore"
 
 
 def services(readiness):
