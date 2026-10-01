@@ -2,9 +2,7 @@
 
 **Status: qualification tooling hardened; actual managed-project qualification PENDING.**
 
-This document defines the safe evidence boundary for the T17 Supabase Auth candidate. It does **not** select
-Supabase, approve a processor/region/contract, activate production identity, or claim that any managed project
-has passed.
+This document defines the safe evidence boundary for the owner-selected T17 Supabase Auth implementation provider. It does **not itself make the selection**, approve a processor/region/contract, activate production identity, or claim that any managed project has passed. The separate owner decision is recorded in [T17 identity-provider decision evidence](T17_IDENTITY_PROVIDER_DECISION_EVIDENCE.md).
 
 ## Why the post-#46 hardening exists
 
@@ -98,12 +96,12 @@ provider network calls. A synthetic PASS is never managed-project evidence.
 
 ## Human/account gates still separate
 
-The dated public-source Supabase-vs-Clerk comparison is in [T17 identity-provider decision evidence](T17_IDENTITY_PROVIDER_DECISION_EVIDENCE.md). That document informs ADR-002 but does not turn this technical qualification receipt into a provider-selection or production-approval claim.
+The dated Supabase-vs-Clerk comparison and 2026-10-01 owner selection are in [T17 identity-provider decision evidence](T17_IDENTITY_PROVIDER_DECISION_EVIDENCE.md). The owner record selects Supabase; this technical qualification receipt still cannot select a provider or create production approval.
 
 A technical PASS does not establish any of these:
 
 ```text
-provider selected                     OWNER DECISION REQUIRED
+provider selected                     RECORDED 2026-10-01 — SUPABASE AUTH
 processor terms                       SEPARATE REVIEW REQUIRED
 region/data handling                  SEPARATE REVIEW REQUIRED
 retention/deletion                    SEPARATE REVIEW REQUIRED
@@ -115,8 +113,6 @@ turn them into approval claims.
 
 ## Still not activation
 
-Even after a real `MANAGED_PROJECT` PASS, T17 still needs the explicit ADR-002 provider decision plus provider
-logout/deletion lifecycle, web PKCE/callback/origin integration, cross-device/account recovery, and applicable
-native Apple/Google/private-relay evidence.
+The ADR-002 provider-selection decision is now recorded. Even after a real `MANAGED_PROJECT` PASS, T17 still needs approved processor/account evidence plus provider logout/deletion lifecycle, web PKCE/callback/origin integration, cross-device/account recovery, and applicable native Apple/Google/private-relay evidence.
 
 Production login remains disabled until those gates close.

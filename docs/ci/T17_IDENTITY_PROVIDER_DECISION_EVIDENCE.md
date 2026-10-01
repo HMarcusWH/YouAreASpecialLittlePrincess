@@ -1,10 +1,11 @@
 # T17 identity-provider decision evidence
 
-**Checked: 2026-10-01. Status: public-source comparison complete; provider selection and production approval PENDING.**
+**Checked: 2026-10-01. Status: public-source comparison complete; Supabase Auth selected as implementation provider; account/profile qualification and production approval PENDING.**
 
 This is supporting evidence for [ADR-002](../adr/ADR-002-auth-provider.md) and the canonical
-[provider decision register](../roadmap/19-provider-decision-register.md). It does not select a provider, approve
-a processor/account/region, claim a managed-project qualification PASS, or activate runtime identity.
+[provider decision register](../roadmap/19-provider-decision-register.md). The product/technical owner selected
+Supabase Auth as the implementation provider on 2026-10-01 after reviewing this comparison. This record does not
+approve a provider account/region/processor, claim a managed-project qualification PASS, or activate runtime identity.
 
 The comparison uses current first-party vendor documentation plus evidence already merged in this repository.
 Account-specific settings, contracts, negotiated support, actual provider behavior and owner decisions remain
@@ -104,36 +105,47 @@ Supabase has materially more Princess-specific implementation evidence because t
 That implementation lead is **not** a provider-selection claim. Clerk has not undergone equivalent Princess-specific
 adapter/profile qualification.
 
-## Selection blockers after this public-source pass
+## Post-selection gates after this public-source pass
 
-The public-source comparison does not close the following gates:
+The owner selection closes only the provider-choice gate. The following evidence still blocks composition or later production activation:
 
-1. **Owner provider decision:** no owner has selected Supabase or Clerk in the repository.
-2. **Supabase managed-project evidence:** the protected `MANAGED_PROJECT` run remains PENDING.
-3. **Processor/account approval:** actual provider account, purpose, region, retention/deletion, support and
+1. **Supabase managed-project evidence:** the protected `MANAGED_PROJECT` run remains PENDING.
+2. **Processor/account approval:** actual provider account, purpose, region, retention/deletion, support and
    subprocessors must be reviewed under `processor_retention_contracts`.
-4. **Clerk principal-continuity compatibility:** if Clerk remains under consideration, prove/configure a flow that
-   does not let email equality silently become Princess account-merge authority.
-5. **Clerk freshness profile:** if Clerk remains under consideration, code-qualify how `fva`, session refresh,
-   reverification, session revocation and JWT/JWKS behavior interact with Princess's durable `revoked_before`
-   fence.
-6. **Actual web/native account configuration:** callback/deep-link domains, Apple/Google credentials, private
+3. **Actual web/native account configuration:** callback/deep-link domains, Apple/Google credentials, private
    relay/relinking and cross-device recovery remain real account/device evidence.
-7. **Provider lifecycle integration:** provider logout/revocation and provider-account deletion are still not
+4. **Provider lifecycle integration:** provider logout/revocation and provider-account deletion are still not
    bound to Princess application deletion/logout choreography.
+5. **Replacement trigger:** if Supabase fails managed-project/account qualification or a future provider change is
+   proposed, reopen ADR-002 and reuse the Clerk compatibility findings rather than silently switching vendors.
+
+## Owner decision
+
+**Decision: SELECT SUPABASE AUTH AS ADR-002 IMPLEMENTATION PROVIDER**
+
+- approver: product/technical owner
+- decided on: 2026-10-01
+- purpose: bind the managed identity implementation direction for T17/T29-T31 and the future API adapter
+- scope: web, backend credential verification and future iOS/Android identity integration
+- evidence: this dated comparison plus the merged Princess Supabase verifier/JWKS/qualification-tooling evidence
+- relevant environment: implementation direction only; no local/test/preview/staging/production provider mode is activated by this decision
+- expiration/review trigger: reopen ADR-002 if managed-project qualification fails, the selected credential/claims/signing profile changes, provider linking/session semantics materially change, processor/region terms become unacceptable, or native Apple/Google/private-relay qualification cannot preserve Princess account continuity
+- limitations: no Supabase account, region, processor terms, retention/deletion/support obligations, MANAGED_PROJECT PASS, production credentials or release environment are approved by this decision
+
+The selected credential direction remains the already code-qualified first-party Supabase access-JWT profile:
+asymmetric JWKS, exact configured issuer/audience/role, canonical subject/session UUIDs, non-anonymous state,
+stock claims profile, and AMR-derived authentication freshness. The actual managed project must still qualify that
+profile before runtime composition.
 
 ## Decision state after this PR
 
-Unless a separate explicit owner decision and account evidence are supplied during review, merging this evidence
-packet must leave:
-
 ```text
-Supabase Auth            CANDIDATE (Princess code-qualified; managed-project PASS pending)
-Clerk                    alternative (public-source reviewed; Princess profile qualification pending)
-ADR-002 provider choice  PENDING
+Supabase Auth            SELECTED IMPLEMENTATION PROVIDER
+Supabase managed project QUALIFICATION PENDING
+processor/account gate   PENDING
+Clerk                    NOT SELECTED (comparison retained for ADR replacement review)
 production activation    PENDING
 ```
 
-A later owner decision may select a provider without waiting for complete App Store/Play release evidence, but
-must not treat this public-source review as live-account, signed-device, processor-contract or production
-approval.
+This owner decision is intentionally narrower than `PRODUCTION_APPROVED`. It does not authorize live-account,
+signed-device, processor-contract, runtime composition or production login activity.
