@@ -108,9 +108,9 @@ adapter/profile qualification.
 
 ## Post-selection gates after this public-source pass
 
-The owner selection closes only the provider-choice gate. The following evidence still blocks composition or later production activation:
+The owner selection and separate 2026-10-01 v4 staging witness close the provider-choice and staging exact-profile technical gates. The following evidence still blocks staging composition or later production activation:
 
-1. **Supabase managed-project evidence:** the protected `supabase-identity-qualification/4` `MANAGED_PROJECT` run remains PENDING. The receipt must state `QUALIFICATION_ONLY` or `INTENDED_RUNTIME_PROFILE` plus its environment/provider mode; only environment-bound intended-runtime evidence (or a separately reviewed binding/equivalence witness) can close the exact runtime-profile technical gate.
+1. **Supabase managed-project evidence:** COMPLETE for the intended staging/sandbox profile on 2026-10-01 using `supabase-identity-qualification/4`, `MANAGED_PROJECT`, `INTENDED_RUNTIME_PROFILE`, `environment=staging` and `provider_mode=sandbox`. Do not repeat the invasive staging rotation witness unless the qualified profile materially changes. Production/live remains a separate later managed-project qualification.
 2. **Processor/account approval:** actual provider account, purpose, region, retention/deletion, support and
    subprocessors must be reviewed under `processor_retention_contracts`.
 3. **Actual web/native account configuration:** callback/deep-link domains, Apple/Google credentials, private
@@ -135,8 +135,9 @@ The owner selection closes only the provider-choice gate. The following evidence
 
 The selected credential direction remains the already code-qualified first-party Supabase access-JWT profile:
 asymmetric JWKS, exact configured issuer/audience/role, canonical subject/session UUIDs, non-anonymous state,
-stock claims profile, and AMR-derived authentication freshness. The actual managed project must still qualify that
-profile before runtime composition.
+stock claims profile, and AMR-derived authentication freshness. The intended staging/sandbox profile has now
+qualified that shape; staging composition must explicitly bind its runtime issuer/audience/role/JWKS configuration
+to the qualified evidence before use. Production/live remains separately unqualified.
 
 ## Decision state after this PR
 
