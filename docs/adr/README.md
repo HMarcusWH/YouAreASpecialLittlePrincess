@@ -7,7 +7,7 @@ These records document the engineering defaults proposed by roadmap v2.0. Mergin
 | Record | Direction |
 |---|---|
 | [ADR-001](ADR-001-client-architecture.md) | Next.js web presentation; FastAPI business authority |
-| [ADR-002](ADR-002-auth-provider.md) | Supabase Auth selected for managed identity; account/profile qualification and activation pending |
+| [ADR-002](ADR-002-auth-provider.md) | Supabase Auth selected; staging/sandbox exact-profile qualification passed; processor/runtime and production/live activation pending |
 | [ADR-003](ADR-003-postgres-hosting.md) | PostgreSQL with migrations/roles and durable jobs |
 | [ADR-004](ADR-004-object-storage.md) | Private S3-shaped storage with capability tests |
 | [ADR-005](ADR-005-mobile-framework.md) | Expo/RN native app, shared semantics not webview |
