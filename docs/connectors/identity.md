@@ -10,7 +10,7 @@ The application resolves unique `(issuer, subject)` into its own `principal_id`/
 
 ## Implementation instructions
 
-Select a managed identity provider and exact API credential profile through ADR-002. Validate the selected credential's signature/key source, provider-specific context claims, time claims and token/session type inside that adapter. The existing generic `OidcIdentityProvider` remains an **ID-token-shaped** verifier with its expected audience configured in the adapter and still rejects RFC 9068 access-token `typ` values; that behavior must not be broadened before the provider decision. Key rotation uses bounded caching and a controlled refresh on unknown key IDs; do not fetch arbitrary issuer/JWKS URLs taken from an untrusted token. Keep replay/nonce/state and PKCE behavior in the relevant login transport.
+ADR-002 selects Supabase Auth as the implementation provider. Before composition, qualify the exact managed project/account/profile and validate the selected credential's signature/key source, provider-specific context claims, time claims and token/session type inside the dedicated Supabase adapter. The existing generic `OidcIdentityProvider` remains an **ID-token-shaped** verifier with its expected audience configured in the adapter and still rejects RFC 9068 access-token `typ` values; selecting Supabase does not authorize broadening that generic profile. Key rotation uses bounded caching and a controlled refresh on unknown key IDs; do not fetch arbitrary issuer/JWKS URLs taken from an untrusted token. Keep replay/nonce/state and PKCE behavior in the relevant login transport.
 
 `auth_time` means the time of an actual provider authentication/reauthentication ceremony. It is optional when the provider cannot prove it, and **token `iat` is never substituted for it**. Application logout-everywhere and deletion persist a local `revoked_before` fence: after that fence, unknown/old authentication freshness fails closed even if a provider can mint a newly issued credential. The production identity decision must therefore demonstrate a trustworthy reauthentication/session-freshness mechanism compatible with that fence, or introduce a separately reviewed application-session/provider-revocation design. The current provider-neutral service does not pretend that merely having a provider `sid` means provider logout has been executed.
 
@@ -27,11 +27,11 @@ Live configuration requires an approved tenant, exact credential profile/audienc
 Primary protocol references: E23/E24 and platform rules in [source refresh](../roadmap/22-research-and-source-refresh.md).
 
 
-## Supabase Auth candidate profile (T17, production disabled)
+## Selected Supabase Auth implementation profile (T17, production disabled)
 
-`src/princess_app/adapters/supabase/SupabaseIdentityProvider` code-qualifies one narrow **candidate** profile; it does not select or activate Supabase for production. The reviewed upstream behavior is pinned to `supabase/auth@ce9a8eee0cc042be8c7a42981a7ddae631e41d91` (checked 2026-09-30). A future managed project must still prove its actual version/configuration, processor terms, region/retention/deletion behavior and account settings.
+`src/princess_app/adapters/supabase/SupabaseIdentityProvider` code-qualifies the narrow profile selected by ADR-002; the separate 2026-10-01 owner decision selects Supabase as implementation provider, but this adapter does not activate Supabase for production. The reviewed upstream behavior is pinned to `supabase/auth@ce9a8eee0cc042be8c7a42981a7ddae631e41d91` (checked 2026-09-30). A future managed project must still prove its actual version/configuration, processor terms, region/retention/deletion behavior and account settings.
 
-The candidate accepts first-party Supabase **access JWTs** only when all of these are true:
+The selected profile accepts first-party Supabase **access JWTs** only when all of these are true:
 
 - project signing is asymmetric and the key comes from the configured JWKS source; HS256/shared-secret projects are outside this profile;
 - issuer, singleton audience and permitted role are explicit adapter configuration, not universal Supabase constants;
@@ -42,12 +42,12 @@ The candidate accepts first-party Supabase **access JWTs** only when all of thes
 
 Authentication freshness is derived from signed AMR objects, never token `iat`. The reviewed Supabase Auth source stores authentication-method claims on the session and emits their timestamps into access-token AMR; token refresh reissues a JWT from that persisted session AMR rather than turning the refresh timestamp into a new authentication ceremony. Princess accepts timestamped reviewed authentication/reauthentication methods as freshness evidence, ignores unknown/string-only/refresh-only entries for freshness, rejects malformed/future/post-`iat` timestamps, and returns `auth_time=None` when no usable freshness exists. That allows a valid never-revoked session to authenticate while preserving the existing fail-closed `revoked_before` behavior after logout/deletion.
 
-The candidate advertises only `VERIFY_CREDENTIAL`. `REVOKE_SESSION` and `DELETE_PROVIDER_ACCOUNT` remain unsupported: Supabase logout/admin APIs have not yet been bound to Princess's durable provider-session/deletion choreography. API composition still refuses every non-fake IdentityProvider, and no Supabase key, URL or project configuration is present in the environment manifests.
+The selected profile advertises only `VERIFY_CREDENTIAL`. `REVOKE_SESSION` and `DELETE_PROVIDER_ACCOUNT` remain unsupported: Supabase logout/admin APIs have not yet been bound to Princess's durable provider-session/deletion choreography. API composition still refuses every non-fake IdentityProvider, and no Supabase key, URL or project configuration is present in the environment manifests.
 
 
 ## Supabase managed-project qualification boundary
 
-The production-disabled candidate has the opt-in account-profile qualification harness at
+The selected production-disabled profile has the opt-in account-profile qualification harness at
 `tools/qualify_supabase_identity.py`. Synthetic CI remains offline. A `MANAGED_PROJECT` run is deliberately
 manual: it uses a protected initial access JWT, refresh token and low-privilege Supabase publishable/legacy-anon
 API key, fetches the configured issuer's JWKS, and performs one real refresh grant itself. Secret/service-role
@@ -69,12 +69,12 @@ URL or JWKS body. A PASS still does not select Supabase, prove processor terms, 
 If the Custom Access Token Hook is enabled/unknown, the account-policy settings were not explicitly inspected,
 the project uses an out-of-profile signing configuration, a secret/service-role key is supplied, refresh changes
 session/authentication freshness, the signing key does not rotate for the live witness, reauthentication is not
-genuinely newer, or the existing adapter rejects any credential, qualification fails. Fix/review the account
+genuinely newer, or the selected adapter rejects any credential, qualification fails. Fix/review the account
 configuration; do not weaken the candidate verifier or durable freshness fence to manufacture a PASS.
 
 
 ### Bounded Supabase JWKS network source
 
-PR #48 adds `SupabaseJwksSource` as a reusable network primitive for the already-reviewed candidate profile. The JWKS URL is derived only from the explicitly configured HTTPS issuer; token headers cannot supply `jku`, `x5u` or another key URL. Redirects are refused, decoded response bytes and key count are bounded, and HTTP/network failures are translated to typed redacted port errors. The qualification harness reuses this source so live qualification and later runtime composition cannot drift onto different JWKS-fetch policies.
+PR #48 adds `SupabaseJwksSource` as a reusable network primitive for the already-reviewed selected profile. The JWKS URL is derived only from the explicitly configured HTTPS issuer; token headers cannot supply `jku`, `x5u` or another key URL. Redirects are refused, decoded response bytes and key count are bounded, and HTTP/network failures are translated to typed redacted port errors. The qualification harness reuses this source so live qualification and later runtime composition cannot drift onto different JWKS-fetch policies.
 
-This is **composition preparation only**. `apps/api/princess_api/compose.py` and runtime preflight still reject every non-fake IdentityProvider. Supabase remains a CANDIDATE until the owner/provider/account gates above are actually satisfied; this network source is not a provider selection, managed-project PASS or production activation.
+This is **composition preparation only**. `apps/api/princess_api/compose.py` and runtime preflight still reject every non-fake IdentityProvider. Supabase is owner-selected as the implementation provider, but the managed project/account/profile remains unqualified; this network source is not a managed-project PASS, processor approval or production activation.
