@@ -86,6 +86,7 @@ def qualify_fixture(**overrides):
     values = {
         "project_alias": "synthetic-supabase",
         "evidence_kind": "SYNTHETIC_TEST",
+        "project_binding": "QUALIFICATION_ONLY",
         "princess_commit": COMMIT,
         "issuer": ISSUER,
         "audience": AUDIENCE,
@@ -110,6 +111,7 @@ def test_synthetic_qualification_proves_refresh_rotation_reauth_and_emits_redact
     receipt = qualify(
         project_alias="synthetic-supabase",
         evidence_kind="SYNTHETIC_TEST",
+        project_binding="QUALIFICATION_ONLY",
         princess_commit=COMMIT,
         issuer=ISSUER,
         audience=AUDIENCE,
@@ -126,6 +128,8 @@ def test_synthetic_qualification_proves_refresh_rotation_reauth_and_emits_redact
         refresh_response_expires_in_s=3600,
     )
     validate_receipt(receipt)
+    assert receipt["version"] == "supabase-identity-qualification/3"
+    assert receipt["project_binding"] == "QUALIFICATION_ONLY"
     assert receipt["source_revision"] == SOURCE_REVISION
     assert receipt["same_session_initial_refresh"] is True
     assert receipt["refresh_auth_time_unchanged"] is True
@@ -235,6 +239,21 @@ def test_account_policy_values_must_be_inspected_not_assumed(field, value, code)
         qualify_fixture(**{field: value})
 
 
+def test_project_binding_distinguishes_qualification_project_from_runtime_profile():
+    receipt = qualify_fixture()
+    assert receipt["project_binding"] == "QUALIFICATION_ONLY"
+
+    managed = qualify_fixture(
+        evidence_kind="MANAGED_PROJECT",
+        project_binding="INTENDED_RUNTIME_PROFILE",
+        refresh_source="LIVE_PROVIDER_REFRESH",
+    )
+    assert managed["project_binding"] == "INTENDED_RUNTIME_PROFILE"
+
+    with pytest.raises(QualificationError, match="synthetic_cannot_bind_runtime_profile"):
+        qualify_fixture(project_binding="INTENDED_RUNTIME_PROFILE")
+
+
 def test_managed_project_requires_live_refresh_witness():
     with pytest.raises(QualificationError, match="managed_project_requires_live_refresh"):
         qualify_fixture(evidence_kind="MANAGED_PROJECT")
@@ -290,6 +309,100 @@ def test_live_jwks_fetch_reuses_bounded_redirect_refusing_source():
         _fetch_jwks(ISSUER, transport=httpx.MockTransport(redirect))
 
 
+def test_live_refresh_refuses_redirects_and_bounds_response_body():
+    calls = []
+
+    def redirect(request: httpx.Request) -> httpx.Response:
+        calls.append(str(request.url))
+        return httpx.Response(302, headers={"location": "https://evil.invalid/token"})
+
+    with pytest.raises(QualificationError, match="refresh_redirect_refused"):
+        _refresh_access_token(
+            ISSUER,
+            api_key="sb_publishable_test",
+            refresh_token="refresh-secret",
+            transport=httpx.MockTransport(redirect),
+        )
+    assert calls == [ISSUER + "/token?grant_type=refresh_token"]
+
+    def oversized(_: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, content=b'{"pad":"' + b"x" * 5000 + b'"}')
+
+    with pytest.raises(QualificationError, match="refresh_response_too_large"):
+        _refresh_access_token(
+            ISSUER,
+            api_key="sb_publishable_test",
+            refresh_token="refresh-secret",
+            transport=httpx.MockTransport(oversized),
+            max_response_bytes=4096,
+        )
+
+
+def test_live_refresh_disables_ambient_httpx_environment(monkeypatch):
+    import qualify_supabase_identity as cli
+
+    _, _, _, refreshed, _ = fixture()
+    real_client = httpx.Client
+    seen = {}
+
+    def handler(_: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, json={"access_token": refreshed, "expires_in": 3600})
+
+    def client_factory(*args, **kwargs):
+        seen.update(kwargs)
+        kwargs["transport"] = httpx.MockTransport(handler)
+        return real_client(*args, **kwargs)
+
+    monkeypatch.setattr(cli.httpx, "Client", client_factory)
+    access, expires_in = cli._refresh_access_token(
+        ISSUER,
+        api_key="sb_publishable_test",
+        refresh_token="refresh-secret",
+    )
+    assert access == refreshed and expires_in == 3600
+    assert seen["trust_env"] is False
+    assert seen["follow_redirects"] is False
+
+
+@pytest.mark.parametrize(
+    "status,code",
+    [
+        (429, "refresh_rate_limited"),
+        (503, "refresh_unavailable"),
+        (403, "refresh_http_error"),
+    ],
+)
+def test_live_refresh_http_failures_are_safe_and_typed(status, code):
+    def handler(_: httpx.Request) -> httpx.Response:
+        return httpx.Response(status, content=b"private upstream detail")
+
+    with pytest.raises(QualificationError) as err:
+        _refresh_access_token(
+            ISSUER,
+            api_key="sb_publishable_test",
+            refresh_token="refresh-secret",
+            transport=httpx.MockTransport(handler),
+        )
+    assert str(err.value) == code
+    assert "private upstream detail" not in str(err.value)
+    assert "refresh-secret" not in str(err.value)
+
+
+def test_live_refresh_transport_errors_are_redacted():
+    def handler(request: httpx.Request) -> httpx.Response:
+        raise httpx.ConnectError("refresh-secret upstream detail", request=request)
+
+    with pytest.raises(QualificationError) as err:
+        _refresh_access_token(
+            ISSUER,
+            api_key="sb_publishable_test",
+            refresh_token="refresh-secret",
+            transport=httpx.MockTransport(handler),
+        )
+    assert str(err.value) == "refresh_request_failed"
+    assert "refresh-secret" not in str(err.value)
+
+
 def test_live_refresh_uses_low_privilege_api_key_and_returns_only_access_token():
     _, _, _, refreshed, _ = fixture()
     seen = {}
@@ -341,6 +454,7 @@ def test_receipt_validator_rejects_scope_or_witness_tampering():
         ("logout_fence_refresh_rejected", False),
         ("signing_key_rotation_observed", False),
         ("source_revision", "0" * 40),
+        ("project_binding", "UNKNOWN"),
     ):
         changed = dict(receipt)
         changed[field] = value
@@ -367,6 +481,8 @@ def test_cli_requires_explicit_gate_and_file_only_synthetic_credentials(tmp_path
         "synthetic-supabase",
         "--evidence-kind",
         "SYNTHETIC_TEST",
+        "--project-binding",
+        "QUALIFICATION_ONLY",
         "--issuer",
         ISSUER,
         "--audience",
@@ -444,6 +560,8 @@ def test_managed_cli_sequences_live_refresh_then_rotation_then_reauth(tmp_path, 
         "managed-supabase",
         "--evidence-kind",
         "MANAGED_PROJECT",
+        "--project-binding",
+        "QUALIFICATION_ONLY",
         "--issuer",
         ISSUER,
         "--audience",
@@ -470,5 +588,6 @@ def test_managed_cli_sequences_live_refresh_then_rotation_then_reauth(tmp_path, 
     assert cli.main(argv) == 0
     receipt = json.loads(output.read_text(encoding="utf-8"))
     assert receipt["evidence_kind"] == "MANAGED_PROJECT"
+    assert receipt["project_binding"] == "QUALIFICATION_ONLY"
     assert receipt["refresh_source"] == "LIVE_PROVIDER_REFRESH"
     assert receipt["signing_key_rotation_observed"] is True

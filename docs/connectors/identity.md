@@ -60,7 +60,7 @@ uses a new session and newer AMR-derived freshness, the signing `kid` has change
 remain trusted by the final JWKS. The same run exercises Princess's local `revoked_before` fence: the refreshed
 old session is rejected and the post-fence genuine authentication is accepted.
 
-The `supabase-identity-qualification/2` receipt records checked date/Princess commit, issuer host and hashes,
+The `supabase-identity-qualification/3` receipt records checked date/Princess commit, explicit project binding, issuer host and hashes,
 audience/role, inspected anonymous-sign-in and OAuth-server settings, Custom Access Token Hook state, token
 lifetime, JWKS algorithms/key IDs/hashes, AMR method names and boolean refresh/rotation/reauth/fence witnesses.
 It contains no access/refresh token, API key, subject, session ID, absolute authentication timestamp, raw issuer
@@ -78,3 +78,9 @@ configuration; do not weaken the candidate verifier or durable freshness fence t
 PR #48 adds `SupabaseJwksSource` as a reusable network primitive for the already-reviewed selected profile. The JWKS URL is derived only from the explicitly configured HTTPS issuer; token headers cannot supply `jku`, `x5u` or another key URL. Redirects are refused, decoded response bytes and key count are bounded, and HTTP/network failures are translated to typed redacted port errors. The qualification harness reuses this source so live qualification and later runtime composition cannot drift onto different JWKS-fetch policies.
 
 This is **composition preparation only**. `apps/api/princess_api/compose.py` and runtime preflight still reject every non-fake IdentityProvider. Supabase is owner-selected as the implementation provider, but the managed project/account/profile remains unqualified; this network source is not a managed-project PASS, processor approval or production activation.
+
+For managed evidence, `QUALIFICATION_ONLY` and `INTENDED_RUNTIME_PROFILE` are deliberately different receipt
+bindings. A disposable rotation project can prove the selected credential mechanics but cannot be cited as proof
+that the later runtime tenant/profile has matching settings. The full receipt remains protected; Git stores only
+the safe digest/reference index in `docs/ci/T17_SUPABASE_MANAGED_PROJECT_EVIDENCE.md`.
+
