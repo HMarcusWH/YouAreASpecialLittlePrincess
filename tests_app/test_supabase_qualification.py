@@ -128,6 +128,8 @@ def test_synthetic_qualification_proves_refresh_rotation_reauth_and_emits_redact
         refresh_response_expires_in_s=3600,
     )
     validate_receipt(receipt)
+    assert receipt["version"] == "supabase-identity-qualification/3"
+    assert receipt["project_binding"] == "QUALIFICATION_ONLY"
     assert receipt["source_revision"] == SOURCE_REVISION
     assert receipt["same_session_initial_refresh"] is True
     assert receipt["refresh_auth_time_unchanged"] is True
@@ -362,6 +364,30 @@ def test_live_refresh_disables_ambient_httpx_environment(monkeypatch):
     assert seen["follow_redirects"] is False
 
 
+@pytest.mark.parametrize(
+    "status,code",
+    [
+        (429, "refresh_rate_limited"),
+        (503, "refresh_unavailable"),
+        (403, "refresh_http_error"),
+    ],
+)
+def test_live_refresh_http_failures_are_safe_and_typed(status, code):
+    def handler(_: httpx.Request) -> httpx.Response:
+        return httpx.Response(status, content=b"private upstream detail")
+
+    with pytest.raises(QualificationError) as err:
+        _refresh_access_token(
+            ISSUER,
+            api_key="sb_publishable_test",
+            refresh_token="refresh-secret",
+            transport=httpx.MockTransport(handler),
+        )
+    assert str(err.value) == code
+    assert "private upstream detail" not in str(err.value)
+    assert "refresh-secret" not in str(err.value)
+
+
 def test_live_refresh_transport_errors_are_redacted():
     def handler(request: httpx.Request) -> httpx.Response:
         raise httpx.ConnectError("refresh-secret upstream detail", request=request)
@@ -562,5 +588,6 @@ def test_managed_cli_sequences_live_refresh_then_rotation_then_reauth(tmp_path, 
     assert cli.main(argv) == 0
     receipt = json.loads(output.read_text(encoding="utf-8"))
     assert receipt["evidence_kind"] == "MANAGED_PROJECT"
+    assert receipt["project_binding"] == "QUALIFICATION_ONLY"
     assert receipt["refresh_source"] == "LIVE_PROVIDER_REFRESH"
     assert receipt["signing_key_rotation_observed"] is True
