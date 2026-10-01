@@ -8,7 +8,7 @@ This document defines the safe evidence boundary for the owner-selected T17 Supa
 
 Merged PR #46 established the first opt-in qualification harness, but its managed-project shape still trusted an
 operator-supplied "refreshed access JWT" and did not retain every account-profile fact from the qualification
-checklist. `supabase-identity-qualification/3` keeps those witnesses and additionally binds every receipt to an explicit project purpose without enabling login.
+checklist. `supabase-identity-qualification/4` keeps those witnesses and additionally binds every receipt to an explicit project purpose without enabling login.
 
 Synthetic CI remains offline. `MANAGED_PROJECT` mode is intentionally manual and provider-facing.
 
@@ -75,6 +75,8 @@ python tools/qualify_supabase_identity.py \
   --project-alias <safe-alias> \
   --evidence-kind MANAGED_PROJECT \
   --project-binding <QUALIFICATION_ONLY|INTENDED_RUNTIME_PROFILE> \
+  --environment <staging|production> \
+  --provider-mode <sandbox|live> \
   --issuer '<exact-reviewed-issuer>' \
   --audience '<exact-reviewed-audience>' \
   --role '<exact-reviewed-role>' \
@@ -88,13 +90,13 @@ python tools/qualify_supabase_identity.py \
   --output /protected/supabase-identity-qualification.json
 ```
 
-The receipt must declare what the managed project proves:
+The receipt must declare both what the managed project proves and which reviewed runtime environment it belongs to:
 
 - `QUALIFICATION_ONLY`: a dedicated/disposable project used to prove provider/profile semantics. A PASS does **not**
   prove that the later runtime tenant/profile has the same settings.
-- `INTENDED_RUNTIME_PROFILE`: the project/profile is the actual intended runtime identity profile. A PASS can close
-  the technical exact-profile gate, but still does not approve processor terms, region/data handling, support,
-  production secrets, callbacks/native configuration or runtime activation.
+- `INTENDED_RUNTIME_PROFILE`: the project/profile is the actual intended runtime identity profile **for the receipt's bound environment/provider mode**. A staging/sandbox PASS can close the staging technical exact-profile gate only; it does not qualify production/live. A PASS still does not approve processor terms, region/data handling, support, production secrets, callbacks/native configuration or runtime activation.
+
+The v4 tool verifies `environment` + `provider_mode` against the checked-in environment manifest and records that manifest's SHA-256. Current reviewed pairs are staging/sandbox and production/live; local/test/preview are not managed qualification targets.
 
 Use a dedicated owner-authorized `QUALIFICATION_ONLY` project when the signing-key rotation drill must not touch
 the intended runtime tenant. If that path is used, a later exact-profile binding/equivalence witness remains required
@@ -109,7 +111,7 @@ provider network calls. A synthetic PASS is never managed-project evidence.
 
 ## Evidence retention
 
-The exact generated receipt remains protected operational evidence. Keep it outside Git (for example under the
+The exact generated receipt remains protected operational evidence and is valid only together with its recorded Princess commit and environment-manifest hash. Keep it outside Git (for example under the
 operator's protected evidence store), compute its SHA-256, and commit only the safe reference/digest summary in
 [T17 managed-project evidence](T17_SUPABASE_MANAGED_PROJECT_EVIDENCE.md). The receipt is intentionally redacted of
 tokens/subjects/session IDs, but still contains operational metadata such as issuer host, key IDs, token lifetime
