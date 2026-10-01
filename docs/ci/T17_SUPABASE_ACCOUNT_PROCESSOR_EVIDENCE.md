@@ -195,6 +195,16 @@ activated, T17 must capture the exact relevant selected-account Auth endpoint li
 owner and the abuse-control policy as acceptance evidence.** This requirement is task-bound; it is not deferred to
 a prospective PR number.
 
+The evidence machinery for that gate is now defined in
+[T17 Supabase Auth operational policy](T17_SUPABASE_AUTH_OPERATIONAL_POLICY.md).
+`tools/build_supabase_auth_settings_snapshot.py` accepts only protected operator-captured
+`GET /v1/projects/{ref}/config/auth` evidence plus the protected selected project ref, verifies the existing
+Princess project-ref hash, and emits a narrow Git-safe snapshot. It does not call the Management API, hold a
+Management API access token, activate application login or invent missing values from public defaults.
+
+The selected-account Auth-settings snapshot is still **PENDING** until a real owner-authorized account export is
+run through that tool. Tooling/tests alone do not close this acceptance gate.
+
 ## Cost model
 
 The source-bound account snapshot records the organization as Free. This staging decision therefore covers only
