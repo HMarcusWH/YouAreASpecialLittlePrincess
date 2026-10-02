@@ -14,14 +14,11 @@ Runtime conformance is frozen to:
 7cf6371a1daec3cfd46f4adf35d6175c57452cc0
 ```
 
-The evidence PR is based on post-#61 `main`:
+The evidence branch must be created from current `main` containing the post-#60 closeout tooling and this
+runbook. Do not pin evidence assembly to a historical main SHA.
 
-```text
-a3b40d1d935f4d8d7a48fdbd671c262a2df3ec18
-```
-
-The frozen SHA is only the runtime witness binding. Cleanup v2 and final evidence assembly must use current
-post-#60/#61 code.
+The frozen SHA above is only the runtime witness binding. Cleanup v2 and final evidence assembly must use current
+code from the evidence branch.
 
 ## Protected material
 
@@ -112,6 +109,7 @@ user/session identifiers or a hand-entered conformance receipt digest.
 Required safe facts:
 
 ```text
+checked_date:                                 YYYY-MM-DD
 operator_role:                                product/technical owner
 affected_test_population_count:               1
 all_sessions_for_test_user_revoked:           true
@@ -122,11 +120,15 @@ application_login_active:                     false
 jwt_age_out_required:                         true
 project_decommission:                         NOT_APPLICABLE
 production_activation:                        false
+protected_evidence_ref:                       operator-local:<safe-reference>
 ```
+
+`checked_date` must be the same as or later than the bound runtime-conformance receipt's `checked_date`.
+The cleanup builder rejects evidence that claims cleanup occurred before the witness.
 
 ## 4. Generate cleanup v2 on current code
 
-From the evidence branch/current post-#60 code:
+From the current evidence branch containing cleanup-v2 tooling:
 
 ```bash
 python tools/build_supabase_staging_cleanup_evidence.py \

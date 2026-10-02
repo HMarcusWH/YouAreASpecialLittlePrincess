@@ -1495,6 +1495,7 @@ No approval is created by this task brief. Mock/disabled implementation is not a
 - [docs/ci/T17_SUPABASE_RUNTIME_CONFORMANCE.md](../ci/T17_SUPABASE_RUNTIME_CONFORMANCE.md)
 - [docs/ci/T17_SUPABASE_AUTH_OPERATIONAL_POLICY.md](../ci/T17_SUPABASE_AUTH_OPERATIONAL_POLICY.md)
 - [docs/ci/T17_SUPABASE_STAGING_AUTH_CLOSEOUT.md](../ci/T17_SUPABASE_STAGING_AUTH_CLOSEOUT.md)
+- [docs/ci/T17_SUPABASE_STAGING_AUTH_OPERATOR_RUNBOOK.md](../ci/T17_SUPABASE_STAGING_AUTH_OPERATOR_RUNBOOK.md)
 
 ### Owned implementation surfaces
 
@@ -1526,6 +1527,7 @@ docs/ci/T17_SUPABASE_STAGING_CLEANUP_EVIDENCE.json
 docs/ci/T17_SUPABASE_AUTH_OPERATIONAL_POLICY.md
 docs/ci/T17_SUPABASE_AUTH_SETTINGS_SNAPSHOT.json
 docs/ci/T17_SUPABASE_RUNTIME_CONFORMANCE.md
+docs/ci/T17_SUPABASE_STAGING_AUTH_OPERATOR_RUNBOOK.md
 ```
 
 ### Coding sequence
@@ -1571,6 +1573,7 @@ PR #14 established the working deterministic Free Next.js journey and T21 export
 - Staging cleanup evidence records all sessions for the disposable conformance test user revoked and that user's Auth account deleted without provider user/session identifiers, while preserving application_login inactive, project_decommission NOT_APPLICABLE, JWT age-out required and production disabled.
 - Runtime-conformance closeout evidence is bound to the frozen post-#58 witness commit `7cf6371a1daec3cfd46f4adf35d6175c57452cc0` and the complete Git-safe conformance record validates receipt version/digest plus the recorded qualification, account, manifest, project, issuer, audience, role and source-revision anchors.
 - Disposable-provider cleanup evidence uses `supabase-staging-cleanup/2` and carries the exact runtime `conformance_receipt_sha256`; cleanup for another witness cannot be combined with the selected-account snapshot to close T17.
+- Disposable-provider cleanup evidence cannot predate the bound runtime-conformance witness; its checked_date must be the same as or later than the protected conformance receipt checked_date.
 
 ### Required failure and regression cases
 
@@ -1592,6 +1595,7 @@ PR #14 established the working deterministic Free Next.js journey and T21 export
 - Closeout claimed from a dirty/synthetic conformance run, selected-account snapshot generated before the clean conformance witness in the same worktree, cleanup claimed by editing the conformance receipt, revoking unrelated project users/sessions, project decommission falsely claimed, or any two-of-three evidence subset presented as complete.
 - Staging closeout checker that rewrites the 2026-10-01 narrow owner decision into application-login/production approval or permits the closeout while application_login owner authority is widened.
 - PASS-shaped conformance Markdown from the wrong Princess commit, missing/forged receipt digest, altered qualification/account/manifest/profile anchor, or cleanup evidence whose conformance_receipt_sha256 differs from the runtime witness.
+- Cleanup evidence with checked_date earlier than its bound runtime-conformance receipt, even when all cleanup booleans and receipt digest otherwise validate.
 
 ### Deliverables
 
