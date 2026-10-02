@@ -124,19 +124,22 @@ requires a separate least-privilege and trusted-proxy review.
 
 ## Gate interaction
 
-Two independent T17 gates remain before application-managed authentication work may activate:
+The final staging closeout is atomic across three evidence classes:
 
 ```text
 real staging runtime conformance PASS
                  AND
 selected-account Auth settings + operational policy evidence
+                 AND
+disposable provider cleanup evidence
                  |
                  v
-application-managed authentication may be implemented/activated under its own review
+application-auth implementation may proceed under a separate disabled/reviewed scope
 ```
 
-The conformance harness merged in PR #57 remains a separate live witness. This policy cannot convert its current
-PENDING evidence into PASS.
+The conformance harness merged in PR #57 remains a separate live witness, and cleanup remains a separate
+owner-authorized provider operation. This policy cannot convert either PENDING state into PASS. The existing
+2026-10-01 owner decision still does not approve application-login activation or production/live identity.
 
 ## Evidence status
 
