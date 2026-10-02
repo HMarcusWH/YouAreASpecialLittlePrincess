@@ -119,7 +119,7 @@ def _write_world(root: Path):
     )
 
     cleanup = {
-        "version": "supabase-staging-cleanup/1",
+        "version": "supabase-staging-cleanup/2",
         "provider": "supabase-auth",
         "project_alias": "princess-staging",
         "environment": "staging",
