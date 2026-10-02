@@ -161,6 +161,16 @@ def test_cleanup_requires_valid_protected_conformance_receipt(monkeypatch, recei
         )
 
 
+def test_cleanup_cannot_predate_bound_conformance(monkeypatch):
+    ref = _bind_project(monkeypatch)
+    with pytest.raises(cleanup.CleanupEvidenceError, match="cleanup_before_conformance"):
+        cleanup.build_cleanup_evidence(
+            project_ref=ref,
+            raw=_raw(checked_date="2026-10-01"),
+            conformance_receipt_bytes=_conformance_receipt_bytes(checked_date="2026-10-02"),
+        )
+
+
 def test_cleanup_requires_exact_project_binding(monkeypatch):
     _bind_project(monkeypatch)
     with pytest.raises(cleanup.CleanupEvidenceError, match="project_ref_mismatch"):

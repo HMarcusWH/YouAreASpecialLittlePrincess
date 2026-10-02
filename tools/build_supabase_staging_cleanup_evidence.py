@@ -138,7 +138,7 @@ def _validate_date(value: object) -> str:
     return value
 
 
-def _validated_conformance_receipt_sha256(receipt_bytes: bytes) -> str:
+def _validated_conformance_receipt(receipt_bytes: bytes) -> tuple[str, str]:
     try:
         receipt = json.loads(receipt_bytes)
     except (UnicodeDecodeError, ValueError):
@@ -149,7 +149,16 @@ def _validated_conformance_receipt_sha256(receipt_bytes: bytes) -> str:
         validate_conformance_receipt(receipt)
     except ConformanceError:
         raise CleanupEvidenceError("cleanup_conformance_receipt_invalid") from None
-    return hashlib.sha256(receipt_bytes).hexdigest()
+
+    checked_date = receipt.get("checked_date")
+    if not isinstance(checked_date, str):
+        raise CleanupEvidenceError("cleanup_conformance_receipt_invalid")
+    try:
+        date.fromisoformat(checked_date)
+    except ValueError:
+        raise CleanupEvidenceError("cleanup_conformance_receipt_invalid") from None
+
+    return hashlib.sha256(receipt_bytes).hexdigest(), checked_date
 
 
 def build_cleanup_evidence(
@@ -193,9 +202,11 @@ def build_cleanup_evidence(
     evidence_ref = raw.get("protected_evidence_ref")
     if not isinstance(evidence_ref, str) or not REF_RE.fullmatch(evidence_ref):
         raise CleanupEvidenceError("cleanup_protected_evidence_ref")
-    conformance_receipt_sha256 = _validated_conformance_receipt_sha256(
+    conformance_receipt_sha256, conformance_checked_date = _validated_conformance_receipt(
         conformance_receipt_bytes
     )
+    if date.fromisoformat(checked_date) < date.fromisoformat(conformance_checked_date):
+        raise CleanupEvidenceError("cleanup_before_conformance")
 
     result = {
         "version": VERSION,
