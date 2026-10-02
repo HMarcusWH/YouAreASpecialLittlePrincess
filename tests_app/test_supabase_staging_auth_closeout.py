@@ -8,6 +8,7 @@ from pathlib import Path
 import pytest
 
 import check_supabase_staging_auth_closeout as closeout
+import verify_supabase_staging_runtime as conformance
 from build_supabase_auth_settings_snapshot import SAFE_PROVIDER_FIELDS
 from princess_app.config_supabase import (
     ACCOUNT_SNAPSHOT_SHA256,
@@ -28,18 +29,16 @@ def _canonical_bytes(value):
     return json.dumps(value, sort_keys=True, separators=(",", ":")).encode()
 
 
-def _conformance_text(**overrides):
-    record = {
+def _conformance_receipt(**overrides):
+    receipt = {
+        "version": conformance.VERSION,
         "provider": "supabase-auth",
         "project_alias": "princess-staging",
-        "receipt_version": closeout.CONFORMANCE_RECEIPT_VERSION,
         "environment": "staging",
         "provider_mode": "sandbox",
         "capability": "VERIFY_CREDENTIAL",
         "checked_date": "2026-10-02",
         "princess_commit": closeout.FROZEN_CONFORMANCE_COMMIT,
-        "receipt_sha256": CONFORMANCE_RECEIPT_SHA256,
-        "protected_evidence_ref": "operator-local:runtime-conformance",
         "qualification_receipt_sha256": QUALIFICATION_RECEIPT_SHA256,
         "runtime_binding_sha256": RUNTIME_BINDING_SHA256,
         "account_snapshot_sha256": ACCOUNT_SNAPSHOT_SHA256,
@@ -49,34 +48,31 @@ def _conformance_text(**overrides):
         "audience_sha256": QUALIFIED_AUDIENCE_SHA256,
         "role_sha256": QUALIFIED_ROLE_SHA256,
         "source_revision": SOURCE_REVISION,
-        "jwks_fetch": "PASS",
-        "credential_verified": "PASS",
-        "identity_service_authenticated": "PASS",
-        "stable_principal_mapping": "PASS",
+        "jwks_fetch_observed": True,
+        "credential_verified": True,
+        "identity_service_authenticated": True,
+        "stable_principal_mapping": True,
         "principal_kind": "ACCOUNT",
-        "auth_time_present": "PASS",
-        "session_id_present": "PASS",
-        "credential_unexpired": "PASS",
-        "provider_cleanup_required": "true",
-        "provider_cleanup_performed_by_tool": "false",
-        "application_login": "false",
-        "production_activation": "false",
-        "global_gate_closure": "false",
+        "auth_time_present": True,
+        "session_id_present": True,
+        "credential_unexpired": True,
+        "provider_cleanup_required": True,
+        "provider_cleanup_performed_by_tool": False,
+        "application_login": False,
+        "production_activation": False,
+        "global_gate_closure": False,
         "result": "PASS",
     }
-    record.update(overrides)
-    lines = [
-        "# T17 Supabase staging runtime conformance",
-        "",
-        "**Status: PASS — real witness**",
-        "",
-        "## Evidence record",
-        "",
-        "```text",
-    ]
-    lines.extend(f"{key}: {value}" for key, value in record.items())
-    lines.extend(["```", ""])
-    return "\n".join(lines)
+    receipt.update(overrides)
+    return receipt
+
+
+def _conformance_text(**overrides):
+    return conformance.render_safe_index(
+        _conformance_receipt(**overrides),
+        receipt_sha256=CONFORMANCE_RECEIPT_SHA256,
+        protected_evidence_ref="operator-local:runtime-conformance",
+    )
 
 
 def _write_world(root: Path):
@@ -159,7 +155,7 @@ def _write_world(root: Path):
     return ci
 
 
-def test_closeout_requires_all_three_real_evidence_classes(tmp_path):
+def test_real_conformance_renderer_output_is_closeout_compatible(tmp_path):
     _write_world(tmp_path)
     closeout.check_closeout(tmp_path)
 
@@ -202,8 +198,10 @@ def test_conformance_must_bind_exact_frozen_commit(tmp_path):
 
 def test_conformance_must_bind_qualification_anchor(tmp_path):
     ci = _write_world(tmp_path)
-    (ci / "T17_SUPABASE_RUNTIME_CONFORMANCE.md").write_text(
-        _conformance_text(qualification_receipt_sha256="c" * 64),
+    p = ci / "T17_SUPABASE_RUNTIME_CONFORMANCE.md"
+    valid = _conformance_text()
+    p.write_text(
+        valid.replace(QUALIFICATION_RECEIPT_SHA256, "c" * 64, 1),
         encoding="utf-8",
     )
     with pytest.raises(closeout.CloseoutError, match="runtime_conformance_qualification_receipt_sha256"):

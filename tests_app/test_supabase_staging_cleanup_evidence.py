@@ -8,6 +8,7 @@ from pathlib import Path
 import pytest
 
 import build_supabase_staging_cleanup_evidence as cleanup
+import verify_supabase_staging_runtime as conformance
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -20,6 +21,46 @@ def _bind_project(monkeypatch):
     ref = "qualified-staging-ref"
     monkeypatch.setattr(cleanup, "PROJECT_REF_SHA256", _sha(ref))
     return ref
+
+
+def _conformance_receipt_bytes(**overrides) -> bytes:
+    receipt = {
+        "version": conformance.VERSION,
+        "provider": "supabase-auth",
+        "project_alias": conformance.binding_config.PROJECT_ALIAS,
+        "environment": "staging",
+        "provider_mode": "sandbox",
+        "capability": "VERIFY_CREDENTIAL",
+        "checked_date": "2026-10-02",
+        "princess_commit": "7cf6371a1daec3cfd46f4adf35d6175c57452cc0",
+        "qualification_receipt_sha256": conformance.binding_config.QUALIFICATION_RECEIPT_SHA256,
+        "runtime_binding_sha256": "b" * 64,
+        "account_snapshot_sha256": conformance.binding_config.ACCOUNT_SNAPSHOT_SHA256,
+        "qualified_environment_manifest_sha256": conformance.binding_config.QUALIFIED_ENVIRONMENT_MANIFEST_SHA256,
+        "project_ref_sha256": conformance.binding_config.PROJECT_REF_SHA256,
+        "issuer_sha256": conformance.binding_config.QUALIFIED_ISSUER_SHA256,
+        "audience_sha256": conformance.binding_config.QUALIFIED_AUDIENCE_SHA256,
+        "role_sha256": conformance.binding_config.QUALIFIED_ROLE_SHA256,
+        "source_revision": conformance.binding_config.SOURCE_REVISION,
+        "jwks_fetch_observed": True,
+        "credential_verified": True,
+        "identity_service_authenticated": True,
+        "stable_principal_mapping": True,
+        "principal_kind": "ACCOUNT",
+        "auth_time_present": True,
+        "session_id_present": True,
+        "credential_unexpired": True,
+        "provider_cleanup_required": True,
+        "provider_cleanup_performed_by_tool": False,
+        "application_login": False,
+        "production_activation": False,
+        "global_gate_closure": False,
+        "result": "PASS",
+    }
+    receipt.update(overrides)
+    return (
+        json.dumps(receipt, indent=2, sort_keys=True, ensure_ascii=False) + "\n"
+    ).encode("utf-8")
 
 
 def _raw(**overrides):
@@ -36,22 +77,32 @@ def _raw(**overrides):
         "project_decommission": "NOT_APPLICABLE",
         "production_activation": False,
         "protected_evidence_ref": "operator-local:princess-staging-cleanup-2026-10-02",
-        "conformance_receipt_sha256": "a" * 64,
     }
     value.update(overrides)
     return value
 
 
-def test_build_cleanup_evidence_is_non_identifying_and_fail_closed(monkeypatch):
+def _build(monkeypatch, **raw_overrides):
     ref = _bind_project(monkeypatch)
-    result = cleanup.build_cleanup_evidence(project_ref=ref, raw=_raw())
+    receipt_bytes = _conformance_receipt_bytes()
+    result = cleanup.build_cleanup_evidence(
+        project_ref=ref,
+        raw=_raw(**raw_overrides),
+        conformance_receipt_bytes=receipt_bytes,
+    )
+    return ref, receipt_bytes, result
+
+
+def test_build_cleanup_evidence_is_non_identifying_and_receipt_bound(monkeypatch):
+    ref, receipt_bytes, result = _build(monkeypatch)
     assert result["result"] == "PASS"
     assert result["project_ref_sha256"] == _sha(ref)
     assert result["application_login_active"] is False
     assert result["production_activation"] is False
     assert result["persistent_princess_binding_created_by_witness"] is False
     assert result["project_decommission"] == "NOT_APPLICABLE"
-    assert result["conformance_receipt_sha256"] == "a" * 64
+    assert result["affected_test_population_count"] == 1
+    assert result["conformance_receipt_sha256"] == hashlib.sha256(receipt_bytes).hexdigest()
     rendered = json.dumps(result, sort_keys=True)
     assert ref not in rendered
     assert "provider_user_id" not in result
@@ -75,23 +126,49 @@ def test_build_cleanup_evidence_is_non_identifying_and_fail_closed(monkeypatch):
 def test_cleanup_cannot_overclaim(monkeypatch, field, value, code):
     ref = _bind_project(monkeypatch)
     with pytest.raises(cleanup.CleanupEvidenceError, match=code):
-        cleanup.build_cleanup_evidence(project_ref=ref, raw=_raw(**{field: value}))
+        cleanup.build_cleanup_evidence(
+            project_ref=ref,
+            raw=_raw(**{field: value}),
+            conformance_receipt_bytes=_conformance_receipt_bytes(),
+        )
 
 
-def test_cleanup_requires_valid_conformance_receipt_hash(monkeypatch):
+def test_cleanup_rejects_manual_conformance_digest(monkeypatch):
     ref = _bind_project(monkeypatch)
-    for value in ("", "not-a-hash", "A" * 64, "a" * 63):
-        with pytest.raises(cleanup.CleanupEvidenceError, match="cleanup_conformance_receipt_sha256"):
-            cleanup.build_cleanup_evidence(
-                project_ref=ref,
-                raw=_raw(conformance_receipt_sha256=value),
-            )
+    with pytest.raises(cleanup.CleanupEvidenceError, match="cleanup_input_shape"):
+        cleanup.build_cleanup_evidence(
+            project_ref=ref,
+            raw=_raw(conformance_receipt_sha256="a" * 64),
+            conformance_receipt_bytes=_conformance_receipt_bytes(),
+        )
+
+
+@pytest.mark.parametrize(
+    "receipt_bytes",
+    [
+        b"{}",
+        _conformance_receipt_bytes(result="FAIL"),
+        _conformance_receipt_bytes(princess_commit="not-a-commit"),
+    ],
+)
+def test_cleanup_requires_valid_protected_conformance_receipt(monkeypatch, receipt_bytes):
+    ref = _bind_project(monkeypatch)
+    with pytest.raises(cleanup.CleanupEvidenceError, match="cleanup_conformance_receipt_invalid"):
+        cleanup.build_cleanup_evidence(
+            project_ref=ref,
+            raw=_raw(),
+            conformance_receipt_bytes=receipt_bytes,
+        )
 
 
 def test_cleanup_requires_exact_project_binding(monkeypatch):
     _bind_project(monkeypatch)
     with pytest.raises(cleanup.CleanupEvidenceError, match="project_ref_mismatch"):
-        cleanup.build_cleanup_evidence(project_ref="other-project", raw=_raw())
+        cleanup.build_cleanup_evidence(
+            project_ref="other-project",
+            raw=_raw(),
+            conformance_receipt_bytes=_conformance_receipt_bytes(),
+        )
 
 
 def test_cleanup_rejects_extra_identifier_fields(monkeypatch):
@@ -99,16 +176,21 @@ def test_cleanup_rejects_extra_identifier_fields(monkeypatch):
     raw = _raw()
     raw["provider_user_id"] = "11111111-1111-4111-8111-111111111111"
     with pytest.raises(cleanup.CleanupEvidenceError, match="cleanup_input_shape"):
-        cleanup.build_cleanup_evidence(project_ref=ref, raw=raw)
+        cleanup.build_cleanup_evidence(
+            project_ref=ref,
+            raw=raw,
+            conformance_receipt_bytes=_conformance_receipt_bytes(),
+        )
 
 
-@pytest.mark.parametrize("count", [0, -1, True, "1", 1001])
-def test_population_count_is_bounded_integer(monkeypatch, count):
+@pytest.mark.parametrize("count", [0, -1, True, "1", 2, 1000, 1001])
+def test_population_count_must_be_exactly_one(monkeypatch, count):
     ref = _bind_project(monkeypatch)
     with pytest.raises(cleanup.CleanupEvidenceError, match="cleanup_population_count"):
         cleanup.build_cleanup_evidence(
             project_ref=ref,
             raw=_raw(affected_test_population_count=count),
+            conformance_receipt_bytes=_conformance_receipt_bytes(),
         )
 
 

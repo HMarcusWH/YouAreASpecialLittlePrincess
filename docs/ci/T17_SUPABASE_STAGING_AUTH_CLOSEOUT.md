@@ -33,9 +33,10 @@ All three must exist and validate before the staging Auth evidence closeout is c
    - records all sessions for the disposable test user revoked, provider refresh/session state revoked and the
      disposable Auth user deleted;
    - records only aggregate/safe facts, never provider user/session identifiers;
-   - cleanup evidence schema `supabase-staging-cleanup/2` must carry the exact `conformance_receipt_sha256` from the runtime-conformance index so cleanup cannot be paired with another witness.
+   - the builder receives the protected runtime-conformance receipt directly, validates it with the runtime receipt validator and computes its SHA-256 from those exact protected bytes;
+   - cleanup evidence schema `supabase-staging-cleanup/2` carries that derived `conformance_receipt_sha256`, so the operator cannot hand-enter a matching digest and cleanup cannot be paired with another witness.
 
-`tools/check_supabase_staging_auth_closeout.py` parses the complete Git-safe conformance evidence block and fails closed unless its receipt version, frozen Princess commit, receipt/runtime-binding digests and every qualified evidence anchor match the reviewed profile. It also requires cleanup v2 to reference that exact conformance receipt SHA. All three evidence classes must validate against the same qualified staging project, and the existing owner record must still say application login is not approved by the 2026-10-01 narrow staging decision.
+`tools/check_supabase_staging_auth_closeout.py` parses the complete Git-safe conformance evidence block and fails closed unless its receipt version, frozen Princess commit, digest fields and every qualified evidence anchor match the reviewed profile. The cleanup builder independently validates and hashes the protected runtime receipt, and the checker requires that derived cleanup digest to match the safe index's `receipt_sha256`. All three evidence classes must validate against the same qualified staging project, and the existing owner record must still say application login is not approved by the 2026-10-01 narrow staging decision.
 
 ## Operational sequencing
 
@@ -54,10 +55,11 @@ clean worktree B @ 7cf6371...
     -> generated Git-safe Auth settings snapshot
 
 owner-authorized provider cleanup
-    -> revoke all sessions for the disposable test user
-    -> delete the disposable Auth user
-    -> protected cleanup attestation including the exact conformance receipt SHA
-    -> generated Git-safe cleanup evidence v2
+    -> revoke all sessions for the one disposable conformance test user
+    -> delete that disposable Auth user
+    -> protected cleanup attestation (no hand-entered receipt digest)
+    -> cleanup builder reads the protected runtime receipt directly
+    -> generated Git-safe cleanup evidence v2 with derived receipt SHA
 
 evidence branch from 7cf6371...
     -> bring in the three Git-safe evidence artifacts
@@ -73,7 +75,8 @@ recorded.
 ## Cleanup semantics
 
 "All sessions revoked" means all sessions for the **one disposable conformance test user**, not every user or
-session in the Supabase project.
+session in the Supabase project. The cleanup builder therefore requires `affected_test_population_count: 1`
+exactly; broader batch-cleanup attestations cannot satisfy this gate.
 
 The conformance harness intentionally reports:
 
@@ -92,7 +95,7 @@ application_login_active:                      false
 jwt_age_out_required:                          true
 project_decommission:                          NOT_APPLICABLE
 production_activation:                         false
-conformance_receipt_sha256:                    <exact runtime-conformance receipt SHA-256>
+conformance_receipt_sha256:                    <derived from the protected runtime-conformance receipt bytes>
 ```
 
 The isolated conformance witness uses `InMemoryIdentityStore`; it does not create a durable Princess account
@@ -123,6 +126,22 @@ If any operational witness fails:
 - do not weaken JWT/claim verification to make conformance pass;
 - do not delete unrelated provider users/sessions;
 - treat provider-schema drift, account drift or runtime failure as a finding and repair/review that condition first.
+
+## Cleanup evidence command
+
+After owner-authorized cleanup, generate the Git-safe cleanup artifact from the protected attestation **and the exact
+protected runtime-conformance receipt**:
+
+```bash
+python tools/build_supabase_staging_cleanup_evidence.py \
+  --project-ref-file /protected/princess-staging-project-ref.txt \
+  --cleanup-input-file /protected/princess-staging-cleanup.json \
+  --conformance-receipt-file /protected/supabase-staging-runtime-conformance.json \
+  --output docs/ci/T17_SUPABASE_STAGING_CLEANUP_EVIDENCE.json
+```
+
+The cleanup input JSON must not contain `conformance_receipt_sha256`; the builder derives it from the protected
+receipt after validating that receipt.
 
 ## Closeout command
 
