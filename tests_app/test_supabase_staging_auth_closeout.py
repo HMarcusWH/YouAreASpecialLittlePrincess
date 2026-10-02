@@ -9,39 +9,83 @@ import pytest
 
 import check_supabase_staging_auth_closeout as closeout
 from build_supabase_auth_settings_snapshot import SAFE_PROVIDER_FIELDS
-from princess_app.config_supabase import PROJECT_REF_SHA256
+from princess_app.config_supabase import (
+    ACCOUNT_SNAPSHOT_SHA256,
+    PROJECT_REF_SHA256,
+    QUALIFICATION_RECEIPT_SHA256,
+    QUALIFIED_AUDIENCE_SHA256,
+    QUALIFIED_ENVIRONMENT_MANIFEST_SHA256,
+    QUALIFIED_ISSUER_SHA256,
+    QUALIFIED_ROLE_SHA256,
+    SOURCE_REVISION,
+)
+
+CONFORMANCE_RECEIPT_SHA256 = "a" * 64
+RUNTIME_BINDING_SHA256 = "b" * 64
 
 
 def _canonical_bytes(value):
     return json.dumps(value, sort_keys=True, separators=(",", ":")).encode()
 
 
-def _write_world(root: Path):
-    ci = root / "docs" / "ci"
-    ci.mkdir(parents=True)
-
-    conformance = "\n".join([
+def _conformance_text(**overrides):
+    record = {
+        "provider": "supabase-auth",
+        "project_alias": "princess-staging",
+        "receipt_version": closeout.CONFORMANCE_RECEIPT_VERSION,
+        "environment": "staging",
+        "provider_mode": "sandbox",
+        "capability": "VERIFY_CREDENTIAL",
+        "checked_date": "2026-10-02",
+        "princess_commit": closeout.FROZEN_CONFORMANCE_COMMIT,
+        "receipt_sha256": CONFORMANCE_RECEIPT_SHA256,
+        "protected_evidence_ref": "operator-local:runtime-conformance",
+        "qualification_receipt_sha256": QUALIFICATION_RECEIPT_SHA256,
+        "runtime_binding_sha256": RUNTIME_BINDING_SHA256,
+        "account_snapshot_sha256": ACCOUNT_SNAPSHOT_SHA256,
+        "qualified_environment_manifest_sha256": QUALIFIED_ENVIRONMENT_MANIFEST_SHA256,
+        "project_ref_sha256": PROJECT_REF_SHA256,
+        "issuer_sha256": QUALIFIED_ISSUER_SHA256,
+        "audience_sha256": QUALIFIED_AUDIENCE_SHA256,
+        "role_sha256": QUALIFIED_ROLE_SHA256,
+        "source_revision": SOURCE_REVISION,
+        "jwks_fetch": "PASS",
+        "credential_verified": "PASS",
+        "identity_service_authenticated": "PASS",
+        "stable_principal_mapping": "PASS",
+        "principal_kind": "ACCOUNT",
+        "auth_time_present": "PASS",
+        "session_id_present": "PASS",
+        "credential_unexpired": "PASS",
+        "provider_cleanup_required": "true",
+        "provider_cleanup_performed_by_tool": "false",
+        "application_login": "false",
+        "production_activation": "false",
+        "global_gate_closure": "false",
+        "result": "PASS",
+    }
+    record.update(overrides)
+    lines = [
         "# T17 Supabase staging runtime conformance",
         "",
         "**Status: PASS — real witness**",
         "",
-        f"project_ref_sha256:                    {PROJECT_REF_SHA256}",
-        "jwks_fetch:                            PASS",
-        "credential_verified:                   PASS",
-        "identity_service_authenticated:        PASS",
-        "stable_principal_mapping:              PASS",
-        "principal_kind:                        ACCOUNT",
-        "auth_time_present:                     PASS",
-        "session_id_present:                    PASS",
-        "credential_unexpired:                  PASS",
-        "provider_cleanup_performed_by_tool:    false",
-        "application_login:                     false",
-        "production_activation:                 false",
-        "global_gate_closure:                   false",
-        "result:                                PASS",
+        "## Evidence record",
         "",
-    ])
-    (ci / "T17_SUPABASE_RUNTIME_CONFORMANCE.md").write_text(conformance, encoding="utf-8")
+        "```text",
+    ]
+    lines.extend(f"{key}: {value}" for key, value in record.items())
+    lines.extend(["```", ""])
+    return "\n".join(lines)
+
+
+def _write_world(root: Path):
+    ci = root / "docs" / "ci"
+    ci.mkdir(parents=True)
+
+    (ci / "T17_SUPABASE_RUNTIME_CONFORMANCE.md").write_text(
+        _conformance_text(), encoding="utf-8"
+    )
 
     projection = {
         "rate_limit_anonymous_users": 30,
@@ -96,6 +140,7 @@ def _write_world(root: Path):
         "contains_session_ids": False,
         "contains_secrets": False,
         "protected_evidence_ref": "operator-local:cleanup",
+        "conformance_receipt_sha256": CONFORMANCE_RECEIPT_SHA256,
         "result": "PASS",
     }
     (ci / "T17_SUPABASE_STAGING_CLEANUP_EVIDENCE.json").write_text(
@@ -142,6 +187,36 @@ def test_pending_conformance_cannot_close_gate(tmp_path):
         encoding="utf-8",
     )
     with pytest.raises(closeout.CloseoutError, match="runtime_conformance_not_pass"):
+        closeout.check_closeout(tmp_path)
+
+
+def test_conformance_must_bind_exact_frozen_commit(tmp_path):
+    ci = _write_world(tmp_path)
+    (ci / "T17_SUPABASE_RUNTIME_CONFORMANCE.md").write_text(
+        _conformance_text(princess_commit="f" * 40),
+        encoding="utf-8",
+    )
+    with pytest.raises(closeout.CloseoutError, match="runtime_conformance_commit_binding"):
+        closeout.check_closeout(tmp_path)
+
+
+def test_conformance_must_bind_qualification_anchor(tmp_path):
+    ci = _write_world(tmp_path)
+    (ci / "T17_SUPABASE_RUNTIME_CONFORMANCE.md").write_text(
+        _conformance_text(qualification_receipt_sha256="c" * 64),
+        encoding="utf-8",
+    )
+    with pytest.raises(closeout.CloseoutError, match="runtime_conformance_qualification_receipt_sha256"):
+        closeout.check_closeout(tmp_path)
+
+
+def test_cleanup_must_bind_same_conformance_receipt(tmp_path):
+    ci = _write_world(tmp_path)
+    p = ci / "T17_SUPABASE_STAGING_CLEANUP_EVIDENCE.json"
+    data = json.loads(p.read_text())
+    data["conformance_receipt_sha256"] = "c" * 64
+    p.write_text(json.dumps(data), encoding="utf-8")
+    with pytest.raises(closeout.CloseoutError, match="cleanup_conformance_receipt_mismatch"):
         closeout.check_closeout(tmp_path)
 
 
