@@ -36,7 +36,7 @@ def _conformance_receipt(**overrides):
         "project_alias": "princess-staging",
         "environment": "staging",
         "provider_mode": "sandbox",
-        "capability": "VERIFY_CREDENTIAL",
+        "capability": conformance.identity_port.VERIFY_CREDENTIAL,
         "checked_date": "2026-10-02",
         "princess_commit": closeout.FROZEN_CONFORMANCE_COMMIT,
         "qualification_receipt_sha256": QUALIFICATION_RECEIPT_SHA256,

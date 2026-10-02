@@ -31,6 +31,7 @@ from princess_app.config_supabase import (  # noqa: E402
     QUALIFIED_ROLE_SHA256,
     SOURCE_REVISION,
 )
+from princess_app.ports import identity as identity_port  # noqa: E402
 from build_supabase_auth_settings_snapshot import (  # noqa: E402
     validate_snapshot as validate_auth_snapshot,
 )
@@ -146,7 +147,7 @@ def _validate_conformance(path: Path) -> dict[str, str]:
         "receipt_version": CONFORMANCE_RECEIPT_VERSION,
         "environment": "staging",
         "provider_mode": "sandbox",
-        "capability": "VERIFY_CREDENTIAL",
+        "capability": identity_port.VERIFY_CREDENTIAL,
         "princess_commit": FROZEN_CONFORMANCE_COMMIT,
         "qualification_receipt_sha256": QUALIFICATION_RECEIPT_SHA256,
         "account_snapshot_sha256": ACCOUNT_SNAPSHOT_SHA256,
