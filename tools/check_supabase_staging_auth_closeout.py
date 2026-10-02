@@ -112,7 +112,7 @@ def _parse_conformance_record(text: str) -> dict[str, str]:
         line = raw_line.strip()
         if not line:
             continue
-        item = re.fullmatch(r"([a-z_]+):\s+(.+)", line)
+        item = re.fullmatch(r"([a-z0-9_]+):\s+(.+)", line)
         if item is None:
             raise CloseoutError("runtime_conformance_record_shape")
         key, value = item.group(1), item.group(2).strip()
