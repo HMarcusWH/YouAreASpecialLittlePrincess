@@ -5,11 +5,15 @@
 This document defines the final staging Auth evidence closeout sequence. It does not create a PASS and does not
 authorize application-managed login or production/live identity.
 
-The closeout target is the merged post-#58 baseline:
+The **runtime conformance witness** is frozen to the merged post-#58 baseline:
 
 ```text
 7cf6371a1daec3cfd46f4adf35d6175c57452cc0
 ```
+
+That frozen SHA is a witness binding, not the base for the evidence PR. Git-safe evidence assembly must happen on a
+branch from current `main` that already contains the post-#59/#60 closeout hardening. Do not rewind the evidence
+branch to the frozen witness commit.
 
 ## Required evidence classes
 
@@ -58,19 +62,21 @@ owner-authorized provider cleanup
     -> revoke all sessions for the one disposable conformance test user
     -> delete that disposable Auth user
     -> protected cleanup attestation (no hand-entered receipt digest)
-    -> cleanup builder reads the protected runtime receipt directly
-    -> generated Git-safe cleanup evidence v2 with derived receipt SHA
 
-evidence branch from 7cf6371...
-    -> bring in the three Git-safe evidence artifacts
+post-#60 evidence branch from current main
+    -> run the v2 cleanup builder with the protected runtime receipt
+    -> generated Git-safe cleanup evidence v2 with derived receipt SHA
+    -> bring in the runtime PASS index and Auth-settings snapshot from the protected witness worktrees
     -> run closeout checker
     -> reconcile T17/task/provider docs
     -> regenerate backlog from tasks.json
 ```
 
-Using two clean worktrees avoids the common failure where generating
+Using two clean witness worktrees avoids the common failure where generating
 `T17_SUPABASE_AUTH_SETTINGS_SNAPSHOT.json` makes the conformance checkout dirty before its commit witness is
-recorded.
+recorded. The v2 cleanup builder must run from post-#60 code because that builder validates the protected
+conformance receipt and derives `conformance_receipt_sha256`; the frozen witness checkout is not the evidence
+assembly branch.
 
 ## Cleanup semantics
 
@@ -145,7 +151,7 @@ receipt after validating that receipt.
 
 ## Closeout command
 
-After all three real Git-safe artifacts have been added to an evidence branch:
+After all three real Git-safe artifacts have been added to the current-main evidence branch:
 
 ```bash
 python tools/check_supabase_staging_auth_closeout.py
