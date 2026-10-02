@@ -29,13 +29,19 @@ from princess_app.config_supabase import (  # noqa: E402
     PROVIDER,
     PROVIDER_MODE,
 )
+from verify_supabase_staging_runtime import (  # noqa: E402
+    ConformanceError,
+    validate_conformance_receipt,
+)
 
-VERSION = "supabase-staging-cleanup/1"
+VERSION = "supabase-staging-cleanup/2"
 OUTPUT_PATH = ROOT / "docs" / "ci" / "T17_SUPABASE_STAGING_CLEANUP_EVIDENCE.json"
 MAX_INPUT_BYTES = 64 * 1024
 MAX_PROJECT_REF_BYTES = 1024
+MAX_CONFORMANCE_RECEIPT_BYTES = 64 * 1024
 DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 REF_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$")
+HEX64_RE = re.compile(r"^[0-9a-f]{64}$")
 
 _ALLOWED_INPUT_KEYS = frozenset({
     "checked_date",
@@ -87,7 +93,7 @@ def _canonical_output(path: Path) -> Path:
     return resolved
 
 
-def _read_text(path: Path, *, name: str, max_bytes: int) -> str:
+def _read_bytes(path: Path, *, name: str, max_bytes: int) -> bytes:
     try:
         size = path.stat().st_size
         if size <= 0 or size > max_bytes:
@@ -95,6 +101,13 @@ def _read_text(path: Path, *, name: str, max_bytes: int) -> str:
         raw = path.read_bytes()
     except OSError:
         raise CleanupEvidenceError(f"{name}_unreadable") from None
+    if not raw or len(raw) > max_bytes:
+        raise CleanupEvidenceError(f"{name}_size")
+    return raw
+
+
+def _read_text(path: Path, *, name: str, max_bytes: int) -> str:
+    raw = _read_bytes(path, name=name, max_bytes=max_bytes)
     try:
         value = raw.decode("utf-8").strip()
     except UnicodeDecodeError:
@@ -125,7 +138,26 @@ def _validate_date(value: object) -> str:
     return value
 
 
-def build_cleanup_evidence(*, project_ref: str, raw: Mapping[str, Any]) -> dict[str, Any]:
+def _validated_conformance_receipt_sha256(receipt_bytes: bytes) -> str:
+    try:
+        receipt = json.loads(receipt_bytes)
+    except (UnicodeDecodeError, ValueError):
+        raise CleanupEvidenceError("cleanup_conformance_receipt_invalid") from None
+    if not isinstance(receipt, dict):
+        raise CleanupEvidenceError("cleanup_conformance_receipt_invalid")
+    try:
+        validate_conformance_receipt(receipt)
+    except ConformanceError:
+        raise CleanupEvidenceError("cleanup_conformance_receipt_invalid") from None
+    return hashlib.sha256(receipt_bytes).hexdigest()
+
+
+def build_cleanup_evidence(
+    *,
+    project_ref: str,
+    raw: Mapping[str, Any],
+    conformance_receipt_bytes: bytes,
+) -> dict[str, Any]:
     if _sha256_text(project_ref) != PROJECT_REF_SHA256:
         raise CleanupEvidenceError("project_ref_mismatch")
     if not isinstance(raw, Mapping) or set(raw) != set(_ALLOWED_INPUT_KEYS):
@@ -135,7 +167,7 @@ def build_cleanup_evidence(*, project_ref: str, raw: Mapping[str, Any]) -> dict[
     if raw.get("operator_role") != "product/technical owner":
         raise CleanupEvidenceError("cleanup_operator_role")
     count = raw.get("affected_test_population_count")
-    if type(count) is not int or not (1 <= count <= 1000):
+    if type(count) is not int or count != 1:
         raise CleanupEvidenceError("cleanup_population_count")
 
     for key in (
@@ -161,6 +193,9 @@ def build_cleanup_evidence(*, project_ref: str, raw: Mapping[str, Any]) -> dict[
     evidence_ref = raw.get("protected_evidence_ref")
     if not isinstance(evidence_ref, str) or not REF_RE.fullmatch(evidence_ref):
         raise CleanupEvidenceError("cleanup_protected_evidence_ref")
+    conformance_receipt_sha256 = _validated_conformance_receipt_sha256(
+        conformance_receipt_bytes
+    )
 
     result = {
         "version": VERSION,
@@ -184,6 +219,7 @@ def build_cleanup_evidence(*, project_ref: str, raw: Mapping[str, Any]) -> dict[
         "contains_session_ids": False,
         "contains_secrets": False,
         "protected_evidence_ref": evidence_ref,
+        "conformance_receipt_sha256": conformance_receipt_sha256,
         "result": "PASS",
     }
     validate_cleanup_evidence(result)
@@ -213,6 +249,7 @@ def validate_cleanup_evidence(value: Mapping[str, Any]) -> None:
         "contains_session_ids",
         "contains_secrets",
         "protected_evidence_ref",
+        "conformance_receipt_sha256",
         "result",
     }
     if not isinstance(value, Mapping) or set(value) != expected_keys:
@@ -243,27 +280,43 @@ def validate_cleanup_evidence(value: Mapping[str, Any]) -> None:
             raise CleanupEvidenceError(f"cleanup_evidence_{key}")
     _validate_date(value.get("checked_date"))
     count = value.get("affected_test_population_count")
-    if type(count) is not int or not (1 <= count <= 1000):
+    if type(count) is not int or count != 1:
         raise CleanupEvidenceError("cleanup_evidence_population_count")
     ref = value.get("protected_evidence_ref")
     if not isinstance(ref, str) or not REF_RE.fullmatch(ref):
         raise CleanupEvidenceError("cleanup_evidence_protected_evidence_ref")
+    conformance_receipt_sha256 = value.get("conformance_receipt_sha256")
+    if not isinstance(conformance_receipt_sha256, str) or not HEX64_RE.fullmatch(conformance_receipt_sha256):
+        raise CleanupEvidenceError("cleanup_evidence_conformance_receipt_sha256")
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--project-ref-file", type=Path, required=True)
     parser.add_argument("--cleanup-input-file", type=Path, required=True)
+    parser.add_argument("--conformance-receipt-file", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args(argv)
 
     try:
         project_path = _protected_input(args.project_ref_file, "project_ref")
         cleanup_path = _protected_input(args.cleanup_input_file, "cleanup_input")
+        conformance_path = _protected_input(
+            args.conformance_receipt_file, "conformance_receipt"
+        )
         output_path = _canonical_output(args.output)
         project_ref = _read_text(project_path, name="project_ref", max_bytes=MAX_PROJECT_REF_BYTES)
         raw = _load_json(cleanup_path, "cleanup_input")
-        result = build_cleanup_evidence(project_ref=project_ref, raw=raw)
+        conformance_receipt_bytes = _read_bytes(
+            conformance_path,
+            name="conformance_receipt",
+            max_bytes=MAX_CONFORMANCE_RECEIPT_BYTES,
+        )
+        result = build_cleanup_evidence(
+            project_ref=project_ref,
+            raw=raw,
+            conformance_receipt_bytes=conformance_receipt_bytes,
+        )
         output_path.write_text(
             json.dumps(result, indent=2, sort_keys=True, ensure_ascii=False) + "\n",
             encoding="utf-8",
