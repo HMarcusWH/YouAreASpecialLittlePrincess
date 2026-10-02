@@ -36,6 +36,7 @@ MAX_INPUT_BYTES = 64 * 1024
 MAX_PROJECT_REF_BYTES = 1024
 DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 REF_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$")
+HEX64_RE = re.compile(r"^[0-9a-f]{64}$")
 
 _ALLOWED_INPUT_KEYS = frozenset({
     "checked_date",
@@ -50,6 +51,7 @@ _ALLOWED_INPUT_KEYS = frozenset({
     "project_decommission",
     "production_activation",
     "protected_evidence_ref",
+    "conformance_receipt_sha256",
 })
 
 
@@ -161,6 +163,9 @@ def build_cleanup_evidence(*, project_ref: str, raw: Mapping[str, Any]) -> dict[
     evidence_ref = raw.get("protected_evidence_ref")
     if not isinstance(evidence_ref, str) or not REF_RE.fullmatch(evidence_ref):
         raise CleanupEvidenceError("cleanup_protected_evidence_ref")
+    conformance_receipt_sha256 = raw.get("conformance_receipt_sha256")
+    if not isinstance(conformance_receipt_sha256, str) or not HEX64_RE.fullmatch(conformance_receipt_sha256):
+        raise CleanupEvidenceError("cleanup_conformance_receipt_sha256")
 
     result = {
         "version": VERSION,
@@ -184,6 +189,7 @@ def build_cleanup_evidence(*, project_ref: str, raw: Mapping[str, Any]) -> dict[
         "contains_session_ids": False,
         "contains_secrets": False,
         "protected_evidence_ref": evidence_ref,
+        "conformance_receipt_sha256": conformance_receipt_sha256,
         "result": "PASS",
     }
     validate_cleanup_evidence(result)
@@ -213,6 +219,7 @@ def validate_cleanup_evidence(value: Mapping[str, Any]) -> None:
         "contains_session_ids",
         "contains_secrets",
         "protected_evidence_ref",
+        "conformance_receipt_sha256",
         "result",
     }
     if not isinstance(value, Mapping) or set(value) != expected_keys:
@@ -248,6 +255,9 @@ def validate_cleanup_evidence(value: Mapping[str, Any]) -> None:
     ref = value.get("protected_evidence_ref")
     if not isinstance(ref, str) or not REF_RE.fullmatch(ref):
         raise CleanupEvidenceError("cleanup_evidence_protected_evidence_ref")
+    conformance_receipt_sha256 = value.get("conformance_receipt_sha256")
+    if not isinstance(conformance_receipt_sha256, str) or not HEX64_RE.fullmatch(conformance_receipt_sha256):
+        raise CleanupEvidenceError("cleanup_evidence_conformance_receipt_sha256")
 
 
 def main(argv: list[str] | None = None) -> int:
