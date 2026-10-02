@@ -33,13 +33,15 @@ from princess_app.config_supabase import (  # noqa: E402
     PROVIDER_MODE,
 )
 
-SNAPSHOT_VERSION = "supabase-auth-settings/1"
+SNAPSHOT_VERSION = "supabase-auth-settings/2"
 SOURCE_KIND = "SUPABASE_MANAGEMENT_API"
 SOURCE_ACTION = "GET /v1/projects/{ref}/config/auth"
 OUTPUT_PATH = ROOT / "docs" / "ci" / "T17_SUPABASE_AUTH_SETTINGS_SNAPSHOT.json"
 MAX_AUTH_CONFIG_BYTES = 1024 * 1024
 MAX_PROJECT_REF_BYTES = 1024
 DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+REF_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$")
+HEX64_RE = re.compile(r"^[0-9a-f]{64}$")
 
 RATE_LIMIT_FIELDS = (
     "rate_limit_anonymous_users",
@@ -124,7 +126,7 @@ def _read_project_ref(path: Path) -> str:
     return value
 
 
-def _load_auth_config(path: Path) -> dict[str, Any]:
+def _load_auth_config(path: Path) -> tuple[dict[str, Any], bytes]:
     raw = _read_bytes(path, name="auth_config", max_bytes=MAX_AUTH_CONFIG_BYTES)
     try:
         value = json.loads(raw)
@@ -132,7 +134,7 @@ def _load_auth_config(path: Path) -> dict[str, Any]:
         raise AuthSettingsError("auth_config_unreadable") from None
     if not isinstance(value, dict):
         raise AuthSettingsError("auth_config_unreadable")
-    return value
+    return value, raw
 
 
 def _strict_nonnegative_int(raw: Mapping[str, Any], field: str) -> int:
@@ -153,7 +155,9 @@ def build_snapshot(
     *,
     project_ref: str,
     auth_config: Mapping[str, Any],
+    source_response_bytes: bytes,
     captured_date: str,
+    protected_evidence_ref: str,
 ) -> dict[str, Any]:
     if not isinstance(project_ref, str) or not project_ref:
         raise AuthSettingsError("project_ref_unreadable")
@@ -167,6 +171,27 @@ def build_snapshot(
         date.fromisoformat(captured_date)
     except ValueError:
         raise AuthSettingsError("captured_date_invalid") from None
+
+    if not isinstance(source_response_bytes, bytes) or not source_response_bytes:
+        raise AuthSettingsError("auth_config_source_response")
+    if len(source_response_bytes) > MAX_AUTH_CONFIG_BYTES:
+        raise AuthSettingsError("auth_config_source_response")
+    try:
+        source_value = json.loads(source_response_bytes)
+    except (UnicodeDecodeError, ValueError):
+        raise AuthSettingsError("auth_config_source_response") from None
+    if not isinstance(source_value, dict) or source_value != dict(auth_config):
+        raise AuthSettingsError("auth_config_source_mismatch")
+    if not isinstance(protected_evidence_ref, str) or not REF_RE.fullmatch(protected_evidence_ref):
+        raise AuthSettingsError("auth_config_protected_evidence_ref")
+
+    source_response_sha256 = _sha256_bytes(source_response_bytes)
+    source_response_sha256 = snapshot.get("source_response_sha256")
+    if not isinstance(source_response_sha256, str) or not HEX64_RE.fullmatch(source_response_sha256):
+        raise AuthSettingsError("auth_settings_snapshot_source_response_sha256")
+    protected_evidence_ref = snapshot.get("protected_evidence_ref")
+    if not isinstance(protected_evidence_ref, str) or not REF_RE.fullmatch(protected_evidence_ref):
+        raise AuthSettingsError("auth_settings_snapshot_protected_evidence_ref")
 
     provider_projection: dict[str, Any] = {}
     for field in RATE_LIMIT_FIELDS:
@@ -185,6 +210,8 @@ def build_snapshot(
         "source_kind": SOURCE_KIND,
         "source_action": SOURCE_ACTION,
         "project_ref_sha256": PROJECT_REF_SHA256,
+        "source_response_sha256": source_response_sha256,
+        "protected_evidence_ref": protected_evidence_ref,
         "safe_projection_sha256": projection_hash,
         **provider_projection,
         "contains_secrets": False,
@@ -206,6 +233,8 @@ def validate_snapshot(snapshot: Mapping[str, Any]) -> None:
         "source_kind",
         "source_action",
         "project_ref_sha256",
+        "source_response_sha256",
+        "protected_evidence_ref",
         "safe_projection_sha256",
         *SAFE_PROVIDER_FIELDS,
         "contains_secrets",
@@ -256,6 +285,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--project-ref-file", type=Path, required=True)
     parser.add_argument("--auth-config-file", type=Path, required=True)
     parser.add_argument("--captured-date", required=True)
+    parser.add_argument("--protected-evidence-ref", required=True)
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args(argv)
 
@@ -264,11 +294,13 @@ def main(argv: list[str] | None = None) -> int:
         auth_config_path = _protected_input(args.auth_config_file, "auth_config")
         output_path = _canonical_output(args.output)
         project_ref = _read_project_ref(project_ref_path)
-        auth_config = _load_auth_config(auth_config_path)
+        auth_config, auth_config_bytes = _load_auth_config(auth_config_path)
         snapshot = build_snapshot(
             project_ref=project_ref,
             auth_config=auth_config,
+            source_response_bytes=auth_config_bytes,
             captured_date=args.captured_date,
+            protected_evidence_ref=args.protected_evidence_ref,
         )
         output_path.write_text(
             json.dumps(snapshot, indent=2, sort_keys=True, ensure_ascii=False) + "\n",
