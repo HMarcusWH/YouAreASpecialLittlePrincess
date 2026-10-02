@@ -36,6 +36,7 @@ def _raw(**overrides):
         "project_decommission": "NOT_APPLICABLE",
         "production_activation": False,
         "protected_evidence_ref": "operator-local:princess-staging-cleanup-2026-10-02",
+        "conformance_receipt_sha256": "a" * 64,
     }
     value.update(overrides)
     return value
@@ -50,6 +51,7 @@ def test_build_cleanup_evidence_is_non_identifying_and_fail_closed(monkeypatch):
     assert result["production_activation"] is False
     assert result["persistent_princess_binding_created_by_witness"] is False
     assert result["project_decommission"] == "NOT_APPLICABLE"
+    assert result["conformance_receipt_sha256"] == "a" * 64
     rendered = json.dumps(result, sort_keys=True)
     assert ref not in rendered
     assert "provider_user_id" not in result
@@ -74,6 +76,16 @@ def test_cleanup_cannot_overclaim(monkeypatch, field, value, code):
     ref = _bind_project(monkeypatch)
     with pytest.raises(cleanup.CleanupEvidenceError, match=code):
         cleanup.build_cleanup_evidence(project_ref=ref, raw=_raw(**{field: value}))
+
+
+def test_cleanup_requires_valid_conformance_receipt_hash(monkeypatch):
+    ref = _bind_project(monkeypatch)
+    for value in ("", "not-a-hash", "A" * 64, "a" * 63):
+        with pytest.raises(cleanup.CleanupEvidenceError, match="cleanup_conformance_receipt_sha256"):
+            cleanup.build_cleanup_evidence(
+                project_ref=ref,
+                raw=_raw(conformance_receipt_sha256=value),
+            )
 
 
 def test_cleanup_requires_exact_project_binding(monkeypatch):
