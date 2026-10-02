@@ -1350,6 +1350,7 @@ No approval is created by this task brief. Mock/disabled implementation is not a
 - [docs/roadmap/03-premium-openai.md](03-premium-openai.md)
 - [docs/roadmap/08-premium-question-selector-database.md](08-premium-question-selector-database.md)
 - [docs/connectors/premium-model.md](../connectors/premium-model.md)
+- [supabase/README.md](../../supabase/README.md)
 - [docs/roadmap/14-payments-entitlements-and-commerce.md](14-payments-entitlements-and-commerce.md)
 - [docs/connectors/object-storage.md](../connectors/object-storage.md)
 
@@ -2090,6 +2091,7 @@ migrations/
 apps/api/princess_api/ops.py
 src/princess_app/application/operations.py
 src/princess_app/adapters/postgres/operations.py
+supabase/
 ```
 
 ### Coding sequence

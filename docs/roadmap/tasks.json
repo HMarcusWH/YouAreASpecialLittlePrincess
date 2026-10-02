@@ -1845,7 +1845,8 @@
         "docs/connectors/telemetry.md",
         "docs/connectors/analytics.md",
         "docs/connectors/object-storage.md",
-        "docs/connectors/premium-model.md"
+        "docs/connectors/premium-model.md",
+        "supabase/README.md"
       ],
       "owned_paths": [
         "infra/",
@@ -1858,7 +1859,8 @@
         "migrations/",
         "apps/api/princess_api/ops.py",
         "src/princess_app/application/operations.py",
-        "src/princess_app/adapters/postgres/operations.py"
+        "src/princess_app/adapters/postgres/operations.py",
+        "supabase/"
       ],
       "coding_steps": [
         "Deploy staging and approved production topology with narrow worker roles, migrations, private storage, secret rotation and independent capability kill switches.",
