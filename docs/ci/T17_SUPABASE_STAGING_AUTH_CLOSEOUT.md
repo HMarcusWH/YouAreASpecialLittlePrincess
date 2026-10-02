@@ -3,7 +3,8 @@
 **Status: CLOSEOUT CONTROLS READY — live conformance, selected-account Auth snapshot and cleanup evidence remain PENDING.**
 
 This document defines the final staging Auth evidence closeout sequence. It does not create a PASS and does not
-authorize application-managed login or production/live identity.
+authorize application-managed login or production/live identity. The step-by-step protected operator handoff is in
+[T17 Supabase staging Auth operator runbook](T17_SUPABASE_STAGING_AUTH_OPERATOR_RUNBOOK.md).
 
 The **runtime conformance witness** is frozen to the merged post-#58 baseline:
 

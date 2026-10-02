@@ -41,9 +41,11 @@ a publishable/anon key, a secret/service-role key, a password or a refresh token
 
 ## Operator command
 
-Run the command from the repository root on a clean checkout. All protected paths must be absolute and resolve
-outside the Git checkout. The raw issuer is read from a protected file so it cannot leak through shell
-history/process arguments.
+Run the command from the repository root on a clean checkout at
+`7cf6371a1daec3cfd46f4adf35d6175c57452cc0`, the frozen witness revision required by the closeout checker. All
+protected paths must be absolute and resolve outside the Git checkout. The raw issuer is read from a protected file
+so it cannot leak through shell history/process arguments. The complete three-class procedure is documented in
+[T17 Supabase staging Auth operator runbook](T17_SUPABASE_STAGING_AUTH_OPERATOR_RUNBOOK.md).
 
 ```bash
 PRINCESS_SUPABASE_STAGING_CONFORMANCE=1 \
