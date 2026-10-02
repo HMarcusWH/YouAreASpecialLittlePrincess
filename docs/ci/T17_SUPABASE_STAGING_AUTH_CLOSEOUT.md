@@ -34,6 +34,9 @@ All three must exist and validate before the staging Auth evidence closeout is c
    - schema `supabase-auth-settings/2` binds the safe projection to the SHA-256 of the exact protected response
      bytes plus an opaque protected-evidence reference;
    - the builder derives that source-response digest; the operator cannot hand-enter it;
+   - the Git-safe validator checks digest shape and snapshot consistency but cannot reconstruct protected source
+     provenance; retained protected response bytes are the material from which an operator/reviewer can recompute the
+     digest independently;
    - public defaults do not satisfy this evidence.
 
 3. **Disposable provider cleanup**
@@ -44,9 +47,10 @@ All three must exist and validate before the staging Auth evidence closeout is c
    - the builder receives the protected runtime-conformance receipt directly, validates it with the runtime receipt validator and computes its SHA-256 from those exact protected bytes;
    - cleanup evidence schema `supabase-staging-cleanup/2` carries that derived `conformance_receipt_sha256`, so the operator cannot hand-enter a matching digest and cleanup cannot be paired with another witness.
 
-`tools/check_supabase_staging_auth_closeout.py` parses the complete Git-safe conformance evidence block and fails closed unless its receipt version, frozen Princess commit, digest fields and every qualified evidence anchor match the reviewed profile. The cleanup builder independently validates and hashes the protected runtime receipt, and the checker requires that derived cleanup digest to match the safe index's `receipt_sha256`. All three evidence classes must validate against the same qualified staging project. The final checker also requires
-`conformance.checked_date <= auth_settings.captured_date <= cleanup.checked_date`, and the existing owner record
-must still say application login is not approved by the 2026-10-01 narrow staging decision.
+`tools/check_supabase_staging_auth_closeout.py` parses the complete Git-safe conformance evidence block and fails closed unless its receipt version, frozen Princess commit, digest fields and every qualified evidence anchor match the reviewed profile. The cleanup builder independently validates and hashes the protected runtime receipt, and the checker requires that derived cleanup digest to match the safe index's `receipt_sha256`. All three evidence classes must validate against the same qualified staging project. The final checker also requires day-level date ordering
+`conformance.checked_date <= auth_settings.captured_date <= cleanup.checked_date`; this prevents one evidence
+class from predating its predecessor but does not prove within-day event ordering. The existing owner record must
+still say application login is not approved by the 2026-10-01 narrow staging decision.
 
 ## Operational sequencing
 
@@ -60,29 +64,33 @@ clean worktree A @ 7cf6371...
     -> real runtime conformance
     -> protected receipt + generated Git-safe PASS index
 
-clean worktree B @ 7cf6371...
-    -> protected /config/auth capture
-    -> generated Git-safe Auth settings snapshot
+protected operator capture
+    -> capture the selected staging project's raw /config/auth response
+    -> retain raw project ref + exact response bytes outside Git
+
+current-main / evidence branch
+    -> run the supabase-auth-settings/2 builder against those protected source bytes
+    -> generated Git-safe Auth settings snapshot with derived source_response_sha256
 
 owner-authorized provider cleanup
     -> revoke all sessions for the one disposable conformance test user
+    -> revoke provider refresh/session state for that user
     -> delete that disposable Auth user
     -> protected cleanup attestation (no hand-entered receipt digest)
 
-post-#60 evidence branch from current main
-    -> run the v2 cleanup builder with the protected runtime receipt
+current-main / evidence branch
+    -> run cleanup v2 with the protected runtime receipt
     -> generated Git-safe cleanup evidence v2 with derived receipt SHA
-    -> bring in the runtime PASS index and Auth-settings snapshot from the protected witness worktrees
+    -> bring in the runtime PASS index from the frozen witness checkout
     -> run closeout checker
     -> reconcile T17/task/provider docs
     -> regenerate backlog from tasks.json
 ```
 
-Using two clean witness worktrees avoids the common failure where generating
-`T17_SUPABASE_AUTH_SETTINGS_SNAPSHOT.json` makes the conformance checkout dirty before its commit witness is
-recorded. The v2 cleanup builder must run from post-#60 code because that builder validates the protected
-conformance receipt and derives `conformance_receipt_sha256`; the frozen witness checkout is not the evidence
-assembly branch.
+Only the runtime conformance witness is pinned to the frozen checkout. Auth-settings v2, cleanup v2 and final
+evidence assembly must run from current code because those schemas and validators were added after the frozen
+witness revision. Keep the frozen runtime worktree clean; do not attempt to generate the v2 Auth-settings snapshot
+there.
 
 ## Cleanup semantics
 

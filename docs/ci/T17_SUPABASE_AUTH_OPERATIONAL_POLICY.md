@@ -41,7 +41,9 @@ The generated `supabase-auth-settings/2` snapshot is Git-safe only because it al
 fields, hashes the raw project reference before comparison with the already-qualified Princess staging project
 binding, hashes the exact protected Management API response bytes into `source_response_sha256`, and records only
 an opaque `protected_evidence_ref`. The source-response digest is derived by the builder and is never supplied by
-the operator.
+the operator. The Git-safe validator can verify digest shape and snapshot consistency, but it cannot re-read the
+protected response; retain those exact protected bytes so an operator/reviewer can independently recompute and
+compare the digest when provenance needs to be checked.
 
 ## Required selected-account fields
 
@@ -145,10 +147,11 @@ application-auth implementation may proceed under a separate disabled/reviewed s
 ```
 
 The conformance harness merged in PR #57 remains a separate live witness, and cleanup remains a separate
-owner-authorized provider operation. The final closeout checker also requires the Auth-settings capture date to be
-the same as or later than the conformance date and cleanup to be the same as or later than both. This policy cannot
-convert any PENDING state into PASS. The existing 2026-10-01 owner decision still does not approve
-application-login activation or production/live identity.
+owner-authorized provider operation. The final closeout checker also requires day-level date ordering: the
+Auth-settings capture date must be the same as or later than the conformance date and cleanup must be the same as or
+later than both. This prevents an evidence class from predating its predecessor but does not prove within-day event
+order. This policy cannot convert any PENDING state into PASS. The existing 2026-10-01 owner decision still does
+not approve application-login activation or production/live identity.
 
 ## Evidence status
 
