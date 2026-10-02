@@ -94,7 +94,7 @@ def _write_world(root: Path):
         "security_sb_forwarded_for_enabled": False,
     }
     auth = {
-        "snapshot_version": "supabase-auth-settings/1",
+        "snapshot_version": "supabase-auth-settings/2",
         "provider": "supabase-auth",
         "project_alias": "princess-staging",
         "environment": "staging",
@@ -103,6 +103,8 @@ def _write_world(root: Path):
         "source_kind": "SUPABASE_MANAGEMENT_API",
         "source_action": "GET /v1/projects/{ref}/config/auth",
         "project_ref_sha256": PROJECT_REF_SHA256,
+        "source_response_sha256": "d" * 64,
+        "protected_evidence_ref": "operator-local:auth-config",
         "safe_projection_sha256": hashlib.sha256(_canonical_bytes(projection)).hexdigest(),
         **projection,
         "contains_secrets": False,
@@ -215,6 +217,40 @@ def test_cleanup_must_bind_same_conformance_receipt(tmp_path):
     data["conformance_receipt_sha256"] = "c" * 64
     p.write_text(json.dumps(data), encoding="utf-8")
     with pytest.raises(closeout.CloseoutError, match="cleanup_conformance_receipt_mismatch"):
+        closeout.check_closeout(tmp_path)
+
+
+def test_auth_settings_cannot_predate_conformance(tmp_path):
+    ci = _write_world(tmp_path)
+    p = ci / "T17_SUPABASE_AUTH_SETTINGS_SNAPSHOT.json"
+    data = json.loads(p.read_text())
+    data["captured_date"] = "2026-10-01"
+    p.write_text(json.dumps(data), encoding="utf-8")
+    with pytest.raises(closeout.CloseoutError, match="auth_settings_before_conformance"):
+        closeout.check_closeout(tmp_path)
+
+
+def test_cleanup_cannot_predate_conformance_at_final_gate(tmp_path):
+    ci = _write_world(tmp_path)
+    p = ci / "T17_SUPABASE_STAGING_CLEANUP_EVIDENCE.json"
+    data = json.loads(p.read_text())
+    data["checked_date"] = "2026-10-01"
+    p.write_text(json.dumps(data), encoding="utf-8")
+    with pytest.raises(closeout.CloseoutError, match="cleanup_before_conformance"):
+        closeout.check_closeout(tmp_path)
+
+
+def test_cleanup_cannot_predate_auth_settings(tmp_path):
+    ci = _write_world(tmp_path)
+    auth_path = ci / "T17_SUPABASE_AUTH_SETTINGS_SNAPSHOT.json"
+    auth = json.loads(auth_path.read_text())
+    auth["captured_date"] = "2026-10-03"
+    auth_path.write_text(json.dumps(auth), encoding="utf-8")
+    cleanup_path = ci / "T17_SUPABASE_STAGING_CLEANUP_EVIDENCE.json"
+    cleanup = json.loads(cleanup_path.read_text())
+    cleanup["checked_date"] = "2026-10-02"
+    cleanup_path.write_text(json.dumps(cleanup), encoding="utf-8")
+    with pytest.raises(closeout.CloseoutError, match="cleanup_before_auth_settings"):
         closeout.check_closeout(tmp_path)
 
 

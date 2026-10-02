@@ -238,6 +238,16 @@ def check_closeout(root: Path = ROOT) -> None:
     if cleanup.get("conformance_receipt_sha256") != conformance_record["receipt_sha256"]:
         raise CloseoutError("cleanup_conformance_receipt_mismatch")
 
+    conformance_date = date.fromisoformat(conformance_record["checked_date"])
+    auth_date = date.fromisoformat(auth_snapshot["captured_date"])
+    cleanup_date = date.fromisoformat(cleanup["checked_date"])
+    if auth_date < conformance_date:
+        raise CloseoutError("auth_settings_before_conformance")
+    if cleanup_date < conformance_date:
+        raise CloseoutError("cleanup_before_conformance")
+    if cleanup_date < auth_date:
+        raise CloseoutError("cleanup_before_auth_settings")
+
     _validate_owner_scope(account_path)
 
 

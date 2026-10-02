@@ -30,14 +30,18 @@ The operator must provide:
 --project-ref-file   /protected/princess-staging-project-ref.txt
 --auth-config-file   /protected/princess-staging-auth-config.json
 --captured-date      YYYY-MM-DD
+--protected-evidence-ref operator-local:princess-staging-auth-config
 --output             docs/ci/T17_SUPABASE_AUTH_SETTINGS_SNAPSHOT.json
 ```
 
 Both protected inputs must be absolute paths outside the Git checkout. The tool performs no provider request and
 accepts no Supabase Management API token, application API key, password, access token or refresh token.
 
-The generated snapshot is Git-safe only because it allowlists reviewed non-secret fields and hashes the raw project
-reference before comparison with the already-qualified Princess staging project binding.
+The generated `supabase-auth-settings/2` snapshot is Git-safe only because it allowlists reviewed non-secret
+fields, hashes the raw project reference before comparison with the already-qualified Princess staging project
+binding, hashes the exact protected Management API response bytes into `source_response_sha256`, and records only
+an opaque `protected_evidence_ref`. The source-response digest is derived by the builder and is never supplied by
+the operator.
 
 ## Required selected-account fields
 
@@ -59,6 +63,9 @@ digest while unrelated raw provider fields do not.
 The generated snapshot must always state:
 
 ```text
+snapshot_version:             supabase-auth-settings/2
+source_response_sha256:       <derived from exact protected /config/auth bytes>
+protected_evidence_ref:       <opaque safe reference>
 contains_secrets:             false
 application_login_activation: false
 production_activation:        false
@@ -138,8 +145,10 @@ application-auth implementation may proceed under a separate disabled/reviewed s
 ```
 
 The conformance harness merged in PR #57 remains a separate live witness, and cleanup remains a separate
-owner-authorized provider operation. This policy cannot convert either PENDING state into PASS. The existing
-2026-10-01 owner decision still does not approve application-login activation or production/live identity.
+owner-authorized provider operation. The final closeout checker also requires the Auth-settings capture date to be
+the same as or later than the conformance date and cleanup to be the same as or later than both. This policy cannot
+convert any PENDING state into PASS. The existing 2026-10-01 owner decision still does not approve
+application-login activation or production/live identity.
 
 ## Evidence status
 

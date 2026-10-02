@@ -85,11 +85,14 @@ python tools/build_supabase_auth_settings_snapshot.py \
   --project-ref-file /protected/princess-staging-project-ref.txt \
   --auth-config-file /protected/princess-staging-auth-config.json \
   --captured-date YYYY-MM-DD \
+  --protected-evidence-ref operator-local:princess-staging-auth-config \
   --output docs/ci/T17_SUPABASE_AUTH_SETTINGS_SNAPSHOT.json
 ```
 
-The builder must source the exact selected-account values for all allowlisted `rate_limit_*` fields and
-`security_sb_forwarded_for_enabled`.
+The v2 builder must source the exact selected-account values for all allowlisted `rate_limit_*` fields and
+`security_sb_forwarded_for_enabled`. It hashes the exact protected Management API response bytes into
+`source_response_sha256` and records only an opaque `protected_evidence_ref`; the operator cannot hand-enter
+the source digest.
 
 ## 3. Dispose of the witness identity
 
@@ -166,7 +169,16 @@ The required success line is:
 PASS: Supabase staging Auth evidence gates are complete without widening login/production authority
 ```
 
-A failure is a finding. Do not alter generated evidence or weaken validators to force PASS.
+The final checker independently requires:
+
+```text
+runtime conformance checked_date
+    <= Auth settings captured_date
+    <= cleanup checked_date
+```
+
+Same-day capture/cleanup is valid. A failure is a finding. Do not alter generated evidence or weaken validators to
+force PASS.
 
 ## 7. Privacy review before ready-for-review
 
