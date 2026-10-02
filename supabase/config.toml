@@ -1,0 +1,7 @@
+# Supabase CLI/GitHub integration scaffold for the Princess project.
+# This file is intentionally non-secret and does not contain the remote project ref.
+# Database schema migrations remain authoritative in ../migrations/ via Alembic.
+project_id = "princess"
+
+[db]
+major_version = 17

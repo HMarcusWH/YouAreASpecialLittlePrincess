@@ -2073,6 +2073,7 @@ No approval is created by this task brief. Mock/disabled implementation is not a
 - [docs/connectors/analytics.md](../connectors/analytics.md)
 - [docs/connectors/object-storage.md](../connectors/object-storage.md)
 - [docs/connectors/premium-model.md](../connectors/premium-model.md)
+- [supabase/README.md](../../supabase/README.md)
 
 ### Owned implementation surfaces
 
@@ -2090,6 +2091,7 @@ migrations/
 apps/api/princess_api/ops.py
 src/princess_app/application/operations.py
 src/princess_app/adapters/postgres/operations.py
+supabase/
 ```
 
 ### Coding sequence
