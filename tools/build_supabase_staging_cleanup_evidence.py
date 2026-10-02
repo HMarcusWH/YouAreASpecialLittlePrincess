@@ -30,7 +30,7 @@ from princess_app.config_supabase import (  # noqa: E402
     PROVIDER_MODE,
 )
 
-VERSION = "supabase-staging-cleanup/1"
+VERSION = "supabase-staging-cleanup/2"
 OUTPUT_PATH = ROOT / "docs" / "ci" / "T17_SUPABASE_STAGING_CLEANUP_EVIDENCE.json"
 MAX_INPUT_BYTES = 64 * 1024
 MAX_PROJECT_REF_BYTES = 1024
