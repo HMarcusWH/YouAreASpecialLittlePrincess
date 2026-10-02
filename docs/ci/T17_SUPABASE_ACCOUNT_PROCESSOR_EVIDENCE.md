@@ -208,7 +208,9 @@ run through that tool. Tooling/tests alone do not close this acceptance gate.
 The final staging evidence closeout also requires separate provider cleanup evidence. After the real conformance
 witness, the owner-authorized operator must revoke all sessions for the disposable conformance test user and delete
 that disposable Auth user. `tools/build_supabase_staging_cleanup_evidence.py` turns only the safe aggregate result
-into Git-safe evidence; it does not perform the provider action and cannot claim project decommission. The atomic
+into Git-safe evidence; it does not perform the provider action and cannot claim project decommission. Cleanup v2
+must be generated from post-#60 code with the protected runtime-conformance receipt supplied directly, so the
+builder validates that receipt and derives its SHA-256 instead of accepting a hand-entered digest. The atomic
 closeout checker refuses PASS unless conformance, selected-account settings and cleanup evidence all validate while
 this owner decision still says application login is not approved.
 
