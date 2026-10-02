@@ -186,12 +186,6 @@ def build_snapshot(
         raise AuthSettingsError("auth_config_protected_evidence_ref")
 
     source_response_sha256 = _sha256_bytes(source_response_bytes)
-    source_response_sha256 = snapshot.get("source_response_sha256")
-    if not isinstance(source_response_sha256, str) or not HEX64_RE.fullmatch(source_response_sha256):
-        raise AuthSettingsError("auth_settings_snapshot_source_response_sha256")
-    protected_evidence_ref = snapshot.get("protected_evidence_ref")
-    if not isinstance(protected_evidence_ref, str) or not REF_RE.fullmatch(protected_evidence_ref):
-        raise AuthSettingsError("auth_settings_snapshot_protected_evidence_ref")
 
     provider_projection: dict[str, Any] = {}
     for field in RATE_LIMIT_FIELDS:
@@ -268,6 +262,13 @@ def validate_snapshot(snapshot: Mapping[str, Any]) -> None:
         date.fromisoformat(captured)
     except ValueError:
         raise AuthSettingsError("auth_settings_snapshot_captured_date") from None
+
+    source_response_sha256 = snapshot.get("source_response_sha256")
+    if not isinstance(source_response_sha256, str) or not HEX64_RE.fullmatch(source_response_sha256):
+        raise AuthSettingsError("auth_settings_snapshot_source_response_sha256")
+    protected_evidence_ref = snapshot.get("protected_evidence_ref")
+    if not isinstance(protected_evidence_ref, str) or not REF_RE.fullmatch(protected_evidence_ref):
+        raise AuthSettingsError("auth_settings_snapshot_protected_evidence_ref")
 
     provider_projection: dict[str, Any] = {}
     for field in RATE_LIMIT_FIELDS:
