@@ -11,7 +11,6 @@ Run locally with::
 """
 from __future__ import annotations
 
-import hashlib
 import os
 from pathlib import Path
 
@@ -44,7 +43,7 @@ from princess_app.application.intake import IntakeService
 from princess_app.application.notifications import NotificationService
 from princess_app.application.permissions import PermissionService
 from princess_app.config import RuntimeConfig, load_runtime_config
-from princess_app.config_supabase import parse_supabase_staging_runtime_binding
+from princess_app.config_supabase import normalized_manifest_sha256, parse_supabase_staging_runtime_binding
 from princess_app.domain.commerce import CATALOG
 from princess_app.ports.payments import PaymentRail
 from princess_app.ports.base import Environment, ProviderMode, SystemClock, Unsupported
@@ -65,9 +64,11 @@ class UuidIds:
 def _manifest_sha256(environment: Environment) -> str:
     path = ROOT / "infra" / "environments" / f"{environment.value}.json"
     try:
-        return hashlib.sha256(path.read_bytes()).hexdigest()
+        raw = path.read_bytes()
     except OSError:
         raise Unsupported("identity_runtime_manifest_unreadable", detail=environment.value) from None
+
+    return normalized_manifest_sha256(raw)
 
 
 def compose_identity_provider(config: RuntimeConfig, clock):

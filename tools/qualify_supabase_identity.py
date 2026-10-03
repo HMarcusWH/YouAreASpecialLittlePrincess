@@ -114,6 +114,17 @@ def _jwks_url(issuer: str) -> str:
     return supabase_jwks_url(issuer)
 
 
+def _manifest_hashes(raw: bytes) -> tuple[str, str]:
+    """Return stable LF and legacy Windows-CRLF SHA-256 values for one manifest."""
+
+    normalized = raw.replace(b"\r\n", b"\n").replace(b"\r", b"\n")
+    legacy_crlf = normalized.replace(b"\n", b"\r\n")
+    return (
+        hashlib.sha256(normalized).hexdigest(),
+        hashlib.sha256(legacy_crlf).hexdigest(),
+    )
+
+
 def _qualification_scope(environment: str, provider_mode: str) -> tuple[Environment, ProviderMode, str]:
     try:
         env = Environment.parse(environment)
@@ -133,7 +144,7 @@ def _qualification_scope(environment: str, provider_mode: str) -> tuple[Environm
         raise QualificationError("identity_mode_manifest_mismatch")
     path = ROOT / "infra" / "environments" / f"{env.value}.json"
     try:
-        digest = hashlib.sha256(path.read_bytes()).hexdigest()
+        digest, _legacy_crlf_digest = _manifest_hashes(path.read_bytes())
     except OSError as exc:
         raise QualificationError("qualification_environment_manifest_unreadable") from exc
     return env, mode, digest
@@ -593,7 +604,12 @@ def validate_receipt(data: dict[str, Any]) -> None:
     manifest_hash = data.get("environment_manifest_sha256")
     if not isinstance(manifest_hash, str) or not re.fullmatch(r"[0-9a-f]{64}", manifest_hash):
         raise QualificationError("receipt_environment_manifest_sha256")
-    if manifest_hash != expected_manifest_hash:
+    manifest_path = ROOT / "infra" / "environments" / f"{environment}.json"
+    try:
+        _stable_hash, legacy_crlf_hash = _manifest_hashes(manifest_path.read_bytes())
+    except OSError as exc:
+        raise QualificationError("receipt_environment_manifest_unreadable") from exc
+    if manifest_hash not in {expected_manifest_hash, legacy_crlf_hash}:
         raise QualificationError("receipt_environment_manifest_mismatch")
     if data.get("evidence_kind") == "SYNTHETIC_TEST" and data.get("project_binding") != "QUALIFICATION_ONLY":
         raise QualificationError("receipt_synthetic_runtime_binding")

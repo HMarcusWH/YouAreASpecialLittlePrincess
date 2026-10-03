@@ -34,6 +34,7 @@ from princess_app.config_supabase import (  # noqa: E402
     PROVIDER,
     PROVIDER_MODE,
     QUALIFICATION_RECEIPT_SHA256,
+    QUALIFICATION_ENVIRONMENT_MANIFEST_SHA256,
     QUALIFIED_ENVIRONMENT_MANIFEST_SHA256,
     SOURCE_REVISION,
 )
@@ -70,7 +71,7 @@ def build_binding(receipt_bytes: bytes, account_snapshot: dict[str, Any]) -> dic
         or receipt.get("project_binding") != PROJECT_BINDING
         or receipt.get("environment") != ENVIRONMENT
         or receipt.get("provider_mode") != PROVIDER_MODE
-        or receipt.get("environment_manifest_sha256") != QUALIFIED_ENVIRONMENT_MANIFEST_SHA256
+        or receipt.get("environment_manifest_sha256") != QUALIFICATION_ENVIRONMENT_MANIFEST_SHA256
         or receipt.get("source_revision") != SOURCE_REVISION
         or receipt.get("stock_claims_profile") is not True
         or receipt.get("result") != "PASS"
@@ -111,7 +112,7 @@ def build_binding(receipt_bytes: bytes, account_snapshot: dict[str, Any]) -> dic
         "environment": ENVIRONMENT,
         "provider_mode": PROVIDER_MODE,
         "qualification_receipt_sha256": receipt_sha,
-        "qualified_environment_manifest_sha256": receipt["environment_manifest_sha256"],
+        "qualified_environment_manifest_sha256": QUALIFIED_ENVIRONMENT_MANIFEST_SHA256,
         "account_snapshot_sha256": ACCOUNT_SNAPSHOT_SHA256,
         "project_ref_sha256": PROJECT_REF_SHA256,
         "source_revision": receipt["source_revision"],

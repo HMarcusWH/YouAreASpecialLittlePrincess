@@ -9,13 +9,14 @@ from types import MappingProxyType
 
 import pytest
 
+import build_supabase_staging_runtime_binding as binding_builder
 import princess_app.config_supabase as binding_module
 import princess_api.compose as compose_module
 from princess_app.adapters.fakes import FakeClock
 from princess_app.adapters.supabase import SupabaseIdentityProvider
 from princess_app.config import load_runtime_config
 from princess_app.ports import identity as identity_port
-from princess_app.ports.base import InvalidInput, ProviderMode, Unsupported
+from princess_app.ports.base import Environment, InvalidInput, ProviderMode, Unsupported
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -66,6 +67,68 @@ def code(fn) -> str:
     with pytest.raises(InvalidInput) as err:
         fn()
     return err.value.code
+
+
+def test_runtime_manifest_hash_is_line_ending_stable(tmp_path, monkeypatch):
+    manifest_dir = tmp_path / "infra" / "environments"
+    manifest_dir.mkdir(parents=True)
+    manifest_path = manifest_dir / "staging.json"
+    lf = b'{\n  "providers": {"IdentityProvider": "sandbox"}\n}\n'
+    crlf = lf.replace(b"\n", b"\r\n")
+
+    monkeypatch.setattr(compose_module, "ROOT", tmp_path)
+
+    manifest_path.write_bytes(lf)
+    stable = compose_module._manifest_sha256(Environment.STAGING)
+
+    manifest_path.write_bytes(crlf)
+    assert compose_module._manifest_sha256(Environment.STAGING) == stable
+    assert stable == hashlib.sha256(lf).hexdigest()
+
+
+def test_builder_migrates_historical_crlf_receipt_anchor_to_stable_runtime_manifest(monkeypatch):
+    qualification_manifest_hash = "1" * 64
+    runtime_manifest_hash = "2" * 64
+    issuer = "https://qualified-staging-ref.supabase.co/auth/v1"
+    audience = "authenticated"
+    role = "authenticated"
+    project_ref_hash = _sha("qualified-staging-ref")
+
+    receipt = {
+        "project_alias": binding_builder.PROJECT_ALIAS,
+        "evidence_kind": "MANAGED_PROJECT",
+        "project_binding": binding_builder.PROJECT_BINDING,
+        "environment": binding_builder.ENVIRONMENT,
+        "provider_mode": binding_builder.PROVIDER_MODE,
+        "environment_manifest_sha256": qualification_manifest_hash,
+        "source_revision": binding_builder.SOURCE_REVISION,
+        "stock_claims_profile": True,
+        "result": "PASS",
+        "issuer_sha256": _sha(issuer),
+        "audience": audience,
+        "allowed_role": role,
+    }
+    receipt_bytes = json.dumps(receipt, sort_keys=True).encode("utf-8")
+    snapshot = {
+        "project_alias": binding_builder.PROJECT_ALIAS,
+        "project_ref_sha256": project_ref_hash,
+        "contains_secrets": False,
+        "production_activation": False,
+    }
+
+    monkeypatch.setattr(binding_builder, "validate_receipt", lambda value: None)
+    monkeypatch.setattr(binding_builder, "QUALIFICATION_RECEIPT_SHA256", hashlib.sha256(receipt_bytes).hexdigest())
+    monkeypatch.setattr(binding_builder, "QUALIFICATION_ENVIRONMENT_MANIFEST_SHA256", qualification_manifest_hash)
+    monkeypatch.setattr(binding_builder, "QUALIFIED_ENVIRONMENT_MANIFEST_SHA256", runtime_manifest_hash)
+    monkeypatch.setattr(binding_builder, "ACCOUNT_SNAPSHOT_SHA256", binding_builder._canonical_hash(snapshot))
+    monkeypatch.setattr(binding_builder, "PROJECT_REF_SHA256", project_ref_hash)
+    monkeypatch.setattr(binding_builder, "QUALIFIED_ISSUER_SHA256", _sha(issuer))
+    monkeypatch.setattr(binding_builder, "QUALIFIED_AUDIENCE_SHA256", _sha(audience))
+    monkeypatch.setattr(binding_builder, "QUALIFIED_ROLE_SHA256", _sha(role))
+
+    built = binding_builder.build_binding(receipt_bytes, snapshot)
+    assert built["qualified_environment_manifest_sha256"] == runtime_manifest_hash
+    assert built["qualified_environment_manifest_sha256"] != qualification_manifest_hash
 
 
 def test_receipt_binding_accepts_only_exact_runtime_profile(monkeypatch):

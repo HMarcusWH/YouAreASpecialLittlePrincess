@@ -26,6 +26,10 @@ SOURCE_REVISION = "ce9a8eee0cc042be8c7a42981a7ddae631e41d91"
 
 # Git-safe evidence already recorded by T17.
 QUALIFICATION_RECEIPT_SHA256 = "c9e23770d23b5b066cf32596d26bde5564bdd440d460074deb61d0cab1be85fe"
+# The 2026-10-01 v4 receipt was generated from a clean Windows checkout. Git's
+# CRLF working-tree transform changed only the raw bytes hashed by that receipt.
+QUALIFICATION_ENVIRONMENT_MANIFEST_SHA256 = "4441a12bdb89688634e30a00785daae6e0e44dadfab6ae219affc4ef9067e7b7"
+# Runtime composition uses the stable LF-normalized/Git manifest bytes.
 QUALIFIED_ENVIRONMENT_MANIFEST_SHA256 = "bc9ef87478461e1a13098e116d34f46c7b84addefbdb65004a2e9a71aa642f1c"
 ACCOUNT_SNAPSHOT_SHA256 = "905a943563fcce0c921b07f3c661032f2e732dbd968f8dcc6b6b31bf4e2c96a1"
 PROJECT_REF_SHA256 = "730f049be2bb48fbca59f87518cece081ca02f313c465fd55498e84a9d590a99"
@@ -71,6 +75,12 @@ def _pairs(items: list[tuple[str, Any]]) -> dict[str, Any]:
 
 def _sha256_text(value: str) -> str:
     return hashlib.sha256(value.encode("utf-8")).hexdigest()
+
+
+def normalized_manifest_sha256(raw: bytes) -> str:
+    """Hash manifest bytes after canonicalizing line endings to LF."""
+    normalized = raw.replace(b"\r\n", b"\n").replace(b"\r", b"\n")
+    return hashlib.sha256(normalized).hexdigest()
 
 
 def _project_ref_from_issuer(issuer: str) -> str:

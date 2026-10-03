@@ -42,7 +42,7 @@ a publishable/anon key, a secret/service-role key, a password or a refresh token
 ## Operator command
 
 Run the command from the repository root on a clean checkout at
-`7cf6371a1daec3cfd46f4adf35d6175c57452cc0`, the frozen witness revision required by the closeout checker. All
+`c653a7d0cc29e0398a0cfb9e5c8113b9b2acd6b3`, the corrected frozen witness revision required by the closeout checker. The earlier `7cf6371...` freeze was superseded before any live PASS because its receipt-binding path conflated Windows CRLF and Git-normalized manifest byte hashes. All
 protected paths must be absolute and resolve outside the Git checkout. The raw issuer is read from a protected file
 so it cannot leak through shell history/process arguments. The complete three-class procedure is documented in
 [T17 Supabase staging Auth operator runbook](T17_SUPABASE_STAGING_AUTH_OPERATOR_RUNBOOK.md).

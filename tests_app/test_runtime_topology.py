@@ -18,6 +18,7 @@ from princess_app.ports.base import Environment, InvalidInput, TransientUnavaila
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "infra" / "runtime"))
+import runtime_policy  # noqa: E402
 from runtime_policy import preflight  # noqa: E402
 
 DB_TEST = "postgresql://runtime:runtime@127.0.0.1:5432/princess_test"
@@ -37,6 +38,21 @@ def test_preflight_accepts_current_test_api_without_network(monkeypatch):
     monkeypatch.setattr(socket.socket, "connect", refuse)
     config = preflight(API_TEST, ROOT)
     assert config.component == "api" and config.environment is Environment.TEST
+
+
+def test_runtime_preflight_manifest_hash_is_line_ending_stable(tmp_path):
+    manifest_dir = tmp_path / "infra" / "environments"
+    manifest_dir.mkdir(parents=True)
+    manifest_path = manifest_dir / "staging.json"
+    lf = b'{\n  "providers": {"IdentityProvider": "sandbox"}\n}\n'
+    crlf = lf.replace(b"\n", b"\r\n")
+
+    manifest_path.write_bytes(lf)
+    stable = runtime_policy._manifest_sha256(tmp_path, Environment.STAGING)
+
+    manifest_path.write_bytes(crlf)
+    assert runtime_policy._manifest_sha256(tmp_path, Environment.STAGING) == stable
+    assert stable == hashlib.sha256(lf).hexdigest()
 
 
 @pytest.mark.parametrize("component", ["render_worker", "reference_worker"])
@@ -64,7 +80,7 @@ def test_staging_identity_support_moves_fail_closed_boundary_to_object_store(mon
     project_ref = "runtime-staging-ref"
     issuer = f"https://{project_ref}.supabase.co/auth/v1"
     audience = "runtime-staging-audience"
-    manifest_hash = hashlib.sha256((ROOT / "infra" / "environments" / "staging.json").read_bytes()).hexdigest()
+    manifest_hash = runtime_policy._manifest_sha256(ROOT, Environment.STAGING)
     receipt_hash = "2" * 64
     snapshot_hash = "3" * 64
     project_hash = hashlib.sha256(project_ref.encode()).hexdigest()

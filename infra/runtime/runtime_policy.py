@@ -6,12 +6,11 @@ this role with the declared provider modes?
 """
 from __future__ import annotations
 
-import hashlib
 from pathlib import Path
 from typing import Mapping
 
 from princess_app.config import RuntimeConfig, load_runtime_config
-from princess_app.config_supabase import parse_supabase_staging_runtime_binding
+from princess_app.config_supabase import normalized_manifest_sha256, parse_supabase_staging_runtime_binding
 from princess_app.ports.base import Environment, InvalidInput, ProviderMode, Unsupported
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -31,11 +30,10 @@ PROVIDER_REQUIREMENTS: Mapping[str, tuple[str, ...]] = {
 
 def _manifest_sha256(root: Path, environment: Environment) -> str:
     try:
-        return hashlib.sha256(
-            (root / "infra" / "environments" / f"{environment.value}.json").read_bytes()
-        ).hexdigest()
+        raw = (root / "infra" / "environments" / f"{environment.value}.json").read_bytes()
     except OSError:
         raise InvalidInput("manifest_unreadable", detail=environment.value) from None
+    return normalized_manifest_sha256(raw)
 
 
 def _provider_supported(config: RuntimeConfig, port: str, root: Path) -> None:

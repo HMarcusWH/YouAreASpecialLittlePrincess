@@ -32,7 +32,7 @@ def _conformance_receipt_bytes(**overrides) -> bytes:
         "provider_mode": "sandbox",
         "capability": conformance.identity_port.VERIFY_CREDENTIAL,
         "checked_date": "2026-10-02",
-        "princess_commit": "7cf6371a1daec3cfd46f4adf35d6175c57452cc0",
+        "princess_commit": "c653a7d0cc29e0398a0cfb9e5c8113b9b2acd6b3",
         "qualification_receipt_sha256": conformance.binding_config.QUALIFICATION_RECEIPT_SHA256,
         "runtime_binding_sha256": "b" * 64,
         "account_snapshot_sha256": conformance.binding_config.ACCOUNT_SNAPSHOT_SHA256,
