@@ -90,6 +90,17 @@ class RunStatus:
     error_code: str | None
 
 
+@dataclass(frozen=True)
+class RunSummary:
+    """One of the owner's runs, for recovery after reinstall or on another device."""
+
+    run_id: str
+    state: str
+    report_id: str | None
+    error_code: str | None
+    created_at: datetime
+
+
 class IntakeRepository(Protocol):
     def admit_upload(self, owner_id: str, *, since: datetime, limit: int, created_at: datetime,
                      issue: Callable[[], UploadRow]) -> UploadRow:
@@ -138,6 +149,16 @@ class IntakeRepository(Protocol):
     def captures(self, owner_id: str) -> list[str]:
         """IDs of the owner's live captures."""
         ...
+
+    def recent_runs(self, owner_id: str, limit: int) -> list[RunSummary]:
+        """The owner's newest runs whose capture is not deleted, newest first."""
+        ...
+
+    def capture_for_report(self, owner_id: str, report_id: str) -> str | None:
+        """The live capture an undeleted report was derived from, if any."""
+        ...
+
+    def capture_for_asset(self, owner_id: str, asset_id: str) -> CaptureRow | None: ...
 
     def request_retention_review(self, owner_id: str, capture_id: str, at: datetime) -> None:
         """Queue a check that erases the original unless image retention is granted."""
@@ -297,6 +318,30 @@ class IntakeService:
         if self._repo.capture(owner_id, capture_id) is None:
             raise NotFound("capture_not_found")
         self._repo.delete_capture(owner_id, capture_id, self._clock.now())
+
+    def recent_runs(self, owner_id: str, limit: int = 20) -> list[RunSummary]:
+        """Server-side discovery of unfinished and recent work, so a reinstalled
+        app or a second device need not rely on one device's journal."""
+        if not 1 <= limit <= 50:
+            raise InvalidInput("invalid_run_page_size")
+        return self._repo.recent_runs(owner_id, limit)
+
+    def delete_report_source(self, owner_id: str, report_id: str) -> str:
+        """Delete the specimen a report came from, which ends the report too.
+        Returns the capture ID so the caller can record its tombstone."""
+        capture_id = self._repo.capture_for_report(owner_id, report_id)
+        if capture_id is None:
+            raise NotFound("report_not_found")
+        self._repo.delete_capture(owner_id, capture_id, self._clock.now())
+        return capture_id
+
+    def read_source_image(self, owner_id: str, asset_id: str, ctx: CallContext) -> tuple[bytes, str]:
+        """Bytes of a retained input, for the owner only. The caller has already
+        authorized the report projection that names this asset."""
+        capture = self._repo.capture_for_asset(owner_id, asset_id)
+        if capture is None or capture.deleted or capture.original_erased:
+            raise NotFound("source_image_not_available")
+        return self._store.read_object(capture.stored_object(), ctx), capture.media_type
 
     def apply_permission_change(self, owner_id: str, purpose_id: str, scope: Scope, decision: Decision) -> None:
         """T03 withdrawal propagation for intake-owned retention classes.

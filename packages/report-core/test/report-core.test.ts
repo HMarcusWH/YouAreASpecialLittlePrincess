@@ -131,3 +131,41 @@ test("free view fixture carries no premium sections and only referenced facts", 
   assert.deepEqual(share.actions, []);
   assert.deepEqual(share.authorized_asset_ids, []);
 });
+
+test("dossier model keeps server order, resolves copy and never invents values", async () => {
+  const { buildDossier, presentFact, displayLocale, t } = await import("../src/index.ts");
+  const v2 = fixture<ReportViewModel>("view.free-v2.json");
+  const model = buildDossier(v2, "en");
+  assert.deepEqual(model.highlights.map((s) => s.sectionId),
+                   v2.sections.filter((s) => s.template.startsWith("HIGHLIGHT_")).map((s) => s.section_id));
+  assert.equal(model.highlights[0]!.kind, "HIGHLIGHT_PRIMARY");
+  assert.equal(model.highlights[0]!.title, "What stands out");
+  assert.ok(model.highlights[0]!.copy.length > 0, "server-selected highlight resolves reviewed copy");
+  assert.deepEqual(model.sections.map((s) => s.sectionId),
+                   v2.sections.filter((s) => !s.template.startsWith("HIGHLIGHT_")).map((s) => s.section_id));
+  const total = model.sections.reduce((n, s) => n + s.facts.length, 0) + model.highlights.reduce((n, s) => n + s.facts.length, 0);
+  assert.equal(total, v2.sections.reduce((n, s) => n + s.fact_ids.length, 0));
+  assert.equal(model.actions.find((a) => a.kind === "EXPORT")!.enabled, true);
+  assert.equal(model.actions.find((a) => a.kind === "COMPARE")!.reasonText, "Comparison is not available yet.");
+  assert.equal(buildDossier(v2, "sv").highlights[0]!.title, "Det som sticker ut");
+
+  const legacy = buildDossier(fixture<ReportViewModel>("view.free.json"), "en");
+  assert.equal(legacy.highlights.length, 0, "legacy v1 has no First Reveal; the client must not pick one");
+  const revoked = buildDossier(fixture<ReportViewModel>("view.owner-image-revoked.json"), "en");
+  assert.equal(revoked.sourceImageOmitted, true);
+  assert.equal(buildDossier(fixture<ReportViewModel>("view.owner-premium.json"), "en").hasPremium, true);
+
+  const missing = presentFact({ ...fact("SLANT_ANGLE_MEAN"), availability: "MISSING", value: null }, "en");
+  assert.equal(missing.value, null);
+  assert.equal(missing.availabilityText, "Not measured in this sample");
+  const yes = presentFact({ ...fact("SLANT_ANGLE_MEAN"), value: true, formatting_key: "boolean" }, "sv");
+  assert.equal(yes.value, "Ja");
+
+  const unknown = buildDossier({ ...v2, sections: [{ ...v2.sections[3]!, template: "FUTURE_TEMPLATE",
+                                                      content_ids: ["content.not.reviewed"] }] }, "en");
+  assert.equal(unknown.sections[0]!.title, "Future template");
+  assert.deepEqual(unknown.sections[0]!.copy, []);
+  assert.equal(displayLocale("sv-SE"), "sv");
+  assert.equal(displayLocale("de-DE"), "en");
+  assert.equal(t("en", "premium.answer.NOT_ASSESSABLE"), "Could not be assessed from this sample");
+});

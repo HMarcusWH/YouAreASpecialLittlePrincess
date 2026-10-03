@@ -42,7 +42,8 @@ ROUTE_TEMPLATES = frozenset({
     "/v1/report-exports", "/v1/report-exports/{export_id}", "/v1/report-exports/{export_id}/file",
     "/v1/reports/{report_id}/feedback", "/v1/feedback/{feedback_id}",
     "/v1/me/push-installations", "/v1/me/push-installations/{installation_id}",
-    "/v1/me/notification-preferences",
+    "/v1/me/notification-preferences", "/v1/consent-notices", "/v1/comparisons",
+    "/v1/reports/{report_id}/source-image",
 })
 
 

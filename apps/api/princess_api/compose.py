@@ -40,6 +40,7 @@ from princess_app.application.exports import ExportService
 from princess_app.application.feedback import FeedbackService
 from princess_app.application.identity import GuestAdmission, IdentityService
 from princess_app.application.intake import IntakeService
+from princess_app.application.notices import NoticeCatalog
 from princess_app.application.notifications import NotificationService
 from princess_app.application.permissions import PermissionService
 from princess_app.config import RuntimeConfig, load_runtime_config
@@ -147,7 +148,10 @@ def compose(config: RuntimeConfig) -> Services:
                     # Registration and preferences only; delivery is the notification worker's.
                     notifications=NotificationService(repo=PostgresNotificationRepository(db), clock=clock,
                                                       ids=UuidIds(), environment=config.environment),
-                    readiness=db.ping)
+                    readiness=db.ping,
+                    notices=NoticeCatalog.from_registry(ROOT / "contracts" / "consent" / "v1" / "notices.json",
+                                                        allow_draft_policy=permissions.allows_draft_policy),
+                    comparisons_enabled=True)
 
 
 def local_store(config: RuntimeConfig, clock) -> LocalObjectStore:

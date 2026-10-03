@@ -1,6 +1,6 @@
 # T29 native compatibility matrix
 
-Status: **provider-independent foundation implemented; gated native evidence remains**.
+Status: **provider-independent foundation (T29) and shared client capabilities (T30A) implemented; gated native evidence remains**.
 
 This report records executed T29 compatibility evidence. It is not App Store/Play approval, production signing approval, processor approval or a claim that the T30/T31 client journeys are complete.
 
@@ -45,19 +45,30 @@ SDK 58 was beta when the spike began; T29 therefore selected the stable SDK 57 l
 
 ## Capability boundary
 
-| Capability | T29 implementation | Authority boundary |
+| Capability | Implementation (T29 foundation, T30A client) | Authority boundary |
 |---|---|---|
-| Navigation | Expo Router native stack | Route selection never grants report access |
-| Design | accepted `design-tokens/1.0` | Shared semantics; native primitives, no DOM/WebView |
-| Capture | image picker/camera + image-manipulator | Produces local derivative metadata only; server verifies/authorizes/analyzes |
-| HEIC/HEIF | picker input can be re-encoded to JPEG derivative | Does not expand backend accepted media authority |
-| Identity transport | external-user-agent adapter via expo-web-browser | Provider-neutral HTTPS auth + allowlisted redirect and strict callback target/state checks; no embedded password/provider secret |
-| Secure session | expo-secure-store adapter | Credential material only; report/image payloads excluded |
-| Purchase | typed NativePurchaseClient + expo-iap module compatibility | Client never mints credits; T19 server verification/ledger remains authority |
-| Deep links | allowlisted route resolver + Expo linking module | Link selects resource; server authorization still required |
-| Files/share | typed share port + Expo module compatibility | Authorized exports only; temporary-file cleanup required |
-| Push | typed registration port + Expo notifications compatibility | Opaque references only; no handwriting/results/balances |
+| Navigation | Expo Router native stack; `+native-intent` passes every system URL through the allowlist | Route selection never grants report access |
+| Design | accepted `design-tokens/1.0`; platform serif/monospace fallbacks | Shared semantics; native primitives, no DOM/WebView |
+| Capture | system camera/Photo Picker + image-manipulator; no broad media permission requested | Produces a bounded private derivative only; server verifies/authorizes/analyzes |
+| HEIC/HEIF | picker asks for a compatible representation; re-encoded to JPEG (PNG kept as PNG) | Does not expand backend accepted media authority; device verification pending |
+| Identity transport | external-user-agent adapter via expo-web-browser; request/callback checks use the strict shared `parseUri` | No embedded password/provider secret; provider sign-in/refresh not wired (T17 gate) |
+| Secure session | expo-secure-store adapter holding one versioned credential record | Credential material only; report/image payloads excluded |
+| Work journal | app-private JSON document of IDs/digests; capture files in private cache | No image bytes, report bodies, purchase proofs or credentials |
+| Purchase | expo-iap StoreKit/Play adapter; app finishes Apple transactions only after a durable server grant; Play consumption stays server-side | Client never mints credits; T19 server verification/ledger remains authority; sandbox unexercised |
+| Deep links | allowlisted scheme + verified-host resolver (Universal/App Links configured from `INKTROSPECT_LINK_HOSTS`) | Link selects resource; server authorization still required |
+| Files/share | bearer download of API files into private cache with size/type sniffing; expo-sharing; cleanup after the sheet closes | Authorized exports only; downloaded copies cannot be recalled |
+| Push | expo-notifications device token registered with the API per principal; opens route by opaque reference | Opaque references only; no handwriting/results/balances |
 | Abuse | typed attestation fake/port | Risk signal only, never authorization |
+
+React Native's global `URL` is a regex approximation (it accepts malformed input and reports an empty host and `/` path for custom schemes). Security-relevant parsing never uses it.
+
+## Build variants and permissions (T30A)
+
+`app.config.ts` reads `INKTROSPECT_APP_VARIANT` (`development`/`staging`/`store`), `INKTROSPECT_API_BASE`, `INKTROSPECT_BACKEND_ENV`, `INKTROSPECT_UPLOAD_ORIGINS` and `INKTROSPECT_LINK_HOSTS`; `src/config/runtime.ts` re-validates at launch (store: HTTPS + production backend, no development identity). Variants differ by bundle/package identifier (`se.inktrospect.development`, `.staging`, `se.inktrospect`) and scheme; the app name stays `Inktrospect` because CNG derives the Xcode workspace the native CI builds from it.
+
+Android blocks `RECORD_AUDIO` and the Android 13+ media permissions (`READ_MEDIA_*`); the picker library's legacy storage pair (maxSdkVersion 32) is kept because its camera path requires `WRITE_EXTERNAL_STORAGE` on Android 7–9. iOS sets no photo-library usage description (PHPicker needs none) and allows local networking only in development builds.
+
+Local T30A evidence on branch `claude/determined-volta-42hu9a` (not exact-head CI): an Android CNG prebuild merged the blocked permissions as `tools:node="remove"` and generated the App Links intent filter with `autoVerify`; Metro exports compiled the whole app to Hermes bytecode for Android and iOS with no fake or test helper in the bundle. No APK/IPA was built in that environment (no Android SDK or Xcode); the Native foundation workflow remains the compile qualification.
 
 ## Executed Android evidence
 
@@ -89,7 +100,7 @@ Node-side native tests cover:
 - abuse attestation unavailable remains unavailable rather than authorizing;
 - exact compatibility validation rejects unsupported native dependency/version drift.
 
-T30/T31 add real process death, physical-device camera/HEIC, sandbox purchase, push, link association, screen-reader/text-scale and signed-build lifecycle evidence.
+T30A adds Node tests for session, workflow recovery, runner, controllers, configuration, links and copy, plus the development-API journey (`tools/run_mobile_journey.sh`). T30/T31 add real process death, physical-device camera/HEIC, sandbox purchase, push, link association, screen-reader/text-scale and signed-build lifecycle evidence.
 
 ## Permanent validation workflow
 

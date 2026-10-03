@@ -34,11 +34,7 @@ export class ExpoExternalUserAgentIdentityTransport implements NativeIdentityTra
       return { status: "FAILED", callbackUrl: null };
     }
 
-    const callback = validateNativeAuthorizationCallback(
-      result.url,
-      request.redirectUrl,
-      request.expectedState,
-    );
-    return { status: "SUCCESS", callbackUrl: callback.toString() };
+    validateNativeAuthorizationCallback(result.url, request.redirectUrl, request.expectedState);
+    return { status: "SUCCESS", callbackUrl: result.url };
   }
 }

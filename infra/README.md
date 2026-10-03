@@ -87,6 +87,8 @@ The upload flow runs in this order:
 4. `POST /v1/me/permissions` records a `service_processing` grant for that capture.
 5. `POST /v1/analyses` idempotently creates one run and job per capture and configuration.
 
+A client that lost its local state (reinstall, second device) finds unfinished work through `GET /v1/analyses`. `DELETE /v1/reports/{id}` deletes the specimen behind a report without the client remembering its capture ID, and `GET /v1/reports/{id}/source-image` serves a retained original only while the live owner projection authorizes it. `GET /v1/consent-notices` serves the exact notice text and version a grant may cite, marked DRAFT where applicable.
+
 The worker then claims a leased job, decodes within limits, runs the zero-AI engine, and builds the evidence and report outside any transaction. It publishes in one short transaction only if all of these still hold:
 
 - its fencing token is current;
