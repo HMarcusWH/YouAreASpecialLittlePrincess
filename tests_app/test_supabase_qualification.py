@@ -14,6 +14,7 @@ from qualify_supabase_identity import (
     SOURCE_REVISION,
     _api_key_kind,
     _fetch_jwks,
+    _manifest_hashes,
     _refresh_access_token,
     qualify,
     validate_receipt,
@@ -259,6 +260,24 @@ def test_project_binding_distinguishes_qualification_project_from_runtime_profil
 
     with pytest.raises(QualificationError, match="synthetic_cannot_bind_runtime_profile"):
         qualify_fixture(project_binding="INTENDED_RUNTIME_PROFILE")
+
+
+def test_environment_manifest_hashing_is_cross_platform_and_accepts_historical_windows_receipt():
+    import qualify_supabase_identity as cli
+    from princess_app.config_supabase import (
+        QUALIFICATION_ENVIRONMENT_MANIFEST_SHA256,
+        QUALIFIED_ENVIRONMENT_MANIFEST_SHA256,
+    )
+
+    raw = (cli.ROOT / "infra" / "environments" / "staging.json").read_bytes()
+    stable, legacy_crlf = _manifest_hashes(raw)
+    assert stable == QUALIFIED_ENVIRONMENT_MANIFEST_SHA256
+    assert legacy_crlf == QUALIFICATION_ENVIRONMENT_MANIFEST_SHA256
+    assert stable != legacy_crlf
+
+    receipt = qualify_fixture()
+    receipt["environment_manifest_sha256"] = legacy_crlf
+    validate_receipt(receipt)
 
 
 def test_environment_binding_matches_reviewed_manifests():
