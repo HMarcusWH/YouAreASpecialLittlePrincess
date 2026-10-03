@@ -33,8 +33,9 @@ All three must exist and validate before the staging Auth evidence closeout is c
      `GET /v1/projects/{ref}/config/auth` response;
    - schema `supabase-auth-settings/3` binds the safe projection to the SHA-256 of the exact protected response
      bytes plus an opaque protected-evidence reference;
-   - v3 also derives `evidence_sha256` over the complete Git-safe snapshot envelope so valid-looking post-generation edits to the source digest or safe metadata fail validation;
-   - the builder derives the source-response and envelope digests; the operator cannot hand-enter the source digest;
+   - v3 also derives `evidence_sha256` over the complete Git-safe snapshot envelope so accidental/post-generation edits fail validation;
+   - final closeout re-reads the exact protected raw `/config/auth` bytes and requires their SHA-256 plus every allowlisted value to match the Git-safe snapshot, so recomputing the public envelope hash cannot substitute for the protected provider capture;
+   - the builder derives the source-response and envelope digests; the operator cannot hand-enter the source digest during generation;
    - public defaults do not satisfy this evidence.
 
 3. **Disposable provider cleanup**
@@ -65,7 +66,8 @@ current-main evidence worktree/branch
     -> protected /config/auth capture (preserve exact response bytes; do not reserialize)
     -> generated Git-safe Auth settings v3 snapshot
     -> stage/copy the frozen runtime PASS index unchanged
-    -> run closeout checker and require the expected pre-cleanup failure: cleanup_evidence_missing
+    -> run closeout checker with the same protected raw /config/auth file
+    -> require the expected pre-cleanup failure: cleanup_evidence_missing
 
 owner-authorized provider cleanup
     -> revoke all sessions/refresh state for the one disposable conformance test user
@@ -166,7 +168,8 @@ receipt after validating that receipt.
 After all three real Git-safe artifacts have been added to the current-main evidence branch:
 
 ```bash
-python tools/check_supabase_staging_auth_closeout.py
+python tools/check_supabase_staging_auth_closeout.py \
+  --auth-config-file /protected/princess-staging-auth-config.json
 ```
 
 A PASS from this checker validates evidence consistency and authority boundaries only. It does not authorize
