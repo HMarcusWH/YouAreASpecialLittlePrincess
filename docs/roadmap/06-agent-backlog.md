@@ -4,7 +4,7 @@
 
 [Documentation index](00-index.md) · [Machine authority](tasks.json) · [Build sequence](20-end-to-end-build-sequence.md) · [Release gates](21-release-readiness-checklists.md)
 
-Plan 2.3; code baseline `acad76e24697585d43998ed4db01e41aaf81c3b4`. Statuses are implementation/history records, not production approvals. READY is computed from completed hard predecessors.
+Plan 2.3; code baseline `f42f6415dc3c166af6feac36df18cf219d88080a`. Statuses are implementation/history records, not production approvals. READY is computed from completed hard predecessors.
 
 Use `python docs/roadmap/plan_tools.py --ready`, `--active` or `--task ID`. Edit tasks.json and run `--write` then `--check` when maintaining the plan.
 
@@ -1574,7 +1574,7 @@ PR #14 established the working deterministic Free Next.js journey and T21 export
 - Runtime-conformance closeout evidence is bound to the corrected frozen runtime-witness commit `c653a7d0cc29e0398a0cfb9e5c8113b9b2acd6b3` and the complete Git-safe conformance record validates receipt version/digest plus the recorded qualification, account, manifest, project, issuer, audience, role and source-revision anchors.
 - Disposable-provider cleanup evidence uses `supabase-staging-cleanup/2` and carries the exact runtime `conformance_receipt_sha256`; cleanup for another witness cannot be combined with the selected-account snapshot to close T17.
 - Disposable-provider cleanup evidence cannot predate the bound runtime-conformance witness; its checked_date must be the same as or later than the protected conformance receipt checked_date.
-- Selected-account Auth-settings evidence uses `supabase-auth-settings/2` and binds the allowlisted safe projection to the SHA-256 of the exact protected Management API `/config/auth` response bytes plus an opaque protected-evidence reference; the operator cannot hand-enter the source digest.
+- Selected-account Auth-settings evidence uses `supabase-auth-settings/3`, binds the allowlisted safe projection to the SHA-256 of the exact protected Management API `/config/auth` response bytes plus an opaque protected-evidence reference, and carries canonical `evidence_sha256` over the complete Git-safe snapshot envelope so valid-looking post-generation edits to the source digest or safe metadata fail validation. The source digest remains builder-derived from protected bytes.
 - Final staging Auth closeout independently enforces chronology across evidence classes: runtime conformance checked_date <= Auth-settings captured_date <= cleanup checked_date.
 - Supabase qualification manifest hashing is line-ending stable: the exact historical Windows CRLF v4 receipt remains receipt-SHA-pinned while runtime drift detection uses the LF-normalized/Git manifest hash.
 
@@ -1599,7 +1599,7 @@ PR #14 established the working deterministic Free Next.js journey and T21 export
 - Staging closeout checker that rewrites the 2026-10-01 narrow owner decision into application-login/production approval or permits the closeout while application_login owner authority is widened.
 - PASS-shaped conformance Markdown from the wrong Princess commit, missing/forged receipt digest, altered qualification/account/manifest/profile anchor, or cleanup evidence whose conformance_receipt_sha256 differs from the runtime witness.
 - Cleanup evidence with checked_date earlier than its bound runtime-conformance receipt, even when all cleanup booleans and receipt digest otherwise validate.
-- Auth-settings snapshot with an edited/invalid source_response_sha256, invalid protected evidence reference, or source bytes whose parsed object differs from the projected Auth config.
+- Auth-settings snapshot with an edited/invalid source_response_sha256 (including another valid 64-hex value without the matching v3 evidence envelope), invalid protected evidence reference, or source bytes whose parsed object differs from the projected Auth config.
 - Final closeout using Auth-settings captured before runtime conformance or cleanup dated before either the runtime witness or Auth-settings capture.
 - LF/CRLF checkout differences for the unchanged staging manifest must not force requalification or weaken exact receipt pinning; actual normalized manifest content drift must still fail closed.
 
@@ -1617,7 +1617,7 @@ PR #14 established the working deterministic Free Next.js journey and T21 export
 - Operator-only Supabase staging runtime conformance harness with protected receipt and Git-safe evidence index
 - Supabase Auth operational-policy contract plus source-bound selected-account settings snapshot builder
 - Supabase staging Auth closeout contract, cleanup-evidence builder and atomic closeout checker
-- Source-bound Supabase Auth-settings v2 evidence contract plus final cross-artifact chronology validation.
+- Source-bound Supabase Auth-settings v3 evidence-envelope contract plus final cross-artifact chronology validation.
 
 ### Rollback and compatibility
 

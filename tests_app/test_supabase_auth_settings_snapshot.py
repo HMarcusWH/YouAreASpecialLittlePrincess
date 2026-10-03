@@ -81,6 +81,7 @@ def test_safe_snapshot_extracts_only_allowlisted_account_facts(monkeypatch):
     assert result["production_activation"] is False
     assert result["source_response_sha256"] == hashlib.sha256(_source_bytes(_config())).hexdigest()
     assert result["protected_evidence_ref"] == "operator-local:princess-staging-auth-config"
+    assert result["evidence_sha256"] == snapshot._evidence_hash(result)
 
     rendered = json.dumps(result, sort_keys=True)
     assert project_ref not in rendered
@@ -106,6 +107,7 @@ def test_unrelated_provider_fields_do_not_change_safe_projection(monkeypatch):
     )
     assert first["safe_projection_sha256"] == second["safe_projection_sha256"]
     assert first["source_response_sha256"] != second["source_response_sha256"]
+    assert first["evidence_sha256"] != second["evidence_sha256"]
 
 
 def test_reviewed_setting_change_changes_projection_hash(monkeypatch):
@@ -121,6 +123,7 @@ def test_reviewed_setting_change_changes_projection_hash(monkeypatch):
         captured_date="2026-10-02",
     )
     assert first["safe_projection_sha256"] != second["safe_projection_sha256"]
+    assert first["evidence_sha256"] != second["evidence_sha256"]
 
 
 @pytest.mark.parametrize(
@@ -231,6 +234,38 @@ def test_snapshot_source_response_hash_shape_detects_tampering(monkeypatch):
     )
     result["source_response_sha256"] = "not-a-digest"
     with pytest.raises(snapshot.AuthSettingsError, match="auth_settings_snapshot_source_response_sha256"):
+        snapshot.validate_snapshot(result)
+
+
+@pytest.mark.parametrize(
+    ("field", "value"),
+    [
+        ("source_response_sha256", "e" * 64),
+        ("captured_date", "2026-10-03"),
+        ("protected_evidence_ref", "operator-local:changed-auth-config"),
+    ],
+)
+def test_snapshot_evidence_hash_detects_valid_looking_tampering(monkeypatch, field, value):
+    project_ref = _bind_project(monkeypatch)
+    result = _build_snapshot(
+        project_ref=project_ref,
+        auth_config=_config(),
+        captured_date="2026-10-02",
+    )
+    result[field] = value
+    with pytest.raises(snapshot.AuthSettingsError, match="auth_settings_snapshot_evidence_hash"):
+        snapshot.validate_snapshot(result)
+
+
+def test_snapshot_evidence_hash_shape_is_strict(monkeypatch):
+    project_ref = _bind_project(monkeypatch)
+    result = _build_snapshot(
+        project_ref=project_ref,
+        auth_config=_config(),
+        captured_date="2026-10-02",
+    )
+    result["evidence_sha256"] = "not-a-digest"
+    with pytest.raises(snapshot.AuthSettingsError, match="auth_settings_snapshot_evidence_sha256"):
         snapshot.validate_snapshot(result)
 
 

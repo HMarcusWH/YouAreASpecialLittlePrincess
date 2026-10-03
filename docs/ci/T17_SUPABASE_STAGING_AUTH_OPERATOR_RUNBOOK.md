@@ -89,10 +89,30 @@ python tools/build_supabase_auth_settings_snapshot.py \
   --output docs/ci/T17_SUPABASE_AUTH_SETTINGS_SNAPSHOT.json
 ```
 
-The v2 builder must source the exact selected-account values for all allowlisted `rate_limit_*` fields and
+The v3 builder must source the exact selected-account values for all allowlisted `rate_limit_*` fields and
 `security_sb_forwarded_for_enabled`. It hashes the exact protected Management API response bytes into
 `source_response_sha256` and records only an opaque `protected_evidence_ref`; the operator cannot hand-enter
-the source digest.
+the source digest. The v3 snapshot also carries a canonical `evidence_sha256` over the complete Git-safe envelope.
+Do not pretty-print, parse-and-redump, normalize line endings or otherwise rewrite the protected raw response before
+running the builder; `source_response_sha256` is byte-exact.
+
+## 2.5. Validate both non-destructive evidence classes before cleanup
+
+Copy/stage the generated runtime PASS index from the frozen witness worktree into the current evidence branch
+without editing it, then run:
+
+```bash
+python tools/check_supabase_staging_auth_closeout.py
+```
+
+At this point cleanup evidence intentionally does not exist. The required result is exactly:
+
+```text
+FAIL: cleanup_evidence_missing
+```
+
+Any earlier failure means the conformance or Auth-settings evidence is not acceptable; stop before deleting the
+disposable provider identity.
 
 ## 3. Dispose of the witness identity
 
@@ -100,8 +120,9 @@ After a successful runtime witness, use owner-authorized Supabase controls to:
 
 1. revoke/sign out all sessions for the one disposable conformance test user;
 2. revoke provider refresh/session state for that user;
-3. delete that disposable Auth user;
-4. leave the Princess staging project intact.
+3. verify the targeted session/refresh state is revoked and retain that verification only in protected operator evidence;
+4. delete that disposable Auth user and verify deletion;
+5. leave the Princess staging project intact.
 
 Already-issued access JWTs may remain cryptographically valid until `exp`; do not record cleanup as instantaneous
 access-token invalidation.
@@ -142,6 +163,7 @@ python tools/build_supabase_staging_cleanup_evidence.py \
 ```
 
 The builder validates the protected runtime receipt and derives `conformance_receipt_sha256` from its exact bytes.
+Do not reserialize or rewrite that protected receipt after the frozen harness creates it.
 
 ## 5. Assemble only Git-safe evidence
 

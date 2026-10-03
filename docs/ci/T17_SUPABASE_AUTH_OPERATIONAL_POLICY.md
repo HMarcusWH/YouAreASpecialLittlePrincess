@@ -37,11 +37,13 @@ The operator must provide:
 Both protected inputs must be absolute paths outside the Git checkout. The tool performs no provider request and
 accepts no Supabase Management API token, application API key, password, access token or refresh token.
 
-The generated `supabase-auth-settings/2` snapshot is Git-safe only because it allowlists reviewed non-secret
+The generated `supabase-auth-settings/3` snapshot is Git-safe only because it allowlists reviewed non-secret
 fields, hashes the raw project reference before comparison with the already-qualified Princess staging project
-binding, hashes the exact protected Management API response bytes into `source_response_sha256`, and records only
-an opaque `protected_evidence_ref`. The source-response digest is derived by the builder and is never supplied by
-the operator.
+binding, hashes the exact protected Management API response bytes into `source_response_sha256`, records only
+an opaque `protected_evidence_ref`, and derives `evidence_sha256` over the complete Git-safe snapshot envelope.
+The source-response digest is derived by the builder and is never supplied by the operator. The envelope digest
+makes valid-looking post-generation edits to that digest, capture metadata or safe evidence references fail closed
+unless the complete safe artifact is deliberately regenerated.
 
 ## Required selected-account fields
 
@@ -57,14 +59,16 @@ The real snapshot must contain the selected staging account's exact current valu
 - `security_sb_forwarded_for_enabled`.
 
 Missing values are not filled from documentation defaults. Unknown provider fields are ignored rather than copied
-into Git. The safe projection is canonicalized and SHA-256 bound so reviewed-setting drift changes its evidence
-digest while unrelated raw provider fields do not.
+into Git. The reviewed safe projection remains independently canonicalized and SHA-256 bound. The complete v3
+Git-safe envelope is also canonicalized and hashed, so unrelated raw provider fields leave the projection digest
+unchanged but still change the source-response/envelope evidence because the exact protected response bytes changed.
 
 The generated snapshot must always state:
 
 ```text
-snapshot_version:             supabase-auth-settings/2
+snapshot_version:             supabase-auth-settings/3
 source_response_sha256:       <derived from exact protected /config/auth bytes>
+evidence_sha256:              <derived from complete Git-safe snapshot envelope>
 protected_evidence_ref:       <opaque safe reference>
 contains_secrets:             false
 application_login_activation: false

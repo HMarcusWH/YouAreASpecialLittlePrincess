@@ -95,7 +95,7 @@ def _write_world(root: Path):
         "security_sb_forwarded_for_enabled": False,
     }
     auth = {
-        "snapshot_version": "supabase-auth-settings/2",
+        "snapshot_version": "supabase-auth-settings/3",
         "provider": "supabase-auth",
         "project_alias": "princess-staging",
         "environment": "staging",
@@ -112,6 +112,7 @@ def _write_world(root: Path):
         "application_login_activation": False,
         "production_activation": False,
     }
+    auth["evidence_sha256"] = hashlib.sha256(_canonical_bytes(auth)).hexdigest()
     assert set(projection) == set(SAFE_PROVIDER_FIELDS)
     (ci / "T17_SUPABASE_AUTH_SETTINGS_SNAPSHOT.json").write_text(
         json.dumps(auth), encoding="utf-8"
@@ -230,6 +231,16 @@ def test_cleanup_must_bind_same_conformance_receipt(tmp_path):
     data["conformance_receipt_sha256"] = "c" * 64
     p.write_text(json.dumps(data), encoding="utf-8")
     with pytest.raises(closeout.CloseoutError, match="cleanup_conformance_receipt_mismatch"):
+        closeout.check_closeout(tmp_path)
+
+
+def test_auth_settings_valid_digest_edit_fails_evidence_envelope(tmp_path):
+    ci = _write_world(tmp_path)
+    p = ci / "T17_SUPABASE_AUTH_SETTINGS_SNAPSHOT.json"
+    data = json.loads(p.read_text())
+    data["source_response_sha256"] = "e" * 64
+    p.write_text(json.dumps(data), encoding="utf-8")
+    with pytest.raises(Exception, match="auth_settings_snapshot_evidence_hash"):
         closeout.check_closeout(tmp_path)
 
 
