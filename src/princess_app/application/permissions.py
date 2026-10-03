@@ -47,6 +47,11 @@ class PermissionService:
         self._ids = ids
         self._allow_draft = allow_draft_policy
 
+    @property
+    def allows_draft_policy(self) -> bool:
+        """Whether grants under unapproved (DRAFT) notices count here (synthetic data only)."""
+        return self._allow_draft
+
     def record(self, *, subject_id: str, actor_id: str, purpose_id: str, scope: Scope, decision: Decision,
                notice_version: str, effective_at: datetime | None = None,
                request_id: str | None = None) -> PermissionEvent:

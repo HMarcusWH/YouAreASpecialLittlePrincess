@@ -20,10 +20,12 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from princess_app.adapters.fakes import FakeIdentityProvider
 from princess_app.application.commerce import CommerceService
+from princess_app.application.comparison import ComparisonService
 from princess_app.application.exports import NOT_RECALLABLE, ExportRow, ExportService
 from princess_app.application.feedback import FeedbackService
 from princess_app.application.identity import IdentityService, Principal
 from princess_app.application.intake import ChallengeProof, IntakeService
+from princess_app.application.notices import NoticeCatalog
 from princess_app.application.notifications import NotificationService
 from princess_app.application.permissions import PermissionService
 from princess_app.application.reports import ReportAccessResolver, ReportReader, ReportStore
@@ -102,6 +104,10 @@ class Services:
     notifications: NotificationService | None = None
     # Operational readiness is injected by composition and must remain provider-free.
     readiness: Callable[[], None] | None = None
+    # The reviewed consent notice registry served to clients (read-only).
+    notices: NoticeCatalog | None = None
+    # Same-owner, unsaved comparisons over the T18 builder; partner inputs need T22.
+    comparisons_enabled: bool = False
 
 
 class _Strict(BaseModel):
@@ -164,6 +170,11 @@ class ExportBody(_Strict):
     sections: list[str] = Field(default_factory=list, max_length=8)
     # Cards: the ordinary_sharing grant (scope SHARE_GRANT) the card falls under.
     share_grant_ref: str | None = Field(default=None, pattern=r"^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$")
+
+
+class ComparisonBody(_Strict):
+    kind: Literal["PAIR", "HISTORY"]
+    report_ids: list[str] = Field(min_length=2, max_length=16)
 
 
 class FeedbackBody(_Strict):
@@ -325,6 +336,13 @@ def create_app(services: Services) -> FastAPI:
         check = services.permissions.check(who.principal_id, purpose_id, Scope(scope_kind, scope_ref))
         return {"purpose_id": purpose_id, "allowed": check.allowed, "reason": check.reason}
 
+    @app.get("/v1/consent-notices")
+    def consent_notices(locale: str = Query("en", pattern=r"^[a-z]{2}(?:-[A-Z]{2})?$")) -> dict:
+        """The notice text and versions a grant may cite here. Public: no permission is implied."""
+        if services.notices is None:
+            raise Unsupported("notices_not_configured")
+        return {"notices": services.notices.describe(locale)}
+
     def reader_for(who: Principal) -> ReportReader:
         return ReportReader(services.report_store_for(who.principal_id), services.clock, services.report_access)
 
@@ -359,6 +377,38 @@ def create_app(services: Services) -> FastAPI:
             raise Unsupported("uploads_not_configured")
         return services.intake
 
+    @app.delete("/v1/reports/{report_id}", status_code=202)
+    def delete_report(report_id: str, who: Principal = Depends(principal)) -> dict:
+        """Delete the specimen behind a report (and so the report), without the
+        client having to remember a capture ID from the device that made it."""
+        capture_id = intake().delete_report_source(who.principal_id, report_id)
+        tombstone(CAPTURE_DELETED, who.principal_id, capture_id)
+        return {"state": "DELETION_REQUESTED"}
+
+    @app.get("/v1/reports/{report_id}/source-image")
+    def report_source_image(report_id: str, request: Request, who: Principal = Depends(principal)) -> Response:
+        """The retained input image of the owner's report. Authorized through the
+        live OWNER projection: an erased, revoked or withdrawn image is not served."""
+        view = reader_for(who).view(report_id=report_id, principal_id=who.principal_id, projection="OWNER").data
+        entry = services.report_store_for(who.principal_id).latest(report_id)
+        asset_id = entry[1].data["analysis"]["input_asset_id"] if entry else None
+        if asset_id is None or asset_id not in view["authorized_asset_ids"]:
+            raise NotFound("source_image_not_available")
+        data, media_type = intake().read_source_image(who.principal_id, asset_id, call_context(request))
+        return Response(content=data, media_type=media_type, headers={
+            "Cache-Control": "private, no-store", "X-Content-Type-Options": "nosniff"})
+
+    @app.post("/v1/comparisons")
+    def create_comparison(body: ComparisonBody, who: Principal = Depends(principal)) -> dict:
+        """Deterministic same-owner comparison of saved reports. Computed from the
+        latest saved revisions and returned, not stored; never calls a model."""
+        if not services.comparisons_enabled:
+            raise Unsupported("comparisons_not_configured")
+        comparison = ComparisonService(services.report_store_for(who.principal_id), services.clock).create(
+            comparison_id=f"comparison_{uuid.uuid4().hex}", principal_id=who.principal_id,
+            report_ids=body.report_ids, kind=body.kind)
+        return comparison.to_dict()
+
     @app.post("/v1/uploads", status_code=201)
     def reserve_upload(body: UploadBody, request: Request, who: Principal = Depends(principal)) -> dict:
         proof = ChallengeProof(body.challenge.token) if body.challenge else None
@@ -378,6 +428,14 @@ def create_app(services: Services) -> FastAPI:
         run_id = intake().start_analysis(who.principal_id, body.capture_id)
         status = intake().status(who.principal_id, run_id)
         return {"run_id": run_id, "state": status.state}
+
+    @app.get("/v1/analyses")
+    def list_analyses(limit: int = Query(20, ge=1, le=50), who: Principal = Depends(principal)) -> dict:
+        """The principal's newest runs: lets a reinstalled app or another device
+        find unfinished work instead of starting it again."""
+        return {"items": [{"run_id": run.run_id, "state": run.state, "report_id": run.report_id,
+                           "error_code": run.error_code, "created_at": rfc3339(run.created_at)}
+                          for run in intake().recent_runs(who.principal_id, limit)]}
 
     @app.get("/v1/analyses/{run_id}")
     def analysis_status(run_id: str, who: Principal = Depends(principal)) -> dict:

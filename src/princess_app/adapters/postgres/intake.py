@@ -26,6 +26,7 @@ from ...application.intake import (
     SERVICE_PURPOSE,
     CaptureRow,
     RunStatus,
+    RunSummary,
     UploadRow,
 )
 from ...ports.base import Conflict, NotFound, RateLimited
@@ -260,6 +261,37 @@ class PostgresIntakeRepository:
     def request_retention_review(self, owner_id: str, capture_id: str, at: datetime) -> None:
         with self.db.session(owner_id) as conn:
             request_retention_review(conn, owner_id, capture_id, at)
+
+    def recent_runs(self, owner_id: str, limit: int) -> list[RunSummary]:
+        with self.db.session(owner_id) as conn:
+            rows = conn.execute(text(
+                "SELECT r.run_id, r.status, r.error_code, r.created_at, j.state AS job_state, "
+                "(SELECT report_id FROM app.report WHERE run_id = r.run_id AND deleted_at IS NULL) AS report_id "
+                "FROM app.analysis_run r LEFT JOIN app.job j ON j.subject_ref = r.run_id AND j.kind = :k "
+                # Same visibility as run_status: a deleted capture's runs are gone.
+                "WHERE NOT EXISTS (SELECT 1 FROM app.capture c WHERE c.capture_id = r.capture_id "
+                "AND c.deleted_at IS NOT NULL) ORDER BY r.created_at DESC, r.run_id DESC LIMIT :n"),
+                {"k": ANALYSIS_KIND, "n": limit}).mappings().all()
+        out = []
+        for row in rows:
+            state = row["status"]
+            if state == "QUEUED" and row["job_state"] == "LEASED":
+                state = "RUNNING"
+            out.append(RunSummary(row["run_id"], state, row["report_id"], row["error_code"], row["created_at"]))
+        return out
+
+    def capture_for_report(self, owner_id: str, report_id: str) -> str | None:
+        with self.db.session(owner_id) as conn:
+            return conn.execute(text(
+                "SELECT c.capture_id FROM app.report rp JOIN app.analysis_run r ON r.run_id = rp.run_id "
+                "JOIN app.capture c ON c.capture_id = r.capture_id "
+                "WHERE rp.report_id = :r AND rp.deleted_at IS NULL AND c.deleted_at IS NULL"),
+                {"r": report_id}).scalar()
+
+    def capture_for_asset(self, owner_id: str, asset_id: str) -> CaptureRow | None:
+        with self.db.session(owner_id) as conn:
+            return _capture(conn.execute(text(CAPTURE_SELECT + "WHERE c.asset_id = :a"),
+                                         {"a": asset_id}).mappings().first())
 
 
 def request_retention_review(conn: Connection, owner_id: str, capture_id: str, at: datetime) -> None:
