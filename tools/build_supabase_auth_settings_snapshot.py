@@ -33,7 +33,7 @@ from princess_app.config_supabase import (  # noqa: E402
     PROVIDER_MODE,
 )
 
-SNAPSHOT_VERSION = "supabase-auth-settings/2"
+SNAPSHOT_VERSION = "supabase-auth-settings/3"
 SOURCE_KIND = "SUPABASE_MANAGEMENT_API"
 SOURCE_ACTION = "GET /v1/projects/{ref}/config/auth"
 OUTPUT_PATH = ROOT / "docs" / "ci" / "T17_SUPABASE_AUTH_SETTINGS_SNAPSHOT.json"
@@ -72,6 +72,12 @@ def _sha256_bytes(value: bytes) -> str:
 
 def _sha256_text(value: str) -> str:
     return _sha256_bytes(value.encode("utf-8"))
+
+
+def _evidence_hash(snapshot: Mapping[str, Any]) -> str:
+    """Hash the complete Git-safe snapshot envelope, excluding this digest itself."""
+    payload = {key: value for key, value in snapshot.items() if key != "evidence_sha256"}
+    return _sha256_bytes(_canonical_bytes(payload))
 
 
 def _inside_repo(path: Path) -> bool:
@@ -212,6 +218,7 @@ def build_snapshot(
         "application_login_activation": False,
         "production_activation": False,
     }
+    snapshot["evidence_sha256"] = _evidence_hash(snapshot)
     validate_snapshot(snapshot)
     return snapshot
 
@@ -230,6 +237,7 @@ def validate_snapshot(snapshot: Mapping[str, Any]) -> None:
         "source_response_sha256",
         "protected_evidence_ref",
         "safe_projection_sha256",
+        "evidence_sha256",
         *SAFE_PROVIDER_FIELDS,
         "contains_secrets",
         "application_login_activation",
@@ -279,6 +287,54 @@ def validate_snapshot(snapshot: Mapping[str, Any]) -> None:
     expected_hash = _sha256_bytes(_canonical_bytes(provider_projection))
     if snapshot.get("safe_projection_sha256") != expected_hash:
         raise AuthSettingsError("auth_settings_snapshot_projection_hash")
+
+    evidence_sha256 = snapshot.get("evidence_sha256")
+    if not isinstance(evidence_sha256, str) or not HEX64_RE.fullmatch(evidence_sha256):
+        raise AuthSettingsError("auth_settings_snapshot_evidence_sha256")
+    if evidence_sha256 != _evidence_hash(snapshot):
+        raise AuthSettingsError("auth_settings_snapshot_evidence_hash")
+
+
+def validate_snapshot_source_binding(
+    snapshot: Mapping[str, Any],
+    *,
+    source_response_bytes: bytes,
+) -> None:
+    """Re-bind a Git-safe snapshot to the exact protected provider response bytes."""
+    validate_snapshot(snapshot)
+    if (
+        not isinstance(source_response_bytes, bytes)
+        or not source_response_bytes
+        or len(source_response_bytes) > MAX_AUTH_CONFIG_BYTES
+    ):
+        raise AuthSettingsError("auth_settings_snapshot_source_response_binding")
+    try:
+        source = json.loads(source_response_bytes)
+    except (UnicodeDecodeError, ValueError):
+        raise AuthSettingsError("auth_settings_snapshot_source_response_binding") from None
+    if not isinstance(source, dict):
+        raise AuthSettingsError("auth_settings_snapshot_source_response_binding")
+    if snapshot.get("source_response_sha256") != _sha256_bytes(source_response_bytes):
+        raise AuthSettingsError("auth_settings_snapshot_source_response_binding")
+
+    try:
+        for field in RATE_LIMIT_FIELDS:
+            if _strict_nonnegative_int(source, field) != snapshot.get(field):
+                raise AuthSettingsError("auth_settings_snapshot_source_projection_binding")
+        for field in SECURITY_FIELDS:
+            if _strict_bool(source, field) != snapshot.get(field):
+                raise AuthSettingsError("auth_settings_snapshot_source_projection_binding")
+    except AuthSettingsError as exc:
+        if str(exc).startswith("auth_settings_snapshot_source_"):
+            raise
+        raise AuthSettingsError("auth_settings_snapshot_source_projection_binding") from None
+
+
+def load_protected_auth_config_bytes(path: Path) -> bytes:
+    """Load the protected raw Auth-config response without reserializing it."""
+    protected = _protected_input(path, "auth_config")
+    _, raw = _load_auth_config(protected)
+    return raw
 
 
 def main(argv: list[str] | None = None) -> int:

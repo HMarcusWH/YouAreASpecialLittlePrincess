@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pytest
 
+import build_supabase_auth_settings_snapshot as auth_settings_snapshot
 import check_supabase_staging_auth_closeout as closeout
 import verify_supabase_staging_runtime as conformance
 from build_supabase_auth_settings_snapshot import SAFE_PROVIDER_FIELDS
@@ -28,6 +29,27 @@ RUNTIME_BINDING_SHA256 = QUALIFIED_RUNTIME_BINDING_SHA256
 
 def _canonical_bytes(value):
     return json.dumps(value, sort_keys=True, separators=(",", ":")).encode()
+
+
+def _auth_source_bytes() -> bytes:
+    source = {
+        "rate_limit_anonymous_users": 30,
+        "rate_limit_email_sent": 2,
+        "rate_limit_sms_sent": 30,
+        "rate_limit_verify": 360,
+        "rate_limit_token_refresh": 1800,
+        "rate_limit_otp": 30,
+        "rate_limit_web3": 30,
+        "security_sb_forwarded_for_enabled": False,
+        "unreviewed_provider_field": "ignored-but-byte-bound",
+    }
+    return (
+        json.dumps(source, indent=2, sort_keys=True, ensure_ascii=False) + "\n"
+    ).encode("utf-8")
+
+
+def _check(root: Path) -> None:
+    closeout.check_closeout(root, auth_config_bytes=_auth_source_bytes())
 
 
 def _conformance_receipt(**overrides):
@@ -95,7 +117,7 @@ def _write_world(root: Path):
         "security_sb_forwarded_for_enabled": False,
     }
     auth = {
-        "snapshot_version": "supabase-auth-settings/2",
+        "snapshot_version": "supabase-auth-settings/3",
         "provider": "supabase-auth",
         "project_alias": "princess-staging",
         "environment": "staging",
@@ -104,7 +126,7 @@ def _write_world(root: Path):
         "source_kind": "SUPABASE_MANAGEMENT_API",
         "source_action": "GET /v1/projects/{ref}/config/auth",
         "project_ref_sha256": PROJECT_REF_SHA256,
-        "source_response_sha256": "d" * 64,
+        "source_response_sha256": hashlib.sha256(_auth_source_bytes()).hexdigest(),
         "protected_evidence_ref": "operator-local:auth-config",
         "safe_projection_sha256": hashlib.sha256(_canonical_bytes(projection)).hexdigest(),
         **projection,
@@ -112,6 +134,7 @@ def _write_world(root: Path):
         "application_login_activation": False,
         "production_activation": False,
     }
+    auth["evidence_sha256"] = hashlib.sha256(_canonical_bytes(auth)).hexdigest()
     assert set(projection) == set(SAFE_PROVIDER_FIELDS)
     (ci / "T17_SUPABASE_AUTH_SETTINGS_SNAPSHOT.json").write_text(
         json.dumps(auth), encoding="utf-8"
@@ -160,7 +183,7 @@ def _write_world(root: Path):
 
 def test_real_conformance_renderer_output_is_closeout_compatible(tmp_path):
     _write_world(tmp_path)
-    closeout.check_closeout(tmp_path)
+    _check(tmp_path)
 
 
 @pytest.mark.parametrize(
@@ -175,7 +198,7 @@ def test_closeout_fails_when_any_evidence_class_is_missing(tmp_path, name, code)
     ci = _write_world(tmp_path)
     (ci / name).unlink()
     with pytest.raises(Exception, match=code):
-        closeout.check_closeout(tmp_path)
+        _check(tmp_path)
 
 
 def test_pending_conformance_cannot_close_gate(tmp_path):
@@ -186,7 +209,7 @@ def test_pending_conformance_cannot_close_gate(tmp_path):
         encoding="utf-8",
     )
     with pytest.raises(closeout.CloseoutError, match="runtime_conformance_not_pass"):
-        closeout.check_closeout(tmp_path)
+        _check(tmp_path)
 
 
 def test_conformance_must_bind_exact_frozen_commit(tmp_path):
@@ -196,7 +219,7 @@ def test_conformance_must_bind_exact_frozen_commit(tmp_path):
         encoding="utf-8",
     )
     with pytest.raises(closeout.CloseoutError, match="runtime_conformance_commit_binding"):
-        closeout.check_closeout(tmp_path)
+        _check(tmp_path)
 
 
 def test_conformance_must_bind_qualification_anchor(tmp_path):
@@ -208,7 +231,7 @@ def test_conformance_must_bind_qualification_anchor(tmp_path):
         encoding="utf-8",
     )
     with pytest.raises(closeout.CloseoutError, match="runtime_conformance_qualification_receipt_sha256"):
-        closeout.check_closeout(tmp_path)
+        _check(tmp_path)
 
 
 def test_conformance_must_bind_exact_runtime_binding_digest(tmp_path):
@@ -220,7 +243,7 @@ def test_conformance_must_bind_exact_runtime_binding_digest(tmp_path):
         encoding="utf-8",
     )
     with pytest.raises(closeout.CloseoutError, match="runtime_conformance_runtime_binding_sha256"):
-        closeout.check_closeout(tmp_path)
+        _check(tmp_path)
 
 
 def test_cleanup_must_bind_same_conformance_receipt(tmp_path):
@@ -230,7 +253,31 @@ def test_cleanup_must_bind_same_conformance_receipt(tmp_path):
     data["conformance_receipt_sha256"] = "c" * 64
     p.write_text(json.dumps(data), encoding="utf-8")
     with pytest.raises(closeout.CloseoutError, match="cleanup_conformance_receipt_mismatch"):
-        closeout.check_closeout(tmp_path)
+        _check(tmp_path)
+
+
+def test_auth_settings_valid_digest_edit_fails_evidence_envelope(tmp_path):
+    ci = _write_world(tmp_path)
+    p = ci / "T17_SUPABASE_AUTH_SETTINGS_SNAPSHOT.json"
+    data = json.loads(p.read_text())
+    data["source_response_sha256"] = "e" * 64
+    p.write_text(json.dumps(data), encoding="utf-8")
+    with pytest.raises(Exception, match="auth_settings_snapshot_evidence_hash"):
+        _check(tmp_path)
+
+
+def test_closeout_rejects_rehashed_snapshot_without_matching_protected_source(tmp_path):
+    ci = _write_world(tmp_path)
+    p = ci / "T17_SUPABASE_AUTH_SETTINGS_SNAPSHOT.json"
+    data = json.loads(p.read_text())
+    data["source_response_sha256"] = "e" * 64
+    data["evidence_sha256"] = auth_settings_snapshot._evidence_hash(data)
+    p.write_text(json.dumps(data), encoding="utf-8")
+    with pytest.raises(
+        auth_settings_snapshot.AuthSettingsError,
+        match="auth_settings_snapshot_source_response_binding",
+    ):
+        _check(tmp_path)
 
 
 def test_auth_settings_cannot_predate_conformance(tmp_path):
@@ -238,9 +285,10 @@ def test_auth_settings_cannot_predate_conformance(tmp_path):
     p = ci / "T17_SUPABASE_AUTH_SETTINGS_SNAPSHOT.json"
     data = json.loads(p.read_text())
     data["captured_date"] = "2026-10-01"
+    data["evidence_sha256"] = auth_settings_snapshot._evidence_hash(data)
     p.write_text(json.dumps(data), encoding="utf-8")
     with pytest.raises(closeout.CloseoutError, match="auth_settings_before_conformance"):
-        closeout.check_closeout(tmp_path)
+        _check(tmp_path)
 
 
 def test_cleanup_cannot_predate_conformance_at_final_gate(tmp_path):
@@ -250,7 +298,7 @@ def test_cleanup_cannot_predate_conformance_at_final_gate(tmp_path):
     data["checked_date"] = "2026-10-01"
     p.write_text(json.dumps(data), encoding="utf-8")
     with pytest.raises(closeout.CloseoutError, match="cleanup_before_conformance"):
-        closeout.check_closeout(tmp_path)
+        _check(tmp_path)
 
 
 def test_cleanup_cannot_predate_auth_settings(tmp_path):
@@ -258,13 +306,14 @@ def test_cleanup_cannot_predate_auth_settings(tmp_path):
     auth_path = ci / "T17_SUPABASE_AUTH_SETTINGS_SNAPSHOT.json"
     auth = json.loads(auth_path.read_text())
     auth["captured_date"] = "2026-10-03"
+    auth["evidence_sha256"] = auth_settings_snapshot._evidence_hash(auth)
     auth_path.write_text(json.dumps(auth), encoding="utf-8")
     cleanup_path = ci / "T17_SUPABASE_STAGING_CLEANUP_EVIDENCE.json"
     cleanup = json.loads(cleanup_path.read_text())
     cleanup["checked_date"] = "2026-10-02"
     cleanup_path.write_text(json.dumps(cleanup), encoding="utf-8")
     with pytest.raises(closeout.CloseoutError, match="cleanup_before_auth_settings"):
-        closeout.check_closeout(tmp_path)
+        _check(tmp_path)
 
 
 def test_closeout_rejects_owner_scope_widening(tmp_path):
@@ -277,7 +326,7 @@ def test_closeout_rejects_owner_scope_widening(tmp_path):
         encoding="utf-8",
     )
     with pytest.raises(closeout.CloseoutError, match="application_login_owner_gate_widened"):
-        closeout.check_closeout(tmp_path)
+        _check(tmp_path)
 
 
 def test_cleanup_evidence_cannot_claim_project_decommission(tmp_path):
@@ -287,4 +336,4 @@ def test_cleanup_evidence_cannot_claim_project_decommission(tmp_path):
     data["project_decommission"] = "PASS"
     p.write_text(json.dumps(data), encoding="utf-8")
     with pytest.raises(Exception, match="cleanup_evidence_project_decommission"):
-        closeout.check_closeout(tmp_path)
+        _check(tmp_path)
