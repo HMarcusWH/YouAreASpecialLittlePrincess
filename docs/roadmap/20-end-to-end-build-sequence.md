@@ -12,7 +12,7 @@ python docs/roadmap/plan_tools.py --active
 python docs/roadmap/plan_tools.py --task T11
 ```
 
-At the current implementation baseline, `--ready` yields no newly startable planned task. `--active` yields **T11, T17, T19, T21, T24 and T29**. T10 and T18 are DONE. T29's provider-independent native foundation is implemented/qualified across Android and iOS simulator builds; signed-device/IAP and live processor evidence remain separately gated.
+Use the current `--ready` and `--active` outputs; do not treat a copied list in prose as a second status authority. T30A carries the merged native client; retained #72 checks are recorded in the handover snapshot.
 
 ## Current handoff
 

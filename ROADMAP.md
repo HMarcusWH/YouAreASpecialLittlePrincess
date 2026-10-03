@@ -1,6 +1,8 @@
+> Taking over implementation? Start with the [maintainer handover](docs/handover/README.md). This roadmap describes scope and future work, not a substitute for the [current API](docs/reference/api.md), [setup](docs/development/local-setup.md) or [operator commands](docs/reference/commands.md).
+
 # Product roadmap — Web, iOS and Android
 
-**Plan version:** 2.3 · **Research reviewed:** 2026-09-26 · **Implementation baseline reconciled through:** `c8142f3784a81a4c10988bb906c655bdf7fee59f` (merged PR #70). The machine task graph remains the status authority.
+**Plan version:** 2.3 · **Research reviewed:** 2026-09-26 · **Implementation baseline reconciled through:** `766125e25ccb0c9a4ada4466da5f36e708024e51` (merged PR #72). The machine task graph remains the status authority.
 
 [Agent instructions](AGENTS.md) · [Documentation map](docs/roadmap/00-index.md) · [Detailed task briefs](docs/roadmap/06-agent-backlog.md) · [Machine task graph](docs/roadmap/tasks.json) · [Execution sequence](docs/roadmap/20-end-to-end-build-sequence.md) · [Release gates](docs/roadmap/21-release-readiness-checklists.md).
 
