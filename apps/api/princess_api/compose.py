@@ -65,9 +65,12 @@ class UuidIds:
 def _manifest_sha256(environment: Environment) -> str:
     path = ROOT / "infra" / "environments" / f"{environment.value}.json"
     try:
-        return hashlib.sha256(path.read_bytes()).hexdigest()
+        raw = path.read_bytes()
     except OSError:
         raise Unsupported("identity_runtime_manifest_unreadable", detail=environment.value) from None
+
+    normalized = raw.replace(b"\r\n", b"\n").replace(b"\r", b"\n")
+    return hashlib.sha256(normalized).hexdigest()
 
 
 def compose_identity_provider(config: RuntimeConfig, clock):
