@@ -1,3 +1,5 @@
+> Choose the [supported host/setup recipe](../docs/development/local-setup.md) before installing. The core, backend and native toolchains are separate. This page owns dependency policy; [testing](../docs/development/testing.md) owns runnable suite entry points.
+
 # CI dependency locks
 
 T00 uses two reviewed files per supported interpreter:

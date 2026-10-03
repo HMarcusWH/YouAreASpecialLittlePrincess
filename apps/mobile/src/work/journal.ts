@@ -1,8 +1,10 @@
 // Minimal, owner-bound record of in-flight capture work, written before each
 // external side effect so process death or relaunch resumes the same business
-// operation instead of starting another. It holds identifiers, a private file
-// reference and a digest only: never image bytes, report bodies, purchase
-// proofs or credentials. It lives in app-private storage, not preferences.
+// operation instead of starting another. It holds identifiers, private file
+// metadata/digests, consent and retry state, and the upload slot URL/expiry. A
+// signed upload URL is a scoped capability: never log this journal. It stores
+// no image bytes, report bodies, store proofs or account credentials and lives
+// in app-private storage, not preferences. See docs/architecture/mobile-lifecycle.md.
 import type { UploadMediaType } from "@princess/api-client";
 
 import type { KeyValueFile } from "../platform/contracts.ts";
