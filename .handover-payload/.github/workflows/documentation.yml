@@ -1,0 +1,60 @@
+name: Documentation handover
+
+on:
+  pull_request:
+    paths:
+      - '**/*.md'
+      - 'docs/reference/inventory.json'
+      - 'docs/roadmap/tasks.json'
+      - 'tools/documentation.py'
+      - 'tests_docs/**'
+      - 'apps/api/princess_api/app.py'
+      - 'apps/*/package.json'
+      - 'packages/*/package.json'
+      - 'package.json'
+      - 'infra/environments/*.json'
+      - 'migrations/versions/*.py'
+      - 'tools/*.py'
+      - 'tools/*.sh'
+      - 'apps/workers/*/run_worker.py'
+      - '.github/workflows/*.yml'
+  push:
+    branches: [main]
+    paths:
+      - '**/*.md'
+      - 'docs/reference/inventory.json'
+      - 'docs/roadmap/tasks.json'
+      - 'tools/documentation.py'
+      - 'tests_docs/**'
+      - 'apps/api/princess_api/app.py'
+      - 'apps/*/package.json'
+      - 'packages/*/package.json'
+      - 'package.json'
+      - 'infra/environments/*.json'
+      - 'migrations/versions/*.py'
+      - 'tools/*.py'
+      - 'tools/*.sh'
+      - 'apps/workers/*/run_worker.py'
+      - '.github/workflows/*.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  documentation:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12'
+      - run: python tools/documentation.py --check
+      - run: python docs/roadmap/plan_tools.py --check
+      - run: python -m unittest discover -s tests_docs -p 'test_*.py'
+      - run: python -m unittest discover -s docs/roadmap -p 'test_plan_tools.py'
+      - name: Syntax only, never execute arbitrary documentation fences
+        run: |
+          bash -n tools/run_mobile_journey.sh
+          bash -n tools/run_web_e2e.sh
