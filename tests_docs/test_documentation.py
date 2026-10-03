@@ -4,6 +4,7 @@ from __future__ import annotations
 import importlib.util
 import os
 from pathlib import Path
+import re
 import shutil
 import subprocess
 import tempfile
@@ -66,6 +67,29 @@ class DocumentationTests(unittest.TestCase):
             before = DOCS.render_api(root)
             path.write_text('@app.get("/v1/b")\ndef a(): pass\n', encoding='utf-8')
             self.assertNotEqual(before, DOCS.render_api(root))
+
+    @unittest.skipUnless(shutil.which('bash'), 'Bash required for shell syntax checks')
+    def test_documented_setup_recipes_parse_without_execution(self):
+        # Only syntax-check these two allowlisted guides. Never execute their
+        # fences or inherit a BASH_ENV startup script from the test environment.
+        shell = shutil.which('bash')
+        for rel in ('docs/development/local-setup.md', 'docs/development/testing.md'):
+            body = (ROOT / rel).read_text(encoding='utf-8')
+            snippets = re.findall(r'^```bash\n(.*?)^```', body, re.MULTILINE | re.DOTALL)
+            self.assertTrue(snippets, rel)
+            for index, snippet in enumerate(snippets):
+                result = subprocess.run([shell, '-n'], input=snippet, text=True,
+                                        capture_output=True, env={'PATH': os.defpath}, timeout=10)
+                self.assertEqual(result.returncode, 0, f'{rel} fence {index}: {result.stderr}')
+        with tempfile.TemporaryDirectory() as directory:
+            marker = Path(directory) / 'must-not-exist'
+            result = subprocess.run([shell, '-n'], input=f'touch "{marker}"\n', text=True,
+                                    capture_output=True, env={'PATH': os.defpath}, timeout=10)
+            self.assertEqual(result.returncode, 0)
+            self.assertFalse(marker.exists(), 'syntax check executed a command')
+            invalid = subprocess.run([shell, '-n'], input='if true; then\n', text=True,
+                                     capture_output=True, env={'PATH': os.defpath}, timeout=10)
+            self.assertNotEqual(invalid.returncode, 0, 'invalid shell syntax was accepted')
 
     @unittest.skipUnless(shutil.which('bash'), 'Bash required for guarded shell refusal')
     def test_reset_refusal_happens_before_external_commands(self):

@@ -11,6 +11,8 @@ This is the route for an engineer who has not read the development chats. Public
 5. Resolve access and custody with the outgoing owner using [access and assets](access-and-assets.md). Never collect secrets through a PR, issue or chat transcript.
 6. Complete the [receiving-maintainer acceptance](acceptance.md) record. Documentation merging does not fill this record automatically.
 
+The [documentation audit disposition](documentation-changes.md) maps all 18 findings to the implemented guides and separates remaining external/recipient acceptance.
+
 ## Useful development commands
 
 From the repository root, after the applicable setup:
