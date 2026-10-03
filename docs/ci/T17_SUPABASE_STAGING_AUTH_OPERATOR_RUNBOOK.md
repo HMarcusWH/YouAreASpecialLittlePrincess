@@ -181,10 +181,11 @@ Then reconcile the T17 status/evidence docs without widening application-login o
 
 ## 6. Atomic closeout
 
-Run:
+Run with the same protected raw Auth-config response used to generate the v3 snapshot:
 
 ```bash
-python tools/check_supabase_staging_auth_closeout.py
+python tools/check_supabase_staging_auth_closeout.py \
+  --auth-config-file /protected/princess-staging-auth-config.json
 ```
 
 The required success line is:
