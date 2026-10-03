@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pytest
 
+import build_supabase_auth_settings_snapshot as auth_settings_snapshot
 import check_supabase_staging_auth_closeout as closeout
 import verify_supabase_staging_runtime as conformance
 from build_supabase_auth_settings_snapshot import SAFE_PROVIDER_FIELDS
@@ -249,6 +250,7 @@ def test_auth_settings_cannot_predate_conformance(tmp_path):
     p = ci / "T17_SUPABASE_AUTH_SETTINGS_SNAPSHOT.json"
     data = json.loads(p.read_text())
     data["captured_date"] = "2026-10-01"
+    data["evidence_sha256"] = auth_settings_snapshot._evidence_hash(data)
     p.write_text(json.dumps(data), encoding="utf-8")
     with pytest.raises(closeout.CloseoutError, match="auth_settings_before_conformance"):
         closeout.check_closeout(tmp_path)
@@ -269,6 +271,7 @@ def test_cleanup_cannot_predate_auth_settings(tmp_path):
     auth_path = ci / "T17_SUPABASE_AUTH_SETTINGS_SNAPSHOT.json"
     auth = json.loads(auth_path.read_text())
     auth["captured_date"] = "2026-10-03"
+    auth["evidence_sha256"] = auth_settings_snapshot._evidence_hash(auth)
     auth_path.write_text(json.dumps(auth), encoding="utf-8")
     cleanup_path = ci / "T17_SUPABASE_STAGING_CLEANUP_EVIDENCE.json"
     cleanup = json.loads(cleanup_path.read_text())
