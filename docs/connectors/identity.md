@@ -132,7 +132,7 @@ evidence. It also verifies that the existing owner record still says application
 2026-10-01 narrow staging decision.
 
 The runtime conformance harness requires a clean checkout and the closeout checker freezes the corrected cross-platform-hash witness to
-`ce6fe884305de93c6a13d091b31a3ff0d72dc5bf`. Generate the conformance PASS from a clean worktree at that SHA and
+`c653a7d0cc29e0398a0cfb9e5c8113b9b2acd6b3`. Generate the conformance PASS from a clean worktree at that SHA and
 capture the selected-account Auth settings in a separate protected operator/worktree flow. Assemble the Git-safe
 artifacts on a branch from current `main`, not from the frozen witness SHA: cleanup v2 is post-#60 tooling and must
 validate/hash the protected conformance receipt there. Closeout tooling does not itself execute provider cleanup
