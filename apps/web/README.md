@@ -26,3 +26,9 @@ PYTHON=.venv/bin/python tools/run_web_e2e.sh                          # live jou
 In a sandbox with a pre-installed browser, set `PRINCESS_CHROMIUM` to its executable instead of running `playwright install`.
 
 PDF export is implemented through T21 and the renderer can also produce scoped share-card PNGs from authorized SHARE projections. The Free web product now includes current-principal saved-report history, stored baseline/spacing/slant evidence views, account report-ready mail preferences, and automated axe WCAG A/AA journey coverage. Not yet included: production account sign-in/cross-device recovery (waiting on ADR-002), Premium/paid states (T20), and share-link/invitation UI (T22).
+
+## Maintainer navigation
+
+Next.js provides the existing Free journey and browser regression/inspection surface. Mobile is the current construction priority; unfinished web Premium is not a prerequisite for native client work. Preserve cookie/proxy and server authorization boundaries when changing shared packages.
+
+Use [setup](../../docs/development/local-setup.md), the package scripts in [command inventory](../../docs/reference/command-inventory.md), `pnpm --filter @princess/web build` and `pnpm --filter @princess/web e2e`. The disposable real-service journey is `tools/run_web_e2e.sh`; read its reset warnings before running. Web/print components share report semantics; native clients do not import the web DOM renderer.

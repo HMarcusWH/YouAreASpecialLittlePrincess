@@ -2,7 +2,7 @@
 
 Status: `DRAFT_PENDING_OWNER_REVIEW`. Human-readable specification: [docs/privacy](../../docs/privacy/README.md).
 
-These are versioned draft contracts. T01 owns the final product wire DTOs and code generation. It maps these schemas into `contracts/product/v1` and generated Python/TypeScript. Until then, the IDs, enums and semantics here are the source, and any change must keep the validator and fixtures green.
+These are versioned draft policy contracts. T01 now binds their authority into `contracts/product/v1` and generated Python/TypeScript; product generation does not approve the draft policy. These IDs, enums and semantics retain their distinct authority, and changes must keep the policy validators, fixtures and bound product outputs consistent.
 
 ## Layout
 

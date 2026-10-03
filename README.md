@@ -1,48 +1,78 @@
-<!-- roadmap-v2-navigation -->
-> **Building the app:** [complete roadmap](ROADMAP.md) · [coding-agent entry](AGENTS.md) · [documentation index](docs/roadmap/00-index.md) · [detailed task briefs](docs/roadmap/06-agent-backlog.md) · [Claude Design handoff](docs/design/CLAUDE_DESIGN_HANDOFF.md).
-> **Status:** active development, not publicly released. `docs/roadmap/tasks.json` is the machine authority for current task state and gates.
-
 # Inktrospect
 
-> Repository/internal codename: **You Are A Special Little Princess**. Existing `Princess` / `princess_*` package and service namespaces remain implementation details; the owner-accepted public product brand is **Inktrospect**.
+A mobile-first, privacy-conscious handwriting-analysis product built around deterministic measurements, structured evidence and separately labelled interpretive layers. Public brand: **Inktrospect**. `YouAreASpecialLittlePrincess`, `Princess` and `princess_*` are internal repository/package names, not instructions to rename existing contracts.
 
-A privacy-conscious consumer handwriting-analysis product built around deterministic
-handwriting measurements, structured evidence and clearly separated interpretive
-layers. Product scope includes web, native iOS/iPad and Android phone/tablet,
-PDF/share rendering, optional bounded Premium synthesis and a protected
-reference/calibration programme.
+**Status: active development, not publicly released.** The shared native client is implemented through T30A; real identity, purchases, push, device and store qualification remain unfinished. [Current handover snapshot](docs/handover/current-state.md) records the post-#72 evidence and limitations. [tasks.json](docs/roadmap/tasks.json) remains the task/dependency authority.
 
-The brand is playful; the evidence boundary is not. Numerical measurements remain
-authoritative for measurable quantities. Traditional graphology and AI synthesis are
-separately labelled and are not validated psychological assessment.
+## Start here
 
-## Current implementation snapshot
-
-| Area | Current state |
+| Goal | Entry |
 |---|---|
-| Canonical numerical schema | 272 feature definitions; 64 registered core measurements |
-| Deterministic Free engine | Implemented; zero runtime AI by design |
-| PostgreSQL/RLS product backend | Implemented provider-independently |
-| Free web journey | Implemented with saved history, evidence, settings and accessibility coverage |
-| PDF/share-card rendering | Implemented from saved authorized projections |
-| Premium runtime | Provider-independent packet/compiler/validator/runtime implemented; live model activation still gated |
-| Commerce | Internal ledger/reservation/fulfilment machinery implemented; real Stripe/App Store/Play verification remains gated |
-| Recovery/notifications | Tombstones, restore reconciliation and notification state machine implemented; production providers/topology remain incomplete |
-| Pilot tooling | Synthetic-qualified, human mode fail-closed behind rights/participant gates |
-| Product design | **Inktrospect / Direction A — The Dossier accepted with changes**; canonical semantic tokens are `design-tokens/1.0` |
-| Native clients | **T29 IN_PROGRESS** — Expo/RN foundation, native ports and Android development compile implemented; signed-device/IAP/provider evidence remains gated |
+| Take over development | [Receiving-maintainer guide](docs/handover/README.md) and [documentation home](docs/README.md) |
+| Run the mobile development app | [Complete local setup](docs/development/local-setup.md) → [native README](apps/mobile/README.md) |
+| Understand the system | [Architecture](docs/architecture/overview.md), [data/lifecycles](docs/architecture/data-and-lifecycles.md), [current API](docs/reference/api.md) |
+| Make a change | [Contributing](CONTRIBUTING.md), [tests](docs/development/testing.md), [generated assets](docs/reference/generated-assets.md), [agent instructions](AGENTS.md) |
+| Diagnose or operate | [Safe commands](docs/reference/commands.md), [troubleshooting](docs/development/troubleshooting.md), [runbooks](docs/runbooks/README.md) |
+| Plan remaining work | [Roadmap](ROADMAP.md), [generated backlog](docs/roadmap/06-agent-backlog.md), [external access/assets](docs/handover/access-and-assets.md) |
 
-Current task status is intentionally not duplicated here; run:
+## Current implementation, not release approval
+
+| Area | Implemented scope / limit |
+|---|---|
+| Numerical Free core | 64 registered measurements against 272 definitions; zero runtime AI; most estimates remain experimental |
+| Product backend | PostgreSQL/RLS, immutable captures/reports, permission events, durable jobs, ledger, exports and erasure/recovery mechanisms |
+| Shared native client | Guest/development sessions, review/crop, journaled upload/analysis, saved Dossier/history, settings, feedback, authenticated exports, same-owner unsaved comparison and paid-state integration code |
+| Native evidence | Controller tests, development-API journey and Android/unsigned-iOS compilation; not launched native UI, physical-device or store qualification |
+| Supporting web | Implemented Free journey and regression/inspection surface; unfinished web Premium is not a native construction prerequisite |
+| Premium / commerce | Provider-independent and disabled adapter/runtime machinery; real model evaluation, store proofs, commercial policy and live composition remain gated |
+| Identity / operations | Narrow selected Supabase verification profile; production-style app login and complete hosting/storage/mail/push/monitoring remain open |
+| Research / policy | Reviewed interpretation structure and synthetic pilot tooling; no fabricated calibration, reference population or approval of draft policy |
+
+The accepted design is [Direction A — The Dossier](docs/design/ACCEPTED_DOSSIER_REFERENCE.md). Native clients share semantic tokens, formatting and authorized facts, not a universal web renderer. The brand is playful; numerical and privacy boundaries are not optional.
+
+```text
+private image → safe immutable capture → deterministic engine
+   → evidence + saved report → current authorized projection
+       ├─ native iPhone/iPad and Android phone/tablet client
+       ├─ supporting web client
+       └─ PDF / share rendering
+optional Premium: authorized image + facts → bounded validated saved overlay
+```
+
+Clients never become a second measurement, credit or permission authority. Reopening, rendering or sharing a saved report does not call a model. Missing is not zero; image darkness/thickness are proxies, not physical pen pressure. No diagnosis, intelligence, deception, criminality, employability, authorship identification or relationship-outcome claim is permitted. Population-relative claims require a qualified reference release. Traditional associations and AI synthesis remain distinct from measured facts.
+
+## Repository map
+
+```text
+apps/mobile/                shared native client and platform boundaries
+apps/api/                   FastAPI surface and source-tree composition
+apps/workers/               analysis/erasure, Premium, export and notification processes
+apps/web/                   supporting Next.js Free client
+apps/render/                offline PDF/share-card renderer
+src/princess_graphology/    deterministic numerical core
+src/princess_app/           domain, application, ports and adapters
+src/princess_contracts/     authoritative product construction/validation
+packages/                  shared DTOs, API transport, report semantics and design tokens
+contracts/                 wire/policy sources and generated schema components
+schema/                    numerical and interpretation authorities
+migrations/                reviewed PostgreSQL revisions and role boundaries
+infra/                     development/runtime/recovery/operations declarations
+research/ provenance/      frozen source evidence and rights records
+evaluation/ fixtures/      synthetic tooling and explicitly gated real evaluation
+docs/                      maintainer guides, specialist specs, decisions and evidence
+```
+
+Read [component navigation](docs/reference/component-index.md) for entry pages. [Security reporting](SECURITY.md) and [third-party notices](THIRD_PARTY_NOTICES.md) explain handling and rights boundaries; this documentation does not select a project license.
 
 ```bash
-python docs/roadmap/plan_tools.py --ready
 python docs/roadmap/plan_tools.py --active
+python docs/roadmap/plan_tools.py --ready
 ```
 
 ### Deferred operational follow-up — T17 Supabase staging Auth closeout
 
 The selected Supabase staging identity profile is implemented and production-disabled, but its final live evidence
-ceremony is intentionally deferred. **This blocks T17 identity closeout / login activation; it does not block
+run is intentionally deferred. **This blocks T17 identity closeout / login activation; it does not block
 continued construction of unrelated or disabled/fake-backed product work.** Revisit this checklist before claiming
 the staging Auth gate complete:
 
@@ -62,59 +92,6 @@ the staging Auth gate complete:
 
 The step-by-step operator procedure remains authoritative in
 [`docs/ci/T17_SUPABASE_STAGING_AUTH_OPERATOR_RUNBOOK.md`](docs/ci/T17_SUPABASE_STAGING_AUTH_OPERATOR_RUNBOOK.md).
-
-## Product architecture
-
-```text
-private image
-    ↓
-safe intake + immutable capture
-    ↓
-deterministic measurement engine
-    ↓
-EvidenceBundle + immutable ReportDocument
-    ↓
-server-authorized projection
-    ├── web
-    ├── PDF / share card
-    ├── native clients (planned)
-    └── optional bounded Premium synthesis
-```
-
-Free uses no runtime learned model or generative provider. Premium starts from the
-same authorized image/evidence, cannot overwrite canonical measurements, and saves
-a validated overlay. Reopening, exporting or sharing a saved report does not call a
-model.
-
-## Repository map
-
-```text
-src/princess_graphology/     deterministic numerical core
-src/princess_app/            product domain/application/adapters
-apps/api/                    FastAPI application surface
-apps/web/                    Next.js Free web product
-apps/render/                 PDF/share-card renderer
-apps/workers/                durable background workers
-packages/contracts/          generated product DTOs
-packages/api-client/         typed client + runtime guards
-packages/report-core/        presentation semantics/formatting
-packages/report-web/         React report/print components
-packages/design-tokens/      cross-platform design tokens
-evaluation/collection/       gated pilot tooling
-docs/                        roadmap, design, privacy, connectors and operations
-```
-
-## Scientific and product boundaries
-
-- Missing is not zero; unavailable facts carry explicit reasons.
-- Experimental is not validated; synthetic tests do not establish population accuracy.
-- Static darkness/thickness are image proxies, not physical pen pressure.
-- No diagnosis, intelligence, deception, criminality, employment suitability,
-  authorship identification or relationship-outcome claim is permitted.
-- A percentile/rank/rarity claim requires an eligible, validated reference release.
-- Traditional associations remain source/school-labelled and runtime-inactive unless
-  separately approved.
-- Clients never become a second measurement, entitlement or credit authority.
 
 ## Measurement engine
 
@@ -141,9 +118,11 @@ provides the runtime contract. CI checks that it has not drifted.
 ### Install and run
 
 ```bash
-python -m venv .venv
+# Reviewed Linux x86_64 / Python 3.12 core environment, not a backend install.
+python3.12 -m venv .venv
 source .venv/bin/activate
-pip install -e '.[dev]'
+python -m pip install --require-hashes --only-binary=:all: --no-deps -r requirements/ci-py312.lock
+python -m pip install --no-index --no-deps --no-build-isolation -e '.[dev]'
 python tools/generate_feature_contract.py --check
 ruff check src tests tools
 pytest -q

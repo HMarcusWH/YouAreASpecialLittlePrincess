@@ -1,6 +1,8 @@
+> Human maintainer entry: [docs/README.md](docs/README.md), [handover](docs/handover/README.md), [setup](docs/development/local-setup.md) and [testing](docs/development/testing.md). For documentation changes also run `python tools/documentation.py --check`. Current implementation references override historical route sketches; task/gate authorities remain unchanged.
+
 # Coding-agent entry point
 
-Read [ROADMAP.md](ROADMAP.md), then the [documentation map](docs/roadmap/00-index.md). This repository is moving from a deterministic Python library to a shared web/iOS/Android product. Do not mistake planned paths or historical roadmap statements for implemented code.
+Read [ROADMAP.md](ROADMAP.md), then the [documentation map](docs/roadmap/00-index.md). This repository contains a deterministic Python core, shared product services and an implemented mobile-first native client with supporting web presentation. Do not mistake planned paths or historical roadmap statements for implemented code.
 
 ## Find and claim work
 
@@ -16,7 +18,7 @@ Mobile-first execution (2026-10-03): shared native client work proceeds under T3
 
 ## Where code belongs
 
-Follow [module boundaries](docs/roadmap/09-connectors-and-provider-boundaries.md). Preserve the pure `princess_graphology` core. Proposed application/domain/adapters live separately; web and native clients consume the same generated contracts and authorized report projections. No SQL, provider SDK or browser dependency in core measurement modules. No provider objects in public API DTOs. No client-side entitlement or measurement authority.
+Follow [module boundaries](docs/roadmap/09-connectors-and-provider-boundaries.md). Preserve the pure `princess_graphology` core. Application/domain/adapters live separately; web and native clients consume the same generated contracts and authorized report projections. No SQL, provider SDK or browser dependency in core measurement modules. No provider objects in public API DTOs. No client-side entitlement or measurement authority.
 
 [Connector specifications](docs/connectors/README.md) define ports, failure semantics, secrets, fakes and contract tests. [ADRs](docs/adr/README.md) distinguish engineering defaults from open provider choices. Do not introduce a new vendor, package manager, auth system, local password implementation, queue broker or billing aggregator without updating the owning decision and tests. Verify exact SDK/tool versions before pinning them; inherited version strings are not recommendations to install latest.
 
@@ -35,7 +37,7 @@ Follow [module boundaries](docs/roadmap/09-connectors-and-provider-boundaries.md
 
 ## Canonical sources and precedence
 
-Product scope and execution order: the [current index](docs/roadmap/00-index.md), [post-PR14 reconciliation](docs/roadmap/23-post-pr14-reconciliation.md) and tasks. Numerical definitions: [feature database](schema/graphology_feature_database_v1.json). Interpretation semantics: [T26 handoff](schema/graphology_interpretation/v1/README.md), source JSON and compiler, not prose examples in an older roadmap. T26 is reviewed and inactive; do not rebuild it or activate traditional packs as part of another task.
+Product scope and execution order: the [current index](docs/roadmap/00-index.md) and tasks. The [post-PR14 reconciliation](docs/roadmap/23-post-pr14-reconciliation.md) is historical evidence, not current implementation instructions. Numerical definitions: [feature database](schema/graphology_feature_database_v1.json). Interpretation semantics: [T26 handoff](schema/graphology_interpretation/v1/README.md), source JSON and compiler, not prose examples in an older roadmap. T26 is reviewed and inactive; do not rebuild it or activate traditional packs as part of another task.
 
 Before content work read [research index](research/graphology/README.md) and [research handoff](research/graphology/DATABASE_HANDOFF.md). Preserve the frozen `research/graphology/foundations-v0.1/` bytes. Source fidelity, empirical validity, feasibility, within-sample salience and rarity stay separate. A roadmap schema/prompt sketch does not override reviewed production fields.
 

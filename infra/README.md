@@ -1,3 +1,5 @@
+> Complete maintainer recipes: [local setup](../docs/development/local-setup.md), [test matrix](../docs/development/testing.md), [current configuration](../docs/reference/configuration.md), [safe commands](../docs/reference/commands.md). The technical details below describe existing mechanisms and explicit pending deployment work.
+
 # Environments and local setup (T28)
 
 `infra/` holds **non-secret** environment composition. Secret values never enter Git; manifests list only secret *names*.
@@ -75,7 +77,7 @@ PRINCESS_TEST_DATABASE_URL=postgresql://princess_admin:local-only-admin@127.0.0.
   .venv/bin/python -m pytest -q tests_app
 ```
 
-The API factory is `princess_api.compose:app_from_environment` (`uvicorn --factory`). Identity remains fake-only after the ADR-002 owner selected Supabase Auth. The intended staging/sandbox identity profile passed the environment-bound v4 managed-project witness on 2026-10-01, but the scoped processor/account review and explicit staging composition/integration slice are still required before runtime use. No production/live issuer is configured.
+The API factory is `princess_api.compose:app_from_environment` (`uvicorn --factory`). Local/test composition uses fake identity. The selected Supabase adapter also has an implemented, protected staging/sandbox `VERIFY_CREDENTIAL` composition for the exact qualified tuple. This is not native/web sign-in, refresh, account lifecycle or complete staging deployment. The real conformance/Auth-settings/cleanup closeout remains deferred; unrelated object/payment/abuse composition still fails closed. Production/live identity is not activated. See the [current capability snapshot](../docs/handover/current-state.md) and [provider register](../docs/roadmap/19-provider-decision-register.md).
 
 ## Intake and the analysis worker (T04)
 

@@ -13,3 +13,5 @@ node_modules/
 playwright-report/
 test-results/
 **/supabase-identity-qualification*.json
+# Local development tombstone evidence is private, never repository content.
+.local-tombstones/

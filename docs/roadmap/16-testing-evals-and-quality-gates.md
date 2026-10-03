@@ -6,7 +6,7 @@
 
 Every result identifies commit, environment, resolved dependencies, fixture/corpus release, command, exit code and artifact. A proposed command is not a test result. Synthetic geometry proves a numerical/interface property, not population validity. A sandbox purchase proves integration behavior, not real commercial approval. A signed app binary is not store approval.
 
-The repository's existing Python CI is retained. This roadmap adds a documentation validator/workflow; it does not implement product suites by naming them. The baseline PR recorded 158 pytest passes per Python minor before merge. New PRs must execute their exact head and report current counts rather than copying that number.
+Use the current [test command/evidence matrix](../development/testing.md) and source workflows. Retained post-#72 results are in the [handover snapshot](../handover/current-state.md); execute and record the actual new head rather than copying old test counts. Documentation inventory and native controller tests are distinct from device/provider evidence.
 
 ## Existing checks
 
@@ -22,9 +22,9 @@ python -m unittest discover -s docs/roadmap -p 'test_plan_tools.py'
 
 `--write` is a maintenance command, not validation. It regenerates the human backlog from the machine plan. CI uses `--check` so stale generated text fails rather than being silently overwritten.
 
-## Planned suite contract
+## Coverage obligations by owning task
 
-The following suites are `TO_IMPLEMENT` in the owning tasks. Each task must add the exact runnable command to its README/CI and update its task record when the suite exists.
+This table combines implemented and remaining coverage obligations, not a blanket TO_IMPLEMENT status. The current [command matrix](../development/testing.md), actual workflows and `tasks.json` validation profiles establish which checks exist. Device/provider/empirical obligations remain open where their real evidence is absent.
 
 | Suite | Owner | Required coverage |
 |---|---|---|

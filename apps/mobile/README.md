@@ -20,13 +20,7 @@ Shared iPhone/iPad and Android phone/tablet client (task T30A, consumed by T30/T
 
 Native builds need a development build (`expo-dev-client`); Expo Go cannot exercise these native modules. The phone talks to the API directly, so the API must issue upload URLs on an origin the device can reach.
 
-```bash
-# API (see infra/README.md) with a device-reachable public base, e.g. a LAN address:
-PRINCESS_PUBLIC_API_BASE=http://192.168.1.20:8000 … uvicorn --factory princess_api.compose:app_from_environment --host 0.0.0.0
-
-# App (development variant: local/test backend, development identity allowed):
-INKTROSPECT_API_BASE=http://192.168.1.20:8000 pnpm --filter @princess/mobile ios      # or: android
-```
+Follow [local setup](../../docs/development/local-setup.md) for complete locked backend/role/worker preparation and Android/macOS launch commands. The API and issued upload URLs must use the same device-reachable origin; do not paste a placeholder command as a shell recipe.
 
 | Variable | Meaning |
 |---|---|
@@ -43,8 +37,7 @@ Invalid configuration stops at a configuration screen with a code. Store and sta
 ```bash
 pnpm --filter @princess/mobile typecheck
 pnpm --filter @princess/mobile test          # Node: session, workflow recovery, runner, controllers, config, links, copy
-PYTHON=.venv/bin/python PRINCESS_E2E_ADMIN_URL=postgresql://…@127.0.0.1:5432/postgres PRINCESS_E2E_ALLOW_RESET=1 \
-  tools/run_mobile_journey.sh                # real composition against a disposable local API and workers
+# The destructive native API journey has a complete isolated recipe in docs/development/local-setup.md.
 ```
 
 `tools/run_mobile_journey.sh` drives the app's real composition in Node with Node stand-ins only for device I/O. It is development-API evidence (session, notice, journaled upload with a lost response, process-death resume, Dossier, evidence, retained image, history, comparison, feedback, PDF export with `PRINCESS_E2E_EXPORTS=1`, guest transfer, deletion). It is not device, simulator UI, signed-build or store evidence.
@@ -57,3 +50,7 @@ PYTHON=.venv/bin/python PRINCESS_E2E_ADMIN_URL=postgresql://…@127.0.0.1:5432/p
 - Fonts use platform serif/monospace fallbacks rather than bundled faces.
 - A lost upload-reservation response costs one daily slot (recorded in the journal); the orphaned slot expires server-side. Byte-range resumable upload is not offered.
 - React Native's global `URL` is an approximation; security-relevant parsing uses `parseUri` from `@princess/api-client`.
+
+## Maintainer handover
+
+Use the [complete host-specific setup](../../docs/development/local-setup.md) rather than assembling the abbreviated launch examples above. [Native lifecycle/private data](../../docs/architecture/mobile-lifecycle.md) documents session epochs, workflow recovery, signed upload URLs and cleanup. [Testing](../../docs/development/testing.md) distinguishes Node/controller integration from native UI/device/store qualification. [Current state](../../docs/handover/current-state.md) records #72 workflow evidence without inventing a Codex review. [Configuration](../../docs/reference/configuration.md) explains build-time values and runtime/provider limits.

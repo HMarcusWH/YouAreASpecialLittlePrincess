@@ -10,27 +10,13 @@ T28 establishes a pinned pnpm workspace and Node/toolchain matrix. Preserve the 
 
 ## API surfaces and ownership
 
-| Route family | Use case | Implemented by |
-|---|---|---|
-| `/v1/me`, identity/session binding | Resolve internal principal; guest upgrade; account deletion request | T02 |
-| `/v1/permissions`, grants/withdrawals/status | Persist/query append-only purpose, policy, scope and effective permission state for service, retention, AI, contribution and sharing | T02 |
-| `/v1/samples`, `/{id}/upload`, `/{id}/complete` | Reserve asset, issue bounded upload authorization, bind immutable verified bytes, enqueue decoding | T04 |
-| `POST /v1/analyses` | Idempotently start deterministic analysis from an authorized completed sample/capture and return the AnalysisRun/job reference | T04 |
-| `/v1/jobs/{id}` | Owner-scoped status, progress stage and safe error code | T04 |
-| `/v1/reports/{id}` and history pagination | Authorized immutable revision projection, not raw DB rows | T09/T17 |
-| `/v1/reports/{id}/premium` | Validate consent/credit/suitability, reserve one business fulfilment | T15/T19 |
-| `/v1/commerce/catalog`, purchases, claim/status | Server catalog mapping, Stripe intent, native transaction verification/recovery | T19 |
-| `/v1/comparisons` | Authorized common-feature comparison of specific revisions | T18/T22 |
-| `/v1/report-exports`, `/{id}` | Async PDF/card creation, authorized retrieval | T21 |
-| `/v1/share-grants`, invitations | Scope, preview, redeem, revoke; no implicit image or Premium consent | T22 |
-| `/v1/contributions`, withdrawals | Contribution-specific permission plus corpus lineage/release invalidation; uses the T02 permission ledger | T02/T12/T14 |
-| `/v1/devices`, notifications | Push token binding and notification preferences | T29/T24 |
-| `/v1/reports/{id}/feedback` | Owner-bound, redacted report-content feedback with retention/deletion and restricted support review | T24 backend; T20/T30/T31 clients |
-| `/v1/webhooks/{provider}` | Raw signature verification then durable inbox | T19/T24 |
+The callable method/path/request inventory is now the source-generated [current API reference](../reference/api-routes.md), with [authorization/error/retry semantics](../reference/api.md). Do not implement against the historical `/v1/samples`, `/v1/jobs/{id}`, `/v1/commerce/catalog`, `/v1/devices` or generic `/v1/webhooks/{provider}` sketches: current handlers use uploads, analyses, catalog, account-bound push installations and rail-specific payment events.
 
-This is an ownership map across implemented and planned surfaces, not a claim that every row is live. T02/T04/T09/T17/T21/T24 now provide the provider-independent Free/report/export/feedback/notification-preference seams; T18 comparison mechanics are exposed only as the unsaved same-owner `POST /v1/comparisons` added for the native client (T30A); persistence and partner inputs remain T22. T30A also added `GET /v1/analyses` (run discovery), `DELETE /v1/reports/{id}` (report-scoped deletion), `GET /v1/reports/{id}/source-image` (retained input through the live owner projection) and `GET /v1/consent-notices` (exact notice text/version). T20/T22 still add their owned product routes. Generated OpenAPI/contracts and the machine task graph are authoritative for exact current availability. Follow existing [05](05-release-operations.md) semantics, including safe intake and deletion. Partner comparison is a distinct permission purpose from ordinary sharing; invitation or share state never substitutes for an effective partner-comparison grant in the T02 permission ledger. Upload completion and analysis submission are deliberately separate: `/samples/{id}/complete` verifies/promotes immutable bytes and may enqueue decode preparation, while `POST /v1/analyses` is the explicit idempotent business operation that creates or reuses the intended deterministic AnalysisRun/job.
+The API owns identity/principal resolution, purpose decisions, immutable intake, report projections, account-backed history, ledger, export, feedback and installation state. Shared clients consume runtime-guarded responses. Product schema components are generated separately from endpoint routing.
 
-Mutating API calls use server-scoped idempotency keys and a canonical request digest. A reused key with a different body fails. Responses identify job/report revision separately; `202` acceptance is not successful inference. Use cursor pagination with stable ordering, bounded page sizes and ownership checks. Return machine error codes plus localized UI actions; keep traces and internal paths private.
+T30A added run discovery, report-scoped deletion, authorized retained source-image delivery, exact notice catalogue delivery and unsaved same-owner comparison. Persisted invitations, partner grants and pair Premium remain T22 work; no proposed share/contribution route is callable merely because a roadmap names it.
+
+Upload completion and analysis start are separate. Completion binds verified immutable bytes and returns a capture; `POST /v1/analyses` creates/reuses the intended run. Idempotency is operation-specific: completion is digest-bound, analysis start is capture/config-bound, permission and feedback requests carry decision IDs, and an upload reservation can consume another quota slot after a lost response. A 202 response is acceptance, not completed inference. Never blindly replay an ambiguous paid request.
 
 ## Web session and request safety
 

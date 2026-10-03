@@ -1,7 +1,7 @@
 """Report publication and read use cases over a storage seam (T09).
 
-``InMemoryReportStore`` is the fixture-backed seam used until the T02
-PostgreSQL repository exists; both honour ``check_revision``. Reads compose
+``InMemoryReportStore`` is the fixture/test implementation; runtime composition
+uses the PostgreSQL repository. Both honour ``check_revision``. Reads compose
 the stored snapshot with an authorization-filtered projection. No model,
 provider or renderer is reachable from here.
 """

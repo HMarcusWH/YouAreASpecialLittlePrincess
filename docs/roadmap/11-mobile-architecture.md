@@ -1,3 +1,5 @@
+> Implemented native maintenance: [mobile README](../../apps/mobile/README.md), [lifecycle/private state](../architecture/mobile-lifecycle.md), [setup](../development/local-setup.md) and [test evidence boundaries](../development/testing.md). This chapter retains architecture and completion requirements.
+
 # 11 — Native mobile architecture and shared-client strategy
 
 [Index](00-index.md) · [Apple](12-apple-platform-and-app-store.md) · [Android](13-android-and-google-play.md) · [Commerce](14-payments-entitlements-and-commerce.md) · [ADR-005](../adr/ADR-005-mobile-framework.md).
