@@ -18,11 +18,12 @@ from princess_app.config_supabase import (
     QUALIFIED_ENVIRONMENT_MANIFEST_SHA256,
     QUALIFIED_ISSUER_SHA256,
     QUALIFIED_ROLE_SHA256,
+    QUALIFIED_RUNTIME_BINDING_SHA256,
     SOURCE_REVISION,
 )
 
 CONFORMANCE_RECEIPT_SHA256 = "a" * 64
-RUNTIME_BINDING_SHA256 = "b" * 64
+RUNTIME_BINDING_SHA256 = QUALIFIED_RUNTIME_BINDING_SHA256
 
 
 def _canonical_bytes(value):
@@ -207,6 +208,18 @@ def test_conformance_must_bind_qualification_anchor(tmp_path):
         encoding="utf-8",
     )
     with pytest.raises(closeout.CloseoutError, match="runtime_conformance_qualification_receipt_sha256"):
+        closeout.check_closeout(tmp_path)
+
+
+def test_conformance_must_bind_exact_runtime_binding_digest(tmp_path):
+    ci = _write_world(tmp_path)
+    p = ci / "T17_SUPABASE_RUNTIME_CONFORMANCE.md"
+    valid = _conformance_text()
+    p.write_text(
+        valid.replace(QUALIFIED_RUNTIME_BINDING_SHA256, "b" * 64, 1),
+        encoding="utf-8",
+    )
+    with pytest.raises(closeout.CloseoutError, match="runtime_conformance_runtime_binding_sha256"):
         closeout.check_closeout(tmp_path)
 
 

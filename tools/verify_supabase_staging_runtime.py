@@ -275,6 +275,8 @@ def validate_conformance_receipt(receipt: Mapping[str, Any]) -> None:
 
     if receipt["qualification_receipt_sha256"] != binding_config.QUALIFICATION_RECEIPT_SHA256:
         raise ConformanceError("conformance_receipt_qualification_anchor")
+    if receipt["runtime_binding_sha256"] != binding_config.QUALIFIED_RUNTIME_BINDING_SHA256:
+        raise ConformanceError("conformance_receipt_runtime_binding_anchor")
     if receipt["account_snapshot_sha256"] != binding_config.ACCOUNT_SNAPSHOT_SHA256:
         raise ConformanceError("conformance_receipt_account_anchor")
     if receipt["qualified_environment_manifest_sha256"] != binding_config.QUALIFIED_ENVIRONMENT_MANIFEST_SHA256:

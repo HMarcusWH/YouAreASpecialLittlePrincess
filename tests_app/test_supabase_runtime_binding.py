@@ -86,6 +86,32 @@ def test_runtime_manifest_hash_is_line_ending_stable(tmp_path, monkeypatch):
     assert stable == hashlib.sha256(lf).hexdigest()
 
 
+def test_qualified_runtime_binding_digest_matches_pinned_profile():
+    binding = {
+        "version": binding_module.BINDING_VERSION,
+        "provider": binding_module.PROVIDER,
+        "project_alias": binding_module.PROJECT_ALIAS,
+        "project_binding": binding_module.PROJECT_BINDING,
+        "environment": binding_module.ENVIRONMENT,
+        "provider_mode": binding_module.PROVIDER_MODE,
+        "qualification_receipt_sha256": binding_module.QUALIFICATION_RECEIPT_SHA256,
+        "qualified_environment_manifest_sha256": binding_module.QUALIFIED_ENVIRONMENT_MANIFEST_SHA256,
+        "account_snapshot_sha256": binding_module.ACCOUNT_SNAPSHOT_SHA256,
+        "project_ref_sha256": binding_module.PROJECT_REF_SHA256,
+        "source_revision": binding_module.SOURCE_REVISION,
+        "issuer_sha256": binding_module.QUALIFIED_ISSUER_SHA256,
+        "audience": "authenticated",
+        "allowed_role": "authenticated",
+        "stock_claims_profile": True,
+    }
+    encoded = json.dumps(
+        binding, sort_keys=True, separators=(",", ":"), ensure_ascii=False
+    ).encode("utf-8")
+    assert hashlib.sha256(encoded).hexdigest() == binding_module.QUALIFIED_RUNTIME_BINDING_SHA256
+    assert _sha(binding["audience"]) == binding_module.QUALIFIED_AUDIENCE_SHA256
+    assert _sha(binding["allowed_role"]) == binding_module.QUALIFIED_ROLE_SHA256
+
+
 def test_builder_migrates_historical_crlf_receipt_anchor_to_stable_runtime_manifest(monkeypatch):
     qualification_manifest_hash = "1" * 64
     runtime_manifest_hash = "2" * 64

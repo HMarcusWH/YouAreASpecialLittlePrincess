@@ -36,6 +36,10 @@ PROJECT_REF_SHA256 = "730f049be2bb48fbca59f87518cece081ca02f313c465fd55498e84a9d
 QUALIFIED_ISSUER_SHA256 = "0c619c9e3850c9bca069636be52c55b7e85165ae295fa682566797073e551cf0"
 QUALIFIED_AUDIENCE_SHA256 = "40c041842ccbe556bd30396b6ba8070418afa56119feebd79d2b74a15d176fc8"
 QUALIFIED_ROLE_SHA256 = "40c041842ccbe556bd30396b6ba8070418afa56119feebd79d2b74a15d176fc8"
+# Canonical SHA-256 of the exact qualified Git-safe runtime-binding payload.
+# This is redundant with the pinned constituent anchors by design: the closeout
+# chain can detect a changed aggregate binding even when every field is present.
+QUALIFIED_RUNTIME_BINDING_SHA256 = "b4d4e547c43f733657dc35f9077b2c883e53c022e9892637fa0a6a570e291c3b"
 
 _HEX64 = re.compile(r"^[0-9a-f]{64}$")
 _ALLOWED_KEYS = frozenset({

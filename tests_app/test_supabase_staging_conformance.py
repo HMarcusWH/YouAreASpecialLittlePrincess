@@ -72,6 +72,11 @@ def _world(monkeypatch):
         "allowed_role": role,
         "stock_claims_profile": True,
     }
+    monkeypatch.setattr(
+        binding_config,
+        "QUALIFIED_RUNTIME_BINDING_SHA256",
+        conformance._sha256_bytes(conformance._canonical_json_bytes(binding)),
+    )
 
     key, jwk = _key_and_jwk()
 
@@ -192,6 +197,20 @@ def test_receipt_schema_rejects_extra_fields_and_false_witnesses(monkeypatch):
     false["stable_principal_mapping"] = False
     with pytest.raises(conformance.ConformanceError, match="conformance_receipt_stable_principal_mapping"):
         conformance.validate_conformance_receipt(false)
+
+
+def test_receipt_rejects_runtime_binding_digest_drift(monkeypatch):
+    issuer, audience, role, binding, key = _world(monkeypatch)
+    receipt = conformance.run_conformance(
+        credential=_token(key, issuer, audience, role),
+        issuer=issuer,
+        binding=binding,
+        princess_commit=COMMIT,
+        clock=FakeClock(T0 + timedelta(seconds=30)),
+    )
+    receipt["runtime_binding_sha256"] = "f" * 64
+    with pytest.raises(conformance.ConformanceError, match="conformance_receipt_runtime_binding_anchor"):
+        conformance.validate_conformance_receipt(receipt)
 
 
 def test_protected_material_cannot_live_inside_checkout(tmp_path):
