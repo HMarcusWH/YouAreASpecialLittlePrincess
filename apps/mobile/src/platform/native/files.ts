@@ -70,7 +70,7 @@ export class ExpoLocalFiles implements LocalFiles {
     let result: { status: number; body: string };
     try {
       // Streams the file natively; only the content type is sent, never the API credential.
-      result = await file.upload(url.toString(), { httpMethod: "PUT", uploadType: UploadType.BINARY_CONTENT,
+      result = await file.upload(url, { httpMethod: "PUT", uploadType: UploadType.BINARY_CONTENT,
                                                    headers: { "content-type": mediaType }, sessionType: "foreground" });
     } catch {
       throw new TransportError("NETWORK");

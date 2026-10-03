@@ -20,3 +20,5 @@ export type {
 } from "./operations.ts";
 export { sha256HexSync } from "./sha256.ts";
 export { checkUploadTarget, putUpload } from "./upload.ts";
+export { isPrivateDevelopmentHost, originOf, parseUri, pathSegments, queryParam } from "./uri.ts";
+export type { ParsedUri } from "./uri.ts";

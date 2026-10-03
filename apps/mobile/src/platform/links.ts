@@ -2,6 +2,8 @@
 // links (Universal Links / App Links) select a resource; the destination
 // screen still fetches it with the current credential, so a link never
 // authorizes anything and a forged or stale link opens an unavailable state.
+import { parseUri, pathSegments } from "@princess/api-client";
+
 import type { DeepLinkRouter, NativeRoute } from "./contracts.ts";
 
 export class AllowlistedDeepLinkRouter implements DeepLinkRouter {
@@ -14,16 +16,17 @@ export class AllowlistedDeepLinkRouter implements DeepLinkRouter {
   }
 
   resolve(raw: string): NativeRoute | null {
-    let url: URL;
-    try { url = new URL(raw); } catch { return null; }
-    if (url.username || url.password) return null;
-    const scheme = url.protocol.replace(/:$/, "");
+    // Not the runtime URL class: React Native's accepts malformed input and loses custom-scheme hosts.
+    const uri = parseUri(raw);
+    if (uri === null || uri.userinfo !== null || uri.host === null) return null;
+    const segments = pathSegments(uri);
+    if (segments === null) return null;
     let parts: string[];
-    if (scheme === "https") {
-      if (!this.allowedHosts.has(url.hostname) || url.port) return null;
-      parts = url.pathname.split("/").filter(Boolean);
-    } else if (this.allowedSchemes.has(scheme)) {
-      parts = [url.hostname, ...url.pathname.split("/").filter(Boolean)].filter(Boolean);
+    if (uri.scheme === "https") {
+      if (!this.allowedHosts.has(uri.host) || uri.port !== null) return null;
+      parts = segments;
+    } else if (this.allowedSchemes.has(uri.scheme) && uri.port === null) {
+      parts = [uri.host, ...segments].filter(Boolean);
     } else {
       return null;
     }
@@ -37,7 +40,6 @@ export class AllowlistedDeepLinkRouter implements DeepLinkRouter {
     return null;
   }
 }
-
 
 /** Expo Router path for a resolved route ("/" for anything not allowlisted). */
 export function pathFor(route: NativeRoute | null): string {

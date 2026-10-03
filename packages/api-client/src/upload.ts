@@ -4,28 +4,22 @@
 // failed or ambiguous PUT is reported as such (completion decides the truth).
 import { ApiError, TransportError } from "./client.ts";
 import type { UploadTicket } from "./operations.ts";
+import { isPrivateDevelopmentHost, originOf, parseUri } from "./uri.ts";
 
-export function checkUploadTarget(ticket: UploadTicket, allowedOrigins: ReadonlySet<string>): URL {
-  let url: URL;
-  try {
-    url = new URL(ticket.url);
-  } catch {
+/** The ticket URL, if its origin is allowlisted; plain HTTP only for loopback/LAN development hosts. */
+export function checkUploadTarget(ticket: UploadTicket, allowedOrigins: ReadonlySet<string>): string {
+  const uri = parseUri(ticket.url);
+  const origin = uri === null ? null : originOf(uri);
+  if (uri === null || origin === null || (uri.scheme !== "https" && uri.scheme !== "http")) {
     throw new ApiError(502, "upload_url_invalid");
   }
-  if (url.username || url.password || !allowedOrigins.has(url.origin)) {
+  if (uri.userinfo !== null || uri.fragment !== null || !allowedOrigins.has(origin)) {
     throw new ApiError(502, "upload_origin_not_allowed");
   }
-  if (url.protocol !== "https:" && !isLoopbackOrPrivate(url.hostname)) {
-    // Plain HTTP is a development convenience for a LAN/loopback API only.
+  if (uri.scheme !== "https" && !isPrivateDevelopmentHost(uri.host!)) {
     throw new ApiError(502, "upload_origin_not_allowed");
   }
-  return url;
-}
-
-function isLoopbackOrPrivate(host: string): boolean {
-  return host === "localhost" || host === "127.0.0.1" || host === "[::1]" || host === "10.0.2.2"
-    || /^10\.\d+\.\d+\.\d+$/.test(host) || /^192\.168\.\d+\.\d+$/.test(host)
-    || /^172\.(1[6-9]|2\d|3[01])\.\d+\.\d+$/.test(host);
+  return ticket.url;
 }
 
 /** PUT ``body`` to the ticket URL with only a content type (no credential). */
@@ -38,7 +32,7 @@ export async function putUpload(ticket: UploadTicket, body: Uint8Array, mediaTyp
   try {
     const init: RequestInit = { method: "PUT", headers: { "content-type": mediaType }, redirect: "error" };
     init.body = body as unknown as NonNullable<RequestInit["body"]>;
-    response = await doFetch(url.toString(), init);
+    response = await doFetch(url, init);
   } catch (error) {
     throw TransportError.from(error);
   }

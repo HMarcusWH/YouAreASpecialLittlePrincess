@@ -80,6 +80,20 @@ test("deep links fail closed for foreign schemes, unverified hosts and malformed
   assert.equal(pathFor(links.resolve("https://evil.example/reports/report_123")), "/");
 });
 
+test("link resolution does not use the runtime URL class", () => {
+  const original = globalThis.URL;
+  (globalThis as { URL: unknown }).URL = class { constructor() { throw new Error("runtime URL must not be used"); } };
+  try {
+    const links = new AllowlistedDeepLinkRouter(new Set(["inktrospect-dev"]), new Set(["inktrospect.se"]));
+    assert.deepEqual(links.resolve("inktrospect-dev://reports/report_9"), { kind: "REPORT", reportId: "report_9" });
+    assert.deepEqual(links.resolve("HTTPS://Inktrospect.SE/reports/report_9"), { kind: "REPORT", reportId: "report_9" });
+    assert.equal(links.resolve("https://inktrospect.se.evil.example/reports/report_9"), null);
+    assert.equal(links.resolve("inktrospect-dev://reports/%E0%A4%A"), null);
+  } finally {
+    (globalThis as { URL: unknown }).URL = original;
+  }
+});
+
 test("push registration is contextual, principal-bound and survives denial", async () => {
   const device = new FakeDevicePushClient();
   const file = new FakeKeyValueFile();

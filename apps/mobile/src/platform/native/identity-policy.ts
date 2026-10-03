@@ -1,29 +1,34 @@
+// Validation of external-user-agent authorization requests and callbacks.
+// Uses the shared strict parser, not the runtime URL class: React Native's URL
+// reports an empty host and "/" path for custom schemes, which would make any
+// callback on the app scheme look like the requested redirect.
+import { originOf, parseUri, queryParam, type ParsedUri } from "@princess/api-client";
+
 import type { NativeAuthorizationRequest } from "../contracts.ts";
 
-function parseUrl(raw: string, errorCode: string): URL {
-  try {
-    return new URL(raw);
-  } catch {
-    throw new Error(errorCode);
-  }
+function parse(raw: string, errorCode: string): ParsedUri {
+  const uri = parseUri(raw);
+  if (uri === null) throw new Error(errorCode);
+  return uri;
 }
 
 export function validateNativeAuthorizationRequest(
   request: NativeAuthorizationRequest,
   allowedAuthorizationOrigins: ReadonlySet<string>,
   allowedRedirectSchemes: ReadonlySet<string>,
-): { authorization: URL; redirect: URL } {
-  const authorization = parseUrl(request.authorizationUrl, "identity_authorization_url_invalid");
-  const redirect = parseUrl(request.redirectUrl, "identity_redirect_url_invalid");
-  const redirectScheme = redirect.protocol.replace(/:$/, "");
+): { authorization: ParsedUri; redirect: ParsedUri } {
+  const authorization = parse(request.authorizationUrl, "identity_authorization_url_invalid");
+  const redirect = parse(request.redirectUrl, "identity_redirect_url_invalid");
+  const origin = originOf(authorization);
 
-  if (authorization.protocol !== "https:" || !allowedAuthorizationOrigins.has(authorization.origin)) {
+  if (authorization.scheme !== "https" || authorization.userinfo !== null || origin === null
+      || !allowedAuthorizationOrigins.has(origin)) {
     throw new Error("identity_authorization_origin_not_allowed");
   }
-  if (!allowedRedirectSchemes.has(redirectScheme)) {
+  if (!allowedRedirectSchemes.has(redirect.scheme)) {
     throw new Error("identity_redirect_scheme_not_allowed");
   }
-  if (redirect.username || redirect.password) {
+  if (redirect.userinfo !== null) {
     throw new Error("identity_redirect_credentials_not_allowed");
   }
 
@@ -34,19 +39,19 @@ export function validateNativeAuthorizationCallback(
   callbackUrl: string,
   requestedRedirectUrl: string,
   expectedState: string,
-): URL {
-  const callback = parseUrl(callbackUrl, "identity_callback_url_invalid");
-  const redirect = parseUrl(requestedRedirectUrl, "identity_redirect_url_invalid");
+): ParsedUri {
+  const callback = parse(callbackUrl, "identity_callback_url_invalid");
+  const redirect = parse(requestedRedirectUrl, "identity_redirect_url_invalid");
 
-  const sameTarget = callback.protocol === redirect.protocol
+  const sameTarget = callback.scheme === redirect.scheme
     && callback.host === redirect.host
-    && callback.pathname === redirect.pathname
-    && !callback.username
-    && !callback.password;
+    && callback.port === redirect.port
+    && callback.path === redirect.path
+    && callback.userinfo === null;
   if (!sameTarget) {
     throw new Error("identity_callback_redirect_mismatch");
   }
-  if (callback.searchParams.get("state") !== expectedState) {
+  if (queryParam(callback, "state") !== expectedState) {
     throw new Error("identity_state_mismatch");
   }
 

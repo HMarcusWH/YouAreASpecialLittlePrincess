@@ -186,7 +186,7 @@ test("upload PUT goes only to allowlisted origins, without a credential, and rep
   const plain = parseUploadTicket({ ...ticket, url: "http://uploads.example/v1/upl_1" });
   assert.throws(() => checkUploadTarget(plain, new Set(["http://uploads.example"])), ApiError);
   const lan = parseUploadTicket({ ...ticket, url: "http://192.168.1.20:8000/v1/dev/uploads/upl_1?sig=s" });
-  assert.equal(checkUploadTarget(lan, new Set(["http://192.168.1.20:8000"])).hostname, "192.168.1.20");
+  assert.equal(checkUploadTarget(lan, new Set(["http://192.168.1.20:8000"])), lan.url);
 
   const expired = (async () => json({ error: "upload_expired" }, 409)) as unknown as typeof fetch;
   await assert.rejects(putUpload(ticket, new Uint8Array(1), "image/jpeg", allowed, expired),
@@ -203,4 +203,25 @@ test("native downloads are bound to API paths and carry the current bearer crede
   assert.equal(exportFile.headers.authorization, "Bearer tok");
   const image = await api.sourceImageDownload("report/../1");
   assert.equal(image.url, "https://api.example.invalid/v1/reports/report%2F..%2F1/source-image");
+});
+
+test("the strict URI parser rejects what React Native's URL would accept", async () => {
+  const { parseUri, originOf, pathSegments, queryParam } = await import("../src/index.ts");
+  for (const bad of ["not a url", "", "https://", "https://exa mple.com/", "https://a..b/", "https://host:99999/",
+                     "http://[zz]/", "javascript:alert(1)\n", "https://host\\@evil/"]) {
+    const parsed = parseUri(bad);
+    assert.ok(parsed === null || originOf(parsed) === null, bad);
+  }
+  const custom = parseUri("inktrospect-dev://reports/report_1?x=1#f")!;
+  assert.deepEqual([custom.scheme, custom.host, custom.path, custom.query, custom.fragment],
+                   ["inktrospect-dev", "reports", "/report_1", "x=1", "f"]);
+  assert.equal(originOf(parseUri("HTTPS://API.Example:443/v1")!), "https://api.example");
+  assert.equal(originOf(parseUri("http://192.168.1.2:8000")!), "http://192.168.1.2:8000");
+  assert.deepEqual(pathSegments(parseUri("app://x/a%20b/c")!), ["a b", "c"]);
+  assert.equal(pathSegments(parseUri("app://x/%E0%A4%A")!), null);
+  assert.equal(queryParam(parseUri("app://cb?state=a+b&code=%2F")!, "state"), "a b");
+  assert.equal(queryParam(parseUri("app://cb?state=a")!, "missing"), null);
+  const evil = parseUri("https://api.example@evil.example/v1/uploads")!;
+  assert.equal(evil.userinfo, "api.example");
+  assert.equal(originOf(evil), "https://evil.example");
 });

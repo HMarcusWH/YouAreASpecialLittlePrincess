@@ -3,6 +3,7 @@
 // identity helpers and must name a non-development backend; a development
 // build must name a device-reachable API (a phone cannot reach the build
 // machine's loopback address unless it is a simulator/emulator alias).
+import { isPrivateDevelopmentHost as isPrivateHost, originOf, parseUri } from "@princess/api-client";
 
 export type AppVariant = "development" | "staging" | "store";
 export type BackendEnvironment = "local" | "test" | "preview" | "staging" | "production";
@@ -26,21 +27,14 @@ export type ConfigResult = { readonly ok: true; readonly config: RuntimeConfig }
 const VARIANTS = new Set<AppVariant>(["development", "staging", "store"]);
 const BACKENDS = new Set<BackendEnvironment>(["local", "test", "preview", "staging", "production"]);
 
-function isPrivateHost(host: string): boolean {
-  return host === "localhost" || host === "127.0.0.1" || host === "[::1]" || host === "10.0.2.2"
-    || /^10\.\d+\.\d+\.\d+$/.test(host) || /^192\.168\.\d+\.\d+$/.test(host)
-    || /^172\.(1[6-9]|2\d|3[01])\.\d+\.\d+$/.test(host) || host.endsWith(".local");
-}
-
-function origin(raw: string): URL | null {
-  try {
-    const url = new URL(raw);
-    if (url.username || url.password || url.search || url.hash) return null;
-    if (url.protocol !== "https:" && url.protocol !== "http:") return null;
-    return url;
-  } catch {
-    return null;
-  }
+function origin(raw: string): { readonly origin: string; readonly base: string; readonly secure: boolean;
+                                  readonly host: string } | null {
+  const uri = parseUri(raw);
+  if (uri === null || (uri.scheme !== "https" && uri.scheme !== "http") || uri.userinfo !== null
+      || uri.query !== null || uri.fragment !== null) return null;
+  const root = originOf(uri);
+  if (root === null) return null;
+  return { origin: root, base: `${root}${uri.path.replace(/\/+$/, "")}`, secure: uri.scheme === "https", host: uri.host! };
 }
 
 /** Parse ``expoConfig.extra.runtime`` (set by app.config.ts from build environment variables). */
@@ -55,9 +49,9 @@ export function parseRuntimeConfig(raw: unknown): ConfigResult {
   }
   const api = origin(value.apiBaseUrl);
   if (api === null) return { ok: false, code: "config_api_base_invalid" };
-  const secure = api.protocol === "https:";
+  const secure = api.secure;
   if (variant !== "development" && !secure) return { ok: false, code: "config_api_base_not_https" };
-  if (variant === "development" && !secure && !isPrivateHost(api.hostname)) {
+  if (variant === "development" && !secure && !isPrivateHost(api.host)) {
     return { ok: false, code: "config_api_base_not_https" };
   }
   if (variant === "store" && backend !== "production") return { ok: false, code: "config_store_backend_invalid" };
@@ -70,7 +64,7 @@ export function parseRuntimeConfig(raw: unknown): ConfigResult {
   const extra = Array.isArray(value.uploadOrigins) ? value.uploadOrigins : [];
   for (const candidate of extra) {
     const url = typeof candidate === "string" ? origin(candidate) : null;
-    if (url === null || (url.protocol !== "https:" && (variant !== "development" || !isPrivateHost(url.hostname)))) {
+    if (url === null || (!url.secure && (variant !== "development" || !isPrivateHost(url.host)))) {
       return { ok: false, code: "config_upload_origin_invalid" };
     }
     uploadOrigins.add(url.origin);
@@ -88,7 +82,7 @@ export function parseRuntimeConfig(raw: unknown): ConfigResult {
   return {
     ok: true,
     config: {
-      variant, backendEnvironment: backend, apiBaseUrl: api.toString().replace(/\/+$/, ""), uploadOrigins,
+      variant, backendEnvironment: backend, apiBaseUrl: api.base, uploadOrigins,
       devIdentity, linkSchemes: new Set(schemes), linkHosts: new Set(hosts),
     },
   };
