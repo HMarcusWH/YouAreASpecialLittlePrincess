@@ -17,6 +17,6 @@
     "skipLibCheck": true,
     "types": ["node"]
   },
-  "include": ["app/**/*.ts", "app/**/*.tsx", "src/**/*.ts", "src/**/*.tsx", "test/**/*.ts", "app.config.ts"],
+  "include": ["app/**/*.ts", "app/**/*.tsx", "src/**/*.ts", "src/**/*.tsx", "test/**/*.ts", "scripts/**/*.ts", "app.config.ts"],
   "exclude": ["node_modules", "android", "ios"]
 }

@@ -166,3 +166,6 @@ jobs:
           grep -q "REFUSE" /tmp/e2e-refusal.log
       - name: Real Free upload-to-export journey with accessibility checkpoints
         run: PYTHON=python tools/run_web_e2e.sh
+      - name: Native client journey against the development API and workers
+        # The mobile app's real composition in Node; not device, simulator or store evidence.
+        run: PYTHON=python PRINCESS_E2E_EXPORTS=1 tools/run_mobile_journey.sh
