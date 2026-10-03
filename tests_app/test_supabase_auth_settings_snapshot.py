@@ -281,6 +281,32 @@ def test_snapshot_projection_hash_detects_tampering(monkeypatch):
         snapshot.validate_snapshot(result)
 
 
+def test_snapshot_source_binding_requires_exact_raw_response(monkeypatch):
+    project_ref = _bind_project(monkeypatch)
+    auth_config = _config()
+    source_bytes = _source_bytes(auth_config)
+    result = snapshot.build_snapshot(
+        project_ref=project_ref,
+        auth_config=auth_config,
+        source_response_bytes=source_bytes,
+        captured_date="2026-10-02",
+        protected_evidence_ref="operator-local:auth-config",
+    )
+    snapshot.validate_snapshot_source_binding(
+        result,
+        source_response_bytes=source_bytes,
+    )
+
+    edited = _source_bytes(_config(rate_limit_otp=31))
+    with pytest.raises(
+        snapshot.AuthSettingsError,
+        match="auth_settings_snapshot_source_response_binding",
+    ):
+        snapshot.validate_snapshot_source_binding(
+            result,
+            source_response_bytes=edited,
+        )
+
 def test_protected_inputs_must_be_absolute_and_outside_checkout(tmp_path):
     with pytest.raises(snapshot.AuthSettingsError, match="project_ref_path_must_be_absolute"):
         snapshot._protected_input(Path("project-ref.txt"), "project_ref")
