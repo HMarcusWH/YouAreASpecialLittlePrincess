@@ -29,6 +29,7 @@ from princess_app.config_supabase import (  # noqa: E402
     QUALIFIED_ENVIRONMENT_MANIFEST_SHA256,
     QUALIFIED_ISSUER_SHA256,
     QUALIFIED_ROLE_SHA256,
+    QUALIFIED_RUNTIME_BINDING_SHA256,
     SOURCE_REVISION,
 )
 from princess_app.ports import identity as identity_port  # noqa: E402
@@ -150,6 +151,7 @@ def _validate_conformance(path: Path) -> dict[str, str]:
         "capability": identity_port.VERIFY_CREDENTIAL,
         "princess_commit": FROZEN_CONFORMANCE_COMMIT,
         "qualification_receipt_sha256": QUALIFICATION_RECEIPT_SHA256,
+        "runtime_binding_sha256": QUALIFIED_RUNTIME_BINDING_SHA256,
         "account_snapshot_sha256": ACCOUNT_SNAPSHOT_SHA256,
         "qualified_environment_manifest_sha256": QUALIFIED_ENVIRONMENT_MANIFEST_SHA256,
         "project_ref_sha256": PROJECT_REF_SHA256,
@@ -186,10 +188,9 @@ def _validate_conformance(path: Path) -> dict[str, str]:
     except ValueError:
         raise CloseoutError("runtime_conformance_checked_date") from None
 
-    for key in ("receipt_sha256", "runtime_binding_sha256"):
-        value = record.get(key, "")
-        if not HEX64_RE.fullmatch(value):
-            raise CloseoutError(f"runtime_conformance_{key}")
+    value = record.get("receipt_sha256", "")
+    if not HEX64_RE.fullmatch(value):
+        raise CloseoutError("runtime_conformance_receipt_sha256")
 
     evidence_ref = record.get("protected_evidence_ref", "")
     if not EVIDENCE_REF_RE.fullmatch(evidence_ref):

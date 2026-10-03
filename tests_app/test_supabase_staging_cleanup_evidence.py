@@ -34,7 +34,7 @@ def _conformance_receipt_bytes(**overrides) -> bytes:
         "checked_date": "2026-10-02",
         "princess_commit": "c653a7d0cc29e0398a0cfb9e5c8113b9b2acd6b3",
         "qualification_receipt_sha256": conformance.binding_config.QUALIFICATION_RECEIPT_SHA256,
-        "runtime_binding_sha256": "b" * 64,
+        "runtime_binding_sha256": conformance.binding_config.QUALIFIED_RUNTIME_BINDING_SHA256,
         "account_snapshot_sha256": conformance.binding_config.ACCOUNT_SNAPSHOT_SHA256,
         "qualified_environment_manifest_sha256": conformance.binding_config.QUALIFIED_ENVIRONMENT_MANIFEST_SHA256,
         "project_ref_sha256": conformance.binding_config.PROJECT_REF_SHA256,
@@ -149,6 +149,7 @@ def test_cleanup_rejects_manual_conformance_digest(monkeypatch):
         b"{}",
         _conformance_receipt_bytes(result="FAIL"),
         _conformance_receipt_bytes(princess_commit="not-a-commit"),
+        _conformance_receipt_bytes(runtime_binding_sha256="b" * 64),
     ],
 )
 def test_cleanup_requires_valid_protected_conformance_receipt(monkeypatch, receipt_bytes):
