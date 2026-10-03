@@ -1,7 +1,7 @@
 {
   "version": "documentation-targets/1",
   "required_paths": [
-    "README.md", "CONTRIBUTING.md", "SECURITY.md", "AGENTS.md", "docs/README.md",
+    "README.md", "CONTRIBUTING.md", "SECURITY.md", "AGENTS.md", ".github/WORKFLOWS.md", "docs/README.md",
     "docs/handover/current-state.md", "docs/handover/acceptance.md", "docs/handover/access-and-assets.md",
     "apps/api/princess_api/app.py", "apps/api/princess_api/compose.py", "apps/api/princess_api/ops.py",
     "apps/mobile/src/bootstrap/services.ts", "apps/mobile/src/session/session-manager.ts",
