@@ -17,7 +17,7 @@ jobs:
           ref: ce6fe884305de93c6a13d091b31a3ff0d72dc5bf
           persist-credentials: false
       - name: Pack exact witness source
-        run: tar --exclude=.git -czf "$RUNNER_TEMP/princess-supabase-witness.tar.gz" .
+        run: tar -czf "$RUNNER_TEMP/princess-supabase-witness.tar.gz" .
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: princess-supabase-witness-ce6fe884
