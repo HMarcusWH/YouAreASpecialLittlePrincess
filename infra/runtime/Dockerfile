@@ -41,6 +41,8 @@ COPY infra/environments ./infra/environments
 COPY infra/runtime ./infra/runtime
 COPY infra/operations ./infra/operations
 COPY schema/premium_interpretation_database_v1.json ./schema/premium_interpretation_database_v1.json
+# The API serves this reviewed consent notice registry (GET /v1/consent-notices) and validates it at startup.
+COPY contracts/consent/v1/notices.json ./contracts/consent/v1/notices.json
 RUN groupadd --system --gid 10001 princess \
     && useradd --system --uid 10001 --gid 10001 --home-dir /nonexistent --shell /usr/sbin/nologin princess \
     && mkdir -p /data \
