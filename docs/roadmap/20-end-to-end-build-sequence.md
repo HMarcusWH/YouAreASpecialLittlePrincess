@@ -19,7 +19,7 @@ At the current implementation baseline, `--ready` yields no newly startable plan
 The [post-PR14 reconciliation](23-post-pr14-reconciliation.md) is retained as historical evidence. Current status comes from [tasks.json](tasks.json) and the generated backlog.
 
 - **READY planned work:** none at this graph state while T29 is actively claimed.
-- **Active incomplete work:** T11 (human pilot gates/real evidence), T17 (production identity/cross-device recovery), T19 (Stripe sandbox/refund activation evidence, App Store/Play server adapters and product policy), T24 (deployment/recovery/live providers) and T29 (signed-device/IAP plus live-processor evidence).
+- **Active incomplete work:** T11 (human pilot gates/real evidence), T17 (real Supabase staging conformance + selected-account `/config/auth` snapshot + disposable-user cleanup; application login remains inactive), T19 (Stripe/Apple/Play sandbox qualification and product/refund policy), T24 (deployment/recovery/live providers) and T29 (signed-device/IAP plus live-processor evidence).
 - **Implemented pending review:** T21 (task-specific accepted-design Dossier print/share integration and full-size render review are complete; machine closure waits on hard predecessor T17).
 - **Completed since PR #14:** T10 accepted Inktrospect/Dossier design handoff, T15 provider-independent Premium adapter/runtime work, T08A calibration-independent presentation/first-reveal policy and T18 deterministic pair/history comparison are DONE; live model activation/evaluation and population calibration remain separately gated.
 - **Native foundation:** T29 is IN_PROGRESS after establishing the shared Expo/RN scaffold, native ports, exact dependency matrix and cross-platform compile qualification.

@@ -56,11 +56,11 @@ Git-safe files inside the checkout. Therefore do not run all three steps sequent
 Preferred procedure:
 
 ```text
-clean worktree A @ 7cf6371...
+clean worktree A @ c653a7d0...
     -> real runtime conformance
     -> protected receipt + generated Git-safe PASS index
 
-clean worktree B @ 7cf6371...
+clean worktree B @ c653a7d0...
     -> protected /config/auth capture
     -> generated Git-safe Auth settings snapshot
 
