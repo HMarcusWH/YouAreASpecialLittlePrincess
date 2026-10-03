@@ -11,7 +11,7 @@ be used to hand-author PASS artifacts.
 Runtime conformance is frozen to:
 
 ```text
-7cf6371a1daec3cfd46f4adf35d6175c57452cc0
+ce6fe884305de93c6a13d091b31a3ff0d72dc5bf
 ```
 
 The evidence branch must be created from current `main` containing the post-#60 closeout tooling and this
@@ -48,7 +48,7 @@ git status --porcelain
 Expected HEAD:
 
 ```text
-7cf6371a1daec3cfd46f4adf35d6175c57452cc0
+ce6fe884305de93c6a13d091b31a3ff0d72dc5bf
 ```
 
 `git status --porcelain` must be empty before running the witness.
