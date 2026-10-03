@@ -16,7 +16,7 @@ from princess_app.adapters.fakes import FakeClock
 from princess_app.adapters.supabase import SupabaseIdentityProvider
 from princess_app.config import load_runtime_config
 from princess_app.ports import identity as identity_port
-from princess_app.ports.base import InvalidInput, ProviderMode, Unsupported
+from princess_app.ports.base import Environment, InvalidInput, ProviderMode, Unsupported
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -67,6 +67,23 @@ def code(fn) -> str:
     with pytest.raises(InvalidInput) as err:
         fn()
     return err.value.code
+
+
+def test_runtime_manifest_hash_is_line_ending_stable(tmp_path, monkeypatch):
+    manifest_dir = tmp_path / "infra" / "environments"
+    manifest_dir.mkdir(parents=True)
+    manifest_path = manifest_dir / "staging.json"
+    lf = b'{\n  "providers": {"IdentityProvider": "sandbox"}\n}\n'
+    crlf = lf.replace(b"\n", b"\r\n")
+
+    monkeypatch.setattr(compose_module, "ROOT", tmp_path)
+
+    manifest_path.write_bytes(lf)
+    stable = compose_module._manifest_sha256(Environment.STAGING)
+
+    manifest_path.write_bytes(crlf)
+    assert compose_module._manifest_sha256(Environment.STAGING) == stable
+    assert stable == hashlib.sha256(lf).hexdigest()
 
 
 def test_builder_migrates_historical_crlf_receipt_anchor_to_stable_runtime_manifest(monkeypatch):
