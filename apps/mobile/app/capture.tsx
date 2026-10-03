@@ -1,47 +1,56 @@
-import { useMemo, useState } from "react";
-import { Pressable, StyleSheet, Text, useColorScheme, View } from "react-native";
+import { router } from "expo-router";
+import { useState } from "react";
+import { Linking } from "react-native";
 
-import { ExpoCaptureClient } from "../src/platform/native/capture.ts";
-import type { LocalCapture } from "../src/platform/contracts.ts";
-import { dossierColors } from "../src/theme.ts";
-import { DossierCopy, DossierScreen } from "../src/ui/DossierScreen.tsx";
+import { useApp } from "../src/bootstrap/AppProvider.tsx";
+import type { CaptureOutcome } from "../src/platform/contracts.ts";
+import { Banner, Body, Busy, Button, Screen } from "../src/ui/components.tsx";
+
+type Message = { tone: "info" | "attention" | "danger"; text: string; settings?: boolean };
 
 export default function Capture() {
-  const client = useMemo(() => new ExpoCaptureClient(), []);
-  const [capture, setCapture] = useState<LocalCapture | null>(null);
-  const [message, setMessage] = useState("No photo selected.");
-  const theme = useColorScheme() === "dark" ? "dark" : "light";
-  const colors = dossierColors(theme);
+  const { t, services, setDraft, draft } = useApp();
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState<Message | null>(null);
 
-  const run = async (source: "camera" | "library") => {
-    const result = source === "camera" ? await client.takePhoto() : await client.pickPhoto();
-    setCapture(result);
-    setMessage(result
-      ? "Prepared " + result.width + "×" + result.height + " JPEG derivative for safe server upload."
-      : "No authorized photo was returned.");
-  };
+  async function run(source: "camera" | "library") {
+    setBusy(true);
+    setMessage(null);
+    try {
+      const outcome: CaptureOutcome = source === "camera"
+        ? await services.ports.capture.takePhoto() : await services.ports.capture.pickPhoto();
+      if (outcome.status === "CANCELLED") return setMessage({ tone: "info", text: t("capture.cancelled") });
+      if (outcome.status === "DENIED") {
+        return setMessage({ tone: "attention", text: t("capture.camera_denied"), settings: !outcome.canAskAgain });
+      }
+      if (outcome.status === "UNAVAILABLE") return setMessage({ tone: "attention", text: t("capture.camera_unavailable") });
+      if (outcome.status === "FAILED") return setMessage({ tone: "danger", text: t("capture.failed") });
+      const prepared = await services.ports.preparer.normalize(outcome.image);
+      if (!prepared.ok) {
+        const key = prepared.code === "image_too_small" ? "review.too_small"
+          : prepared.code === "image_too_large" ? "review.too_large" : "review.unreadable";
+        return setMessage({ tone: "danger", text: t(key) });
+      }
+      if (draft !== null) await services.ports.preparer.discard(draft.uri);
+      setDraft(prepared.image);
+      router.push("/review");
+    } finally {
+      setBusy(false);
+    }
+  }
 
   return (
-    <DossierScreen eyebrow="Local preparation only" title="Capture">
-      <DossierCopy>
-        HEIC/HEIF or other picker input is normalized to a JPEG derivative. The server still verifies bytes,
-        dimensions, media type, permissions and ownership before analysis.
-      </DossierCopy>
-      <View style={styles.row}>
-        <Pressable accessibilityRole="button" style={[styles.button, { borderColor: colors.accent }]} onPress={() => void run("camera")}>
-          <Text style={{ color: colors.accent }}>Take photo</Text>
-        </Pressable>
-        <Pressable accessibilityRole="button" style={[styles.button, { borderColor: colors.accent }]} onPress={() => void run("library")}>
-          <Text style={{ color: colors.accent }}>Choose photo</Text>
-        </Pressable>
-      </View>
-      <Text accessibilityLiveRegion="polite" style={{ color: colors["text-muted"] }}>{message}</Text>
-      {capture ? <Text style={{ color: colors.text }}>Source: {capture.source} · original {capture.originalMimeType ?? "unknown"}</Text> : null}
-    </DossierScreen>
+    <Screen title={t("capture.title")}>
+      <Body muted>{t("capture.intro")}</Body>
+      <Body muted>{t("capture.local_only")}</Body>
+      {message ? (
+        <Banner tone={message.tone} action={message.settings ? (
+          <Button tone="secondary" label={t("capture.open_settings")} onPress={() => void Linking.openSettings()} />
+        ) : undefined}>{message.text}</Banner>
+      ) : null}
+      {busy ? <Busy label={t("capture.preparing")} /> : null}
+      <Button label={t("capture.take")} disabled={busy} onPress={() => void run("camera")} />
+      <Button tone="secondary" label={t("capture.choose")} disabled={busy} onPress={() => void run("library")} />
+    </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  row: { gap: 12 },
-  button: { minHeight: 44, justifyContent: "center", paddingHorizontal: 16, borderWidth: 1, borderRadius: 4 },
-});
