@@ -17,28 +17,42 @@ The repository's version pins are reproduction inputs, not recommendations to in
 
 ## 1. Install the backend on Linux x86_64
 
-Python 3.12 and the system tools above must already be installed. Do not install the optional learned `signature` extra for Free.
+Python 3.12 and the system tools above must already be installed. Do not install the optional learned `signature` extra for Free. Start with a new virtual environment; an existing environment with unrelated packages is not an exact locked install.
 
 ```bash
 python3.12 -m venv .venv
 .venv/bin/python -m pip install --require-hashes --only-binary=:all: --no-deps -r requirements/app-py312.lock
 .venv/bin/python -m pip install --no-index --no-deps --no-build-isolation -e '.[dev]'
 .venv/bin/python tools/verify_ci_lock.py requirements/app-py312.lock --manifest requirements/app-py312.txt --allow 'special-little-princess-graphology==0.1.0'
+source .venv/bin/activate
 export PYTHONPATH="$PWD/src:$PWD/apps/api"
 ```
 
-`princess_app` is source-tree application code, not part of the Free wheel. An editable core installation alone does not provide the backend dependencies or make the API importable without the source paths.
+`princess_app` is source-tree application code, not part of the Free wheel. An editable core installation alone does not provide the backend dependencies or make the API importable without the source paths. In each new shell, activate this environment and set the source paths again before using an unqualified `python` command.
 
 For core-only work, replace the app lock with the `requirements/ci-py310`, `ci-py311` or `ci-py312` lock matching the reviewed interpreter/architecture, then use the core checks in [testing](testing.md). Do not mix locks in the same environment and call it an exact locked environment.
 
 ## 2. Start the disposable local database and migrate
 
-**Mutating local setup.** The database in this recipe is `princess_local` on loopback port 5432. Never substitute a production host or dump. The documented passwords below are local-only examples, not production credentials.
+**Mutating local setup.** The database in this recipe is `princess_local` on loopback port 5432. Never substitute a production host or dump. The documented passwords below are local-only examples, not production credentials. Run the following as one Bash block; a failed readiness check must stop before migration.
 
 ```bash
+(
+set -euo pipefail
 docker compose -f infra/local/compose.yaml up -d
-export LOCAL_ADMIN='postgresql://princess_admin:local-only-admin@127.0.0.1:5432/princess_local'
-until psql "$LOCAL_ADMIN" -Atqc 'SELECT 1' >/dev/null 2>&1; do sleep 1; done
+LOCAL_ADMIN='postgresql://princess_admin:local-only-admin@127.0.0.1:5432/princess_local'
+db_ready=0
+for attempt in {1..30}; do
+  if PGCONNECT_TIMEOUT=2 psql "$LOCAL_ADMIN" -Atqc 'SELECT 1' >/dev/null 2>&1; then
+    db_ready=1
+    break
+  fi
+  sleep 1
+done
+if [ "$db_ready" != 1 ]; then
+  printf '%s\n' 'Local PostgreSQL did not become ready; inspect compose logs and stop here.' >&2
+  exit 1
+fi
 PRINCESS_MIGRATION_DATABASE_URL="$LOCAL_ADMIN" .venv/bin/python -m princess_app.adapters.postgres.migrate upgrade
 psql "$LOCAL_ADMIN" -v ON_ERROR_STOP=1 <<'SQL'
 DO $$ BEGIN
@@ -52,13 +66,14 @@ END $$;
 GRANT princess_app TO princess_local_api;
 GRANT princess_worker TO princess_local_worker;
 SQL
+)
 ```
 
 Only the setup/migration connection is an owner/admin. API and worker logins must not own tables or have superuser/BYPASSRLS. Existing roles are not silently reset by the SQL above; use the passwords actually established on a reused disposable cluster. Read [migrations](../../migrations/README.md) before changing role ownership.
 
 ## 3. Start the API
 
-Choose the API origin **as reached by the client**. For a physical phone use the development host's reachable LAN address, not the phone's loopback. The API advertises this origin in signed upload URLs. The native config must allow the same origin.
+Choose the API origin **as reached by the client**. For a physical phone use the development host's reachable LAN address, not the phone's loopback. The API advertises this origin in signed upload URLs. The native config must allow the same origin. The default below listens on loopback only.
 
 ```bash
 export PRINCESS_ENV=local
@@ -71,10 +86,10 @@ export PRINCESS_LOCAL_STORAGE_DIR="$PWD/.local-storage"
 export PRINCESS_TOMBSTONE_DIR="$PWD/.local-tombstones"
 export PRINCESS_PUBLIC_API_BASE='http://127.0.0.1:8000'
 export PYTHONPATH="$PWD/src:$PWD/apps/api"
-.venv/bin/python -m uvicorn --factory princess_api.compose:app_from_environment --host 0.0.0.0 --port 8000
+.venv/bin/python -m uvicorn --factory princess_api.compose:app_from_environment --host 127.0.0.1 --port 8000
 ```
 
-For a phone, replace `127.0.0.1` in `PRINCESS_PUBLIC_API_BASE` with the approved development LAN address before starting this process. Binding to `0.0.0.0` exposes the development API to that network: restrict it to a trusted development network/firewall and never expose fake identity publicly.
+For a phone, replace `127.0.0.1` in `PRINCESS_PUBLIC_API_BASE` with the approved development LAN address and start uvicorn with `--host 0.0.0.0`. That exposes the development API to the network: restrict it to a trusted development network/firewall and never expose fake identity publicly. When backend and native tooling are on different hosts, only the API must be reachable from the device; do not expose the PostgreSQL port.
 
 In another terminal, read-only checks:
 
@@ -122,7 +137,7 @@ pnpm --filter @princess/web exec playwright install --with-deps chromium
 pnpm --filter @princess/render run build
 ```
 
-The Playwright installation may install system packages; use a disposable/approved development machine. The [export runtime](../../infra/runtime/README.md) provides the alternative packaged Chromium boundary. For a source-tree export worker, use the reviewed renderer executable/environment described by [apps/render](../../apps/render/README.md) and the existing `PRINCESS_CHROMIUM` override when required by that installation; never substitute an arbitrary browser URL.
+The Playwright installation may install system packages; use a disposable/approved development machine. The [export runtime](../../infra/runtime/README.md) provides the alternative packaged Chromium boundary. A source-tree export worker uses the built renderer and its pinned browser installation; the optional `PRINCESS_CHROMIUM` variable selects an approved executable when that installation needs an override. The relevant source is [run_worker.py](../../apps/workers/export/run_worker.py). Never substitute an arbitrary browser URL.
 
 Start the export worker in a separate terminal using the worker connection and same storage:
 

@@ -18,7 +18,7 @@
 | `PRINCESS_CHROMIUM` | Reviewed renderer-browser executable override when needed, not a browser URL |
 | Protected Supabase inputs | Exact selected staging verification tuple and receipt-derived binding; see the dedicated runbook rather than copying private values here |
 
-The complete names and current source uses are indexed by [command/config inventory](command-inventory.md). Do not put provider keys in `EXPO_PUBLIC_*`, `NEXT_PUBLIC_*`, native extras, URLs or logs. Not every operational directory is declared a secret, but its contents may still be sensitive.
+The [environment matrix](environment-matrix.md) lists all manifest-declared secret names. The table above covers key operational variables but is not an inventory of every `os.environ` use. Consult the actual component configuration and the [tool inventory](command-inventory.md) for the relevant source. Do not put provider keys in `EXPO_PUBLIC_*`, `NEXT_PUBLIC_*`, native extras, URLs or logs. Not every operational directory is declared a secret, but its contents may still be sensitive.
 
 ## Native build-time configuration
 
