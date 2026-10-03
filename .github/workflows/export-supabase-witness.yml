@@ -1,0 +1,26 @@
+name: Export frozen Supabase witness source
+
+on:
+  push:
+    branches:
+      - ci/export-supabase-witness-source
+
+permissions:
+  contents: read
+
+jobs:
+  export:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ce6fe884305de93c6a13d091b31a3ff0d72dc5bf
+          persist-credentials: false
+      - name: Pack exact witness source
+        run: tar --exclude=.git -czf "$RUNNER_TEMP/princess-supabase-witness.tar.gz" .
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: princess-supabase-witness-ce6fe884
+          path: ${{ runner.temp }}/princess-supabase-witness.tar.gz
+          if-no-files-found: error
+          retention-days: 1
