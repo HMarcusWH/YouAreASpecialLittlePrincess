@@ -1,3 +1,5 @@
+> Historical construction handoff, retained as provenance. T26 and its T15 consumer have since been implemented. Current source/status: [interpretation database](../../schema/graphology_interpretation/v1/README.md). Do not alter frozen foundations or treat this record as authorization to activate content.
+
 # Post-merge handoff: construct the actual database
 
 **Current scope: supporting research only. Next scope: T26 database construction in a separate PR after this research import is merged.** No production values, schema enums or task-completion statuses are changed by the import.

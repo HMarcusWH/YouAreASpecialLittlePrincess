@@ -55,3 +55,7 @@ The accepted-token/documentation implementation was qualified at `4a786230fcb9d7
 - **T06/T08/T12–T14:** calibration/reference work required before population-relative claims.
 
 This acceptance closes only the T10 `design_acceptance` gate. It does not approve participant rights, processor terms, live model use, prices, charges, native signing, store review or public release.
+
+## Maintainer artifact retrieval
+
+The acceptance record above is unchanged. [Access and assets](../handover/access-and-assets.md) records the exact archive digest and the outstanding durable delivery/recipient verification action. A clone contains the accepted token/reference records, not the external prototype ZIP or approval to redistribute fonts.

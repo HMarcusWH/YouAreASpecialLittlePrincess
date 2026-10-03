@@ -1,3 +1,5 @@
+> Current implemented/composed/qualified limits are summarized in the [handover snapshot](../handover/current-state.md) and [configuration reference](../reference/configuration.md). Engineering defaults below are not blanket production approvals.
+
 # Architecture decisions
 
 [Roadmap index](../roadmap/00-index.md) · [Provider register](../roadmap/19-provider-decision-register.md) · [Connector index](../connectors/README.md).

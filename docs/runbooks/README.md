@@ -1,10 +1,12 @@
+> [Operator command safety/output semantics](../reference/commands.md) · [troubleshooting](../development/troubleshooting.md) · [access/custody](../handover/access-and-assets.md). These are implementation runbooks with explicit deployment gaps, not authorization to operate live providers.
+
 # Runbooks (T24)
 
 Status: **DRAFT.** These cover the mechanisms that exist in the code today, with commands you can run against a local or staging database. No hosting, alerting or paging provider has been chosen yet. Every step that depends on one is marked **PENDING DEPLOYMENT** instead of guessed. Alert owners and escalation channels are owner decisions ([18](../roadmap/18-observability-support-and-cost-control.md)).
 
 Conventions:
-- `$API_ENV` is the API component's environment (`PRINCESS_ENV`, `PRINCESS_COMPONENT=api`, `PRINCESS_DATABASE_URL`, …).
-- SQL runs as a migration or operator role, never as an owner.
+- Commands below are operator templates after the correct component environment and reviewed role have been prepared. Follow [command safety and outputs](../reference/commands.md); an undefined `$API_ENV` expansion is not a setup command.
+- SQL requires the approved diagnostic/operator role and verified environment. Ordinary API principals must never receive owner/BYPASSRLS privileges for troubleshooting. Cross-owner completion needs the actual authorized worker/operator scope.
 - Queries return counts, IDs and codes only. None of them selects handwriting, report documents, Premium text or feedback comments.
 
 ## 1. Worker outage and lease recovery (analysis, Premium, export)
@@ -24,8 +26,8 @@ Conventions:
 - **Trigger:** a customer reports a purchase without credit, or `financial_transaction` rows sit with `completed_at IS NULL`.
 - **Act (idempotent):**
   ```sh
-  $API_ENV python -m princess_api.ops reconcile --rail stripe --since-hours 48
-  $API_ENV python -m princess_api.ops complete-pending
+  python -m princess_api.ops reconcile --rail stripe --since-hours 48
+  python -m princess_api.ops complete-pending
   ```
   Reconciliation re-reads the provider's authoritative state. It never grants from a client flag or a redirect.
 - **Payments after account deletion:**
@@ -33,7 +35,7 @@ Conventions:
   SELECT rail, event_id, received_at FROM app.provider_event WHERE outcome LIKE '%owner_deleted_refund_pending%';
   ```
   Each row is a payment whose automatic refund request failed. Refund it in the provider console, then run `reconcile`.
-- **Verify:** `complete-pending` reports `0`, and the provider shows the refund.
+- **Verify:** `completed` reports successful completions in that invocation, not remaining work. Zero can also mean provider completion failed. Inspect remaining completion state using the repository's actual pending-completion predicate under approved operator scope, reconcile it with authoritative provider state, and separately verify any requested refund. Do not close an incident on `completed == 0` or CLI exit 0 alone. A new bounded pending-state CLI, if needed, is separate T24 implementation work.
 
 ## 3. Model outage or runaway cost
 
@@ -43,7 +45,7 @@ Conventions:
   SELECT state, last_error, count(*) FROM app.job WHERE kind = 'premium' GROUP BY 1, 2;
   SELECT state, count(*) FROM app.credit_reservation GROUP BY 1;
   ```
-- **Note:** an ambiguous provider timeout may have executed and billed on the provider side. That cost is ours and bounded by the spend budget. The customer is charged only on publication.
+- **Note:** an ambiguous provider timeout may have executed and billed on the provider side. That cost is ours and bounded by the spend budget. The application spends a reserved credit on publication; the store purchase may already have charged the customer earlier. Releasing an eligible reservation is not a store refund. Refund-after-spend/access behavior requires the approved commercial policy.
 
 ## 4. Deletion and erasure verification
 
@@ -63,7 +65,7 @@ Conventions:
 ## 6. Feedback retention
 
 ```sh
-$API_ENV python -m princess_api.ops expire-feedback
+python -m princess_api.ops expire-feedback
 ```
 This deletes report feedback past `expires_at` (a draft 180-day period, owner-pending). Only the `princess_support` role may read feedback, and it sees the feedback columns only.
 
@@ -73,7 +75,7 @@ Every account and capture deletion, every permission withdrawal or denial, and e
 
 After restoring a backup, **before the environment serves traffic**:
 ```sh
-$API_ENV python -m princess_api.ops replay-tombstones
+python -m princess_api.ops replay-tombstones
 ```
 The command prints four counts:
 - `reapplied`: changes the restored database had lost, now applied again. Deletions are re-queued for erasure, withdrawals re-recorded and propagated, and revocations re-applied with the devices bound before them dropped.
@@ -86,7 +88,7 @@ The command is idempotent. Then start the erasure worker. Byte erasure is idempo
 - **Also run:** `reconcile` and `complete-pending` (section 2), because payments made after the backup point are recovered from the provider's authoritative state rather than replayed.
 - **Before resuming Premium workers**, run the restored-attempt check with the Premium worker environment:
   ```sh
-  $PREMIUM_ENV python apps/workers/premium/run_worker.py --reconcile-restored
+  python apps/workers/premium/run_worker.py --reconcile-restored
   ```
   The command checks each deterministic provider-attempt identity through the configured model connector before any restored Premium job is allowed to run again. A provider-confirmed prior execution is recorded in the sanitized `provider_attempt` journal, the restored job is failed and its reserved credit is returned; no second model generation is issued. If lookup is unsupported or uncertain, the job also fails closed and its credit is returned. Only a provider that can authoritatively report every possible bounded attempt as absent leaves that job safe to resume. Run the command again to confirm it is idempotent before starting ordinary Premium workers.
 - The local/test fake advertises authoritative attempt lookup so the restore choreography is executable in CI. The current OpenAI `store=false` adapter does not advertise it and therefore cannot certify restored Premium work; live Premium remains gated until an approved provider configuration proves compatible authoritative lookup or an equivalent reviewed idempotency mechanism.
@@ -98,11 +100,11 @@ The command is idempotent. Then start the erasure worker. Byte erasure is idempo
 
 Notices never carry business state, so an outage only delays or drops them.
 ```sh
-$NOTIFY_ENV python apps/workers/notifications/run_worker.py once     # one pass; counts by channel and state
-$NOTIFY_ENV python apps/workers/notifications/run_worker.py suppress --recipient <principal_id> --reason COMPLAINT
-$NOTIFY_ENV python apps/workers/notifications/run_worker.py unsuppress --recipient <principal_id>
+python apps/workers/notifications/run_worker.py once     # one pass; counts by channel and state
+python apps/workers/notifications/run_worker.py suppress --recipient <principal_id> --reason COMPLAINT
+python apps/workers/notifications/run_worker.py unsuppress --recipient <principal_id>
 ```
-(`$NOTIFY_ENV` = the `notification_worker` component's environment.)
+(Prepare the `notification_worker` component environment and approved role before these mutating commands.)
 
 - **Provider outage:** failures back off and give up after 5 attempts. Notices older than 24 h are dropped rather than sent late. No action is needed beyond watching the `notification.delivery` metric (`outcome=retry`/`failed`, `error_code`).
 - **Revoked or rotated provider key:** sends fail as `provider_auth` and back off. Set the `notifications` kill switch off (pending events are consumed without sending, so no backlog floods out later), rotate the secret, redeploy only the notification worker and switch back on.
@@ -137,9 +139,9 @@ those providers are selected and qualified.
 The backend runtime exposes three read-only operator commands:
 
 ```sh
-$API_ENV python -m princess_api.ops snapshot
-$API_ENV python -m princess_api.ops check --policy <reviewed-policy.json>
-$API_ENV python -m princess_api.ops verify-disabled --switch commerce --switch premium_generation
+python -m princess_api.ops snapshot
+python -m princess_api.ops check --policy <reviewed-policy.json>
+python -m princess_api.ops verify-disabled --switch commerce --switch premium_generation
 ```
 
 `snapshot` emits `operational-snapshot/1`: fixed aggregate queue/outbox,

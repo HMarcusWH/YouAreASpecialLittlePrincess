@@ -45,3 +45,9 @@ Supabase CLI state and local secret files are ignored by `supabase/.gitignore`.
 
 If GitHub-driven Supabase deployment is enabled later, reconcile it with the Alembic migration authority first.
 Do not enable **Deploy to production** merely because this directory exists.
+
+## Maintainer navigation
+
+This directory is not proof that the entire Princess application backend is deployed on Supabase. The selected identity adapter lives under `src/princess_app/adapters/supabase`; application PostgreSQL migrations remain under `migrations`.
+
+Read the [provider decision](../docs/roadmap/19-provider-decision-register.md), [current handover](../docs/handover/current-state.md) and [T17 operator runbook](../docs/ci/T17_SUPABASE_STAGING_AUTH_OPERATOR_RUNBOOK.md). Only the protected selected staging verification profile is implemented/composed as recorded. Application login, provider lifecycle, full staging and production activation remain separate. No raw project references, credentials or protected receipts are added here.

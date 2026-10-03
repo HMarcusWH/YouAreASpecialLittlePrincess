@@ -6,12 +6,12 @@ This directory holds **research snapshots and database-design evidence**, not an
 
 1. [Foundations v0.1](foundations-v0.1/README.md): research report, source register, question domains and provenance.
 2. [Question catalogue navigation](foundations-v0.1/catalogue_index.md): the 89 proposed questions, grouped into 16 examination domains, with links to their complete records and legal draft values.
-3. [Database construction handoff](DATABASE_HANDOFF.md): requirements for the separate post-merge T26 implementation.
+3. [Historical database construction handoff](DATABASE_HANDOFF.md): original T26 requirements; current implementation is the [reviewed interpretation source](../../schema/graphology_interpretation/v1/README.md). Do not rebuild completed T26 work.
 4. [Existing product roadmap](../../ROADMAP.md) and [selector architecture](../../docs/roadmap/08-premium-question-selector-database.md): application context, not authority to activate draft associations.
 
 ## Review boundary
 
-The supporting-materials PR must be merged before database construction starts. The research JSON is deliberately under `research/`, separate from `schema/premium_interpretation_database_v1.json`. This import does not replace that UNPOPULATED scaffold, execute rules, change the engine, or mark T26 complete.
+The original supporting-materials import preceded T26 construction. That is historical provenance, not present implementation status: T26 and its T15 consumer are now recorded DONE, the database is populated/reviewed, runtime activation remains false and traditional runtime eligibility remains zero. The frozen research JSON stays under `research/`; it does not independently authorize interpretation. Read the current schema handoff before acting on historical construction instructions.
 
 The preserved draft distinguishes source fidelity, empirical support and observation feasibility. Original terminology, access-depth limits, pending rubrics and research-only associations remain intact. Any later correction or new research must be documented as a new revision, not silently edited into this snapshot.
 
