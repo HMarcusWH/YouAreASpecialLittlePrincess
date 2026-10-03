@@ -7,6 +7,7 @@ procedures have completed.
 """
 from __future__ import annotations
 
+import argparse
 import json
 import re
 import sys
@@ -34,7 +35,10 @@ from princess_app.config_supabase import (  # noqa: E402
 )
 from princess_app.ports import identity as identity_port  # noqa: E402
 from build_supabase_auth_settings_snapshot import (  # noqa: E402
+    AuthSettingsError,
+    load_protected_auth_config_bytes,
     validate_snapshot as validate_auth_snapshot,
+    validate_snapshot_source_binding,
 )
 from build_supabase_staging_cleanup_evidence import (  # noqa: E402
     validate_cleanup_evidence,
@@ -215,7 +219,7 @@ def _validate_owner_scope(path: Path) -> None:
         raise CloseoutError("global_gate_widened")
 
 
-def check_closeout(root: Path = ROOT) -> None:
+def check_closeout(root: Path = ROOT, *, auth_config_bytes: bytes) -> None:
     conformance = root / "docs" / "ci" / "T17_SUPABASE_RUNTIME_CONFORMANCE.md"
     auth_snapshot_path = root / "docs" / "ci" / "T17_SUPABASE_AUTH_SETTINGS_SNAPSHOT.json"
     cleanup_path = root / "docs" / "ci" / "T17_SUPABASE_STAGING_CLEANUP_EVIDENCE.json"
@@ -225,6 +229,10 @@ def check_closeout(root: Path = ROOT) -> None:
 
     auth_snapshot = _load_json(auth_snapshot_path, "auth_settings_snapshot")
     validate_auth_snapshot(auth_snapshot)
+    validate_snapshot_source_binding(
+        auth_snapshot,
+        source_response_bytes=auth_config_bytes,
+    )
     if auth_snapshot.get("project_ref_sha256") != PROJECT_REF_SHA256:
         raise CloseoutError("auth_settings_project_binding")
     if auth_snapshot.get("application_login_activation") is not False:
@@ -252,10 +260,15 @@ def check_closeout(root: Path = ROOT) -> None:
     _validate_owner_scope(account_path)
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--auth-config-file", type=Path, required=True)
+    args = parser.parse_args(argv)
+
     try:
-        check_closeout()
-    except (CloseoutError, ValueError) as exc:
+        auth_config_bytes = load_protected_auth_config_bytes(args.auth_config_file)
+        check_closeout(auth_config_bytes=auth_config_bytes)
+    except (CloseoutError, AuthSettingsError, ValueError) as exc:
         print(f"FAIL: {exc}")
         return 1
     except Exception:
