@@ -295,6 +295,48 @@ def validate_snapshot(snapshot: Mapping[str, Any]) -> None:
         raise AuthSettingsError("auth_settings_snapshot_evidence_hash")
 
 
+def validate_snapshot_source_binding(
+    snapshot: Mapping[str, Any],
+    *,
+    source_response_bytes: bytes,
+) -> None:
+    """Re-bind a Git-safe snapshot to the exact protected provider response bytes."""
+    validate_snapshot(snapshot)
+    if (
+        not isinstance(source_response_bytes, bytes)
+        or not source_response_bytes
+        or len(source_response_bytes) > MAX_AUTH_CONFIG_BYTES
+    ):
+        raise AuthSettingsError("auth_settings_snapshot_source_response_binding")
+    try:
+        source = json.loads(source_response_bytes)
+    except (UnicodeDecodeError, ValueError):
+        raise AuthSettingsError("auth_settings_snapshot_source_response_binding") from None
+    if not isinstance(source, dict):
+        raise AuthSettingsError("auth_settings_snapshot_source_response_binding")
+    if snapshot.get("source_response_sha256") != _sha256_bytes(source_response_bytes):
+        raise AuthSettingsError("auth_settings_snapshot_source_response_binding")
+
+    try:
+        for field in RATE_LIMIT_FIELDS:
+            if _strict_nonnegative_int(source, field) != snapshot.get(field):
+                raise AuthSettingsError("auth_settings_snapshot_source_projection_binding")
+        for field in SECURITY_FIELDS:
+            if _strict_bool(source, field) != snapshot.get(field):
+                raise AuthSettingsError("auth_settings_snapshot_source_projection_binding")
+    except AuthSettingsError as exc:
+        if str(exc).startswith("auth_settings_snapshot_source_"):
+            raise
+        raise AuthSettingsError("auth_settings_snapshot_source_projection_binding") from None
+
+
+def load_protected_auth_config_bytes(path: Path) -> bytes:
+    """Load the protected raw Auth-config response without reserializing it."""
+    protected = _protected_input(path, "auth_config")
+    _, raw = _load_auth_config(protected)
+    return raw
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--project-ref-file", type=Path, required=True)
