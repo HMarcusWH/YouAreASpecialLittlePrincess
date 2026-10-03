@@ -6,7 +6,7 @@ This document defines the final staging Auth evidence closeout sequence. It does
 authorize application-managed login or production/live identity. The step-by-step protected operator handoff is in
 [T17 Supabase staging Auth operator runbook](T17_SUPABASE_STAGING_AUTH_OPERATOR_RUNBOOK.md).
 
-The **runtime conformance witness** is frozen to the merged post-#58 baseline:
+The **runtime conformance witness** is frozen to the corrected pre-live cross-platform-hash baseline:
 
 ```text
 ce6fe884305de93c6a13d091b31a3ff0d72dc5bf
