@@ -36,6 +36,7 @@ test("development builds reach a LAN API and only they carry the development ide
   const runtime = parseRuntimeConfig((config.extra as { runtime: unknown }).runtime);
   assert.ok(runtime.ok && runtime.config.devIdentity);
   assert.equal(config.scheme, "inktrospect-dev");
+  assert.equal(config.name, "Inktrospect", "CNG derives the Xcode workspace name the native CI builds from this");
   const staging = build({ INKTROSPECT_APP_VARIANT: "staging", INKTROSPECT_API_BASE: "https://staging-api.inktrospect.se" });
   const stagingRuntime = parseRuntimeConfig((staging.extra as { runtime: unknown }).runtime);
   assert.ok(stagingRuntime.ok && !stagingRuntime.config.devIdentity);
@@ -45,9 +46,11 @@ test("development builds reach a LAN API and only they carry the development ide
 test("broad media and microphone permissions are blocked; the picker needs none", () => {
   const config = build({ INKTROSPECT_API_BASE: "http://127.0.0.1:8000" });
   for (const permission of ["android.permission.RECORD_AUDIO", "android.permission.READ_MEDIA_IMAGES",
-                            "android.permission.READ_EXTERNAL_STORAGE"]) {
+                            "android.permission.READ_MEDIA_VIDEO"]) {
     assert.ok(config.android?.blockedPermissions?.includes(permission), permission);
   }
+  // Camera capture on Android 7-9 needs the picker library's capped storage permission.
+  assert.ok(!config.android?.blockedPermissions?.includes("android.permission.WRITE_EXTERNAL_STORAGE"));
   const picker = (config.plugins ?? []).find((p) => Array.isArray(p) && p[0] === "expo-image-picker") as [string, Record<string, unknown>];
   assert.equal(picker[1].microphonePermission, false);
   assert.equal(picker[1].photosPermission, false);

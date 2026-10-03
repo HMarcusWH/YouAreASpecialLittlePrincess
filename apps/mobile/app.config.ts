@@ -11,10 +11,12 @@ import type { ConfigContext, ExpoConfig } from "expo/config";
 // No signing material, provider secret or credential is ever placed here.
 type Variant = "development" | "staging" | "store";
 
-const VARIANTS: Record<Variant, { id: string; scheme: string; name: string; backend: string }> = {
-  development: { id: "se.inktrospect.development", scheme: "inktrospect-dev", name: "Inktrospect Dev", backend: "local" },
-  staging: { id: "se.inktrospect.staging", scheme: "inktrospect-staging", name: "Inktrospect Staging", backend: "staging" },
-  store: { id: "se.inktrospect", scheme: "inktrospect", name: "Inktrospect", backend: "production" },
+// The app name stays "Inktrospect" in every variant: CNG derives the Xcode workspace/scheme from it and the
+// native CI builds Inktrospect.xcworkspace. Variants differ by identifier, scheme and backend.
+const VARIANTS: Record<Variant, { id: string; scheme: string; backend: string }> = {
+  development: { id: "se.inktrospect.development", scheme: "inktrospect-dev", backend: "local" },
+  staging: { id: "se.inktrospect.staging", scheme: "inktrospect-staging", backend: "staging" },
+  store: { id: "se.inktrospect", scheme: "inktrospect", backend: "production" },
 };
 
 function list(value: string | undefined): string[] {
@@ -33,7 +35,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
 
   return {
     ...config,
-    name: profile.name,
+    name: "Inktrospect",
     slug: "inktrospect",
     version: "0.1.0",
     scheme: profile.scheme,
@@ -52,11 +54,12 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     },
     android: {
       package: profile.id,
-      // The system Photo Picker needs no media permission; nothing broader is requested.
+      // The system Photo Picker needs no media permission, so the Android 13+ media permissions and the
+      // microphone are blocked. The picker library's legacy storage pair (maxSdkVersion 32) stays: its
+      // camera capture requires WRITE_EXTERNAL_STORAGE on Android 7-9 (minSdk 24). Neither is requested
+      // for picking.
       blockedPermissions: [
         "android.permission.RECORD_AUDIO",
-        "android.permission.READ_EXTERNAL_STORAGE",
-        "android.permission.WRITE_EXTERNAL_STORAGE",
         "android.permission.READ_MEDIA_IMAGES",
         "android.permission.READ_MEDIA_VIDEO",
         "android.permission.READ_MEDIA_AUDIO",
