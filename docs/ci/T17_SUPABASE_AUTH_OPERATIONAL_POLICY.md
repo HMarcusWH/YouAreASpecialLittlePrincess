@@ -41,9 +41,11 @@ The generated `supabase-auth-settings/3` snapshot is Git-safe only because it al
 fields, hashes the raw project reference before comparison with the already-qualified Princess staging project
 binding, hashes the exact protected Management API response bytes into `source_response_sha256`, records only
 an opaque `protected_evidence_ref`, and derives `evidence_sha256` over the complete Git-safe snapshot envelope.
-The source-response digest is derived by the builder and is never supplied by the operator. The envelope digest
-makes valid-looking post-generation edits to that digest, capture metadata or safe evidence references fail closed
-unless the complete safe artifact is deliberately regenerated.
+The source-response digest is derived by the builder and is never supplied by the operator during generation.
+The envelope digest detects accidental/post-generation edits to that digest, capture metadata or safe evidence
+references. It is not itself a provider-provenance signature: final closeout independently re-reads the exact
+protected raw `/config/auth` response bytes and requires their SHA-256 plus every allowlisted value to match the
+Git-safe snapshot.
 
 ## Required selected-account fields
 
