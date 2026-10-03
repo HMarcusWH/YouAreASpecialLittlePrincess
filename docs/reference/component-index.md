@@ -8,7 +8,6 @@ All maintained README entry pages discovered in the source tree are listed below
 
 | Entry page | Title |
 |---|---|
-| [.github/README.md](../../.github/README.md) | Repository workflows |
 | [README.md](../../README.md) | Inktrospect |
 | [apps/api/README.md](../../apps/api/README.md) | FastAPI application |
 | [apps/mobile/README.md](../../apps/mobile/README.md) | Inktrospect native client (Expo / React Native) |
