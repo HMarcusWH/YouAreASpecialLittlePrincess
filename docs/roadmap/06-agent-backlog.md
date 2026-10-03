@@ -4,7 +4,7 @@
 
 [Documentation index](00-index.md) · [Machine authority](tasks.json) · [Build sequence](20-end-to-end-build-sequence.md) · [Release gates](21-release-readiness-checklists.md)
 
-Plan 2.3; code baseline `e8e174a2311f8d4327850218405819de8f87277e`. Statuses are implementation/history records, not production approvals. READY is computed from completed hard predecessors.
+Plan 2.3; code baseline `acad76e24697585d43998ed4db01e41aaf81c3b4`. Statuses are implementation/history records, not production approvals. READY is computed from completed hard predecessors.
 
 Use `python docs/roadmap/plan_tools.py --ready`, `--active` or `--task ID`. Edit tasks.json and run `--write` then `--check` when maintaining the plan.
 
