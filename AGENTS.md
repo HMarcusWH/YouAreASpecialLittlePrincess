@@ -10,6 +10,8 @@ Read [ROADMAP.md](ROADMAP.md), then the [documentation map](docs/roadmap/00-inde
 4. Coordinate shared schema, DTO generation, migrations, ledger and worker state-machine edits. Another PR's proposal is not a merged dependency. A mock or frozen fixture can unblock only work explicitly scoped to mocks.
 5. Finish with positive and adversarial tests, actual executed command results, resolved versions, migration/recovery evidence and a limitation statement. Never merge or weaken protection/checks to bypass failure.
 
+Mobile-first execution (2026-10-03): shared native client work proceeds under T30A against `DONE` capability tasks, fakes and the development API; T30/T31 platform qualification no longer waits for web Premium T20, and a mobile-scoped release is not T25 multi-platform signoff. This does not relax any owner gate or mark a predecessor done.
+
 `docs/roadmap/tasks.json` is the task/dependency/status authority. The [human backlog](docs/roadmap/06-agent-backlog.md) is generated; edit the JSON then run `python docs/roadmap/plan_tools.py --write`. `--check` rejects cycles, missing references, stale generated text and broken local document links. `--ready` shows unopened planned work whose hard predecessors are DONE; `--active` shows `IN_PROGRESS` and `IMPLEMENTED_PENDING_REVIEW` work. Partial tasks record `implementation_evidence` and explicit `remaining_work`; a merged PR never implies `DONE`. Owner gates may allow mock implementation, never unapproved activation.
 
 ## Where code belongs

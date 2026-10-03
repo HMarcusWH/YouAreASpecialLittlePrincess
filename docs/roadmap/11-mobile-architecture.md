@@ -10,21 +10,36 @@ Target the complete phone journey plus adaptive iPad/Android-tablet layouts; exa
 
 Use development builds for native purchase libraries and platform capabilities; Expo Go alone is not an IAP test environment (source E06 in [22](22-research-and-source-refresh.md)). T29 pinned Expo 57.0.25 / RN 0.86.3 / Router 57.0.23 / expo-iap 5.6.3 and the checked-in lockfile; `apps/mobile/scripts/check-compatibility.mjs` verifies exact installed versions and license metadata. EAS is a build-service candidate, not a requirement to send signing keys or customer data to a new processor without approval. Local Xcode/Gradle builds remain documented.
 
-## Planned module layout
+## Module layout (implemented by T29/T30A)
 
 ```text
-apps/mobile/app/                  routes and native navigation
-apps/mobile/src/features/         capture, reports, history, commerce, sharing, settings
-apps/mobile/src/platform/         camera, secure-session, purchases, links, files, notifications
-apps/mobile/src/bootstrap/        API transport and provider composition
-apps/mobile/plugins/              reviewed native configuration plugins
+apps/mobile/app/                  Expo Router screens and the link intent filter (+native-intent)
+apps/mobile/src/bootstrap/        createServices composition (no React Native imports), native wiring, React provider
+apps/mobile/src/config/           build-variant runtime configuration validation
+apps/mobile/src/session/          secure-store credential, hydration, guest/dev sign-in, transfer, sign-out/deletion
+apps/mobile/src/work/             journal, resumable capture workflow, foreground runner, derivative bounds
+apps/mobile/src/features/         commerce, Premium, exports, history, feedback, comparison, push, preferences
+apps/mobile/src/platform/         port contracts, fakes, links, Expo adapters (capture, files, share, push, IAP, identity)
+apps/mobile/src/ui/               Dossier renderer, evidence drawing, Premium overlay, crop view, primitives, tokens
 packages/contracts/               generated shared DTOs
-packages/api-client/              transport-neutral application API client
-packages/report-core/             semantic presentation/formatting
+packages/api-client/              transport-neutral client, runtime guards, portable SHA-256, strict URI parser
+packages/report-core/             formatting, charts, shared EN/SV report copy, dossier reading model
 packages/design-tokens/           shared values; platform-specific rendering
 ```
 
-T29 chose **Expo CNG/prebuild + reviewed config plugins**: generated native projects must not accumulate unexplained hand-edits. Native changes belong in tested config plugins or an explicitly adopted committed-native workflow. Record the choice in ADR-005. Rebuild development/store binaries when native modules or entitlements change.
+No reviewed config plugins exist yet; native configuration is expressed through `app.config.ts` and installed module plugins. Build variants (`development`/`staging`/`store`) differ by identifier, scheme and backend; the app name stays constant because CNG derives the Xcode workspace from it.
+
+## Mobile-first execution amendment (2026-10-03)
+
+T30A carries the shared native client against `DONE` capability tasks (T01–T04, T09, T15, T18, T27, T28), fakes and the development API, and adds only the native-facing API contracts it consumes: `GET /v1/analyses` (run discovery after reinstall/second device), `DELETE /v1/reports/{id}` (report-scoped deletion), `GET /v1/reports/{id}/source-image` (retained input through the live OWNER projection), `GET /v1/consent-notices` (exact notice text/version and draft status) and `POST /v1/comparisons` (unsaved same-owner T18 comparison). T30/T31 keep the platform qualification: signed devices, StoreKit/Play sandboxes, push delivery, verified links and accessibility on the device matrix. They no longer wait for web Premium T20. A mobile-scoped release candidate is recorded separately and is not T25 multi-platform signoff.
+
+Implemented behaviour, with Node tests and the development-API journey (`tools/run_mobile_journey.sh`) as evidence:
+
+- **Session:** one versioned credential record in secure storage; verified hydration (offline launch stays unverified until an authenticated call succeeds); private guest sessions; development sign-in only in development builds against local/test backends; guest transfer proven by both credentials; local sign-out, application sign-out-everywhere and asynchronous account deletion kept distinct; serialized credential changes and epoch fencing; a 401 forgets only the credential that was rejected; exit hooks purge the outgoing principal's journal, private files and push binding.
+- **Capture to report:** system picker without broad media permission; camera permission only on capture; metadata-free re-encode bounded to the intake policy; rotate/crop review where every later coordinate refers to the uploaded derivative. A journal entry records the intent and digest before any network call; each step (reserve, PUT, complete, grant by request ID, start with dedupe, poll) is idempotent server-side except reservation, whose lost response costs one recorded slot. Lost responses and process death at every transition converge on one capture, grant and run.
+- **Reading:** the Dossier renders the saved projection (server First Reveal, every Free fact with evidence class and availability, notices, actions with reasons) and stored evidence (baseline traces drawn from stored points with text alternatives; spacing and slant observation tables). The retained source image is downloaded with the bearer credential through the report-scoped route and evidence is overlaid only when the stored frame matches it exactly.
+- **Paid states:** offers join the server catalog with store-localized prices; the store transaction is finished only after the server reports a durable grant (Play consumption stays server-side); pending, cancelled and unknown outcomes never ask to pay twice; a purchase requires an account first. Premium shows only the saved validated overlay, its evidence class, support and omissions, and needs the server's PURCHASE action, an account, a retained image and report-scoped third-party AI permission.
+- **Runtime caveat:** React Native's global `URL` is a regex approximation that accepts malformed input and loses custom-scheme hosts. Upload-origin, configuration, deep-link and auth-callback checks use the shared strict `parseUri` instead.
 
 ## Native boundary interfaces
 
@@ -60,6 +75,6 @@ Do not present Stripe web checkout in a native paywall by default. Alternative p
 
 ## Delivery plan
 
-T29 builds the shared shell, fake platform ports, secure transport, navigation, capture prototype and compatibility matrix. T30/T31 integrate the complete Apple/Android journeys once API/report/commerce/sharing contracts exist. This split lets native scaffolding begin early without pretending that a shell is a finished paid app.
+T29 builds the shared shell, fake platform ports, secure transport, navigation, capture prototype and compatibility matrix. T30A builds the shared client capabilities against the established contracts and fakes. T30/T31 qualify the complete Apple/Android journeys on signed devices and store sandboxes. This split lets native work proceed without pretending that a development-API journey is a qualified paid app.
 
 Acceptance requires real-device capture, interruptions, account switching, deep-link cold/warm start, accessibility text scaling/screen readers, sandbox purchase recovery, push denial, offline re-entry, tablet layout and signed release-build smoke. JavaScript tests alone are not native acceptance. Signed release artifacts and store evidence are owned by T32/T33.

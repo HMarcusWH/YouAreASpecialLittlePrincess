@@ -13,7 +13,8 @@
     "Every task may use bounded sub-PRs; DONE requires the integrated acceptance evidence, not one merged scaffold.",
     "Human gates permit mock/disabled implementation only where specified; no invented rights, participants, account access, test results or store approvals.",
     "T07 is optional if omitted from marketed scope. Other-owner comparison requires T22 authorization before release.",
-    "No provider charges, recruitment, signing-account changes or public rollout without the applicable owner gate."
+    "No provider charges, recruitment, signing-account changes or public rollout without the applicable owner gate.",
+    "Mobile-first execution (2026-10-03): T30A carries the shared native client against DONE capability tasks and fakes; T30/T31 platform qualification no longer waits for web Premium T20. A mobile-scoped release candidate is not T25 multi-platform signoff."
   ],
   "gate_registry": {
     "pilot_rights_consent": "Owner-reviewed collection agreement, purpose/retention/withdrawal protocol before recruitment.",
@@ -150,6 +151,14 @@
         "python -m pytest -q tests/test_release_compatibility.py"
       ],
       "description": "Merged provider-neutral runtime-release/rollback contract tests; .github/workflows/release-compat.yml supplies the Docker/PostgreSQL cross-version qualification. This is not production rollout approval."
+    },
+    "native-journey": {
+      "state": "EXISTS_IN_THIS_PR",
+      "commands": [
+        "pnpm --filter @princess/mobile test",
+        "PYTHON=python PRINCESS_E2E_ADMIN_URL=postgresql://<disposable-admin>@127.0.0.1:5432/postgres PRINCESS_E2E_ALLOW_RESET=1 tools/run_mobile_journey.sh"
+      ],
+      "description": "T30A shared native client profile: controller/workflow/session tests plus the native app's real composition driven in Node against a disposable local API, analysis worker and (with PRINCESS_E2E_EXPORTS=1) export worker. Development-API evidence only: not device, simulator UI, signed-build or store evidence."
     }
   },
   "tasks": [
@@ -2237,6 +2246,93 @@
       ]
     },
     {
+      "id": "T30A",
+      "title": "Shared native client capabilities and Free-to-paid integration slice",
+      "status": "IN_PROGRESS",
+      "depends_on": [
+        "T01",
+        "T02",
+        "T03",
+        "T04",
+        "T09",
+        "T15",
+        "T18",
+        "T27",
+        "T28"
+      ],
+      "owner_role": "mobile-platform",
+      "milestone": "mobile",
+      "platforms": [
+        "ios",
+        "ipados",
+        "android"
+      ],
+      "connectors": [
+        "IdentityProvider",
+        "NativePurchaseClient",
+        "PushProvider"
+      ],
+      "required_docs": [
+        "docs/roadmap/11-mobile-architecture.md",
+        "docs/roadmap/14-payments-entitlements-and-commerce.md",
+        "docs/connectors/identity.md",
+        "docs/connectors/payments.md",
+        "docs/connectors/push.md",
+        "apps/mobile/README.md",
+        "apps/mobile/COMPATIBILITY.md"
+      ],
+      "owned_paths": [
+        "apps/mobile/",
+        "packages/api-client/",
+        "packages/report-core/",
+        "apps/api/princess_api/app.py",
+        "tools/run_mobile_journey.sh"
+      ],
+      "coding_steps": [
+        "Compose the native app from validated build-variant config: secure session manager, guarded API client with per-request credentials, journal, resumable capture workflow and foreground runner; keep fixture identity out of release builds.",
+        "Implement capture review/bounds, the journaled upload-to-report workflow with lost-response and process-death recovery, and the native Dossier/evidence/history/settings/feedback/export/comparison screens from saved authorized projections.",
+        "Implement provider-independent commerce orchestration (grant-before-finish, pending/unknown outcomes, account-before-purchase), Premium state/permission/overlay display, push registration and verified-link resolution behind the existing ports and fakes.",
+        "Add only the native-facing API contracts the slice consumes (run discovery, report-scoped deletion and source image, notice delivery, same-owner comparisons) with owner-scope tests, and drive the real composition against the development API and workers."
+      ],
+      "contract_handoff": "Shared native client capabilities proven against fakes and the development API, consumed by T30 (Apple) and T31 (Android) platform qualification; not a signed binary, store transaction, device or release evidence.",
+      "acceptance": [
+        "A clean install reaches an explicit session state; a synthetic specimen traverses the real development API and analysis worker to a saved report rendered from the authorized projection; relaunch resumes the same run; no development credential path exists in staging/store configuration.",
+        "Lost responses and process death at every workflow transition create no second capture, grant or run; client purchase states never grant credit; store transactions finish only after a durable server grant."
+      ],
+      "negative_tests": [
+        "Lost reservation/PUT/completion/permission/start responses, expired slot, changed or missing local bytes, quota/capacity back-off, withdrawn permission, expired session, account switch during purchase, pending/unknown store outcome, malformed links, React Native URL approximation, denied push and unavailable camera."
+      ],
+      "artifacts": [
+        "Native composition, controllers, adapters and screens; native-facing API routes; live development-API journey tooling and evidence"
+      ],
+      "production_gates": [
+        "native_signing_accounts",
+        "price_account_terms_before_charges",
+        "model_evaluation_and_data_controls",
+        "processor_retention_contracts"
+      ],
+      "validation_profiles": [
+        "docs",
+        "contracts",
+        "native",
+        "native-journey",
+        "connectors"
+      ],
+      "rollback": [
+        "Revert the client slice or disable affected capabilities by configuration; the added API routes are additive and owner-scoped, and the backend stays compatible with earlier clients."
+      ],
+      "implementation_evidence": "Implemented on branch claude/determined-volta-42hu9a from main d6b37beb5fbb4365b48ac6d1fa50e7051191f350 (mobile completion plan N01-N06, N08, N11, N12, N15, N16 client work and S01 contracts). Local executed evidence on that branch: tests_app (including new tests_app/test_native_api.py) 478 passed and tests 1169 passed on PostgreSQL 16; pnpm typecheck clean; api-client 17, report-core 11, mobile 67, web 23 and render 9 tests passed (render with the preinstalled Chromium); Android CNG prebuild and Metro exports compiled the whole app to Hermes bytecode for Android and iOS with no fake in the bundle; tools/run_mobile_journey.sh passed against the local API, analysis worker and export worker (guest session, server notice, lost completion response, process-death resume of the same run, Dossier model, evidence lineage, byte-identical retained source image, history, same-owner comparison, feedback, bearer PDF export, guest-to-account transfer, report and account deletion). Exact-head CI evidence is not recorded here until a pull request runs the workflows.",
+      "remaining_work": [
+        "Run the Native foundation and Application environments workflows (including the native journey step) on the reviewed pull-request head and record exact-head results; no device, simulator UI or signed build has executed this client yet.",
+        "Qualify the client on physical iPhone/iPad and Android phone/tablet development builds after native_signing_accounts: camera/HEIC/EXIF, crop, process death, secure-store reinstall, large text, VoiceOver/TalkBack, tablet layouts and link cold/warm start (T30/T31).",
+        "Select and pin a real app-driving test runner for simulator/emulator journeys; current automated evidence is Node controller tests plus the development-API journey.",
+        "Native provider sign-in/refresh/recovery (N07) waits for the T17 selected-account Auth settings and retry-policy closeout; only development identity and guest transfer exist.",
+        "Qualify StoreKit and Play purchase proofs, pending/Ask to Buy and finish/consume recovery in real sandboxes after price_account_terms_before_charges (T19/T30/T31); the expo-iap adapter is unexercised.",
+        "Persist comparisons and add invitations, partner grants and pair Premium (N13/N14) only after T22 authorization contracts; current comparisons are same-owner and unsaved.",
+        "Deliver APNs/FCM pushes through an approved push provider with the kind/object_ref payload the client expects, after processor_retention_contracts (T24)."
+      ]
+    },
+    {
       "id": "T30",
       "title": "Complete iOS and iPad client integration",
       "status": "PLANNED",
@@ -2248,7 +2344,7 @@
         "T16",
         "T18",
         "T19",
-        "T20",
+        "T30A",
         "T21",
         "T22",
         "T24"
@@ -2325,7 +2421,7 @@
         "T16",
         "T18",
         "T19",
-        "T20",
+        "T30A",
         "T21",
         "T22",
         "T24"
