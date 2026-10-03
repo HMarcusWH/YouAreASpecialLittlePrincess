@@ -44,7 +44,7 @@ from princess_app.application.intake import IntakeService
 from princess_app.application.notifications import NotificationService
 from princess_app.application.permissions import PermissionService
 from princess_app.config import RuntimeConfig, load_runtime_config
-from princess_app.config_supabase import parse_supabase_staging_runtime_binding
+from princess_app.config_supabase import normalized_manifest_sha256, parse_supabase_staging_runtime_binding
 from princess_app.domain.commerce import CATALOG
 from princess_app.ports.payments import PaymentRail
 from princess_app.ports.base import Environment, ProviderMode, SystemClock, Unsupported
@@ -69,8 +69,7 @@ def _manifest_sha256(environment: Environment) -> str:
     except OSError:
         raise Unsupported("identity_runtime_manifest_unreadable", detail=environment.value) from None
 
-    normalized = raw.replace(b"\r\n", b"\n").replace(b"\r", b"\n")
-    return hashlib.sha256(normalized).hexdigest()
+    return normalized_manifest_sha256(raw)
 
 
 def compose_identity_provider(config: RuntimeConfig, clock):
