@@ -102,7 +102,8 @@ Copy/stage the generated runtime PASS index from the frozen witness worktree int
 without editing it, then run:
 
 ```bash
-python tools/check_supabase_staging_auth_closeout.py
+python tools/check_supabase_staging_auth_closeout.py \
+  --auth-config-file /protected/princess-staging-auth-config.json
 ```
 
 At this point cleanup evidence intentionally does not exist. The required result is exactly:
@@ -112,7 +113,8 @@ FAIL: cleanup_evidence_missing
 ```
 
 Any earlier failure means the conformance or Auth-settings evidence is not acceptable; stop before deleting the
-disposable provider identity.
+disposable provider identity. The checker re-reads the exact protected `/config/auth` response bytes at this step,
+so a hand-edited Git-safe source digest cannot satisfy the gate merely by recomputing the public v3 envelope hash.
 
 ## 3. Dispose of the witness identity
 
