@@ -38,9 +38,9 @@ def _world(monkeypatch):
     issuer = f"https://{project_ref}.supabase.co/auth/v1"
     audience = "qualified-audience"
     role = "authenticated"
-    manifest_hash = hashlib.sha256(
+    manifest_hash = binding_config.normalized_manifest_sha256(
         (ROOT / "infra" / "environments" / "staging.json").read_bytes()
-    ).hexdigest()
+    )
     receipt_hash = "2" * 64
     snapshot_hash = "3" * 64
     project_hash = _sha(project_ref)
@@ -265,5 +265,7 @@ def test_unexpected_failure_never_echoes_protected_material(monkeypatch, tmp_pat
 
 
 def test_current_staging_manifest_still_matches_qualified_hash():
-    digest = hashlib.sha256((ROOT / "infra" / "environments" / "staging.json").read_bytes()).hexdigest()
+    digest = binding_config.normalized_manifest_sha256(
+        (ROOT / "infra" / "environments" / "staging.json").read_bytes()
+    )
     assert digest == binding_config.QUALIFIED_ENVIRONMENT_MANIFEST_SHA256
