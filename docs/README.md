@@ -16,7 +16,7 @@ Start here to maintain the mobile-first product. The repository contains a worki
 
 ## Reference map
 
-[Current routes and request models](reference/api-routes.md) · [build/runtime configuration](reference/configuration.md) · [declared environment matrix](reference/environment-matrix.md) · [tool/package command inventory](reference/command-inventory.md) · [component navigation](reference/component-index.md).
+[Current routes and request models](reference/api-routes.md) · [build/runtime configuration](reference/configuration.md) · [declared environment matrix](reference/environment-matrix.md) · [tool/package command inventory](reference/command-inventory.md) · [repository workflows](../.github/WORKFLOWS.md) · [component navigation](reference/component-index.md).
 
 The original specialist documentation remains useful:
 
