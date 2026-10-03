@@ -131,8 +131,8 @@ three Git-safe artifacts together: runtime conformance PASS, selected-account Au
 evidence. It also verifies that the existing owner record still says application login is not approved by the
 2026-10-01 narrow staging decision.
 
-The runtime conformance harness requires a clean checkout and the closeout checker freezes that witness to
-`7cf6371a1daec3cfd46f4adf35d6175c57452cc0`. Generate the conformance PASS from a clean worktree at that SHA and
+The runtime conformance harness requires a clean checkout and the closeout checker freezes the corrected cross-platform-hash witness to
+`ce6fe884305de93c6a13d091b31a3ff0d72dc5bf`. Generate the conformance PASS from a clean worktree at that SHA and
 capture the selected-account Auth settings in a separate protected operator/worktree flow. Assemble the Git-safe
 artifacts on a branch from current `main`, not from the frozen witness SHA: cleanup v2 is post-#60 tooling and must
 validate/hash the protected conformance receipt there. Closeout tooling does not itself execute provider cleanup
