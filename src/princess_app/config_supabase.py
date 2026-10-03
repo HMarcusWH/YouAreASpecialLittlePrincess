@@ -77,6 +77,12 @@ def _sha256_text(value: str) -> str:
     return hashlib.sha256(value.encode("utf-8")).hexdigest()
 
 
+def normalized_manifest_sha256(raw: bytes) -> str:
+    """Hash manifest bytes after canonicalizing line endings to LF."""
+    normalized = raw.replace(b"\r\n", b"\n").replace(b"\r", b"\n")
+    return hashlib.sha256(normalized).hexdigest()
+
+
 def _project_ref_from_issuer(issuer: str) -> str:
     parts = urlsplit(issuer)
     host = parts.hostname or ""
