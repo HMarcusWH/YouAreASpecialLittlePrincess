@@ -39,6 +39,30 @@ python docs/roadmap/plan_tools.py --ready
 python docs/roadmap/plan_tools.py --active
 ```
 
+### Deferred operational follow-up — T17 Supabase staging Auth closeout
+
+The selected Supabase staging identity profile is implemented and production-disabled, but its final live evidence
+ceremony is intentionally deferred. **This blocks T17 identity closeout / login activation; it does not block
+continued construction of unrelated or disabled/fake-backed product work.** Revisit this checklist before claiming
+the staging Auth gate complete:
+
+- run the frozen runtime conformance witness from clean commit
+  `c653a7d0cc29e0398a0cfb9e5c8113b9b2acd6b3` and retain the protected receipt plus Git-safe PASS index;
+- capture the selected project's exact raw `GET /v1/projects/{ref}/config/auth` response byte-for-byte outside Git
+  and generate `docs/ci/T17_SUPABASE_AUTH_SETTINGS_SNAPSHOT.json` using `supabase-auth-settings/3`;
+- before destructive cleanup, run the hardened closeout checker with that same protected raw Auth-config response
+  and require the only failure to be `cleanup_evidence_missing`;
+- revoke all sessions and refresh state for the one disposable witness identity, verify that revocation, then delete
+  that disposable Auth user; do not decommission the Princess staging project;
+- generate `docs/ci/T17_SUPABASE_STAGING_CLEANUP_EVIDENCE.json` from the protected cleanup attestation and exact
+  protected conformance receipt;
+- require final `tools/check_supabase_staging_auth_closeout.py --auth-config-file <protected raw config>` PASS;
+- keep application login and production activation disabled until their later explicit implementation/approval
+  gates are satisfied.
+
+The step-by-step operator procedure remains authoritative in
+[`docs/ci/T17_SUPABASE_STAGING_AUTH_OPERATOR_RUNBOOK.md`](docs/ci/T17_SUPABASE_STAGING_AUTH_OPERATOR_RUNBOOK.md).
+
 ## Product architecture
 
 ```text
