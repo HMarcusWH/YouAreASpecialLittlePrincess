@@ -1,6 +1,6 @@
 # Product roadmap — Web, iOS and Android
 
-**Plan version:** 2.3 · **Research reviewed:** 2026-09-26 · **Implementation baseline reconciled through:** `f42f6415dc3c166af6feac36df18cf219d88080a` (merged PR #69). The machine task graph remains the status authority.
+**Plan version:** 2.3 · **Research reviewed:** 2026-09-26 · **Implementation baseline reconciled through:** `c8142f3784a81a4c10988bb906c655bdf7fee59f` (merged PR #70). The machine task graph remains the status authority.
 
 [Agent instructions](AGENTS.md) · [Documentation map](docs/roadmap/00-index.md) · [Detailed task briefs](docs/roadmap/06-agent-backlog.md) · [Machine task graph](docs/roadmap/tasks.json) · [Execution sequence](docs/roadmap/20-end-to-end-build-sequence.md) · [Release gates](docs/roadmap/21-release-readiness-checklists.md).
 
