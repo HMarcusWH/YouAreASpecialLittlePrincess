@@ -86,7 +86,7 @@ export function SectionLabel({ children }: PropsWithChildren) {
 export function EditorialStatement({ children, secondary = false }: PropsWithChildren<{ secondary?: boolean }>) {
   const { theme } = useApp();
   return (
-    <Text accessibilityRole="header" style={[secondary ? styles.statementSecondary : styles.statement, {
+    <Text style={[secondary ? styles.statementSecondary : styles.statement, {
       color: theme.color.text, fontFamily: theme.serif,
     }]}>{children}</Text>
   );
