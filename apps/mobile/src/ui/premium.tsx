@@ -45,9 +45,6 @@ export function PremiumOverlay({ content, facts, locale }: { content: PremiumCon
   return (
     <Paper style={{ borderColor: theme.color["evidence-ai"], borderWidth: 1 }}>
       <EvidenceBadge fact={badge} />
-      <Text style={[base.label, { color: theme.color["evidence-ai"], fontFamily: theme.mono }]}>
-        ✦ {reportText(locale, "evidence.AI_SYNTHESIS")}
-      </Text>
       <EditorialStatement>{reportText(locale, "premium.title")}</EditorialStatement>
       <Body muted>{reportText(locale, "premium.intro")}</Body>
       {content.soft_fields.map((field) => (
