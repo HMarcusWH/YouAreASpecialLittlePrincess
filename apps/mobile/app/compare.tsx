@@ -1,12 +1,12 @@
 import { ApiError } from "@princess/api-client";
-import { useLocalSearchParams } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { Text, View } from "react-native";
 
 import { useApp } from "../src/bootstrap/AppProvider.tsx";
 import { presentComparison, type ComparisonView } from "../src/features/comparison.ts";
 import {
-  Banner, Body, Busy, EditorialSection, KeyValue, Paper, Screen, SectionLabel, styles,
+  Banner, Body, Busy, Button, EditorialSection, KeyValue, Paper, Screen, SectionLabel, styles,
 } from "../src/ui/components.tsx";
 
 function Bar({ from, to, color, second }: { from: number; to: number; color: string; second: string }) {
@@ -49,6 +49,11 @@ export default function Compare() {
     <Screen title={t("compare.title")}>
       <Body muted>{t("compare.intro")}</Body>
       <KeyValue label={t("compare.coverage")} value={`${view.commonCount} / ${view.candidateCount}`} />
+      {reportIds.length === 2 ? (
+        <Button tone="secondary" label={t("compare.swap")} onPress={() => router.replace({
+          pathname: "/compare", params: { ids: [reportIds[1]!, reportIds[0]!].join(",") },
+        })} />
+      ) : null}
       <Paper>
         <SectionLabel>{t("compare.coverage")}</SectionLabel>
         {view.inputs.map((input, index) => (

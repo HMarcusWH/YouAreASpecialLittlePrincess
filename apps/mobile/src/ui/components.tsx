@@ -145,11 +145,16 @@ export function Button({ label, onPress, tone = "primary", disabled = false, bus
       disabled={inactive}
       onPress={onPress}
       style={({ pressed }) => [styles.button, {
-        backgroundColor: filled ? color : "transparent", borderColor: color,
-        opacity: inactive ? 0.45 : pressed ? 0.78 : 1,
+        backgroundColor: filled && !disabled ? color : "transparent",
+        borderColor: color,
+        borderStyle: disabled ? "dashed" : "solid",
+        opacity: pressed && !inactive ? 0.78 : 1,
       }]}>
-      {busy ? <ActivityIndicator color={filled ? theme.color["accent-contrast"] : color} /> : null}
-      <Text style={[styles.buttonText, { color: filled ? theme.color["accent-contrast"] : color, fontFamily: theme.sans }]}>
+      {busy ? <ActivityIndicator color={filled && !disabled ? theme.color["accent-contrast"] : color} /> : null}
+      <Text style={[styles.buttonText, {
+        color: filled && !disabled ? theme.color["accent-contrast"] : color,
+        fontFamily: theme.sans,
+      }]}>
         {label}
       </Text>
     </Pressable>
