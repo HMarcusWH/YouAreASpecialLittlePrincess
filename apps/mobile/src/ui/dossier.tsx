@@ -203,8 +203,10 @@ function SlantRange({ bundle, locale }: { bundle: EvidenceBundle; locale: Locale
           return (
             <View key={obs.observation_id} aria-hidden style={[local.slantMarker, {
               left: percent(left),
-              backgroundColor: obs.accepted ? theme.color.accent : theme.color["surface-raised"],
+              backgroundColor: obs.accepted ? theme.color.accent : theme.plate.surface,
               borderColor: obs.accepted ? theme.color.accent : theme.color["state-attention"],
+              borderStyle: obs.accepted ? "solid" : "dashed",
+              opacity: obs.accepted ? 1 : 0.55,
             }]} />
           );
         })}
