@@ -78,10 +78,11 @@ raw = open(sys.argv[1], encoding="utf-8", errors="replace").read()
 seen = []
 def walk(node):
     attributes = node.get("attributes", {}) if isinstance(node, dict) else {}
+    flags = " ".join(f"{flag}={node[flag]}" for flag in ("enabled", "checked") if node.get(flag) is not None)
     for key in ("text", "accessibilityText", "resource-id"):
         value = attributes.get(key)
-        if value and f"{key}={value}" not in seen:
-            seen.append(f"{key}={value}")
+        if value and f"{key}={value} [{flags}]" not in seen:
+            seen.append(f"{key}={value} [{flags}]")
     for child in (node.get("children") or []) if isinstance(node, dict) else []:
         walk(child)
 try:

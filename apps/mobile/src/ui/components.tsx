@@ -130,8 +130,10 @@ export function Mono({ children, style }: PropsWithChildren<{ style?: StyleProp<
 
 type Tone = "primary" | "secondary" | "danger";
 
-export function Button({ label, onPress, tone = "primary", disabled = false, busy = false, hint }: {
+export function Button({ label, onPress, tone = "primary", disabled = false, busy = false, hint, testID }: {
   label: string; onPress: () => void; tone?: Tone; disabled?: boolean; busy?: boolean; hint?: string;
+  /** Stable semantic identifier of this control (its label text is also a separate text node). */
+  testID?: string;
 }) {
   const { theme } = useApp();
   const filled = tone === "primary";
@@ -142,6 +144,7 @@ export function Button({ label, onPress, tone = "primary", disabled = false, bus
       accessibilityRole="button"
       accessibilityState={{ disabled: inactive, busy }}
       {...(hint ? { accessibilityHint: hint } : {})}
+      {...(testID ? { testID } : {})}
       disabled={inactive}
       onPress={onPress}
       style={({ pressed }) => [styles.button, {

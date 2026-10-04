@@ -86,7 +86,8 @@ export default function Review() {
     <Screen title={t("review.title")} footer={
       <View style={{ gap: 8 }}>
         {busy ? <Busy label={t("review.submitting")} /> : null}
-        <Button label={t("review.submit")} disabled={!agreed || !usable || busy} onPress={() => void submit()} />
+        <Button label={t("review.submit")} disabled={!agreed || !usable || busy} onPress={() => void submit()}
+                testID="review-submit" />
       </View>
     }>
       <CropView key={cropKey} image={image} enabled={cropping} maxHeight={height * 0.5} onChange={setCrop}

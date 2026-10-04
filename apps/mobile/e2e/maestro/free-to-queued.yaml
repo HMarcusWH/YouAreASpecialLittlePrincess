@@ -52,7 +52,26 @@ name: Free journey to a queued analysis
 - assertVisible:
     id: "review-service-processing"
     checked: true
-- tapOn: "Analyse my handwriting"
+# The submit button is enabled only once the app has recorded the consent choice.
+- extendedWaitUntil:
+    visible:
+      id: "review-submit"
+      enabled: true
+    timeout: 30000
+- tapOn:
+    id: "review-submit"
+    enabled: true
+# An accepted tap makes the button busy or leaves the screen at once. If it is still enabled, the press was not
+# delivered to the app (seen intermittently on the emulator: no request reached the API), so press it once more.
+- runFlow:
+    when:
+      visible:
+        id: "review-submit"
+        enabled: true
+    commands:
+      - tapOn:
+          id: "review-submit"
+          enabled: true
 # The request was recorded and the app left the review screen for the work screen.
 - extendedWaitUntil:
     notVisible: "Analyse my handwriting"
