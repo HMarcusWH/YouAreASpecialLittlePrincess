@@ -6,6 +6,12 @@ Sources: [report design](../roadmap/04-reports-design.md), [web client](../roadm
 
 Claude Design package: [handoff brief](CLAUDE_DESIGN_HANDOFF.md) · [accepted Dossier reference](ACCEPTED_DOSSIER_REFERENCE.md) · [owner acceptance record](CLAUDE_DESIGN_ACCEPTANCE.md) · [v3 implementation sync](IMPLEMENTATION_SYNC_V3.md) · [native v3 matrix](NATIVE_IMPLEMENTATION_MATRIX_V3.md) · [`claude-design-import.json`](claude-design-import.json) · [`claude-design-state-matrix.json`](claude-design-state-matrix.json). The acceptance record and accepted-design reference close the T10 design gate; v3 is a later implementation reference and does not reopen it. Downstream implementation remains owned by T17/T21/T22/T29–T31.
 
+### Inspecting the retained v3 implementation reference
+
+The exact post-acceptance v3 UX archive is retained at [`artifacts/2026-10-04-v3/Inktrospect-mobile-design-v3.zip`](artifacts/2026-10-04-v3/Inktrospect-mobile-design-v3.zip), with its checksum and usage notes in the [artifact README](artifacts/2026-10-04-v3/README.md). It contains directly inspectable prototype HTML, design-system assets, native frame helpers, synthetic fixtures and repository snapshots from its declared baseline.
+
+Treat the archive as an **immutable UX/composition reference, not a second source tree**. Verify its SHA-256, extract it to a temporary directory, and compare the prototype against the current checkout. Open `Inktrospect App.dc.html` and `Inktrospect Print and Share.dc.html` directly for the interactive app and print/share references. Never unzip the archive over the repository; current contracts, permissions, copy authorities and tests win whenever an embedded snapshot differs.
+
 ## 1. Rules that shape every screen
 
 1. **Everything is designed from the contract.** Screens render a `ReportViewModel` (facts, sections, notices, actions, authorized assets) or an API status DTO. A layout must never need a field the contract does not have.

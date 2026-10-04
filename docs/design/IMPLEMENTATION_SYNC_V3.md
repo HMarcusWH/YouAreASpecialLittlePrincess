@@ -16,7 +16,7 @@ The historical T10 owner decision remains bound to `Inktrospect mobile app desig
 | Repository baseline | `3099bcf1e71a98430c4ca39ae26a39e5eacfde48` |
 | Relationship | post-acceptance implementation sync for Direction A — The Dossier |
 
-The archive is intentionally not copied into ordinary source history. It contains prototype HTML/JavaScript, generated design-system material and repository snapshots that would become a second stale code copy. The outgoing owner must transfer the exact archive through an approved durable handover channel and the receiver must verify this digest.
+The exact immutable archive is retained in this repository at [`artifacts/2026-10-04-v3/Inktrospect-mobile-design-v3.zip`](artifacts/2026-10-04-v3/Inktrospect-mobile-design-v3.zip), with verification and inspection instructions in the adjacent [artifact README](artifacts/2026-10-04-v3/README.md). It is handoff evidence and an inspectable UX/composition reference, not a second source tree. Verify the recorded digest, extract it only to a temporary directory, and compare its embedded snapshots against current repository source; never unzip it over the working tree.
 
 ## Safety and provenance audit
 
