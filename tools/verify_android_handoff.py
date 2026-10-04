@@ -219,7 +219,123 @@ def check_manifest(text: str, expected: argparse.Namespace) -> dict[str, Any]:
             "uses_cleartext_traffic": True, "permissions": sorted(permissions)}
 
 
-def check_signature(text: str) -> dict[str, Any]:
+APK_SIG_BLOCK_MAGIC = b"APK Sig Block 42"
+SIGNATURE_SCHEME_BLOCKS = {0x7109871A: "v2", 0xF05368C0: "v3", 0x1B93AD61: "v3.1"}
+DN_ATTRIBUTES = {"2.5.4.3": "CN", "2.5.4.11": "OU", "2.5.4.10": "O", "2.5.4.7": "L", "2.5.4.8": "ST", "2.5.4.6": "C"}
+
+
+def _prefixed(data: bytes, offset: int = 0) -> tuple[bytes, int]:
+    """One uint32-little-endian length-prefixed field of an APK Signing Block value."""
+    _require(offset + 4 <= len(data), "truncated APK Signing Block field")
+    size = int.from_bytes(data[offset:offset + 4], "little")
+    _require(offset + 4 + size <= len(data), "truncated APK Signing Block field")
+    return data[offset + 4:offset + 4 + size], offset + 4 + size
+
+
+def _prefixed_sequence(data: bytes) -> list[bytes]:
+    items, offset = [], 0
+    while offset < len(data):
+        item, offset = _prefixed(data, offset)
+        items.append(item)
+    return items
+
+
+def signing_block_certificates(path: Path) -> dict[str, list[bytes]]:
+    """First certificate of every signer in the APK Signature Scheme v2/v3 blocks (structure only).
+
+    Cryptographic verification stays with apksigner; this reads which certificate it verified
+    without depending on apksigner's report wording.
+    """
+    with path.open("rb") as handle:
+        handle.seek(0, 2)
+        size = handle.tell()
+        handle.seek(max(0, size - 65_557))
+        tail = handle.read()
+        eocd = tail.rfind(b"PK\x05\x06")
+        _require(eocd >= 0 and eocd + 22 <= len(tail), "APK has no ZIP end-of-central-directory record")
+        central_directory = int.from_bytes(tail[eocd + 16:eocd + 20], "little")
+        _require(24 <= central_directory <= size, "APK central directory offset is invalid")
+        handle.seek(central_directory - 24)
+        footer = handle.read(24)
+        _require(footer[8:] == APK_SIG_BLOCK_MAGIC, "APK has no APK Signing Block (not v2/v3 signed)")
+        block_size = int.from_bytes(footer[:8], "little")
+        _require(32 <= block_size <= central_directory - 8, "APK Signing Block size is invalid")
+        handle.seek(central_directory - block_size - 8)
+        block = handle.read(block_size + 8)
+    _require(int.from_bytes(block[:8], "little") == block_size, "APK Signing Block sizes disagree")
+    pairs, offset, found = block[8:-24], 0, {}
+    while offset < len(pairs):
+        _require(offset + 12 <= len(pairs), "truncated APK Signing Block pair")
+        length = int.from_bytes(pairs[offset:offset + 8], "little")
+        _require(4 <= length <= len(pairs) - offset - 8, "APK Signing Block pair length is invalid")
+        pair_id = int.from_bytes(pairs[offset + 8:offset + 12], "little")
+        value = pairs[offset + 12:offset + 8 + length]
+        offset += 8 + length
+        scheme = SIGNATURE_SCHEME_BLOCKS.get(pair_id)
+        if scheme is None:
+            continue
+        certificates = []
+        for signer in _prefixed_sequence(_prefixed(value)[0]):
+            signed_data = _prefixed(signer)[0]
+            certs = _prefixed_sequence(_prefixed(signed_data, _prefixed(signed_data)[1])[0])
+            _require(bool(certs), f"{scheme} signer has no certificate")
+            certificates.append(certs[0])
+        found[scheme] = certificates
+    return found
+
+
+def _der(data: bytes, offset: int) -> tuple[int, int, int]:
+    """(tag, content start, content end) of one DER element."""
+    _require(offset + 2 <= len(data), "truncated DER element")
+    tag, length, start = data[offset], data[offset + 1], offset + 2
+    if length & 0x80:
+        count = length & 0x7F
+        _require(0 < count <= 4 and start + count <= len(data), "unsupported DER length")
+        length, start = int.from_bytes(data[start:start + count], "big"), start + count
+    _require(start + length <= len(data), "truncated DER element")
+    return tag, start, start + length
+
+
+def _children(data: bytes, start: int, end: int) -> list[tuple[int, int, int]]:
+    items = []
+    while start < end:
+        item = _der(data, start)
+        items.append(item)
+        start = item[2]
+    return items
+
+
+def _oid(raw: bytes) -> str:
+    parts, value = [raw[0] // 40, raw[0] % 40], 0
+    for byte in raw[1:]:
+        value = (value << 7) | (byte & 0x7F)
+        if not byte & 0x80:
+            parts.append(value)
+            value = 0
+    return ".".join(map(str, parts))
+
+
+def certificate_subject(der: bytes) -> list[tuple[str, str]]:
+    """Subject attributes of an X.509 certificate, most specific first (as apksigner/keytool print them)."""
+    tag, start, end = _der(der, 0)
+    _require(tag == 0x30, "signer certificate is not a DER SEQUENCE")
+    tbs = _children(der, start, end)[0]
+    fields = _children(der, tbs[1], tbs[2])
+    if fields and fields[0][0] == 0xA0:
+        fields = fields[1:]
+    _require(len(fields) >= 5 and fields[4][0] == 0x30, "signer certificate has no subject")
+    subject: list[tuple[str, str]] = []
+    for rdn in _children(der, fields[4][1], fields[4][2]):
+        for attribute in _children(der, rdn[1], rdn[2]):
+            oid, value = _children(der, attribute[1], attribute[2])[:2]
+            raw = der[value[1]:value[2]]
+            text = raw.decode("utf-16-be") if value[0] == 0x1E else raw.decode("utf-8", errors="replace")
+            name = _oid(der[oid[1]:oid[2]])
+            subject.append((DN_ATTRIBUTES.get(name, name), text))
+    return list(reversed(subject))
+
+
+def check_signature(text: str, apk: Path) -> dict[str, Any]:
     lines = [line.strip() for line in text.splitlines() if line.strip()]
     _require("Verifies" in lines, "apksigner did not report that the APK verifies")
     schemes = sorted(match.group(1) for line in lines
@@ -228,19 +344,25 @@ def check_signature(text: str) -> dict[str, Any]:
              "APK is not verified by an APK Signature Scheme v2/v3 block")
     signers = [line for line in lines if line.startswith("Number of signers:")]
     _require(signers == ["Number of signers: 1"], f"expected exactly one signer: {signers!r}")
-    dn = next((line.split(":", 1)[1].strip() for line in lines if line.startswith("Signer #1 certificate DN:")), None)
-    digest = next((line.split(":", 1)[1].strip().lower() for line in lines
-                   if line.startswith("Signer #1 certificate SHA-256 digest:")), None)
-    _require(dn is not None and digest is not None and re.fullmatch(r"[0-9a-f]{64}", digest) is not None,
-             "apksigner report has no signer DN/SHA-256 certificate digest")
-    assert dn is not None
-    components = {part.split("=", 1)[0].strip(): part.split("=", 1)[1].strip()
-                  for part in dn.split(",") if "=" in part}
+    blocks = signing_block_certificates(apk)
+    _require(any(scheme in blocks for scheme in ("v2", "v3")), "APK has no v2/v3 signature scheme block")
+    _require(all(len(certs) == 1 for certs in blocks.values()), "expected exactly one signer per signature block")
+    certificates = {cert for certs in blocks.values() for cert in certs}
+    _require(len(certificates) == 1, "signature blocks name different certificates (key rotation is not a handoff)")
+    certificate = certificates.pop()
+    digest = hashlib.sha256(certificate).hexdigest()
+    # Whatever label this apksigner version uses, every certificate digest it reports must be this one.
+    reported = {match.group(1).lower() for line in lines
+                if (match := re.search(r"certificate SHA-256 digest: ([0-9A-Fa-f]{64})$", line))}
+    _require(reported <= {digest}, f"apksigner reports a different signer certificate: {sorted(reported)}")
+    subject = certificate_subject(certificate)
+    dn = ", ".join(f"{key}={value}" for key, value in subject)
     # Only the generated Android debug key is acceptable here; any other key would be mislabelled.
-    _require(components.get("CN") == "Android Debug",
+    _require(dict(subject).get("CN") == "Android Debug",
              f"signer is not the generated Android debug identity (DN {dn!r}); refusing to label it a handoff")
     return {"signing_class": "android_debug_key", "signing_certificate_dn": dn,
-            "signing_certificate_sha256": digest, "signature_schemes": schemes}
+            "signing_certificate_sha256": digest, "signature_schemes": schemes,
+            "signing_certificate_cross_checked_by_apksigner": bool(reported)}
 
 
 def verify(args: argparse.Namespace) -> dict[str, Any]:
@@ -261,7 +383,7 @@ def verify(args: argparse.Namespace) -> dict[str, Any]:
     _require(bool(args.manifest_xml), "--manifest-xml is required unless --static-only is explicit")
     _require(bool(args.signature_report), "--signature-report is required unless --static-only is explicit")
     summary.update(check_manifest(Path(args.manifest_xml).read_text(encoding="utf-8"), args))
-    summary.update(check_signature(Path(args.signature_report).read_text(encoding="utf-8")))
+    summary.update(check_signature(Path(args.signature_report).read_text(encoding="utf-8"), Path(args.apk)))
     summary["scope"] = "complete"
     return summary
 
@@ -303,7 +425,9 @@ def buildinfo(summary: dict[str, Any], args: argparse.Namespace) -> dict[str, An
         "target_sdk": summary["target_sdk"],
         "compile_sdk": summary["compile_sdk"],
         "signing_class": summary["signing_class"],
+        "signing_certificate_dn": summary["signing_certificate_dn"],
         "signing_certificate_sha256": summary["signing_certificate_sha256"],
+        "signing_certificate_cross_checked_by_apksigner": summary["signing_certificate_cross_checked_by_apksigner"],
         "signature_schemes": summary["signature_schemes"],
         "maestro_version": args.maestro_version,
         "maestro_archive_sha256": args.maestro_archive_sha256,
@@ -335,7 +459,7 @@ This is a development handoff binary.
 | Package / version | `{info['package']}` / `{info['version']}` |
 | Build | Gradle `{info['gradle_variant']}` variant, `debuggable={str(info['android_debuggable']).lower()}`, embedded {info['js_bundle_format']} bundle; Metro is not required |
 | Runtime | `{info['app_variant']}` variant, `{info['backend_environment']}` backend at `{info['api_base_url']}` |
-| Signing | `{info['signing_class']}`, certificate SHA-256 `{info['signing_certificate_sha256']}` |
+| Signing | `{info['signing_class']}` (`{info['signing_certificate_dn']}`), certificate SHA-256 `{info['signing_certificate_sha256']}` |
 | Qualification | Synthetic Free journey on `{info['android_system_image']}` revision `{info['android_system_image_revision']}` with Maestro `{info['maestro_version']}` |
 
 The signer is the generated Android debug keystore from the Expo/React Native template. It is not a

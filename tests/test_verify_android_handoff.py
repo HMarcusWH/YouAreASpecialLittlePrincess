@@ -32,16 +32,57 @@ MANIFEST = """<?xml version="1.0" encoding="utf-8"?>
   </application>
 </manifest>
 """
-DIGEST = "ab" * 32
-SIGNATURE = f"""Verifies
+def der(tag: int, content: bytes) -> bytes:
+    size = len(content)
+    head = bytes([size]) if size < 0x80 else bytes([0x80 | 2]) + size.to_bytes(2, "big")
+    return bytes([tag]) + head + content
+
+
+def certificate(cn: str = "Android Debug") -> bytes:
+    """A structurally X.509-shaped certificate; only its subject is read, never its signature."""
+    def rdn(oid: bytes, value: str, tag: int = 0x0C) -> bytes:
+        return der(0x31, der(0x30, der(0x06, oid) + der(tag, value.encode())))
+    name = (rdn(b"\x55\x04\x06", "US", 0x13) + rdn(b"\x55\x04\x0a", "Android") + rdn(b"\x55\x04\x03", cn))
+    algorithm = der(0x30, der(0x06, b"\x2a\x86\x48\x86\xf7\x0d\x01\x01\x0b") + der(0x05, b""))
+    validity = der(0x30, der(0x17, b"140101000000Z") + der(0x17, b"520101000000Z"))
+    tbs = der(0x30, der(0xA0, der(0x02, b"\x02")) + der(0x02, b"\x01") + algorithm + der(0x30, name)
+              + validity + der(0x30, name) + der(0x30, algorithm + der(0x03, b"\x00key")))
+    return der(0x30, tbs + algorithm + der(0x03, b"\x00sig"))
+
+
+DEBUG_CERT = certificate()
+DIGEST = handoff.hashlib.sha256(DEBUG_CERT).hexdigest()
+SIGNATURE_VERIFIED = """Verifies
 Verified using v1 scheme (JAR signing): false
 Verified using v2 scheme (APK Signature Scheme v2): true
 Verified using v3 scheme (APK Signature Scheme v3): false
+Verified using v3.2 scheme (APK Signature Scheme v3.2): false
 Number of signers: 1
-Signer #1 certificate DN: CN=Android Debug, OU=Android, O=Unknown, L=Unknown, ST=Unknown, C=US
+"""
+# Older apksigner wording; newer build-tools may print no per-signer certificate lines at all.
+SIGNATURE = SIGNATURE_VERIFIED + f"""Signer #1 certificate DN: CN=Android Debug, O=Android, C=US
 Signer #1 certificate SHA-256 digest: {DIGEST}
 Signer #1 certificate SHA-1 digest: {'cd' * 20}
 """
+
+
+def lp(data: bytes) -> bytes:
+    return len(data).to_bytes(4, "little") + data
+
+
+def sign(path: Path, certificates: list[bytes], scheme_id: int = 0x7109871A) -> None:
+    """Insert an APK Signing Block (structure only) before the central directory, as apksigner does."""
+    raw = path.read_bytes()
+    eocd = raw.rfind(b"PK\x05\x06")
+    central = int.from_bytes(raw[eocd + 16:eocd + 20], "little")
+    signers = b"".join(lp(lp(lp(b"") + lp(lp(cert)) + lp(b"")) + lp(b"") + lp(b"public-key")) for cert in certificates)
+    value = lp(signers)
+    pairs = (len(value) + 4).to_bytes(8, "little") + scheme_id.to_bytes(4, "little") + value
+    size = len(pairs) + 24
+    block = size.to_bytes(8, "little") + pairs + size.to_bytes(8, "little") + handoff.APK_SIG_BLOCK_MAGIC
+    tail = bytearray(raw[central:])
+    tail[eocd - central + 16:eocd - central + 20] = (central + len(block)).to_bytes(4, "little")
+    path.write_bytes(raw[:central] + block + bytes(tail))
 
 
 def runtime(**overrides):
@@ -59,7 +100,8 @@ def config(**overrides):
 
 
 def make_apk(path: Path, *, bundle: bytes | None = handoff.HERMES_MAGIC + bytes(200_000),
-             app_config: object = None, raw_config: bytes | None = None) -> Path:
+             app_config: object = None, raw_config: bytes | None = None,
+             signers: tuple[bytes, ...] = (DEBUG_CERT,)) -> Path:
     with zipfile.ZipFile(path, "w") as archive:
         archive.writestr("AndroidManifest.xml", b"\x03\x00\x08\x00binary-xml")
         archive.writestr("classes.dex", b"dex\n035\x00")
@@ -69,6 +111,8 @@ def make_apk(path: Path, *, bundle: bytes | None = handoff.HERMES_MAGIC + bytes(
             archive.writestr(handoff.APP_CONFIG, raw_config)
         elif app_config is not False:
             archive.writestr(handoff.APP_CONFIG, json.dumps(config() if app_config is None else app_config))
+    if signers:
+        sign(path, list(signers))
     return path
 
 
@@ -230,11 +274,31 @@ def test_capped_legacy_storage_permission_is_not_rejected():
     ("Verifies\n", "", "did not report"),
     ("v2 scheme (APK Signature Scheme v2): true", "v2 scheme (APK Signature Scheme v2): false", "v2/v3"),
     ("Number of signers: 1", "Number of signers: 2", "exactly one signer"),
-    ("CN=Android Debug", "CN=Inktrospect Release", "not the generated Android debug identity"),
-    (f"SHA-256 digest: {DIGEST}", "SHA-256 digest: nothex", "no signer DN/SHA-256"),
+    (f"SHA-256 digest: {DIGEST}", f"SHA-256 digest: {'ef' * 32}", "different signer certificate"),
 ])
-def test_signature_must_verify_with_the_debug_identity(tmp_path, old, new, message, capsys):
+def test_apksigner_report_must_verify_one_signer(tmp_path, old, new, message, capsys):
     assert run(tmp_path, make_apk(tmp_path / "a.apk"), signature=SIGNATURE.replace(old, new)) == 1
+    assert message in capsys.readouterr().err
+
+
+def test_signer_certificate_is_read_from_the_signing_block_whatever_apksigner_prints(tmp_path):
+    apk = make_apk(tmp_path / "a.apk")
+    assert run(tmp_path, apk, signature=SIGNATURE_VERIFIED) == 0
+    summary = json.loads((tmp_path / "summary.json").read_text())
+    assert summary["signing_certificate_sha256"] == DIGEST
+    assert summary["signing_certificate_dn"] == "CN=Android Debug, O=Android, C=US"
+    assert summary["signing_certificate_cross_checked_by_apksigner"] is False
+    assert run(tmp_path, apk) == 0
+    assert json.loads((tmp_path / "summary.json").read_text())["signing_certificate_cross_checked_by_apksigner"] is True
+
+
+@pytest.mark.parametrize("signers, message", [
+    ((certificate("Inktrospect Release"),), "not the generated Android debug identity"),
+    ((DEBUG_CERT, DEBUG_CERT), "exactly one signer per signature block"),
+    ((), "no APK Signing Block"),
+])
+def test_signing_block_must_hold_exactly_the_debug_identity(tmp_path, signers, message, capsys):
+    assert run(tmp_path, make_apk(tmp_path / "a.apk", signers=signers), signature=SIGNATURE_VERIFIED) == 1
     assert message in capsys.readouterr().err
 
 

@@ -246,7 +246,7 @@ jobs:
           revision="$(sed -n 's/^Pkg.Revision=//p' "$image_dir/source.properties" | tr -d '[:space:]')"
           test -n "$revision"
           echo "$ANDROID_HOME/platform-tools" >> "$GITHUB_PATH"
-          emulator_version="$("$ANDROID_HOME/emulator/emulator" -version 2>/dev/null | grep -o -m1 'Android emulator version [0-9][0-9.]*')"
+          emulator_version="$("$ANDROID_HOME/emulator/emulator" -version 2>&1 | grep -o -m1 'Android emulator version [0-9][0-9.]*' || true)"
           adb_version="$("$ANDROID_HOME/platform-tools/adb" version | grep -E '^(Android Debug Bridge version|Version) ' | paste -sd ';' -)"
           test -n "$emulator_version" && test -n "$adb_version"
           {
@@ -335,7 +335,8 @@ jobs:
       - name: Stop the emulator
         if: always()
         shell: bash
-        run: timeout 30 adb emu kill || true
+        run: |
+          if command -v adb >/dev/null; then timeout 30 adb emu kill || true; fi
 
   ios-simulator:
     needs: static

@@ -124,8 +124,11 @@ if [[ "$(cat "$OUT/apkanalyzer.txt")" != "$expected_analysis" ]]; then
   echo "FAIL: apkanalyzer manifest values differ from the handoff contract" >&2
   exit 1
 fi
+echo "build-tools=$BUILD_TOOLS"
 "$APKSIGNER" verify --verbose --print-certs "$APK" > "$OUT/apksigner.txt"
-grep -E '^(Verifies|Verified using|Number of signers|Signer #1 certificate (DN|SHA-256))' "$OUT/apksigner.txt"
+# Public-key metadata of the debug signer only; the verifier reads the certificate from the APK Signing Block
+# and cross-checks any digest apksigner reports, whatever labels this build-tools version prints.
+cat "$OUT/apksigner.txt"
 
 echo "== Repository verifier"
 "$PY" "$ROOT/tools/verify_android_handoff.py" verify "$APK" \
