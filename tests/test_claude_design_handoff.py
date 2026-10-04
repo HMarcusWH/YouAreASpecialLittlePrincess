@@ -1,8 +1,10 @@
 """T10 Claude Design handoff stays complete, curated and bound to explicit owner acceptance."""
 from __future__ import annotations
 
+import hashlib
 import json
 from pathlib import Path
+import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
 DESIGN = ROOT / "docs" / "design"
@@ -10,6 +12,35 @@ DESIGN = ROOT / "docs" / "design"
 
 def load(name: str):
     return json.loads((DESIGN / name).read_text(encoding="utf-8"))
+
+
+V3_ARTIFACT = DESIGN / "artifacts" / "2026-10-04-v3" / "Inktrospect-mobile-design-v3.zip"
+V3_SHA256 = "12253a30614b31b54d9585eec262956a49c06dad10a7070c1b71949d6f334f98"
+
+
+def test_v3_implementation_reference_is_retained_byte_exact_and_inspectable():
+    payload = V3_ARTIFACT.read_bytes()
+    assert len(payload) == 377_913
+    assert hashlib.sha256(payload).hexdigest() == V3_SHA256
+    assert (V3_ARTIFACT.parent / "SHA256SUMS").read_text(encoding="utf-8") == (
+        f"{V3_SHA256}  {V3_ARTIFACT.name}\n"
+    )
+
+    with zipfile.ZipFile(V3_ARTIFACT) as archive:
+        names = archive.namelist()
+        assert len(names) == 47
+        assert {
+            "Inktrospect App.dc.html",
+            "Inktrospect Print and Share.dc.html",
+            "README.md",
+            "ios-frame.jsx",
+            "android-frame.jsx",
+            "_ds/inktrospect-design-system-60df8537-0b1f-478f-ab79-43e44e9176c6/_ds_manifest.json",
+        } <= set(names)
+        for name in names:
+            path = Path(name)
+            assert not path.is_absolute()
+            assert ".." not in path.parts
 
 
 def test_claude_design_import_paths_exist_and_exclude_irrelevant_private_surfaces():
