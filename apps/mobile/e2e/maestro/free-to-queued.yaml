@@ -1,0 +1,65 @@
+# Clean install to a real server-backed queued analysis, through the Android system Photo Picker.
+# Run by tools/run_android_handoff_journey.sh against the exact standalone handoff APK, a disposable local API and a
+# gated analysis worker; synthetic data only. The flow ends when the server run exists (journal STARTED, server QUEUED):
+# the work screen then offers "Cancel analysis", which needs a server run ID, and marks "Queueing the analysis" done.
+appId: se.inktrospect.development
+name: Free journey to a queued analysis
+---
+- launchApp:
+    clearState: true
+    permissions:
+      # The system Photo Picker needs no runtime permission; grant none.
+      all: deny
+- extendedWaitUntil:
+    visible: "Your handwriting, measured."
+    timeout: 90000
+- tapOn: "Start privately"
+- extendedWaitUntil:
+    visible: "Analyse handwriting"
+    timeout: 60000
+- assertVisible: "Guest session: reports stay on this device's session until you sign in."
+- assertNotVisible: "Start privately"
+- addMedia:
+    - "resources/synthetic-writing.png"
+- tapOn: "Analyse handwriting"
+- extendedWaitUntil:
+    visible: "Choose from photos"
+    timeout: 30000
+- tapOn: "Choose from photos"
+- runFlow: pick-first-image.yaml
+- extendedWaitUntil:
+    visible: "Analyse my handwriting"
+    timeout: 60000
+- assertVisible: "Review"
+# The prepared private copy is the generated 900 x 360 synthetic page, not some other gallery image.
+- assertVisible: ".*900 × 360 px"
+# The server's draft notice is shown as a draft; only synthetic data is used under it.
+- scrollUntilVisible:
+    element: "Development notice: .*"
+    direction: DOWN
+    timeout: 30000
+- scrollUntilVisible:
+    element:
+      id: "review-service-processing"
+    direction: DOWN
+    timeout: 30000
+- assertVisible: "Analyse this page"
+- assertVisible:
+    id: "review-service-processing"
+    checked: false
+- tapOn:
+    id: "review-service-processing"
+- assertVisible:
+    id: "review-service-processing"
+    checked: true
+- tapOn: "Analyse my handwriting"
+# The active-step label exists only once the server run was created; the earlier steps are marked done.
+- extendedWaitUntil:
+    visible: "Measuring on the server …"
+    timeout: 120000
+- assertVisible: "Queueing the analysis ✓"
+- scrollUntilVisible:
+    element: "Cancel analysis"
+    direction: DOWN
+    timeout: 30000
+- assertNotVisible: "Discard photo"

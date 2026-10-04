@@ -62,3 +62,5 @@ jobs:
         run: |
           bash -n tools/run_mobile_journey.sh
           bash -n tools/run_web_e2e.sh
+          bash -n tools/run_android_handoff_journey.sh
+          bash -n tools/build_android_handoff.sh
