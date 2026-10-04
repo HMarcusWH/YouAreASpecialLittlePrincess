@@ -44,7 +44,7 @@ pnpm --filter @princess/mobile test          # Node: session, workflow recovery,
 
 ## Android handoff artifact
 
-The retained native workflow builds and hashes the development APK on PR candidates with the same CNG/native-module path used for compatibility qualification. After the design change is merged, the `main` push run additionally uploads a 14-day artifact named `inktrospect-android-development-<merge-sha>` containing `inktrospect-development-<short-sha>.apk`. Use the merged-main artifact for handoff: pull-request `GITHUB_SHA` values are synthetic merge candidates, not durable release identities. This is still an engineering/debug handoff binary, not Play Store signing or production-backend evidence.
+The retained native workflow builds and hashes the development APK on PR candidates with the same CNG/native-module path used for compatibility qualification. After the design change is merged, the `main` push run additionally uploads a 14-day artifact named `inktrospect-android-development-<merge-sha>` containing `inktrospect-development-<short-sha>.apk` plus its `*.apk.sha256` digest file. Use the merged-main artifact for handoff: pull-request `GITHUB_SHA` values are synthetic merge candidates, not durable release identities. This is still an engineering/debug handoff binary, not Play Store signing or production-backend evidence.
 
 ## Known limits
 
