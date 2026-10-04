@@ -91,8 +91,12 @@ async function save(context: ReturnType<typeof ImageManipulator.manipulate>, png
   const result = await rendered.saveAsync({ format: png ? SaveFormat.PNG : SaveFormat.JPEG, compress: quality });
   const source = new File(result.uri);
   const target = new File(directory(), uniqueName(png ? "png" : "jpg"));
-  source.move(target);
-  return { uri: target.uri, width: result.width, height: result.height, size: target.info().size ?? 0 };
+  // move() is asynchronous (expo-file-system 57): the copy must be in place before its size, digest or upload.
+  await source.move(target);
+  const info = target.info();
+  // Missing is not zero: an unknown size would slip past the upload bound, so the copy counts as unreadable.
+  if (!info.exists || typeof info.size !== "number") throw new Error("prepared_copy_missing");
+  return { uri: target.uri, width: result.width, height: result.height, size: info.size };
 }
 
 export class ExpoImagePreparer implements ImagePreparer {

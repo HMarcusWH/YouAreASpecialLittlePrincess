@@ -35,7 +35,8 @@ export class ExpoDocumentStore implements KeyValueFile {
     if (temp.exists) temp.delete();
     temp.create();
     temp.write(value);
-    temp.move(new File(folder, name), { overwrite: true });
+    // move() is asynchronous: the write is complete only once the document has replaced the old one.
+    await temp.move(new File(folder, name), { overwrite: true });
   }
 
   async remove(name: string): Promise<void> {

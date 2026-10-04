@@ -70,9 +70,9 @@ cleanup() {
     redact() { sed -E 's#(postgres(ql)?(\+psycopg)?://)[^@/ ]*@#\1***@#g; s#(sig|token|signature)=[^& "]*#\1=***#g;
                        s#[Bb]earer [A-Za-z0-9._~+/=-]+#Bearer ***#g; /[Aa]uthorization/d'; }
     echo "== Failure diagnostics (synthetic data only)"
-    timeout 90 "$MAESTRO" ${ANDROID_SERIAL:+--device "$ANDROID_SERIAL"} hierarchy \
-      > "$LOGS/hierarchy-on-failure.json" 2>/dev/null || true
-    "$PY" - "$LOGS/hierarchy-on-failure.json" <<'PY' || true
+    show_screen() {
+      timeout 90 "$MAESTRO" ${ANDROID_SERIAL:+--device "$ANDROID_SERIAL"} hierarchy > "$LOGS/$1.json" 2>/dev/null || true
+      "$PY" - "$LOGS/$1.json" "$2" <<'PY' || true
 import json, sys
 raw = open(sys.argv[1], encoding="utf-8", errors="replace").read()
 seen = []
@@ -87,10 +87,22 @@ def walk(node):
         walk(child)
 try:
     walk(json.loads(raw[raw.index("{"):]))
-    print("on-screen:", *seen[:100], sep="\n  ")
+    print(f"{sys.argv[2]}:", *seen[:100], sep="\n  ")
 except (ValueError, KeyError) as error:
     print(f"hierarchy unavailable: {error}")
 PY
+    }
+    show_screen hierarchy-on-failure on-screen
+    # An error banner can sit below the fold (under the consent section, say): scroll the content and look again.
+    read -r width height < <(adb_ shell wm size 2>/dev/null | tr -d '\r' | sed -nE 's/.*: ([0-9]+)x([0-9]+).*/\1 \2/p' |
+                             tail -n 1) || true
+    if [[ -n "${width:-}" && -n "${height:-}" ]]; then
+      for _ in 1 2; do
+        adb_ shell input swipe "$((width / 2))" "$((height * 55 / 100))" "$((width / 2))" "$((height * 25 / 100))" 400 \
+          >/dev/null 2>&1 || true
+      done
+      show_screen hierarchy-scrolled-on-failure "after scrolling down"
+    fi
     psql "$DB_ADMIN" -XAtq -F ' ' -c "SELECT 'upload', count(*) FROM app.upload UNION ALL SELECT 'capture', count(*)
       FROM app.capture UNION ALL SELECT 'permission_event', count(*) FROM app.permission_event UNION ALL
       SELECT 'analysis_run:' || status, count(*) FROM app.analysis_run GROUP BY status UNION ALL
