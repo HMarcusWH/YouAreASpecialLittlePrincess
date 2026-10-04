@@ -112,7 +112,7 @@ export default function Review() {
         {service ? (
           <>
             <Toggle label={service.label} hint={`${service.explanation} ${service.decline_consequence}`} value={agreed}
-                    onChange={setAgreed} />
+                    onChange={setAgreed} testID="review-service-processing" />
             {retention ? <Toggle label={retention.label} hint={`${retention.explanation} ${retention.decline_consequence}`}
                                  value={retain} onChange={setRetain} /> : null}
           </>

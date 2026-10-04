@@ -91,7 +91,10 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       "expo-iap",
       ["expo-build-properties", {
         ios: { deploymentTarget: "16.4" },
-        android: { minSdkVersion: 24, compileSdkVersion: 36, targetSdkVersion: 36 },
+        // Android 9+ refuses cleartext by default. Only development binaries (including the non-debuggable
+        // release-variant developer handoff APK) may reach a local/LAN HTTP API; staging/store stay HTTPS-only.
+        android: { minSdkVersion: 24, compileSdkVersion: 36, targetSdkVersion: 36,
+                   usesCleartextTraffic: variant === "development" },
       }],
     ],
     extra: {

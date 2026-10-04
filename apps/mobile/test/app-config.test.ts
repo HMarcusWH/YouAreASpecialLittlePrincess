@@ -55,3 +55,55 @@ test("broad media and microphone permissions are blocked; the picker needs none"
   assert.equal(picker[1].microphonePermission, false);
   assert.equal(picker[1].photosPermission, false);
 });
+
+function buildProperties(config: ReturnType<typeof build>) {
+  const entry = (config.plugins ?? []).find((p) => Array.isArray(p) && p[0] === "expo-build-properties") as
+    [string, { android: Record<string, unknown>; ios: Record<string, unknown> }];
+  return entry[1];
+}
+
+test("the development handoff build parses with local cleartext and development identity", () => {
+  const config = build({ INKTROSPECT_APP_VARIANT: "development", INKTROSPECT_BACKEND_ENV: "local",
+                         INKTROSPECT_API_BASE: "http://127.0.0.1:8000" });
+  const runtime = parseRuntimeConfig((config.extra as { runtime: unknown }).runtime);
+  assert.ok(runtime.ok, JSON.stringify(runtime));
+  assert.equal(runtime.config.variant, "development");
+  assert.equal(runtime.config.backendEnvironment, "local");
+  assert.equal(runtime.config.apiBaseUrl, "http://127.0.0.1:8000");
+  assert.equal(runtime.config.devIdentity, true);
+  assert.equal(config.android?.package, "se.inktrospect.development");
+  assert.equal(config.version, "0.1.0");
+  const android = buildProperties(config).android;
+  // A non-debuggable release-variant APK gets no debug-manifest cleartext override; it must come from here.
+  assert.equal(android.usesCleartextTraffic, true);
+  assert.deepEqual([android.minSdkVersion, android.compileSdkVersion, android.targetSdkVersion], [24, 36, 36]);
+  const lan = parseRuntimeConfig((build({ INKTROSPECT_API_BASE: "http://192.168.1.20:8000" }).extra as
+    { runtime: unknown }).runtime);
+  assert.ok(lan.ok && lan.config.devIdentity);
+});
+
+test("staging and store builds keep Android cleartext off, require HTTPS and refuse development identity", () => {
+  for (const [variant, id, backend, api] of [
+    ["staging", "se.inktrospect.staging", "staging", "https://staging-api.inktrospect.se"],
+    ["store", "se.inktrospect", "production", "https://api.inktrospect.se"],
+  ] as const) {
+    const config = build({ INKTROSPECT_APP_VARIANT: variant, INKTROSPECT_API_BASE: api });
+    assert.equal(buildProperties(config).android.usesCleartextTraffic, false, variant);
+    assert.equal(config.android?.package, id);
+    assert.equal(config.ios?.bundleIdentifier, id);
+    const runtime = (config.extra as { runtime: Record<string, unknown> }).runtime;
+    assert.equal(runtime.devIdentity, false, variant);
+    assert.equal(runtime.backendEnvironment, backend);
+    const parsed = parseRuntimeConfig(runtime);
+    assert.ok(parsed.ok && !parsed.config.devIdentity, variant);
+    // A tampered binary that claims development identity is refused before any network call.
+    assert.deepEqual(parseRuntimeConfig({ ...runtime, devIdentity: true }),
+                     { ok: false, code: "config_dev_identity_not_allowed" });
+    // Cleartext to a loopback/LAN API is refused for these variants, even with build-time cleartext off.
+    for (const insecure of ["http://127.0.0.1:8000", "http://192.168.1.20:8000", api.replace("https:", "http:")]) {
+      const http = build({ INKTROSPECT_APP_VARIANT: variant, INKTROSPECT_API_BASE: insecure });
+      assert.deepEqual(parseRuntimeConfig((http.extra as { runtime: unknown }).runtime),
+                       { ok: false, code: "config_api_base_not_https" }, `${variant} ${insecure}`);
+    }
+  }
+});
