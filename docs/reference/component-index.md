@@ -24,6 +24,7 @@ All maintained README entry pages discovered in the source tree are listed below
 | [docs/adr/README.md](../../docs/adr/README.md) | Architecture decisions |
 | [docs/connectors/README.md](../../docs/connectors/README.md) | Connector implementation index |
 | [docs/design/README.md](../../docs/design/README.md) | Design handoff — Inktrospect contract-driven report experience (T10) |
+| [docs/design/artifacts/2026-10-04-v3/README.md](../../docs/design/artifacts/2026-10-04-v3/README.md) | Inktrospect mobile design v3 — immutable implementation reference |
 | [docs/handover/README.md](../../docs/handover/README.md) | Receiving-maintainer handover |
 | [docs/privacy/README.md](../../docs/privacy/README.md) | Privacy, consent and collection drafts (T03) |
 | [docs/runbooks/README.md](../../docs/runbooks/README.md) | Runbooks (T24) |
