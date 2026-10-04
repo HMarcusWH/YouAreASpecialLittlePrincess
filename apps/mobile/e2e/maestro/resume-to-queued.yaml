@@ -1,0 +1,29 @@
+# Relaunch after `adb shell am force-stop` (app data kept): the guest session and the journaled operation are
+# recovered and lead back to the same queued work item. The analysis worker is still gated, so nothing completes yet;
+# tools/run_android_handoff_journey.sh proves sameness with exact database counts and the recorded run ID.
+appId: se.inktrospect.development
+name: Relaunch recovers the same queued analysis
+---
+- launchApp:
+    clearState: false
+    permissions:
+      all: deny
+- extendedWaitUntil:
+    visible: "Analyse handwriting"
+    timeout: 90000
+# The private guest session survived the process death; no new session was started.
+- assertNotVisible: "Start privately"
+- extendedWaitUntil:
+    visible: "In progress"
+    timeout: 30000
+- tapOn: "Measuring on the server"
+- extendedWaitUntil:
+    visible: "Measuring on the server …"
+    timeout: 60000
+- assertVisible: "Queueing the analysis ✓"
+# Only a journal entry bound to its server run offers cancellation; an unbound one offers "Discard photo".
+- scrollUntilVisible:
+    element: "Cancel analysis"
+    direction: DOWN
+    timeout: 30000
+- assertNotVisible: "Discard photo"

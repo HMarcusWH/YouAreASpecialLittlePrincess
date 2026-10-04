@@ -66,7 +66,7 @@ React Native's global `URL` is a regex approximation (it accepts malformed input
 
 `app.config.ts` reads `INKTROSPECT_APP_VARIANT` (`development`/`staging`/`store`), `INKTROSPECT_API_BASE`, `INKTROSPECT_BACKEND_ENV`, `INKTROSPECT_UPLOAD_ORIGINS` and `INKTROSPECT_LINK_HOSTS`; `src/config/runtime.ts` re-validates at launch (store: HTTPS + production backend, no development identity). Variants differ by bundle/package identifier (`se.inktrospect.development`, `.staging`, `se.inktrospect`) and scheme; the app name stays `Inktrospect` because CNG derives the Xcode workspace the native CI builds from it.
 
-Android blocks `RECORD_AUDIO` and the Android 13+ media permissions (`READ_MEDIA_*`); the picker library's legacy storage pair (maxSdkVersion 32) is kept because its camera path requires `WRITE_EXTERNAL_STORAGE` on Android 7–9. iOS sets no photo-library usage description (PHPicker needs none) and allows local networking only in development builds.
+Android blocks `RECORD_AUDIO` and the Android 13+ media permissions (`READ_MEDIA_*`); the picker library's legacy storage pair (maxSdkVersion 32) is kept because its camera path requires `WRITE_EXTERNAL_STORAGE` on Android 7–9. iOS sets no photo-library usage description (PHPicker needs none) and allows local networking only in development builds. Android cleartext follows the same rule: `expo-build-properties` sets `usesCleartextTraffic` to `true` only for the `development` variant, so a non-debuggable development release build can reach a local HTTP API, while staging/store manifests carry `usesCleartextTraffic="false"` and their runtime configuration still requires HTTPS (`test/app-config.test.ts`).
 
 Local T30A evidence on branch `claude/determined-volta-42hu9a` (not exact-head CI): an Android CNG prebuild merged the blocked permissions as `tools:node="remove"` and generated the App Links intent filter with `autoVerify`; Metro exports compiled the whole app to Hermes bytecode for Android and iOS with no fake or test helper in the bundle. No APK/IPA was built in that environment (no Android SDK or Xcode); the Native foundation workflow remains the compile qualification.
 
@@ -100,11 +100,32 @@ Node-side native tests cover:
 - abuse attestation unavailable remains unavailable rather than authorizing;
 - exact compatibility validation rejects unsupported native dependency/version drift.
 
-T30A adds Node tests for session, workflow recovery, runner, controllers, configuration, links and copy, plus the development-API journey (`tools/run_mobile_journey.sh`). T30/T31 add real process death, physical-device camera/HEIC, sandbox purchase, push, link association, screen-reader/text-scale and signed-build lifecycle evidence.
+T30A adds Node tests for session, workflow recovery, runner, controllers, configuration, links and copy, plus the development-API journey (`tools/run_mobile_journey.sh`) and the packaged Android emulator journey below. T30/T31 add physical-device process death, camera/HEIC, sandbox purchase, push, link association, screen-reader/text-scale and signed-build lifecycle evidence.
 
 ## Permanent validation workflow
 
-`.github/workflows/native.yml` is the retained T29 validation surface. It runs exact package/license checks, Expo compatibility, mobile typecheck/unit/config checks, Android CNG + debug APK compilation, and iOS CNG + CocoaPods + simulator compilation. The Android job hashes every qualified development APK. On a push to `main` it also renames and retains that merged-main APK plus its SHA-256 sidecar for 14 days as a GitHub Actions artifact; pull-request runs do not publish a handoff artifact because their `GITHUB_SHA` is a synthetic merge candidate. Retention does not change debug/development signing status. PR #32 is the first qualification of the permanent build workflow.
+`.github/workflows/native.yml` is the retained T29 validation surface. It runs exact package/license checks, Expo compatibility, mobile typecheck/unit/config checks, Android CNG + debug (dev-client) APK compilation, the standalone Android handoff build and emulator journey, and iOS CNG + CocoaPods + simulator compilation. The `android-development` job hashes every dev-client APK; on a push to `main` it retains it as `inktrospect-android-dev-client-<sha>` (`inktrospect-dev-client-<short-sha>.apk` plus SHA-256 sidecar) for 14 days. That APK needs Metro and is compile evidence, not a handoff binary; artifacts retained under the earlier `inktrospect-android-development-<sha>` name are the same kind of dev-client APK. Pull-request runs publish no APK because their `GITHUB_SHA` is a synthetic merge candidate. Retention does not change debug/development signing status. PR #32 is the first qualification of the permanent build workflow.
+
+## Packaged standalone Android evidence model
+
+The `android-handoff` job answers a different question from `android-development`: can somebody install Inktrospect and run it without Metro? Its evidence chain, in order, is:
+
+| Step | Tool | Fails closed when |
+|---|---|---|
+| Build | `tools/build_android_handoff.sh`: clean CNG prebuild with `INKTROSPECT_APP_VARIANT=development`, `INKTROSPECT_BACKEND_ENV=local`, `INKTROSPECT_API_BASE=http://127.0.0.1:8000`, then `:app:assembleRelease` | The variant/backend/API is not the reviewed handoff value; the generated project has a non-debug signing config, a configured `debuggableVariants`, or no development cleartext; not exactly one `app-release.apk` |
+| Static APK | `tools/verify_android_handoff.py verify` | No or trivial `assets/index.android.bundle`, non-Hermes bundle, no/unparseable `assets/app.config`, a staging/store variant, staging/production backend, production/staging package, blank or public API origin, development identity off, link hosts present |
+| Manifest | `apkanalyzer manifest …` and the decoded manifest | Application ID, version 0.1.0, min SDK 24, target/compile SDK 36, `debuggable=false`, `usesCleartextTraffic="true"`, an exported MAIN/LAUNCHER activity, the blocked media/microphone permissions absent, legacy storage capped at API 32 |
+| Signature | `apksigner verify --verbose --print-certs` plus the verifier's read of the APK Signing Block | `apksigner` does not report a verified v2/v3 signature with exactly one signer; the signing block holds more than one signer or certificate; any certificate digest `apksigner` reports differs from the block's certificate; or that certificate's subject is not `CN=Android Debug` (the template key). The certificate SHA-256 and DN are recorded, not hard-coded |
+| Device | Explicit `system-images;android-36;google_apis;x86_64` AVD, headless, KVM when present, animations off | Boot does not complete within bounded timeouts |
+| Exact install | `tools/run_android_handoff_journey.sh` | The pulled installed APK digest differs from the built APK, the installed package is debuggable, or anything serves host port 8081 before or after the journey |
+| UI journey | Maestro CLI 2.11.0 (GitHub release `cli-2.11.0` `maestro.zip`, SHA-256 `5384593cb4e7a106489e75a821d157dd43f4e438df6bc308b72e82c685e1283a`, verified before extraction; no cloud or API key) | Any flow assertion: landing, guest start, system Photo Picker, review of the 900 × 360 synthetic page, notice switch, queued run, relaunch recovery, saved Dossier/evidence |
+| Recovery | PostgreSQL counts on the disposable `princess_test` database | Anything other than 1 capture / 1 run / 0 reports before the gated worker runs, or 1 / 1 / 1 report / 1 revision afterwards, all bound to the same run |
+
+The qualification server runs `PRINCESS_ENV=test` against `princess_test`: the server's environment manifest binds `local` to the developer's `princess_local` database, which an automated reset must never touch, and the `test` manifest has the identical fake-provider composition. The APK itself is built for `local`, which is what a recipient runs.
+
+Only a successful `main` push publishes `inktrospect-android-handoff-<sha>` (APK, `.sha256`, `BUILDINFO.json`, `HANDOFF.md`; 30 days). `BUILDINFO.json` is generated from the verified summary and the resolved toolchain (system-image revision, emulator, adb and Maestro versions) and names its own source commit, so this document records no run ID for it. Failure diagnostics (emulator log, Maestro debug output, hierarchy, crash buffer, redacted API/worker log tails, assertion log) are retained for 5 days.
+
+This is one emulator image. It does not qualify physical phones or tablets, release signing, Play distribution, purchases, push or T31.
 
 ## Permanent workflow qualification
 

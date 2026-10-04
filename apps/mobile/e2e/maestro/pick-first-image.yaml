@@ -1,0 +1,34 @@
+# Select the first image in the Android system picker opened by expo-image-picker.
+# Resource IDs, not screen coordinates: the modern Photo Picker (Google-signed MediaProvider module, with its
+# AOSP-named build as an equivalent) first, then the DocumentsUI fallback.
+appId: se.inktrospect.development
+name: Pick the first image in the system picker
+---
+- extendedWaitUntil:
+    visible:
+      id: "com\\.google\\.android\\.providers\\.media\\.module:id/icon_thumbnail|com\\.android\\.providers\\.media\\.module:id/icon_thumbnail|com\\.google\\.android\\.documentsui:id/thumbnail|com\\.android\\.documentsui:id/thumbnail"
+    timeout: 60000
+- runFlow:
+    when:
+      visible:
+        id: "com\\.google\\.android\\.providers\\.media\\.module:id/icon_thumbnail"
+    commands:
+      - tapOn:
+          id: "com\\.google\\.android\\.providers\\.media\\.module:id/icon_thumbnail"
+          index: 0
+- runFlow:
+    when:
+      visible:
+        id: "com\\.android\\.providers\\.media\\.module:id/icon_thumbnail"
+    commands:
+      - tapOn:
+          id: "com\\.android\\.providers\\.media\\.module:id/icon_thumbnail"
+          index: 0
+- runFlow:
+    when:
+      visible:
+        id: "com\\.(google\\.)?android\\.documentsui:id/thumbnail"
+    commands:
+      - tapOn:
+          id: "com\\.(google\\.)?android\\.documentsui:id/thumbnail"
+          index: 0

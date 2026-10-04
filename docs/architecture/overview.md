@@ -1,6 +1,6 @@
 # Implemented application architecture
 
-This guide describes the post-#72 source layout. [Current state](../handover/current-state.md) records qualification limits; [provider decisions](../roadmap/19-provider-decision-register.md) records pending activation. A declared production environment is not evidence of a deployed system.
+This guide describes the source layout as of the post-#76 baseline. [Current state](../handover/current-state.md) records qualification limits; [provider decisions](../roadmap/19-provider-decision-register.md) records pending activation. A declared production environment is not evidence of a deployed system.
 
 ## Process and trust map
 

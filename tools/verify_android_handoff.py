@@ -1,0 +1,576 @@
+#!/usr/bin/env python3
+"""Verify a standalone Android developer-handoff APK and record its qualified build evidence.
+
+Standard library only. ``verify`` fails closed unless the APK is a structurally valid ZIP with a
+non-trivial embedded application bundle (``assets/index.android.bundle``) and an embedded Expo
+configuration that names the expected development identity and local API. Without
+``--static-only`` it also requires the decoded merged manifest (``apkanalyzer manifest print``)
+and the ``apksigner verify --verbose --print-certs`` report, and checks the non-debuggable,
+development-cleartext, launcher, permission and debug-signing boundaries. ``record`` writes
+BUILDINFO.json and HANDOFF.md only from a verified summary and supplied toolchain facts.
+
+This is a developer-handoff boundary check, not production signing, store or security review.
+"""
+from __future__ import annotations
+
+import argparse
+import hashlib
+import ipaddress
+import json
+from pathlib import Path
+import re
+import sys
+from typing import Any
+from urllib.parse import urlsplit
+import xml.etree.ElementTree as ET
+import zipfile
+
+ANDROID_NS = "{http://schemas.android.com/apk/res/android}"
+BUNDLE = "assets/index.android.bundle"
+APP_CONFIG = "assets/app.config"
+# Hermes bytecode files start with this 64-bit magic number, stored little-endian.
+HERMES_MAGIC = (0x1F1903C103BC1FC6).to_bytes(8, "little")
+# Identifiers of the non-development variants in apps/mobile/app.config.ts; a handoff never carries them.
+FORBIDDEN_PACKAGES = frozenset({"se.inktrospect", "se.inktrospect.staging"})
+FORBIDDEN_VARIANTS = frozenset({"staging", "store"})
+HANDOFF_BACKENDS = frozenset({"local", "test"})
+DEFAULT_FORBIDDEN_PERMISSIONS = (
+    "android.permission.RECORD_AUDIO",
+    "android.permission.READ_MEDIA_IMAGES",
+    "android.permission.READ_MEDIA_VIDEO",
+    "android.permission.READ_MEDIA_AUDIO",
+    "android.permission.READ_MEDIA_VISUAL_USER_SELECTED",
+)
+# The picker library's legacy storage pair is deliberately kept for Android 7-9 camera capture,
+# but only when capped at API 32 (see apps/mobile/app.config.ts).
+CAPPED_LEGACY_PERMISSIONS = frozenset({
+    "android.permission.READ_EXTERNAL_STORAGE",
+    "android.permission.WRITE_EXTERNAL_STORAGE",
+})
+LEGACY_MAX_SDK = 32
+SCHEMA_VERSION = "android-handoff-buildinfo/1"
+
+
+class HandoffError(Exception):
+    """A fail-closed verification finding."""
+
+
+def _require(condition: bool, message: str) -> None:
+    if not condition:
+        raise HandoffError(message)
+
+
+def sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for block in iter(lambda: handle.read(1 << 20), b""):
+            digest.update(block)
+    return digest.hexdigest()
+
+
+def _private_host(host: str) -> bool:
+    if host == "localhost":
+        return True
+    try:
+        address = ipaddress.ip_address(host)
+    except ValueError:
+        return False
+    return address.is_loopback or address.is_private
+
+
+def check_handoff_api(raw: Any) -> str:
+    """A handoff API origin is a non-blank HTTP(S) loopback/private origin with no credentials or query."""
+    _require(isinstance(raw, str) and raw.strip() != "", "runtime.apiBaseUrl is blank")
+    parts = urlsplit(raw)
+    _require(parts.scheme in {"http", "https"}, f"runtime.apiBaseUrl scheme is not HTTP(S): {raw!r}")
+    _require(parts.hostname is not None and parts.username is None and parts.password is None
+             and not parts.query and not parts.fragment, f"runtime.apiBaseUrl is not a plain origin: {raw!r}")
+    assert parts.hostname is not None
+    _require(_private_host(parts.hostname),
+             f"runtime.apiBaseUrl is not a loopback/private development origin: {raw!r}")
+    return raw
+
+
+def read_apk(path: Path, *, min_apk_bytes: int, min_bundle_bytes: int) -> dict[str, Any]:
+    _require(path.is_file(), f"APK not found: {path}")
+    size = path.stat().st_size
+    _require(size >= min_apk_bytes, f"APK is implausibly small ({size} bytes < {min_apk_bytes})")
+    _require(zipfile.is_zipfile(path), "APK is not a valid ZIP archive")
+    try:
+        with zipfile.ZipFile(path) as archive:
+            names = set(archive.namelist())
+            bad = archive.testzip()
+            _require(bad is None, f"APK entry fails its CRC check: {bad}")
+            _require("AndroidManifest.xml" in names, "APK has no AndroidManifest.xml")
+            _require(any(re.fullmatch(r"classes\d*\.dex", name) for name in names), "APK has no classes.dex")
+            # The regression this guards: a dev-client/debug APK expects Metro and embeds no application bundle.
+            _require(BUNDLE in names, f"APK has no embedded application bundle ({BUNDLE}); it would require Metro")
+            bundle = archive.read(BUNDLE)
+            _require(APP_CONFIG in names, f"APK has no embedded application configuration ({APP_CONFIG})")
+            raw_config = archive.read(APP_CONFIG)
+    except zipfile.BadZipFile as error:
+        raise HandoffError(f"APK is not a readable ZIP archive: {error}") from None
+    _require(len(bundle) >= min_bundle_bytes,
+             f"embedded bundle is implausibly small ({len(bundle)} bytes < {min_bundle_bytes})")
+    try:
+        config = json.loads(raw_config.decode("utf-8"))
+    except (UnicodeDecodeError, ValueError) as error:
+        raise HandoffError(f"embedded application configuration does not parse: {error}") from None
+    _require(isinstance(config, dict), "embedded application configuration is not an object")
+    return {
+        "apk_bytes": size,
+        "apk_sha256": sha256_file(path),
+        "bundle_bytes": len(bundle),
+        "bundle_sha256": hashlib.sha256(bundle).hexdigest(),
+        "bundle_format": "hermes" if bundle.startswith(HERMES_MAGIC) else "javascript",
+        "config": config,
+    }
+
+
+def check_config(config: dict[str, Any], expected: argparse.Namespace) -> dict[str, Any]:
+    android = config.get("android") if isinstance(config.get("android"), dict) else {}
+    extra = config.get("extra") if isinstance(config.get("extra"), dict) else {}
+    runtime = extra.get("runtime") if isinstance(extra.get("runtime"), dict) else None
+    _require(runtime is not None, "embedded configuration has no extra.runtime object")
+    assert runtime is not None
+    package = android.get("package")
+    variant = runtime.get("variant")
+    backend = runtime.get("backendEnvironment")
+    # Policy first, so a wrong expectation can never bless a staging/store binary.
+    _require(package not in FORBIDDEN_PACKAGES, f"embedded package is a non-development identity: {package!r}")
+    _require(variant not in FORBIDDEN_VARIANTS, f"embedded runtime.variant is not a development build: {variant!r}")
+    _require(variant == "development", f"embedded runtime.variant must be development: {variant!r}")
+    _require(backend in HANDOFF_BACKENDS, f"embedded runtime.backendEnvironment is not local/test: {backend!r}")
+    api = check_handoff_api(runtime.get("apiBaseUrl"))
+    _require(runtime.get("devIdentity") is True, "embedded runtime.devIdentity is not true")
+    _require(runtime.get("linkHosts") == [], f"embedded runtime.linkHosts must be empty: {runtime.get('linkHosts')!r}")
+    for origin in runtime.get("uploadOrigins") or []:
+        check_handoff_api(origin)
+    actual = {
+        "name": config.get("name"), "package": package, "version": config.get("version"),
+        "scheme": config.get("scheme"), "variant": variant, "backend": backend, "api_base": api,
+    }
+    for key, value in actual.items():
+        want = getattr(expected, key)
+        _require(value == want, f"embedded {key} is {value!r}, expected {want!r}")
+    _require(runtime.get("linkSchemes") == [expected.scheme],
+             f"embedded runtime.linkSchemes is {runtime.get('linkSchemes')!r}, expected {[expected.scheme]!r}")
+    return actual
+
+
+def _manifest_root(text: str) -> ET.Element:
+    start = text.find("<manifest")
+    _require(start >= 0, "decoded manifest has no <manifest> element")
+    try:
+        root = ET.fromstring(text[start:])
+    except ET.ParseError as error:
+        raise HandoffError(f"decoded manifest does not parse: {error}") from None
+    _require(root.tag == "manifest", "decoded manifest root is not <manifest>")
+    return root
+
+
+def _int_attr(element: ET.Element | None, name: str) -> int | None:
+    value = None if element is None else element.get(ANDROID_NS + name, element.get(name))
+    return int(value) if value is not None and re.fullmatch(r"\d+", value) else None
+
+
+def check_manifest(text: str, expected: argparse.Namespace) -> dict[str, Any]:
+    root = _manifest_root(text)
+    _require(root.get("package") == expected.package,
+             f"manifest package is {root.get('package')!r}, expected {expected.package!r}")
+    version = root.get(ANDROID_NS + "versionName")
+    _require(version == expected.version, f"manifest versionName is {version!r}, expected {expected.version!r}")
+    sdk = root.find("uses-sdk")
+    min_sdk, target_sdk = _int_attr(sdk, "minSdkVersion"), _int_attr(sdk, "targetSdkVersion")
+    compile_sdk = _int_attr(root, "compileSdkVersion") or _int_attr(root, "platformBuildVersionCode")
+    _require(min_sdk == expected.min_sdk, f"manifest minSdkVersion is {min_sdk}, expected {expected.min_sdk}")
+    _require(target_sdk == expected.target_sdk,
+             f"manifest targetSdkVersion is {target_sdk}, expected {expected.target_sdk}")
+    _require(compile_sdk == expected.compile_sdk,
+             f"manifest compile SDK is {compile_sdk}, expected {expected.compile_sdk}")
+    application = root.find("application")
+    _require(application is not None, "manifest has no <application>")
+    assert application is not None
+    debuggable = application.get(ANDROID_NS + "debuggable", "false")
+    _require(debuggable == "false", f"application is debuggable ({debuggable}); a handoff must not need Metro")
+    cleartext = application.get(ANDROID_NS + "usesCleartextTraffic")
+    _require(cleartext == "true",
+             f"application usesCleartextTraffic is {cleartext!r}; the development handoff must reach the local HTTP API")
+    launcher = False
+    for activity in [*application.findall("activity"), *application.findall("activity-alias")]:
+        for intent in activity.findall("intent-filter"):
+            actions = {a.get(ANDROID_NS + "name") for a in intent.findall("action")}
+            categories = {c.get(ANDROID_NS + "name") for c in intent.findall("category")}
+            if "android.intent.action.MAIN" in actions and "android.intent.category.LAUNCHER" in categories:
+                _require(activity.get(ANDROID_NS + "exported") == "true", "launcher activity is not exported")
+                launcher = True
+    _require(launcher, "manifest has no exported MAIN/LAUNCHER activity")
+    permissions: dict[str, int | None] = {}
+    for element in root.findall("uses-permission"):
+        name = element.get(ANDROID_NS + "name")
+        if name:
+            permissions[name] = _int_attr(element, "maxSdkVersion")
+    present = sorted(set(permissions) & set(expected.forbid_permission))
+    _require(not present, f"manifest requests forbidden permissions: {', '.join(present)}")
+    for name in sorted(CAPPED_LEGACY_PERMISSIONS & set(permissions)):
+        cap = permissions[name]
+        _require(cap is not None and cap <= LEGACY_MAX_SDK, f"{name} is not capped at maxSdkVersion {LEGACY_MAX_SDK}")
+    return {"min_sdk": min_sdk, "target_sdk": target_sdk, "compile_sdk": compile_sdk, "debuggable": False,
+            "uses_cleartext_traffic": True, "permissions": sorted(permissions)}
+
+
+APK_SIG_BLOCK_MAGIC = b"APK Sig Block 42"
+SIGNATURE_SCHEME_BLOCKS = {0x7109871A: "v2", 0xF05368C0: "v3", 0x1B93AD61: "v3.1"}
+DN_ATTRIBUTES = {"2.5.4.3": "CN", "2.5.4.11": "OU", "2.5.4.10": "O", "2.5.4.7": "L", "2.5.4.8": "ST", "2.5.4.6": "C"}
+
+
+def _prefixed(data: bytes, offset: int = 0) -> tuple[bytes, int]:
+    """One uint32-little-endian length-prefixed field of an APK Signing Block value."""
+    _require(offset + 4 <= len(data), "truncated APK Signing Block field")
+    size = int.from_bytes(data[offset:offset + 4], "little")
+    _require(offset + 4 + size <= len(data), "truncated APK Signing Block field")
+    return data[offset + 4:offset + 4 + size], offset + 4 + size
+
+
+def _prefixed_sequence(data: bytes) -> list[bytes]:
+    items, offset = [], 0
+    while offset < len(data):
+        item, offset = _prefixed(data, offset)
+        items.append(item)
+    return items
+
+
+def signing_block_certificates(path: Path) -> dict[str, list[bytes]]:
+    """First certificate of every signer in the APK Signature Scheme v2/v3 blocks (structure only).
+
+    Cryptographic verification stays with apksigner; this reads which certificate it verified
+    without depending on apksigner's report wording.
+    """
+    with path.open("rb") as handle:
+        handle.seek(0, 2)
+        size = handle.tell()
+        handle.seek(max(0, size - 65_557))
+        tail = handle.read()
+        eocd = tail.rfind(b"PK\x05\x06")
+        _require(eocd >= 0 and eocd + 22 <= len(tail), "APK has no ZIP end-of-central-directory record")
+        central_directory = int.from_bytes(tail[eocd + 16:eocd + 20], "little")
+        _require(24 <= central_directory <= size, "APK central directory offset is invalid")
+        handle.seek(central_directory - 24)
+        footer = handle.read(24)
+        _require(footer[8:] == APK_SIG_BLOCK_MAGIC, "APK has no APK Signing Block (not v2/v3 signed)")
+        block_size = int.from_bytes(footer[:8], "little")
+        _require(32 <= block_size <= central_directory - 8, "APK Signing Block size is invalid")
+        handle.seek(central_directory - block_size - 8)
+        block = handle.read(block_size + 8)
+    _require(int.from_bytes(block[:8], "little") == block_size, "APK Signing Block sizes disagree")
+    pairs, offset, found = block[8:-24], 0, {}
+    while offset < len(pairs):
+        _require(offset + 12 <= len(pairs), "truncated APK Signing Block pair")
+        length = int.from_bytes(pairs[offset:offset + 8], "little")
+        _require(4 <= length <= len(pairs) - offset - 8, "APK Signing Block pair length is invalid")
+        pair_id = int.from_bytes(pairs[offset + 8:offset + 12], "little")
+        value = pairs[offset + 12:offset + 8 + length]
+        offset += 8 + length
+        scheme = SIGNATURE_SCHEME_BLOCKS.get(pair_id)
+        if scheme is None:
+            continue
+        certificates = []
+        for signer in _prefixed_sequence(_prefixed(value)[0]):
+            signed_data = _prefixed(signer)[0]
+            certs = _prefixed_sequence(_prefixed(signed_data, _prefixed(signed_data)[1])[0])
+            _require(bool(certs), f"{scheme} signer has no certificate")
+            certificates.append(certs[0])
+        found[scheme] = certificates
+    return found
+
+
+def _der(data: bytes, offset: int) -> tuple[int, int, int]:
+    """(tag, content start, content end) of one DER element."""
+    _require(offset + 2 <= len(data), "truncated DER element")
+    tag, length, start = data[offset], data[offset + 1], offset + 2
+    if length & 0x80:
+        count = length & 0x7F
+        _require(0 < count <= 4 and start + count <= len(data), "unsupported DER length")
+        length, start = int.from_bytes(data[start:start + count], "big"), start + count
+    _require(start + length <= len(data), "truncated DER element")
+    return tag, start, start + length
+
+
+def _children(data: bytes, start: int, end: int) -> list[tuple[int, int, int]]:
+    items = []
+    while start < end:
+        item = _der(data, start)
+        items.append(item)
+        start = item[2]
+    return items
+
+
+def _oid(raw: bytes) -> str:
+    parts, value = [raw[0] // 40, raw[0] % 40], 0
+    for byte in raw[1:]:
+        value = (value << 7) | (byte & 0x7F)
+        if not byte & 0x80:
+            parts.append(value)
+            value = 0
+    return ".".join(map(str, parts))
+
+
+def certificate_subject(der: bytes) -> list[tuple[str, str]]:
+    """Subject attributes of an X.509 certificate, most specific first (as apksigner/keytool print them)."""
+    tag, start, end = _der(der, 0)
+    _require(tag == 0x30, "signer certificate is not a DER SEQUENCE")
+    tbs = _children(der, start, end)[0]
+    fields = _children(der, tbs[1], tbs[2])
+    if fields and fields[0][0] == 0xA0:
+        fields = fields[1:]
+    _require(len(fields) >= 5 and fields[4][0] == 0x30, "signer certificate has no subject")
+    subject: list[tuple[str, str]] = []
+    for rdn in _children(der, fields[4][1], fields[4][2]):
+        for attribute in _children(der, rdn[1], rdn[2]):
+            oid, value = _children(der, attribute[1], attribute[2])[:2]
+            raw = der[value[1]:value[2]]
+            text = raw.decode("utf-16-be") if value[0] == 0x1E else raw.decode("utf-8", errors="replace")
+            name = _oid(der[oid[1]:oid[2]])
+            subject.append((DN_ATTRIBUTES.get(name, name), text))
+    return list(reversed(subject))
+
+
+def check_signature(text: str, apk: Path) -> dict[str, Any]:
+    lines = [line.strip() for line in text.splitlines() if line.strip()]
+    _require("Verifies" in lines, "apksigner did not report that the APK verifies")
+    schemes = sorted(match.group(1) for line in lines
+                     if (match := re.fullmatch(r"Verified using (v[\d.]+) scheme \(.*\): true", line)))
+    _require(any(scheme in {"v2", "v3", "v3.1"} for scheme in schemes),
+             "APK is not verified by an APK Signature Scheme v2/v3 block")
+    signers = [line for line in lines if line.startswith("Number of signers:")]
+    _require(signers == ["Number of signers: 1"], f"expected exactly one signer: {signers!r}")
+    blocks = signing_block_certificates(apk)
+    _require(any(scheme in blocks for scheme in ("v2", "v3")), "APK has no v2/v3 signature scheme block")
+    _require(all(len(certs) == 1 for certs in blocks.values()), "expected exactly one signer per signature block")
+    certificates = {cert for certs in blocks.values() for cert in certs}
+    _require(len(certificates) == 1, "signature blocks name different certificates (key rotation is not a handoff)")
+    certificate = certificates.pop()
+    digest = hashlib.sha256(certificate).hexdigest()
+    # Whatever label this apksigner version uses, every certificate digest it reports must be this one.
+    reported = {match.group(1).lower() for line in lines
+                if (match := re.search(r"certificate SHA-256 digest: ([0-9A-Fa-f]{64})$", line))}
+    _require(reported <= {digest}, f"apksigner reports a different signer certificate: {sorted(reported)}")
+    subject = certificate_subject(certificate)
+    dn = ", ".join(f"{key}={value}" for key, value in subject)
+    # Only the generated Android debug key is acceptable here; any other key would be mislabelled.
+    _require(dict(subject).get("CN") == "Android Debug",
+             f"signer is not the generated Android debug identity (DN {dn!r}); refusing to label it a handoff")
+    return {"signing_class": "android_debug_key", "signing_certificate_dn": dn,
+            "signing_certificate_sha256": digest, "signature_schemes": schemes,
+            "signing_certificate_cross_checked_by_apksigner": bool(reported)}
+
+
+def verify(args: argparse.Namespace) -> dict[str, Any]:
+    apk = read_apk(Path(args.apk), min_apk_bytes=args.min_apk_bytes, min_bundle_bytes=args.min_bundle_bytes)
+    _require(apk["bundle_format"] == args.bundle_format or args.bundle_format == "any",
+             f"embedded bundle format is {apk['bundle_format']}, expected {args.bundle_format}")
+    summary: dict[str, Any] = {
+        "apk_file": Path(args.apk).name, "apk_bytes": apk["apk_bytes"], "apk_sha256": apk["apk_sha256"],
+        "js_bundle_embedded": True, "js_bundle_bytes": apk["bundle_bytes"],
+        "js_bundle_sha256": apk["bundle_sha256"], "js_bundle_format": apk["bundle_format"],
+        **check_config(apk["config"], args),
+    }
+    if args.static_only:
+        _require(not (args.manifest_xml or args.signature_report),
+                 "--static-only cannot be combined with manifest/signature evidence")
+        summary["scope"] = "static_only"
+        return summary
+    _require(bool(args.manifest_xml), "--manifest-xml is required unless --static-only is explicit")
+    _require(bool(args.signature_report), "--signature-report is required unless --static-only is explicit")
+    summary.update(check_manifest(Path(args.manifest_xml).read_text(encoding="utf-8"), args))
+    summary.update(check_signature(Path(args.signature_report).read_text(encoding="utf-8"), Path(args.apk)))
+    summary["scope"] = "complete"
+    return summary
+
+
+_FORBIDDEN_RECORD_TEXT = re.compile(r"(/home/|/Users/|/runner/|/tmp/|postgres(ql)?://|bearer|authorization|"
+                                    r"password|secret|token=|sig=|signature=|X-Amz-)", re.IGNORECASE)
+
+
+def buildinfo(summary: dict[str, Any], args: argparse.Namespace) -> dict[str, Any]:
+    _require(summary.get("scope") == "complete", "BUILDINFO needs a complete (not static-only) verification summary")
+    apk = Path(args.apk)
+    _require(sha256_file(apk) == summary["apk_sha256"], "APK changed after verification")
+    _require(re.fullmatch(r"[0-9a-f]{40}", args.source_commit) is not None, "source commit is not a full SHA")
+    _require(args.journey_passed, "BUILDINFO is only written after the packaged emulator journey passed")
+    _require(re.fullmatch(r"[0-9a-f]{64}", args.maestro_archive_sha256) is not None, "Maestro archive digest invalid")
+    info = {
+        "schema_version": SCHEMA_VERSION,
+        "purpose": "developer_handoff",
+        "release_candidate": False,
+        "source_commit": args.source_commit,
+        "workflow_run_id": args.workflow_run_id,
+        "workflow_run_attempt": args.workflow_run_attempt,
+        "apk_file": args.apk_name,
+        "apk_bytes": summary["apk_bytes"],
+        "apk_sha256": summary["apk_sha256"],
+        "package": summary["package"],
+        "version": summary["version"],
+        "app_variant": summary["variant"],
+        "backend_environment": summary["backend"],
+        "api_base_url": summary["api_base"],
+        "gradle_variant": args.gradle_variant,
+        "metro_required": False,
+        "js_bundle_embedded": summary["js_bundle_embedded"],
+        "js_bundle_format": summary["js_bundle_format"],
+        "js_bundle_sha256": summary["js_bundle_sha256"],
+        "android_debuggable": summary["debuggable"],
+        "uses_cleartext_traffic": summary["uses_cleartext_traffic"],
+        "min_sdk": summary["min_sdk"],
+        "target_sdk": summary["target_sdk"],
+        "compile_sdk": summary["compile_sdk"],
+        "signing_class": summary["signing_class"],
+        "signing_certificate_dn": summary["signing_certificate_dn"],
+        "signing_certificate_sha256": summary["signing_certificate_sha256"],
+        "signing_certificate_cross_checked_by_apksigner": summary["signing_certificate_cross_checked_by_apksigner"],
+        "signature_schemes": summary["signature_schemes"],
+        "maestro_version": args.maestro_version,
+        "maestro_archive_sha256": args.maestro_archive_sha256,
+        "android_system_image": args.system_image,
+        "android_system_image_revision": args.system_image_revision,
+        "emulator_version": args.emulator_version,
+        "adb_version": args.adb_version,
+        "qualification": "packaged_free_journey_passed_on_emulator",
+        "qualification_data": "synthetic_only",
+    }
+    _require(info["gradle_variant"] == "release" and info["android_debuggable"] is False
+             and info["js_bundle_embedded"] is True, "only a non-debuggable release-variant APK is a handoff")
+    for key, value in info.items():
+        _require(not (isinstance(value, str) and _FORBIDDEN_RECORD_TEXT.search(value)),
+                 f"BUILDINFO field {key} looks like a private path, credential or signed URL")
+    return info
+
+
+def handoff_markdown(info: dict[str, Any]) -> str:
+    short = info["source_commit"][:12]
+    return f"""# Inktrospect Android developer handoff
+
+This is a development handoff binary.
+
+| Field | Value |
+|---|---|
+| Source commit | `{info['source_commit']}` |
+| APK | `{info['apk_file']}` (SHA-256 `{info['apk_sha256']}`) |
+| Package / version | `{info['package']}` / `{info['version']}` |
+| Build | Gradle `{info['gradle_variant']}` variant, `debuggable={str(info['android_debuggable']).lower()}`, embedded {info['js_bundle_format']} bundle; Metro is not required |
+| Runtime | `{info['app_variant']}` variant, `{info['backend_environment']}` backend at `{info['api_base_url']}` |
+| Signing | `{info['signing_class']}` (`{info['signing_certificate_dn']}`), certificate SHA-256 `{info['signing_certificate_sha256']}` |
+| Qualification | Synthetic Free journey on `{info['android_system_image']}` revision `{info['android_system_image_revision']}` with Maestro `{info['maestro_version']}` |
+
+The signer is the generated Android debug keystore from the Expo/React Native template. It is not a
+private publisher key and says nothing about who built the file; verify the SHA-256 above against
+`BUILDINFO.json` and the workflow run instead.
+
+## Run it
+
+1. Clone the repository and check out exactly `{info['source_commit']}` (the `source_commit` in `BUILDINFO.json`).
+2. Follow `docs/development/local-setup.md` on a supported host: locked backend, local PostgreSQL, migrations and roles.
+3. Start the local API and the analysis worker from that checkout.
+4. Keep the API on host `127.0.0.1:8000`.
+5. Start the API with `PRINCESS_PUBLIC_API_BASE=http://127.0.0.1:8000` so issued upload URLs use the same origin.
+6. Start an Android emulator or attach a USB-debuggable device (API level {info['min_sdk']} or newer).
+7. Forward the device's port 8000 to the host: `adb reverse tcp:8000 tcp:8000`
+8. Install: `adb install -r inktrospect-handoff-{short}.apk`
+9. Launch Inktrospect. No Metro server, `expo start` or development launcher is needed.
+10. Use only synthetic or explicitly authorized test data.
+
+`adb reverse` has to be repeated after the device restarts or reconnects. The configuration is fixed
+at build time: a different API origin requires a new build, not a setting.
+
+It is not:
+- Play Store signed;
+- a Play production candidate;
+- production identity;
+- live Premium/model approval;
+- live payment evidence;
+- production push;
+- full physical-device qualification;
+- T31 completion.
+
+## Design reference
+
+The v3 UX reference is committed under `docs/design/artifacts/2026-10-04-v3/`. Verify it with
+`sha256sum -c SHA256SUMS`, extract it outside the checkout, and compare it against the current source
+rather than extracting it over the repository. Current repository contracts and tests take precedence.
+"""
+
+
+def _parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    commands = parser.add_subparsers(dest="command", required=True)
+    check = commands.add_parser("verify", help="fail-closed APK verification")
+    check.add_argument("apk")
+    check.add_argument("--name", required=True)
+    check.add_argument("--package", required=True)
+    check.add_argument("--version", required=True)
+    check.add_argument("--scheme", required=True)
+    check.add_argument("--variant", required=True)
+    check.add_argument("--backend", required=True)
+    check.add_argument("--api-base", required=True)
+    check.add_argument("--min-sdk", type=int, required=True)
+    check.add_argument("--target-sdk", type=int, required=True)
+    check.add_argument("--compile-sdk", type=int, required=True)
+    check.add_argument("--bundle-format", choices=("hermes", "javascript", "any"), default="hermes")
+    check.add_argument("--min-apk-bytes", type=int, default=1_000_000)
+    check.add_argument("--min-bundle-bytes", type=int, default=100_000)
+    check.add_argument("--forbid-permission", action="append", default=None)
+    check.add_argument("--manifest-xml", help="output of `apkanalyzer manifest print`")
+    check.add_argument("--signature-report", help="output of `apksigner verify --verbose --print-certs`")
+    check.add_argument("--static-only", action="store_true",
+                       help="check only APK structure and embedded configuration")
+    check.add_argument("--summary-out")
+    record = commands.add_parser("record", help="write BUILDINFO.json and HANDOFF.md from a verified summary")
+    record.add_argument("apk")
+    record.add_argument("--summary", required=True)
+    record.add_argument("--apk-name", required=True)
+    record.add_argument("--source-commit", required=True)
+    record.add_argument("--workflow-run-id", required=True)
+    record.add_argument("--workflow-run-attempt", required=True)
+    record.add_argument("--gradle-variant", required=True)
+    record.add_argument("--maestro-version", required=True)
+    record.add_argument("--maestro-archive-sha256", required=True)
+    record.add_argument("--system-image", required=True)
+    record.add_argument("--system-image-revision", required=True)
+    record.add_argument("--emulator-version", required=True)
+    record.add_argument("--adb-version", required=True)
+    record.add_argument("--journey-passed", action="store_true")
+    record.add_argument("--out-dir", required=True)
+    return parser
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = _parser().parse_args(argv)
+    try:
+        if args.command == "verify":
+            if args.forbid_permission is None:
+                args.forbid_permission = list(DEFAULT_FORBIDDEN_PERMISSIONS)
+            summary = verify(args)
+            text = json.dumps(summary, indent=2, sort_keys=True) + "\n"
+            if args.summary_out:
+                Path(args.summary_out).write_text(text, encoding="utf-8")
+            print(text, end="")
+            print(f"PASS: {summary['scope']} Android handoff verification of {summary['apk_file']}", file=sys.stderr)
+            return 0
+        summary = json.loads(Path(args.summary).read_text(encoding="utf-8"))
+        info = buildinfo(summary, args)
+        out = Path(args.out_dir)
+        out.mkdir(parents=True, exist_ok=True)
+        (out / "BUILDINFO.json").write_text(json.dumps(info, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        (out / "HANDOFF.md").write_text(handoff_markdown(info), encoding="utf-8")
+        print(f"PASS: recorded BUILDINFO.json and HANDOFF.md for {info['apk_file']}", file=sys.stderr)
+        return 0
+    except HandoffError as error:
+        print(f"FAIL: {error}", file=sys.stderr)
+        return 1
+    except (OSError, ValueError, KeyError) as error:
+        print(f"FAIL: unreadable verification input: {error}", file=sys.stderr)
+        return 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

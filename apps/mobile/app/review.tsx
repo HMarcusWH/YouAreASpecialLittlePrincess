@@ -86,7 +86,8 @@ export default function Review() {
     <Screen title={t("review.title")} footer={
       <View style={{ gap: 8 }}>
         {busy ? <Busy label={t("review.submitting")} /> : null}
-        <Button label={t("review.submit")} disabled={!agreed || !usable || busy} onPress={() => void submit()} />
+        <Button label={t("review.submit")} disabled={!agreed || !usable || busy} onPress={() => void submit()}
+                testID="review-submit" />
       </View>
     }>
       <CropView key={cropKey} image={image} enabled={cropping} maxHeight={height * 0.5} onChange={setCrop}
@@ -112,7 +113,7 @@ export default function Review() {
         {service ? (
           <>
             <Toggle label={service.label} hint={`${service.explanation} ${service.decline_consequence}`} value={agreed}
-                    onChange={setAgreed} />
+                    onChange={setAgreed} testID="review-service-processing" />
             {retention ? <Toggle label={retention.label} hint={`${retention.explanation} ${retention.decline_consequence}`}
                                  value={retain} onChange={setRetain} /> : null}
           </>

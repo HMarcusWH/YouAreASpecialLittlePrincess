@@ -104,11 +104,33 @@ class DocumentationTests(unittest.TestCase):
             env = {'PATH': str(poison) + os.pathsep + os.environ.get('PATH', ''), 'HOME': directory,
                    'PRINCESS_E2E_ADMIN_URL': 'postgresql://unused:unused@127.0.0.1:5432/postgres',
                    'PRINCESS_E2E_ALLOW_RESET': '0'}
-            for name in ('run_mobile_journey.sh', 'run_web_e2e.sh'):
+            for name in ('run_mobile_journey.sh', 'run_web_e2e.sh', 'run_android_handoff_journey.sh'):
                 result = subprocess.run([shutil.which('bash'), str(ROOT / 'tools' / name)],
                                         cwd=ROOT, env=env, text=True, capture_output=True, timeout=10)
                 self.assertNotEqual(result.returncode, 0)
                 self.assertIn('REFUSE', result.stdout + result.stderr)
+                self.assertNotIn('FORBIDDEN_EXTERNAL_COMMAND', result.stdout + result.stderr)
+
+    @unittest.skipUnless(shutil.which('bash'), 'Bash required for guarded shell refusal')
+    def test_handoff_build_refuses_non_handoff_configuration_before_external_commands(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            poison = root / 'bin'
+            poison.mkdir()
+            for name in ('python', 'python3', 'node', 'pnpm', 'java', 'adb', 'sdkmanager'):
+                path = poison / name
+                path.write_text('#!/bin/sh\necho FORBIDDEN_EXTERNAL_COMMAND >&2\nexit 97\n', encoding='utf-8')
+                path.chmod(0o755)
+            base = {'PATH': str(poison) + os.pathsep + os.environ.get('PATH', ''), 'HOME': directory}
+            for overrides in ({'INKTROSPECT_APP_VARIANT': 'store'}, {'INKTROSPECT_APP_VARIANT': 'staging'},
+                              {'INKTROSPECT_BACKEND_ENV': 'production'},
+                              {'INKTROSPECT_API_BASE': 'https://api.inktrospect.se'},
+                              {'INKTROSPECT_LINK_HOSTS': 'inktrospect.se'}):
+                result = subprocess.run([shutil.which('bash'), str(ROOT / 'tools/build_android_handoff.sh')],
+                                        cwd=ROOT, env={**base, **overrides}, text=True, capture_output=True,
+                                        timeout=10)
+                self.assertEqual(result.returncode, 2, overrides)
+                self.assertIn('REFUSE', result.stderr)
                 self.assertNotIn('FORBIDDEN_EXTERNAL_COMMAND', result.stdout + result.stderr)
 
 

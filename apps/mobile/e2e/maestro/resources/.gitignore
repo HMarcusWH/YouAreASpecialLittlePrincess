@@ -1,0 +1,4 @@
+# Runtime-generated synthetic media for the Maestro flows (tools/run_android_handoff_journey.sh).
+# Never commit images here: no handwriting, real or synthetic, belongs in Git.
+*
+!.gitignore

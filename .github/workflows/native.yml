@@ -9,6 +9,21 @@ on:
       - "packages/report-core/**"
       - "packages/design-tokens/**"
       - "pnpm-lock.yaml"
+      # The standalone Android handoff job also runs the real API, analysis worker and migrations.
+      - "apps/api/**"
+      - "apps/workers/analysis/**"
+      - "src/princess_app/**"
+      - "src/princess_contracts/**"
+      - "contracts/consent/**"
+      - "contracts/product/**"
+      - "migrations/**"
+      - "infra/environments/**"
+      - "requirements/app-py312.lock"
+      - "requirements/app-py312.txt"
+      - "tools/build_android_handoff.sh"
+      - "tools/run_android_handoff_journey.sh"
+      - "tools/verify_android_handoff.py"
+      - "tests/test_verify_android_handoff.py"
       - ".github/workflows/native.yml"
       - "docs/adr/ADR-005-mobile-framework.md"
       - "docs/roadmap/11-mobile-architecture.md"
@@ -22,7 +37,25 @@ on:
       - "packages/report-core/**"
       - "packages/design-tokens/**"
       - "pnpm-lock.yaml"
+      # The standalone Android handoff job also runs the real API, analysis worker and migrations.
+      - "apps/api/**"
+      - "apps/workers/analysis/**"
+      - "src/princess_app/**"
+      - "src/princess_contracts/**"
+      - "contracts/consent/**"
+      - "contracts/product/**"
+      - "migrations/**"
+      - "infra/environments/**"
+      - "requirements/app-py312.lock"
+      - "requirements/app-py312.txt"
+      - "tools/build_android_handoff.sh"
+      - "tools/run_android_handoff_journey.sh"
+      - "tools/verify_android_handoff.py"
+      - "tests/test_verify_android_handoff.py"
       - ".github/workflows/native.yml"
+      - "docs/adr/ADR-005-mobile-framework.md"
+      - "docs/roadmap/11-mobile-architecture.md"
+      - "docs/roadmap/tasks.json"
 
 permissions:
   contents: read
@@ -51,6 +84,8 @@ jobs:
       - run: pnpm --filter @princess/mobile config:public
 
   android-development:
+    # Expo dev-client compile evidence: assembleDebug launches the development launcher and needs Metro for its
+    # JavaScript. It is not the developer handoff binary (see android-handoff).
     needs: static
     runs-on: ubuntu-24.04
     steps:
@@ -66,25 +101,252 @@ jobs:
       - name: Build Android debug APK with native modules
         working-directory: apps/mobile/android
         run: ./gradlew :app:assembleDebug --no-daemon
-      - name: Record Android development artifact digest
+      - name: Record Android dev-client artifact digest
         run: sha256sum apps/mobile/android/app/build/outputs/apk/debug/app-debug.apk
-      - name: Name merged-main Android handoff APK
+      - name: Name merged-main Android dev-client APK
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         shell: bash
         run: |
           short="${GITHUB_SHA:0:12}"
-          cp apps/mobile/android/app/build/outputs/apk/debug/app-debug.apk "inktrospect-development-${short}.apk"
-          sha256sum "inktrospect-development-${short}.apk" | tee "inktrospect-development-${short}.apk.sha256"
-      - name: Upload merged-main Android handoff APK
+          cp apps/mobile/android/app/build/outputs/apk/debug/app-debug.apk "inktrospect-dev-client-${short}.apk"
+          sha256sum "inktrospect-dev-client-${short}.apk" | tee "inktrospect-dev-client-${short}.apk.sha256"
+      - name: Upload merged-main Android dev-client APK
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: inktrospect-android-development-${{ github.sha }}
+          name: inktrospect-android-dev-client-${{ github.sha }}
           path: |
-            inktrospect-development-*.apk
-            inktrospect-development-*.apk.sha256
+            inktrospect-dev-client-*.apk
+            inktrospect-dev-client-*.apk.sha256
           if-no-files-found: error
           retention-days: 14
+
+  android-handoff:
+    # Standalone developer-handoff APK: the development variant built as a non-debuggable Gradle release with an
+    # embedded Hermes bundle and the local API at device loopback (adb reverse tcp:8000). The exact built APK is
+    # installed on an API-36 emulator and the real Free journey is driven by pinned Maestro against disposable
+    # services, with no Metro anywhere. Pull requests qualify only; a successful main push publishes the artifact.
+    needs: static
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    services:
+      postgres:
+        # postgres:16.13, resolved 2026-09-27 (same digest as Application environments)
+        image: postgres@sha256:5d143123fdf80462d1778cd4f24b9f7ca13c87174bca19141fb194c5a1ebca59
+        env:
+          POSTGRES_USER: princess_admin
+          POSTGRES_PASSWORD: ci-only-admin
+          POSTGRES_DB: princess_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U princess_admin -d princess_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      PIP_DISABLE_PIP_VERSION_CHECK: '1'
+      PIP_NO_INPUT: '1'
+      PRINCESS_E2E_ADMIN_URL: postgresql://princess_admin:ci-only-admin@127.0.0.1:5432/postgres
+      PRINCESS_E2E_ALLOW_RESET: '1'
+      INKTROSPECT_APP_VARIANT: development
+      INKTROSPECT_BACKEND_ENV: local
+      INKTROSPECT_API_BASE: http://127.0.0.1:8000
+      ANDROID_SYSTEM_IMAGE: system-images;android-36;google_apis;x86_64
+      ANDROID_AVD: inktrospect-api36
+      MAESTRO_VERSION: 2.11.0
+      MAESTRO_SHA256: 5384593cb4e7a106489e75a821d157dd43f4e438df6bc308b72e82c685e1283a
+      MAESTRO_CLI_NO_ANALYTICS: '1'
+      MAESTRO_CLI_ANALYSIS_NOTIFICATION_DISABLED: 'true'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: "22.22.2"
+      - run: corepack enable && corepack install
+      - run: pnpm install --frozen-lockfile
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12'
+      - name: Download reviewed backend artifacts
+        run: >-
+          python -m pip download --require-hashes --only-binary=:all: --no-deps
+          --dest "$RUNNER_TEMP/app-wheelhouse" -r requirements/app-py312.lock
+      - name: Install reviewed backend artifacts
+        run: >-
+          python -m pip install --require-hashes --only-binary=:all: --no-index --no-deps --force-reinstall
+          --find-links "$RUNNER_TEMP/app-wheelhouse" -r requirements/app-py312.lock
+      - name: Verify the backend lock is a closed reviewed graph
+        run: >-
+          python tools/verify_project_dependency_policy.py
+          --manifest requirements/app-py312.txt --extra dev
+          --lock requirements/app-py312.lock --wheelhouse "$RUNNER_TEMP/app-wheelhouse"
+          --root pip --root fastapi --root uvicorn --root sqlalchemy --root alembic --root psycopg
+          --root psycopg-binary --root httpx --root pyjwt --root cryptography
+      - name: Install local project without dependency resolution
+        run: python -m pip install --no-index --no-deps --no-build-isolation -e '.[dev]'
+      - name: Verify exact backend environment
+        run: >-
+          python tools/verify_ci_lock.py requirements/app-py312.lock
+          --manifest requirements/app-py312.txt
+          --allow "special-little-princess-graphology==0.1.0"
+      - name: Handoff verifier unit tests (synthetic APK fixtures)
+        run: python -m pytest -q tests/test_verify_android_handoff.py
+      - name: Install pinned Maestro CLI (checksum verified before extraction)
+        shell: bash
+        run: |
+          archive="$RUNNER_TEMP/maestro-${MAESTRO_VERSION}.zip"
+          curl --fail --location --silent --show-error --retry 3 --output "$archive" \
+            "https://github.com/mobile-dev-inc/maestro/releases/download/cli-${MAESTRO_VERSION}/maestro.zip"
+          echo "${MAESTRO_SHA256}  ${archive}" | sha256sum --check --strict -
+          unzip -q "$archive" -d "$RUNNER_TEMP/maestro-cli"
+          echo "$RUNNER_TEMP/maestro-cli/maestro/bin" >> "$GITHUB_PATH"
+      - name: Confirm Maestro version and flow syntax
+        shell: bash
+        run: |
+          reported="$(timeout 120 maestro --version | tail -n 1 | tr -d '[:space:]')"
+          echo "maestro --version: $reported"
+          test "$reported" = "$MAESTRO_VERSION"
+          for flow in apps/mobile/e2e/maestro/*.yaml; do timeout 120 maestro check-syntax "$flow"; done
+      - name: Build and statically verify the standalone handoff APK (assembleRelease)
+        timeout-minutes: 60
+        shell: bash
+        run: |
+          df -h / | tail -n 1
+          java -version 2>&1 | head -n 1
+          PYTHON=python ANDROID_HANDOFF_OUT="$RUNNER_TEMP/handoff/build" tools/build_android_handoff.sh
+          df -h / | tail -n 1
+      - name: Enable KVM hardware acceleration when the runner provides it
+        shell: bash
+        run: |
+          if [ ! -e /dev/kvm ]; then
+            echo "No /dev/kvm on this runner; the emulator runs without hardware acceleration"
+            echo "EMULATOR_ACCEL=off" >> "$GITHUB_ENV"
+            exit 0
+          fi
+          if [ ! -r /dev/kvm ] || [ ! -w /dev/kvm ]; then
+            echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' \
+              | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+            sudo udevadm control --reload-rules
+            sudo udevadm trigger --name-match=kvm
+            sudo udevadm settle
+          fi
+          test -r /dev/kvm && test -w /dev/kvm
+          echo "EMULATOR_ACCEL=on" >> "$GITHUB_ENV"
+      - name: Provision the emulator and explicit API-36 system image
+        timeout-minutes: 20
+        shell: bash
+        run: |
+          sdkmanager="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          (yes || true) | timeout 300 "$sdkmanager" --licenses > /dev/null
+          timeout 900 "$sdkmanager" --install emulator platform-tools "$ANDROID_SYSTEM_IMAGE" > /dev/null
+          image_dir="$ANDROID_HOME/$(echo "$ANDROID_SYSTEM_IMAGE" | tr ';' '/')"
+          revision="$(sed -n 's/^Pkg.Revision=//p' "$image_dir/source.properties" | tr -d '[:space:]')"
+          test -n "$revision"
+          echo "$ANDROID_HOME/platform-tools" >> "$GITHUB_PATH"
+          # Resolved revisions come from each installed package's source.properties, not from banner text.
+          emulator_revision="$(sed -n 's/^Pkg.Revision=//p' "$ANDROID_HOME/emulator/source.properties" | tr -d '[:space:]')"
+          test -n "$emulator_revision"
+          timeout 60 "$ANDROID_HOME/emulator/emulator" -version 2>&1 | head -n 3 || true
+          adb_version="$("$ANDROID_HOME/platform-tools/adb" version | grep -E '^(Android Debug Bridge version|Version) ' | paste -sd ';' -)"
+          test -n "$adb_version"
+          {
+            echo "ANDROID_SYSTEM_IMAGE_REVISION=$revision"
+            echo "EMULATOR_VERSION=emulator $emulator_revision"
+            echo "ADB_VERSION=$adb_version"
+          } | tee -a "$GITHUB_ENV"
+          echo "requested=$ANDROID_SYSTEM_IMAGE installed revision=$revision"
+          # A fixed AVD home: avdmanager and the emulator both honour it, whatever this runner's defaults are.
+          avd_home="$RUNNER_TEMP/avd"
+          mkdir -p "$avd_home"
+          echo "ANDROID_AVD_HOME=$avd_home" >> "$GITHUB_ENV"
+          export ANDROID_AVD_HOME="$avd_home"
+          echo no | "$ANDROID_HOME/cmdline-tools/latest/bin/avdmanager" create avd --force \
+            --name "$ANDROID_AVD" --package "$ANDROID_SYSTEM_IMAGE" --device pixel_6
+          test -f "$avd_home/$ANDROID_AVD.avd/config.ini"
+          printf 'hw.ramSize=4096\ndisk.dataPartition.size=6G\nhw.keyboard=yes\n' \
+            >> "$avd_home/$ANDROID_AVD.avd/config.ini"
+          "$ANDROID_HOME/cmdline-tools/latest/bin/avdmanager" list avd
+      - name: Boot the headless emulator
+        timeout-minutes: 15
+        shell: bash
+        run: |
+          mkdir -p "$RUNNER_TEMP/handoff/evidence"
+          nohup "$ANDROID_HOME/emulator/emulator" -avd "$ANDROID_AVD" -no-window -no-audio -no-boot-anim \
+            -wipe-data -no-snapshot -gpu swiftshader_indirect -accel "$EMULATOR_ACCEL" \
+            -camera-back none -camera-front none > "$RUNNER_TEMP/handoff/evidence/emulator.log" 2>&1 &
+          echo "$!" > "$RUNNER_TEMP/handoff/emulator.pid"
+          timeout 300 adb wait-for-device
+          deadline=$((SECONDS + 600))
+          until [ "$(timeout 10 adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" = "1" ]; do
+            kill -0 "$(cat "$RUNNER_TEMP/handoff/emulator.pid")" || { echo "emulator exited during boot" >&2; exit 1; }
+            if [ "$SECONDS" -gt "$deadline" ]; then echo "emulator did not finish booting" >&2; exit 1; fi
+            sleep 5
+          done
+          timeout 120 adb shell 'while ! pm path android >/dev/null 2>&1; do sleep 2; done'
+          for setting in window_animation_scale transition_animation_scale animator_duration_scale; do
+            timeout 30 adb shell settings put global "$setting" 0
+          done
+          timeout 30 adb shell svc power stayon true
+          timeout 30 adb shell input keyevent 82
+          echo "locale=$(timeout 10 adb shell getprop ro.product.locale | tr -d '\r')"
+          echo "sdk=$(timeout 10 adb shell getprop ro.build.version.sdk | tr -d '\r')"
+      - name: Packaged Free journey on the exact APK (no Metro)
+        timeout-minutes: 60
+        shell: bash
+        run: >-
+          PYTHON=python PRINCESS_HANDOFF_EVIDENCE_DIR="$RUNNER_TEMP/handoff/evidence"
+          tools/run_android_handoff_journey.sh apps/mobile/android/app/build/outputs/apk/release/app-release.apk
+      - name: Assemble the handoff package (published only from main)
+        shell: bash
+        run: |
+          short="${GITHUB_SHA:0:12}"
+          dist="$RUNNER_TEMP/handoff/dist"
+          name="inktrospect-handoff-${short}.apk"
+          mkdir -p "$dist"
+          cp apps/mobile/android/app/build/outputs/apk/release/app-release.apk "$dist/$name"
+          python tools/verify_android_handoff.py record "$dist/$name" \
+            --summary "$RUNNER_TEMP/handoff/build/verification.json" --apk-name "$name" \
+            --source-commit "$GITHUB_SHA" --workflow-run-id "$GITHUB_RUN_ID" \
+            --workflow-run-attempt "$GITHUB_RUN_ATTEMPT" --gradle-variant release \
+            --maestro-version "$(timeout 120 maestro --version | tail -n 1 | tr -d '[:space:]')" \
+            --maestro-archive-sha256 "$MAESTRO_SHA256" --system-image "$ANDROID_SYSTEM_IMAGE" \
+            --system-image-revision "$ANDROID_SYSTEM_IMAGE_REVISION" --emulator-version "$EMULATOR_VERSION" \
+            --adb-version "$ADB_VERSION" --journey-passed --out-dir "$dist"
+          (cd "$dist" && sha256sum "$name" | tee "$name.sha256")
+          cat "$dist/BUILDINFO.json"
+      - name: Upload merged-main Android developer handoff
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: inktrospect-android-handoff-${{ github.sha }}
+          path: |
+            ${{ runner.temp }}/handoff/dist/inktrospect-handoff-*.apk
+            ${{ runner.temp }}/handoff/dist/inktrospect-handoff-*.apk.sha256
+            ${{ runner.temp }}/handoff/dist/BUILDINFO.json
+            ${{ runner.temp }}/handoff/dist/HANDOFF.md
+          if-no-files-found: error
+          retention-days: 30
+      - name: Upload synthetic-only failure diagnostics
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: android-handoff-diagnostics-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/handoff/evidence/
+            ${{ runner.temp }}/handoff/build/apkanalyzer.txt
+            ${{ runner.temp }}/handoff/build/apksigner.txt
+            ${{ runner.temp }}/handoff/build/manifest.xml
+            ${{ runner.temp }}/handoff/build/verification.json
+          if-no-files-found: ignore
+          retention-days: 5
+      - name: Stop the emulator
+        if: always()
+        shell: bash
+        run: |
+          if command -v adb >/dev/null; then timeout 30 adb emu kill || true; fi
 
   ios-simulator:
     needs: static

@@ -34,7 +34,7 @@ These values are evaluated by `apps/mobile/app.config.ts`, included in the built
 
 The app name remains `Inktrospect` across variants because native generation/CI expect that workspace/scheme. Identifiers/schemes differ. Native permission/plugin/identifier changes require rebuilding; a JavaScript refresh is not sufficient. A store variant does not imply signing, catalogue, provider account or store approval.
 
-No API origin should silently fall back to a production service. Development HTTP is deliberately bounded; test the actual emulator/device networking and origin allowlist.
+No API origin should silently fall back to a production service. Development HTTP is deliberately bounded; test the actual emulator/device networking and origin allowlist. Only the `development` variant sets Android `usesCleartextTraffic=true` (and iOS local networking), so a non-debuggable development release such as the standalone handoff APK can reach `http://127.0.0.1:8000` through `adb reverse`; staging/store manifests keep cleartext off.
 
 ## Capability switches
 

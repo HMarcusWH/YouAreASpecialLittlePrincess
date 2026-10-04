@@ -130,8 +130,10 @@ export function Mono({ children, style }: PropsWithChildren<{ style?: StyleProp<
 
 type Tone = "primary" | "secondary" | "danger";
 
-export function Button({ label, onPress, tone = "primary", disabled = false, busy = false, hint }: {
+export function Button({ label, onPress, tone = "primary", disabled = false, busy = false, hint, testID }: {
   label: string; onPress: () => void; tone?: Tone; disabled?: boolean; busy?: boolean; hint?: string;
+  /** Stable semantic identifier of this control (its label text is also a separate text node). */
+  testID?: string;
 }) {
   const { theme } = useApp();
   const filled = tone === "primary";
@@ -142,6 +144,7 @@ export function Button({ label, onPress, tone = "primary", disabled = false, bus
       accessibilityRole="button"
       accessibilityState={{ disabled: inactive, busy }}
       {...(hint ? { accessibilityHint: hint } : {})}
+      {...(testID ? { testID } : {})}
       disabled={inactive}
       onPress={onPress}
       style={({ pressed }) => [styles.button, {
@@ -194,8 +197,10 @@ export function Card({ children, style }: PropsWithChildren<{ style?: StyleProp<
   );
 }
 
-export function Toggle({ label, hint, value, onChange, disabled = false }: {
+export function Toggle({ label, hint, value, onChange, disabled = false, testID }: {
   label: string; hint?: string; value: boolean; onChange: (value: boolean) => void; disabled?: boolean;
+  /** Stable semantic identifier of the visible switch (label text and switch otherwise share one name). */
+  testID?: string;
 }) {
   const { theme } = useApp();
   return (
@@ -204,8 +209,8 @@ export function Toggle({ label, hint, value, onChange, disabled = false }: {
         <Text style={[styles.copy, { color: theme.color.text, fontFamily: theme.serif }]}>{label}</Text>
         {hint ? <Text style={[styles.small, { color: theme.color["text-muted"], fontFamily: theme.serif }]}>{hint}</Text> : null}
       </View>
-      <Switch accessibilityLabel={label} {...(hint ? { accessibilityHint: hint } : {})} value={value}
-              onValueChange={onChange} disabled={disabled}
+      <Switch accessibilityLabel={label} {...(hint ? { accessibilityHint: hint } : {})} {...(testID ? { testID } : {})}
+              value={value} onValueChange={onChange} disabled={disabled}
               trackColor={{ true: theme.color.accent, false: theme.color["border-strong"] }} />
     </View>
   );
