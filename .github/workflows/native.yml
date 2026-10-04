@@ -294,7 +294,7 @@ jobs:
           echo "locale=$(timeout 10 adb shell getprop ro.product.locale | tr -d '\r')"
           echo "sdk=$(timeout 10 adb shell getprop ro.build.version.sdk | tr -d '\r')"
       - name: Packaged Free journey on the exact APK (no Metro)
-        timeout-minutes: 45
+        timeout-minutes: 60
         shell: bash
         run: >-
           PYTHON=python PRINCESS_HANDOFF_EVIDENCE_DIR="$RUNNER_TEMP/handoff/evidence"

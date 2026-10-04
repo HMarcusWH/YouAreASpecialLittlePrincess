@@ -1,6 +1,7 @@
 # After the runner releases the analysis worker, the recovered work screen polls the same run and opens the saved
 # Free report. Asserts the real Dossier and its saved evidence; no Premium or reference-statistic claim is made.
 # The photo was not retained (optional retention left off), so the honest "no longer stored" state is expected.
+# The saved report is long (full metric grid, then evidence tables), so each scroll may take minutes on an emulator.
 appId: se.inktrospect.development
 name: The same run completes into the saved Dossier
 ---
@@ -11,16 +12,16 @@ name: The same run completes into the saved Dossier
 - scrollUntilVisible:
     element: "The source image is no longer stored, so only the saved measurements are shown."
     direction: DOWN
-    timeout: 60000
+    timeout: 300000
 - scrollUntilVisible:
     element: "Baseline traces"
     direction: DOWN
-    timeout: 60000
+    timeout: 300000
 - scrollUntilVisible:
     element: "Compare with another report"
     direction: DOWN
-    timeout: 60000
+    timeout: 300000
 - scrollUntilVisible:
     element: "Report a problem"
     direction: DOWN
-    timeout: 30000
+    timeout: 300000

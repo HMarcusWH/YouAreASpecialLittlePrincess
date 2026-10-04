@@ -53,6 +53,10 @@ name: Free journey to a queued analysis
     id: "review-service-processing"
     checked: true
 - tapOn: "Analyse my handwriting"
+# The request was recorded and the app left the review screen for the work screen.
+- extendedWaitUntil:
+    notVisible: "Analyse my handwriting"
+    timeout: 60000
 # The active-step label exists only once the server run was created; the earlier steps are marked done.
 - extendedWaitUntil:
     visible: "Measuring on the server …"

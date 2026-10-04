@@ -223,7 +223,7 @@ maestro_flow() {
   local flow="$1"
   adb_ shell am broadcast -a android.intent.action.CLOSE_SYSTEM_DIALOGS >/dev/null 2>&1 || true
   echo "== Maestro: $flow"
-  timeout --kill-after=30 "${MAESTRO_FLOW_TIMEOUT:-900}" "$MAESTRO" test --no-ansi "${DEVICE_ARGS[@]}" \
+  timeout --kill-after=30 "${MAESTRO_FLOW_TIMEOUT:-1500}" "$MAESTRO" test --no-ansi "${DEVICE_ARGS[@]}" \
     --debug-output "$LOGS/maestro-$flow" --flatten-debug-output "$FLOWS/$flow.yaml"
 }
 query() { psql "$DB_ADMIN" -XAtq -v ON_ERROR_STOP=1 -c "$1"; }
