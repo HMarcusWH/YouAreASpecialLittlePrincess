@@ -1,11 +1,13 @@
 import { ApiError } from "@princess/api-client";
-import { useLocalSearchParams } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { Text, View } from "react-native";
 
 import { useApp } from "../src/bootstrap/AppProvider.tsx";
 import { presentComparison, type ComparisonView } from "../src/features/comparison.ts";
-import { Banner, Body, Busy, Card, Heading, KeyValue, Screen, styles } from "../src/ui/components.tsx";
+import {
+  Banner, Body, Busy, Button, EditorialSection, KeyValue, Paper, Screen, SectionLabel, styles,
+} from "../src/ui/components.tsx";
 
 function Bar({ from, to, color, second }: { from: number; to: number; color: string; second: string }) {
   // Both values on the feature's fixed display domain: no per-person rescaling.
@@ -47,33 +49,39 @@ export default function Compare() {
     <Screen title={t("compare.title")}>
       <Body muted>{t("compare.intro")}</Body>
       <KeyValue label={t("compare.coverage")} value={`${view.commonCount} / ${view.candidateCount}`} />
-      <Card>
+      {reportIds.length === 2 ? (
+        <Button tone="secondary" label={t("compare.swap")} onPress={() => router.replace({
+          pathname: "/compare", params: { ids: [reportIds[1]!, reportIds[0]!].join(",") },
+        })} />
+      ) : null}
+      <Paper>
+        <SectionLabel>{t("compare.coverage")}</SectionLabel>
         {view.inputs.map((input, index) => (
           <KeyValue key={input.reportId} label={`${index === 0 ? t("compare.from") : `#${index + 1}`} · ${t("history.revision")} ${input.revision}`}
                     value={formatter.format(new Date(input.createdAt))} />
         ))}
         <Body muted>{t("history.created_hint")}</Body>
-      </Card>
+      </Paper>
       {view.rows.length === 0 ? <Banner tone="info">{t("compare.none")}</Banner> : null}
       {view.rows.map((row) => (
-        <View key={row.featureId} accessible
+        <EditorialSection key={row.featureId} accessible
               accessibilityLabel={`${row.label}: ${t("compare.from")} ${row.from}, ${t("compare.to")} ${row.to}, ${t("compare.difference")} ${row.delta}`}
-              style={{ gap: 6, borderTopWidth: 1, borderColor: theme.color.border, paddingVertical: 10 }}>
+              style={{ gap: 6 }}>
           <Text style={[styles.copy, { color: theme.color.text, fontFamily: theme.serif }]}>{row.label}</Text>
           <Bar from={row.fromPosition} to={row.toPosition} color={theme.chart[0] ?? theme.color.accent}
                second={theme.chart[1] ?? theme.color.text} />
           <Text style={[styles.small, { color: theme.color["text-muted"], fontFamily: theme.mono }]}>
             {row.from} → {row.to} ({row.delta})
           </Text>
-        </View>
+        </EditorialSection>
       ))}
       {view.exclusions.length > 0 ? (
-        <Card>
-          <Heading level={3}>{t("compare.excluded")}</Heading>
+        <EditorialSection>
+          <SectionLabel>{t("compare.excluded")}</SectionLabel>
           {view.exclusions.map((group) => (
             <KeyValue key={group.reason} label={t(`compare.reason.${group.reason}`)} value={String(group.featureIds.length)} />
           ))}
-        </Card>
+        </EditorialSection>
       ) : null}
     </Screen>
   );

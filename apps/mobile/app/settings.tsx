@@ -5,7 +5,7 @@ import { Alert } from "react-native";
 import { useApp } from "../src/bootstrap/AppProvider.tsx";
 import { newClientId } from "../src/bootstrap/ids.ts";
 import type { PushStatus } from "../src/features/push-controller.ts";
-import { Banner, Body, Button, Card, Choice, Heading, KeyValue, Screen, Toggle } from "../src/ui/components.tsx";
+import { Banner, Body, Button, Choice, EditorialSection, KeyValue, Screen, SectionLabel, Toggle } from "../src/ui/components.tsx";
 
 export default function Settings() {
   const { t, services, session, config, preferences, setPreferences, locale } = useApp();
@@ -62,8 +62,8 @@ export default function Settings() {
   return (
     <Screen title={t("settings.title")}>
       {message ? <Banner tone={message.tone}>{message.text}</Banner> : null}
-      <Card>
-        <Heading>{t("settings.account")}</Heading>
+      <EditorialSection>
+        <SectionLabel>{t("settings.account")}</SectionLabel>
         {active ? <KeyValue label={active.kind === "GUEST" ? t("settings.guest") : t("settings.account_signed_in")}
                             value={`…${active.principalId.slice(-6)}`} /> : null}
         {active === null || active.kind === "GUEST" ? (
@@ -87,19 +87,19 @@ export default function Settings() {
                                            })} />
           </>
         ) : null}
-      </Card>
+      </EditorialSection>
 
       {active ? (
-        <Card>
-          <Heading>{t("settings.privacy")}</Heading>
+        <EditorialSection>
+          <SectionLabel>{t("settings.privacy")}</SectionLabel>
           <Toggle label={t("settings.retain_all")} hint={t("settings.retain_hint")} value={retainAll === true}
                   disabled={retainAll === null || busy} onChange={(value) => void changeRetention(value)} />
-        </Card>
+        </EditorialSection>
       ) : null}
 
       {active ? (
-        <Card>
-          <Heading>{t("settings.notifications")}</Heading>
+        <EditorialSection>
+          <SectionLabel>{t("settings.notifications")}</SectionLabel>
           <Toggle label={t("settings.push")} value={push === "REGISTERED"} disabled={busy || push === null}
                   onChange={(value) => void attempt(async () => {
                     if (value) setPush(await services.push.enable(active.principalId, locale));
@@ -118,24 +118,24 @@ export default function Settings() {
                       setMail(prefs.mail_report_ready);
                     })} />
           ) : <Body muted>{t("settings.mail_account_only")}</Body>}
-        </Card>
+        </EditorialSection>
       ) : null}
 
-      <Card>
-        <Heading>{t("settings.display")}</Heading>
+      <EditorialSection>
+        <SectionLabel>{t("settings.display")}</SectionLabel>
         <Choice label={t("settings.language")} value={preferences.locale}
                 onChange={(value) => void setPreferences({ locale: value })}
                 options={(["system", "en", "sv"] as const).map((value) => ({ value, label: t(`settings.language.${value}`) }))} />
         <Choice label={t("settings.theme")} value={preferences.theme}
                 onChange={(value) => void setPreferences({ theme: value })}
                 options={(["system", "light", "dark"] as const).map((value) => ({ value, label: t(`settings.theme.${value}`) }))} />
-      </Card>
+      </EditorialSection>
 
-      <Card>
-        <Heading>{t("settings.about")}</Heading>
+      <EditorialSection>
+        <SectionLabel>{t("settings.about")}</SectionLabel>
         <KeyValue label={t("settings.variant")} value={config.variant} />
         <KeyValue label={t("settings.backend")} value={config.backendEnvironment} />
-      </Card>
+      </EditorialSection>
     </Screen>
   );
 }

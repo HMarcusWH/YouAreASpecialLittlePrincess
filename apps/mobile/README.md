@@ -1,6 +1,6 @@
 # Inktrospect native client (Expo / React Native)
 
-Shared iPhone/iPad and Android phone/tablet client (task T30A, consumed by T30/T31). Native screens, not a web view. The FastAPI service owns authorization, consent, jobs, the ledger and reports; this app never measures handwriting, ranks facts, mints credit or authorizes access. Free inference is zero runtime AI. Pinned versions and native build evidence are in [COMPATIBILITY.md](COMPATIBILITY.md); architecture in [11-mobile-architecture.md](../../docs/roadmap/11-mobile-architecture.md).
+Shared iPhone/iPad and Android phone/tablet client (task T30A, consumed by T30/T31). Native screens, not a web view. The FastAPI service owns authorization, consent, jobs, the ledger and reports; this app never measures handwriting, ranks facts, mints credit or authorizes access. Free inference is zero runtime AI. Pinned versions and native build evidence are in [COMPATIBILITY.md](COMPATIBILITY.md); architecture in [11-mobile-architecture.md](../../docs/roadmap/11-mobile-architecture.md). Native presentation follows the accepted Dossier system and the [v3 implementation matrix](../../docs/design/NATIVE_IMPLEMENTATION_MATRIX_V3.md); v3 is a post-acceptance implementation sync, not a second product authority.
 
 ## Layout
 
@@ -41,6 +41,10 @@ pnpm --filter @princess/mobile test          # Node: session, workflow recovery,
 ```
 
 `tools/run_mobile_journey.sh` drives the app's real composition in Node with Node stand-ins only for device I/O. It is development-API evidence (session, notice, journaled upload with a lost response, process-death resume, Dossier, evidence, retained image, history, comparison, feedback, PDF export with `PRINCESS_E2E_EXPORTS=1`, guest transfer, deletion). It is not device, simulator UI, signed-build or store evidence.
+
+## Android handoff artifact
+
+The retained native workflow builds and hashes the development APK on PR candidates with the same CNG/native-module path used for compatibility qualification. After the design change is merged, the `main` push run additionally uploads a 14-day artifact named `inktrospect-android-development-<merge-sha>` containing `inktrospect-development-<short-sha>.apk` plus its `*.apk.sha256` digest file. Use the merged-main artifact for handoff: pull-request `GITHUB_SHA` values are synthetic merge candidates, not durable release identities. This is still an engineering/debug handoff binary, not Play Store signing or production-backend evidence.
 
 ## Known limits
 

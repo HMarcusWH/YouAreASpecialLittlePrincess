@@ -14,6 +14,8 @@ export interface Theme {
   readonly mono: string;
   readonly sans: string;
   readonly chart: readonly string[];
+  /** Evidence/specimen light-table colours stay fixed across light/night report themes. */
+  readonly plate: { readonly surface: string; readonly border: string; readonly ink: string };
 }
 
 const SERIF = Platform.select({ ios: "Georgia", android: "serif", default: "serif" });
@@ -21,7 +23,20 @@ const MONO = Platform.select({ ios: "Menlo", android: "monospace", default: "mon
 const SANS = Platform.select({ ios: "System", android: "sans-serif", default: "System" });
 
 export function themeFor(scheme: Scheme): Theme {
-  return { scheme, color: tokens.color[scheme], serif: SERIF, mono: MONO, sans: SANS, chart: tokens.chart.series };
+  return {
+    scheme,
+    color: tokens.color[scheme],
+    serif: SERIF,
+    mono: MONO,
+    sans: SANS,
+    chart: tokens.chart.series,
+    // v3 keeps handwriting/evidence plates on the light-table palette even in night mode.
+    plate: {
+      surface: tokens.color.light["surface-raised"],
+      border: tokens.color.light.border,
+      ink: tokens.color.light.text,
+    },
+  };
 }
 
 function px(value: string): number {

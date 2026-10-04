@@ -32,7 +32,7 @@ Required design canvases:
 - A4 and Letter print/export;
 - square and story share cards.
 
-Native canvases are **design simulations** for T29–T31. They must feel native and use native navigation/accessibility conventions, but they must not imply that React Native components or store integrations already exist.
+Native canvases remain **design simulations for fidelity review**, but the shared Expo/React Native client now exists through T30A. They must use native navigation/accessibility conventions without implying signed physical-device qualification, live identity/push providers, StoreKit/Play sandbox evidence or store approval that the repository has not earned. See [the v3 implementation sync](IMPLEMENTATION_SYNC_V3.md) and [native implementation matrix](NATIVE_IMPLEMENTATION_MATRIX_V3.md).
 
 ## Sources of truth
 

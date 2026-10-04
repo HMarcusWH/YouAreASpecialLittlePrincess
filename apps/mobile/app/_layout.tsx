@@ -34,9 +34,10 @@ function Shell() {
     <>
       <StatusBar style={theme.scheme === "dark" ? "light" : "dark"} />
       <Stack screenOptions={{
-        headerStyle: { backgroundColor: theme.color["surface-raised"] },
+        headerStyle: { backgroundColor: theme.color.surface },
+        headerShadowVisible: false,
         headerTintColor: theme.color.text,
-        headerTitleStyle: { fontFamily: theme.serif },
+        headerTitleStyle: { fontFamily: theme.serif, fontWeight: "300" },
         contentStyle: { backgroundColor: theme.color.surface },
       }}>
         <Stack.Screen name="index" options={{ title: t("app.name") }} />

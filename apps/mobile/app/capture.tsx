@@ -4,7 +4,7 @@ import { Linking } from "react-native";
 
 import { useApp } from "../src/bootstrap/AppProvider.tsx";
 import type { CaptureOutcome } from "../src/platform/contracts.ts";
-import { Banner, Body, Busy, Button, Screen } from "../src/ui/components.tsx";
+import { Banner, Body, Busy, Button, Paper, Screen } from "../src/ui/components.tsx";
 
 type Message = { tone: "info" | "attention" | "danger"; text: string; settings?: boolean };
 
@@ -41,16 +41,18 @@ export default function Capture() {
 
   return (
     <Screen title={t("capture.title")}>
-      <Body muted>{t("capture.intro")}</Body>
-      <Body muted>{t("capture.local_only")}</Body>
       {message ? (
         <Banner tone={message.tone} action={message.settings ? (
           <Button tone="secondary" label={t("capture.open_settings")} onPress={() => void Linking.openSettings()} />
         ) : undefined}>{message.text}</Banner>
       ) : null}
-      {busy ? <Busy label={t("capture.preparing")} /> : null}
-      <Button label={t("capture.take")} disabled={busy} onPress={() => void run("camera")} />
-      <Button tone="secondary" label={t("capture.choose")} disabled={busy} onPress={() => void run("library")} />
+      <Paper>
+        <Body muted>{t("capture.intro")}</Body>
+        <Body muted>{t("capture.local_only")}</Body>
+        {busy ? <Busy label={t("capture.preparing")} /> : null}
+        <Button label={t("capture.take")} disabled={busy} onPress={() => void run("camera")} />
+        <Button tone="secondary" label={t("capture.choose")} disabled={busy} onPress={() => void run("library")} />
+      </Paper>
     </Screen>
   );
 }
