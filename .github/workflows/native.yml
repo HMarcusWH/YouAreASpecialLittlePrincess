@@ -246,19 +246,29 @@ jobs:
           revision="$(sed -n 's/^Pkg.Revision=//p' "$image_dir/source.properties" | tr -d '[:space:]')"
           test -n "$revision"
           echo "$ANDROID_HOME/platform-tools" >> "$GITHUB_PATH"
-          emulator_version="$("$ANDROID_HOME/emulator/emulator" -version 2>&1 | grep -o -m1 'Android emulator version [0-9][0-9.]*' || true)"
+          # Resolved revisions come from each installed package's source.properties, not from banner text.
+          emulator_revision="$(sed -n 's/^Pkg.Revision=//p' "$ANDROID_HOME/emulator/source.properties" | tr -d '[:space:]')"
+          test -n "$emulator_revision"
+          timeout 60 "$ANDROID_HOME/emulator/emulator" -version 2>&1 | head -n 3 || true
           adb_version="$("$ANDROID_HOME/platform-tools/adb" version | grep -E '^(Android Debug Bridge version|Version) ' | paste -sd ';' -)"
-          test -n "$emulator_version" && test -n "$adb_version"
+          test -n "$adb_version"
           {
             echo "ANDROID_SYSTEM_IMAGE_REVISION=$revision"
-            echo "EMULATOR_VERSION=$emulator_version"
+            echo "EMULATOR_VERSION=emulator $emulator_revision"
             echo "ADB_VERSION=$adb_version"
           } | tee -a "$GITHUB_ENV"
           echo "requested=$ANDROID_SYSTEM_IMAGE installed revision=$revision"
+          # A fixed AVD home: avdmanager and the emulator both honour it, whatever this runner's defaults are.
+          avd_home="$RUNNER_TEMP/avd"
+          mkdir -p "$avd_home"
+          echo "ANDROID_AVD_HOME=$avd_home" >> "$GITHUB_ENV"
+          export ANDROID_AVD_HOME="$avd_home"
           echo no | "$ANDROID_HOME/cmdline-tools/latest/bin/avdmanager" create avd --force \
             --name "$ANDROID_AVD" --package "$ANDROID_SYSTEM_IMAGE" --device pixel_6
+          test -f "$avd_home/$ANDROID_AVD.avd/config.ini"
           printf 'hw.ramSize=4096\ndisk.dataPartition.size=6G\nhw.keyboard=yes\n' \
-            >> "${ANDROID_AVD_HOME:-$HOME/.android/avd}/$ANDROID_AVD.avd/config.ini"
+            >> "$avd_home/$ANDROID_AVD.avd/config.ini"
+          "$ANDROID_HOME/cmdline-tools/latest/bin/avdmanager" list avd
       - name: Boot the headless emulator
         timeout-minutes: 15
         shell: bash
