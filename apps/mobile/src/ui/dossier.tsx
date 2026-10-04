@@ -134,8 +134,8 @@ function BaselineFigure({ trace, index, bundle, locale }: { trace: BaselineTrace
   return (
     <View accessible accessibilityRole="image" accessibilityLabel={caption} style={local.figure}>
       <View onLayout={(e: LayoutChangeEvent) => setAvailable(e.nativeEvent.layout.width)}
-            style={[local.canvas, { height: Math.max(48, frame.height * scale), borderColor: theme.color.border,
-                                    backgroundColor: theme.color["surface-sunken"] }]}>
+            style={[local.canvas, { height: Math.max(48, frame.height * scale), borderColor: theme.plate.border,
+                                    backgroundColor: theme.plate.surface }]}>
         {scale > 0 ? <TraceDrawing points={trace.points.map(([x, y]) => [x * scale, y * scale] as const)}
                                    width={available} height={frame.height * scale}
                                    color={theme.color["evidence-measured"]} /> : null}
@@ -163,8 +163,8 @@ function PageMap({ bundle, locale }: { bundle: EvidenceBundle; locale: Locale })
     <View accessible accessibilityRole="image" accessibilityLabel={label} style={local.figure}>
       <SectionLabel>{reportText(locale, "evidence.regions")}</SectionLabel>
       <View onLayout={(event: LayoutChangeEvent) => setAvailable(event.nativeEvent.layout.width)}
-            style={[local.pageMap, { width: "100%", height, borderColor: theme.color.border,
-                                    backgroundColor: theme.color["surface-sunken"] }]}>
+            style={[local.pageMap, { width: "100%", height, borderColor: theme.plate.border,
+                                    backgroundColor: theme.plate.surface }]}>
         {sx > 0 ? lines.map((line) => (
           <View key={line.region_id} aria-hidden style={{
             position: "absolute", left: line.x * sx, top: line.y * sy,
@@ -328,7 +328,7 @@ export function SourceImage({ reportId, bundle, locale }: { reportId: string; bu
                   accessibilityLabel={reportText(locale, "image.title")}>
         <View onLayout={(e: LayoutChangeEvent) => setAvailable(e.nativeEvent.layout.width)}
               style={[local.sourcePlate, { width: "100%", height: scale > 0 ? state.height * scale : 200,
-                                          backgroundColor: theme.color["surface-sunken"] }]}>
+                                          backgroundColor: theme.plate.surface }]}>
           {scale > 0 ? <Image source={{ uri: state.uri }} accessibilityIgnoresInvertColors
                               style={{ width: state.width * scale, height: state.height * scale }} /> : null}
           {scale > 0 && overlay ? traces.map((entry, index) => (
