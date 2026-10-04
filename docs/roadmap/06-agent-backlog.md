@@ -4,7 +4,7 @@
 
 [Documentation index](00-index.md) · [Machine authority](tasks.json) · [Build sequence](20-end-to-end-build-sequence.md) · [Release gates](21-release-readiness-checklists.md)
 
-Plan 2.3; code baseline `766125e25ccb0c9a4ada4466da5f36e708024e51`. Statuses are implementation/history records, not production approvals. READY is computed from completed hard predecessors.
+Plan 2.3; code baseline `13ca478eca256c04ec2b22ee2ac91841dc8d0109`. Statuses are implementation/history records, not production approvals. READY is computed from completed hard predecessors.
 
 Use `python docs/roadmap/plan_tools.py --ready`, `--active` or `--task ID`. Edit tasks.json and run `--write` then `--check` when maintaining the plan.
 
@@ -196,11 +196,22 @@ python -m pytest -q tests/test_release_compatibility.py
 <a id="validation-native-journey"></a>
 ### native-journey
 
-State: `EXISTS_IN_THIS_PR`. T30A shared native client profile: controller/workflow/session tests plus the native app's real composition driven in Node against a disposable local API, analysis worker and (with PRINCESS_E2E_EXPORTS=1) export worker. Development-API evidence only: not device, simulator UI, signed-build or store evidence.
+State: `EXISTS`. T30A shared native client profile: controller/workflow/session tests plus the native app's real composition driven in Node against a disposable local API, analysis worker and (with PRINCESS_E2E_EXPORTS=1) export worker. Development-API evidence only: not device, simulator UI, signed-build or store evidence.
 
 ```bash
 pnpm --filter @princess/mobile test
 PYTHON=python PRINCESS_E2E_ADMIN_URL=postgresql://<disposable-admin>@127.0.0.1:5432/postgres PRINCESS_E2E_ALLOW_RESET=1 tools/run_mobile_journey.sh
+```
+
+<a id="validation-native-android-handoff"></a>
+### native-android-handoff
+
+State: `EXISTS`. Standalone Android developer-handoff profile (Native foundation android-handoff job): the development variant built with :app:assembleRelease into a non-debuggable, debug-key-signed APK with an embedded Hermes bundle and the local API at device loopback; tools/verify_android_handoff.py plus apkanalyzer/apksigner checks; then the exact APK on one API-36 x86_64 Google APIs emulator, driven by pinned Maestro 2.11.0 through the system Photo Picker, consent, force-stop/relaunch and same-run recovery to the saved Dossier against a disposable API and gated analysis worker, with exact capture/run/report counts and no Metro. One emulator: not physical-device, signing, store, push or T31 evidence.
+
+```bash
+python -m pytest -q tests/test_verify_android_handoff.py
+INKTROSPECT_APP_VARIANT=development INKTROSPECT_BACKEND_ENV=local INKTROSPECT_API_BASE=http://127.0.0.1:8000 tools/build_android_handoff.sh
+PYTHON=python PRINCESS_E2E_ADMIN_URL=postgresql://<disposable-admin>@127.0.0.1:5432/postgres PRINCESS_E2E_ALLOW_RESET=1 tools/run_android_handoff_journey.sh apps/mobile/android/app/build/outputs/apk/release/app-release.apk
 ```
 
 <a id="t00"></a>
@@ -2547,6 +2558,9 @@ packages/api-client/
 packages/report-core/
 apps/api/princess_api/app.py
 tools/run_mobile_journey.sh
+tools/build_android_handoff.sh
+tools/run_android_handoff_journey.sh
+tools/verify_android_handoff.py
 ```
 
 ### Coding sequence
@@ -2562,12 +2576,11 @@ Shared native client capabilities proven against fakes and the development API, 
 
 ### Implementation evidence
 
-Implemented on branch claude/determined-volta-42hu9a from main d6b37beb5fbb4365b48ac6d1fa50e7051191f350 (mobile completion plan N01-N06, N08, N11, N12, N15, N16 client work and S01 contracts). Local executed evidence on that branch: tests_app (including new tests_app/test_native_api.py) 478 passed and tests 1169 passed on PostgreSQL 16; pnpm typecheck clean; api-client 17, report-core 11, mobile 67, web 23 and render 9 tests passed (render with the preinstalled Chromium); Android CNG prebuild and Metro exports compiled the whole app to Hermes bytecode for Android and iOS with no fake in the bundle; tools/run_mobile_journey.sh passed against the local API, analysis worker and export worker (guest session, server notice, lost completion response, process-death resume of the same run, Dossier model, evidence lineage, byte-identical retained source image, history, same-owner comparison, feedback, bearer PDF export, guest-to-account transfer, report and account deletion). Exact-head CI evidence is not recorded here until a pull request runs the workflows. Post-merge documentation reconciliation: PR #72 final head 2a119ba55a185f4ba66f0a7df0e3e30de085ec48 passed Roadmap 37155767212, CI 37155767215, Release compatibility 37155767231, Application environments 37155767234, Runtime topology 37155767236 and Native foundation 37155767217. These are retained PR-triggered results, not new executions on the merge SHA. Codex code/security review was quota-blocked, not approved. No native UI, physical-device, signed-build or store evidence is inferred. See docs/handover/current-state.md.
+Implemented on branch claude/determined-volta-42hu9a from main d6b37beb5fbb4365b48ac6d1fa50e7051191f350 (mobile completion plan N01-N06, N08, N11, N12, N15, N16 client work and S01 contracts). Local executed evidence on that branch: tests_app (including new tests_app/test_native_api.py) 478 passed and tests 1169 passed on PostgreSQL 16; pnpm typecheck clean; api-client 17, report-core 11, mobile 67, web 23 and render 9 tests passed (render with the preinstalled Chromium); Android CNG prebuild and Metro exports compiled the whole app to Hermes bytecode for Android and iOS with no fake in the bundle; tools/run_mobile_journey.sh passed against the local API, analysis worker and export worker (guest session, server notice, lost completion response, process-death resume of the same run, Dossier model, evidence lineage, byte-identical retained source image, history, same-owner comparison, feedback, bearer PDF export, guest-to-account transfer, report and account deletion). Exact-head CI evidence is not recorded here until a pull request runs the workflows. Post-merge documentation reconciliation: PR #72 final head 2a119ba55a185f4ba66f0a7df0e3e30de085ec48 passed Roadmap 37155767212, CI 37155767215, Release compatibility 37155767231, Application environments 37155767234, Runtime topology 37155767236 and Native foundation 37155767217. These are retained PR-triggered results, not new executions on the merge SHA. Codex code/security review was quota-blocked, not approved. No native UI, physical-device, signed-build or store evidence is inferred. See docs/handover/current-state.md. Standalone Android developer handoff (reconciled from main 13ca478eca256c04ec2b22ee2ac91841dc8d0109 after PR #75 Dossier v3 and PR #76 retained v3 UX artifact): the existing development variant is built with :app:assembleRelease into a non-debuggable APK signed by the generated CNG debug key, embedding the Hermes application bundle and the development/local runtime configuration (http://127.0.0.1:8000 through adb reverse; Android cleartext only for the development variant via expo-build-properties); tools/verify_android_handoff.py fails closed without an embedded bundle or with staging/store/production identity, and apkanalyzer/apksigner check debuggable=false, SDK levels, launcher, forbidden permissions and debug signing. Maestro CLI 2.11.0 (checksum-pinned, no cloud) is the selected app-driving runner: the exact APK is installed on an explicitly provisioned API-36 x86_64 Google APIs emulator and drives the real Free journey through the Android system Photo Picker, the server notice's service-processing switch, a server-backed queued run with the analysis worker gated, force-stop and relaunch with app data kept, recovery of the same journaled operation, and completion into the saved Dossier/evidence screen; exact database counts prove one capture, one run, one report and one revision bound to the same run. The qualifying evidence is the exact-head Native foundation android-handoff job of the introducing pull request and, after merge, the main-push run whose BUILDINFO.json names its own source commit; no run ID is recorded here. One emulator is not physical-device, signing, store or T31 evidence.
 
 ### Remaining work
 
 - Qualify the client on physical iPhone/iPad and Android phone/tablet development builds after native_signing_accounts: camera/HEIC/EXIF, crop, process death, secure-store reinstall, large text, VoiceOver/TalkBack, tablet layouts and link cold/warm start (T30/T31).
-- Select and pin a real app-driving test runner for simulator/emulator journeys; current automated evidence is Node controller tests plus the development-API journey.
 - Native provider sign-in/refresh/recovery (N07) waits for the T17 selected-account Auth settings and retry-policy closeout; only development identity and guest transfer exist.
 - Qualify StoreKit and Play purchase proofs, pending/Ask to Buy and finish/consume recovery in real sandboxes after price_account_terms_before_charges (T19/T30/T31); the expo-iap adapter is unexercised.
 - Persist comparisons and add invitations, partner grants and pair Premium (N13/N14) only after T22 authorization contracts; current comparisons are same-owner and unsaved.
@@ -2592,7 +2605,7 @@ Implemented on branch claude/determined-volta-42hu9a from main d6b37beb5fbb4365b
 
 ### Validation and human gates
 
-Validation profiles: [docs](#validation-docs), [contracts](#validation-contracts), [native](#validation-native), [native-journey](#validation-native-journey), [connectors](#validation-connectors). Planned suites must be implemented and their actual command documented by the owning task; they are not passing tests today.
+Validation profiles: [docs](#validation-docs), [contracts](#validation-contracts), [native](#validation-native), [native-journey](#validation-native-journey), [native-android-handoff](#validation-native-android-handoff), [connectors](#validation-connectors). Planned suites must be implemented and their actual command documented by the owning task; they are not passing tests today.
 
 - `native_signing_accounts`: Owner-authorized developer accounts, identifiers, signing custody and protected release credentials.
 - `price_account_terms_before_charges`: Approved products/prices/accounts/tax/refund/storefront and portability policy before real charges.

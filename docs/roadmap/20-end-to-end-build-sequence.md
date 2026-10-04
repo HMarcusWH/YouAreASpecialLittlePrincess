@@ -12,7 +12,7 @@ python docs/roadmap/plan_tools.py --active
 python docs/roadmap/plan_tools.py --task T11
 ```
 
-Use the current `--ready` and `--active` outputs; do not treat a copied list in prose as a second status authority. T30A carries the merged native client; retained #72 checks are recorded in the handover snapshot.
+Use the current `--ready` and `--active` outputs; do not treat a copied list in prose as a second status authority. T30A carries the merged native client; retained #72, #75 and #76 checks and the standalone Android handoff are recorded in the handover snapshot.
 
 ## Current handoff
 

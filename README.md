@@ -2,7 +2,7 @@
 
 A mobile-first, privacy-conscious handwriting-analysis product built around deterministic measurements, structured evidence and separately labelled interpretive layers. Public brand: **Inktrospect**. `YouAreASpecialLittlePrincess`, `Princess` and `princess_*` are internal repository/package names, not instructions to rename existing contracts.
 
-**Status: active development, not publicly released.** The shared native client is implemented through T30A; real identity, purchases, push, device and store qualification remain unfinished. [Current handover snapshot](docs/handover/current-state.md) records the post-#72 evidence and limitations. [tasks.json](docs/roadmap/tasks.json) remains the task/dependency authority.
+**Status: active development, not publicly released.** The shared native client is implemented through T30A; real identity, purchases, push, device and store qualification remain unfinished. [Current handover snapshot](docs/handover/current-state.md) records the post-#76 baseline, the standalone Android developer handoff and the remaining limitations. [tasks.json](docs/roadmap/tasks.json) remains the task/dependency authority.
 
 ## Start here
 

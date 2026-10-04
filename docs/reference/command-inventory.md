@@ -78,10 +78,13 @@ Inventory only: consult [command safety](commands.md) and [testing](../developme
 | [tools/validate_graphology_selector_foundation.py](../../tools/validate_graphology_selector_foundation.py) | Validate selectors, observations, feature roles and candidate contracts against frozen research. |
 | [tools/validate_graphology_traditional_rules.py](../../tools/validate_graphology_traditional_rules.py) | Validate that traditional graphology structures remain sourced, constrained and non-executable. |
 | [tools/validate_product_contracts.py](../../tools/validate_product_contracts.py) | Validate T01 schemas, generated artifacts, semantic fixtures and Free isolation. |
+| [tools/verify_android_handoff.py](../../tools/verify_android_handoff.py) | Verify a standalone Android developer-handoff APK and record its qualified build evidence. |
 | [tools/verify_ci_lock.py](../../tools/verify_ci_lock.py) | Verify that CI lock metadata and the installed environment match exactly. |
 | [tools/verify_project_dependency_policy.py](../../tools/verify_project_dependency_policy.py) | Verify that selected project, build and locked dependencies form a closed reviewed graph. |
 | [tools/verify_runtime_lock.py](../../tools/verify_runtime_lock.py) | Verify the T24 source-tree runtime lock is a reviewed subset of the app lock. |
 | [tools/verify_supabase_staging_runtime.py](../../tools/verify_supabase_staging_runtime.py) | Run one privacy-safe real conformance check against the qualified Supabase staging verifier. |
+| [tools/build_android_handoff.sh](../../tools/build_android_handoff.sh) | Build and statically qualify the standalone Android developer-handoff APK (Gradle release variant, embedded bundle). |
+| [tools/run_android_handoff_journey.sh](../../tools/run_android_handoff_journey.sh) | Packaged Android journey: the exact standalone handoff APK on a booted emulator/device, driven by Maestro 2.11.0. |
 | [tools/run_mobile_journey.sh](../../tools/run_mobile_journey.sh) | Live native-client journey against a disposable local/test API and workers. |
 | [tools/run_web_e2e.sh](../../tools/run_web_e2e.sh) | Destructive live Free web qualification against an explicitly disposable local/test PostgreSQL instance. |
 | [apps/workers/analysis/run_worker.py](../../apps/workers/analysis/run_worker.py) | Analysis worker entry point (T04). |

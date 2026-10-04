@@ -179,7 +179,33 @@ PYTHON=.venv/bin/python \
   tools/run_mobile_journey.sh
 ```
 
-Do not run this concurrently with the web journey or backend tests using `princess_test`. The real app-driving/device exercise remains separate acceptance work.
+Do not run this concurrently with the web journey or backend tests using `princess_test`. The packaged Android UI journey is in section 8 and [testing](testing.md#standalone-android-packaged-ui); physical-device acceptance remains separate work.
+
+## 8. Standalone Android handoff APK
+
+The standalone handoff APK is a non-debuggable release build of the `development` variant. It embeds its JavaScript bundle, so it needs no Metro, `expo start` or development launcher. Its configuration is fixed at build time: `local` backend at `http://127.0.0.1:8000` with development identity. It is signed with the generated debug key and is not a Play or production binary. Section 6's `expo run:android` dev-client workflow stays the way to iterate on JavaScript with Metro; use the handoff APK to run the app as installed.
+
+Run the backend from the APK's `source_commit` (see `BUILDINFO.json`) with steps 1–4 unchanged. The API must listen on host `127.0.0.1:8000` with `PRINCESS_PUBLIC_API_BASE='http://127.0.0.1:8000'`, the default in step 3. The APK reaches it through ADB port reversal: the device's own `127.0.0.1:8000` is forwarded to the development machine's loopback port 8000. This works for an emulator and a USB-debuggable phone alike, and the fake-provider API never has to listen on the LAN.
+
+From the extracted merged-`main` artifact directory, with exactly one device attached:
+
+```bash
+sha256sum -c inktrospect-handoff-*.apk.sha256
+adb reverse tcp:8000 tcp:8000
+adb reverse --list
+adb install -r inktrospect-handoff-*.apk
+```
+
+Then launch Inktrospect on the device and use synthetic or explicitly authorized test data only. Repeat `adb reverse` after the device restarts or reconnects. Without it the app cannot reach the API, so analysis stays waiting for the network. A different API origin needs a new build, not a setting.
+
+To build the same APK locally on a host with a JDK, an Android SDK (`ANDROID_HOME` with build-tools and cmdline-tools) and the frozen JavaScript workspace:
+
+```bash
+INKTROSPECT_APP_VARIANT=development INKTROSPECT_BACKEND_ENV=local INKTROSPECT_API_BASE=http://127.0.0.1:8000 \
+  PYTHON=.venv/bin/python tools/build_android_handoff.sh
+```
+
+The script replaces only the generated `apps/mobile/android/` project and refuses staging/store variants, other backends, and other API origins unless `ANDROID_HANDOFF_ALLOW_CUSTOM_API=1` names a loopback/private one. It verifies the result and prints the qualified `app-release.apk` path. The automated emulator journey for that APK is documented in [testing](testing.md#standalone-android-packaged-ui).
 
 ## Shutdown and deletion
 

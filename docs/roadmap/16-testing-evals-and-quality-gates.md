@@ -6,7 +6,7 @@
 
 Every result identifies commit, environment, resolved dependencies, fixture/corpus release, command, exit code and artifact. A proposed command is not a test result. Synthetic geometry proves a numerical/interface property, not population validity. A sandbox purchase proves integration behavior, not real commercial approval. A signed app binary is not store approval.
 
-Use the current [test command/evidence matrix](../development/testing.md) and source workflows. Retained post-#72 results are in the [handover snapshot](../handover/current-state.md); execute and record the actual new head rather than copying old test counts. Documentation inventory and native controller tests are distinct from device/provider evidence.
+Use the current [test command/evidence matrix](../development/testing.md) and source workflows. Retained post-#76 results (and the earlier #72 record) are in the [handover snapshot](../handover/current-state.md); execute and record the actual new head rather than copying old test counts. Documentation inventory and native controller tests are distinct from device/provider evidence.
 
 ## Existing checks
 

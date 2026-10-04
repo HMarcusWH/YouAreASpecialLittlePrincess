@@ -1,7 +1,7 @@
 {
   "plan_version": "2.3",
   "research_date": "2026-09-26",
-  "baseline_commit": "766125e25ccb0c9a4ada4466da5f36e708024e51",
+  "baseline_commit": "13ca478eca256c04ec2b22ee2ac91841dc8d0109",
   "historical_baseline_commit": "8f2ec7b07f23f7b3613ccc71576714f3c245e7a0",
   "status": "IMPLEMENTATION_PLAN_NOT_RELEASE_APPROVAL",
   "task_spec": "06-agent-backlog.md",
@@ -153,12 +153,21 @@
       "description": "Merged provider-neutral runtime-release/rollback contract tests; .github/workflows/release-compat.yml supplies the Docker/PostgreSQL cross-version qualification. This is not production rollout approval."
     },
     "native-journey": {
-      "state": "EXISTS_IN_THIS_PR",
+      "state": "EXISTS",
       "commands": [
         "pnpm --filter @princess/mobile test",
         "PYTHON=python PRINCESS_E2E_ADMIN_URL=postgresql://<disposable-admin>@127.0.0.1:5432/postgres PRINCESS_E2E_ALLOW_RESET=1 tools/run_mobile_journey.sh"
       ],
       "description": "T30A shared native client profile: controller/workflow/session tests plus the native app's real composition driven in Node against a disposable local API, analysis worker and (with PRINCESS_E2E_EXPORTS=1) export worker. Development-API evidence only: not device, simulator UI, signed-build or store evidence."
+    },
+    "native-android-handoff": {
+      "state": "EXISTS",
+      "commands": [
+        "python -m pytest -q tests/test_verify_android_handoff.py",
+        "INKTROSPECT_APP_VARIANT=development INKTROSPECT_BACKEND_ENV=local INKTROSPECT_API_BASE=http://127.0.0.1:8000 tools/build_android_handoff.sh",
+        "PYTHON=python PRINCESS_E2E_ADMIN_URL=postgresql://<disposable-admin>@127.0.0.1:5432/postgres PRINCESS_E2E_ALLOW_RESET=1 tools/run_android_handoff_journey.sh apps/mobile/android/app/build/outputs/apk/release/app-release.apk"
+      ],
+      "description": "Standalone Android developer-handoff profile (Native foundation android-handoff job): the development variant built with :app:assembleRelease into a non-debuggable, debug-key-signed APK with an embedded Hermes bundle and the local API at device loopback; tools/verify_android_handoff.py plus apkanalyzer/apksigner checks; then the exact APK on one API-36 x86_64 Google APIs emulator, driven by pinned Maestro 2.11.0 through the system Photo Picker, consent, force-stop/relaunch and same-run recovery to the saved Dossier against a disposable API and gated analysis worker, with exact capture/run/report counts and no Metro. One emulator: not physical-device, signing, store, push or T31 evidence."
     }
   },
   "tasks": [
@@ -2286,7 +2295,10 @@
         "packages/api-client/",
         "packages/report-core/",
         "apps/api/princess_api/app.py",
-        "tools/run_mobile_journey.sh"
+        "tools/run_mobile_journey.sh",
+        "tools/build_android_handoff.sh",
+        "tools/run_android_handoff_journey.sh",
+        "tools/verify_android_handoff.py"
       ],
       "coding_steps": [
         "Compose the native app from validated build-variant config: secure session manager, guarded API client with per-request credentials, journal, resumable capture workflow and foreground runner; keep fixture identity out of release builds.",
@@ -2316,15 +2328,15 @@
         "contracts",
         "native",
         "native-journey",
+        "native-android-handoff",
         "connectors"
       ],
       "rollback": [
         "Revert the client slice or disable affected capabilities by configuration; the added API routes are additive and owner-scoped, and the backend stays compatible with earlier clients."
       ],
-      "implementation_evidence": "Implemented on branch claude/determined-volta-42hu9a from main d6b37beb5fbb4365b48ac6d1fa50e7051191f350 (mobile completion plan N01-N06, N08, N11, N12, N15, N16 client work and S01 contracts). Local executed evidence on that branch: tests_app (including new tests_app/test_native_api.py) 478 passed and tests 1169 passed on PostgreSQL 16; pnpm typecheck clean; api-client 17, report-core 11, mobile 67, web 23 and render 9 tests passed (render with the preinstalled Chromium); Android CNG prebuild and Metro exports compiled the whole app to Hermes bytecode for Android and iOS with no fake in the bundle; tools/run_mobile_journey.sh passed against the local API, analysis worker and export worker (guest session, server notice, lost completion response, process-death resume of the same run, Dossier model, evidence lineage, byte-identical retained source image, history, same-owner comparison, feedback, bearer PDF export, guest-to-account transfer, report and account deletion). Exact-head CI evidence is not recorded here until a pull request runs the workflows. Post-merge documentation reconciliation: PR #72 final head 2a119ba55a185f4ba66f0a7df0e3e30de085ec48 passed Roadmap 37155767212, CI 37155767215, Release compatibility 37155767231, Application environments 37155767234, Runtime topology 37155767236 and Native foundation 37155767217. These are retained PR-triggered results, not new executions on the merge SHA. Codex code/security review was quota-blocked, not approved. No native UI, physical-device, signed-build or store evidence is inferred. See docs/handover/current-state.md.",
+      "implementation_evidence": "Implemented on branch claude/determined-volta-42hu9a from main d6b37beb5fbb4365b48ac6d1fa50e7051191f350 (mobile completion plan N01-N06, N08, N11, N12, N15, N16 client work and S01 contracts). Local executed evidence on that branch: tests_app (including new tests_app/test_native_api.py) 478 passed and tests 1169 passed on PostgreSQL 16; pnpm typecheck clean; api-client 17, report-core 11, mobile 67, web 23 and render 9 tests passed (render with the preinstalled Chromium); Android CNG prebuild and Metro exports compiled the whole app to Hermes bytecode for Android and iOS with no fake in the bundle; tools/run_mobile_journey.sh passed against the local API, analysis worker and export worker (guest session, server notice, lost completion response, process-death resume of the same run, Dossier model, evidence lineage, byte-identical retained source image, history, same-owner comparison, feedback, bearer PDF export, guest-to-account transfer, report and account deletion). Exact-head CI evidence is not recorded here until a pull request runs the workflows. Post-merge documentation reconciliation: PR #72 final head 2a119ba55a185f4ba66f0a7df0e3e30de085ec48 passed Roadmap 37155767212, CI 37155767215, Release compatibility 37155767231, Application environments 37155767234, Runtime topology 37155767236 and Native foundation 37155767217. These are retained PR-triggered results, not new executions on the merge SHA. Codex code/security review was quota-blocked, not approved. No native UI, physical-device, signed-build or store evidence is inferred. See docs/handover/current-state.md. Standalone Android developer handoff (reconciled from main 13ca478eca256c04ec2b22ee2ac91841dc8d0109 after PR #75 Dossier v3 and PR #76 retained v3 UX artifact): the existing development variant is built with :app:assembleRelease into a non-debuggable APK signed by the generated CNG debug key, embedding the Hermes application bundle and the development/local runtime configuration (http://127.0.0.1:8000 through adb reverse; Android cleartext only for the development variant via expo-build-properties); tools/verify_android_handoff.py fails closed without an embedded bundle or with staging/store/production identity, and apkanalyzer/apksigner check debuggable=false, SDK levels, launcher, forbidden permissions and debug signing. Maestro CLI 2.11.0 (checksum-pinned, no cloud) is the selected app-driving runner: the exact APK is installed on an explicitly provisioned API-36 x86_64 Google APIs emulator and drives the real Free journey through the Android system Photo Picker, the server notice's service-processing switch, a server-backed queued run with the analysis worker gated, force-stop and relaunch with app data kept, recovery of the same journaled operation, and completion into the saved Dossier/evidence screen; exact database counts prove one capture, one run, one report and one revision bound to the same run. The qualifying evidence is the exact-head Native foundation android-handoff job of the introducing pull request and, after merge, the main-push run whose BUILDINFO.json names its own source commit; no run ID is recorded here. One emulator is not physical-device, signing, store or T31 evidence.",
       "remaining_work": [
         "Qualify the client on physical iPhone/iPad and Android phone/tablet development builds after native_signing_accounts: camera/HEIC/EXIF, crop, process death, secure-store reinstall, large text, VoiceOver/TalkBack, tablet layouts and link cold/warm start (T30/T31).",
-        "Select and pin a real app-driving test runner for simulator/emulator journeys; current automated evidence is Node controller tests plus the development-API journey.",
         "Native provider sign-in/refresh/recovery (N07) waits for the T17 selected-account Auth settings and retry-policy closeout; only development identity and guest transfer exist.",
         "Qualify StoreKit and Play purchase proofs, pending/Ask to Buy and finish/consume recovery in real sandboxes after price_account_terms_before_charges (T19/T30/T31); the expo-iap adapter is unexercised.",
         "Persist comparisons and add invitations, partner grants and pair Premium (N13/N14) only after T22 authorization contracts; current comparisons are same-owner and unsaved.",
@@ -2599,6 +2611,6 @@
     }
   ],
   "reconciled_date": "2026-10-04",
-  "reconciled_from_pr": 72,
-  "reconciled_head": "2a119ba55a185f4ba66f0a7df0e3e30de085ec48"
+  "reconciled_from_pr": 76,
+  "reconciled_head": "26d09564e42d61577f04e1ef03973cbee22f9a06"
 }
