@@ -3,8 +3,8 @@ from __future__ import annotations
 
 import hashlib
 import json
-from pathlib import Path
 import zipfile
+from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 DESIGN = ROOT / "docs" / "design"
@@ -35,7 +35,8 @@ def test_v3_implementation_reference_is_retained_byte_exact_and_inspectable():
             "README.md",
             "ios-frame.jsx",
             "android-frame.jsx",
-            "_ds/inktrospect-design-system-60df8537-0b1f-478f-ab79-43e44e9176c6/_ds_manifest.json",
+            "_ds/inktrospect-design-system-60df8537-0b1f-478f-ab79-43e44e9176c6/"
+            "_ds_manifest.json",
         } <= set(names)
         for name in names:
             path = Path(name)
