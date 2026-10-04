@@ -65,14 +65,42 @@ adb_() { timeout "${ADB_TIMEOUT:-60}" "$ADB" "$@"; }
 cleanup() {
   status=$?
   if [[ "$status" -ne 0 ]]; then
-    # Bounded synthetic-only diagnostics: on-screen hierarchy and crash buffer, no app logs or request URLs.
+    # Bounded synthetic-only diagnostics, also printed to the job log: on-screen texts, table counts, redacted
+    # request lines and app error lines. Credentials, upload signatures and bearer values are removed.
+    redact() { sed -E 's#(postgres(ql)?(\+psycopg)?://)[^@/ ]*@#\1***@#g; s#(sig|token|signature)=[^& "]*#\1=***#g;
+                       s#[Bb]earer [A-Za-z0-9._~+/=-]+#Bearer ***#g; /[Aa]uthorization/d'; }
+    echo "== Failure diagnostics (synthetic data only)"
     timeout 90 "$MAESTRO" ${ANDROID_SERIAL:+--device "$ANDROID_SERIAL"} hierarchy \
       > "$LOGS/hierarchy-on-failure.json" 2>/dev/null || true
-    adb_ logcat -d -b crash > "$LOGS/logcat-crash.txt" 2>/dev/null || true
+    "$PY" - "$LOGS/hierarchy-on-failure.json" <<'PY' || true
+import json, sys
+raw = open(sys.argv[1], encoding="utf-8", errors="replace").read()
+seen = []
+def walk(node):
+    attributes = node.get("attributes", {}) if isinstance(node, dict) else {}
+    for key in ("text", "accessibilityText", "resource-id"):
+        value = attributes.get(key)
+        if value and f"{key}={value}" not in seen:
+            seen.append(f"{key}={value}")
+    for child in (node.get("children") or []) if isinstance(node, dict) else []:
+        walk(child)
+try:
+    walk(json.loads(raw[raw.index("{"):]))
+    print("on-screen:", *seen[:100], sep="\n  ")
+except (ValueError, KeyError) as error:
+    print(f"hierarchy unavailable: {error}")
+PY
+    psql "$DB_ADMIN" -XAtq -F ' ' -c "SELECT 'upload', count(*) FROM app.upload UNION ALL SELECT 'capture', count(*)
+      FROM app.capture UNION ALL SELECT 'permission_event', count(*) FROM app.permission_event UNION ALL
+      SELECT 'analysis_run:' || status, count(*) FROM app.analysis_run GROUP BY status UNION ALL
+      SELECT 'report', count(*) FROM app.report" 2>&1 | tee "$LOGS/db-state-on-failure.txt" || true
+    adb_ logcat -d -b crash 2>/dev/null | redact > "$LOGS/logcat-crash.txt" || true
+    adb_ logcat -d -s ReactNativeJS:V 2>/dev/null | redact | tail -n 40 | tee "$LOGS/logcat-reactnativejs.txt" || true
     for name in api worker; do
       if [[ -f "$WORK/$name.log" ]]; then
-        sed -E 's#(postgres(ql)?(\+psycopg)?://)[^@/ ]*@#\1***@#g; /[Aa]uthorization|[Bb]earer/d' "$WORK/$name.log" \
-          | tail -n 200 > "$LOGS/$name-tail.log" || true
+        redact < "$WORK/$name.log" | tail -n 200 > "$LOGS/$name-tail.log" || true
+        echo "-- $name log tail"
+        tail -n 60 "$LOGS/$name-tail.log" || true
       fi
     done
   fi
@@ -141,7 +169,7 @@ PRINCESS_COMPONENT=api PRINCESS_DATABASE_URL="postgresql://princess_e2e_api:e2e-
   PRINCESS_SESSION_SECRET=local-session-secret-e2e PRINCESS_IDENTITY_AUDIENCE=princess-api \
   PRINCESS_STORAGE_SIGNING_KEY=local-storage-key-e2e PRINCESS_PUBLIC_API_BASE="$API" \
   "$PY" -m uvicorn --factory princess_api.compose:app_from_environment --host 127.0.0.1 --port 8000 \
-  --log-level warning > "$WORK/api.log" 2>&1 &
+  --log-level info > "$WORK/api.log" 2>&1 &
 API_PID=$!
 
 # The analysis worker stays behind a gate until the relaunched app has recovered the queued run.
