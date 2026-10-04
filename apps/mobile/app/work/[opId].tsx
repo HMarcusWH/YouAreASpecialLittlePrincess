@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { Alert, Text, View } from "react-native";
 
 import { useApp } from "../../src/bootstrap/AppProvider.tsx";
-import { Banner, Body, Busy, Button, Card, KeyValue, Screen, styles } from "../../src/ui/components.tsx";
+import { Banner, Body, Busy, Button, KeyValue, Paper, Screen, SectionLabel, styles } from "../../src/ui/components.tsx";
 import { TERMINAL_PHASES, type WorkEntry, type WorkPhase } from "../../src/work/journal.ts";
 
 const STEPS: readonly WorkPhase[] = ["PREPARED", "RESERVED", "UPLOADED", "COMPLETED", "PERMITTED", "STARTED", "SUCCEEDED"];
@@ -88,7 +88,8 @@ export default function WorkStatus() {
   const blockerKey = current.errorCode ? BLOCKER_COPY[current.errorCode] : undefined;
   return (
     <Screen title={t(`work.${current.phase}`)}>
-      <Card>
+      <Paper>
+        <SectionLabel>{t("work.title")}</SectionLabel>
         {STEPS.slice(0, -1).map((step, i) => {
           const done = index > i || current.phase === "SUCCEEDED";
           const active = index === i && !terminal;
@@ -104,7 +105,7 @@ export default function WorkStatus() {
             </View>
           );
         })}
-      </Card>
+      </Paper>
       {!terminal && current.blocked === null ? <Busy label={t(`work.${current.phase}`)} /> : null}
       {!terminal && current.blocked === "RETRY" ? <Banner tone="attention">{t(blockerKey ?? "work.waiting_network")}</Banner> : null}
       {!terminal && current.blocked === "WAIT" ? <Banner tone="attention">{t(blockerKey ?? "work.waiting_server")}</Banner> : null}

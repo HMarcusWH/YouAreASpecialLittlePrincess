@@ -104,7 +104,7 @@ T30A adds Node tests for session, workflow recovery, runner, controllers, config
 
 ## Permanent validation workflow
 
-`.github/workflows/native.yml` is the retained T29 validation surface. It runs exact package/license checks, Expo compatibility, mobile typecheck/unit/config checks, Android CNG + debug APK compilation, and iOS CNG + CocoaPods + simulator compilation. PR #32 is the first qualification of that permanent workflow.
+`.github/workflows/native.yml` is the retained T29 validation surface. It runs exact package/license checks, Expo compatibility, mobile typecheck/unit/config checks, Android CNG + debug APK compilation, and iOS CNG + CocoaPods + simulator compilation. The Android job hashes every qualified development APK. On a push to `main` it also renames and retains that merged-main APK for 14 days as a GitHub Actions artifact; pull-request runs do not publish a handoff artifact because their `GITHUB_SHA` is a synthetic merge candidate. Retention does not change debug/development signing status. PR #32 is the first qualification of the permanent build workflow.
 
 ## Permanent workflow qualification
 

@@ -8,54 +8,69 @@ import { featureName, t as reportText, type Locale } from "@princess/report-core
 import { Text, View } from "react-native";
 
 import { useApp } from "../bootstrap/AppProvider.tsx";
-import { Banner, Body, Card, Heading, styles as base } from "./components.tsx";
+import { Banner, Body, EditorialSection, EditorialStatement, Paper, styles as base } from "./components.tsx";
 import { EvidenceBadge } from "./dossier.tsx";
 
 export function PremiumOverlay({ content, facts, locale }: { content: PremiumContent; facts: readonly Fact[];
                                                              locale: Locale }) {
   const { theme } = useApp();
   const byId = new Map(facts.map((fact) => [fact.fact_id, fact] as const));
-  const support = (ids: readonly string[]) => ids.map((id) => {
+  const supportLabels = (ids: readonly string[]) => ids.map((id) => {
     const fact = byId.get(id);
-    return fact ? featureName(fact.feature_id, locale) : id;
-  }).join(", ");
+    return { id, label: fact ? featureName(fact.feature_id, locale) : id };
+  });
+
+  function SupportFacts({ ids }: { ids: readonly string[] }) {
+    if (ids.length === 0) return null;
+    return (
+      <View style={{ gap: 6 }}>
+        <Text style={[base.label, { color: theme.color["text-muted"], fontFamily: theme.mono }]}>
+          {reportText(locale, "premium.support")}
+        </Text>
+        {supportLabels(ids).map((item) => (
+          <View key={item.id} style={{
+            alignSelf: "flex-start", maxWidth: "100%", borderWidth: 1, borderColor: theme.color.border,
+            paddingHorizontal: 10, paddingVertical: 8, borderRadius: 2,
+          }}>
+            <Text style={[base.small, { color: theme.color["text-muted"], fontFamily: theme.mono }]}>
+              — {item.label}
+            </Text>
+          </View>
+        ))}
+      </View>
+    );
+  }
   const badge = { evidenceClass: "AI_SYNTHESIS" as const, evidenceIcon: "✦",
                   evidenceText: reportText(locale, "evidence.AI_SYNTHESIS") };
   return (
-    <Card style={{ borderColor: theme.color["evidence-ai"], borderWidth: 1 }}>
+    <Paper style={{ borderColor: theme.color["evidence-ai"], borderWidth: 1 }}>
       <EvidenceBadge fact={badge} />
-      <Heading>{reportText(locale, "premium.title")}</Heading>
+      <Text style={[base.label, { color: theme.color["evidence-ai"], fontFamily: theme.mono }]}>
+        ✦ {reportText(locale, "evidence.AI_SYNTHESIS")}
+      </Text>
+      <EditorialStatement>{reportText(locale, "premium.title")}</EditorialStatement>
       <Body muted>{reportText(locale, "premium.intro")}</Body>
       {content.soft_fields.map((field) => (
         <View key={field.field_id} style={{ gap: 4 }}>
           <Body>{field.text}</Body>
-          {field.support_fact_ids.length > 0 ? (
-            <Text style={[base.small, { color: theme.color["text-muted"] }]}>
-              {reportText(locale, "premium.support")}: {support(field.support_fact_ids)}
-            </Text>
-          ) : null}
+          <SupportFacts ids={field.support_fact_ids} />
         </View>
       ))}
       {content.answers.map((answer) => (
-        <View key={answer.question_id} accessible style={{ gap: 4, borderTopWidth: 1, borderColor: theme.color.border,
-                                                           paddingTop: 8 }}>
-          <Text style={[base.label, { color: theme.color["text-muted"] }]}>
+        <EditorialSection key={answer.question_id} style={{ gap: 4 }}>
+          <Text style={[base.label, { color: theme.color["evidence-ai"], fontFamily: theme.mono }]}>
             {reportText(locale, "premium.question")} · {answer.question_id}
           </Text>
           {answer.prose !== null ? <Body>{answer.prose}</Body> : null}
           {answer.answer_state !== "ANSWERED" ? (
             <Body muted>{reportText(locale, `premium.answer.${answer.answer_state}`)}</Body>
           ) : null}
-          {answer.support_fact_ids.length > 0 ? (
-            <Text style={[base.small, { color: theme.color["text-muted"] }]}>
-              {reportText(locale, "premium.support")}: {support(answer.support_fact_ids)}
-            </Text>
-          ) : null}
-        </View>
+          <SupportFacts ids={answer.support_fact_ids} />
+        </EditorialSection>
       ))}
       {content.omissions.length > 0 ? (
         <Banner tone="info">{`${reportText(locale, "premium.omitted")}: ${content.omissions.length}. ${reportText(locale, "premium.omission")}`}</Banner>
       ) : null}
-    </Card>
+    </Paper>
   );
 }

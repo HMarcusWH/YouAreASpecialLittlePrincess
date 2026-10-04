@@ -56,6 +56,12 @@ The accepted-token/documentation implementation was qualified at `4a786230fcb9d7
 
 This acceptance closes only the T10 `design_acceptance` gate. It does not approve participant rights, processor terms, live model use, prices, charges, native signing, store review or public release.
 
+## Post-acceptance implementation sync
+
+The historical T10 decision above remains bound to design v2. The later native implementation pass is recorded separately in [IMPLEMENTATION_SYNC_V3.md](IMPLEMENTATION_SYNC_V3.md), bound to `Inktrospect mobile app design (3).zip` SHA-256 `12253a30614b31b54d9585eec262956a49c06dad10a7070c1b71949d6f334f98` and repository baseline `3099bcf1e71a98430c4ca39ae26a39e5eacfde48`. It refines implementation hierarchy/states; it does not reopen T10 or supersede repository contracts.
+
+The native screen/state disposition for that sync is [NATIVE_IMPLEMENTATION_MATRIX_V3.md](NATIVE_IMPLEMENTATION_MATRIX_V3.md).
+
 ## Maintainer artifact retrieval
 
 The acceptance record above is unchanged. [Access and assets](../handover/access-and-assets.md) records the exact archive digest and the outstanding durable delivery/recipient verification action. A clone contains the accepted token/reference records, not the external prototype ZIP or approval to redistribute fonts.

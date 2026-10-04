@@ -13,7 +13,7 @@ This is a **non-secret handover register**, not evidence that recipient access h
 | Model account/data/spend | [Premium connector](../connectors/premium-model.md) | Confirm approved model configuration, processing controls, spend owner and eval evidence before live calls. |
 | Mail, push, domains and telemetry | [Connector index](../connectors/README.md) | Verify sender/domain ownership, provider retention, alert routing and named escalation; do not invent a contact or vendor. |
 | Reference/pilot participant material | [Pilot tooling](../data/pilot-tooling.md), [privacy](../privacy/README.md) | Protected evidence and permissions remain external. Synthetic tooling is not a participant corpus. |
-| Accepted design | [Accepted reference](../design/ACCEPTED_DOSSIER_REFERENCE.md) | Retrieve the exact artifact below through an approved owner-controlled location. |
+| Accepted design | [Accepted reference](../design/ACCEPTED_DOSSIER_REFERENCE.md), [v3 implementation sync](../design/IMPLEMENTATION_SYNC_V3.md) | Retrieve the historical accepted v2 artifact and the exact v3 implementation-sync artifact through an approved owner-controlled location. |
 | Code/data/weights/fonts rights | [Third-party notices](../../THIRD_PARTY_NOTICES.md), [source rights](../privacy/source-rights.md) | Preserve each rights category separately; no new project distribution license is selected by this handover. |
 
 ## Accepted design artifact
@@ -23,6 +23,16 @@ Filename: `Inktrospect mobile app design (2).zip`.
 SHA-256: `89b43380609dec56bdb82c284f0f6beb4c097692273ef13a3b23deb143ff7db5`.
 
 The acceptance record binds this digest. The archive is intentionally not in Git. A conversation attachment is not a durable retrieval location. The outgoing owner must provide an approved location and the receiving maintainer must record a successful hash check. Do not upload font files separately or substitute prototype typography for an approved delivery strategy.
+
+## Latest implementation-sync design artifact
+
+Filename: `Inktrospect mobile app design (3).zip`.
+
+SHA-256: `12253a30614b31b54d9585eec262956a49c06dad10a7070c1b71949d6f334f98`.
+
+Prototype sync: `2026-10-04T13:25:58Z`; repository baseline: `3099bcf1e71a98430c4ca39ae26a39e5eacfde48`.
+
+This is the post-acceptance implementation reference described in [IMPLEMENTATION_SYNC_V3.md](../design/IMPLEMENTATION_SYNC_V3.md), not a replacement for the v2 T10 owner decision. It remains outside ordinary source history because it contains duplicated prototype/repository snapshots; the receiving maintainer should verify the digest before use.
 
 ## Transfer record to complete privately
 

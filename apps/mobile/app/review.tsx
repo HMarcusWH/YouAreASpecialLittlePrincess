@@ -5,7 +5,7 @@ import { useWindowDimensions, View } from "react-native";
 
 import { useApp } from "../src/bootstrap/AppProvider.tsx";
 import type { CropRect } from "../src/platform/contracts.ts";
-import { Banner, Body, Busy, Button, Card, Heading, KeyValue, Screen, Toggle } from "../src/ui/components.tsx";
+import { Banner, Body, Busy, Button, Paper, SectionLabel, KeyValue, Screen, Toggle } from "../src/ui/components.tsx";
 import { CropView } from "../src/ui/crop.tsx";
 
 export default function Review() {
@@ -99,8 +99,8 @@ export default function Review() {
                 onPress={() => { setCropping(!cropping); setCrop(null); setCropKey(cropKey + 1); }} />
       </View>
       {cropping ? <Body muted>{t("review.crop_hint")}</Body> : null}
-      <Card>
-        <Heading>{t("review.consent_title")}</Heading>
+      <Paper>
+        <SectionLabel>{t("review.consent_title")}</SectionLabel>
         {notice === null ? <Busy label={t("app.loading")} /> : null}
         {notice === "error" ? <Banner tone="danger">{t("review.notice_unavailable")}</Banner> : null}
         {notice !== null && notice !== "error" && notice.status === "DRAFT" ? (
@@ -117,7 +117,7 @@ export default function Review() {
                                  value={retain} onChange={setRetain} /> : null}
           </>
         ) : null}
-      </Card>
+      </Paper>
       {error ? <Banner tone="danger">{error}</Banner> : null}
       <Button tone="secondary" label={t("review.retake")} disabled={busy} onPress={() => router.replace("/capture")} />
       <Button tone="danger" label={t("review.discard")} disabled={busy} onPress={() => void discard()} />

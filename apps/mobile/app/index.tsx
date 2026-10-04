@@ -4,7 +4,7 @@ import { useCallback, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 
 import { useApp } from "../src/bootstrap/AppProvider.tsx";
-import { Banner, Body, Button, Card, Heading, Screen, styles } from "../src/ui/components.tsx";
+import { Banner, Body, Button, Card, Heading, Paper, Screen, styles } from "../src/ui/components.tsx";
 import { TERMINAL_PHASES } from "../src/work/journal.ts";
 
 function SignedOut() {
@@ -28,12 +28,14 @@ function SignedOut() {
       {reason === "expired" ? <Banner tone="attention">{t("home.signed_out_expired")}</Banner> : null}
       {reason === "deleted" ? <Banner tone="ready">{t("home.signed_out_deleted")}</Banner> : null}
       {reason === "logged_out_everywhere" ? <Banner tone="ready">{t("home.signed_out_everywhere")}</Banner> : null}
-      <Body muted>{t("home.intro")}</Body>
-      {error ? <Banner tone="danger">{error}</Banner> : null}
-      <Button label={t("home.start_private")} busy={busy} onPress={() => void startGuest()}
-              hint={t("home.start_private_hint")} />
-      <Body muted>{t("home.start_private_hint")}</Body>
-      <Button tone="secondary" label={t("home.sign_in")} onPress={() => router.push("/account")} />
+      <Paper>
+        <Body muted>{t("home.intro")}</Body>
+        {error ? <Banner tone="danger">{error}</Banner> : null}
+        <Button label={t("home.start_private")} busy={busy} onPress={() => void startGuest()}
+                hint={t("home.start_private_hint")} />
+        <Body muted>{t("home.start_private_hint")}</Body>
+        <Button tone="secondary" label={t("home.sign_in")} onPress={() => router.push("/account")} />
+      </Paper>
     </Screen>
   );
 }
@@ -62,8 +64,10 @@ export default function Home() {
     <Screen eyebrow={t("app.name")} title={t("app.tagline")}>
       {session.kind === "GUEST" ? <Banner tone="info">{t("home.guest_banner")}</Banner> : null}
       {!session.verified ? <Banner tone="attention">{t("home.offline_banner")}</Banner> : null}
-      <Body muted>{t("home.intro")}</Body>
-      <Button label={t("home.analyse")} onPress={() => router.push("/capture")} />
+      <Paper>
+        <Body muted>{t("home.intro")}</Body>
+        <Button label={t("home.analyse")} onPress={() => router.push("/capture")} />
+      </Paper>
       {local.length > 0 ? (
         <Card>
           <Heading>{t("home.in_progress")}</Heading>

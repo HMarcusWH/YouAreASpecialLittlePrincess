@@ -68,6 +68,21 @@ jobs:
         run: ./gradlew :app:assembleDebug --no-daemon
       - name: Record Android development artifact digest
         run: sha256sum apps/mobile/android/app/build/outputs/apk/debug/app-debug.apk
+      - name: Name merged-main Android handoff APK
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        shell: bash
+        run: |
+          short="${GITHUB_SHA:0:12}"
+          cp apps/mobile/android/app/build/outputs/apk/debug/app-debug.apk "inktrospect-development-${short}.apk"
+          sha256sum "inktrospect-development-${short}.apk"
+      - name: Upload merged-main Android handoff APK
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: inktrospect-android-development-${{ github.sha }}
+          path: inktrospect-development-*.apk
+          if-no-files-found: error
+          retention-days: 14
 
   ios-simulator:
     needs: static

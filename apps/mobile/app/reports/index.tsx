@@ -5,7 +5,7 @@ import { Pressable, Text, View } from "react-native";
 
 import { useApp } from "../../src/bootstrap/AppProvider.tsx";
 import { HistoryController, type HistoryState } from "../../src/features/history.ts";
-import { Banner, Body, Busy, Button, Card, Heading, Screen, styles } from "../../src/ui/components.tsx";
+import { Banner, Body, Busy, Button, EditorialSection, Heading, Paper, Screen, styles } from "../../src/ui/components.tsx";
 import { SelectableRow } from "../../src/ui/dossier.tsx";
 
 export default function History() {
@@ -55,10 +55,10 @@ export default function History() {
         <Banner tone="info">{`${t("home.elsewhere")}: ${state.inProgress.length}. ${t("home.elsewhere_hint")}`}</Banner>
       ) : null}
       {state && state.items.length === 0 ? (
-        <Card>
+        <Paper>
           <Body>{t("history.empty")}</Body>
           <Button label={t("home.analyse")} onPress={() => router.push("/capture")} />
-        </Card>
+        </Paper>
       ) : null}
       {state && state.items.length > 1 && !selecting ? (
         <Button tone="secondary" label={t("history.compare")} onPress={() => setSelecting(true)} />
@@ -76,14 +76,14 @@ export default function History() {
             ) : null}
           </View>
         );
-        if (item.deletion === "REQUESTED") return <Card key={item.report_id}>{body}</Card>;
+        if (item.deletion === "REQUESTED") return <EditorialSection key={item.report_id}>{body}</EditorialSection>;
         return selecting ? (
           <SelectableRow key={item.report_id} label={`${title}, ${created}`} selected={selected.includes(item.report_id)}
                          onPress={() => toggle(item.report_id)}>{body}</SelectableRow>
         ) : (
           <Pressable key={item.report_id} accessibilityRole="link" accessibilityLabel={`${title}, ${created}`}
                      onPress={() => router.push(`/reports/${encodeURIComponent(item.report_id)}`)}>
-            <Card>{body}</Card>
+            <EditorialSection>{body}</EditorialSection>
           </Pressable>
         );
       })}
