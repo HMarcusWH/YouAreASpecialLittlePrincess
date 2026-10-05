@@ -9,6 +9,7 @@ A mobile-first, privacy-conscious handwriting-analysis product built around dete
 | Goal | Entry |
 |---|---|
 | Take over development | [Receiving-maintainer guide](docs/handover/README.md) and [documentation home](docs/README.md) |
+| Install/test the Android handoff APK | [APK download + local backend quick start](docs/handover/android-apk.md) |
 | Run the mobile development app | [Complete local setup](docs/development/local-setup.md) → [native README](apps/mobile/README.md) |
 | Understand the system | [Architecture](docs/architecture/overview.md), [data/lifecycles](docs/architecture/data-and-lifecycles.md), [current API](docs/reference/api.md) |
 | Make a change | [Contributing](CONTRIBUTING.md), [tests](docs/development/testing.md), [generated assets](docs/reference/generated-assets.md), [agent instructions](AGENTS.md) |
@@ -22,7 +23,7 @@ A mobile-first, privacy-conscious handwriting-analysis product built around dete
 | Numerical Free core | 64 registered measurements against 272 definitions; zero runtime AI; most estimates remain experimental |
 | Product backend | PostgreSQL/RLS, immutable captures/reports, permission events, durable jobs, ledger, exports and erasure/recovery mechanisms |
 | Shared native client | Guest/development sessions, review/crop, journaled upload/analysis, saved Dossier/history, settings, feedback, authenticated exports, same-owner unsaved comparison and paid-state integration code |
-| Native evidence | Controller tests, development-API journey and Android/unsigned-iOS compilation; not launched native UI, physical-device or store qualification |
+| Native evidence | Controller tests, development-API journey, Android/unsigned-iOS compilation and a standalone Android API-36 emulator UI journey; physical-device/store qualification remains open |
 | Supporting web | Implemented Free journey and regression/inspection surface; unfinished web Premium is not a native construction prerequisite |
 | Premium / commerce | Provider-independent and disabled adapter/runtime machinery; real model evaluation, store proofs, commercial policy and live composition remain gated |
 | Identity / operations | Narrow selected Supabase verification profile; production-style app login and complete hosting/storage/mail/push/monitoring remain open |

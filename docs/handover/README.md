@@ -6,7 +6,7 @@ This is the route for an engineer who has not read the development chats. Public
 
 1. Read [current state](current-state.md). Separate code present, checks executed, capabilities enabled and approvals still pending.
 2. Read [architecture](../architecture/overview.md) and [data/lifecycle boundaries](../architecture/data-and-lifecycles.md). Follow one capture from the phone to its saved report before changing a state machine.
-3. Follow [local setup](../development/local-setup.md) on a supported host with synthetic data. Run the [test layers](../development/testing.md) appropriate to your change.
+3. To install the current standalone Android build, use the [Android APK quick start](android-apk.md). For the full environment, follow [local setup](../development/local-setup.md) on a supported host with synthetic data and run the [test layers](../development/testing.md) appropriate to your change.
 4. Read the [mobile lifecycle guide](../architecture/mobile-lifecycle.md), [API reference](../reference/api.md) and [generated-source map](../reference/generated-assets.md).
 5. Resolve access and custody with the outgoing owner using [access and assets](access-and-assets.md). Never collect secrets through a PR, issue or chat transcript.
 6. Complete the [receiving-maintainer acceptance](acceptance.md) record. Documentation merging does not fill this record automatically.
