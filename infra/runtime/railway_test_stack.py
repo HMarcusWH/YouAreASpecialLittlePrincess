@@ -35,6 +35,9 @@ def role_env(role: str) -> dict[str, str]:
     })
     environment["PRINCESS_ENV"] = "test"
     environment["PRINCESS_COMPONENT"] = role
+    if role == "api" and os.environ.get("PRINCESS_TEST_PUBLIC_GUEST_ONLY") == "1":
+        environment["PRINCESS_TEST_PUBLIC_GUEST_ONLY"] = "1"
+        environment["PRINCESS_GUEST_ADMISSIONS_PER_MINUTE"] = "5"
     database_key = "PRINCESS_API_DATABASE_URL" if role == "api" else "PRINCESS_WORKER_DATABASE_URL"
     environment["PRINCESS_DATABASE_URL"] = os.environ[database_key]
     if role == "api":
@@ -51,8 +54,17 @@ def role_env(role: str) -> dict[str, str]:
 def main() -> int:
     if os.environ.get("PRINCESS_ENV") != "test":
         raise RuntimeError("combined test stack requires PRINCESS_ENV=test")
-    if os.environ.get("RAILWAY_PUBLIC_DOMAIN"):
+    # Public access is allowed only for an explicitly scoped synthetic
+    # guest-only demo. Never publish the development account-token issuer.
+    public = bool(os.environ.get("RAILWAY_PUBLIC_DOMAIN"))
+    guest_only = os.environ.get("PRINCESS_TEST_PUBLIC_GUEST_ONLY") == "1"
+    if public and not guest_only:
         raise RuntimeError("synthetic test identity must not be exposed on a public Railway domain")
+    if guest_only:
+        from urllib.parse import urlsplit
+        base = urlsplit(os.environ.get("PRINCESS_PUBLIC_API_BASE", ""))
+        if base.scheme != "https" or not base.hostname or base.port:
+            raise RuntimeError("public guest-only test API requires an HTTPS origin without port")
     api_env, worker_env = role_env("api"), role_env("analysis_worker")
     os.umask(0o077)
     for directory in ("PRINCESS_LOCAL_STORAGE_DIR", "PRINCESS_TOMBSTONE_DIR"):
