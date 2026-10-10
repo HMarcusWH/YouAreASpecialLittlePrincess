@@ -27,6 +27,11 @@ def command(component: str) -> list[str]:
 
 
 def main() -> int:
+    if os.environ.get("PRINCESS_TEST_STACK") == "1":
+        if os.environ.get("PRINCESS_ENV") != "test":
+            raise RuntimeError("combined stack only supported in synthetic test")
+        from railway_test_stack import main as run_test_stack
+        return run_test_stack()
     config = preflight(os.environ, ROOT)
     argv = command(config.component)
     os.execvpe(argv[0], argv, os.environ)
