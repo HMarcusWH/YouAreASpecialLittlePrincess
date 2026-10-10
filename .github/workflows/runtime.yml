@@ -117,10 +117,22 @@ jobs:
           docker compose -f infra/runtime/compose.smoke.yaml run --rm role-bootstrap
           docker compose -f infra/runtime/compose.smoke.yaml up -d --wait             api analysis-worker premium-worker export-worker notification-worker
           python3 - <<'PY'
-          import json, urllib.request
-          for path in ("live","ready"):
-              with urllib.request.urlopen(f"http://127.0.0.1:18000/health/{path}", timeout=5) as r:
-                  assert r.status == 200 and json.load(r) == {"status":"ok"}
+          import json, time, urllib.error, urllib.request
+          # Compose can mark the health probe healthy while the forwarded
+          # connection still resets during startup. Retry transport faults
+          # only; a real HTTP failure or wrong response still fails closed.
+          for path in ("live", "ready"):
+              for attempt in range(12):
+                  try:
+                      with urllib.request.urlopen(f"http://127.0.0.1:18000/health/{path}", timeout=5) as r:
+                          assert r.status == 200 and json.load(r) == {"status": "ok"}
+                      break
+                  except urllib.error.HTTPError:
+                      raise
+                  except (OSError, urllib.error.URLError):
+                      if attempt == 11:
+                          raise
+                      time.sleep(0.5)
           PY
 
           snapshot="$(docker compose -f infra/runtime/compose.smoke.yaml run --rm --entrypoint python api -m princess_api.ops snapshot)"
