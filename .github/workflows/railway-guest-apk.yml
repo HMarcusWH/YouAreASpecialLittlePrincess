@@ -1,0 +1,90 @@
+name: Inktrospect Railway guest-test APK
+
+on:
+  push:
+    branches:
+      - feat/railway-two-service-test-stack
+    paths:
+      - "apps/mobile/**"
+      - "packages/**"
+      - ".github/workflows/railway-guest-apk.yml"
+      - "pnpm-lock.yaml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  guest-test-apk:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 100
+    env:
+      CI: "1"
+      INKTROSPECT_APP_VARIANT: development
+      INKTROSPECT_BACKEND_ENV: test
+      INKTROSPECT_API_BASE: https://db-migrations-test.up.railway.app
+      INKTROSPECT_REMOTE_GUEST_ONLY: "1"
+      EXPO_NO_TELEMETRY: "1"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: "22.22.2"
+      - run: corepack enable && corepack install
+      - run: pnpm install --frozen-lockfile
+      - name: Check pinned compatibility, TypeScript and native tests
+        run: |
+          pnpm --filter @princess/mobile compat:check
+          pnpm --filter @princess/mobile typecheck
+          pnpm --filter @princess/mobile test
+      - name: Verify public APK configuration cannot mint development logins
+        run: |
+          pnpm --filter @princess/mobile exec expo config --type public --json > "$RUNNER_TEMP/guest-public.json"
+          node - "$RUNNER_TEMP/guest-public.json" <<'NODE'
+          const fs = require("fs");
+          const config = JSON.parse(fs.readFileSync(process.argv[2], "utf8"));
+          const runtime = config.extra?.runtime;
+          if (runtime?.variant !== "development" || runtime?.backendEnvironment !== "test" ||
+              runtime?.devIdentity !== false ||
+              runtime?.apiBaseUrl !== "https://db-migrations-test.up.railway.app" ||
+              config.android?.package !== "se.inktrospect.development")
+            throw Error("remote guest-only public config drift");
+          console.log("Reviewed HTTPS guest-only public config (no account helper)");
+          NODE
+      - name: Assemble standalone Hermes APK without Metro
+        shell: bash
+        run: |
+          pnpm --filter @princess/mobile prebuild:android
+          cd apps/mobile/android
+          ./gradlew :app:assembleRelease --no-daemon
+      - name: Inspect and retain debug-signed synthetic guest APK
+        shell: bash
+        run: |
+          set -euo pipefail
+          apk="apps/mobile/android/app/build/outputs/apk/release/app-release.apk"
+          test -f "$apk"
+          unzip -l "$apk" | grep -F "assets/index.android.bundle"
+          build_tools="$(find "$ANDROID_HOME/build-tools" -mindepth 1 -maxdepth 1 -printf '%f\n' | sort -V | tail -1)"
+          "$ANDROID_HOME/build-tools/$build_tools/apksigner" verify --verbose "$apk"
+          mkdir -p dist
+          cp "$apk" dist/inktrospect-railway-guest-test.apk
+          (cd dist && sha256sum inktrospect-railway-guest-test.apk > inktrospect-railway-guest-test.apk.sha256)
+          cat > dist/README.txt <<'EOF'
+          Inktrospect Railway Guest Test (not a production/store-signed app)
+          HTTPS API: https://db-migrations-test.up.railway.app
+          Only synthetic handwriting specimens are authorized by current draft consent.
+          No account login, Premium generation, or purchases. Do not upload private or third-party handwriting.
+          The APK is debug-key signed; it may replace an existing se.inktrospect.development build.
+          EOF
+      - name: Upload APK and integrity record
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: inktrospect-railway-guest-test-${{ github.sha }}
+          path: |
+            dist/inktrospect-railway-guest-test.apk
+            dist/inktrospect-railway-guest-test.apk.sha256
+            dist/README.txt
+          if-no-files-found: error
+          retention-days: 14
