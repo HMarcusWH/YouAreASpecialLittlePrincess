@@ -99,7 +99,7 @@ class MeasurementContext:
 
 
 def build_measurement_context(gray, mask, *, lines=(), words=(), original_width=None,
-                              original_height=None, rotation_deg=None, metadata=None):
+                              original_height=None, rotation_deg=None, metadata=None, word_trace=None):
     if gray.ndim != 2 or not gray.size or gray.dtype != np.uint8 or mask.shape != gray.shape:
         raise ValueError('gray and mask must have the same nonempty 2-D shape; gray must be uint8')
     if not np.isin(mask, (0, 1, 255)).all():
@@ -110,7 +110,7 @@ def build_measurement_context(gray, mask, *, lines=(), words=(), original_width=
     for box in (*lines, *words):
         if box.x2 > gray.shape[1] or box.y2 > gray.shape[0]:
             raise ValueError('segmentation box outside image')
-    words, word_lines = attach_words(words, lines, mask)
+    words, word_lines = attach_words(words, lines, mask, diagnostics=word_trace)
     _, labels, stats, _ = cv2.connectedComponentsWithStats(mask, connectivity=8)
     components = tuple(Box(*(int(v) for v in row[:4])) for row in stats[1:])
     min_height = max(3.0, 0.2 * float(np.median([b.height for b in lines]))) if lines else 3.0
@@ -128,7 +128,8 @@ def build_measurement_context(gray, mask, *, lines=(), words=(), original_width=
                               rotation_deg, dict(metadata or {}))
 
 
-def prepare_context(image, *, max_dimension=2200, deskew_enabled=True, grid_profile='grid-v1'):
+def prepare_context(image, *, max_dimension=2200, deskew_enabled=True, grid_profile='grid-v1',
+                    word_trace=None):
     """Aligned color/rule detection with one authoritative handwriting mask.
 
     Legacy reproduces the pre-grid measurements. grid-v1 conservatively
@@ -199,7 +200,11 @@ def prepare_context(image, *, max_dimension=2200, deskew_enabled=True, grid_prof
     if grid_profile != 'legacy' and grid_metadata['status'] != 'absent' and not np.any(mask):
         raise GridQualityError('no_handwriting_after_grid_removal')
     lines = segment_lines(mask)
-    proposals = filter_word_proposals(detect_words(word_gray), mask.shape) if lines else []
+    if word_trace is not None:
+        word_trace.update({"raw_contours": 0, "raw_proposals": 0,
+                           "after_geometry_filter": 0, "accepted_words": 0})
+    proposals = (filter_word_proposals(detect_words(word_gray, diagnostics=word_trace),
+                                     mask.shape, diagnostics=word_trace) if lines else [])
     sx, sy = w / original_w, h / original_h
     resize = np.array([[sx, 0, (sx - 1) / 2], [0, sy, (sy - 1) / 2], [0, 0, 1]])
     rotate = np.eye(3)
@@ -220,4 +225,4 @@ def prepare_context(image, *, max_dimension=2200, deskew_enabled=True, grid_prof
     }
     return build_measurement_context(corrected, mask, lines=lines, words=[p.box for p in proposals],
                                      original_width=original_w, original_height=original_h,
-                                     rotation_deg=rotation, metadata=metadata)
+                                     rotation_deg=rotation, metadata=metadata, word_trace=word_trace)

@@ -12,6 +12,10 @@ import numpy as np
 from .models import Box
 
 
+def _bump(diagnostics, name):
+    diagnostics[name] = diagnostics.get(name, 0) + 1
+
+
 @dataclass
 class WordDetection:
     box: Box
@@ -78,7 +82,7 @@ def _kernel(kernel_size: int, sigma: float, theta: float):
 
 
 def detect_words(gray: np.ndarray, kernel_size: int = 25, sigma: float = 11.0,
-                 theta: float = 7.0, min_area: int = 80):
+                 theta: float = 7.0, min_area: int = 80, *, diagnostics=None):
     if gray.ndim == 3:
         gray = cv2.cvtColor(gray, cv2.COLOR_BGR2GRAY)
     if gray.dtype != np.uint8:
@@ -92,21 +96,38 @@ def detect_words(gray: np.ndarray, kernel_size: int = 25, sigma: float = 11.0,
         x, y, w, h = cv2.boundingRect(contour)
         if area >= min_area and w >= 3 and h >= 3:
             result.append(WordDetection(Box(int(x), int(y), int(w), int(h)), float(area)))
+        elif diagnostics is not None:
+            _bump(diagnostics, "reject_low_area_or_extent")
+    if diagnostics is not None:
+        diagnostics["raw_contours"] = len(contours)
+        diagnostics["raw_proposals"] = len(result)
     return result
 
 
-def filter_word_proposals(words, image_shape):
+def filter_word_proposals(words, image_shape, *, diagnostics=None):
     if not words:
+        if diagnostics is not None:
+            diagnostics["after_geometry_filter"] = 0
         return []
     h, w = image_shape[:2]
     mh = max(3.0, float(np.median([x.box.height for x in words])))
     mw = max(3.0, float(np.median([x.box.width for x in words])))
-    return [item for item in words if not (
-        item.box.height < 0.22 * mh and item.box.width < 0.22 * mw
-        or item.box.width > 0.98 * w or item.box.height > 0.5 * h)]
+    accepted = []
+    for item in words:
+        if item.box.height < 0.22 * mh and item.box.width < 0.22 * mw:
+            if diagnostics is not None:
+                _bump(diagnostics, "reject_small_relative_proposal")
+        elif item.box.width > 0.98 * w or item.box.height > 0.5 * h:
+            if diagnostics is not None:
+                _bump(diagnostics, "reject_oversized_proposal")
+        else:
+            accepted.append(item)
+    if diagnostics is not None:
+        diagnostics["after_geometry_filter"] = len(accepted)
+    return accepted
 
 
-def attach_words(words, lines, mask):
+def attach_words(words, lines, mask, *, diagnostics=None):
     """Require vertical overlap; trim detector halos and suppress nested duplicates."""
     candidates = []
     for word in words:
@@ -114,19 +135,29 @@ def attach_words(words, lines, mask):
                     for b in lines]
         matching = [i for i, overlap in enumerate(overlaps) if overlap >= 0.5]
         if len(matching) != 1:
+            if diagnostics is not None:
+                _bump(diagnostics, "reject_no_unique_line" if not matching else "reject_ambiguous_lines")
             continue  # no nearest-line guessing, or ambiguous cross-line proposal
         i = matching[0]
         b = lines[i]
         x1, y1, x2, y2 = max(word.x, b.x), max(word.y, b.y), min(word.x2, b.x2), min(word.y2, b.y2)
         if x2 <= x1 or y2 <= y1:
+            if diagnostics is not None:
+                _bump(diagnostics, "reject_empty_line_intersection")
             continue
         ys, xs = np.where(mask[y1:y2, x1:x2] > 0)
         if xs.size:
             candidates.append((i, Box(x1 + int(xs.min()), y1 + int(ys.min()),
                                       int(xs.max() - xs.min() + 1), int(ys.max() - ys.min() + 1))))
+        elif diagnostics is not None:
+            _bump(diagnostics, "reject_no_ink_in_crop")
     kept = []
     for i, b in sorted(set(candidates), key=lambda p: (-p[1].area, p[0], p[1].x, p[1].y)):
         if not any(i == j and c.x <= b.x and c.y <= b.y and c.x2 >= b.x2 and c.y2 >= b.y2 for j, c in kept):
             kept.append((i, b))
+        elif diagnostics is not None:
+            _bump(diagnostics, "reject_nested_duplicate")
     kept.sort(key=lambda p: (p[0], p[1].x, p[1].y))
+    if diagnostics is not None:
+        diagnostics["accepted_words"] = len(kept)
     return tuple(b for _, b in kept), tuple(i for i, _ in kept)
