@@ -5,7 +5,7 @@ import numpy as np
 from princess_graphology.context import prepare_context
 from princess_graphology.models import Box
 from princess_graphology.segmentation import (
-    WordDetection, attach_words, detect_words, filter_word_proposals,
+    WordDetection, attach_words, filter_word_proposals,
 )
 
 
