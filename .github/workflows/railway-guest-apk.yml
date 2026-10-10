@@ -98,6 +98,109 @@ jobs:
               raise SystemExit("Non-guest account token was not rejected")
           print("HTTPS live guest-only API checks passed; no token printed")
           PY
+      - name: End-to-end synthetic Free handwriting analysis on Railway
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import hashlib
+          import json
+          import struct
+          import time
+          import urllib.error
+          import urllib.request
+          import zlib
+
+          base = "https://db-migrations-test.up.railway.app"
+
+          def call(method, path, *, token=None, payload=None, media=None):
+              data = json.dumps(payload).encode() if payload is not None else media
+              headers = {}
+              if payload is not None:
+                  headers["Content-Type"] = "application/json"
+              if media is not None:
+                  headers["Content-Type"] = "image/png"
+              if token is not None:
+                  headers["Authorization"] = f"Bearer {token}"
+              req = urllib.request.Request(base + path, data=data, headers=headers, method=method)
+              try:
+                  with urllib.request.urlopen(req, timeout=20) as response:
+                      return response.status, response.read()
+              except urllib.error.HTTPError as error:
+                  return error.code, error.read()
+
+          def check(response, expected, label):
+              status, data = response
+              if status != expected:
+                  # Never print bearer credentials, signed upload URLs, or returned image bytes.
+                  raise SystemExit(f"{label}: expected {expected}, received HTTP {status}")
+              return json.loads(data) if data else {}
+
+          def chunk(kind, data):
+              return (struct.pack(">I", len(data)) + kind + data +
+                      struct.pack(">I", zlib.crc32(kind + data) & 0xffffffff))
+
+          # Programmatically drawn marks, no actual person's handwriting.
+          width, height = 900, 360
+          rows = [bytearray([245]) * width for _ in range(height)]
+          for band in (45, 145, 245):
+              for column in range(16):
+                  x = 24 + 52 * column
+                  y = band + column % 3
+                  for dy in range(3, 28):
+                      rows[y + dy][x] = 20
+                      rows[y + dy][x + 19] = 20
+                  for dx in range(20):
+                      rows[y][x + dx] = 20
+                      rows[y + 28][x + dx] = 20
+          pixels = b"".join(b"\x00" + bytes(row) for row in rows)
+          png = (b"\x89PNG\r\n\x1a\n" +
+                 chunk(b"IHDR", struct.pack(">2I5B", width, height, 8, 0, 0, 0, 0)) +
+                 chunk(b"IDAT", zlib.compress(pixels)) + chunk(b"IEND", b""))
+          sha256 = hashlib.sha256(png).hexdigest()
+
+          guest = check(call("POST", "/v1/guest-sessions"), 201, "guest-session")
+          bearer = guest["guest_token"]
+          notices = check(call("GET", "/v1/consent-notices?locale=en"), 200, "notices")
+          versions = [n["notice_version"] for n in notices["notices"]
+                      if n.get("accepted_for_use") and
+                      any(p["purpose_id"] == "service_processing" for p in n["purposes"])]
+          if not versions:
+              raise SystemExit("No synthetic test processing notice available")
+          notice = versions[0]
+
+          ticket = check(call("POST", "/v1/uploads", token=bearer,
+                              payload={"media_type": "image/png"}), 201, "reserve-upload")
+          if ticket.get("method") != "PUT" or not ticket["url"].startswith(base + "/v1/dev/uploads/"):
+              raise SystemExit("Signed upload was not scoped to the test HTTPS origin")
+          signed_path = ticket["url"][len(base):]
+          check(call("PUT", signed_path, media=png), 204, "signed-upload")
+          capture = check(call("POST", f"/v1/uploads/{ticket['upload_id']}/complete",
+                               token=bearer, payload={"sha256": sha256}), 200, "upload-completion")
+          for purpose in ("service_processing", "image_retention"):
+              check(call("POST", "/v1/me/permissions", token=bearer,
+                         payload={"purpose_id": purpose, "scope_kind": "SPECIMEN",
+                                  "scope_ref": capture["capture_id"], "decision": "GRANT",
+                                  "notice_version": notice,
+                                  "request_id": "railway.synthetic." + purpose}),
+                    201, "processing-consent")
+          run = check(call("POST", "/v1/analyses", token=bearer,
+                           payload={"capture_id": capture["capture_id"]}), 202, "start-analysis")
+          if run["state"] not in ("QUEUED", "RUNNING", "SUCCEEDED"):
+              raise SystemExit(f"Unexpected initial run state: {run['state']}")
+          for attempt in range(60):
+              status = check(call("GET", f"/v1/analyses/{run['run_id']}", token=bearer),
+                             200, "poll-analysis")
+              if status["state"] in ("SUCCEEDED", "FAILED", "CANCELLED"):
+                  break
+              time.sleep(2)
+          else:
+              raise SystemExit("Railway analysis did not reach a terminal state within 120s")
+          if status["state"] != "SUCCEEDED" or not status.get("report_id"):
+              raise SystemExit(f"Railway analysis finished as {status['state']}: {status.get('error_code')}")
+          check(call("GET", f"/v1/reports/{status['report_id']}", token=bearer),
+                200, "read-dossier")
+          print("PASS: synthetic HTTPS capture -> worker -> saved Dossier; no credentials or image data emitted")
+          PY
       - name: Assemble standalone Hermes APK without Metro
         shell: bash
         run: |
