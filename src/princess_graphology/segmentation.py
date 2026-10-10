@@ -151,8 +151,11 @@ def attach_words(words, lines, mask, *, diagnostics=None):
                                       int(xs.max() - xs.min() + 1), int(ys.max() - ys.min() + 1))))
         elif diagnostics is not None:
             _bump(diagnostics, "reject_no_ink_in_crop")
+    unique_candidates = set(candidates)
+    if diagnostics is not None:
+        diagnostics["reject_exact_duplicate"] = len(candidates) - len(unique_candidates)
     kept = []
-    for i, b in sorted(set(candidates), key=lambda p: (-p[1].area, p[0], p[1].x, p[1].y)):
+    for i, b in sorted(unique_candidates, key=lambda p: (-p[1].area, p[0], p[1].x, p[1].y)):
         if not any(i == j and c.x <= b.x and c.y <= b.y and c.x2 >= b.x2 and c.y2 >= b.y2 for j, c in kept):
             kept.append((i, b))
         elif diagnostics is not None:

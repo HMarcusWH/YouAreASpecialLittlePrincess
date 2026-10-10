@@ -25,7 +25,7 @@ def test_raw_filter_and_assignment_rejections():
     assert before == after
     assert trace["accepted_words"] == 1
     assert trace["reject_no_ink_in_crop"] == 1
-    assert trace["reject_nested_duplicate"] == 1
+    assert trace["reject_exact_duplicate"] == 1
 
 
 def test_trace_never_changes_measurements_or_accepted_boxes():
