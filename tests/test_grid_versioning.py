@@ -1,7 +1,6 @@
 """Integration tests for graph-paper-v1 and versioned worker fingerprints."""
 import hashlib
 
-import numpy as np
 import pytest
 
 from grid_cases import specimen
