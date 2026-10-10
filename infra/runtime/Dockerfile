@@ -60,3 +60,9 @@ RUN node /opt/princess/apps/render/node_modules/playwright-core/cli.js install-d
     && rm -rf /var/lib/apt/lists/*
 ENV PRINCESS_CHROMIUM=/opt/chromium/chrome
 USER 10001:10001
+
+# Railway synthetic test only: volume initialization requires root on the
+# first launch; the supervised API/worker immediately drop to uid/gid 10001.
+# The approved backend-runtime and export-runtime stages remain unchanged.
+FROM backend-runtime AS railway-test-runtime
+USER root
