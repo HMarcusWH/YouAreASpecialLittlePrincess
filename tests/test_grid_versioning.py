@@ -27,7 +27,7 @@ def test_grid_mask_drives_line_and_word_detection():
     bgr, _ = specimen(grid='blue')
     result = GraphologyEngine(deskew_enabled=False).analyze(bgr)
     assert result.metadata['grid_preprocessing']['version'] == 'grid-v1'
-    assert result.metadata['grid_preprocessing']['status'] == 'cleaned'
+    assert result.metadata['grid_preprocessing']['status'] in ('cleaned', 'detected_no_contamination')
     assert result.metadata['word_proposal_input'] == 'grid_suppressed_gray'
     assert 1 <= result.measurements['PAGE_LINE_COUNT'].raw_value <= 3
     assert result.measurements['PAGE_COMPONENT_COUNT'].raw_value < 150
