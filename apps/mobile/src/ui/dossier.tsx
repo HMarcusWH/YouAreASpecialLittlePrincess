@@ -370,6 +370,26 @@ export function SourceImage({ reportId, bundle, locale }: { reportId: string; bu
       return [mx * scale, my * scale] as const;
     }),
   })) : [];
+  // Draw accepted server-evidence geometry; not local handwriting detection.
+  const outlines = matches && bundle ? bundle.regions
+    .filter((r) => r.scope === "LINE" || r.scope === "WORD").slice(0, 72)
+    .flatMap((region) => {
+      const corners = [
+        [region.x, region.y], [region.x + region.width, region.y],
+        [region.x + region.width, region.y + region.height],
+        [region.x, region.y + region.height], [region.x, region.y],
+      ];
+      try {
+        const points = corners.map(([x, y]) => {
+          const [mx, my] = mapToAncestor(bundle.frames, region.frame_id, root!.frame_id, x!, y!);
+          return [mx * scale, my * scale] as const;
+        });
+        return points.every(([x, y]) => Number.isFinite(x) && Number.isFinite(y))
+          ? [{ id: region.region_id, scope: region.scope, points }] : [];
+      } catch {
+        return []; // Invalid coordinate lineage cannot become evidence.
+      }
+    }) : [];
   const selected = traces.length > 0 ? Math.min(selectedTrace, traces.length - 1) : 0;
   return (
     <Paper>
@@ -387,6 +407,12 @@ export function SourceImage({ reportId, bundle, locale }: { reportId: string; bu
                           color={index === selected ? theme.color.accent : theme.color["evidence-measured"]}
                           thickness={index === selected ? 3 : 1.5} opacity={index === selected ? 1 : 0.42} />
           )) : null}
+           {scale > 0 && overlay ? outlines.map((outline) => (
+             <TraceDrawing key={outline.id} points={outline.points}
+                           width={state.width * scale} height={state.height * scale}
+                           color={outline.scope === "LINE" ? theme.color["evidence-measured"] : theme.color.accent}
+                           thickness={1} opacity={outline.scope === "LINE" ? 0.55 : 0.35} />
+           )) : null}
         </View>
       </ScrollView>
       {!matches && bundle ? <Body muted>{reportText(locale, "image.frame_mismatch")}</Body> : null}
