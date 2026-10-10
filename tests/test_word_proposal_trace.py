@@ -16,7 +16,7 @@ def test_raw_filter_and_assignment_rejections():
     raw = [
         WordDetection(Box(20, 20, 50, 20), 500),
         WordDetection(Box(20, 20, 50, 20), 500),
-        WordDetection(Box(150, 20, 70, 20), 500),
+        WordDetection(Box(90, 20, 20, 20), 500),
     ]
     trace = {}
     filtered = filter_word_proposals(raw, mask.shape, diagnostics=trace)
