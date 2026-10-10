@@ -142,7 +142,8 @@ def compose(config: RuntimeConfig) -> Services:
                             permissions=permissions)
     return Services(environment=config.environment, clock=clock, identity=identity, permissions=permissions,
                     report_store_for=reports, kill_switches=kill_switches,
-                    dev_identity=provider if isinstance(provider, FakeIdentityProvider) else None,
+                    dev_identity=provider if isinstance(provider, FakeIdentityProvider) and not public_guest_only else None,
+                    guest_only=public_guest_only,
                     intake=intake, dev_store=store, commerce=commerce,
                     report_access=access, exports=exports,
                     feedback=FeedbackService(reports=reports, repo=PostgresFeedbackRepository(db), clock=clock),
