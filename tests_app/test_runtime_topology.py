@@ -137,6 +137,15 @@ def services(readiness):
     )
 
 
+def test_public_synthetic_guest_endpoint_refuses_account_bearers():
+    api = services(lambda: None)
+    api.guest_only = True
+    client = TestClient(create_app(api))
+    response = client.get("/v1/me", headers={"Authorization": "Bearer fakeid.kid-1.tok_1234"})
+    assert response.status_code == 401
+    assert response.json() == {"error": "guest_only_test_endpoint"}
+
+
 def test_health_liveness_has_no_readiness_dependency():
     called = False
     def ready():
