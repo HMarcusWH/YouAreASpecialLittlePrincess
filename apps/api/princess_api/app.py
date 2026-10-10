@@ -108,6 +108,8 @@ class Services:
     notices: NoticeCatalog | None = None
     # Same-owner, unsaved comparisons over the T18 builder; partner inputs need T22.
     comparisons_enabled: bool = False
+    # Test-only public preview: no account credentials or development token-minting route.
+    guest_only: bool = False
 
 
 class _Strict(BaseModel):
