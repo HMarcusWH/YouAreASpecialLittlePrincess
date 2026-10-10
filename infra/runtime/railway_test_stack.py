@@ -26,6 +26,13 @@ COMMON = (
 
 def role_env(role: str) -> dict[str, str]:
     environment = {key: os.environ[key] for key in COMMON if key in os.environ}
+    # Bound BLAS/OpenMP thread pools within the Trial plan's 1 GB container memory.
+    # Otherwise scientific imports may reserve large per-thread stacks.
+    environment.update({
+        "OPENBLAS_NUM_THREADS": "1", "OMP_NUM_THREADS": "1",
+        "MKL_NUM_THREADS": "1", "NUMEXPR_NUM_THREADS": "1",
+        "BLIS_NUM_THREADS": "1",
+    })
     environment["PRINCESS_ENV"] = "test"
     environment["PRINCESS_COMPONENT"] = role
     database_key = "PRINCESS_API_DATABASE_URL" if role == "api" else "PRINCESS_WORKER_DATABASE_URL"
