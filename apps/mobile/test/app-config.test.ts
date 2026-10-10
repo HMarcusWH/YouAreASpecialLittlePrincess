@@ -124,7 +124,7 @@ test("remote synthetic guest APK is HTTPS-only and has no development login", ()
     ["development", "test", "http://127.0.0.1:8000"],
     ["staging", "staging", "https://db-migrations-test.up.railway.app"],
     ["development", "local", "https://db-migrations-test.up.railway.app"],
-  ]) {
+  ] as const) {
     assert.throws(() => build({
       INKTROSPECT_APP_VARIANT: variant,
       INKTROSPECT_BACKEND_ENV: backend,
