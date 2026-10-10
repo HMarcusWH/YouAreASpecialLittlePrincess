@@ -11,6 +11,7 @@ from .models import Box
 from .preprocessing.binarize import binarize
 from .preprocessing.denoise import denoise
 from .preprocessing.geometry import deskew, estimate_skew
+from .preprocessing.grid import GRID_PROFILE, GridQualityError, require_qualified, separate_grid
 from .segmentation import attach_words, detect_words, filter_word_proposals, segment_lines
 
 
@@ -127,13 +128,21 @@ def build_measurement_context(gray, mask, *, lines=(), words=(), original_width=
                               rotation_deg, dict(metadata or {}))
 
 
-def prepare_context(image, *, max_dimension=2200, deskew_enabled=True):
+def prepare_context(image, *, max_dimension=2200, deskew_enabled=True, grid_profile='grid-v1'):
+    """Aligned color/rule detection with one authoritative handwriting mask.
+
+    Legacy reproduces the pre-grid measurements. grid-v1 conservatively
+    suppresses separable printed ruling in both line and word detection.
+    """
+    if grid_profile not in ('legacy', GRID_PROFILE):
+        raise ValueError('unknown grid preprocessing profile')
     if not isinstance(image, np.ndarray) or image.dtype != np.uint8 or not image.size:
         raise ValueError('image must be a nonempty uint8 NumPy array')
+    color = None
     if image.ndim == 2:
         gray = image.copy()
     elif image.ndim == 3 and image.shape[2] in (3, 4):
-        color = image[:, :, :3]
+        color = image[:, :, :3].copy()
         if image.shape[2] == 4:
             alpha = image[:, :, 3:4].astype(float) / 255
             color = np.rint(color * alpha + 255 * (1 - alpha)).astype(np.uint8)
@@ -145,6 +154,8 @@ def prepare_context(image, *, max_dimension=2200, deskew_enabled=True):
     target = max(1, round(original_w * scale)), max(1, round(original_h * scale))
     if target != (original_w, original_h):
         gray = cv2.resize(gray, target, interpolation=cv2.INTER_AREA)
+        if color is not None:
+            color = cv2.resize(color, target, interpolation=cv2.INTER_AREA)
     h, w = gray.shape
     correction, rotation = 0.0, None
     skew_method = 'not_estimated'
@@ -152,19 +163,43 @@ def prepare_context(image, *, max_dimension=2200, deskew_enabled=True):
         binary = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)[1]
         if 16 <= np.count_nonzero(binary) < 0.5 * binary.size:
             estimate = estimate_skew(binary)
-            # The upstream confidence is only a heuristic search diagnostic.
             if estimate.confidence > 0 and abs(estimate.angle_degrees) < 14.9:
                 correction = 0.0 if abs(estimate.angle_degrees) < 0.05 else estimate.angle_degrees
                 rotation, skew_method = -float(correction), estimate.method
     corrected, applied = deskew(gray, angle_degrees=correction)
+    corrected_color = None
+    if color is not None and grid_profile != 'legacy':
+        corrected_color, _ = deskew(color, angle_degrees=correction, border_value=(255, 255, 255))
+        if corrected_color.shape[:2] != corrected.shape:
+            raise RuntimeError('co-registered color/gray geometry drift')
     if np.ptp(corrected) == 0:
-        mask, bin_method, removed = np.zeros_like(corrected), 'uniform_image', 0
+        raw_mask, bin_method = np.zeros_like(corrected), 'uniform_image'
     else:
         binary_result = binarize(corrected, method='auto')
-        mask, report = denoise(binary_result.mask, speckle=True, large_blobs=True, closing=False)
-        bin_method, removed = binary_result.method, report.removed_pixels
+        raw_mask, bin_method = binary_result.mask, binary_result.method
+    word_gray = corrected
+    grid_metadata = {'version': 'legacy', 'status': 'not_applied'}
+    if grid_profile != 'legacy':
+        if max(corrected.shape) > 3000:
+            raise GridQualityError('grid_ink_separation_ambiguous')
+        inspected = separate_grid(corrected_color, corrected, raw_mask)
+        require_qualified(inspected)
+        raw_mask = inspected.retained_mask
+        word_gray = inspected.proposal_gray
+        grid_metadata = inspected.diagnostics()
+        if inspected.status != 'absent':
+            # Printed paper alignment is not necessarily a text skew estimate.
+            rotation = None
+            skew_method = 'paper_rule_alignment_not_text_skew'
+    if np.ptp(corrected) == 0:
+        mask, removed = np.zeros_like(corrected), 0
+    else:
+        mask, report = denoise(raw_mask, speckle=True, large_blobs=True, closing=False)
+        removed = report.removed_pixels
+    if grid_profile != 'legacy' and grid_metadata['status'] != 'absent' and not np.any(mask):
+        raise GridQualityError('no_handwriting_after_grid_removal')
     lines = segment_lines(mask)
-    proposals = filter_word_proposals(detect_words(corrected), mask.shape) if lines else []
+    proposals = filter_word_proposals(detect_words(word_gray), mask.shape) if lines else []
     sx, sy = w / original_w, h / original_h
     resize = np.array([[sx, 0, (sx - 1) / 2], [0, sy, (sy - 1) / 2], [0, 0, 1]])
     rotate = np.eye(3)
@@ -179,7 +214,9 @@ def prepare_context(image, *, max_dimension=2200, deskew_enabled=True):
         'original_to_analysis': transform.tolist(), 'analysis_to_original': np.linalg.inv(transform).tolist(),
         'binarize_method': bin_method, 'denoise_removed_pixels': removed,
         'layout_assumption': 'single_column; margins relative to image canvas, not detected paper edges',
-        'rotation_caveat': 'text skew cannot distinguish page rotation from intentional baseline tilt',
+        'rotation_caveat': 'text tilt cannot distinguish page rotation from intentional baseline tilt',
+        'grid_preprocessing': grid_metadata,
+        'word_proposal_input': 'grid_suppressed_gray' if grid_profile != 'legacy' else 'original_gray',
     }
     return build_measurement_context(corrected, mask, lines=lines, words=[p.box for p in proposals],
                                      original_width=original_w, original_height=original_h,
