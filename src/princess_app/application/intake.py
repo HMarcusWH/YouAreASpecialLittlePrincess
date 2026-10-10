@@ -38,15 +38,21 @@ CHALLENGE_ACTION = "upload"
 ENGINE_MAX_DIMENSION = 2200
 
 
-def analysis_config_sha256(max_dimension: int = ENGINE_MAX_DIMENSION, deskew: bool = True) -> str:
-    """Digest of the engine settings a run is requested and executed under."""
-    return hashlib.sha256(f"engine:max_dimension={max_dimension};deskew={'true' if deskew else 'false'};"
-                          f"{policy.INTAKE_POLICY_VERSION}".encode()).hexdigest()
+def analysis_config_sha256(max_dimension: int = ENGINE_MAX_DIMENSION, deskew: bool = True,
+                           grid_profile: str = "grid-v1") -> str:
+    """Digest preprocessing settings; legacy reproduces the exact previous digest."""
+    if grid_profile not in ("legacy", "grid-v1"):
+        raise ValueError("unknown grid preprocessing profile")
+    old = f"engine:max_dimension={max_dimension};deskew={'true' if deskew else 'false'};"
+    if grid_profile == "legacy":
+        return hashlib.sha256((old + policy.INTAKE_POLICY_VERSION).encode()).hexdigest()
+    return hashlib.sha256((old + "grid_preprocessing=grid-v1;" +
+                           policy.INTAKE_POLICY_VERSION).encode()).hexdigest()
 
 
 def engine_config_sha256(engine: object) -> str:
-    return analysis_config_sha256(getattr(engine, "max_dimension"), getattr(engine, "deskew_enabled"))
-
+    return analysis_config_sha256(getattr(engine, "max_dimension"), getattr(engine, "deskew_enabled"),
+                                  getattr(engine, "grid_profile", "legacy"))
 
 ANALYSIS_CONFIG_SHA256 = analysis_config_sha256()
 
