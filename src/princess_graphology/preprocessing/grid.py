@@ -87,8 +87,15 @@ def _candidate_ruling(binary: np.ndarray):
                                  cv2.getStructuringElement(cv2.MORPH_RECT, (lh, 1)))
     vertical = cv2.morphologyEx(binary, cv2.MORPH_OPEN,
                                cv2.getStructuringElement(cv2.MORPH_RECT, (1, lv)))
-    hpos, hpitch = _regular_centres((horizontal > 0).sum(axis=1).astype(float), 4)
-    vpos, vpitch = _regular_centres((vertical > 0).sum(axis=0).astype(float), 4)
+    # Periodic letter stems can resemble vertical graph lines. Printed
+    # ruling must also extend substantially across the page; a 30px glyph
+    # stroke on a 360px canvas is not a grid line.
+    h_profile = (horizontal > 0).sum(axis=1).astype(float)
+    v_profile = (vertical > 0).sum(axis=0).astype(float)
+    h_profile[h_profile < 0.45 * w] = 0
+    v_profile[v_profile < 0.45 * h] = 0
+    hpos, hpitch = _regular_centres(h_profile, 4)
+    vpos, vpitch = _regular_centres(v_profile, 4)
     if not (hpos or vpos):
         return np.zeros_like(binary), None, None, np.zeros_like(binary)
     found = np.zeros_like(binary)
