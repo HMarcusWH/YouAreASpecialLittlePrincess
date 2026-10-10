@@ -15,6 +15,7 @@ export default function Review() {
   const [cropping, setCropping] = useState(false);
   const [cropKey, setCropKey] = useState(0);
   const [notice, setNotice] = useState<ConsentNotice | null | "error">(null);
+  const [noticeRetry, setNoticeRetry] = useState(0);
   const [agreed, setAgreed] = useState(false);
   const [retain, setRetain] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -27,7 +28,7 @@ export default function Review() {
       if (alive) setNotice(notices.find((n) => n.purposes.some((p) => p.purpose_id === "service_processing")) ?? "error");
     }).catch(() => { if (alive) setNotice("error"); });
     return () => { alive = false; };
-  }, [services, locale]);
+  }, [services, locale, noticeRetry]);
 
   if (draft === null) {
     return (
@@ -103,7 +104,19 @@ export default function Review() {
       <Paper>
         <SectionLabel>{t("review.consent_title")}</SectionLabel>
         {notice === null ? <Busy label={t("app.loading")} /> : null}
-        {notice === "error" ? <Banner tone="danger">{t("review.notice_unavailable")}</Banner> : null}
+        {notice === "error" ? (
+          <Banner tone="danger" action={
+            <Button tone="secondary" label={t("common.retry")} testID="review-notice-retry"
+                    onPress={() => {
+                      // The saved image stays private. A new notice must be reviewed
+                      // and independently accepted before an analysis can start.
+                      setAgreed(false);
+                      setRetain(false);
+                      setNotice(null);
+                      setNoticeRetry((attempt) => attempt + 1);
+                    }} />
+          }>{t("review.notice_unavailable")}</Banner>
+        ) : null}
         {notice !== null && notice !== "error" && notice.status === "DRAFT" ? (
           <Banner tone="attention">{t("review.notice_draft")}</Banner>
         ) : null}
