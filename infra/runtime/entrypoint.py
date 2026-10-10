@@ -33,6 +33,11 @@ def main() -> int:
         from railway_test_stack import main as run_test_stack
         return run_test_stack()
     config = preflight(os.environ, ROOT)
+    if os.environ.get("PRINCESS_TEST_BOOTSTRAP") == "1":
+        if config.environment.value != "test" or config.component != "migrations":
+            raise RuntimeError("test role bootstrap only allowed in test migrations")
+        from railway_test_bootstrap import main as run_test_bootstrap
+        return run_test_bootstrap()
     argv = command(config.component)
     os.execvpe(argv[0], argv, os.environ)
     return 127
