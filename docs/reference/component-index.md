@@ -30,6 +30,7 @@ All maintained README entry pages discovered in the source tree are listed below
 | [docs/runbooks/README.md](../../docs/runbooks/README.md) | Runbooks (T24) |
 | [evaluation/README.md](../../evaluation/README.md) | Evaluation and protected data boundaries |
 | [evaluation/premium/README.md](../../evaluation/premium/README.md) | Premium output adversarial cases (T15) |
+| [evaluation/segmentation/README.md](../../evaluation/segmentation/README.md) | Ground-truth line and word benchmark |
 | [fixtures/README.md](../../fixtures/README.md) | Synthetic and contract fixtures |
 | [fixtures/comparisons/README.md](../../fixtures/comparisons/README.md) | T18 synthetic comparison fixtures |
 | [fixtures/reports/README.md](../../fixtures/reports/README.md) | Shared report fixtures (synthetic) |
