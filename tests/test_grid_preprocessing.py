@@ -118,3 +118,20 @@ def test_diagnostics_do_not_include_original_pixels():
         'grid_separation_policy',
     }
     assert all(not isinstance(x, np.ndarray) for x in diagnostics.values())
+
+
+def test_repeating_pen_stems_are_not_grid_lines():
+    """Three synthetic handwritten bands may have regular vertical strokes."""
+    import math
+    gray = np.full((360, 900), 245, np.uint8)
+    for line in range(3):
+        base = 72 + line * 105
+        for x in range(35, 860):
+            wave = int(8 * math.sin(x / 17.0) + 3 * math.sin(x / 5.0))
+            cv2.circle(gray, (x, base + wave), 1, 28, -1)
+            if x % 47 < 3:
+                cv2.line(gray, (x, base + wave - 26), (x, base + wave + 12), 28, 2)
+    raw = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)[1]
+    result = separate_grid(None, gray, raw)
+    assert result.status == 'absent'
+    np.testing.assert_array_equal(result.retained_mask, raw)
