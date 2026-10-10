@@ -446,9 +446,11 @@ export function SourceImage({ reportId, bundle, locale }: { reportId: string; bu
             <Button tone="secondary" label={t("report.evidence_next")} disabled={selected >= traces.length - 1}
                     onPress={() => setSelectedTrace(stepEvidenceIndex(selected, "NEXT", traces.length))} />
           </View>
-          <Button tone="secondary" label={reportText(locale, overlay ? "image.overlay_off" : "image.overlay_on")}
-                  onPress={() => setOverlay(!overlay)} />
         </>
+      ) : null}
+      {matches && (traces.length > 0 || outlines.length > 0) ? (
+        <Button tone="secondary" label={reportText(locale, overlay ? "image.overlay_off" : "image.overlay_on")}
+                onPress={() => setOverlay(!overlay)} />
       ) : null}
     </Paper>
   );
