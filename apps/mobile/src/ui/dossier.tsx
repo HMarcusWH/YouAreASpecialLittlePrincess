@@ -16,7 +16,7 @@ import {
   Banner, Body, Button, EditorialSection, EditorialStatement, Heading, MarginNote, Mono, Paper, SectionLabel,
   styles as base,
 } from "./components.tsx";
-import { evidencePage, evidencePosition, stepEvidenceIndex } from "./evidence-inspector.ts";
+import { evidenceOutlines, evidencePage, evidencePosition, stepEvidenceIndex } from "./evidence-inspector.ts";
 import { EVIDENCE_COLOR, fontSize, MIN_TOUCH, radius, space } from "./theme.ts";
 
 function numberText(value: number, locale: Locale): string {
@@ -370,26 +370,8 @@ export function SourceImage({ reportId, bundle, locale }: { reportId: string; bu
       return [mx * scale, my * scale] as const;
     }),
   })) : [];
-  // Draw accepted server-evidence geometry; not local handwriting detection.
-  const outlines = matches && bundle ? bundle.regions
-    .filter((r) => r.scope === "LINE" || r.scope === "WORD").slice(0, 72)
-    .flatMap((region) => {
-      const corners = [
-        [region.x, region.y], [region.x + region.width, region.y],
-        [region.x + region.width, region.y + region.height],
-        [region.x, region.y + region.height], [region.x, region.y],
-      ];
-      try {
-        const points = corners.map(([x, y]) => {
-          const [mx, my] = mapToAncestor(bundle.frames, region.frame_id, root!.frame_id, x!, y!);
-          return [mx * scale, my * scale] as const;
-        });
-        return points.every(([x, y]) => Number.isFinite(x) && Number.isFinite(y))
-          ? [{ id: region.region_id, scope: region.scope, points }] : [];
-      } catch {
-        return []; // Invalid coordinate lineage cannot become evidence.
-      }
-    }) : [];
+  // Existing server-selected regions only; preserve bounded visibility for both scopes.
+  const outlines = matches && bundle ? evidenceOutlines(bundle, root!.frame_id, scale) : [];
   const selected = traces.length > 0 ? Math.min(selectedTrace, traces.length - 1) : 0;
   return (
     <Paper>
@@ -408,7 +390,7 @@ export function SourceImage({ reportId, bundle, locale }: { reportId: string; bu
                           thickness={index === selected ? 3 : 1.5} opacity={index === selected ? 1 : 0.42} />
           )) : null}
            {scale > 0 && overlay ? outlines.map((outline) => (
-             <TraceDrawing key={outline.id} points={outline.points}
+             <TraceDrawing key={outline.regionId} points={outline.points}
                            width={state.width * scale} height={state.height * scale}
                            color={outline.scope === "LINE" ? theme.color["evidence-measured"] : theme.color.accent}
                            thickness={1} opacity={outline.scope === "LINE" ? 0.55 : 0.35} />
