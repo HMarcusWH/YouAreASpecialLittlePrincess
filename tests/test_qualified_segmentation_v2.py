@@ -1,6 +1,7 @@
 """Regression for Issue #92: ruling, paper edges and false-zero word counts."""
 from __future__ import annotations
 
+import cv2
 import numpy as np
 import pytest
 
@@ -11,6 +12,20 @@ from princess_graphology.preprocessing.grid import GridQualityError
 
 def qualified(image):
     return GraphologyEngine(grid_profile="qualified-v2", deskew_enabled=False).analyze(image)
+
+
+def source_mask_in_analysis_frame(mask, result):
+    """Project synthetic ground-truth ink into the actual output frame.
+
+    Optional page rectification and deskew move accepted LINE region boxes.
+    Comparing those boxes directly against source-image coordinates mistakes
+    a transform for a missed line.
+    """
+    transform = np.asarray(result.metadata["original_to_analysis"], dtype=np.float64)
+    assert transform.shape == (3, 3)
+    assert np.isfinite(transform).all()
+    return cv2.warpPerspective(mask, transform, (result.width, result.height),
+                               flags=cv2.INTER_NEAREST)
 
 
 @pytest.mark.parametrize("ruling", ["gray", "blue"])
@@ -27,8 +42,9 @@ def test_full_frame_and_tabletop_grid_cannot_be_six_false_lines(ruling, backgrou
     assert area.raw_value is None or area.raw_value < 0.75
     accepted = [region for region in result.regions if region.scope == "LINE"]
     assert len(accepted) <= 2
+    ink = source_mask_in_analysis_frame(mask, result)
     for line in accepted:
-        part = mask[line.box.y:line.box.y2, line.box.x:line.box.x2]
+        part = ink[line.box.y:line.box.y2, line.box.x:line.box.x2]
         assert np.count_nonzero(part) > 0, "page ruling accepted as handwriting"
 
 
@@ -54,10 +70,11 @@ def test_gray_grid_detects_qualified_ink_or_refuses_dossier():
     assert line_count.raw_value == 1
     assert result.measurements["PAGE_WORD_COUNT"].raw_value in (2, 3, 4)
     assert any(region.scope == "LINE" for region in result.regions)
+    ink = source_mask_in_analysis_frame(pen_mask, result)
     for region in result.regions:
         if region.scope == "LINE":
-            assert np.count_nonzero(pen_mask[region.box.y:region.box.y2,
-                                            region.box.x:region.box.x2]) > 0
+            assert np.count_nonzero(ink[region.box.y:region.box.y2,
+                                        region.box.x:region.box.x2]) > 0
 
 
 def test_no_false_factual_zero_from_unqualified_word_detection():
@@ -88,10 +105,11 @@ def test_near_edge_pen_must_not_be_clipped_into_invalid_evidence():
         result = qualified(image)
     except GridQualityError:
         return
+    ink = source_mask_in_analysis_frame(pen_mask, result)
     for region in result.regions:
         if region.scope == "LINE":
-            assert np.count_nonzero(pen_mask[region.box.y:region.box.y2,
-                                            region.box.x:region.box.x2]) > 0
+            assert np.count_nonzero(ink[region.box.y:region.box.y2,
+                                        region.box.x:region.box.x2]) > 0
 
 
 def test_legacy_default_is_unchanged_by_new_profile():
