@@ -106,6 +106,41 @@ def qualified_lines(mask: np.ndarray) -> LineSelection:
                           "accepted_lines": len(boxes)})
 
 
+def _gap_groups_v2(mask: np.ndarray, lines: tuple[Box, ...]) -> tuple[Box, ...]:
+    """Group continuous ink by gaps relative to *line height*, not run width.
+
+    A connected script-word may be 100px wide while its interword gap is 25px.
+    The older median-run-width threshold would merge those groups together.
+    """
+    boxes = []
+    for line in lines:
+        crop = mask[line.y:line.y2, line.x:line.x2] > 0
+        active = crop.any(axis=0).astype(np.int8)
+        changes = np.diff(np.pad(active, (1, 1)))
+        runs = list(zip(np.flatnonzero(changes == 1),
+                        np.flatnonzero(changes == -1)))
+        if not runs:
+            continue
+        threshold = max(8, int(round(0.48 * line.height)))
+        groups = []
+        start, end = runs[0]
+        for left, right in runs[1:]:
+            if left - end >= threshold:
+                groups.append((start, end))
+                start = left
+            end = right
+        groups.append((start, end))
+        for left, right in groups:
+            ys, xs = np.where(crop[:, left:right])
+            if not len(xs):
+                continue
+            boxes.append(Box(line.x + left + int(xs.min()), line.y + int(ys.min()),
+                             int(xs.max() - xs.min() + 1), int(ys.max() - ys.min() + 1)))
+            if len(boxes) > MAX_GROUPS:
+                return ()
+    return tuple(boxes)
+
+
 def qualified_words(gray: np.ndarray, mask: np.ndarray,
                     lines: tuple[Box, ...]) -> WordSelection:
     """Combine scale-aware WordDetector diagnostics with conservative ink gaps.
@@ -143,7 +178,8 @@ def qualified_words(gray: np.ndarray, mask: np.ndarray,
                                                "reason": "word_candidate_cap"})
     # Gaps are candidate *groups*, not linguistic word labels. Reject tiny
     # remnants and clearly massive boxes before admitting geometric counts.
-    groups = [box for box in shadow.boxes if box.width >= 6 and box.height >= 4
+    groups = [box for box in _gap_groups_v2(mask, lines)
+              if box.width >= 6 and box.height >= 4
               and box.area >= 20 and box.width <= 0.97 * mask.shape[1]]
     if len(groups) > MAX_GROUPS or any(sum(1 for b in groups if b.y < ln.y2 and b.y2 > ln.y)
                                       > 96 for ln in lines):
@@ -151,6 +187,7 @@ def qualified_words(gray: np.ndarray, mask: np.ndarray,
                                                "reason": "implausible_word_groups"})
     accepted, _ = attach_words(groups, lines, mask)
     diagnostics = {**traces, "gap_candidates": len(shadow.boxes),
+                   "qualified_gap_candidates": len(groups),
                    "accepted_geometry_groups": len(accepted),
                    "detector_accepted_groups": len(detector_boxes)}
     if not accepted:
