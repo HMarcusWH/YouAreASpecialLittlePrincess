@@ -1,0 +1,69 @@
+name: Read-only Railway test provenance probe
+
+# Isolated operator probe. Not an app release or a guest-test APK build.
+# Activate push on this scratch branch only after the reviewed Railway test deploy is live.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-railway-test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Read-only Railway health, build and product contract verification
+        shell: bash
+        env:
+          EXPECTED_REVIEWED_SHA: a2475b4ceff0c951ef059bc9ecb4ca23e40cf697
+        run: |
+          python3 - <<'PY'
+          import hashlib
+          import json
+          import os
+          from pathlib import Path
+          import re
+          import sys
+          from urllib.error import HTTPError, URLError
+          from urllib.request import Request, urlopen
+
+          base = "https://db-migrations-test.up.railway.app"
+          expected = os.environ["EXPECTED_REVIEWED_SHA"].strip().lower()
+          if re.fullmatch(r"[a-f0-9]{40}", expected) is None:
+              raise SystemExit("Invalid independently reviewed test source SHA")
+          manifest = json.loads(Path("contracts/product/v1/manifest.json").read_text("utf-8"))
+          contract = manifest["bundle_sha256"]
+          config = hashlib.sha256(
+              b"engine:max_dimension=2200;deskew=true;grid_preprocessing=grid-v1;intake-policy/1"
+          ).hexdigest()
+
+          def read(path):
+              req = Request(base + path, method="GET", headers={"Accept": "application/json"})
+              try:
+                  with urlopen(req, timeout=20) as response:
+                      if response.status != 200:
+                          raise SystemExit(f"{path}: HTTP {response.status} (expected 200)")
+                      return json.load(response)
+              except HTTPError as error:
+                  raise SystemExit(f"{path}: HTTP {error.code} (expected 200)") from None
+              except URLError as error:
+                  raise SystemExit(f"{path}: HTTPS network error: {type(error.reason).__name__}") from None
+
+          live = read("/health/live")
+          ready = read("/health/ready")
+          build = read("/health/build")
+          if live.get("status") != "ok" or ready.get("status") != "ok":
+              raise SystemExit("Health response shape/status mismatch")
+          if build.get("source_commit_sha") != expected:
+              raise SystemExit("Source mismatch: Railway is not serving independently reviewed commit")
+          if build.get("analysis_config_sha256") != config:
+              raise SystemExit("Grid config mismatch")
+          if build.get("contract_bundle_sha256") != contract:
+              raise SystemExit("Generated product contract mismatch")
+          print("PASS: live + ready + Railway-assigned SHA + grid-v1 config + product contracts")
+          print(f"Reviewed backend source: {expected}")
+          PY
