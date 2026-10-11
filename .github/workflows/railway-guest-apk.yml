@@ -164,6 +164,25 @@ jobs:
                  chunk(b"IDAT", zlib.compress(pixels)) + chunk(b"IEND", b""))
           sha256 = hashlib.sha256(png).hexdigest()
 
+          # Fail closed on provenance BEFORE creating sessions or uploading even synthetic data.
+          expected_config = hashlib.sha256(
+              b"engine:max_dimension=2200;deskew=true;grid_preprocessing=grid-v1;intake-policy/1"
+          ).hexdigest()
+          # The same config can be emitted by many different commits. Verify the
+          # Railway-assigned source SHA independently via read-only build metadata.
+          expected_source = os.environ.get("REVIEWED_RAILWAY_BACKEND_SHA", "").strip().lower()
+          if re.fullmatch(r"[a-f0-9]{40}", expected_source) is None:
+              raise SystemExit("Set reviewed Railway backend commit SHA before building guest APK")
+          build = check(call("GET", "/health/build"), 200, "backend-build-provenance")
+          if build.get("source_commit_sha") != expected_source:
+              raise SystemExit("Railway is not running the reviewed source commit")
+          if build.get("analysis_config_sha256") != expected_config:
+              raise SystemExit("Backend config fingerprint differs from accepted evidence")
+          with open("contracts/product/v1/manifest.json", encoding="utf-8") as stream:
+              expected_contract = json.load(stream)["bundle_sha256"]
+          if build.get("contract_bundle_sha256") != expected_contract:
+              raise SystemExit("APK and Railway backend use incompatible product contracts")
+
           guest = check(call("POST", "/v1/guest-sessions"), 201, "guest-session")
           bearer = guest["guest_token"]
           notices = check(call("GET", "/v1/consent-notices?locale=en"), 200, "notices")
@@ -207,26 +226,9 @@ jobs:
                 200, "read-dossier")
           evidence = check(call("GET", f"/v1/reports/{status['report_id']}/evidence", token=bearer),
                            200, "read-evidence")
-          expected_config = hashlib.sha256(
-              b"engine:max_dimension=2200;deskew=true;grid_preprocessing=grid-v1;intake-policy/1"
-          ).hexdigest()
           observed = evidence.get("analysis", {}).get("versions", {}).get("analysis_config")
           if observed != expected_config:
               raise SystemExit("Remote analysis configuration does not match reviewed grid-v1")
-          # The same config can be emitted by many different commits. Verify the
-          # Railway-assigned source SHA independently via read-only build metadata.
-          expected_source = os.environ.get("REVIEWED_RAILWAY_BACKEND_SHA", "").strip().lower()
-          if re.fullmatch(r"[a-f0-9]{40}", expected_source) is None:
-              raise SystemExit("Set reviewed Railway backend commit SHA before building guest APK")
-          build = check(call("GET", "/health/build"), 200, "backend-build-provenance")
-          if build.get("source_commit_sha") != expected_source:
-              raise SystemExit("Railway is not running the reviewed source commit")
-          if build.get("analysis_config_sha256") != expected_config:
-              raise SystemExit("Backend config fingerprint differs from accepted evidence")
-          with open("contracts/product/v1/manifest.json", encoding="utf-8") as stream:
-              expected_contract = json.load(stream)["bundle_sha256"]
-          if build.get("contract_bundle_sha256") != expected_contract:
-              raise SystemExit("APK and Railway backend use incompatible product contracts")
           print("PASS: exact reviewed backend commit, contracts and grid-v1 provenance; synthetic guest flow")
           PY
       - name: Assemble standalone Hermes APK without Metro
