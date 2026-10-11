@@ -10,7 +10,7 @@ This is a static source inventory, not a claim that every route is enabled. Cond
 
 | Method | Path | Default status | Direct principal dependency | Request model | Handler/source |
 |---|---|---:|---|---|---|
-| GET | `/health/build` | 200 | no; inspect handler | parameters/raw/no body | [health_build](../../apps/api/princess_api/app.py#L247) |
+| GET | `/health/build` | 200 | no; inspect handler | parameters/raw/no body | [health_build](../../apps/api/princess_api/app.py#L248) |
 | GET | `/health/live` | 200 | no; inspect handler | parameters/raw/no body | [health_live](../../apps/api/princess_api/app.py#L242) |
 | GET | `/health/ready` | 200 | no; inspect handler | parameters/raw/no body | [health_ready](../../apps/api/princess_api/app.py#L263) |
 | GET | `/v1/analyses` | 200 | yes | parameters/raw/no body | [list_analyses](../../apps/api/princess_api/app.py#L454) |
