@@ -162,3 +162,46 @@ def test_unqualified_lines_never_produce_baseline_evidence():
     assert not [r for r in result.regions if r.scope in ('LINE', 'WORD')]
     assert not [r for r in evidence['regions'] if r['scope'] in ('LINE', 'WORD', 'BASELINE_POINT')]
     assert not [row for row in evidence['observations'] if row['feature_id'].startswith('BASELINE_')]
+
+@pytest.mark.parametrize("ruling", ["gray", "blue"])
+def test_grid_v2_never_deletes_dark_strokes_at_grid_crossings(ruling):
+    import cv2
+    from princess_graphology.preprocessing.grid_v2 import separate_grid_v2
+    image, pen_mask, _ = page(ruling=ruling, pen="black")
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    raw = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)[1]
+    out = separate_grid_v2(image, gray, raw)
+    assert out.status in ("cleaned", "detected_no_contamination")
+    observed_pen = (raw > 0) & (pen_mask > 0)
+    if np.any(observed_pen):
+        assert np.mean(out.retained_mask[observed_pen] > 0) >= 0.99
+
+
+@pytest.mark.parametrize("perspective", [False, True])
+def test_inset_paper_perspective_never_launders_grid_into_layout(perspective):
+    image, pen_mask, _ = page(ruling="gray", pen="black",
+                              background=True, perspective=perspective)
+    try:
+        result = GraphologyEngine(grid_profile="qualified-v2").analyze(image)
+    except GridQualityError:
+        return
+    assert result.measurements["PAGE_LINE_COUNT"].raw_value in (None, 1, 2)
+    area = result.measurements["PAGE_TEXT_AREA_RATIO"]
+    assert area.raw_value is None or area.raw_value < .8
+    # The source footprint itself may be rectified, so require exact output
+    # lineage rather than comparing analysis-frame boxes to source pixels.
+    a = np.asarray(result.metadata["original_to_analysis"])
+    b = np.asarray(result.metadata["analysis_to_original"])
+    assert np.allclose(a @ b, np.eye(3), atol=1e-6)
+    assert np.count_nonzero(pen_mask) > 0
+
+
+def test_quality_capture_error_copy_is_actionable_not_an_internal_code():
+    from pathlib import Path
+    root = Path(__file__).resolve().parents[1]
+    web = (root / "apps/web/app/analyses/[runId]/JobStatus.tsx").read_text("utf-8")
+    native = (root / "apps/mobile/src/i18n/copy.ts").read_text("utf-8")
+    assert "grid_ink_separation_ambiguous:" in web
+    assert '"work.grid_ink_separation_ambiguous"' in native
+    assert "no_handwriting_after_grid_removal:" in web
+    assert '"work.no_handwriting_after_grid_removal"' in native
