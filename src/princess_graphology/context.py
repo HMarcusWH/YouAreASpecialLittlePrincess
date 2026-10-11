@@ -12,6 +12,9 @@ from .preprocessing.binarize import binarize
 from .preprocessing.denoise import denoise
 from .preprocessing.geometry import deskew, estimate_skew
 from .preprocessing.grid import GRID_PROFILE, GridQualityError, require_qualified, separate_grid
+from .preprocessing.document import detect_document
+from .preprocessing.grid_v2 import separate_grid_v2
+from .segmentation_v2 import qualified_lines, qualified_words
 from .segmentation import attach_words, detect_words, filter_word_proposals, segment_lines
 
 
@@ -135,7 +138,7 @@ def prepare_context(image, *, max_dimension=2200, deskew_enabled=True, grid_prof
     Legacy reproduces the pre-grid measurements. grid-v1 conservatively
     suppresses separable printed ruling in both line and word detection.
     """
-    if grid_profile not in ('legacy', GRID_PROFILE):
+    if grid_profile not in ('legacy', GRID_PROFILE, 'qualified-v2'):
         raise ValueError('unknown grid preprocessing profile')
     if not isinstance(image, np.ndarray) or image.dtype != np.uint8 or not image.size:
         raise ValueError('image must be a nonempty uint8 NumPy array')
@@ -157,6 +160,13 @@ def prepare_context(image, *, max_dimension=2200, deskew_enabled=True, grid_prof
         gray = cv2.resize(gray, target, interpolation=cv2.INTER_AREA)
         if color is not None:
             color = cv2.resize(color, target, interpolation=cv2.INTER_AREA)
+    document_to_resized = np.eye(3)
+    document_meta = {'version': 'none', 'status': 'not_applied'}
+    if grid_profile == 'qualified-v2':
+        document = detect_document(gray, color)
+        gray, color = document.gray, document.color
+        document_to_resized = document.to_input
+        document_meta = document.diagnostics()
     h, w = gray.shape
     correction, rotation = 0.0, None
     skew_method = 'not_estimated'
@@ -183,8 +193,11 @@ def prepare_context(image, *, max_dimension=2200, deskew_enabled=True, grid_prof
     if grid_profile != 'legacy':
         if max(corrected.shape) > 3000:
             raise GridQualityError('grid_ink_separation_ambiguous')
-        inspected = separate_grid(corrected_color, corrected, raw_mask)
-        require_qualified(inspected)
+        if grid_profile == 'qualified-v2':
+            inspected = separate_grid_v2(corrected_color, corrected, raw_mask)
+        else:
+            inspected = separate_grid(corrected_color, corrected, raw_mask)
+            require_qualified(inspected)
         raw_mask = inspected.retained_mask
         word_gray = inspected.proposal_gray
         grid_metadata = inspected.diagnostics()
@@ -199,20 +212,38 @@ def prepare_context(image, *, max_dimension=2200, deskew_enabled=True, grid_prof
         removed = report.removed_pixels
     if grid_profile != 'legacy' and grid_metadata['status'] != 'absent' and not np.any(mask):
         raise GridQualityError('no_handwriting_after_grid_removal')
-    lines = segment_lines(mask)
-    if word_trace is not None:
-        word_trace.update({"raw_contours": 0, "raw_proposals": 0,
-                           "after_geometry_filter": 0, "accepted_words": 0})
-    proposals = (filter_word_proposals(detect_words(word_gray, diagnostics=word_trace),
-                                     mask.shape, diagnostics=word_trace) if lines else [])
-    sx, sy = w / original_w, h / original_h
+    qualification = None
+    if grid_profile == 'qualified-v2':
+        selected = qualified_lines(mask)
+        mask, lines = selected.mask, selected.lines
+        word_selection = qualified_words(word_gray, mask, lines)
+        proposals = [type('CandidateBox', (), {'box': box}) for box in word_selection.boxes]
+        qualification = {
+            'version': 'qualified-segmentation-v2',
+            'foreground': 'qualified' if np.any(mask) and lines else 'unavailable',
+            'lines': selected.status,
+            'words': word_selection.status,
+            'page': 'qualified' if document_meta['status'] == 'qualified' else 'unverified_canvas',
+        }
+        if word_trace is not None:
+            word_trace.update(word_selection.diagnostics)
+        line_trace = selected.diagnostics
+    else:
+        lines = segment_lines(mask)
+        if word_trace is not None:
+            word_trace.update({"raw_contours": 0, "raw_proposals": 0,
+                               "after_geometry_filter": 0, "accepted_words": 0})
+        proposals = (filter_word_proposals(detect_words(word_gray, diagnostics=word_trace),
+                                         mask.shape, diagnostics=word_trace) if lines else [])
+        line_trace = None
+    sx, sy = target[0] / original_w, target[1] / original_h
     resize = np.array([[sx, 0, (sx - 1) / 2], [0, sy, (sy - 1) / 2], [0, 0, 1]])
     rotate = np.eye(3)
     if applied:
         rotate[:2] = cv2.getRotationMatrix2D((w / 2, h / 2), applied, 1)
         rotate[0, 2] += (corrected.shape[1] - w) / 2
         rotate[1, 2] += (corrected.shape[0] - h) / 2
-    transform = rotate @ resize
+    transform = rotate @ np.linalg.inv(document_to_resized) @ resize
     metadata = {
         'coordinate_frame': 'analysis_canvas', 'original_width': original_w, 'original_height': original_h,
         'resize_scale_xy': [sx, sy], 'deskew_applied_deg': float(applied), 'skew_method': skew_method,
@@ -223,6 +254,16 @@ def prepare_context(image, *, max_dimension=2200, deskew_enabled=True, grid_prof
         'grid_preprocessing': grid_metadata,
         'word_proposal_input': 'grid_suppressed_gray' if grid_profile != 'legacy' else 'original_gray',
     }
-    return build_measurement_context(corrected, mask, lines=lines, words=[p.box for p in proposals],
-                                     original_width=original_w, original_height=original_h,
-                                     rotation_deg=rotation, metadata=metadata, word_trace=word_trace)
+    if grid_profile == 'qualified-v2':
+        metadata['document_geometry'] = document_meta
+        metadata['segmentation_profile'] = 'qualified-v2'
+        metadata['line_qualification_diagnostics'] = line_trace
+        metadata['word_qualification_diagnostics'] = word_selection.diagnostics
+        metadata['qualification'] = qualification
+    result = build_measurement_context(corrected, mask, lines=lines,
+                                       words=[p.box for p in proposals],
+                                       original_width=original_w, original_height=original_h,
+                                       rotation_deg=rotation, metadata=metadata, word_trace=word_trace)
+    if grid_profile == 'qualified-v2' and not result.words:
+        result.metadata['qualification']['words'] = 'unavailable'
+    return result

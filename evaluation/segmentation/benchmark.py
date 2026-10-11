@@ -270,7 +270,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--manifest", required=True, type=Path)
     parser.add_argument("--image-root", required=True, type=Path)
-    parser.add_argument("--profile", choices=("legacy", "grid-v1"), default="grid-v1")
+    parser.add_argument("--profile", choices=("legacy", "grid-v1", "qualified-v2"), default="grid-v1")
     parser.add_argument("--allow-authorized-real", action="store_true")
     parser.add_argument("--shadow-projection", action="store_true")
     parser.add_argument("--shadow-words", action="store_true")

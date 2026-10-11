@@ -11,6 +11,7 @@ from .context import prepare_context
 from .measurements import IMPLEMENTED_FEATURE_IDS, MEASUREMENT_STAGES, STAGE_FEATURE_IDS
 from .models import AnalysisResult, Box, Region
 from .schema_validation import load_contract, validate_result
+from .validity import gate
 
 
 def input_pixels_sha256(image):
@@ -31,7 +32,7 @@ class GraphologyEngine:
             raise ValueError('max_dimension must be a positive integer')
         if type(deskew_enabled) is not bool:
             raise ValueError('deskew_enabled must be boolean')
-        if grid_profile not in ("legacy", "grid-v1"):
+        if grid_profile not in ("legacy", "grid-v1", "qualified-v2"):
             raise ValueError("unknown grid preprocessing profile")
         self.max_dimension = max_dimension
         self.deskew_enabled = deskew_enabled
@@ -92,6 +93,16 @@ class GraphologyEngine:
             if len(measurements) != len(expected) or {m.feature_id for m in measurements} != set(expected):
                 raise RuntimeError(f'{stage.__name__} violated its registered feature set')
             for measurement in measurements:
+                if self.grid_profile == 'qualified-v2':
+                    measurement = gate(measurement, ctx.metadata['qualification'])
                 result.add(measurement)
+        if self.grid_profile == 'qualified-v2':
+            status = ctx.metadata['qualification']
+            if status['lines'] != 'qualified':
+                result.warnings.append('Line geometry is unqualified; dependent measurements and highlights are missing.')
+            if status['words'] != 'qualified':
+                result.warnings.append('Word grouping is unavailable; zero accepted proposals is not a zero-word finding.')
+            if status['page'] != 'qualified':
+                result.warnings.append('Physical paper borders are unverified; paper-margin measurements are missing.')
         validate_result(result)
         return ctx, result
