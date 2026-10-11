@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from dataclasses import replace
 
-from .measurements import baseline, ink, layout, quality, segmentation, size, slant, spacing
+from .measurements import baseline, ink, layout, quality, size, slant, spacing
 
 QUALITY_INPUT_ONLY = frozenset(quality.FEATURE_IDS[:4])
 WORD_DEPENDENT = frozenset({"PAGE_WORD_COUNT", "WORD_SPACING_PX",
