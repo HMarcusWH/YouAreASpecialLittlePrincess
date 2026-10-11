@@ -205,3 +205,14 @@ def test_quality_capture_error_copy_is_actionable_not_an_internal_code():
     assert '"work.grid_ink_separation_ambiguous"' in native
     assert "no_handwriting_after_grid_removal:" in web
     assert '"work.no_handwriting_after_grid_removal"' in native
+
+def test_qualified_v2_records_provenance_on_every_canonical_measurement():
+    image, _, _ = page(ruling="none", text=True)
+    result = qualified(image)
+    assert len(result.measurements) == 64
+    for measurement in result.measurements.values():
+        meta = measurement.method_metadata
+        assert meta["processing_profile"] == "qualified-v2"
+        assert meta["grid_preprocessing"] == "grid-v2"
+        assert meta["quality_policy"] == "quality-policy/2"
+        assert meta["qualified_support"] is (measurement.raw_value is not None)
