@@ -122,7 +122,9 @@ class AnalysisWorker:
         reference = analysis_reference(
             analysis_id=f"analysis_{job.run_id}", run_id=job.run_id, owner_id=job.owner_id,
             input_asset_id=capture.asset_id, input_sha256=capture.sha256, processed_sha256=processed,
-            created_at=now, engine_version=self._engine_version, analysis_config_sha256=self._config)
+            created_at=now, engine_version=self._engine_version, analysis_config_sha256=self._config,
+            quality_policy=("quality-policy/2" if getattr(self._engine, "grid_profile", "") == "qualified-v2"
+                            else "quality-policy/1"))
         evidence = build_evidence_bundle(payload, reference, f"evidence_{job.run_id}")
         if evidence.value is None:
             raise Conflict("evidence_contract_rejected")

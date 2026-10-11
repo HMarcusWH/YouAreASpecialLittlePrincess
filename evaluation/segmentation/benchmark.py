@@ -185,12 +185,20 @@ def evaluate(image, row, *, split="synthetic", profile="grid-v1", allow_real=Fal
         if proposals.diagnostics["truncated"]:
             raise ValueError("word candidate cap reached; specimen not scoreable")
         word_shadow = match(expected_words, proposals.boxes)
-    return {**label, "status": "MEASURED", "reason": None,
-            "line_shadow": shadow, "word_shadow": word_shadow, "word_trace": trace,
-            "lines": match(expected_lines, context.lines),
-            "words": match(expected_words, context.words) if expected_words is not None else None,
+    qualification = context.metadata.get("qualification")
+    line_available = qualification is None or qualification.get("lines") == "qualified"
+    word_available = qualification is None or qualification.get("words") == "qualified"
+    status = "MEASURED" if line_available and word_available else "PARTIAL"
+    return {**label, "status": status,
+            "reason": None if status == "MEASURED" else "some_evidence_unqualified",
+            "qualification": qualification, "line_shadow": shadow, "word_shadow": word_shadow,
+            "word_trace": trace,
+            "lines": match(expected_lines, context.lines) if line_available else None,
+            "words": match(expected_words, context.words)
+                     if expected_words is not None and word_available else None,
+            "unavailable_words": expected_words is not None and not word_available,
             "false_zero_words": (bool(expected_words) and not context.words)
-                                if expected_words is not None else None}
+                                if expected_words is not None and word_available else None}
 
 
 def summarize(rows):
@@ -198,7 +206,7 @@ def summarize(rows):
     for row in rows:
         groups[row["split"] + "/" + row["paper"]].append(row)
     def stats(items):
-        measured = [r for r in items if r["status"] == "MEASURED"]
+        measured = [r for r in items if r["status"] in ("MEASURED", "PARTIAL")]
         def family(kind):
             values = [r.get(kind) for r in measured if r.get(kind) is not None]
             return {"annotated_n": len(values),
@@ -213,7 +221,9 @@ def summarize(rows):
                                                             if v["mean_center_error_px"] is not None]))
                                              if any(v["mean_center_error_px"] is not None for v in values) else None}
         return {"count": len(items), "measured": len(measured),
+                "partial": sum(r["status"] == "PARTIAL" for r in measured),
                 "rejected": len(items) - len(measured),
+                "unavailable_words": sum(r.get("unavailable_words") is True for r in measured),
                 "false_zero_words": sum(r.get("false_zero_words") is True for r in measured),
                 "lines": family("lines"), "words": family("words"),
                 "line_shadow": family("line_shadow"), "word_shadow": family("word_shadow")}

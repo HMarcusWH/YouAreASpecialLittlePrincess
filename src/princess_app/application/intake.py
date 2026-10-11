@@ -90,6 +90,9 @@ def runtime_analysis_profile_and_config(environ: Mapping[str, str]) -> tuple[str
             raise ValueError(profile + " cannot serve the public synthetic guest endpoint")
     digest = analysis_config_sha256(grid_profile=profile)
     pin = environ.get(ANALYSIS_CONFIG_PIN_ENV)
+    if (profile == "qualified-v2" and environ.get("PRINCESS_COMPONENT") in ("api", "analysis_worker")
+            and pin is None):
+        raise ValueError("qualified-v2 requires explicit paired API/worker config pin")
     if pin is not None and pin != digest:
         raise ValueError("analysis_config_mismatch")
     return profile, digest

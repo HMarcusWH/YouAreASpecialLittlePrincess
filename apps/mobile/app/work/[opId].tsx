@@ -18,6 +18,8 @@ const BLOCKER_COPY: Record<string, string> = {
   upload_quota_exceeded: "work.upload_quota_exceeded",
   too_many_active_analyses: "work.too_many_active_analyses",
   uploads_disabled: "work.uploads_disabled",
+  grid_ink_separation_ambiguous: "work.grid_ink_separation_ambiguous",
+  no_handwriting_after_grid_removal: "work.no_handwriting_after_grid_removal",
 };
 
 export default function WorkStatus() {

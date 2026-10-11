@@ -13,6 +13,11 @@ const TEXT: Record<RunStatus["state"], string> = {
   CANCELLED: "The analysis was cancelled.",
 };
 
+const QUALITY_FAILURES: Readonly<Record<string, string>> = {
+  grid_ink_separation_ambiguous: "The printed lines could not be separated reliably from the handwriting. Try a clearer, evenly lit photo on plain paper.",
+  no_handwriting_after_grid_removal: "No handwriting could be distinguished reliably from the printed ruling. Try another photograph.",
+};
+
 /** Polls the known run; a refresh resumes this run and never starts new work. */
 export function JobStatus({ runId }: { runId: string }) {
   const router = useRouter();
@@ -54,7 +59,7 @@ export function JobStatus({ runId }: { runId: string }) {
       <p role="status" aria-live="polite" className="status" data-state={status?.state ?? "LOADING"}>
         {status ? TEXT[status.state] : "Loading…"}
       </p>
-      {status?.error_code && <p className="muted">Reason: {status.error_code}</p>}
+      {status?.error_code && <p className="muted" role="alert">{QUALITY_FAILURES[status.error_code] ?? `Reason: ${status.error_code}`}</p>}
       {error && <p role="alert" className="error">{error}</p>}
       {status && (status.state === "QUEUED" || status.state === "RUNNING") && (
         <p><button type="button" className="button button-secondary" onClick={cancel}>Cancel</button></p>

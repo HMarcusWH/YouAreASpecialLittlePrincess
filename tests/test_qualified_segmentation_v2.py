@@ -139,3 +139,17 @@ def test_word_detector_contour_modes_are_bounded_and_traceable():
     assert len(b) <= internal['raw_contours']
     with pytest.raises(ValueError, match='retrieval'):
         detect_words(gray, retrieval='undefined')
+
+def test_partial_qualification_never_selects_invalid_highlight_support():
+    from princess_app.domain.reports.assembly import facts_from_result
+    from princess_app.domain.content import select_highlights
+    image, _, _ = grid_only(ruling='none')
+    result = qualified(image)
+    facts, issues = facts_from_result(result.to_dict())
+    assert not issues
+    assert all(f['value'] is None and f['availability'] == 'MISSING'
+               for f in facts if f['feature_id'] in ('PAGE_LINE_COUNT', 'PAGE_WORD_COUNT',
+                                                      'BASELINE_ANGLE_MEAN'))
+    assert all(all(fact_id not in ('fact.PAGE_LINE_COUNT', 'fact.PAGE_WORD_COUNT',
+                                  'fact.BASELINE_ANGLE_MEAN') for fact_id in item.support_fact_ids)
+               for item in select_highlights(facts, limit=3))
