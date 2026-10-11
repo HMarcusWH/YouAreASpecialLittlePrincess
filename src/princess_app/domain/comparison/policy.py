@@ -44,7 +44,8 @@ def _mismatch_positions(values: Sequence[object]) -> tuple[int, ...]:
     return tuple(index for index, value in enumerate(values) if value != first)
 
 
-def assess_feature(feature_id: str, facts_by_position: Sequence[Mapping[str, Mapping[str, Any]]]) -> FeatureAssessment:
+def assess_feature(feature_id: str, facts_by_position: Sequence[Mapping[str, Mapping[str, Any]]],
+                   *, analysis_versions: Sequence[Mapping[str, Any]] | None = None) -> FeatureAssessment:
     domain = display_domain(feature_id)
     if domain is None:
         raise ValueError(f"feature {feature_id!r} has no approved comparison display domain")
@@ -83,6 +84,20 @@ def assess_feature(feature_id: str, facts_by_position: Sequence[Mapping[str, Map
         return FeatureAssessment(
             feature_id, False, "METHOD_VERSION_MISMATCH", _mismatch_positions(method_versions), ordered, domain
         )
+
+    # T18 display-domain candidates are derived from segmentation/foreground;
+    # a matching feature ID and method version does not prove preprocessing
+    # compatibility. Legacy report snapshots are never silently reinterpreted.
+    if analysis_versions is not None:
+        if len(analysis_versions) != len(ordered):
+            raise ValueError("comparison version count must match inputs")
+        configs = [version.get("analysis_config") for version in analysis_versions]
+        if any(not isinstance(config, str) or not config for config in configs):
+            return FeatureAssessment(feature_id, False, "PROCESSING_CONFIG_UNKNOWN",
+                                     tuple(range(len(ordered))), ordered, domain)
+        if len(set(configs)) != 1:
+            return FeatureAssessment(feature_id, False, "PROCESSING_CONFIG_MISMATCH",
+                                     _mismatch_positions(configs), ordered, domain)
 
     formatting = [(fact.get("formatting_key"), fact.get("precision")) for fact in ordered]
     if len(set(formatting)) != 1:

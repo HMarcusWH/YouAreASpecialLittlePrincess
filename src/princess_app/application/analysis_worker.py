@@ -13,6 +13,7 @@ from datetime import datetime
 from typing import Any, Callable, Mapping, Protocol
 
 from princess_contracts import ValidatedDocument
+from princess_graphology.preprocessing.grid import GridQualityError
 
 from ..domain.analysis import analysis_reference
 from ..domain.evidence import build_evidence_bundle
@@ -110,7 +111,11 @@ class AnalysisWorker:
             raise Fenced("capture_deleted")
         data = self._store.read_object(capture.stored_object(), self._context())
         decoded = self._decode(data, capture.media_type)
-        result_obj, payload = self._engine.analyze_with_evidence(decoded.pixels, source=f"capture:{capture.capture_id}")
+        try:
+            result_obj, payload = self._engine.analyze_with_evidence(decoded.pixels,
+                                                                    source=f"capture:{capture.capture_id}")
+        except GridQualityError as exc:
+            raise InvalidInput(exc.code) from exc
         result = result_obj.to_dict()
         processed = result["metadata"]["input_pixels_sha256"]
         now = self._clock.now()

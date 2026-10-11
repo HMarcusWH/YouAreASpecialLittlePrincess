@@ -442,7 +442,7 @@ export function parsePushInstallation(raw: unknown): string {
 // --- comparisons ------------------------------------------------------------------------
 
 const EXCLUSION_REASONS = ["ABSENT", "UNAVAILABLE", "NON_NUMERIC", "UNIT_MISMATCH", "DOMAIN_UNIT_MISMATCH",
-                           "METHOD_ID_MISMATCH", "METHOD_VERSION_MISMATCH", "FORMATTING_MISMATCH"] as const;
+                           "METHOD_ID_MISMATCH", "METHOD_VERSION_MISMATCH", "PROCESSING_CONFIG_UNKNOWN", "PROCESSING_CONFIG_MISMATCH", "FORMATTING_MISMATCH"] as const;
 
 export function parseComparison(raw: unknown): Comparison {
   const v = object(raw, "");

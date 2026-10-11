@@ -12,6 +12,7 @@ import subprocess
 import sys
 import time
 
+from princess_app.application.intake import analysis_config_sha256, runtime_analysis_profile_and_config
 from runtime_policy import preflight
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -21,6 +22,7 @@ COMMON = (
     "PATH", "PYTHONPATH", "PYTHONUNBUFFERED", "HOME", "LANG",
     "PRINCESS_ENV", "PRINCESS_LOCAL_STORAGE_DIR",
     "PRINCESS_TOMBSTONE_DIR", "PRINCESS_PUBLIC_API_BASE",
+    "PRINCESS_ANALYSIS_PROFILE", "PRINCESS_GRID_V1_RESEARCH_OPT_IN",
 )
 
 
@@ -35,12 +37,25 @@ def role_env(role: str) -> dict[str, str]:
     })
     environment["PRINCESS_ENV"] = "test"
     environment["PRINCESS_COMPONENT"] = role
+    if (os.environ.get("PRINCESS_TEST_PUBLIC_GUEST_ONLY") == "1"
+            and environment.get("PRINCESS_ANALYSIS_PROFILE") == "grid-v1"):
+        raise RuntimeError("grid-v1 is not approved for the public synthetic guest stack")
+    environment["PRINCESS_EXPECTED_ANALYSIS_CONFIG_SHA256"] = os.environ.get(
+        "PRINCESS_EXPECTED_ANALYSIS_CONFIG_SHA256",
+        analysis_config_sha256(grid_profile=environment.get("PRINCESS_ANALYSIS_PROFILE", "legacy")),
+    )
+    runtime_analysis_profile_and_config(environment)
     if role == "api" and os.environ.get("PRINCESS_TEST_PUBLIC_GUEST_ONLY") == "1":
         environment["PRINCESS_TEST_PUBLIC_GUEST_ONLY"] = "1"
         environment["PRINCESS_GUEST_ADMISSIONS_PER_MINUTE"] = "5"
     database_key = "PRINCESS_API_DATABASE_URL" if role == "api" else "PRINCESS_WORKER_DATABASE_URL"
     environment["PRINCESS_DATABASE_URL"] = os.environ[database_key]
     if role == "api":
+        # Railway assigns this immutable source identity on GitHub-origin deployments.
+        # Only the API may expose it through the read-only /health/build endpoint.
+        # Never invent a fallback SHA: absent metadata must keep /health/build at 503.
+        if "RAILWAY_GIT_COMMIT_SHA" in os.environ:
+            environment["RAILWAY_GIT_COMMIT_SHA"] = os.environ["RAILWAY_GIT_COMMIT_SHA"]
         required = ("PRINCESS_SESSION_SECRET", "PRINCESS_IDENTITY_AUDIENCE",
                     "PRINCESS_STORAGE_SIGNING_KEY")
     else:

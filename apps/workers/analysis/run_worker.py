@@ -26,7 +26,9 @@ from princess_app.adapters.postgres.outbox import PostgresErasureOutbox  # noqa:
 from princess_app.adapters.postgres.stores import Database, PostgresPermissionStore, make_engine  # noqa: E402
 from princess_app.application.analysis_worker import AnalysisWorker  # noqa: E402
 from princess_app.application.erasure import ErasureWorker  # noqa: E402
-from princess_app.application.intake import propagate_withdrawal  # noqa: E402
+from princess_app.application.intake import (  # noqa: E402
+    engine_config_sha256, propagate_withdrawal, runtime_analysis_profile_and_config,
+)
 from princess_app.application.permissions import PermissionService  # noqa: E402
 from princess_app.config import load_runtime_config  # noqa: E402
 from princess_app.ports.base import CallContext, Environment, ProviderMode, SystemClock, Unsupported  # noqa: E402
@@ -53,6 +55,10 @@ def main() -> int:
     config = load_runtime_config(os.environ, ROOT)
     if config.component != "analysis_worker":
         raise SystemExit("PRINCESS_COMPONENT must be analysis_worker")
+    profile, active_config_sha256 = runtime_analysis_profile_and_config(os.environ)
+    engine = GraphologyEngine(grid_profile=profile)
+    if engine_config_sha256(engine) != active_config_sha256:
+        raise RuntimeError("analysis_config_mismatch")
     if config.provider_mode("ObjectStore") is not ProviderMode.FAKE:
         raise Unsupported("object_store_adapter_not_configured", detail="ADR-004 provider pending")
     clock = SystemClock()
@@ -66,7 +72,7 @@ def main() -> int:
 
     local = config.environment in (Environment.LOCAL, Environment.TEST)
     worker = AnalysisWorker(
-        queue=PostgresJobQueue(db, allow_draft_policy=local), store=store, decode=decode_image, engine=GraphologyEngine(), clock=clock,
+        queue=PostgresJobQueue(db, allow_draft_policy=local), store=store, decode=decode_image, engine=engine, clock=clock,
         context=context, worker_id=f"analysis-{uuid.uuid4().hex[:8]}", engine_version=__version__)
     permissions = PermissionService(PostgresPermissionStore(db), clock, UuidIds(), allow_draft_policy=local)
     repo = PostgresIntakeRepository(db, engine_version=__version__)
