@@ -13,6 +13,7 @@ import numpy as np
 from princess_graphology.context import prepare_context
 from princess_graphology.models import Box
 from princess_graphology.preprocessing.grid import GridQualityError
+from princess_graphology.segmentation_projection import propose_lines
 
 PAPER = frozenset(("blank", "lined", "grid", "form", "unknown"))
 SPLIT = frozenset(("synthetic", "development", "holdout"))
@@ -94,7 +95,8 @@ def validate_record(row, split, *, allow_real=False):
         tuple(_box(box) for box in row["words"]) if "words" in row else None)
 
 
-def evaluate(image, row, *, split="synthetic", profile="grid-v1", allow_real=False):
+def evaluate(image, row, *, split="synthetic", profile="grid-v1", allow_real=False,
+             shadow_projection=False):
     expected_lines, expected_words = validate_record(row, split, allow_real=allow_real)
     label = {"specimen_id": row["specimen_id"], "split": split, "paper": row["paper"]}
     trace = {}
@@ -103,8 +105,9 @@ def evaluate(image, row, *, split="synthetic", profile="grid-v1", allow_real=Fal
     except GridQualityError as error:
         return {**label, "status": "REJECTED", "reason": error.code,
                 "lines": None, "words": None, "false_zero_words": None}
+    shadow = match(expected_lines, propose_lines(context.mask).boxes) if shadow_projection else None
     return {**label, "status": "MEASURED", "reason": None,
-            "word_trace": trace,
+            "line_shadow": shadow, "word_trace": trace,
             "lines": match(expected_lines, context.lines),
             "words": match(expected_words, context.words) if expected_words is not None else None,
             "false_zero_words": (bool(expected_words) and not context.words)
@@ -129,7 +132,8 @@ def summarize(rows):
             "conditions": {key: stats(group) for key, group in sorted(groups.items())}}
 
 
-def run_manifest(manifest: Path, root: Path, *, profile="grid-v1", allow_real=False):
+def run_manifest(manifest: Path, root: Path, *, profile="grid-v1", allow_real=False,
+                 shadow_projection=False):
     """Only explicitly authorized local reads; no image bytes in JSON output."""
     document = json.loads(manifest.read_text("utf-8"))
     if document.get("schema_version") != 1 or document.get("split") not in SPLIT:
@@ -154,7 +158,8 @@ def run_manifest(manifest: Path, root: Path, *, profile="grid-v1", allow_real=Fa
         image = cv2.imdecode(np.frombuffer(blob, np.uint8), cv2.IMREAD_UNCHANGED)
         if image is None:
             raise ValueError("undecodable image")
-        rows.append(evaluate(image, record, split=split, profile=profile, allow_real=allow_real))
+        rows.append(evaluate(image, record, split=split, profile=profile, allow_real=allow_real,
+                             shadow_projection=shadow_projection))
     return {"version": 1, "profile": profile,
             "manifest_sha256": hashlib.sha256(manifest.read_bytes()).hexdigest(),
             "summary": summarize(rows), "results": rows}
@@ -166,9 +171,11 @@ def main():
     parser.add_argument("--image-root", required=True, type=Path)
     parser.add_argument("--profile", choices=("legacy", "grid-v1"), default="grid-v1")
     parser.add_argument("--allow-authorized-real", action="store_true")
+    parser.add_argument("--shadow-projection", action="store_true")
     args = parser.parse_args()
     result = run_manifest(args.manifest, args.image_root, profile=args.profile,
-                          allow_real=args.allow_authorized_real)
+                          allow_real=args.allow_authorized_real,
+                          shadow_projection=args.shadow_projection)
     print(json.dumps(result, indent=2, sort_keys=True))
 
 
