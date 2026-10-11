@@ -97,12 +97,14 @@ def validate_record(row, split, *, allow_real=False):
 def evaluate(image, row, *, split="synthetic", profile="grid-v1", allow_real=False):
     expected_lines, expected_words = validate_record(row, split, allow_real=allow_real)
     label = {"specimen_id": row["specimen_id"], "split": split, "paper": row["paper"]}
+    trace = {}
     try:
-        context = prepare_context(image, grid_profile=profile)
+        context = prepare_context(image, grid_profile=profile, word_trace=trace)
     except GridQualityError as error:
         return {**label, "status": "REJECTED", "reason": error.code,
                 "lines": None, "words": None, "false_zero_words": None}
     return {**label, "status": "MEASURED", "reason": None,
+            "word_trace": trace,
             "lines": match(expected_lines, context.lines),
             "words": match(expected_words, context.words) if expected_words is not None else None,
             "false_zero_words": (bool(expected_words) and not context.words)
