@@ -224,3 +224,35 @@ def test_application_service_is_same_owner_by_default_and_exposes_only_a_t22_par
     allowed = partner_service.create(comparison_id="comparison_partner_contract", principal_id="owner_a",
                                      report_ids=["report_owner_a_1", "report_partner"], kind="PAIR")
     assert allowed.schema_name == "Comparison"
+
+
+def test_processing_config_mismatch_is_excluded_even_if_feature_method_matches():
+    """Previously equal method IDs masked grid/segmentation policy changes."""
+    a = _report("old_config", T0)
+    b = _report("new_config", T0 + timedelta(hours=1))
+    modified = b.to_dict()
+    modified["analysis"]["versions"]["analysis_config"] = _sha("incompatible-new-preprocessing")
+    modified["document_digest"] = None
+    modified["document_digest"] = canonical_digest(modified)
+    compiled = compile_document("ReportDocument", modified)
+    assert compiled.ok, compiled.issues[:3]
+    outcome = build_comparison(comparison_id="comparison_cross_config", kind="PAIR",
+                               reports=[a, compiled.value], created_at=T0 + timedelta(hours=2))
+    assert outcome.ok, outcome.issues[:3]
+    data = outcome.value.data
+    assert data["coverage"]["common_n"] == 0
+    assert all(e["reason"] == "PROCESSING_CONFIG_MISMATCH" for e in data["exclusions"])
+    assert data["differences"] == ()
+
+
+def test_processing_config_unknown_does_not_become_comparable():
+    feature_id = "SLANT_ANGLE_MEAN"
+    report = _report("config_policy", T0)
+    facts = {f["feature_id"]: f for f in report.to_dict()["facts"]}
+    mapped = [{feature_id: facts[feature_id]}, {feature_id: facts[feature_id]}]
+    match = assess_feature(feature_id, mapped, analysis_versions=[
+        {"analysis_config": "a" * 64}, {"analysis_config": "a" * 64}])
+    assert match.comparable
+    unknown = assess_feature(feature_id, mapped, analysis_versions=[
+        {"analysis_config": "a" * 64}, {}])
+    assert unknown.reason == "PROCESSING_CONFIG_UNKNOWN"

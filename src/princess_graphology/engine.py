@@ -26,13 +26,16 @@ def input_pixels_sha256(image):
 class GraphologyEngine:
     """Deterministic static-image descriptors; no personality or pressure inference."""
 
-    def __init__(self, max_dimension=2200, *, deskew_enabled=True):
+    def __init__(self, max_dimension=2200, *, deskew_enabled=True, grid_profile="grid-v1"):
         if type(max_dimension) is not int or max_dimension < 1:
             raise ValueError('max_dimension must be a positive integer')
         if type(deskew_enabled) is not bool:
             raise ValueError('deskew_enabled must be boolean')
+        if grid_profile not in ("legacy", "grid-v1"):
+            raise ValueError("unknown grid preprocessing profile")
         self.max_dimension = max_dimension
         self.deskew_enabled = deskew_enabled
+        self.grid_profile = grid_profile
 
     def analyze_file(self, path):
         path = os.fspath(path)
@@ -58,7 +61,8 @@ class GraphologyEngine:
     def _analyze(self, image, source):
         if not isinstance(source, str):
             raise ValueError('source must be a string')
-        ctx = prepare_context(image, max_dimension=self.max_dimension, deskew_enabled=self.deskew_enabled)
+        ctx = prepare_context(image, max_dimension=self.max_dimension, deskew_enabled=self.deskew_enabled,
+                              grid_profile=self.grid_profile)
         pixels_sha256 = input_pixels_sha256(image)
         contract = load_contract()
         result = AnalysisResult(source=source, width=ctx.width, height=ctx.height)

@@ -24,7 +24,7 @@
       "version": "premium-interpretation-db/1"
     }
   },
-  "bundle_sha256": "9e344db6faf98ef0c45b2c846ef5189c963293865a75e96d76093089ba8149d4",
+  "bundle_sha256": "a67bdf3180f487eb19d95fae971f7bbe2d54559a9a086b705b8476f32342ef23",
   "canonicalization": "utf8-json-sort-keys-no-nonfinite-v1",
   "contract_id": "princess-product-contracts",
   "contract_version": "1.0.0",
@@ -50,7 +50,7 @@
     {
       "path": "schemas/common.schema.json",
       "schema_id": "common.schema.json",
-      "sha256": "56597632ee397d35a9e85f3014e69cddb75ab0cd26460c8f8db6381cc8ded27f"
+      "sha256": "93ea5fd64333176b5cb96a90282f57d991dbf4e25461ec37ef5b993246b87cd1"
     },
     {
       "path": "schemas/comparison.schema.json",

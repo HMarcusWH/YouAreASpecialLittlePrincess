@@ -97,7 +97,10 @@ def build_comparison(*, comparison_id: str, kind: str, reports: Sequence[Validat
     exclusions: list[dict[str, Any]] = []
     assessments: dict[str, Any] = {}
     for feature_id in candidates:
-        assessment = assess_feature(feature_id, fact_maps)
+        assessment = assess_feature(
+            feature_id, fact_maps,
+            analysis_versions=[row["analysis"]["versions"] for row in rows],
+        )
         assessments[feature_id] = assessment
         if assessment.comparable:
             common.append(feature_id)
