@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import hashlib
 import os
+from dataclasses import replace
 
 import cv2
 import numpy as np
@@ -95,6 +96,13 @@ class GraphologyEngine:
             for measurement in measurements:
                 if self.grid_profile == 'qualified-v2':
                     measurement = gate(measurement, ctx.metadata['qualification'])
+                    measurement = replace(measurement, method_metadata={
+                        **measurement.method_metadata,
+                        'processing_profile': 'qualified-v2',
+                        'grid_preprocessing': 'grid-v2',
+                        'quality_policy': 'quality-policy/2',
+                        'qualified_support': measurement.raw_value is not None,
+                    })
                 result.add(measurement)
         if self.grid_profile == 'qualified-v2':
             status = ctx.metadata['qualification']
