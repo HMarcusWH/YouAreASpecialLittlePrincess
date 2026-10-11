@@ -1,3 +1,6 @@
+import type { EvidenceBundle } from "@princess/contracts";
+import { mapToAncestor } from "@princess/report-core";
+
 // Pure state transition for the native evidence step inspector. The inspector
 // selects already-stored evidence only; it never computes, ranks or alters a measurement.
 export type InspectorDirection = "PREVIOUS" | "NEXT";
@@ -33,4 +36,42 @@ export function evidencePage<T>(rows: readonly T[], requestedPage: number, size 
   const start = page * size;
   const end = Math.min(start + size, rows.length);
   return { page, pageCount, start, end, rows: rows.slice(start, end) };
+}
+
+
+export type EvidenceOutline = {
+  regionId: string;
+  scope: "LINE" | "WORD";
+  points: readonly (readonly [number, number])[];
+};
+
+/** Finite, evidence-only line/word outlines; preserve slots for both scopes. */
+export function evidenceOutlines(bundle: EvidenceBundle, rootFrame: string, scale: number,
+                                 maxLines = 24, maxWords = 48): EvidenceOutline[] {
+  if (!Number.isFinite(scale) || scale <= 0) return [];
+  if (![maxLines, maxWords].every((n) => Number.isInteger(n) && n >= 0 && n <= 72)) {
+    throw new RangeError("invalid bounded evidence outline limits");
+  }
+  const regions = [
+    ...bundle.regions.filter((r) => r.scope === "LINE").slice(0, maxLines),
+    ...bundle.regions.filter((r) => r.scope === "WORD").slice(0, maxWords),
+  ];
+  return regions.flatMap((r): EvidenceOutline[] => {
+    if (![r.x, r.y, r.width, r.height].every(Number.isFinite) || r.width <= 0 || r.height <= 0) return [];
+    const source = [
+      [r.x, r.y], [r.x + r.width, r.y],
+      [r.x + r.width, r.y + r.height], [r.x, r.y + r.height],
+      [r.x, r.y],
+    ] as const;
+    try {
+      const points = source.map(([x, y]) => {
+        const [rx, ry] = mapToAncestor(bundle.frames, r.frame_id, rootFrame, x, y);
+        return [rx * scale, ry * scale] as const;
+      });
+      if (!points.every(([x, y]) => Number.isFinite(x) && Number.isFinite(y))) return [];
+      return [{ regionId: r.region_id, scope: r.scope as "LINE" | "WORD", points }];
+    } catch {
+      return []; // Refuse mismatched or malformed coordinate lineage.
+    }
+  });
 }
