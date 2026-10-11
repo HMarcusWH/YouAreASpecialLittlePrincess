@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - feat/railway-two-service-test-stack
+      - feat/grid-aware-preprocessing-v1
       - test/grid-segmentation-device-journey
     paths:
       - "apps/mobile/**"
