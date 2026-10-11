@@ -19,6 +19,7 @@ from princess_app.ports.base import Environment, InvalidInput, TransientUnavaila
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "infra" / "runtime"))
 import runtime_policy  # noqa: E402
+import railway_test_stack  # noqa: E402
 from runtime_policy import preflight  # noqa: E402
 
 DB_TEST = "postgresql://runtime:runtime@127.0.0.1:5432/princess_test"
@@ -165,3 +166,41 @@ def test_health_readiness_is_low_cardinality_and_fails_closed():
     assert response.status_code == 503
     assert response.json() == {"status": "not_ready"}
     assert "/health/ready" not in client.get("/openapi.json").json()["paths"]
+
+
+def test_railway_test_stack_forwards_git_provenance_only_to_api(monkeypatch):
+    """The API must get genuine Railway source metadata; the worker must not."""
+    monkeypatch.setattr(railway_test_stack, "preflight", lambda _env, _root: None)
+    for key, value in {
+        "PRINCESS_ENV": "test",
+        "PRINCESS_API_DATABASE_URL": "postgresql://api:synthetic@db/princess_test",
+        "PRINCESS_WORKER_DATABASE_URL": "postgresql://worker:synthetic@db/princess_test",
+        "PRINCESS_SESSION_SECRET": "synthetic-only-api-session",
+        "PRINCESS_IDENTITY_AUDIENCE": "princess-api",
+        "PRINCESS_STORAGE_SIGNING_KEY": "synthetic-only-api-storage",
+        "PRINCESS_STORAGE_READ_KEY": "synthetic-only-worker-storage",
+        "RAILWAY_GIT_COMMIT_SHA": "a" * 40,
+    }.items():
+        monkeypatch.setenv(key, value)
+    api_env = railway_test_stack.role_env("api")
+    worker_env = railway_test_stack.role_env("analysis_worker")
+    assert api_env["RAILWAY_GIT_COMMIT_SHA"] == "a" * 40
+    assert "RAILWAY_GIT_COMMIT_SHA" not in worker_env
+    assert "PRINCESS_STORAGE_READ_KEY" not in api_env
+    assert "PRINCESS_SESSION_SECRET" not in worker_env
+
+
+def test_railway_test_stack_does_not_fabricate_missing_git_commit(monkeypatch):
+    """A deployment without Railway Git metadata must fail closed at /health/build."""
+    monkeypatch.setattr(railway_test_stack, "preflight", lambda _env, _root: None)
+    for key, value in {
+        "PRINCESS_ENV": "test",
+        "PRINCESS_API_DATABASE_URL": "postgresql://api:synthetic@db/princess_test",
+        "PRINCESS_SESSION_SECRET": "synthetic-only-api-session",
+        "PRINCESS_IDENTITY_AUDIENCE": "princess-api",
+        "PRINCESS_STORAGE_SIGNING_KEY": "synthetic-only-api-storage",
+    }.items():
+        monkeypatch.setenv(key, value)
+    monkeypatch.delenv("RAILWAY_GIT_COMMIT_SHA", raising=False)
+    api_env = railway_test_stack.role_env("api")
+    assert "RAILWAY_GIT_COMMIT_SHA" not in api_env
