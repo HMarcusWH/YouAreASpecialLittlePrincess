@@ -1,3 +1,5 @@
+name: Inktrospect Railway guest-test APK
+
 # Expensive, real-backend-dependent artifact creation is explicitly opt-in.
 # PR CI validates the code without needing a live reviewed Railway SHA.
 on:
