@@ -3,6 +3,11 @@ name: Read-only Railway test provenance probe
 # Isolated operator probe. Not an app release or a guest-test APK build.
 # Activate push on this scratch branch only after the reviewed Railway test deploy is live.
 on:
+  push:
+    branches:
+      - ops/railway-test-provenance-probe
+    paths:
+      - ".github/workflows/railway-test-provenance-probe.yml"
   workflow_dispatch:
 
 permissions:
