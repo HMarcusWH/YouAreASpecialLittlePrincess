@@ -21,3 +21,5 @@ the additional --allow-authorized-real switch is only a local safety guard,
 not proof of permission. Never check specimens into Git or emit pixels in CI.
 Synthetic results are regression checks, not empirical accuracy. Freeze
 writer-disjoint holdout partitions and targets before parameter selection.
+
+Experimental word grouping can be compared only offline with --shadow-words; a generated visual cluster is not a validated linguistic word. Do not automatically activate or use its output as PAGE_WORD_COUNT.
