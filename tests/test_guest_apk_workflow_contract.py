@@ -28,6 +28,7 @@ def test_guest_apk_artifact_proves_client_source_and_binary_hash():
 def test_guest_apk_is_opt_in_and_checks_remote_backend_before_install():
     src = WORKFLOW.read_text("utf-8")
     triggers = src.split("permissions:", 1)[0]
+    assert src.startswith("name: Inktrospect Railway guest-test APK\\n".replace("\\n", "\n"))
     assert "workflow_dispatch:" in triggers
     assert "  push:" not in triggers
     checkout = src.index("actions/checkout@")
