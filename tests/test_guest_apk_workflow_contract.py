@@ -38,6 +38,9 @@ def test_guest_apk_is_opt_in_and_checks_remote_backend_before_install():
     guest = src.index("Verify remote HTTPS guest API from GitHub runner")
     assert checkout < preflight < install < recheck < guest
     assert "vars.REVIEWED_RAILWAY_BACKEND_SHA" in src
+    assert "vars.REVIEWED_RAILWAY_BACKEND_SHA || github.sha" in src
+    assert src.count('expected != os.environ.get("GITHUB_SHA", "").strip().lower()') == 2
+    assert 'expected_source != os.environ.get("GITHUB_SHA", "").strip().lower()' in src
     assert "build.get(\"analysis_config_sha256\") != config" in src
     assert "build.get(\"contract_bundle_sha256\") != contract" in src
     assert "Railway source changed since build preflight" in src
