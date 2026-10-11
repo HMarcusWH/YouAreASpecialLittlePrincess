@@ -52,6 +52,7 @@ def test_gray_grid_detects_qualified_ink_or_refuses_dossier():
         return
     line_count = result.measurements["PAGE_LINE_COUNT"]
     assert line_count.raw_value == 1
+    assert result.measurements["PAGE_WORD_COUNT"].raw_value in (2, 3, 4)
     assert any(region.scope == "LINE" for region in result.regions)
     for region in result.regions:
         if region.scope == "LINE":
