@@ -41,6 +41,11 @@ def role_env(role: str) -> dict[str, str]:
     database_key = "PRINCESS_API_DATABASE_URL" if role == "api" else "PRINCESS_WORKER_DATABASE_URL"
     environment["PRINCESS_DATABASE_URL"] = os.environ[database_key]
     if role == "api":
+        # Railway assigns this immutable source identity on GitHub-origin deployments.
+        # Only the API may expose it through the read-only /health/build endpoint.
+        # Never invent a fallback SHA: absent metadata must keep /health/build at 503.
+        if "RAILWAY_GIT_COMMIT_SHA" in os.environ:
+            environment["RAILWAY_GIT_COMMIT_SHA"] = os.environ["RAILWAY_GIT_COMMIT_SHA"]
         required = ("PRINCESS_SESSION_SECRET", "PRINCESS_IDENTITY_AUDIENCE",
                     "PRINCESS_STORAGE_SIGNING_KEY")
     else:
