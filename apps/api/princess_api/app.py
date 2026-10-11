@@ -8,6 +8,7 @@ route handlers.
 from __future__ import annotations
 
 import hashlib
+import os
 import re
 import uuid
 from dataclasses import dataclass, field
@@ -24,7 +25,7 @@ from princess_app.application.comparison import ComparisonService
 from princess_app.application.exports import NOT_RECALLABLE, ExportRow, ExportService
 from princess_app.application.feedback import FeedbackService
 from princess_app.application.identity import IdentityService, Principal
-from princess_app.application.intake import ChallengeProof, IntakeService
+from princess_app.application.intake import ANALYSIS_CONFIG_SHA256, ChallengeProof, IntakeService
 from princess_app.application.notices import NoticeCatalog
 from princess_app.application.notifications import NotificationService
 from princess_app.application.permissions import PermissionService
@@ -242,6 +243,21 @@ def create_app(services: Services) -> FastAPI:
     def health_live() -> dict[str, str]:
         """Process liveness only: no database or provider I/O."""
         return {"status": "ok"}
+
+    @app.get("/health/build", include_in_schema=False)
+    def health_build() -> JSONResponse:
+        """Non-sensitive Railway source provenance; never mistake config for commit ID.
+
+        RAILWAY_GIT_COMMIT_SHA is Railway-provided deployment metadata.
+        Missing provenance fails closed instead of falsely claiming a build match.
+        """
+        sha = os.environ.get("RAILWAY_GIT_COMMIT_SHA", "").lower()
+        verified = re.fullmatch(r"[a-f0-9]{40}", sha) is not None
+        return JSONResponse({
+            "source_commit_sha": sha if verified else None,
+            "analysis_config_sha256": ANALYSIS_CONFIG_SHA256,
+            "contract_bundle_sha256": g.CONTRACT_BUNDLE_SHA256,
+        }, status_code=200 if verified else 503)
 
     @app.get("/health/ready", include_in_schema=False)
     def health_ready() -> JSONResponse:

@@ -1,12 +1,17 @@
-# Select the first image in the Android system picker opened by expo-image-picker.
-# Resource IDs, not screen coordinates: the modern Photo Picker (Google-signed MediaProvider module, with its
-# AOSP-named build as an equivalent) first, then the DocumentsUI fallback.
+# Pick the first synthetic image through Android's actual system Photo Picker.
+# CI emulator evidence (2026-10-11, PR #90) proves MediaProvider may expose a
+# clickable photo via contentDescription ("Photo taken on ...") WITHOUT an
+# icon_thumbnail resource ID. The older ID path passed on PR #80, so retain it.
+# Maestro matches Android contentDescription via text; no tap coordinates,
+# no optional-only selector that could silently skip selection.
 appId: se.inktrospect.development
 name: Pick the first image in the system picker
 ---
+# Wait for the system picker itself, not for an implementation-specific thumbnail ID.
+# English device locale is enforced by tools/run_android_handoff_journey.sh.
 - extendedWaitUntil:
     visible:
-      id: "com\\.google\\.android\\.providers\\.media\\.module:id/icon_thumbnail|com\\.android\\.providers\\.media\\.module:id/icon_thumbnail|com\\.google\\.android\\.documentsui:id/thumbnail|com\\.android\\.documentsui:id/thumbnail"
+      text: "Photos|Albums|Recent|Browse|Photo taken on .*"
     timeout: 60000
 - runFlow:
     when:
@@ -31,4 +36,18 @@ name: Pick the first image in the system picker
     commands:
       - tapOn:
           id: "com\\.(google\\.)?android\\.documentsui:id/thumbnail"
+          index: 0
+
+# Fallback for MediaProvider builds that surface only the image's accessibility
+# label and no stable resource ID (observed: "Photo taken on Oct 11, 2026 2:55 AM").
+# This is checked LAST: when an ID path already tapped the image, the picker is
+# gone and this conditional branch is skipped. The caller asserts the review
+# screen and 900 × 360 synthetic specimen so a skipped selection fails closed.
+- runFlow:
+    when:
+      visible:
+        text: "Photo taken on .*"
+    commands:
+      - tapOn:
+          text: "Photo taken on .*"
           index: 0
