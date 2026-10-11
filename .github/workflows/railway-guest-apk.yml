@@ -19,8 +19,9 @@ jobs:
       INKTROSPECT_API_BASE: https://db-migrations-test.up.railway.app
       INKTROSPECT_REMOTE_GUEST_ONLY: "1"
       EXPO_NO_TELEMETRY: "1"
-      # Reviewed Railway deploy SHA set by the maintainer after checking active deployment metadata.
-      REVIEWED_RAILWAY_BACKEND_SHA: ${{ vars.REVIEWED_RAILWAY_BACKEND_SHA }}
+      # Manual dispatch uses its checkout SHA; an explicit operator pin may override
+      # only when identical to that SHA. The remote /health/build must agree.
+      REVIEWED_RAILWAY_BACKEND_SHA: ${{ vars.REVIEWED_RAILWAY_BACKEND_SHA || github.sha }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
@@ -37,7 +38,9 @@ jobs:
           import urllib.request
           expected = os.environ.get("REVIEWED_RAILWAY_BACKEND_SHA", "").strip().lower()
           if re.fullmatch(r"[0-9a-f]{40}", expected) is None:
-              raise SystemExit("Set REVIEWED_RAILWAY_BACKEND_SHA to reviewed active Railway commit")
+              raise SystemExit("Reviewed Git commit SHA is missing or malformed")
+          if expected != os.environ.get("GITHUB_SHA", "").strip().lower():
+              raise SystemExit("Reviewed Railway source must equal the APK checkout commit")
           req = urllib.request.Request("https://db-migrations-test.up.railway.app/health/build")
           try:
               with urllib.request.urlopen(req, timeout=20) as response:
@@ -95,6 +98,8 @@ jobs:
           expected = os.environ.get("REVIEWED_RAILWAY_BACKEND_SHA", "").strip().lower()
           if re.fullmatch(r"[a-f0-9]{40}", expected) is None:
               raise SystemExit("Reviewed Railway SHA is missing or malformed")
+          if expected != os.environ.get("GITHUB_SHA", "").strip().lower():
+              raise SystemExit("Reviewed Railway source must equal the APK checkout commit")
           try:
               with urllib.request.urlopen(
                   urllib.request.Request("https://db-migrations-test.up.railway.app/health/build"),
@@ -224,7 +229,9 @@ jobs:
           # Railway-assigned source SHA independently via read-only build metadata.
           expected_source = os.environ.get("REVIEWED_RAILWAY_BACKEND_SHA", "").strip().lower()
           if re.fullmatch(r"[a-f0-9]{40}", expected_source) is None:
-              raise SystemExit("Set reviewed Railway backend commit SHA before building guest APK")
+              raise SystemExit("Reviewed Railway backend commit is missing or malformed")
+          if expected_source != os.environ.get("GITHUB_SHA", "").strip().lower():
+              raise SystemExit("APK checkout and reviewed Railway source must be identical")
           build = check(call("GET", "/health/build"), 200, "backend-build-provenance")
           if build.get("source_commit_sha") != expected_source:
               raise SystemExit("Railway is not running the reviewed source commit")
