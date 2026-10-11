@@ -10,50 +10,51 @@ This is a static source inventory, not a claim that every route is enabled. Cond
 
 | Method | Path | Default status | Direct principal dependency | Request model | Handler/source |
 |---|---|---:|---|---|---|
+| GET | `/health/build` | 200 | no; inspect handler | parameters/raw/no body | [health_build](../../apps/api/princess_api/app.py#L248) |
 | GET | `/health/live` | 200 | no; inspect handler | parameters/raw/no body | [health_live](../../apps/api/princess_api/app.py#L242) |
-| GET | `/health/ready` | 200 | no; inspect handler | parameters/raw/no body | [health_ready](../../apps/api/princess_api/app.py#L247) |
-| GET | `/v1/analyses` | 200 | yes | parameters/raw/no body | [list_analyses](../../apps/api/princess_api/app.py#L438) |
-| POST | `/v1/analyses` | 202 | yes | AnalysisBody | [start_analysis](../../apps/api/princess_api/app.py#L432) |
-| GET | `/v1/analyses/{run_id}` | 200 | yes | parameters/raw/no body | [analysis_status](../../apps/api/princess_api/app.py#L446) |
-| POST | `/v1/analyses/{run_id}/cancel` | 200 | yes | parameters/raw/no body | [cancel_analysis](../../apps/api/princess_api/app.py#L452) |
-| DELETE | `/v1/captures/{capture_id}` | 202 | yes | parameters/raw/no body | [delete_capture](../../apps/api/princess_api/app.py#L457) |
-| GET | `/v1/catalog` | 200 | no; inspect handler | parameters/raw/no body | [catalog](../../apps/api/princess_api/app.py#L479) |
-| POST | `/v1/checkout/web` | 201 | yes | CheckoutBody | [web_checkout](../../apps/api/princess_api/app.py#L492) |
-| POST | `/v1/comparisons` | 200 | yes | ComparisonBody | [create_comparison](../../apps/api/princess_api/app.py#L407) |
-| GET | `/v1/consent-notices` | 200 | no; inspect handler | parameters/raw/no body | [consent_notices](../../apps/api/princess_api/app.py#L345) |
-| POST | `/v1/dev/id-tokens` | 201 | no; inspect handler | DevTokenBody | [dev_token](../../apps/api/princess_api/app.py#L629) |
-| PUT | `/v1/dev/uploads/{upload_id}` | 204 | no; inspect handler | parameters/raw/no body | [dev_upload](../../apps/api/princess_api/app.py#L618) |
-| DELETE | `/v1/feedback/{feedback_id}` | 204 | yes | parameters/raw/no body | [withdraw_feedback](../../apps/api/princess_api/app.py#L565) |
-| POST | `/v1/guest-sessions` | 201 | no; inspect handler | parameters/raw/no body | [create_guest](../../apps/api/princess_api/app.py#L272) |
-| DELETE | `/v1/me` | 202 | yes | parameters/raw/no body | [delete_me](../../apps/api/princess_api/app.py#L307) |
-| GET | `/v1/me` | 200 | yes | parameters/raw/no body | [me](../../apps/api/princess_api/app.py#L278) |
-| GET | `/v1/me/credits` | 200 | yes | parameters/raw/no body | [credits](../../apps/api/princess_api/app.py#L487) |
-| POST | `/v1/me/guest-transfer` | 200 | yes | GuestTransferBody | [guest_transfer](../../apps/api/princess_api/app.py#L282) |
-| POST | `/v1/me/logout-everywhere` | 204 | yes | parameters/raw/no body | [logout_everywhere](../../apps/api/princess_api/app.py#L286) |
-| GET | `/v1/me/notification-preferences` | 200 | yes | parameters/raw/no body | [read_notification_preferences](../../apps/api/princess_api/app.py#L598) |
-| PUT | `/v1/me/notification-preferences` | 200 | yes | NotificationPreferencesBody | [write_notification_preferences](../../apps/api/princess_api/app.py#L603) |
-| GET | `/v1/me/payment-account` | 200 | yes | parameters/raw/no body | [payment_account](../../apps/api/princess_api/app.py#L483) |
-| POST | `/v1/me/permissions` | 201 | yes | PermissionBody | [record_permission](../../apps/api/princess_api/app.py#L314) |
-| GET | `/v1/me/permissions/{purpose_id}` | 200 | yes | parameters/raw/no body | [check_permission](../../apps/api/princess_api/app.py#L339) |
-| GET | `/v1/me/push-installations` | 200 | yes | parameters/raw/no body | [list_push](../../apps/api/princess_api/app.py#L583) |
-| POST | `/v1/me/push-installations` | 201 | yes | PushInstallationBody | [register_push](../../apps/api/princess_api/app.py#L576) |
-| DELETE | `/v1/me/push-installations/{installation_id}` | 204 | yes | parameters/raw/no body | [unregister_push](../../apps/api/princess_api/app.py#L590) |
-| POST | `/v1/payments/{rail}/events` | 200 | no; inspect handler | parameters/raw/no body | [payment_events](../../apps/api/princess_api/app.py#L499) |
-| GET | `/v1/premium-jobs/{job_id}` | 200 | yes | parameters/raw/no body | [premium_job](../../apps/api/princess_api/app.py#L609) |
-| POST | `/v1/purchases/claims` | 200 | yes | ClaimBody | [claim_purchase](../../apps/api/princess_api/app.py#L508) |
-| POST | `/v1/report-exports` | 202 | yes | ExportBody | [request_export](../../apps/api/princess_api/app.py#L532) |
-| GET | `/v1/report-exports/{export_id}` | 200 | yes | parameters/raw/no body | [read_export](../../apps/api/princess_api/app.py#L538) |
-| GET | `/v1/report-exports/{export_id}/file` | 200 | yes | parameters/raw/no body | [download_export](../../apps/api/princess_api/app.py#L542) |
-| GET | `/v1/reports` | 200 | yes | parameters/raw/no body | [list_reports](../../apps/api/princess_api/app.py#L355) |
-| DELETE | `/v1/reports/{report_id}` | 202 | yes | parameters/raw/no body | [delete_report](../../apps/api/princess_api/app.py#L386) |
-| GET | `/v1/reports/{report_id}` | 200 | yes | parameters/raw/no body | [read_report](../../apps/api/princess_api/app.py#L365) |
-| GET | `/v1/reports/{report_id}/evidence` | 200 | yes | parameters/raw/no body | [read_report_evidence](../../apps/api/princess_api/app.py#L361) |
-| POST | `/v1/reports/{report_id}/feedback` | 201 | yes | FeedbackBody | [submit_feedback](../../apps/api/princess_api/app.py#L555) |
-| GET | `/v1/reports/{report_id}/premium` | 200 | yes | parameters/raw/no body | [read_premium](../../apps/api/princess_api/app.py#L522) |
-| POST | `/v1/reports/{report_id}/premium` | 202 | yes | PremiumBody | [request_premium](../../apps/api/princess_api/app.py#L514) |
-| GET | `/v1/reports/{report_id}/source-image` | 200 | yes | parameters/raw/no body | [report_source_image](../../apps/api/princess_api/app.py#L394) |
-| POST | `/v1/uploads` | 201 | yes | UploadBody | [reserve_upload](../../apps/api/princess_api/app.py#L418) |
-| POST | `/v1/uploads/{upload_id}/complete` | 200 | yes | CompleteBody | [complete_upload](../../apps/api/princess_api/app.py#L425) |
+| GET | `/health/ready` | 200 | no; inspect handler | parameters/raw/no body | [health_ready](../../apps/api/princess_api/app.py#L263) |
+| GET | `/v1/analyses` | 200 | yes | parameters/raw/no body | [list_analyses](../../apps/api/princess_api/app.py#L454) |
+| POST | `/v1/analyses` | 202 | yes | AnalysisBody | [start_analysis](../../apps/api/princess_api/app.py#L448) |
+| GET | `/v1/analyses/{run_id}` | 200 | yes | parameters/raw/no body | [analysis_status](../../apps/api/princess_api/app.py#L462) |
+| POST | `/v1/analyses/{run_id}/cancel` | 200 | yes | parameters/raw/no body | [cancel_analysis](../../apps/api/princess_api/app.py#L468) |
+| DELETE | `/v1/captures/{capture_id}` | 202 | yes | parameters/raw/no body | [delete_capture](../../apps/api/princess_api/app.py#L473) |
+| GET | `/v1/catalog` | 200 | no; inspect handler | parameters/raw/no body | [catalog](../../apps/api/princess_api/app.py#L495) |
+| POST | `/v1/checkout/web` | 201 | yes | CheckoutBody | [web_checkout](../../apps/api/princess_api/app.py#L508) |
+| POST | `/v1/comparisons` | 200 | yes | ComparisonBody | [create_comparison](../../apps/api/princess_api/app.py#L423) |
+| GET | `/v1/consent-notices` | 200 | no; inspect handler | parameters/raw/no body | [consent_notices](../../apps/api/princess_api/app.py#L361) |
+| POST | `/v1/dev/id-tokens` | 201 | no; inspect handler | DevTokenBody | [dev_token](../../apps/api/princess_api/app.py#L645) |
+| PUT | `/v1/dev/uploads/{upload_id}` | 204 | no; inspect handler | parameters/raw/no body | [dev_upload](../../apps/api/princess_api/app.py#L634) |
+| DELETE | `/v1/feedback/{feedback_id}` | 204 | yes | parameters/raw/no body | [withdraw_feedback](../../apps/api/princess_api/app.py#L581) |
+| POST | `/v1/guest-sessions` | 201 | no; inspect handler | parameters/raw/no body | [create_guest](../../apps/api/princess_api/app.py#L288) |
+| DELETE | `/v1/me` | 202 | yes | parameters/raw/no body | [delete_me](../../apps/api/princess_api/app.py#L323) |
+| GET | `/v1/me` | 200 | yes | parameters/raw/no body | [me](../../apps/api/princess_api/app.py#L294) |
+| GET | `/v1/me/credits` | 200 | yes | parameters/raw/no body | [credits](../../apps/api/princess_api/app.py#L503) |
+| POST | `/v1/me/guest-transfer` | 200 | yes | GuestTransferBody | [guest_transfer](../../apps/api/princess_api/app.py#L298) |
+| POST | `/v1/me/logout-everywhere` | 204 | yes | parameters/raw/no body | [logout_everywhere](../../apps/api/princess_api/app.py#L302) |
+| GET | `/v1/me/notification-preferences` | 200 | yes | parameters/raw/no body | [read_notification_preferences](../../apps/api/princess_api/app.py#L614) |
+| PUT | `/v1/me/notification-preferences` | 200 | yes | NotificationPreferencesBody | [write_notification_preferences](../../apps/api/princess_api/app.py#L619) |
+| GET | `/v1/me/payment-account` | 200 | yes | parameters/raw/no body | [payment_account](../../apps/api/princess_api/app.py#L499) |
+| POST | `/v1/me/permissions` | 201 | yes | PermissionBody | [record_permission](../../apps/api/princess_api/app.py#L330) |
+| GET | `/v1/me/permissions/{purpose_id}` | 200 | yes | parameters/raw/no body | [check_permission](../../apps/api/princess_api/app.py#L355) |
+| GET | `/v1/me/push-installations` | 200 | yes | parameters/raw/no body | [list_push](../../apps/api/princess_api/app.py#L599) |
+| POST | `/v1/me/push-installations` | 201 | yes | PushInstallationBody | [register_push](../../apps/api/princess_api/app.py#L592) |
+| DELETE | `/v1/me/push-installations/{installation_id}` | 204 | yes | parameters/raw/no body | [unregister_push](../../apps/api/princess_api/app.py#L606) |
+| POST | `/v1/payments/{rail}/events` | 200 | no; inspect handler | parameters/raw/no body | [payment_events](../../apps/api/princess_api/app.py#L515) |
+| GET | `/v1/premium-jobs/{job_id}` | 200 | yes | parameters/raw/no body | [premium_job](../../apps/api/princess_api/app.py#L625) |
+| POST | `/v1/purchases/claims` | 200 | yes | ClaimBody | [claim_purchase](../../apps/api/princess_api/app.py#L524) |
+| POST | `/v1/report-exports` | 202 | yes | ExportBody | [request_export](../../apps/api/princess_api/app.py#L548) |
+| GET | `/v1/report-exports/{export_id}` | 200 | yes | parameters/raw/no body | [read_export](../../apps/api/princess_api/app.py#L554) |
+| GET | `/v1/report-exports/{export_id}/file` | 200 | yes | parameters/raw/no body | [download_export](../../apps/api/princess_api/app.py#L558) |
+| GET | `/v1/reports` | 200 | yes | parameters/raw/no body | [list_reports](../../apps/api/princess_api/app.py#L371) |
+| DELETE | `/v1/reports/{report_id}` | 202 | yes | parameters/raw/no body | [delete_report](../../apps/api/princess_api/app.py#L402) |
+| GET | `/v1/reports/{report_id}` | 200 | yes | parameters/raw/no body | [read_report](../../apps/api/princess_api/app.py#L381) |
+| GET | `/v1/reports/{report_id}/evidence` | 200 | yes | parameters/raw/no body | [read_report_evidence](../../apps/api/princess_api/app.py#L377) |
+| POST | `/v1/reports/{report_id}/feedback` | 201 | yes | FeedbackBody | [submit_feedback](../../apps/api/princess_api/app.py#L571) |
+| GET | `/v1/reports/{report_id}/premium` | 200 | yes | parameters/raw/no body | [read_premium](../../apps/api/princess_api/app.py#L538) |
+| POST | `/v1/reports/{report_id}/premium` | 202 | yes | PremiumBody | [request_premium](../../apps/api/princess_api/app.py#L530) |
+| GET | `/v1/reports/{report_id}/source-image` | 200 | yes | parameters/raw/no body | [report_source_image](../../apps/api/princess_api/app.py#L410) |
+| POST | `/v1/uploads` | 201 | yes | UploadBody | [reserve_upload](../../apps/api/princess_api/app.py#L434) |
+| POST | `/v1/uploads/{upload_id}/complete` | 200 | yes | CompleteBody | [complete_upload](../../apps/api/princess_api/app.py#L441) |
 
 ## Request model fields
 

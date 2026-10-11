@@ -433,3 +433,28 @@ def test_push_bindings_and_mail_preferences_over_http(client, app_db):
     clock.advance(1)
     alice = login(api, "alice-n")
     assert api.get("/v1/me/push-installations", headers=alice).json()["installations"] == []
+
+
+
+def test_build_provenance_is_separate_from_analysis_config(client, monkeypatch):
+    from princess_app.application.intake import ANALYSIS_CONFIG_SHA256
+    from princess_contracts import generated as generated
+    api, _ = client
+    monkeypatch.delenv("RAILWAY_GIT_COMMIT_SHA", raising=False)
+    unknown = api.get("/health/build")
+    assert unknown.status_code == 503
+    assert unknown.json()["source_commit_sha"] is None
+
+    sha = "ab" * 20
+    monkeypatch.setenv("RAILWAY_GIT_COMMIT_SHA", sha)
+    response = api.get("/health/build")
+    assert response.status_code == 200
+    assert response.json() == {
+        "source_commit_sha": sha,
+        "analysis_config_sha256": ANALYSIS_CONFIG_SHA256,
+        "contract_bundle_sha256": generated.CONTRACT_BUNDLE_SHA256,
+    }
+    # A configuration fingerprint is not a source revision.
+    assert sha != ANALYSIS_CONFIG_SHA256
+    monkeypatch.setenv("RAILWAY_GIT_COMMIT_SHA", "not-a-commit")
+    assert api.get("/health/build").status_code == 503
