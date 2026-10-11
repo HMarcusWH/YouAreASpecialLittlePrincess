@@ -108,6 +108,8 @@ class Services:
     notices: NoticeCatalog | None = None
     # Same-owner, unsaved comparisons over the T18 builder; partner inputs need T22.
     comparisons_enabled: bool = False
+    # Test-only public preview: no account credentials or development token-minting route.
+    guest_only: bool = False
 
 
 class _Strict(BaseModel):
@@ -261,7 +263,10 @@ def create_app(services: Services) -> FastAPI:
         header = request.headers.get("authorization", "")
         if not header.startswith("Bearer ") or len(header) > 8192:
             raise Unauthenticated("missing_credential")
-        return services.identity.authenticate(header[len("Bearer "):], call_context(request))
+        credential = header[len("Bearer "):]
+        if services.guest_only and not credential.startswith("guest_"):
+            raise Unauthenticated("guest_only_test_endpoint")
+        return services.identity.authenticate(credential, call_context(request))
 
     @app.post("/v1/guest-sessions", status_code=201)
     def create_guest() -> dict:

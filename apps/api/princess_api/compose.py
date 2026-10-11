@@ -107,6 +107,8 @@ def compose(config: RuntimeConfig) -> Services:
     db = Database(make_engine(config.secret("PRINCESS_DATABASE_URL")))
     clock = SystemClock()
     provider = compose_identity_provider(config, clock)
+    public_guest_only = (config.environment is Environment.TEST
+                         and os.environ.get("PRINCESS_TEST_PUBLIC_GUEST_ONLY") == "1")
     admission = GuestAdmission(limit=int(os.environ.get("PRINCESS_GUEST_ADMISSIONS_PER_MINUTE", "300")))
     identity = IdentityService(provider, PostgresIdentityStore(db), clock, UuidIds(),
                                guest_admission=admission)
@@ -140,7 +142,8 @@ def compose(config: RuntimeConfig) -> Services:
                             permissions=permissions)
     return Services(environment=config.environment, clock=clock, identity=identity, permissions=permissions,
                     report_store_for=reports, kill_switches=kill_switches,
-                    dev_identity=provider if isinstance(provider, FakeIdentityProvider) else None,
+                    dev_identity=provider if isinstance(provider, FakeIdentityProvider) and not public_guest_only else None,
+                    guest_only=public_guest_only,
                     intake=intake, dev_store=store, commerce=commerce,
                     report_access=access, exports=exports,
                     feedback=FeedbackService(reports=reports, repo=PostgresFeedbackRepository(db), clock=clock),

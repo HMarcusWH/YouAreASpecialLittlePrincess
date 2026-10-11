@@ -94,8 +94,12 @@ def estimate_skew_hough(binary: np.ndarray, limit: float = 15.0) -> SkewEstimate
     if lines is None or len(lines) == 0:
         return SkewEstimate(0.0, "hough", 0.0)
 
+    # OpenCV bindings can yield (N, 1, 4) or (N, 4) for HoughLinesP.
+    # Indexing [:, 0] on the latter yields scalar coordinates and crashes.
+    # Normalize either representation into one row per (x1, y1, x2, y2).
+    segments = np.asarray(lines).reshape(-1, 4)
     angles = []
-    for x1, y1, x2, y2 in lines[:, 0]:
+    for x1, y1, x2, y2 in segments:
         if x2 == x1:
             continue
         angle = math.degrees(math.atan2(y2 - y1, x2 - x1))

@@ -16,7 +16,7 @@ import {
   Banner, Body, Button, EditorialSection, EditorialStatement, Heading, MarginNote, Mono, Paper, SectionLabel,
   styles as base,
 } from "./components.tsx";
-import { evidencePosition, stepEvidenceIndex } from "./evidence-inspector.ts";
+import { evidencePage, evidencePosition, stepEvidenceIndex } from "./evidence-inspector.ts";
 import { EVIDENCE_COLOR, fontSize, MIN_TOUCH, radius, space } from "./theme.ts";
 
 function numberText(value: number, locale: Locale): string {
@@ -187,6 +187,17 @@ function SlantRange({ bundle, locale }: { bundle: EvidenceBundle; locale: Locale
   const accepted = observations.filter((o) => o.accepted).length;
   const rejected = observations.length - accepted;
   const label = `${reportText(locale, "evidence.slant_observations")}: ${accepted} ${reportText(locale, "evidence.accepted")}, ${rejected} ${reportText(locale, "evidence.rejected")}`;
+  // Thousands of overlapping dots are not useful, and would allocate thousands
+  // of native views. Preserve the source records for paged inspection below.
+  if (observations.length > 96) {
+    return (
+      <View style={local.figure}>
+        <SectionLabel>{reportText(locale, "evidence.slant_observations")}</SectionLabel>
+        <Body muted>{label}</Body>
+        <Body muted>{reportText(locale, "evidence.plot_omitted")}</Body>
+      </View>
+    );
+  }
   return (
     <View accessible accessibilityRole="image" accessibilityLabel={label} style={local.figure}>
       <SectionLabel>{reportText(locale, "evidence.slant_observations")}</SectionLabel>
@@ -226,29 +237,54 @@ function SlantRange({ bundle, locale }: { bundle: EvidenceBundle; locale: Locale
 function ObservationTable({ title, rows, locale }: { title: string; locale: Locale;
   rows: ReadonlyArray<{ key: string; label: string; value: string; accepted: boolean; reason: string | null }> }) {
   const { theme } = useApp();
+  const [expanded, setExpanded] = useState(false);
+  const [requestedPage, setPage] = useState(0);
   if (rows.length === 0) return null;
+  const accepted = rows.filter((row) => row.accepted).length;
+  const current = evidencePage(rows, requestedPage);
+  const countText = rows.length + " " + reportText(locale, "evidence.observation") + " · "
+    + accepted + " " + reportText(locale, "evidence.accepted") + " · "
+    + (rows.length - accepted) + " " + reportText(locale, "evidence.rejected");
   return (
     <View style={local.table}>
       <Heading level={3}>{title}</Heading>
-      {rows.map((row) => {
-        const status = row.accepted ? reportText(locale, "evidence.accepted")
-          : `${reportText(locale, "evidence.rejected")}: ${row.reason ?? ""}`;
-        return (
-          <View key={row.key} accessible accessibilityLabel={`${row.label}, ${row.value}, ${status}`}
-                style={[local.tableRow, { borderColor: theme.color.border }]}>
-            <Text style={[base.small, local.tableCell, { color: theme.color["text-muted"], fontFamily: theme.mono }]}>{row.label}</Text>
-            <Text style={[base.small, { color: theme.color.text, fontFamily: theme.mono }]}>{row.value}</Text>
-            <Text style={[base.small, { color: row.accepted ? theme.color["state-ready"] : theme.color["state-attention"],
-                                        fontFamily: theme.sans }]}>{row.accepted ? "✓ " : "✕ "}{status}</Text>
-          </View>
-        );
-      })}
+      <Body muted>{countText}</Body>
+      <Button tone="secondary" label={reportText(locale, expanded ? "evidence.hide_details" : "evidence.inspect_details")}
+              onPress={() => setExpanded((shown) => !shown)} />
+      {expanded ? (
+        <>
+          <Body muted>{(current.start + 1) + "–" + current.end + " / " + rows.length}</Body>
+          {current.rows.map((row) => {
+            const status = row.accepted ? reportText(locale, "evidence.accepted")
+              : reportText(locale, "evidence.rejected") + ": " + (row.reason ?? "");
+            return (
+              <View key={row.key} accessible accessibilityLabel={row.label + ", " + row.value + ", " + status}
+                    style={[local.tableRow, { borderColor: theme.color.border }]}>
+                <Text style={[base.small, local.tableCell, { color: theme.color["text-muted"], fontFamily: theme.mono }]}>{row.label}</Text>
+                <Text style={[base.small, { color: theme.color.text, fontFamily: theme.mono }]}>{row.value}</Text>
+                <Text style={[base.small, { color: row.accepted ? theme.color["state-ready"] : theme.color["state-attention"],
+                                            fontFamily: theme.sans }]}>{row.accepted ? "✓ " : "✕ "}{status}</Text>
+              </View>
+            );
+          })}
+          {current.pageCount > 1 ? (
+            <View style={local.inspectorActions}>
+              <Button tone="secondary" label={reportText(locale, "evidence.previous_page")}
+                      disabled={current.page === 0} onPress={() => setPage(current.page - 1)} />
+              <Button tone="secondary" label={reportText(locale, "evidence.next_page")}
+                      disabled={current.page >= current.pageCount - 1} onPress={() => setPage(current.page + 1)} />
+            </View>
+          ) : null}
+        </>
+      ) : null}
     </View>
   );
 }
 
 export function EvidencePanel({ bundle, locale }: { bundle: EvidenceBundle; locale: Locale }) {
   const traces = baselineTraces(bundle);
+  const [traceIndex, setTraceIndex] = useState(0);
+  const selectedTrace = traces[Math.min(traceIndex, Math.max(traces.length - 1, 0))];
   const spacing = (featureId: "LINE_SPACING_PX" | "WORD_SPACING_PX") => spacingBrackets(bundle, featureId)
     .map((row, index) => ({ key: `${featureId}-${index}`, label: `${row.from.region_id} → ${row.to.region_id}`,
                             value: `${numberText(row.gap, locale)} px`, accepted: row.accepted,
@@ -263,15 +299,27 @@ export function EvidencePanel({ bundle, locale }: { bundle: EvidenceBundle; loca
       <Body muted>{reportText(locale, "evidence.intro")}</Body>
       <Heading level={3}>{reportText(locale, "evidence.baseline")}</Heading>
       {traces.length === 0 ? <Body muted>{reportText(locale, "evidence.none")}</Body> : null}
-      {traces.map((trace, index) => (
-        <BaselineFigure key={trace.lineRegionId} trace={trace} index={index} bundle={bundle} locale={locale} />
-      ))}
+      {selectedTrace ? (
+        <>
+          <Body muted>{evidencePosition(Math.min(traceIndex, traces.length - 1), traces.length)}</Body>
+          <BaselineFigure key={selectedTrace.lineRegionId} trace={selectedTrace}
+                          index={Math.min(traceIndex, traces.length - 1)} bundle={bundle} locale={locale} />
+          {traces.length > 1 ? (
+            <View style={local.inspectorActions}>
+              <Button tone="secondary" label={reportText(locale, "evidence.previous_page")}
+                      disabled={traceIndex === 0} onPress={() => setTraceIndex((n) => Math.max(0, n - 1))} />
+              <Button tone="secondary" label={reportText(locale, "evidence.next_page")}
+                      disabled={traceIndex >= traces.length - 1}
+                      onPress={() => setTraceIndex((n) => Math.min(traces.length - 1, n + 1))} />
+            </View>
+          ) : null}
+        </>
+      ) : null}
       <PageMap bundle={bundle} locale={locale} />
       <ObservationTable title={reportText(locale, "evidence.regions")} rows={[...spacing("LINE_SPACING_PX"),
                                                                               ...spacing("WORD_SPACING_PX")]}
                         locale={locale} />
       <SlantRange bundle={bundle} locale={locale} />
-      {slant.length > 0 ? <Body muted>{reportText(locale, "evidence.no_histogram")}</Body> : null}
       <ObservationTable title={reportText(locale, "evidence.slant_observations")} rows={slant} locale={locale} />
     </Paper>
   );

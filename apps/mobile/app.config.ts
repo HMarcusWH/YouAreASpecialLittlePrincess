@@ -31,7 +31,14 @@ export default ({ config }: ConfigContext): ExpoConfig => {
   const backendEnvironment = process.env.INKTROSPECT_BACKEND_ENV ?? profile.backend;
   const linkHosts = list(process.env.INKTROSPECT_LINK_HOSTS);
   // Development identity exists only in development builds against a local/test API.
-  const devIdentity = variant === "development" && (backendEnvironment === "local" || backendEnvironment === "test");
+  // An HTTPS guest-only demo must never display development account/token helpers.
+  const remoteGuestOnly = process.env.INKTROSPECT_REMOTE_GUEST_ONLY === "1";
+  if (remoteGuestOnly && (variant !== "development" || backendEnvironment !== "test" ||
+      !process.env.INKTROSPECT_API_BASE?.startsWith("https://"))) {
+    throw new Error("INKTROSPECT_REMOTE_GUEST_ONLY requires development/test over HTTPS");
+  }
+  const devIdentity = !remoteGuestOnly && variant === "development" &&
+    (backendEnvironment === "local" || backendEnvironment === "test");
 
   return {
     ...config,

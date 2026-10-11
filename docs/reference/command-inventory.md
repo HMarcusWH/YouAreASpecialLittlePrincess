@@ -121,6 +121,7 @@ Names and paths are source inventory, not current run status. Core CI is generat
 | [.github/workflows/ci.yml](../../.github/workflows/ci.yml) | CI |
 | [.github/workflows/documentation.yml](../../.github/workflows/documentation.yml) | Documentation handover |
 | [.github/workflows/native.yml](../../.github/workflows/native.yml) | Native foundation |
+| [.github/workflows/railway-guest-apk.yml](../../.github/workflows/railway-guest-apk.yml) | Inktrospect Railway guest-test APK |
 | [.github/workflows/release-compat.yml](../../.github/workflows/release-compat.yml) | Release compatibility |
 | [.github/workflows/roadmap.yml](../../.github/workflows/roadmap.yml) | Roadmap integrity |
 | [.github/workflows/runtime.yml](../../.github/workflows/runtime.yml) | Runtime topology |

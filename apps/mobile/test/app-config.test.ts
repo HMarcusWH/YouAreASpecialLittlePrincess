@@ -107,3 +107,29 @@ test("staging and store builds keep Android cleartext off, require HTTPS and ref
     }
   }
 });
+
+test("remote synthetic guest APK is HTTPS-only and has no development login", () => {
+  const config = build({
+    INKTROSPECT_APP_VARIANT: "development",
+    INKTROSPECT_BACKEND_ENV: "test",
+    INKTROSPECT_API_BASE: "https://db-migrations-test.up.railway.app",
+    INKTROSPECT_REMOTE_GUEST_ONLY: "1",
+  });
+  const runtime = parseRuntimeConfig((config.extra as { runtime: unknown }).runtime);
+  assert.ok(runtime.ok, JSON.stringify(runtime));
+  assert.equal(runtime.config.devIdentity, false);
+  assert.equal(runtime.config.backendEnvironment, "test");
+  assert.equal(runtime.config.apiBaseUrl, "https://db-migrations-test.up.railway.app");
+  for (const [variant, backend, url] of [
+    ["development", "test", "http://127.0.0.1:8000"],
+    ["staging", "staging", "https://db-migrations-test.up.railway.app"],
+    ["development", "local", "https://db-migrations-test.up.railway.app"],
+  ] as const) {
+    assert.throws(() => build({
+      INKTROSPECT_APP_VARIANT: variant,
+      INKTROSPECT_BACKEND_ENV: backend,
+      INKTROSPECT_API_BASE: url,
+      INKTROSPECT_REMOTE_GUEST_ONLY: "1",
+    }), /INKTROSPECT_REMOTE_GUEST_ONLY/);
+  }
+});

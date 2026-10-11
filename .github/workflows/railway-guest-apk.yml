@@ -1,0 +1,238 @@
+name: Inktrospect Railway guest-test APK
+
+on:
+  push:
+    branches:
+      - feat/railway-two-service-test-stack
+    paths:
+      - "apps/mobile/**"
+      - "packages/**"
+      - ".github/workflows/railway-guest-apk.yml"
+      - "pnpm-lock.yaml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  guest-test-apk:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 100
+    env:
+      CI: "1"
+      INKTROSPECT_APP_VARIANT: development
+      INKTROSPECT_BACKEND_ENV: test
+      INKTROSPECT_API_BASE: https://db-migrations-test.up.railway.app
+      INKTROSPECT_REMOTE_GUEST_ONLY: "1"
+      EXPO_NO_TELEMETRY: "1"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: "22.22.2"
+      - run: corepack enable && corepack install
+      - run: pnpm install --frozen-lockfile
+      - name: Check pinned compatibility, TypeScript and native tests
+        run: |
+          pnpm --filter @princess/mobile compat:check
+          pnpm --filter @princess/mobile typecheck
+          pnpm --filter @princess/mobile test
+      - name: Verify public APK configuration cannot mint development logins
+        run: |
+          pnpm --filter @princess/mobile exec expo config --type public --json > "$RUNNER_TEMP/guest-public.json"
+          node - "$RUNNER_TEMP/guest-public.json" <<'NODE'
+          const fs = require("fs");
+          const config = JSON.parse(fs.readFileSync(process.argv[2], "utf8"));
+          const runtime = config.extra?.runtime;
+          if (runtime?.variant !== "development" || runtime?.backendEnvironment !== "test" ||
+              runtime?.devIdentity !== false ||
+              runtime?.apiBaseUrl !== "https://db-migrations-test.up.railway.app" ||
+              config.android?.package !== "se.inktrospect.development")
+            throw Error("remote guest-only public config drift");
+          console.log("Reviewed HTTPS guest-only public config (no account helper)");
+          NODE
+      - name: Verify remote HTTPS guest API from GitHub runner
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json, time, urllib.request, urllib.error
+          base = "https://db-migrations-test.up.railway.app"
+          def request(path, method="GET", body=None, token=None):
+              data = json.dumps(body).encode() if body is not None else None
+              headers = {"Content-Type": "application/json"} if data is not None else {}
+              if token is not None:
+                  headers["Authorization"] = f"Bearer {token}"
+              req = urllib.request.Request(base + path, data=data, headers=headers, method=method)
+              try:
+                  with urllib.request.urlopen(req, timeout=15) as response:
+                      return response.status, response.read()
+              except urllib.error.HTTPError as error:
+                  return error.code, error.read()
+          status = None
+          for attempt in range(10):
+              try:
+                  status, _ = request("/health/ready")
+                  if status == 200:
+                      break
+              except Exception:
+                  pass
+              time.sleep(2)
+          if status != 200:
+              raise SystemExit("Remote HTTPS readiness failed")
+          status, _ = request("/v1/dev/id-tokens", "POST", {"subject": "must-not-exist"})
+          if status != 404:
+              raise SystemExit(f"Development token issuer unexpectedly accessible: HTTP {status}")
+          status, payload = request("/v1/guest-sessions", "POST")
+          if status != 201:
+              raise SystemExit(f"Guest admission returned HTTP {status}")
+          token = json.loads(payload)["guest_token"]
+          if not token.startswith("guest_"):
+              raise SystemExit("Guest token shape invalid")
+          status, payload = request("/v1/me", token=token)
+          if status != 200 or json.loads(payload).get("kind") != "GUEST":
+              raise SystemExit("Guest self lookup failed")
+          status, _ = request("/v1/me", token="fakeid.kid-1.tok_1234")
+          if status != 401:
+              raise SystemExit("Non-guest account token was not rejected")
+          print("HTTPS live guest-only API checks passed; no token printed")
+          PY
+      - name: End-to-end synthetic Free handwriting analysis on Railway
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import hashlib
+          import json
+          import struct
+          import time
+          import urllib.error
+          import urllib.request
+          import zlib
+
+          base = "https://db-migrations-test.up.railway.app"
+
+          def call(method, path, *, token=None, payload=None, media=None):
+              data = json.dumps(payload).encode() if payload is not None else media
+              headers = {}
+              if payload is not None:
+                  headers["Content-Type"] = "application/json"
+              if media is not None:
+                  headers["Content-Type"] = "image/png"
+              if token is not None:
+                  headers["Authorization"] = f"Bearer {token}"
+              req = urllib.request.Request(base + path, data=data, headers=headers, method=method)
+              try:
+                  with urllib.request.urlopen(req, timeout=20) as response:
+                      return response.status, response.read()
+              except urllib.error.HTTPError as error:
+                  return error.code, error.read()
+
+          def check(response, expected, label):
+              status, data = response
+              if status != expected:
+                  # Never print bearer credentials, signed upload URLs, or returned image bytes.
+                  raise SystemExit(f"{label}: expected {expected}, received HTTP {status}")
+              return json.loads(data) if data else {}
+
+          def chunk(kind, data):
+              return (struct.pack(">I", len(data)) + kind + data +
+                      struct.pack(">I", zlib.crc32(kind + data) & 0xffffffff))
+
+          # Programmatically drawn marks, no actual person's handwriting.
+          width, height = 900, 360
+          rows = [bytearray([245]) * width for _ in range(height)]
+          for band in (45, 145, 245):
+              for column in range(16):
+                  x = 24 + 52 * column
+                  y = band + column % 3
+                  for dy in range(3, 28):
+                      rows[y + dy][x] = 20
+                      rows[y + dy][x + 19] = 20
+                  for dx in range(20):
+                      rows[y][x + dx] = 20
+                      rows[y + 28][x + dx] = 20
+          pixels = b"".join(b"\x00" + bytes(row) for row in rows)
+          png = (b"\x89PNG\r\n\x1a\n" +
+                 chunk(b"IHDR", struct.pack(">2I5B", width, height, 8, 0, 0, 0, 0)) +
+                 chunk(b"IDAT", zlib.compress(pixels)) + chunk(b"IEND", b""))
+          sha256 = hashlib.sha256(png).hexdigest()
+
+          guest = check(call("POST", "/v1/guest-sessions"), 201, "guest-session")
+          bearer = guest["guest_token"]
+          notices = check(call("GET", "/v1/consent-notices?locale=en"), 200, "notices")
+          versions = [n["notice_version"] for n in notices["notices"]
+                      if n.get("accepted_for_use") and
+                      any(p["purpose_id"] == "service_processing" for p in n["purposes"])]
+          if not versions:
+              raise SystemExit("No synthetic test processing notice available")
+          notice = versions[0]
+
+          ticket = check(call("POST", "/v1/uploads", token=bearer,
+                              payload={"media_type": "image/png"}), 201, "reserve-upload")
+          if ticket.get("method") != "PUT" or not ticket["url"].startswith(base + "/v1/dev/uploads/"):
+              raise SystemExit("Signed upload was not scoped to the test HTTPS origin")
+          signed_path = ticket["url"][len(base):]
+          check(call("PUT", signed_path, media=png), 204, "signed-upload")
+          capture = check(call("POST", f"/v1/uploads/{ticket['upload_id']}/complete",
+                               token=bearer, payload={"sha256": sha256}), 200, "upload-completion")
+          for purpose in ("service_processing", "image_retention"):
+              check(call("POST", "/v1/me/permissions", token=bearer,
+                         payload={"purpose_id": purpose, "scope_kind": "SPECIMEN",
+                                  "scope_ref": capture["capture_id"], "decision": "GRANT",
+                                  "notice_version": notice,
+                                  "request_id": "railway.synthetic." + purpose}),
+                    201, "processing-consent")
+          run = check(call("POST", "/v1/analyses", token=bearer,
+                           payload={"capture_id": capture["capture_id"]}), 202, "start-analysis")
+          if run["state"] not in ("QUEUED", "RUNNING", "SUCCEEDED"):
+              raise SystemExit(f"Unexpected initial run state: {run['state']}")
+          for attempt in range(60):
+              status = check(call("GET", f"/v1/analyses/{run['run_id']}", token=bearer),
+                             200, "poll-analysis")
+              if status["state"] in ("SUCCEEDED", "FAILED", "CANCELLED"):
+                  break
+              time.sleep(2)
+          else:
+              raise SystemExit("Railway analysis did not reach a terminal state within 120s")
+          if status["state"] != "SUCCEEDED" or not status.get("report_id"):
+              raise SystemExit(f"Railway analysis finished as {status['state']}: {status.get('error_code')}")
+          check(call("GET", f"/v1/reports/{status['report_id']}", token=bearer),
+                200, "read-dossier")
+          print("PASS: synthetic HTTPS capture -> worker -> saved Dossier; no credentials or image data emitted")
+          PY
+      - name: Assemble standalone Hermes APK without Metro
+        shell: bash
+        run: |
+          pnpm --filter @princess/mobile prebuild:android
+          cd apps/mobile/android
+          ./gradlew :app:assembleRelease --no-daemon
+      - name: Inspect and retain debug-signed synthetic guest APK
+        shell: bash
+        run: |
+          set -euo pipefail
+          apk="apps/mobile/android/app/build/outputs/apk/release/app-release.apk"
+          test -f "$apk"
+          unzip -l "$apk" | grep -F "assets/index.android.bundle"
+          build_tools="$(find "$ANDROID_HOME/build-tools" -mindepth 1 -maxdepth 1 -printf '%f\n' | sort -V | tail -1)"
+          "$ANDROID_HOME/build-tools/$build_tools/apksigner" verify --verbose "$apk"
+          mkdir -p dist
+          cp "$apk" dist/inktrospect-railway-guest-test.apk
+          (cd dist && sha256sum inktrospect-railway-guest-test.apk > inktrospect-railway-guest-test.apk.sha256)
+          cat > dist/README.txt <<'EOF'
+          Inktrospect Railway Guest Test (not a production/store-signed app)
+          HTTPS API: https://db-migrations-test.up.railway.app
+          Only synthetic handwriting specimens are authorized by current draft consent.
+          No account login, Premium generation, or purchases. Do not upload private or third-party handwriting.
+          The APK is debug-key signed; it may replace an existing se.inktrospect.development build.
+          EOF
+      - name: Upload APK and integrity record
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: inktrospect-railway-guest-test-${{ github.sha }}
+          path: |
+            dist/inktrospect-railway-guest-test.apk
+            dist/inktrospect-railway-guest-test.apk.sha256
+            dist/README.txt
+          if-no-files-found: error
+          retention-days: 14
