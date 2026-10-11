@@ -124,7 +124,7 @@ def qualified_words(gray: np.ndarray, mask: np.ndarray,
         proposal = cv2.resize(gray, target, interpolation=cv2.INTER_AREA if factor < 1 else cv2.INTER_CUBIC)
     else:
         proposal = gray
-    raw = detect_words(proposal, diagnostics=traces)
+    raw = detect_words(proposal, diagnostics=traces, retrieval='list')
     if factor != 1.:
         resized = []
         from .segmentation import WordDetection

@@ -100,3 +100,22 @@ def test_runtime_default_and_pinned_private_evaluation_configuration():
 def test_invalid_or_public_grid_profile_fails_closed(env):
     with pytest.raises(ValueError, match='grid-v1|unknown grid'):
         runtime_analysis_profile_and_config(env)
+
+def test_qualified_v2_fingerprint_is_separate_and_never_public_by_default():
+    old = analysis_config_sha256()
+    previous_grid = analysis_config_sha256(grid_profile='grid-v1')
+    v2 = analysis_config_sha256(grid_profile='qualified-v2')
+    assert len({old, previous_grid, v2}) == 3
+    assert engine_config_sha256(GraphologyEngine(grid_profile='qualified-v2')) == v2
+    research = {'PRINCESS_ENV': 'test', 'PRINCESS_ANALYSIS_PROFILE': 'qualified-v2',
+                'PRINCESS_SEGMENTATION_V2_RESEARCH_OPT_IN': '1'}
+    assert runtime_analysis_profile_and_config(research) == ('qualified-v2', v2)
+    for forbidden in (
+        {**research, 'PRINCESS_ENV': 'production'},
+        {**research, 'PRINCESS_ENV': 'staging'},
+        {**research, 'PRINCESS_TEST_PUBLIC_GUEST_ONLY': '1'},
+        {'PRINCESS_ENV': 'test', 'PRINCESS_ANALYSIS_PROFILE': 'qualified-v2'},
+        {**research, 'PRINCESS_EXPECTED_ANALYSIS_CONFIG_SHA256': old},
+    ):
+        with pytest.raises(ValueError):
+            runtime_analysis_profile_and_config(forbidden)

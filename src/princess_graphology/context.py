@@ -15,7 +15,7 @@ from .preprocessing.grid import GRID_PROFILE, GridQualityError, require_qualifie
 from .preprocessing.document import detect_document
 from .preprocessing.grid_v2 import separate_grid_v2
 from .segmentation_v2 import qualified_lines, qualified_words
-from .segmentation import attach_words, detect_words, filter_word_proposals, segment_lines
+from .segmentation import WordDetection, attach_words, detect_words, filter_word_proposals, segment_lines
 
 
 def estimate_x_height(components, indices):
@@ -217,7 +217,7 @@ def prepare_context(image, *, max_dimension=2200, deskew_enabled=True, grid_prof
         selected = qualified_lines(mask)
         mask, lines = selected.mask, selected.lines
         word_selection = qualified_words(word_gray, mask, lines)
-        proposals = [type('CandidateBox', (), {'box': box}) for box in word_selection.boxes]
+        proposals = [WordDetection(box) for box in word_selection.boxes]
         qualification = {
             'version': 'qualified-segmentation-v2',
             'foreground': 'qualified' if np.any(mask) and lines else 'unavailable',

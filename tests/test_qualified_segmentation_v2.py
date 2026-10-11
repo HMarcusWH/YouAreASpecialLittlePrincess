@@ -99,3 +99,43 @@ def test_legacy_default_is_unchanged_by_new_profile():
     b = GraphologyEngine(deskew_enabled=False, grid_profile="legacy").analyze(image)
     assert {k: v.to_dict() for k, v in a.measurements.items()} == {
         k: v.to_dict() for k, v in b.measurements.items()}
+
+def test_unqualified_measures_preserve_canonical_feature_ids_and_missing_reasons():
+    image, _, _ = grid_only(ruling='none')
+    result = qualified(image)
+    assert len(result.measurements) == 64
+    for feature in ('PAGE_LINE_COUNT', 'PAGE_WORD_COUNT', 'PAGE_TEXT_AREA_RATIO',
+                    'BASELINE_ANGLE_MEAN', 'INK_DARKNESS_MEAN', 'MARGIN_LEFT_REL'):
+        item = result.measurements[feature]
+        assert item.raw_value is None and item.quality_flag == 'MISSING'
+        assert item.missing_reason and item.n_observations == 0
+    for feature in ('IMG_WIDTH_PX', 'IMG_HEIGHT_PX', 'IMG_MEGAPIXELS', 'IMG_ASPECT_RATIO'):
+        assert result.measurements[feature].raw_value is not None
+
+
+def test_original_and_analysis_transform_round_trip_for_inset_page():
+    from princess_graphology.context import prepare_context
+    image, _, _ = page(ruling='gray', background=True)
+    context = prepare_context(image, grid_profile='qualified-v2', deskew_enabled=False)
+    forward = np.asarray(context.metadata['original_to_analysis'])
+    inverse = np.asarray(context.metadata['analysis_to_original'])
+    assert np.allclose(forward @ inverse, np.eye(3), atol=1e-7)
+    assert np.allclose(inverse @ forward, np.eye(3), atol=1e-7)
+    assert context.metadata['document_geometry']['version'] == 'document-roi-v1'
+    assert context.original_width == image.shape[1]
+    assert context.original_height == image.shape[0]
+
+
+def test_word_detector_contour_modes_are_bounded_and_traceable():
+    import cv2
+    from princess_graphology.segmentation import detect_words
+    image, _, _ = page(ruling='none')
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    external, internal = {}, {}
+    a = detect_words(gray, retrieval='external', diagnostics=external)
+    b = detect_words(gray, retrieval='list', diagnostics=internal)
+    assert external['raw_contours'] <= internal['raw_contours']
+    assert len(a) <= external['raw_contours']
+    assert len(b) <= internal['raw_contours']
+    with pytest.raises(ValueError, match='retrieval'):
+        detect_words(gray, retrieval='undefined')

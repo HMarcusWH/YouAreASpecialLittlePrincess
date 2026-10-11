@@ -82,14 +82,18 @@ def _kernel(kernel_size: int, sigma: float, theta: float):
 
 
 def detect_words(gray: np.ndarray, kernel_size: int = 25, sigma: float = 11.0,
-                 theta: float = 7.0, min_area: int = 80, *, diagnostics=None):
+                 theta: float = 7.0, min_area: int = 80, *, diagnostics=None,
+                 retrieval: str = 'external'):
     if gray.ndim == 3:
         gray = cv2.cvtColor(gray, cv2.COLOR_BGR2GRAY)
     if gray.dtype != np.uint8:
         gray = np.clip(gray, 0, 255).astype(np.uint8)
     filtered = cv2.filter2D(gray, -1, _kernel(kernel_size, sigma, theta), borderType=cv2.BORDER_REPLICATE)
     thresholded = 255 - cv2.threshold(filtered, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)[1]
-    contours = cv2.findContours(thresholded, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[0]
+    if retrieval not in ('external', 'list'):
+        raise ValueError('unknown word contour retrieval mode')
+    mode = cv2.RETR_LIST if retrieval == 'list' else cv2.RETR_EXTERNAL
+    contours = cv2.findContours(thresholded, mode, cv2.CHAIN_APPROX_SIMPLE)[0]
     result = []
     for contour in contours:
         area = cv2.contourArea(contour)
