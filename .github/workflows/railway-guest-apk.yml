@@ -27,6 +27,8 @@ jobs:
       INKTROSPECT_API_BASE: https://db-migrations-test.up.railway.app
       INKTROSPECT_REMOTE_GUEST_ONLY: "1"
       EXPO_NO_TELEMETRY: "1"
+      # Reviewed Railway deploy SHA set by the maintainer after checking active deployment metadata.
+      REVIEWED_RAILWAY_BACKEND_SHA: ${{ vars.REVIEWED_RAILWAY_BACKEND_SHA }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
@@ -106,6 +108,8 @@ jobs:
           python3 - <<'PY'
           import hashlib
           import json
+          import os
+          import re
           import struct
           import time
           import urllib.error
@@ -203,13 +207,27 @@ jobs:
                 200, "read-dossier")
           evidence = check(call("GET", f"/v1/reports/{status['report_id']}/evidence", token=bearer),
                            200, "read-evidence")
-          expected = hashlib.sha256(
+          expected_config = hashlib.sha256(
               b"engine:max_dimension=2200;deskew=true;grid_preprocessing=grid-v1;intake-policy/1"
           ).hexdigest()
           observed = evidence.get("analysis", {}).get("versions", {}).get("analysis_config")
-          if observed != expected:
+          if observed != expected_config:
               raise SystemExit("Remote analysis configuration does not match reviewed grid-v1")
-          print("PASS: synthetic HTTPS capture -> worker -> saved Dossier and grid-v1 evidence")
+          # The same config can be emitted by many different commits. Verify the
+          # Railway-assigned source SHA independently via read-only build metadata.
+          expected_source = os.environ.get("REVIEWED_RAILWAY_BACKEND_SHA", "").strip().lower()
+          if re.fullmatch(r"[a-f0-9]{40}", expected_source) is None:
+              raise SystemExit("Set reviewed Railway backend commit SHA before building guest APK")
+          build = check(call("GET", "/health/build"), 200, "backend-build-provenance")
+          if build.get("source_commit_sha") != expected_source:
+              raise SystemExit("Railway is not running the reviewed source commit")
+          if build.get("analysis_config_sha256") != expected_config:
+              raise SystemExit("Backend config fingerprint differs from accepted evidence")
+          with open("contracts/product/v1/manifest.json", encoding="utf-8") as stream:
+              expected_contract = json.load(stream)["bundle_sha256"]
+          if build.get("contract_bundle_sha256") != expected_contract:
+              raise SystemExit("APK and Railway backend use incompatible product contracts")
+          print("PASS: exact reviewed backend commit, contracts and grid-v1 provenance; synthetic guest flow")
           PY
       - name: Assemble standalone Hermes APK without Metro
         shell: bash
@@ -229,6 +247,7 @@ jobs:
           mkdir -p dist
           cp "$apk" dist/inktrospect-railway-guest-test.apk
           (cd dist && sha256sum inktrospect-railway-guest-test.apk > inktrospect-railway-guest-test.apk.sha256)
+          git rev-parse HEAD > dist/inktrospect-railway-guest-test.source-sha
           cat > dist/README.txt <<'EOF'
           Inktrospect Railway Guest Test (not a production/store-signed app)
           HTTPS API: https://db-migrations-test.up.railway.app
@@ -243,6 +262,7 @@ jobs:
           path: |
             dist/inktrospect-railway-guest-test.apk
             dist/inktrospect-railway-guest-test.apk.sha256
+            dist/inktrospect-railway-guest-test.source-sha
             dist/README.txt
           if-no-files-found: error
           retention-days: 14
