@@ -2,6 +2,24 @@
 
 **Scope:** isolated Inktrospect guest-test environment, never production or a general user upload service.
 
+## PR #80 foundation merge quarantine
+
+- The implicit engine, API intake and worker profile is **legacy**, with the original
+  `engine:max_dimension=2200;deskew=true;intake-policy/1` SHA-256 unchanged.
+  This is a compatibility guard, **not** validation of legacy on gray graph paper.
+- `PRINCESS_ANALYSIS_PROFILE=grid-v1` requires
+  `PRINCESS_ENV=local|test` and `PRINCESS_GRID_V1_RESEARCH_OPT_IN=1`.
+  It must not serve the public synthetic guest endpoint, staging or production.
+  The public Railway guest APK therefore expects the **legacy** hash.
+- API and worker derive configuration with the same resolver. When provided,
+  `PRINCESS_EXPECTED_ANALYSIS_CONFIG_SHA256` must equal the computed digest
+  before startup. The combined Railway test stack pins and propagates this
+  digest to both child processes; queued jobs are also fenced by exact hash.
+- This PR may merge as an **experimental infrastructure foundation only** after
+  exact-head CI, reviewed opt-in restrictions, and explicit maintainer approval.
+  Issue #92 remains open; Segmentation v2 and physical real-photo accuracy
+  qualification are separate gates before production authorization.
+
 ## Immutable identity chain
 
 1. Review and pin the intended `feat/grid-aware-preprocessing-v1` commit SHA.

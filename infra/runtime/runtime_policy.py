@@ -9,6 +9,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Mapping
 
+from princess_app.application.intake import runtime_analysis_profile_and_config
 from princess_app.config import RuntimeConfig, load_runtime_config
 from princess_app.config_supabase import normalized_manifest_sha256, parse_supabase_staging_runtime_binding
 from princess_app.ports.base import Environment, InvalidInput, ProviderMode, Unsupported
@@ -62,6 +63,8 @@ def preflight(env: Mapping[str, str], root: Path = ROOT) -> RuntimeConfig:
     component = config.component
     if component not in EXECUTABLE_COMPONENTS:
         raise InvalidInput("component_not_runtime_executable", detail=component)
+    if component in ("api", "analysis_worker"):
+        runtime_analysis_profile_and_config(env)
 
     for port in PROVIDER_REQUIREMENTS[component]:
         _provider_supported(config, port, root)

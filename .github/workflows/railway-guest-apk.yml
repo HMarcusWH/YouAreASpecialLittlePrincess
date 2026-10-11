@@ -50,14 +50,14 @@ jobs:
           except urllib.error.HTTPError as error:
               raise SystemExit(f"Railway build provenance returned HTTP {error.code}")
           config = hashlib.sha256(
-              b"engine:max_dimension=2200;deskew=true;grid_preprocessing=grid-v1;intake-policy/1"
+              b"engine:max_dimension=2200;deskew=true;intake-policy/1"
           ).hexdigest()
           with open("contracts/product/v1/manifest.json", encoding="utf-8") as source:
               contract = json.load(source)["bundle_sha256"]
           if build.get("source_commit_sha") != expected:
               raise SystemExit("Railway source commit differs from reviewed deployment")
           if build.get("analysis_config_sha256") != config:
-              raise SystemExit("Railway analysis config differs from reviewed grid-v1")
+              raise SystemExit("Railway analysis config differs from reviewed legacy")
           if build.get("contract_bundle_sha256") != contract:
               raise SystemExit("Railway contract bundle differs from reviewed APK contracts")
           print("PASS: reviewed Railway source, config and contract provenance")
@@ -223,7 +223,7 @@ jobs:
 
           # Fail closed on provenance BEFORE creating sessions or uploading even synthetic data.
           expected_config = hashlib.sha256(
-              b"engine:max_dimension=2200;deskew=true;grid_preprocessing=grid-v1;intake-policy/1"
+              b"engine:max_dimension=2200;deskew=true;intake-policy/1"
           ).hexdigest()
           # The same config can be emitted by many different commits. Verify the
           # Railway-assigned source SHA independently via read-only build metadata.
@@ -287,8 +287,8 @@ jobs:
                            200, "read-evidence")
           observed = evidence.get("analysis", {}).get("versions", {}).get("analysis_config")
           if observed != expected_config:
-              raise SystemExit("Remote analysis configuration does not match reviewed grid-v1")
-          print("PASS: exact reviewed backend commit, contracts and grid-v1 provenance; synthetic guest flow")
+              raise SystemExit("Remote analysis configuration does not match reviewed legacy")
+          print("PASS: exact reviewed backend commit, contracts and legacy provenance; synthetic guest flow")
           PY
       - name: Assemble standalone Hermes APK without Metro
         shell: bash

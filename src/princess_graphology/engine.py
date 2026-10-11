@@ -26,7 +26,7 @@ def input_pixels_sha256(image):
 class GraphologyEngine:
     """Deterministic static-image descriptors; no personality or pressure inference."""
 
-    def __init__(self, max_dimension=2200, *, deskew_enabled=True, grid_profile="grid-v1"):
+    def __init__(self, max_dimension=2200, *, deskew_enabled=True, grid_profile="legacy"):
         if type(max_dimension) is not int or max_dimension < 1:
             raise ValueError('max_dimension must be a positive integer')
         if type(deskew_enabled) is not bool:

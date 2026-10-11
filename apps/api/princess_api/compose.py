@@ -39,7 +39,7 @@ from princess_app.application.commerce import CommerceService
 from princess_app.application.exports import ExportService
 from princess_app.application.feedback import FeedbackService
 from princess_app.application.identity import GuestAdmission, IdentityService
-from princess_app.application.intake import IntakeService
+from princess_app.application.intake import IntakeService, runtime_analysis_profile_and_config
 from princess_app.application.notices import NoticeCatalog
 from princess_app.application.notifications import NotificationService
 from princess_app.application.permissions import PermissionService
@@ -104,6 +104,7 @@ def compose_identity_provider(config: RuntimeConfig, clock):
 def compose(config: RuntimeConfig) -> Services:
     if config.component != "api":
         raise Unsupported("wrong_component", detail=config.component)
+    _, active_config_sha256 = runtime_analysis_profile_and_config(os.environ)
     db = Database(make_engine(config.secret("PRINCESS_DATABASE_URL")))
     clock = SystemClock()
     provider = compose_identity_provider(config, clock)
@@ -124,7 +125,8 @@ def compose(config: RuntimeConfig) -> Services:
                                                                                    environment=config.environment),
                            inspect=inspect_header, clock=clock, ids=UuidIds(),
                            challenge_site=os.environ.get("PRINCESS_CHALLENGE_SITE", "localhost"),
-                           uploads_enabled=lambda: config.enabled("uploads"))
+                           uploads_enabled=lambda: config.enabled("uploads"),
+                           analysis_config=active_config_sha256)
     if config.provider_mode("PaymentProvider") is not ProviderMode.FAKE:
         # Real Stripe/StoreKit/Play adapters wait on accounts, products and terms
         # (price_account_terms_before_charges); only the fake rails compose.
@@ -143,7 +145,7 @@ def compose(config: RuntimeConfig) -> Services:
     return Services(environment=config.environment, clock=clock, identity=identity, permissions=permissions,
                     report_store_for=reports, kill_switches=kill_switches,
                     dev_identity=provider if isinstance(provider, FakeIdentityProvider) and not public_guest_only else None,
-                    guest_only=public_guest_only,
+                    guest_only=public_guest_only, analysis_config_sha256=active_config_sha256,
                     intake=intake, dev_store=store, commerce=commerce,
                     report_access=access, exports=exports,
                     feedback=FeedbackService(reports=reports, repo=PostgresFeedbackRepository(db), clock=clock),

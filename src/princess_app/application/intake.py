@@ -11,7 +11,7 @@ from __future__ import annotations
 import hashlib
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Callable, Protocol
+from typing import Callable, Mapping, Protocol
 
 from ..domain import intake as policy
 from ..domain.intake import ImageHeader
@@ -39,7 +39,7 @@ ENGINE_MAX_DIMENSION = 2200
 
 
 def analysis_config_sha256(max_dimension: int = ENGINE_MAX_DIMENSION, deskew: bool = True,
-                           grid_profile: str = "grid-v1") -> str:
+                           grid_profile: str = "legacy") -> str:
     """Digest preprocessing settings; legacy reproduces the exact previous digest."""
     if grid_profile not in ("legacy", "grid-v1"):
         raise ValueError("unknown grid preprocessing profile")
@@ -55,6 +55,37 @@ def engine_config_sha256(engine: object) -> str:
                                   getattr(engine, "grid_profile", "legacy"))
 
 ANALYSIS_CONFIG_SHA256 = analysis_config_sha256()
+
+# Unset means the historical, bit-for-bit stable Free engine. grid-v1 is
+# an evaluation candidate, never an implicit or publicly served default.
+ANALYSIS_PROFILE_ENV = "PRINCESS_ANALYSIS_PROFILE"
+GRID_V1_EVALUATION_ENV = "PRINCESS_GRID_V1_RESEARCH_OPT_IN"
+ANALYSIS_CONFIG_PIN_ENV = "PRINCESS_EXPECTED_ANALYSIS_CONFIG_SHA256"
+
+
+def runtime_analysis_profile_and_config(environ: Mapping[str, str]) -> tuple[str, str]:
+    """Resolve one processing identity for both the API and analysis worker.
+
+    grid-v1 requires a private local/test environment AND an explicit research
+    opt-in. Public guest testing, staging and production may use only legacy
+    until the separate Segmentation v2 qualification/release decision.
+    An expected digest is a startup fence; queued jobs have an independent
+    per-job digest check when an analysis worker claims them.
+    """
+    profile = environ.get(ANALYSIS_PROFILE_ENV, "legacy")
+    if profile not in ("legacy", "grid-v1"):
+        raise ValueError("unknown grid preprocessing profile")
+    if profile == "grid-v1":
+        if (environ.get("PRINCESS_ENV") not in ("local", "test")
+                or environ.get(GRID_V1_EVALUATION_ENV) != "1"):
+            raise ValueError("grid-v1 requires explicit private local/test evaluation opt-in")
+        if environ.get("PRINCESS_TEST_PUBLIC_GUEST_ONLY") == "1":
+            raise ValueError("grid-v1 cannot serve the public synthetic guest endpoint")
+    digest = analysis_config_sha256(grid_profile=profile)
+    pin = environ.get(ANALYSIS_CONFIG_PIN_ENV)
+    if pin is not None and pin != digest:
+        raise ValueError("analysis_config_mismatch")
+    return profile, digest
 
 
 @dataclass(frozen=True)

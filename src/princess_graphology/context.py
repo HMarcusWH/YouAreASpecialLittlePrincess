@@ -128,7 +128,7 @@ def build_measurement_context(gray, mask, *, lines=(), words=(), original_width=
                               rotation_deg, dict(metadata or {}))
 
 
-def prepare_context(image, *, max_dimension=2200, deskew_enabled=True, grid_profile='grid-v1',
+def prepare_context(image, *, max_dimension=2200, deskew_enabled=True, grid_profile='legacy',
                     word_trace=None):
     """Aligned color/rule detection with one authoritative handwriting mask.
 

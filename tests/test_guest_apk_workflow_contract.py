@@ -44,3 +44,9 @@ def test_guest_apk_is_opt_in_and_checks_remote_backend_before_install():
     assert "build.get(\"analysis_config_sha256\") != config" in src
     assert "build.get(\"contract_bundle_sha256\") != contract" in src
     assert "Railway source changed since build preflight" in src
+
+def test_public_guest_apk_requires_legacy_only_and_never_implicit_grid_v1():
+    src = WORKFLOW.read_text("utf-8")
+    # Both provenance checks must be pinned to the historical default digest.
+    assert src.count('b"engine:max_dimension=2200;deskew=true;intake-policy/1"') == 2
+    assert "grid_preprocessing=grid-v1;intake-policy/1" not in src

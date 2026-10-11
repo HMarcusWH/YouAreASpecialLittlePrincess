@@ -88,6 +88,7 @@ class Services:
     identity: IdentityService
     permissions: PermissionService
     report_store_for: Callable[[str], ReportStore]
+    analysis_config_sha256: str = ANALYSIS_CONFIG_SHA256
     kill_switches: dict[str, bool] = field(default_factory=dict)
     # Present only when the identity provider is a fake (never in production).
     dev_identity: FakeIdentityProvider | None = None
@@ -255,7 +256,7 @@ def create_app(services: Services) -> FastAPI:
         verified = re.fullmatch(r"[a-f0-9]{40}", sha) is not None
         return JSONResponse({
             "source_commit_sha": sha if verified else None,
-            "analysis_config_sha256": ANALYSIS_CONFIG_SHA256,
+            "analysis_config_sha256": services.analysis_config_sha256,
             "contract_bundle_sha256": g.CONTRACT_BUNDLE_SHA256,
         }, status_code=200 if verified else 503)
 

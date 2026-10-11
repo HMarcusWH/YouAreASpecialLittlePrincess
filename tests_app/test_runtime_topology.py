@@ -13,6 +13,7 @@ from fastapi.testclient import TestClient
 
 from princess_api.app import Services, create_app
 from princess_app.adapters.fakes import FakeClock
+from princess_app.application.intake import analysis_config_sha256, runtime_analysis_profile_and_config
 import princess_app.config_supabase as binding_module
 from princess_app.ports.base import Environment, InvalidInput, TransientUnavailable, Unsupported
 
@@ -188,6 +189,11 @@ def test_railway_test_stack_forwards_git_provenance_only_to_api(monkeypatch):
     assert "RAILWAY_GIT_COMMIT_SHA" not in worker_env
     assert "PRINCESS_STORAGE_READ_KEY" not in api_env
     assert "PRINCESS_SESSION_SECRET" not in worker_env
+    fingerprint = analysis_config_sha256(grid_profile="legacy")
+    assert api_env["PRINCESS_EXPECTED_ANALYSIS_CONFIG_SHA256"] == fingerprint
+    assert worker_env["PRINCESS_EXPECTED_ANALYSIS_CONFIG_SHA256"] == fingerprint
+    assert runtime_analysis_profile_and_config(api_env) == ("legacy", fingerprint)
+    assert runtime_analysis_profile_and_config(worker_env) == ("legacy", fingerprint)
 
 
 def test_railway_test_stack_does_not_fabricate_missing_git_commit(monkeypatch):
@@ -204,3 +210,58 @@ def test_railway_test_stack_does_not_fabricate_missing_git_commit(monkeypatch):
     monkeypatch.delenv("RAILWAY_GIT_COMMIT_SHA", raising=False)
     api_env = railway_test_stack.role_env("api")
     assert "RAILWAY_GIT_COMMIT_SHA" not in api_env
+
+def test_preflight_refuses_unapproved_grid_runtime_before_any_engine_is_started():
+    worker = {"PRINCESS_ENV": "test", "PRINCESS_COMPONENT": "analysis_worker",
+              "PRINCESS_DATABASE_URL": DB_TEST,
+              "PRINCESS_STORAGE_READ_KEY": "runtime-worker-read-0123456789"}
+    for base in (API_TEST, worker):
+        for overrides in (
+            {"PRINCESS_ANALYSIS_PROFILE": "grid-v1"},
+            {"PRINCESS_ANALYSIS_PROFILE": "grid-v1",
+             "PRINCESS_GRID_V1_RESEARCH_OPT_IN": "1",
+             "PRINCESS_TEST_PUBLIC_GUEST_ONLY": "1"},
+            {"PRINCESS_EXPECTED_ANALYSIS_CONFIG_SHA256": "0" * 64},
+        ):
+            with pytest.raises(ValueError):
+                preflight({**base, **overrides}, ROOT)
+
+
+def test_railway_private_test_only_profile_is_shared_and_pinned(monkeypatch):
+    monkeypatch.setattr(railway_test_stack, "preflight", lambda _env, _root: None)
+    for key, value in {
+        "PRINCESS_ENV": "test",
+        "PRINCESS_ANALYSIS_PROFILE": "grid-v1",
+        "PRINCESS_GRID_V1_RESEARCH_OPT_IN": "1",
+        "PRINCESS_API_DATABASE_URL": "postgresql://api:test@db/princess_test",
+        "PRINCESS_WORKER_DATABASE_URL": "postgresql://worker:test@db/princess_test",
+        "PRINCESS_SESSION_SECRET": "test-session",
+        "PRINCESS_IDENTITY_AUDIENCE": "test-audience",
+        "PRINCESS_STORAGE_SIGNING_KEY": "test-signing",
+        "PRINCESS_STORAGE_READ_KEY": "test-read",
+    }.items():
+        monkeypatch.setenv(key, value)
+    monkeypatch.delenv("PRINCESS_TEST_PUBLIC_GUEST_ONLY", raising=False)
+    monkeypatch.delenv("PRINCESS_EXPECTED_ANALYSIS_CONFIG_SHA256", raising=False)
+    a, w = railway_test_stack.role_env("api"), railway_test_stack.role_env("analysis_worker")
+    digest = analysis_config_sha256(grid_profile="grid-v1")
+    assert a["PRINCESS_EXPECTED_ANALYSIS_CONFIG_SHA256"] == digest
+    assert w["PRINCESS_EXPECTED_ANALYSIS_CONFIG_SHA256"] == digest
+    assert runtime_analysis_profile_and_config(a) == ("grid-v1", digest)
+    assert runtime_analysis_profile_and_config(w) == ("grid-v1", digest)
+    monkeypatch.setenv("PRINCESS_TEST_PUBLIC_GUEST_ONLY", "1")
+    with pytest.raises(RuntimeError, match="grid-v1 is not approved"):
+        railway_test_stack.role_env("api")
+    with pytest.raises(RuntimeError, match="grid-v1 is not approved"):
+        railway_test_stack.role_env("analysis_worker")
+
+
+def test_build_endpoint_announces_the_service_processing_hash(monkeypatch):
+    app_services = services(lambda: None)
+    # Health provenance must follow the composed API configuration, rather
+    # than a module import-time constant from an unrelated process.
+    app_services.analysis_config_sha256 = analysis_config_sha256(grid_profile="grid-v1")
+    monkeypatch.setenv("RAILWAY_GIT_COMMIT_SHA", "b" * 40)
+    response = TestClient(create_app(app_services)).get("/health/build")
+    assert response.status_code == 200
+    assert response.json()["analysis_config_sha256"] == app_services.analysis_config_sha256
