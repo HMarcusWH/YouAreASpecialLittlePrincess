@@ -58,13 +58,34 @@ jobs:
               except URLError as error:
                   raise SystemExit(f"{path}: HTTPS network error: {type(error.reason).__name__}") from None
 
-          live = read("/health/live")
-          ready = read("/health/ready")
-          build = read("/health/build")
-          if live.get("status") != "ok" or ready.get("status") != "ok":
-              raise SystemExit("Health response shape/status mismatch")
-          if build.get("source_commit_sha") != expected:
-              raise SystemExit("Source mismatch: Railway is not serving independently reviewed commit")
+          import time
+
+          # Railway can keep the old instance serving until new health checks
+          # pass. Avoid treating an in-flight rollout as a source failure.
+          build = None
+          for attempt in range(36):
+              live = read("/health/live")
+              ready = read("/health/ready")
+              if live.get("status") != "ok" or ready.get("status") != "ok":
+                  raise SystemExit("Health response shape/status mismatch")
+              try:
+                  candidate = read("/health/build")
+              except SystemExit as error:
+                  if "/health/build: HTTP 503" not in str(error) or attempt == 35:
+                      raise
+                  print("Railway test build provenance not ready; bounded rollout retry", flush=True)
+                  time.sleep(5)
+                  continue
+              if candidate.get("source_commit_sha") != expected:
+                  if attempt == 35:
+                      raise SystemExit("Source mismatch: Railway never served independently reviewed commit")
+                  print("Railway still serving prior reviewed source; bounded rollout retry", flush=True)
+                  time.sleep(5)
+                  continue
+              build = candidate
+              break
+          if build is None:
+              raise SystemExit("Railway did not serve reviewed build provenance")
           if build.get("analysis_config_sha256") != config:
               raise SystemExit("Grid config mismatch")
           if build.get("contract_bundle_sha256") != contract:
