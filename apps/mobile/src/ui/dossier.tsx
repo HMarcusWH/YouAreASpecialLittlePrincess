@@ -16,7 +16,7 @@ import {
   Banner, Body, Button, EditorialSection, EditorialStatement, Heading, MarginNote, Mono, Paper, SectionLabel,
   styles as base,
 } from "./components.tsx";
-import { evidencePage, evidencePosition, stepEvidenceIndex } from "./evidence-inspector.ts";
+import { evidenceOutlines, evidencePage, evidencePosition, stepEvidenceIndex } from "./evidence-inspector.ts";
 import { EVIDENCE_COLOR, fontSize, MIN_TOUCH, radius, space } from "./theme.ts";
 
 function numberText(value: number, locale: Locale): string {
@@ -370,6 +370,8 @@ export function SourceImage({ reportId, bundle, locale }: { reportId: string; bu
       return [mx * scale, my * scale] as const;
     }),
   })) : [];
+  // Existing server-selected regions only; preserve bounded visibility for both scopes.
+  const outlines = matches && bundle ? evidenceOutlines(bundle, root!.frame_id, scale) : [];
   const selected = traces.length > 0 ? Math.min(selectedTrace, traces.length - 1) : 0;
   return (
     <Paper>
@@ -387,6 +389,12 @@ export function SourceImage({ reportId, bundle, locale }: { reportId: string; bu
                           color={index === selected ? theme.color.accent : theme.color["evidence-measured"]}
                           thickness={index === selected ? 3 : 1.5} opacity={index === selected ? 1 : 0.42} />
           )) : null}
+           {scale > 0 && overlay ? outlines.map((outline) => (
+             <TraceDrawing key={outline.regionId} points={outline.points}
+                           width={state.width * scale} height={state.height * scale}
+                           color={outline.scope === "LINE" ? theme.color["evidence-measured"] : theme.color.accent}
+                           thickness={1} opacity={outline.scope === "LINE" ? 0.55 : 0.35} />
+           )) : null}
         </View>
       </ScrollView>
       {!matches && bundle ? <Body muted>{reportText(locale, "image.frame_mismatch")}</Body> : null}
@@ -420,9 +428,11 @@ export function SourceImage({ reportId, bundle, locale }: { reportId: string; bu
             <Button tone="secondary" label={t("report.evidence_next")} disabled={selected >= traces.length - 1}
                     onPress={() => setSelectedTrace(stepEvidenceIndex(selected, "NEXT", traces.length))} />
           </View>
-          <Button tone="secondary" label={reportText(locale, overlay ? "image.overlay_off" : "image.overlay_on")}
-                  onPress={() => setOverlay(!overlay)} />
         </>
+      ) : null}
+      {matches && (traces.length > 0 || outlines.length > 0) ? (
+        <Button tone="secondary" label={reportText(locale, overlay ? "image.overlay_off" : "image.overlay_on")}
+                onPress={() => setOverlay(!overlay)} />
       ) : null}
     </Paper>
   );
