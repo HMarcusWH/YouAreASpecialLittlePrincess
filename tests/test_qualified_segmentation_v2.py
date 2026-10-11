@@ -153,3 +153,12 @@ def test_partial_qualification_never_selects_invalid_highlight_support():
     assert all(all(fact_id not in ('fact.PAGE_LINE_COUNT', 'fact.PAGE_WORD_COUNT',
                                   'fact.BASELINE_ANGLE_MEAN') for fact_id in item.support_fact_ids)
                for item in select_highlights(facts, limit=3))
+
+def test_unqualified_lines_never_produce_baseline_evidence():
+    image, _, _ = grid_only(ruling='none')
+    result, evidence = GraphologyEngine(
+        grid_profile='qualified-v2', deskew_enabled=False).analyze_with_evidence(image)
+    assert result.measurements['BASELINE_ANGLE_MEAN'].raw_value is None
+    assert not [r for r in result.regions if r.scope in ('LINE', 'WORD')]
+    assert not [r for r in evidence['regions'] if r['scope'] in ('LINE', 'WORD', 'BASELINE_POINT')]
+    assert not [row for row in evidence['observations'] if row['feature_id'].startswith('BASELINE_')]

@@ -265,3 +265,17 @@ def test_build_endpoint_announces_the_service_processing_hash(monkeypatch):
     response = TestClient(create_app(app_services)).get("/health/build")
     assert response.status_code == 200
     assert response.json()["analysis_config_sha256"] == app_services.analysis_config_sha256
+
+def test_qualified_v2_independent_services_require_identical_reviewed_pin():
+    from princess_app.application.intake import analysis_config_sha256
+    env = {'PRINCESS_ENV': 'test',
+           'PRINCESS_ANALYSIS_PROFILE': 'qualified-v2',
+           'PRINCESS_SEGMENTATION_V2_RESEARCH_OPT_IN': '1'}
+    api = {**API_TEST, **env}
+    with pytest.raises(ValueError, match='paired API/worker'):
+        preflight(api, ROOT)
+    digest = analysis_config_sha256(grid_profile='qualified-v2')
+    expected = {**api, 'PRINCESS_EXPECTED_ANALYSIS_CONFIG_SHA256': digest}
+    assert preflight(expected, ROOT).component == 'api'
+    with pytest.raises(ValueError, match='analysis_config_mismatch'):
+        preflight({**api, 'PRINCESS_EXPECTED_ANALYSIS_CONFIG_SHA256': '0' * 64}, ROOT)

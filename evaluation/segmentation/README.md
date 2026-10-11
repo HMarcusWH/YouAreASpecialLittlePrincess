@@ -23,3 +23,19 @@ Max 256 specimens per run, 25MB per encoded file, 24 megapixels decoded and 4096
 Before claiming real accuracy: obtain consent and explicit per-use rights, freeze writer-disjoint development/holdout partitions, agree on annotation criteria, audit annotator disagreement, pre-register targets, and evaluate once on held-out samples. The `--allow-authorized-real` switch is a secondary guard, not proof of clearance.
 
 Never promote shadow candidates to authoritative `PAGE_LINE_COUNT` or `PAGE_WORD_COUNT` from synthetic results alone.
+
+## Qualified v2 protocol and partial results
+
+The default research CLI remains `grid-v1`. The separate `--profile
+qualified-v2` explicitly evaluates the guarded v2 candidate offline and does
+**not** turn it on in Free production. Its output includes the line/word
+qualification state. A `PARTIAL` specimen counts toward denominator/coverage;
+unqualified word groups have `words: null`, not a fabricated zero score.
+
+`evaluation.segmentation.qualification.predeclared_holdout_gate` verifies
+that frozen holdout bytes and explicit acceptance criteria were pinned and
+development/holdout writers, captures and image hashes do not overlap.
+`score_holdout` checks aggregate metrics against that pinned threshold policy.
+A `rights_decision_id` field and CLI opt-in are necessary protocol guards but
+do not independently prove consent. Do not upload protected manifests, even if
+image pixels are omitted. See [the release gates](../../docs/runbooks/segmentation-v2-qualification.md).
