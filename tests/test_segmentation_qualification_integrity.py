@@ -15,9 +15,9 @@ import pytest
 from evaluation.segmentation import benchmark
 from evaluation.segmentation.qualification import (
     current_local_identity,
-    predeclared_holdout_gate_v2,
+    predeclared_holdout_gate_v2 as _production_predeclared_holdout_gate_v2,
     public_safe_receipt,
-    run_frozen_synthetic_qualification,
+    run_frozen_synthetic_qualification as _production_run_frozen_synthetic_qualification,
     score_holdout,
 )
 from princess_graphology.models import Box
@@ -29,6 +29,30 @@ from princess_graphology.models import Box
 # Standalone evaluation stays STRICT; these synthetic unit tests supply the
 # exact reviewed mapping and test the genuine check in a fresh subprocess.
 REPOSITORY = Path(__file__).resolve().parents[1]
+
+
+def _approval_file(policy: Path) -> Path:
+    """Independent, immutable-for-a-test approval fixture kept outside the policy."""
+    return Path(str(policy) + ".approved.sha256")
+
+
+def _reapprove_policy_for_validation_test(policy: Path) -> None:
+    """For tests targeting schema/runtime failures, approve the edited bytes first."""
+    _approval_file(policy).write_text(hashlib.sha256(policy.read_bytes()).hexdigest())
+
+
+def predeclared_holdout_gate_v2(development, validation, holdout, policy):
+    return _production_predeclared_holdout_gate_v2(
+        development, validation, holdout, policy,
+        expected_policy_sha256=_approval_file(policy).read_text(),
+    )
+
+
+def run_frozen_synthetic_qualification(development, validation, holdout, policy, image_root):
+    return _production_run_frozen_synthetic_qualification(
+        development, validation, holdout, policy, image_root,
+        expected_policy_sha256=_approval_file(policy).read_text(),
+    )
 
 
 @pytest.fixture(autouse=True)
@@ -129,6 +153,7 @@ def _freeze_policy(manifests, path, *, thresholds=None):
               **current_local_identity(),
               "thresholds": dict(TARGETS if thresholds is None else thresholds)}
     path.write_text(json.dumps(policy), encoding="utf-8")
+    _reapprove_policy_for_validation_test(path)
 
 
 def _fake_results(manifests, *, drop=0, refuse_last=False):
@@ -240,6 +265,7 @@ def test_code_and_processing_identity_are_checked_against_checkout(key, tmp_path
     p = json.loads(policy.read_text())
     p[key] = "0" * len(p[key])
     policy.write_text(json.dumps(p))
+    _reapprove_policy_for_validation_test(policy)
     with pytest.raises(ValueError, match="identity mismatch"):
         predeclared_holdout_gate_v2(
             manifests["development"], manifests["validation"],
@@ -253,6 +279,7 @@ def test_unset_threshold_is_never_an_approval(target, tmp_path):
     p = json.loads(policy.read_text())
     p["thresholds"][target] = None
     policy.write_text(json.dumps(p))
+    _reapprove_policy_for_validation_test(policy)
     with pytest.raises(ValueError, match="invalid frozen"):
         predeclared_holdout_gate_v2(
             manifests["development"], manifests["validation"],
@@ -382,6 +409,7 @@ def test_duplicate_frozen_policy_keys_fail_even_when_values_match(tmp_path):
     raw = policy.read_text()
     policy.write_text(raw.replace('"schema_version": 2',
                                   '"schema_version": 2, "schema_version": 2', 1))
+    _reapprove_policy_for_validation_test(policy)
     with pytest.raises(ValueError, match="duplicate JSON"):
         predeclared_holdout_gate_v2(
             manifests["development"], manifests["validation"],
@@ -395,6 +423,7 @@ def test_duplicate_nested_threshold_keys_fail_before_scoring(tmp_path):
     policy.write_text(raw.replace('"min_line_coverage": 1.0',
                                   '"min_line_coverage": 1.0, "min_line_coverage": 0.0',
                                   1))
+    _reapprove_policy_for_validation_test(policy)
     with pytest.raises(ValueError, match="duplicate JSON"):
         predeclared_holdout_gate_v2(
             manifests["development"], manifests["validation"],
@@ -436,6 +465,7 @@ def test_nonstandard_nonfinite_json_constant_fails_before_threshold_review(tmp_p
     raw = policy.read_text()
     policy.write_text(raw.replace('"min_line_coverage": 1.0',
                                   '"min_line_coverage": NaN', 1))
+    _reapprove_policy_for_validation_test(policy)
     with pytest.raises(ValueError, match="nonfinite JSON"):
         predeclared_holdout_gate_v2(
             manifests["development"], manifests["validation"],
@@ -544,6 +574,7 @@ def test_frozen_environment_identity_mutations_are_rejected(key, tmp_path):
     p = json.loads(policy.read_text())
     p["environment"][key] = "tampered"
     policy.write_text(json.dumps(p))
+    _reapprove_policy_for_validation_test(policy)
     with pytest.raises(ValueError, match="identity mismatch"):
         predeclared_holdout_gate_v2(
             manifests["development"], manifests["validation"],
@@ -661,6 +692,7 @@ def test_zero_or_invalid_blank_coverage_policy_is_refused_before_scoring(
     configuration = json.loads(policy.read_text())
     configuration["thresholds"][target] = value
     policy.write_text(json.dumps(configuration))
+    _reapprove_policy_for_validation_test(policy)
     # The strict JSON decoder rejects NaN before threshold validation.
     expected_error = "nonfinite JSON" if value != value else "invalid frozen fraction"
     with pytest.raises(ValueError, match=expected_error):
@@ -678,6 +710,7 @@ def test_zero_available_empty_minimum_is_refused(target, tmp_path):
     configuration = json.loads(policy.read_text())
     configuration["thresholds"][target] = 0
     policy.write_text(json.dumps(configuration))
+    _reapprove_policy_for_validation_test(policy)
     with pytest.raises(ValueError, match="invalid frozen count"):
         predeclared_holdout_gate_v2(
             manifests["development"], manifests["validation"], manifests["holdout"], policy
@@ -713,3 +746,50 @@ def test_available_blank_minimum_blocks_abstentions_even_with_positive_coverage(
     assert not receipt["engineering_gates"]["minimum_available_empty_line_n"]
     assert not receipt["engineering_gates"]["minimum_available_empty_word_n"]
     assert receipt["public_qualification"] == "NOT_AUTHORIZED"
+
+
+def test_production_policy_digest_is_required_before_reading_holdout(tmp_path):
+    manifests, policy, root = _fixtures(tmp_path)
+    args = (manifests["development"], manifests["validation"], manifests["holdout"], policy)
+    with pytest.raises(TypeError, match="expected_policy_sha256"):
+        _production_predeclared_holdout_gate_v2(*args)
+    with pytest.raises(TypeError, match="expected_policy_sha256"):
+        _production_run_frozen_synthetic_qualification(*args, root)
+    for invalid in ("", "0" * 63, "f" * 63 + "G", None, 42):
+        with pytest.raises(ValueError, match="independently approved"):
+            _production_predeclared_holdout_gate_v2(*args, expected_policy_sha256=invalid)
+
+
+def test_unapproved_policy_mutation_never_reaches_benchmark(monkeypatch, tmp_path):
+    manifests, policy, root = _fixtures(tmp_path)
+    approved_digest = _approval_file(policy).read_text()
+    altered = json.loads(policy.read_text())
+    altered["thresholds"]["min_word_nonempty_macro_f1"] = 0.0
+    altered["thresholds"]["minimum_holdout_n"] = 1
+    altered["thresholds"]["max_false_zero_words"] = 100
+    policy.write_text(json.dumps(altered))
+    called = []
+    monkeypatch.setattr(benchmark, "run_manifest", lambda *a, **k: called.append("run"))
+    with pytest.raises(ValueError, match="independently approved policy digest mismatch"):
+        _production_run_frozen_synthetic_qualification(
+            manifests["development"], manifests["validation"], manifests["holdout"],
+            policy, root, expected_policy_sha256=approved_digest,
+        )
+    assert not called
+
+
+def test_reapproved_bytes_are_not_proof_of_prior_independent_authorization(tmp_path):
+    manifests, policy, _ = _fixtures(tmp_path)
+    digest = _approval_file(policy).read_text()
+    assert digest == hashlib.sha256(policy.read_bytes()).hexdigest()
+    altered = json.loads(policy.read_text())
+    altered["thresholds"]["min_line_nonempty_macro_f1"] = 0.25
+    policy.write_text(json.dumps(altered))
+    # Freshly computing the same new hash is mathematically possible. An operator
+    # must obtain and verify a prior independent approval record outside this API.
+    assert hashlib.sha256(policy.read_bytes()).hexdigest() != digest
+    with pytest.raises(ValueError, match="independently approved policy digest mismatch"):
+        _production_predeclared_holdout_gate_v2(
+            manifests["development"], manifests["validation"], manifests["holdout"],
+            policy, expected_policy_sha256=digest,
+        )

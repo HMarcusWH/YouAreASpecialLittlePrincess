@@ -6,6 +6,7 @@ substitute for reviewing raw evidence with authorized annotators.
 from __future__ import annotations
 
 import hashlib
+import hmac
 import importlib.metadata
 import json
 import math
@@ -277,8 +278,22 @@ def _validate_thresholds(targets):
 
 def predeclared_holdout_gate_v2(
     development: Path, validation: Path, holdout: Path, policy: Path,
+    *, expected_policy_sha256: str,
 ) -> dict:
-    """Verify all splits and pinned protocol BEFORE reading any holdout pixels."""
+    """Require an externally approved policy digest BEFORE examining holdout data.
+
+    The supplied digest must come from an independent, prior approval record.
+    Comparing caller-provided hashes is an integrity check, not proof of when
+    or by whom a policy was approved.
+    """
+    if not isinstance(expected_policy_sha256, str) or not HASH_PATTERN.fullmatch(
+        expected_policy_sha256
+    ):
+        raise ValueError("independently approved policy digest required")
+    raw_policy = policy.read_bytes()
+    policy_digest = hashlib.sha256(raw_policy).hexdigest()
+    if not hmac.compare_digest(policy_digest, expected_policy_sha256):
+        raise ValueError("independently approved policy digest mismatch")
     documents = {}
     digests = {}
     for split, path in (
@@ -294,7 +309,6 @@ def predeclared_holdout_gate_v2(
                 if a & b:
                     raise ValueError(f"{left}/{right} {field} leakage")
 
-    raw_policy = policy.read_bytes()
     approved = strict_loads(raw_policy)
     policy_fields = {"schema_version", "mode", "profile",
                      "development_manifest_sha256", "validation_manifest_sha256",
@@ -315,7 +329,7 @@ def predeclared_holdout_gate_v2(
     for key, expected in identity.items():
         if approved[key] != expected:
             raise ValueError("frozen processing/source/evaluator identity mismatch: " + key)
-    return {"policy_digest": hashlib.sha256(raw_policy).hexdigest(),
+    return {"policy_digest": policy_digest,
             "profile": "qualified-v2", "mode": "synthetic", "identity": identity,
             "holdout_manifest_sha256": digests["holdout"],
             "holdout_writers": len({r["writer_group"] for r in documents["holdout"]["specimens"]}),
@@ -451,6 +465,7 @@ def _engineering_gates(rows, frozen):
 
 def run_frozen_synthetic_qualification(
     development: Path, validation: Path, holdout: Path, policy: Path, image_root: Path,
+    *, expected_policy_sha256: str,
 ) -> dict:
     """Run a pinned synthetic holdout directly; never accept a supplied aggregate.
 
@@ -459,7 +474,10 @@ def run_frozen_synthetic_qualification(
     """
     from .benchmark import run_manifest
 
-    frozen = predeclared_holdout_gate_v2(development, validation, holdout, policy)
+    frozen = predeclared_holdout_gate_v2(
+        development, validation, holdout, policy,
+        expected_policy_sha256=expected_policy_sha256,
+    )
     result = run_manifest(holdout, image_root, profile=frozen["profile"],
                           allow_real=False, synthetic_split=True)
     rows = _checked_holdout_rows(result, frozen)
