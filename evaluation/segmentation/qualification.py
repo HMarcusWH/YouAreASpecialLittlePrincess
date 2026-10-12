@@ -5,11 +5,9 @@ substitute for reviewing raw evidence with authorized annotators.
 """
 from __future__ import annotations
 
-import base64
 import hashlib
 import hmac
 import importlib.metadata
-import sys
 import json
 import math
 import platform
@@ -112,112 +110,16 @@ POSITIVE_COVERAGE_TARGETS = frozenset(("min_empty_line_coverage", "min_empty_wor
 
 
 
-# Source modules are constrained to the reviewed checkout; numerical packages
-# must match the installed hash-locked wheel RECORD. This verifies the executing
-# process, but is not a signature, hardware attestation or process sandbox.
-_PROJECT_IMPORT_ROOTS = {
-    "evaluation": ROOT / "evaluation",
-    "princess_graphology": ROOT / "src" / "princess_graphology",
-    "princess_app": ROOT / "src" / "princess_app",
-    "princess_contracts": ROOT / "src" / "princess_contracts",
-}
-_NUMERIC_IMPORT_DISTRIBUTIONS = {
-    "numpy": "numpy",
-    "cv2": "opencv-python-headless",
-    "scipy": "scipy",
-    "skimage": "scikit-image",
-    "sklearn": "scikit-learn",
-    "PIL": "pillow",
-}
-
-
 def _verify_loaded_evaluation_modules() -> None:
-    """Reject shadowed/unreviewed Python modules and numeric binary extensions."""
-    inspected = {}
-    for name, module in tuple(sys.modules.items()):
-        top = name.partition(".")[0]
-        if top in _PROJECT_IMPORT_ROOTS:
-            inspected[name] = (module, _PROJECT_IMPORT_ROOTS[top], None)
-        elif top in _NUMERIC_IMPORT_DISTRIBUTIONS:
-            inspected[name] = (module, None, top)
-        elif name == "tools.verify_ci_lock":
-            inspected[name] = (module, ROOT / "tools", None)
+    """Authenticate the complete import closure using reviewed wheel artifacts.
 
-    approved_wheel_files = {}
-    wheel_roots = {}
-    for top in {part for _, _, part in inspected.values() if part is not None}:
-        try:
-            distribution = importlib.metadata.distribution(_NUMERIC_IMPORT_DISTRIBUTIONS[top])
-            entries = distribution.files
-            if not entries:
-                raise ValueError("unrecorded dependency installation")
-            wheel_roots[top] = Path(distribution.locate_file(top)).resolve(strict=True)
-            approved_wheel_files[top] = {}
-            for entry in entries:
-                if entry.parts and entry.parts[0] == top:
-                    approved_wheel_files[top][Path(distribution.locate_file(entry)).resolve(
-                        strict=True
-                    )] = entry.hash
-        except (OSError, ValueError, importlib.metadata.PackageNotFoundError) as exc:
-            raise ValueError("unreviewed imported evaluation module") from exc
+    This enforces more than version strings or editable installed RECORD data.
+    The qualification launcher additionally isolates the Python import path and
+    executes from a fresh committed worktree, avoiding untrusted cached code.
+    """
+    from .runtime_integrity import verify_loaded_module_closure
 
-    for name, (module, project_root, wheel_top) in inspected.items():
-        if module is None:
-            raise ValueError("unreviewed imported evaluation module")
-        try:
-            root = (project_root.resolve(strict=True) if project_root is not None
-                    else wheel_roots[wheel_top])
-            spec = getattr(module, "__spec__", None)
-            file_name = getattr(module, "__file__", None)
-            locations = getattr(module, "__path__", None)
-            if file_name is None:
-                # cv2's verified compiled extension creates native submodules
-                # without separate Python source files. Require that each is
-                # the exact object registered on its verified parent module.
-                if wheel_top == "cv2" and spec is None and name.startswith("cv2."):
-                    parent_name, _, child = name.rpartition(".")
-                    parent = sys.modules.get(parent_name)
-                    if parent is not None and getattr(parent, child, None) is module:
-                        continue
-                if spec is None or getattr(spec, "origin", "invalid") not in (None, "namespace"):
-                    raise ValueError("invalid namespace origin")
-                if not locations:
-                    raise ValueError("unlocatable namespace module")
-                if any(not Path(p).resolve(strict=True).is_relative_to(root) for p in locations):
-                    raise ValueError("unreviewed namespace path")
-                continue
-            origin = Path(file_name).resolve(strict=True)
-            spec_origin = getattr(spec, "origin", None)
-            parent_name, _, child = name.rpartition(".")
-            parent = sys.modules.get(parent_name)
-            # Some verified C extensions register nested module objects that
-            # report the reviewed parent .so file but have no separate spec.
-            # Do not mistake these for missing-origin shadow code.
-            compiled_alias = (
-                wheel_top is not None and spec is None
-                and origin.suffix in (".so", ".pyd")
-                and parent is not None and getattr(parent, child, None) is module
-            )
-            spec_matches = (isinstance(spec_origin, str)
-                            and Path(spec_origin).resolve(strict=True) == origin)
-            if (not (spec_matches or compiled_alias)
-                    or not origin.is_file() or not origin.is_relative_to(root)):
-                raise ValueError("unreviewed imported source path")
-            if locations and any(
-                not Path(p).resolve(strict=True).is_relative_to(root) for p in locations
-            ):
-                raise ValueError("unreviewed package search path")
-            if wheel_top is not None:
-                record_hash = approved_wheel_files[wheel_top].get(origin)
-                if record_hash is None or record_hash.mode != "sha256":
-                    raise ValueError("unrecorded numerical runtime file")
-                actual_hash = base64.urlsafe_b64encode(hashlib.sha256(
-                    origin.read_bytes()
-                ).digest()).rstrip(b"=").decode("ascii")
-                if not hmac.compare_digest(actual_hash, record_hash.value):
-                    raise ValueError("modified numerical runtime file")
-        except (OSError, TypeError, ValueError, AttributeError) as exc:
-            raise ValueError("unreviewed imported evaluation module") from exc
+    verify_loaded_module_closure(ROOT)
 
 
 def _reviewed_runtime_identity() -> dict:
