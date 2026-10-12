@@ -187,13 +187,20 @@ def verify_loaded_module_closure(root: Path) -> None:
     lock = root / "requirements" / f"ci-py{target}.lock"
     files = _trusted_files(str(wheelhouse), str(lock), tuple(map(str, sites)))
     for name, module in tuple(sys.modules.items()):
-        if module is None or name == "__main__":
-            # The isolated launcher audits its own source/worktree separately.
+        if module is None or name == "__main__" or (
+            name == "__mp_main__" and module is sys.modules.get("__main__")
+        ):
+            # Script and multiprocessing aliases inherit the staged launcher.
             continue
         spec = getattr(module, "__spec__", None)
         origin = getattr(module, "__file__", None)
         spec_origin = getattr(spec, "origin", None)
         if origin is None:
+            if (name == "cython_runtime" or name.startswith("_cython_")
+                    or name.startswith("cython.")):
+                # Native Cython wheels create virtual runtime modules whose
+                # metadata does not describe separate importable source files.
+                continue
             if (spec_origin == "built-in"
                     and name in sys.builtin_module_names):
                 continue
@@ -203,7 +210,7 @@ def verify_loaded_module_closure(root: Path) -> None:
             if spec_origin in (None, "namespace"):
                 paths = getattr(module, "__path__", None)
                 if paths:
-                    approved_roots = (*sites, root / "src", root / "evaluation",
+                    approved_roots = (*sites, stdlib, root / "src", root / "evaluation",
                                       root / "tools", root / "tests",
                                       root / "apps" / "api", root / "apps" / "workers",
                                       root / "infra", root / "migrations",
@@ -246,7 +253,7 @@ def verify_loaded_module_closure(root: Path) -> None:
             paths = getattr(module, "__path__", None)
             if paths and not all(
                 any(Path(p).resolve(strict=True).is_relative_to(allowed)
-                    for allowed in (*sites, root / "src", root / "evaluation", root / "tools", root / "tests",
+                    for allowed in (*sites, stdlib, root / "src", root / "evaluation", root / "tools", root / "tests",
                                     root / "apps" / "api", root / "apps" / "workers",
                                     root / "infra", root / "migrations",
                                     root / "docs" / "roadmap"))
