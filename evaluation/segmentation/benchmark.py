@@ -336,10 +336,15 @@ def main():
     parser.add_argument("--shadow-projection", action="store_true")
     parser.add_argument("--shadow-words", action="store_true")
     args = parser.parse_args()
-    result = run_manifest(args.manifest, args.image_root, profile=args.profile,
-                          allow_real=args.allow_authorized_real,
-                          shadow_projection=args.shadow_projection,
-                          shadow_words=args.shadow_words)
+    try:
+        result = run_manifest(args.manifest, args.image_root, profile=args.profile,
+                              allow_real=args.allow_authorized_real,
+                              shadow_projection=args.shadow_projection,
+                              shadow_words=args.shadow_words)
+    except (OSError, ValueError, cv2.error):
+        if args.allow_authorized_real:
+            parser.exit(2, "Protected evaluation failed; details withheld from CLI.\n")
+        raise
     # Real specimen-level IDs and diagnostics must not flow to public stdout.
     if args.allow_authorized_real:
         print(json.dumps({"status": "PROTECTED_RESULTS_WITHHELD",

@@ -113,6 +113,19 @@ def current_local_identity() -> dict:
         )
     except (OSError, subprocess.SubprocessError) as exc:
         raise ValueError("source revision cannot be verified") from exc
+    # HEAD alone does not establish which code actually executed: an edited
+    # working tree could behave differently while still advertising that SHA.
+    try:
+        dirty = subprocess.run(
+            ["git", "status", "--porcelain", "--untracked-files=normal", "--",
+             "src/princess_graphology", "src/princess_app/application/intake.py",
+             "evaluation/segmentation"],
+            cwd=ROOT, text=True, capture_output=True, check=True, timeout=10,
+        )
+    except (OSError, subprocess.SubprocessError) as exc:
+        raise ValueError("source checkout cleanliness cannot be verified") from exc
+    if dirty.stdout.strip():
+        raise ValueError("source checkout contains unreviewed evaluation changes")
     commit = run.stdout.strip()
     if not COMMIT_PATTERN.fullmatch(commit):
         raise ValueError("invalid source revision")
@@ -243,8 +256,52 @@ def _checked_holdout_rows(result, frozen):
             number = row.get(family + "_reference_n")
             if number != len(original["lines" if family == "line" else "words"]):
                 raise ValueError("frozen annotation count mismatch")
-        if row.get("status") not in ("MEASURED", "PARTIAL", "REJECTED"):
+        status = row.get("status")
+        if status not in ("MEASURED", "PARTIAL", "REJECTED"):
             raise ValueError("unknown benchmark outcome")
+        metrics = {}
+        for family in ("line", "word"):
+            value = row.get("lines" if family == "line" else "words")
+            metrics[family] = value
+            if value is None:
+                continue
+            if not isinstance(value, dict):
+                raise ValueError("invalid scored metric")
+            reference = len(original["lines" if family == "line" else "words"])
+            for key in ("reference_n", "detected_n", "tp", "fp", "fn", "count_mae"):
+                if type(value.get(key)) is not int or value[key] < 0:
+                    raise ValueError("invalid scored metric count")
+            if (value["reference_n"] != reference
+                    or value["tp"] + value["fn"] != reference
+                    or value["tp"] + value["fp"] != value["detected_n"]
+                    or value["count_mae"] != abs(reference - value["detected_n"])):
+                raise ValueError("inconsistent scored metric counts")
+            expected_p = (value["tp"] / value["detected_n"] if value["detected_n"]
+                          else (1.0 if not reference else 0.0))
+            expected_r = (value["tp"] / reference if reference
+                          else (1.0 if not value["detected_n"] else 0.0))
+            expected_f1 = (2 * expected_p * expected_r / (expected_p + expected_r)
+                           if expected_p + expected_r else 0.0)
+            for key, expected_score in (
+                ("precision", expected_p), ("recall", expected_r), ("f1", expected_f1)
+            ):
+                score = value.get(key)
+                if (type(score) not in (int, float) or not math.isfinite(score)
+                        or abs(score - expected_score) > 1e-9):
+                    raise ValueError("inconsistent scored metric values")
+        if status == "REJECTED" and any(m is not None for m in metrics.values()):
+            raise ValueError("rejected result cannot claim measured accuracy")
+        if status == "MEASURED" and any(m is None for m in metrics.values()):
+            raise ValueError("measured result lacks annotated accuracy")
+        if status == "PARTIAL" and all(m is not None for m in metrics.values()):
+            raise ValueError("partial result cannot claim full availability")
+        if metrics["word"] is None:
+            if row.get("false_zero_words") is not None:
+                raise ValueError("withheld word group cannot assert a zero")
+        elif row.get("false_zero_words") is not (
+            bool(original["words"]) and metrics["word"]["detected_n"] == 0
+        ):
+            raise ValueError("false-zero words disagree with scored results")
     if seen != set(expected):
         raise ValueError("missing frozen benchmark result")
     return rows

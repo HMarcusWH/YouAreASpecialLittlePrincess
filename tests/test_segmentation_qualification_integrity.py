@@ -256,3 +256,36 @@ def test_actual_synthetic_image_pipeline_fails_closed_or_scores_without_authoriz
     assert receipt["public_qualification"] == "NOT_AUTHORIZED"
     assert receipt["specimen_count"] == 1
     assert len(receipt["engineering_gates"]) == len(TARGETS)
+
+
+def test_inconsistent_f1_cannot_be_laundered_into_a_passing_receipt(monkeypatch, tmp_path):
+    manifests, policy, root = _fixtures(tmp_path)
+    fake = _fake_results(manifests)
+    fake["results"][0]["lines"]["tp"] = 0  # F1 and bookkeeping still claim success.
+    monkeypatch.setattr(benchmark, "run_manifest", lambda *a, **k: fake)
+    with pytest.raises(ValueError, match="inconsistent scored metric"):
+        run_frozen_synthetic_qualification(
+            manifests["development"], manifests["validation"],
+            manifests["holdout"], policy, root,
+        )
+
+
+def test_private_real_cli_error_does_not_expose_file_path(monkeypatch, capsys):
+    import sys
+
+    secret = "/private/a_persons_handwriting_and_name.jpg"
+
+    def failed(*args, **kwargs):
+        raise FileNotFoundError(secret)
+
+    monkeypatch.setattr(benchmark, "run_manifest", failed)
+    monkeypatch.setattr(sys, "argv", [
+        "segmentation-benchmark", "--manifest", secret, "--image-root", secret,
+        "--allow-authorized-real",
+    ])
+    with pytest.raises(SystemExit) as err:
+        benchmark.main()
+    assert err.value.code == 2
+    captured = capsys.readouterr()
+    assert secret not in captured.out + captured.err
+    assert "Protected evaluation failed" in captured.err
