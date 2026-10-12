@@ -118,6 +118,25 @@ def _trusted_files(wheelhouse_name: str, lock_name: str, site_names: tuple[str, 
     return files
 
 
+
+def preflight_reviewed_environment(root: Path) -> None:
+    """Validate installed executable bytes BEFORE numerical wheels are imported.
+
+    The dependency manifest is taken from the original lock-authenticated
+    archives, never from locally editable dist-info/RECORD files.
+    """
+    root = root.resolve(strict=True)
+    sites = _site_roots()
+    wheelhouse = _wheelhouse_path()
+    lock = root / "requirements" / f"ci-py{sys.version_info.major}{sys.version_info.minor}.lock"
+    approved = _trusted_files(str(wheelhouse), str(lock), tuple(map(str, sites)))
+    for path, digest in approved.items():
+        if path.is_symlink() or not path.is_file():
+            raise ValueError("missing or redirected locked executable artifact")
+        if hashlib.sha256(path.read_bytes()).hexdigest() != digest:
+            raise ValueError("installed file differs from authenticated locked wheel")
+
+
 def _project_path(path: Path, root: Path) -> bool:
     allowed = (
         root / "evaluation",
@@ -163,7 +182,8 @@ def verify_loaded_module_closure(root: Path) -> None:
     lock = root / "requirements" / f"ci-py{target}.lock"
     files = _trusted_files(str(wheelhouse), str(lock), tuple(map(str, sites)))
     for name, module in tuple(sys.modules.items()):
-        if module is None:
+        if module is None or name == "__main__":
+            # The isolated launcher audits its own source/worktree separately.
             continue
         spec = getattr(module, "__spec__", None)
         origin = getattr(module, "__file__", None)

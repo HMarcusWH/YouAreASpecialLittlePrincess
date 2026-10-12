@@ -965,7 +965,7 @@ def test_isolated_launcher_refuses_unapproved_policy_and_hides_paths(tmp_path):
     assert rejected.returncode == 2
     assert "Isolation required" in rejected.stderr
     result = subprocess.run(
-        [sys.executable, "-I", str(launcher), *args],
+        [sys.executable, "-I", "-S", "-B", str(launcher), *args],
         cwd=REPOSITORY, text=True, capture_output=True, timeout=45,
     )
     assert result.returncode == 2
@@ -979,7 +979,7 @@ def test_isolated_launcher_returns_only_redacted_synthetic_receipt(tmp_path):
     approval.write_text(_approval_file(policy).read_text())
     launcher = REPOSITORY / "evaluation" / "segmentation" / "run_qualification.py"
     result = subprocess.run([
-        sys.executable, "-I", str(launcher),
+        sys.executable, "-I", "-S", "-B", str(launcher),
         "--development", str(manifests["development"]),
         "--validation", str(manifests["validation"]),
         "--holdout", str(manifests["holdout"]),
