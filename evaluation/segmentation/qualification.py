@@ -5,9 +5,11 @@ substitute for reviewing raw evidence with authorized annotators.
 """
 from __future__ import annotations
 
+import base64
 import hashlib
 import hmac
 import importlib.metadata
+import sys
 import json
 import math
 import platform
@@ -109,6 +111,104 @@ INTEGER_TARGETS = THRESHOLD_KEYS - FRACTION_TARGETS
 POSITIVE_COVERAGE_TARGETS = frozenset(("min_empty_line_coverage", "min_empty_word_coverage"))
 
 
+
+# Source modules are constrained to the reviewed checkout; numerical packages
+# must match the installed hash-locked wheel RECORD. This verifies the executing
+# process, but is not a signature, hardware attestation or process sandbox.
+_PROJECT_IMPORT_ROOTS = {
+    "evaluation": ROOT / "evaluation",
+    "princess_graphology": ROOT / "src" / "princess_graphology",
+    "princess_app": ROOT / "src" / "princess_app",
+    "princess_contracts": ROOT / "src" / "princess_contracts",
+}
+_NUMERIC_IMPORT_DISTRIBUTIONS = {
+    "numpy": "numpy",
+    "cv2": "opencv-python-headless",
+    "scipy": "scipy",
+    "skimage": "scikit-image",
+    "sklearn": "scikit-learn",
+    "PIL": "pillow",
+}
+
+
+def _verify_loaded_evaluation_modules() -> None:
+    """Reject shadowed/unreviewed Python modules and numeric binary extensions."""
+    inspected = {}
+    for name, module in tuple(sys.modules.items()):
+        top = name.partition(".")[0]
+        if top in _PROJECT_IMPORT_ROOTS:
+            inspected[name] = (module, _PROJECT_IMPORT_ROOTS[top], None)
+        elif top in _NUMERIC_IMPORT_DISTRIBUTIONS:
+            inspected[name] = (module, None, top)
+        elif name == "tools.verify_ci_lock":
+            inspected[name] = (module, ROOT / "tools", None)
+
+    approved_wheel_files = {}
+    wheel_roots = {}
+    for top in {part for _, _, part in inspected.values() if part is not None}:
+        try:
+            distribution = importlib.metadata.distribution(_NUMERIC_IMPORT_DISTRIBUTIONS[top])
+            entries = distribution.files
+            if not entries:
+                raise ValueError("unrecorded dependency installation")
+            wheel_roots[top] = Path(distribution.locate_file(top)).resolve(strict=True)
+            approved_wheel_files[top] = {}
+            for entry in entries:
+                if entry.parts and entry.parts[0] == top:
+                    approved_wheel_files[top][Path(distribution.locate_file(entry)).resolve(
+                        strict=True
+                    )] = entry.hash
+        except (OSError, ValueError, importlib.metadata.PackageNotFoundError) as exc:
+            raise ValueError("unreviewed imported evaluation module") from exc
+
+    for name, (module, project_root, wheel_top) in inspected.items():
+        if module is None:
+            raise ValueError("unreviewed imported evaluation module")
+        try:
+            root = (project_root.resolve(strict=True) if project_root is not None
+                    else wheel_roots[wheel_top])
+            spec = getattr(module, "__spec__", None)
+            file_name = getattr(module, "__file__", None)
+            locations = getattr(module, "__path__", None)
+            if file_name is None:
+                # cv2's verified compiled extension creates native submodules
+                # without separate Python source files. Require that each is
+                # the exact object registered on its verified parent module.
+                if wheel_top == "cv2" and spec is None and name.startswith("cv2."):
+                    parent_name, _, child = name.rpartition(".")
+                    parent = sys.modules.get(parent_name)
+                    if parent is not None and getattr(parent, child, None) is module:
+                        continue
+                if spec is None or getattr(spec, "origin", "invalid") not in (None, "namespace"):
+                    raise ValueError("invalid namespace origin")
+                if not locations:
+                    raise ValueError("unlocatable namespace module")
+                if any(not Path(p).resolve(strict=True).is_relative_to(root) for p in locations):
+                    raise ValueError("unreviewed namespace path")
+                continue
+            origin = Path(file_name).resolve(strict=True)
+            spec_origin = getattr(spec, "origin", None)
+            if (not isinstance(spec_origin, str)
+                    or Path(spec_origin).resolve(strict=True) != origin
+                    or not origin.is_file() or not origin.is_relative_to(root)):
+                raise ValueError("unreviewed imported source path")
+            if locations and any(
+                not Path(p).resolve(strict=True).is_relative_to(root) for p in locations
+            ):
+                raise ValueError("unreviewed package search path")
+            if wheel_top is not None:
+                record_hash = approved_wheel_files[wheel_top].get(origin)
+                if record_hash is None or record_hash.mode != "sha256":
+                    raise ValueError("unrecorded numerical runtime file")
+                actual_hash = base64.urlsafe_b64encode(hashlib.sha256(
+                    origin.read_bytes()
+                ).digest()).rstrip(b"=").decode("ascii")
+                if not hmac.compare_digest(actual_hash, record_hash.value):
+                    raise ValueError("modified numerical runtime file")
+        except (OSError, TypeError, ValueError, AttributeError) as exc:
+            raise ValueError("unreviewed imported evaluation module") from exc
+
+
 def _reviewed_runtime_identity() -> dict:
     """Fail closed unless running from an exact reviewed CI dependency snapshot.
 
@@ -188,6 +288,7 @@ def current_local_identity() -> dict:
     """
     from princess_app.application.intake import analysis_config_sha256
 
+    _verify_loaded_evaluation_modules()
     try:
         run = subprocess.run(
             ["git", "rev-parse", "--verify", "HEAD"], cwd=ROOT, text=True,
@@ -200,8 +301,8 @@ def current_local_identity() -> dict:
     try:
         dirty = subprocess.run(
             ["git", "status", "--porcelain", "--untracked-files=normal", "--",
-             "src/princess_graphology", "src/princess_app/application/intake.py",
-             "evaluation/segmentation", "tools/verify_ci_lock.py", "requirements"],
+             "src/princess_graphology", "src/princess_app", "src/princess_contracts",
+             "evaluation", "tools/verify_ci_lock.py", "requirements"],
             cwd=ROOT, text=True, capture_output=True, check=True, timeout=10,
         )
     except (OSError, subprocess.SubprocessError) as exc:
@@ -215,12 +316,14 @@ def current_local_identity() -> dict:
     verifier_file = ROOT / "tools" / "verify_ci_lock.py"
     if verifier_file.is_symlink() or not verifier_file.is_file():
         raise ValueError("unreviewed lock verifier source")
+    environment = _reviewed_runtime_identity()
+    _verify_loaded_evaluation_modules()
     return {"source_commit_sha": commit,
             "analysis_config_sha256": analysis_config_sha256(grid_profile="qualified-v2"),
             "evaluator_sha256": hashlib.sha256(Path(benchmark.__file__).read_bytes()).hexdigest(),
             "qualification_sha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
             "lock_verifier_sha256": hashlib.sha256(verifier_file.read_bytes()).hexdigest(),
-            "environment": _reviewed_runtime_identity()}
+            "environment": environment}
 
 
 def _synthetic_manifest(path: Path, split: str):
@@ -486,6 +589,7 @@ def run_frozen_synthetic_qualification(
     )
     result = run_manifest(holdout, image_root, profile=frozen["profile"],
                           allow_real=False, synthetic_split=True)
+    _verify_loaded_evaluation_modules()
     rows = _checked_holdout_rows(result, frozen)
     summary, gates = _engineering_gates(rows, frozen)
     return {"kind": "segmentation-qualification/2", "mode": "synthetic",
