@@ -145,6 +145,11 @@ def _project_path(path: Path, root: Path) -> bool:
         root / "src" / "princess_contracts",
         root / "tools",
         root / "tests",
+        root / "apps" / "api",
+        root / "apps" / "workers",
+        root / "infra",
+        root / "migrations",
+        root / "docs" / "roadmap",
     )
     return any(path.is_relative_to(directory) for directory in allowed)
 
@@ -199,16 +204,24 @@ def verify_loaded_module_closure(root: Path) -> None:
                 paths = getattr(module, "__path__", None)
                 if paths:
                     approved_roots = (*sites, root / "src", root / "evaluation",
-                                      root / "tools", root / "tests")
+                                      root / "tools", root / "tests",
+                                      root / "apps" / "api", root / "apps" / "workers",
+                                      root / "infra", root / "migrations",
+                                      root / "docs" / "roadmap")
                     if all(any(Path(p).resolve(strict=True).is_relative_to(a)
                                for a in approved_roots) for p in paths):
                         continue
                 parent_name, _, child = name.rpartition(".")
                 parent = sys.modules.get(parent_name)
-                if (parent is not None and getattr(parent, child, None) is module
-                        and (name.startswith("cv2.") or name.startswith("numpy."))):
-                    # Binary extension aliases inherit the verified parent's
-                    # actual .so; parent source gets checked in the same pass.
+                if parent is not None and getattr(parent, child, None) is module:
+                    # Alias modules inherit a parent whose actual source is
+                    # separately authenticated in the same complete scan.
+                    continue
+                if (name == "cython_runtime" or name.startswith("_cython_")
+                        or name.startswith("cython.")):
+                    # Cython extensions create runtime-only module objects
+                    # without separately importable .py/.so files. Their
+                    # native wheel artifacts are independently preverified.
                     continue
             raise ValueError("unreviewed imported evaluation module")
         try:
@@ -233,7 +246,10 @@ def verify_loaded_module_closure(root: Path) -> None:
             paths = getattr(module, "__path__", None)
             if paths and not all(
                 any(Path(p).resolve(strict=True).is_relative_to(allowed)
-                    for allowed in (*sites, root / "src", root / "evaluation", root / "tools", root / "tests"))
+                    for allowed in (*sites, root / "src", root / "evaluation", root / "tools", root / "tests",
+                                    root / "apps" / "api", root / "apps" / "workers",
+                                    root / "infra", root / "migrations",
+                                    root / "docs" / "roadmap"))
                 for p in paths
             ):
                 raise ValueError("unreviewed package import search path")

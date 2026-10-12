@@ -215,7 +215,8 @@ def current_local_identity() -> dict:
         dirty = subprocess.run(
             ["git", "status", "--porcelain", "--untracked-files=normal", "--",
              "src/princess_graphology", "src/princess_app", "src/princess_contracts",
-             "evaluation", "tools/verify_ci_lock.py", "requirements"],
+             "evaluation", "tools", "requirements", "tests",
+             "apps/api", "apps/workers", "infra", "migrations", "docs/roadmap"],
             cwd=ROOT, text=True, capture_output=True, check=True, timeout=10,
         )
     except (OSError, subprocess.SubprocessError) as exc:
