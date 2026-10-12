@@ -3,6 +3,10 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
+import subprocess
+import sys
+from pathlib import Path
 
 import cv2
 import numpy as np
@@ -17,6 +21,42 @@ from evaluation.segmentation.qualification import (
     score_holdout,
 )
 from princess_graphology.models import Box
+
+
+# The full pytest suite exercises and temporarily places alternate wheel
+# metadata on sys.path (e.g. packaging 26.0 alongside the locked 26.3).
+# That intentionally contaminates the parent process's distributions() view.
+# Standalone evaluation stays STRICT; these synthetic unit tests supply the
+# exact reviewed mapping and test the genuine check in a fresh subprocess.
+REPOSITORY = Path(__file__).resolve().parents[1]
+
+
+@pytest.fixture(autouse=True)
+def _unit_test_with_clean_reviewed_distribution_view(monkeypatch):
+    from tools import verify_ci_lock as locks
+
+    target = locks.running_target()[0].replace(".", "")
+    reviewed = locks.read_lock(REPOSITORY / "requirements" / f"ci-py{target}.lock")
+    installed = {**reviewed, "special-little-princess-graphology": "0.1.0"}
+    monkeypatch.setattr(locks, "installed_distributions", lambda: dict(installed))
+
+
+def test_actual_reviewed_runtime_matches_lock_in_fresh_interpreter():
+    """Independently verify live distributions without the unit-test shim."""
+    script = (
+        "from evaluation.segmentation.qualification import _reviewed_runtime_identity; "
+        "record = _reviewed_runtime_identity(); "
+        "assert record['lock_sha256']; "
+        "assert record['installed_distributions_sha256']"
+    )
+    env = os.environ.copy()
+    env["PYTHONPATH"] = os.pathsep.join((str(REPOSITORY / "src"), str(REPOSITORY)))
+    run = subprocess.run(
+        [sys.executable, "-c", script],
+        cwd=REPOSITORY, env=env, text=True, capture_output=True,
+        timeout=45, check=False,
+    )
+    assert run.returncode == 0, run.stderr[-1200:]
 
 
 TARGETS = {
