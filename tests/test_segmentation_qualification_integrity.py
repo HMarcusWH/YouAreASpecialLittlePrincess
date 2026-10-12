@@ -1151,3 +1151,36 @@ def test_all_module_import_origins_reject_unreviewed_shadow(monkeypatch, tmp_pat
     monkeypatch.setitem(sys.modules, name, injected)
     with pytest.raises(ValueError, match="unreviewed imported evaluation module"):
         verify_loaded_module_closure(REPOSITORY)
+
+
+def test_preflight_refuses_forged_installed_bytecode_before_import(monkeypatch, tmp_path):
+    import importlib.util
+    import marshal
+    import zipfile
+    from evaluation.segmentation import runtime_integrity as trust
+
+    root = tmp_path / "repo"
+    (root / "requirements").mkdir(parents=True)
+    site = tmp_path / "site"
+    (site / "demo").mkdir(parents=True)
+    wheelhouse = tmp_path / "wheelhouse"
+    wheelhouse.mkdir()
+    wheel = wheelhouse / "demo-1.0-py3-none-any.whl"
+    good = b"answer = 42\n"
+    with zipfile.ZipFile(wheel, "w") as archive:
+        archive.writestr("demo/__init__.py", good)
+    lock = root / "requirements" / f"ci-py{sys.version_info.major}{sys.version_info.minor}.lock"
+    lock.write_text("demo==1.0 --hash=sha256:" + hashlib.sha256(wheel.read_bytes()).hexdigest())
+    source = site / "demo" / "__init__.py"
+    source.write_bytes(good)
+    cache = Path(importlib.util.cache_from_source(str(source)))
+    cache.parent.mkdir()
+    header = importlib.util.MAGIC_NUMBER + b"\x00" * 12
+    cache.write_bytes(header + marshal.dumps(compile(good, str(source), "exec")))
+    monkeypatch.setattr(trust, "_wheelhouse_path", lambda: wheelhouse)
+    monkeypatch.setattr(trust, "_site_roots", lambda: (site,))
+    trust._trusted_files.cache_clear()
+    trust.preflight_reviewed_environment(root)
+    cache.write_bytes(header + marshal.dumps(compile(b"answer = 0\n", str(source), "exec")))
+    with pytest.raises(ValueError, match="unreviewed installed bytecode cache"):
+        trust.preflight_reviewed_environment(root)

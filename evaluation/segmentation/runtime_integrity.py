@@ -10,6 +10,7 @@ import hashlib
 import io
 import importlib
 import importlib.metadata
+import importlib.util
 import marshal
 import os
 import re
@@ -133,8 +134,23 @@ def preflight_reviewed_environment(root: Path) -> None:
     for path, digest in approved.items():
         if path.is_symlink() or not path.is_file():
             raise ValueError("missing or redirected locked executable artifact")
-        if hashlib.sha256(path.read_bytes()).hexdigest() != digest:
+        source = path.read_bytes()
+        if hashlib.sha256(source).hexdigest() != digest:
             raise ValueError("installed file differs from authenticated locked wheel")
+        if path.suffix == ".py":
+            # -B prevents writing caches, but CPython can still READ existing
+            # timestamp-matched .pyc files. Verify all approved dependency
+            # caches before adding site-packages to the import path.
+            cache = Path(importlib.util.cache_from_source(str(path)))
+            if cache.exists():
+                if cache.is_symlink() or not cache.is_file():
+                    raise ValueError("unreviewed installed bytecode cache")
+                cached_bytes = cache.read_bytes()
+                expected_code = marshal.dumps(compile(source, str(path), "exec"))
+                if (len(cached_bytes) < 16
+                        or cached_bytes[:4] != importlib.util.MAGIC_NUMBER
+                        or cached_bytes[16:] != expected_code):
+                    raise ValueError("unreviewed installed bytecode cache")
 
 
 def _project_path(path: Path, root: Path) -> bool:
