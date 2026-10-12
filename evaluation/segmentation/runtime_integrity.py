@@ -217,7 +217,16 @@ def verify_loaded_module_closure(root: Path) -> None:
             parent = sys.modules.get(parent_name)
             native_alias = (spec is None and path.suffix in (".so", ".pyd")
                             and parent is not None and getattr(parent, child, None) is module)
-            if (not native_alias and
+            frozen_stdlib = (
+                spec_origin == "frozen"
+                and name.partition(".")[0] in sys.stdlib_module_names
+                and path.is_relative_to(stdlib)
+                and not any(path.is_relative_to(site) for site in sites)
+            )
+            # CPython sometimes supplies an informational __file__ for frozen
+            # interpreter modules such as abc/io, while spec.origin is "frozen".
+            # The host interpreter, not that .py source, owns their code.
+            if (not (native_alias or frozen_stdlib) and
                     (not isinstance(spec_origin, str)
                      or Path(spec_origin).resolve(strict=True) != path)):
                 raise ValueError("import origin and executed path disagree")
