@@ -121,7 +121,7 @@ def match(reference, detected, threshold=0.5):
             "mean_center_error_px": float(np.mean(center_errors)) if matches else None}
 
 
-def validate_record(row, split, *, allow_real=False):
+def validate_record(row, split, *, allow_real=False, synthetic_fixture=False):
     if split not in SPLIT:
         raise ValueError("unknown split")
     if not isinstance(row, dict):
@@ -135,16 +135,23 @@ def validate_record(row, split, *, allow_real=False):
     digest = row.get("sha256")
     if not isinstance(digest, str) or len(digest) != 64 or any(x not in "0123456789abcdef" for x in digest):
         raise ValueError("invalid image digest")
-    if split != "synthetic" and (not allow_real or not row.get("rights_decision_id")):
+    if split != "synthetic" and not synthetic_fixture and (
+        not allow_real or not row.get("rights_decision_id")
+    ):
         raise ValueError("authorized rights decision required for real data")
+    if synthetic_fixture and allow_real:
+        raise ValueError("fixture mode and real-data mode cannot be combined")
     # Missing annotations are unknown, never a ground-truth empty page.
     return (_validated_boxes(row["lines"], label="line") if "lines" in row else None), (
         _validated_boxes(row["words"], label="word") if "words" in row else None)
 
 
 def evaluate(image, row, *, split="synthetic", profile="grid-v1", allow_real=False,
-             shadow_projection=False, shadow_words=False, annotation_frame="analysis_canvas"):
-    expected_lines, expected_words = validate_record(row, split, allow_real=allow_real)
+             shadow_projection=False, shadow_words=False, annotation_frame="analysis_canvas",
+             synthetic_fixture=False):
+    expected_lines, expected_words = validate_record(
+        row, split, allow_real=allow_real, synthetic_fixture=synthetic_fixture
+    )
     if annotation_frame not in FRAMES:
         raise ValueError("unrecognized annotation frame")
     if not isinstance(image, np.ndarray) or image.dtype != np.uint8 or image.ndim not in (2, 3):
@@ -293,7 +300,7 @@ def run_manifest(manifest: Path, root: Path, *, profile="grid-v1", allow_real=Fa
         raise ValueError("invalid specimen count/budget")
     rows, seen = [], set()
     for record in specimens:
-        validate_record(record, split, allow_real=allow_real or fixture)
+        validate_record(record, split, allow_real=allow_real, synthetic_fixture=fixture)
         name = record["specimen_id"]
         if name in seen:
             raise ValueError("duplicate specimen id")
@@ -312,7 +319,7 @@ def run_manifest(manifest: Path, root: Path, *, profile="grid-v1", allow_real=Fa
         if image.shape[0] * image.shape[1] > MAX_PIXELS:
             raise ValueError("decoded image exceeds benchmark pixel budget")
         rows.append(evaluate(image, record, split=split, profile=profile,
-                             allow_real=allow_real or fixture,
+                             allow_real=allow_real, synthetic_fixture=fixture,
                              shadow_projection=shadow_projection, shadow_words=shadow_words,
                              annotation_frame=frame))
     return {"version": 2, "profile": profile, "split": split, "annotation_frame": frame,
