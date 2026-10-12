@@ -188,8 +188,19 @@ def _verify_loaded_evaluation_modules() -> None:
                 continue
             origin = Path(file_name).resolve(strict=True)
             spec_origin = getattr(spec, "origin", None)
-            if (not isinstance(spec_origin, str)
-                    or Path(spec_origin).resolve(strict=True) != origin
+            parent_name, _, child = name.rpartition(".")
+            parent = sys.modules.get(parent_name)
+            # Some verified C extensions register nested module objects that
+            # report the reviewed parent .so file but have no separate spec.
+            # Do not mistake these for missing-origin shadow code.
+            compiled_alias = (
+                wheel_top is not None and spec is None
+                and origin.suffix in (".so", ".pyd")
+                and parent is not None and getattr(parent, child, None) is module
+            )
+            spec_matches = (isinstance(spec_origin, str)
+                            and Path(spec_origin).resolve(strict=True) == origin)
+            if (not (spec_matches or compiled_alias)
                     or not origin.is_file() or not origin.is_relative_to(root)):
                 raise ValueError("unreviewed imported source path")
             if locations and any(
