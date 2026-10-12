@@ -6,8 +6,10 @@ substitute for reviewing raw evidence with authorized annotators.
 from __future__ import annotations
 
 import hashlib
+import importlib.metadata
 import json
 import math
+import platform
 from pathlib import Path
 
 from .strict_json import strict_loads
@@ -104,6 +106,68 @@ FRACTION_TARGETS = frozenset((
 INTEGER_TARGETS = THRESHOLD_KEYS - FRACTION_TARGETS
 
 
+def _reviewed_runtime_identity() -> dict:
+    """Fail closed unless running from an exact reviewed CI dependency snapshot.
+
+    Only Linux x86_64, Python 3.10..3.12 currently have approved lock files.
+    Other platforms need separately reviewed locks before qualification.
+    """
+    import cv2
+    import numpy as np
+    from tools import verify_ci_lock as locks
+
+    target = locks.running_target()
+    if target[1:] != ("Linux", "x86_64") or target[0] not in ("3.10", "3.11", "3.12"):
+        raise ValueError("no reviewed qualification dependency target")
+    interpreter = target[0].replace(".", "")
+    manifest_path = ROOT / "requirements" / f"ci-py{interpreter}.txt"
+    lock_path = ROOT / "requirements" / f"ci-py{interpreter}.lock"
+    if (manifest_path.is_symlink() or lock_path.is_symlink()
+            or not manifest_path.is_file() or not lock_path.is_file()):
+        raise ValueError("missing or unreviewed dependency snapshot")
+
+    try:
+        manifest = locks.read_manifest(manifest_path)
+        reviewed = locks.read_lock(lock_path)
+        installed = locks.installed_distributions()
+        lock_target = locks.read_lock_target(lock_path)
+        numpy_distribution = importlib.metadata.version("numpy")
+        opencv_distribution = importlib.metadata.version("opencv-python-headless")
+    except (OSError, ValueError, importlib.metadata.PackageNotFoundError) as exc:
+        raise ValueError("dependency snapshot cannot be verified") from exc
+    if (lock_target != target or manifest != reviewed
+            or reviewed.get("numpy") != numpy_distribution
+            or reviewed.get("opencv-python-headless") != opencv_distribution):
+        raise ValueError("reviewed dependency versions or platform mismatch")
+
+    expected_installed = dict(reviewed)
+    expected_installed["special-little-princess-graphology"] = "0.1.0"
+    if installed != expected_installed:
+        raise ValueError("installed environment differs from reviewed dependency lock")
+    if np.__version__ != reviewed["numpy"]:
+        raise ValueError("imported NumPy differs from reviewed dependency lock")
+    if not isinstance(cv2.__version__, str) or not cv2.__version__:
+        raise ValueError("unverifiable imported OpenCV runtime")
+
+    distribution_bytes = json.dumps(
+        installed, sort_keys=True, separators=(",", ":"), allow_nan=False,
+    ).encode("utf-8")
+    return {
+        "python_implementation": platform.python_implementation(),
+        "python_version": platform.python_version(),
+        "python_target": target[0],
+        "os": target[1],
+        "architecture": target[2],
+        "numpy_module_version": np.__version__,
+        "opencv_module_version": cv2.__version__,
+        "numpy_distribution_version": numpy_distribution,
+        "opencv_distribution_version": opencv_distribution,
+        "manifest_sha256": hashlib.sha256(manifest_path.read_bytes()).hexdigest(),
+        "lock_sha256": hashlib.sha256(lock_path.read_bytes()).hexdigest(),
+        "installed_distributions_sha256": hashlib.sha256(distribution_bytes).hexdigest(),
+    }
+
+
 def current_local_identity() -> dict:
     """Read code/config identity from actual checkout, not caller-supplied claims.
 
@@ -139,7 +203,8 @@ def current_local_identity() -> dict:
     return {"source_commit_sha": commit,
             "analysis_config_sha256": analysis_config_sha256(grid_profile="qualified-v2"),
             "evaluator_sha256": hashlib.sha256(Path(benchmark.__file__).read_bytes()).hexdigest(),
-            "qualification_sha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest()}
+            "qualification_sha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
+            "environment": _reviewed_runtime_identity()}
 
 
 def _synthetic_manifest(path: Path, split: str):
@@ -214,7 +279,7 @@ def predeclared_holdout_gate_v2(
                      "development_manifest_sha256", "validation_manifest_sha256",
                      "holdout_manifest_sha256", "source_commit_sha",
                      "analysis_config_sha256", "evaluator_sha256",
-                     "qualification_sha256", "thresholds"}
+                     "qualification_sha256", "environment", "thresholds"}
     if not isinstance(approved, dict) or set(approved) != policy_fields:
         raise ValueError("invalid frozen qualification policy shape")
     if approved["schema_version"] != 2 or approved["mode"] != "synthetic" or (

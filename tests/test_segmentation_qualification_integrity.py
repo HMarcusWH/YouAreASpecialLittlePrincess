@@ -473,3 +473,79 @@ def test_blank_annotation_is_not_inferred_from_unruled_paper_field():
     stats = summarize([row])["overall"]
     assert stats["lines"]["empty_eligible_n"] == 0
     assert stats["lines"]["nonempty_eligible_n"] == 1
+
+
+def test_runtime_environment_is_bound_to_the_frozen_processing_identity(tmp_path):
+    manifests, policy, _ = _fixtures(tmp_path)
+    identity = current_local_identity()
+    assert identity["environment"]["lock_sha256"]
+    assert identity["environment"]["installed_distributions_sha256"]
+    assert identity["environment"]["python_target"] in ("3.10", "3.11", "3.12")
+    assert identity["environment"]["numpy_module_version"]
+    assert identity["environment"]["opencv_module_version"]
+    frozen = json.loads(policy.read_text())
+    assert frozen["environment"] == identity["environment"]
+    assert predeclared_holdout_gate_v2(
+        manifests["development"], manifests["validation"],
+        manifests["holdout"], policy,
+    )["identity"]["environment"] == identity["environment"]
+
+
+@pytest.mark.parametrize("key", [
+    "python_version", "numpy_module_version", "opencv_module_version",
+    "lock_sha256", "manifest_sha256", "installed_distributions_sha256",
+])
+def test_frozen_environment_identity_mutations_are_rejected(key, tmp_path):
+    manifests, policy, _ = _fixtures(tmp_path)
+    p = json.loads(policy.read_text())
+    p["environment"][key] = "tampered"
+    policy.write_text(json.dumps(p))
+    with pytest.raises(ValueError, match="identity mismatch"):
+        predeclared_holdout_gate_v2(
+            manifests["development"], manifests["validation"],
+            manifests["holdout"], policy,
+        )
+
+
+def test_replaced_installed_numpy_version_is_refused(monkeypatch, tmp_path):
+    from tools import verify_ci_lock as locks
+
+    manifests, policy, _ = _fixtures(tmp_path)
+    original = locks.installed_distributions
+    def altered():
+        value = original()
+        value["numpy"] = "0.0.0"
+        return value
+    monkeypatch.setattr(locks, "installed_distributions", altered)
+    with pytest.raises(ValueError, match="installed environment differs"):
+        predeclared_holdout_gate_v2(
+            manifests["development"], manifests["validation"],
+            manifests["holdout"], policy,
+        )
+
+
+def test_unsupported_python_target_or_platform_refused(monkeypatch, tmp_path):
+    from tools import verify_ci_lock as locks
+
+    manifests, policy, _ = _fixtures(tmp_path)
+    monkeypatch.setattr(locks, "running_target", lambda: ("3.13", "Linux", "x86_64"))
+    with pytest.raises(ValueError, match="no reviewed qualification dependency"):
+        predeclared_holdout_gate_v2(
+            manifests["development"], manifests["validation"],
+            manifests["holdout"], policy,
+        )
+
+
+def test_modified_lock_to_manifest_mapping_is_refused(monkeypatch, tmp_path):
+    from tools import verify_ci_lock as locks
+
+    manifests, policy, _ = _fixtures(tmp_path)
+    original = locks.read_lock
+    def altered(path):
+        return {**original(path), "numpy": "999.0"}
+    monkeypatch.setattr(locks, "read_lock", altered)
+    with pytest.raises(ValueError, match="reviewed dependency versions"):
+        predeclared_holdout_gate_v2(
+            manifests["development"], manifests["validation"],
+            manifests["holdout"], policy,
+        )
