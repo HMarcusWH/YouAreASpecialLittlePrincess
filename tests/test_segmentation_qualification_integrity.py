@@ -1071,3 +1071,83 @@ def test_verified_image_bytes_refuse_symlinks_and_swapped_digest(tmp_path):
         _read_verified_image(root, "approved.png", digest)
     with pytest.raises(ValueError, match="invalid specimen image path"):
         _read_verified_image(root, "../secret.png", digest)
+
+
+def test_wheel_record_tamper_cannot_override_reviewed_archive(monkeypatch, tmp_path):
+    """A forged installed RECORD is not accepted as independent file evidence."""
+    import zipfile
+    from evaluation.segmentation import runtime_integrity as trust
+
+    root = tmp_path / "repo"
+    lock_dir = root / "requirements"
+    lock_dir.mkdir(parents=True)
+    site = tmp_path / "site"
+    (site / "demo").mkdir(parents=True)
+    wheelhouse = tmp_path / "wheels"
+    wheelhouse.mkdir()
+    wheel = wheelhouse / "demo-1.0-py3-none-any.whl"
+    trusted = b"print('reviewed')\n"
+    with zipfile.ZipFile(wheel, "w") as archive:
+        archive.writestr("demo/__init__.py", trusted)
+        archive.writestr("demo-1.0.dist-info/RECORD", b"")
+    approved_sha = hashlib.sha256(wheel.read_bytes()).hexdigest()
+    target = f"{sys.version_info.major}{sys.version_info.minor}"
+    (lock_dir / f"ci-py{target}.lock").write_text(
+        "demo==1.0 --hash=sha256:" + approved_sha + "\n"
+    )
+    (site / "demo" / "__init__.py").write_bytes(trusted)
+    monkeypatch.setattr(trust, "_wheelhouse_path", lambda: wheelhouse)
+    monkeypatch.setattr(trust, "_site_roots", lambda: (site,))
+    trust._trusted_files.cache_clear()
+    trust.preflight_reviewed_environment(root)
+
+    altered = b"print('attacker')\n"
+    (site / "demo" / "__init__.py").write_bytes(altered)
+    (site / "demo-1.0.dist-info").mkdir()
+    (site / "demo-1.0.dist-info" / "RECORD").write_text(
+        "demo/__init__.py,sha256:" + hashlib.sha256(altered).hexdigest()
+    )
+    with pytest.raises(ValueError, match="differs from authenticated locked wheel"):
+        trust.preflight_reviewed_environment(root)
+    with zipfile.ZipFile(wheel, "w") as archive:
+        archive.writestr("demo/__init__.py", altered)
+    trust._trusted_files.cache_clear()
+    with pytest.raises(ValueError, match="wheel archive differs"):
+        trust.preflight_reviewed_environment(root)
+
+
+def test_forged_timestamp_matching_bytecode_is_rejected(tmp_path):
+    import importlib.util
+    import marshal
+    import types
+    from evaluation.segmentation.runtime_integrity import _check_project_bytecode
+
+    source = tmp_path / "reviewed.py"
+    source.write_bytes(b"answer = 42\n")
+    cached = tmp_path / "__pycache__" / "reviewed.cpython.pyc"
+    cached.parent.mkdir()
+    magic = importlib.util.MAGIC_NUMBER + b"\x00" * 12
+    good = marshal.dumps(compile(source.read_bytes(), str(source), "exec"))
+    fake = marshal.dumps(compile(b"answer = 0\n", str(source), "exec"))
+    module = types.SimpleNamespace(__cached__=str(cached))
+    cached.write_bytes(magic + good)
+    _check_project_bytecode(module, source)
+    cached.write_bytes(magic + fake)
+    with pytest.raises(ValueError, match="unverified cached project bytecode"):
+        _check_project_bytecode(module, source)
+
+
+@pytest.mark.parametrize("name", ("hmac", "lazy_loader", "imageio"))
+def test_all_module_import_origins_reject_unreviewed_shadow(monkeypatch, tmp_path, name):
+    import importlib.util
+    import types
+    from evaluation.segmentation.runtime_integrity import verify_loaded_module_closure
+
+    attacker = tmp_path / f"{name}.py"
+    attacker.write_text("FAKE = True\n")
+    injected = types.ModuleType(name)
+    injected.__file__ = str(attacker)
+    injected.__spec__ = importlib.util.spec_from_file_location(name, attacker)
+    monkeypatch.setitem(sys.modules, name, injected)
+    with pytest.raises(ValueError, match="unreviewed imported evaluation module"):
+        verify_loaded_module_closure(REPOSITORY)

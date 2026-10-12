@@ -235,7 +235,10 @@ def verify_loaded_module_closure(root: Path) -> None:
             elif _project_path(path, root):
                 if path.suffix != ".py":
                     raise ValueError("unapproved project code artifact")
-                _check_project_bytecode(module, path)
+                # pytest assertion-rewrites its own test modules; those are
+                # not imported by the staged qualification subprocess.
+                if not path.is_relative_to(root / "tests"):
+                    _check_project_bytecode(module, path)
             elif path.is_relative_to(stdlib):
                 # The system Python interpreter/stdlib is part of the reviewed
                 # runner trust anchor; never accept a repo-local stdlib shadow.
