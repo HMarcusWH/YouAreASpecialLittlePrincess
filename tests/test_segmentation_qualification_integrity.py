@@ -963,7 +963,7 @@ def test_isolated_launcher_refuses_unapproved_policy_and_hides_paths(tmp_path):
         cwd=REPOSITORY, text=True, capture_output=True, timeout=45,
     )
     assert rejected.returncode == 2
-    assert "Isolation required" in rejected.stderr
+    assert "Isolation requires python -I -S -B" in rejected.stderr
     result = subprocess.run(
         [sys.executable, "-I", "-S", "-B", str(launcher), *args],
         cwd=REPOSITORY, text=True, capture_output=True, timeout=45,
