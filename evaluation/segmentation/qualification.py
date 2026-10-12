@@ -10,10 +10,12 @@ import json
 import math
 from pathlib import Path
 
+from .strict_json import strict_loads
+
 
 def _records(path: Path, expected_split: str):
     raw = path.read_bytes()
-    data = json.loads(raw)
+    data = strict_loads(raw)
     if data.get("schema_version") != 2 or data.get("split") != expected_split:
         raise ValueError("expected v2 " + expected_split + " manifest")
     if data.get("annotation_frame") not in ("original_image", "analysis_canvas"):
@@ -36,7 +38,7 @@ def predeclared_holdout_gate(development: Path, holdout: Path, policy: Path) -> 
     """Check frozen policy/holdout identity without disclosing writer IDs."""
     dev, _ = _records(development, "development")
     held, digest = _records(holdout, "holdout")
-    approved = json.loads(policy.read_text("utf-8"))
+    approved = strict_loads(policy.read_bytes())
     if approved.get("schema_version") != 1 or approved.get("holdout_manifest_sha256") != digest:
         raise ValueError("holdout manifest does not match predeclared reviewed SHA")
     for label in ("writer_group", "capture_group", "sha256"):
@@ -141,7 +143,7 @@ def _synthetic_manifest(path: Path, split: str):
     from .benchmark import validate_record
 
     raw = path.read_bytes()
-    data = json.loads(raw)
+    data = strict_loads(raw)
     if not isinstance(data, dict) or set(data) != {
         "schema_version", "annotation_frame", "split", "synthetic", "specimens"
     }:
@@ -203,7 +205,7 @@ def predeclared_holdout_gate_v2(
                     raise ValueError(f"{left}/{right} {field} leakage")
 
     raw_policy = policy.read_bytes()
-    approved = json.loads(raw_policy)
+    approved = strict_loads(raw_policy)
     policy_fields = {"schema_version", "mode", "profile",
                      "development_manifest_sha256", "validation_manifest_sha256",
                      "holdout_manifest_sha256", "source_commit_sha",

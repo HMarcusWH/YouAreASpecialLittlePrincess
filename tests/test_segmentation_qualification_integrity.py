@@ -289,3 +289,99 @@ def test_private_real_cli_error_does_not_expose_file_path(monkeypatch, capsys):
     captured = capsys.readouterr()
     assert secret not in captured.out + captured.err
     assert "Protected evaluation failed" in captured.err
+
+
+def test_validation_split_is_evaluable_only_as_explicit_synthetic_fixture(tmp_path):
+    from evaluation.segmentation.benchmark import run_manifest
+
+    manifests, _, image_root = _fixtures(tmp_path)
+    result = run_manifest(
+        manifests["validation"], image_root, profile="qualified-v2",
+        synthetic_split=True,
+    )
+    assert result["split"] == "validation"
+    assert result["manifest_sha256"] == hashlib.sha256(
+        manifests["validation"].read_bytes()
+    ).hexdigest()
+    assert len(result["results"]) == 1
+    with pytest.raises(ValueError, match="authorization"):
+        run_manifest(manifests["validation"], image_root, profile="qualified-v2")
+
+
+@pytest.mark.parametrize("split", ("development", "validation", "holdout"))
+def test_unmarked_validation_or_other_split_cannot_claim_fixture_authority(split, tmp_path):
+    from evaluation.segmentation.benchmark import run_manifest
+
+    manifests, _, root = _fixtures(tmp_path)
+    manifest = manifests[split]
+    raw = json.loads(manifest.read_text())
+    raw["synthetic"] = False
+    manifest.write_text(json.dumps(raw))
+    with pytest.raises(ValueError, match="authorization"):
+        run_manifest(manifest, root, synthetic_split=True)
+
+
+def test_duplicate_frozen_policy_keys_fail_even_when_values_match(tmp_path):
+    manifests, policy, _ = _fixtures(tmp_path)
+    raw = policy.read_text()
+    policy.write_text(raw.replace('"schema_version": 2',
+                                  '"schema_version": 2, "schema_version": 2', 1))
+    with pytest.raises(ValueError, match="duplicate JSON"):
+        predeclared_holdout_gate_v2(
+            manifests["development"], manifests["validation"],
+            manifests["holdout"], policy,
+        )
+
+
+def test_duplicate_nested_threshold_keys_fail_before_scoring(tmp_path):
+    manifests, policy, _ = _fixtures(tmp_path)
+    raw = policy.read_text()
+    policy.write_text(raw.replace('"min_line_coverage": 1.0',
+                                  '"min_line_coverage": 1.0, "min_line_coverage": 0.0',
+                                  1))
+    with pytest.raises(ValueError, match="duplicate JSON"):
+        predeclared_holdout_gate_v2(
+            manifests["development"], manifests["validation"],
+            manifests["holdout"], policy,
+        )
+
+
+@pytest.mark.parametrize("split", ("development", "validation", "holdout"))
+def test_duplicate_specimen_record_keys_fail_before_digest_check(split, tmp_path):
+    manifests, policy, _ = _fixtures(tmp_path)
+    manifest = manifests[split]
+    raw = manifest.read_text()
+    manifest.write_text(raw.replace('"specimen_id":',
+                                    '"specimen_id": "injected", "specimen_id":', 1))
+    # Freeze the mutated bytes: only the strict parser should cause the failure.
+    _freeze_policy(manifests, policy)
+    with pytest.raises(ValueError, match="duplicate JSON"):
+        predeclared_holdout_gate_v2(
+            manifests["development"], manifests["validation"],
+            manifests["holdout"], policy,
+        )
+
+
+def test_duplicate_keys_rejected_in_direct_benchmark_invocation(tmp_path):
+    from evaluation.segmentation.benchmark import run_manifest
+
+    manifests, _, image_root = _fixtures(tmp_path)
+    manifest = manifests["validation"]
+    raw = manifest.read_text()
+    manifest.write_text(raw.replace('"annotation_frame": "original_image"',
+                                    '"annotation_frame": "original_image", "annotation_frame": "original_image"',
+                                    1))
+    with pytest.raises(ValueError, match="duplicate JSON"):
+        run_manifest(manifest, image_root, synthetic_split=True)
+
+
+def test_nonstandard_nonfinite_json_constant_fails_before_threshold_review(tmp_path):
+    manifests, policy, _ = _fixtures(tmp_path)
+    raw = policy.read_text()
+    policy.write_text(raw.replace('"min_line_coverage": 1.0',
+                                  '"min_line_coverage": NaN', 1))
+    with pytest.raises(ValueError, match="nonfinite JSON"):
+        predeclared_holdout_gate_v2(
+            manifests["development"], manifests["validation"],
+            manifests["holdout"], policy,
+        )

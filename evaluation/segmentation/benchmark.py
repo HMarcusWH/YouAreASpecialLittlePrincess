@@ -16,8 +16,10 @@ from princess_graphology.preprocessing.grid import GridQualityError
 from princess_graphology.segmentation_projection import propose_lines
 from princess_graphology.segmentation_words import propose_words
 
+from .strict_json import strict_loads
+
 PAPER = frozenset(("blank", "lined", "grid", "form", "unknown"))
-SPLIT = frozenset(("synthetic", "development", "holdout"))
+SPLIT = frozenset(("synthetic", "development", "validation", "holdout"))
 FRAMES = frozenset(("analysis_canvas", "original_image"))
 MAX_SPECIMENS = 256
 MAX_FILE_BYTES = 25 * 1024 * 1024
@@ -281,7 +283,8 @@ def summarize(rows):
 def run_manifest(manifest: Path, root: Path, *, profile="grid-v1", allow_real=False,
                  shadow_projection=False, shadow_words=False, synthetic_split=False):
     """Only explicitly authorized local reads; no image bytes in JSON output."""
-    document = json.loads(manifest.read_text("utf-8"))
+    manifest_bytes = manifest.read_bytes()
+    document = strict_loads(manifest_bytes)
     version = document.get("schema_version")
     if version not in (1, 2) or document.get("split") not in SPLIT:
         raise ValueError("invalid manifest")
@@ -323,7 +326,7 @@ def run_manifest(manifest: Path, root: Path, *, profile="grid-v1", allow_real=Fa
                              shadow_projection=shadow_projection, shadow_words=shadow_words,
                              annotation_frame=frame))
     return {"version": 2, "profile": profile, "split": split, "annotation_frame": frame,
-            "manifest_sha256": hashlib.sha256(manifest.read_bytes()).hexdigest(),
+            "manifest_sha256": hashlib.sha256(manifest_bytes).hexdigest(),
             "summary": summarize(rows), "results": rows}
 
 
