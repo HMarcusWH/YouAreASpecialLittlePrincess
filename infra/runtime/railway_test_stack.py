@@ -23,6 +23,7 @@ COMMON = (
     "PRINCESS_ENV", "PRINCESS_LOCAL_STORAGE_DIR",
     "PRINCESS_TOMBSTONE_DIR", "PRINCESS_PUBLIC_API_BASE",
     "PRINCESS_ANALYSIS_PROFILE", "PRINCESS_GRID_V1_RESEARCH_OPT_IN",
+    "PRINCESS_SEGMENTATION_V2_RESEARCH_OPT_IN",
 )
 
 
@@ -38,8 +39,9 @@ def role_env(role: str) -> dict[str, str]:
     environment["PRINCESS_ENV"] = "test"
     environment["PRINCESS_COMPONENT"] = role
     if (os.environ.get("PRINCESS_TEST_PUBLIC_GUEST_ONLY") == "1"
-            and environment.get("PRINCESS_ANALYSIS_PROFILE") == "grid-v1"):
-        raise RuntimeError("grid-v1 is not approved for the public synthetic guest stack")
+            and environment.get("PRINCESS_ANALYSIS_PROFILE") in ("grid-v1", "qualified-v2")):
+        raise RuntimeError(environment["PRINCESS_ANALYSIS_PROFILE"] +
+                           " is not approved for the public synthetic guest stack")
     environment["PRINCESS_EXPECTED_ANALYSIS_CONFIG_SHA256"] = os.environ.get(
         "PRINCESS_EXPECTED_ANALYSIS_CONFIG_SHA256",
         analysis_config_sha256(grid_profile=environment.get("PRINCESS_ANALYSIS_PROFILE", "legacy")),

@@ -49,3 +49,12 @@
 - Without a resolved TLC/HAT license decision, do **not** copy their source/assets or introduce an identity-classification product feature.
 
 Track those as three distinct gates: algorithm qualification, backend/client provenance, and physical device QA. Green synthetic CI is necessary but not a substitute.
+
+## Follow-up #93 — v2 qualification
+
+The merged #80 foundation still defaults to `legacy`.
+Draft PR #93 adds `qualified-v2` under a separate explicit private/local/test
+gate, preserving the existing public guest APK's legacy hash. It does **not**
+authorize a `qualified-v2` public guest deployment or production activation.
+The [v2 qualification gates](segmentation-v2-qualification.md) control the
+later, distinct release decision; Issue #92 remains open.
