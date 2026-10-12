@@ -137,7 +137,8 @@ def validate_record(row, split, *, allow_real=False):
         raise ValueError("invalid image digest")
     if split != "synthetic" and (not allow_real or not row.get("rights_decision_id")):
         raise ValueError("authorized rights decision required for real data")
-    return _validated_boxes(row.get("lines", []), label="line"), (
+    # Missing annotations are unknown, never a ground-truth empty page.
+    return (_validated_boxes(row["lines"], label="line") if "lines" in row else None), (
         _validated_boxes(row["words"], label="word") if "words" in row else None)
 
 
@@ -150,7 +151,9 @@ def evaluate(image, row, *, split="synthetic", profile="grid-v1", allow_real=Fal
         raise ValueError("invalid benchmark image")
     if image.shape[0] * image.shape[1] > MAX_PIXELS:
         raise ValueError("decoded image exceeds benchmark pixel budget")
-    label = {"specimen_id": row["specimen_id"], "split": split, "paper": row["paper"]}
+    label = {"specimen_id": row["specimen_id"], "split": split, "paper": row["paper"],
+             "line_reference_n": len(expected_lines) if expected_lines is not None else None,
+             "word_reference_n": len(expected_words) if expected_words is not None else None}
     trace = {}
     try:
         context = prepare_context(image, grid_profile=profile, word_trace=trace)
@@ -161,20 +164,23 @@ def evaluate(image, row, *, split="synthetic", profile="grid-v1", allow_real=Fal
         matrix = context.metadata["original_to_analysis"]
         source = (image.shape[1], image.shape[0])
         target = (context.width, context.height)
-        expected_lines = to_analysis_boxes(expected_lines, matrix,
-                                           source_size=source, destination_size=target)
+        if expected_lines is not None:
+            expected_lines = to_analysis_boxes(expected_lines, matrix,
+                                               source_size=source, destination_size=target)
         if expected_words is not None:
             expected_words = to_analysis_boxes(expected_words, matrix,
                                                source_size=source, destination_size=target)
     else:
-        if any(b.x2 > context.width or b.y2 > context.height for b in expected_lines):
+        if expected_lines is not None and any(
+            b.x2 > context.width or b.y2 > context.height for b in expected_lines
+        ):
             raise ValueError("line annotation exceeds analysis canvas")
         if expected_words is not None and any(
             b.x2 > context.width or b.y2 > context.height for b in expected_words
         ):
             raise ValueError("word annotation exceeds analysis canvas")
     shadow = None
-    if shadow_projection:
+    if shadow_projection and expected_lines is not None:
         projection = propose_lines(context.mask)
         if projection.diagnostics["truncated"]:
             raise ValueError("line candidate cap reached; specimen not scoreable")
@@ -193,7 +199,8 @@ def evaluate(image, row, *, split="synthetic", profile="grid-v1", allow_real=Fal
             "reason": None if status == "MEASURED" else "some_evidence_unqualified",
             "qualification": qualification, "line_shadow": shadow, "word_shadow": word_shadow,
             "word_trace": trace,
-            "lines": match(expected_lines, context.lines) if line_available else None,
+            "lines": match(expected_lines, context.lines)
+                     if expected_lines is not None and line_available else None,
             "words": match(expected_words, context.words)
                      if expected_words is not None and word_available else None,
             "unavailable_words": expected_words is not None and not word_available,
@@ -202,37 +209,70 @@ def evaluate(image, row, *, split="synthetic", profile="grid-v1", allow_real=Fal
 
 
 def summarize(rows):
+    """Report accuracy only where annotated and available, with full-denominator coverage.
+
+    Empty references are tracked separately. A selective estimator cannot improve
+    its nonempty-handwriting F1 merely by refusing or excluding hard specimens.
+    """
     groups = defaultdict(list)
     for row in rows:
         groups[row["split"] + "/" + row["paper"]].append(row)
+
     def stats(items):
         measured = [r for r in items if r["status"] in ("MEASURED", "PARTIAL")]
+
         def family(kind):
-            values = [r.get(kind) for r in measured if r.get(kind) is not None]
-            return {"annotated_n": len(values),
-                    "macro_precision": float(np.mean([v["precision"] for v in values])) if values else None,
-                    "macro_recall": float(np.mean([v["recall"] for v in values])) if values else None,
-                    "macro_f1": float(np.mean([v["f1"] for v in values])) if values else None,
-                    "macro_count_mae": float(np.mean([v["count_mae"] for v in values])) if values else None,
-                    "macro_matched_iou": float(np.mean([v["mean_iou"] for v in values
-                                                       if v["mean_iou"] is not None]))
-                                         if any(v["mean_iou"] is not None for v in values) else None,
-                    "macro_center_error_px": float(np.mean([v["mean_center_error_px"] for v in values
-                                                            if v["mean_center_error_px"] is not None]))
-                                             if any(v["mean_center_error_px"] is not None for v in values) else None}
+            key = "line_reference_n" if kind in ("lines", "line_shadow") else "word_reference_n"
+            eligible = []
+            for r in items:
+                n = r.get(key)
+                if n is None and isinstance(r.get(kind), dict):
+                    n = r[kind].get("reference_n")
+                if n is not None:
+                    eligible.append((r, n))
+            available = [(r, n) for r, n in eligible if isinstance(r.get(kind), dict)]
+            values = [r[kind] for r, _ in available]
+            nonempty = [r[kind] for r, n in available if n > 0]
+            nonempty_eligible_n = sum(n > 0 for _, n in eligible)
+            empty = [r[kind] for r, n in available if n == 0]
+            def avg(field, subset):
+                numbers = [v[field] for v in subset if v.get(field) is not None]
+                return float(np.mean(numbers)) if numbers else None
+
+            return {"eligible_n": len(eligible),
+                    "annotation_unknown_n": len(items) - len(eligible),
+                    "annotated_n": len(values),
+                    "available_n": len(available),
+                    "unavailable_n": len(eligible) - len(available),
+                    "coverage": len(available) / len(eligible) if eligible else None,
+                    "nonempty_eligible_n": nonempty_eligible_n,
+                    "nonempty_available_n": len(nonempty),
+                    "nonempty_coverage": len(nonempty) / nonempty_eligible_n
+                                          if nonempty_eligible_n else None,
+                    "nonempty_macro_f1": avg("f1", nonempty),
+                    "empty_annotated_n": len(empty),
+                    "empty_correct_n": sum(v["detected_n"] == 0 for v in empty),
+                    "macro_precision": avg("precision", values),
+                    "macro_recall": avg("recall", values),
+                    "macro_f1": avg("f1", values),
+                    "macro_count_mae": avg("count_mae", values),
+                    "macro_matched_iou": avg("mean_iou", values),
+                    "macro_center_error_px": avg("mean_center_error_px", values)}
+
         return {"count": len(items), "measured": len(measured),
                 "partial": sum(r["status"] == "PARTIAL" for r in measured),
-                "rejected": len(items) - len(measured),
-                "unavailable_words": sum(r.get("unavailable_words") is True for r in measured),
-                "false_zero_words": sum(r.get("false_zero_words") is True for r in measured),
+                "rejected": sum(r["status"] == "REJECTED" for r in items),
+                "unavailable_words": sum(r.get("unavailable_words") is True for r in items),
+                "false_zero_words": sum(r.get("false_zero_words") is True for r in items),
                 "lines": family("lines"), "words": family("words"),
                 "line_shadow": family("line_shadow"), "word_shadow": family("word_shadow")}
-    return {"version": 1, "overall": stats(rows),
+
+    return {"version": 2, "overall": stats(rows),
             "conditions": {key: stats(group) for key, group in sorted(groups.items())}}
 
 
 def run_manifest(manifest: Path, root: Path, *, profile="grid-v1", allow_real=False,
-                 shadow_projection=False, shadow_words=False):
+                 shadow_projection=False, shadow_words=False, synthetic_split=False):
     """Only explicitly authorized local reads; no image bytes in JSON output."""
     document = json.loads(manifest.read_text("utf-8"))
     version = document.get("schema_version")
@@ -242,7 +282,10 @@ def run_manifest(manifest: Path, root: Path, *, profile="grid-v1", allow_real=Fa
     if frame not in FRAMES or (version == 2 and "annotation_frame" not in document):
         raise ValueError("v2 manifests require explicit annotation_frame")
     split = document["split"]
-    if split != "synthetic" and not allow_real:
+    # Synthetic split fixtures exercise the full writer-disjoint protocol
+    # without falsely claiming a human-data rights decision.
+    fixture = (synthetic_split is True and version == 2 and document.get("synthetic") is True)
+    if split != "synthetic" and not (allow_real or fixture):
         raise ValueError("real-data execution requires authorization")
     resolved_root = root.resolve(strict=True)
     specimens = document.get("specimens")
@@ -250,7 +293,7 @@ def run_manifest(manifest: Path, root: Path, *, profile="grid-v1", allow_real=Fa
         raise ValueError("invalid specimen count/budget")
     rows, seen = [], set()
     for record in specimens:
-        validate_record(record, split, allow_real=allow_real)
+        validate_record(record, split, allow_real=allow_real or fixture)
         name = record["specimen_id"]
         if name in seen:
             raise ValueError("duplicate specimen id")
@@ -268,10 +311,11 @@ def run_manifest(manifest: Path, root: Path, *, profile="grid-v1", allow_real=Fa
             raise ValueError("undecodable image")
         if image.shape[0] * image.shape[1] > MAX_PIXELS:
             raise ValueError("decoded image exceeds benchmark pixel budget")
-        rows.append(evaluate(image, record, split=split, profile=profile, allow_real=allow_real,
+        rows.append(evaluate(image, record, split=split, profile=profile,
+                             allow_real=allow_real or fixture,
                              shadow_projection=shadow_projection, shadow_words=shadow_words,
                              annotation_frame=frame))
-    return {"version": 2, "profile": profile, "annotation_frame": frame,
+    return {"version": 2, "profile": profile, "split": split, "annotation_frame": frame,
             "manifest_sha256": hashlib.sha256(manifest.read_bytes()).hexdigest(),
             "summary": summarize(rows), "results": rows}
 
@@ -289,7 +333,14 @@ def main():
                           allow_real=args.allow_authorized_real,
                           shadow_projection=args.shadow_projection,
                           shadow_words=args.shadow_words)
-    print(json.dumps(result, indent=2, sort_keys=True))
+    # Real specimen-level IDs and diagnostics must not flow to public stdout.
+    if args.allow_authorized_real:
+        print(json.dumps({"status": "PROTECTED_RESULTS_WITHHELD",
+                          "publication": "NOT_AUTHORIZED",
+                          "message": "Keep protected evaluation details offline."},
+                         sort_keys=True))
+    else:
+        print(json.dumps(result, indent=2, sort_keys=True))
 
 
 if __name__ == "__main__":

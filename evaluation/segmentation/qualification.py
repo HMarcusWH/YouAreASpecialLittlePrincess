@@ -65,23 +65,263 @@ def predeclared_holdout_gate(development: Path, holdout: Path, policy: Path) -> 
 
 
 def score_holdout(summary: dict, approved: dict) -> dict:
-    """Score only explicitly qualified benchmark runs against frozen targets."""
-    if not approved.get("protocol_qualified"):
-        raise ValueError("unqualified protocol")
-    block = summary.get("overall")
-    if not isinstance(block, dict):
-        raise ValueError("missing holdout benchmark aggregate")
-    targets = approved["thresholds"]
-    qualified = block["measured"] - block.get("partial", 0)
-    fraction = qualified / block["count"] if block["count"] else 0.0
-    line = block["lines"]["macro_f1"]
-    word = block["words"]["macro_f1"]
-    scores = {
-        "minimum_holdout_n": block["count"] >= targets["minimum_holdout_n"],
-        "min_line_macro_f1": line is not None and line >= targets["min_line_macro_f1"],
-        "min_word_macro_f1": word is not None and word >= targets["min_word_macro_f1"],
-        "min_qualified_fraction": fraction >= targets["min_qualified_fraction"],
-        "max_false_zero_words": block["false_zero_words"] <= targets["max_false_zero_words"],
+    """Legacy v1 aggregates cannot establish a qualified benchmark result.
+
+    Kept for historical synthetic test callers; never returns authorization.
+    Use run_frozen_synthetic_qualification for an internally computed result.
+    """
+    return {"accepted": False, "reason": "unverifiable_legacy_aggregate",
+            "public_qualification": "NOT_AUTHORIZED"}
+
+
+# V2 is deliberately fixture-only while T11 pilot_rights_consent is pending.
+# This module has no option to authorize real participants or promote a profile.
+import re
+import subprocess
+
+ROOT = Path(__file__).resolve().parents[2]
+HASH_PATTERN = re.compile(r"^[0-9a-f]{64}$")
+COMMIT_PATTERN = re.compile(r"^[0-9a-f]{40}$")
+THRESHOLD_KEYS = frozenset((
+    "minimum_holdout_n", "minimum_holdout_writers",
+    "minimum_nonempty_line_n", "minimum_nonempty_word_n",
+    "min_line_nonempty_macro_f1", "min_word_nonempty_macro_f1",
+    "min_line_coverage", "min_word_coverage",
+    "min_nonempty_line_coverage", "min_nonempty_word_coverage",
+    "max_false_zero_words",
+))
+FRACTION_TARGETS = frozenset((
+    "min_line_nonempty_macro_f1", "min_word_nonempty_macro_f1",
+    "min_line_coverage", "min_word_coverage",
+    "min_nonempty_line_coverage", "min_nonempty_word_coverage",
+))
+INTEGER_TARGETS = THRESHOLD_KEYS - FRACTION_TARGETS
+
+
+def current_local_identity() -> dict:
+    """Read code/config identity from actual checkout, not caller-supplied claims.
+
+    Not a signed attestation: external review, source-control access and process
+    integrity remain requirements for protected evaluation.
+    """
+    from princess_app.application.intake import analysis_config_sha256
+
+    try:
+        run = subprocess.run(
+            ["git", "rev-parse", "--verify", "HEAD"], cwd=ROOT, text=True,
+            capture_output=True, check=True, timeout=10,
+        )
+    except (OSError, subprocess.SubprocessError) as exc:
+        raise ValueError("source revision cannot be verified") from exc
+    commit = run.stdout.strip()
+    if not COMMIT_PATTERN.fullmatch(commit):
+        raise ValueError("invalid source revision")
+    from . import benchmark
+    return {"source_commit_sha": commit,
+            "analysis_config_sha256": analysis_config_sha256(grid_profile="qualified-v2"),
+            "evaluator_sha256": hashlib.sha256(Path(benchmark.__file__).read_bytes()).hexdigest(),
+            "qualification_sha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest()}
+
+
+def _synthetic_manifest(path: Path, split: str):
+    """Strict closed-shape fixture manifests. Human-data admission is absent."""
+    from .benchmark import validate_record
+
+    raw = path.read_bytes()
+    data = json.loads(raw)
+    if not isinstance(data, dict) or set(data) != {
+        "schema_version", "annotation_frame", "split", "synthetic", "specimens"
+    }:
+        raise ValueError("invalid frozen fixture manifest shape")
+    if data["schema_version"] != 2 or data["split"] != split or data["synthetic"] is not True:
+        raise ValueError("real-data qualification not authorized")
+    if data["annotation_frame"] != "original_image":
+        raise ValueError("frozen fixture annotations require original_image coordinates")
+    rows = data["specimens"]
+    if not isinstance(rows, list) or not 1 <= len(rows) <= 256:
+        raise ValueError("invalid frozen fixture specimen count")
+    required = {"specimen_id", "writer_group", "capture_group",
+                "source_specimen_group", "image_path", "sha256", "paper", "lines", "words"}
+    for row in rows:
+        if not isinstance(row, dict) or set(row) != required:
+            raise ValueError("invalid frozen fixture record shape")
+        validate_record(row, "synthetic")
+        if any(not isinstance(row[key], str) or not row[key] or len(row[key]) > 256
+               for key in ("source_specimen_group", "writer_group", "capture_group")):
+            raise ValueError("invalid source/writer/capture identity")
+        if not HASH_PATTERN.fullmatch(row["sha256"]):
+            raise ValueError("invalid image digest")
+    for field in ("specimen_id", "sha256"):
+        if len({r[field] for r in rows}) != len(rows):
+            raise ValueError("duplicate " + field)
+    return data, hashlib.sha256(raw).hexdigest()
+
+
+def _validate_thresholds(targets):
+    if not isinstance(targets, dict) or set(targets) != THRESHOLD_KEYS:
+        raise ValueError("incomplete frozen thresholds")
+    for key in FRACTION_TARGETS:
+        value = targets[key]
+        if type(value) not in (int, float) or not math.isfinite(value) or not 0 <= value <= 1:
+            raise ValueError("invalid frozen fraction: " + key)
+    for key in INTEGER_TARGETS:
+        value = targets[key]
+        if type(value) is not int or value < (0 if key == "max_false_zero_words" else 1):
+            raise ValueError("invalid frozen count: " + key)
+
+
+def predeclared_holdout_gate_v2(
+    development: Path, validation: Path, holdout: Path, policy: Path,
+) -> dict:
+    """Verify all splits and pinned protocol BEFORE reading any holdout pixels."""
+    documents = {}
+    digests = {}
+    for split, path in (
+        ("development", development), ("validation", validation), ("holdout", holdout)
+    ):
+        documents[split], digests[split] = _synthetic_manifest(path, split)
+    for i, left in enumerate(documents):
+        for right in list(documents)[i + 1:]:
+            for field in ("specimen_id", "writer_group", "capture_group",
+                          "source_specimen_group", "sha256"):
+                a = {r[field] for r in documents[left]["specimens"]}
+                b = {r[field] for r in documents[right]["specimens"]}
+                if a & b:
+                    raise ValueError(f"{left}/{right} {field} leakage")
+
+    raw_policy = policy.read_bytes()
+    approved = json.loads(raw_policy)
+    policy_fields = {"schema_version", "mode", "profile",
+                     "development_manifest_sha256", "validation_manifest_sha256",
+                     "holdout_manifest_sha256", "source_commit_sha",
+                     "analysis_config_sha256", "evaluator_sha256",
+                     "qualification_sha256", "thresholds"}
+    if not isinstance(approved, dict) or set(approved) != policy_fields:
+        raise ValueError("invalid frozen qualification policy shape")
+    if approved["schema_version"] != 2 or approved["mode"] != "synthetic" or (
+        approved["profile"] != "qualified-v2"
+    ):
+        raise ValueError("real qualification and profile promotion not authorized")
+    for split in documents:
+        if approved[split + "_manifest_sha256"] != digests[split]:
+            raise ValueError("predeclared " + split + " digest mismatch")
+    _validate_thresholds(approved["thresholds"])
+    identity = current_local_identity()
+    for key, expected in identity.items():
+        if approved[key] != expected:
+            raise ValueError("frozen processing/source/evaluator identity mismatch: " + key)
+    return {"policy_digest": hashlib.sha256(raw_policy).hexdigest(),
+            "profile": "qualified-v2", "mode": "synthetic", "identity": identity,
+            "holdout_manifest_sha256": digests["holdout"],
+            "holdout_writers": len({r["writer_group"] for r in documents["holdout"]["specimens"]}),
+            "holdout_records": documents["holdout"]["specimens"],
+            "thresholds": approved["thresholds"]}
+
+
+def _checked_holdout_rows(result, frozen):
+    """Fail if a runner truncates, duplicates, reorders identity, or drops rows."""
+    expected = {r["specimen_id"]: r for r in frozen["holdout_records"]}
+    if not isinstance(result, dict) or result.get("profile") != frozen["profile"] or (
+        result.get("split") != "holdout"
+    ) or result.get("manifest_sha256") != frozen["holdout_manifest_sha256"]:
+        raise ValueError("wrong frozen benchmark identity")
+    rows = result.get("results")
+    if not isinstance(rows, list) or len(rows) != len(expected):
+        raise ValueError("frozen holdout coverage mismatch")
+    seen = set()
+    for row in rows:
+        if not isinstance(row, dict) or row.get("specimen_id") not in expected:
+            raise ValueError("unexpected frozen specimen")
+        ident = row["specimen_id"]
+        if ident in seen:
+            raise ValueError("duplicate frozen benchmark result")
+        seen.add(ident)
+        original = expected[ident]
+        if row.get("split") != "holdout" or row.get("paper") != original["paper"]:
+            raise ValueError("frozen benchmark metadata mismatch")
+        for family in ("line", "word"):
+            number = row.get(family + "_reference_n")
+            if number != len(original["lines" if family == "line" else "words"]):
+                raise ValueError("frozen annotation count mismatch")
+        if row.get("status") not in ("MEASURED", "PARTIAL", "REJECTED"):
+            raise ValueError("unknown benchmark outcome")
+    if seen != set(expected):
+        raise ValueError("missing frozen benchmark result")
+    return rows
+
+
+def _engineering_gates(rows, frozen):
+    from .benchmark import summarize
+
+    overall = summarize(rows)["overall"]  # Never trust a caller-supplied summary.
+    if overall["count"] != len(frozen["holdout_records"]):
+        raise ValueError("incomplete holdout denominator")
+    line, word = overall["lines"], overall["words"]
+    targets = frozen["thresholds"]
+    checks = {
+        "minimum_holdout_n": overall["count"] >= targets["minimum_holdout_n"],
+        "minimum_holdout_writers": frozen["holdout_writers"] >= targets["minimum_holdout_writers"],
+        "minimum_nonempty_line_n": line["nonempty_eligible_n"] >= targets["minimum_nonempty_line_n"],
+        "minimum_nonempty_word_n": word["nonempty_eligible_n"] >= targets["minimum_nonempty_word_n"],
+        "min_line_nonempty_macro_f1":
+            line["nonempty_macro_f1"] is not None and
+            line["nonempty_macro_f1"] >= targets["min_line_nonempty_macro_f1"],
+        "min_word_nonempty_macro_f1":
+            word["nonempty_macro_f1"] is not None and
+            word["nonempty_macro_f1"] >= targets["min_word_nonempty_macro_f1"],
+        "min_line_coverage": line["coverage"] is not None and
+                             line["coverage"] >= targets["min_line_coverage"],
+        "min_word_coverage": word["coverage"] is not None and
+                             word["coverage"] >= targets["min_word_coverage"],
+        "min_nonempty_line_coverage": line["nonempty_coverage"] is not None and
+                                     line["nonempty_coverage"] >= targets["min_nonempty_line_coverage"],
+        "min_nonempty_word_coverage": word["nonempty_coverage"] is not None and
+                                     word["nonempty_coverage"] >= targets["min_nonempty_word_coverage"],
+        "max_false_zero_words": overall["false_zero_words"] <= targets["max_false_zero_words"],
     }
-    return {"accepted": all(scores.values()), "gates": scores,
-            "evaluated_n": block["count"], "qualified_n": qualified}
+    return overall, checks
+
+
+def run_frozen_synthetic_qualification(
+    development: Path, validation: Path, holdout: Path, policy: Path, image_root: Path,
+) -> dict:
+    """Run a pinned synthetic holdout directly; never accept a supplied aggregate.
+
+    The return is NOT a scientific or legal authorization. Human pilots are
+    blocked by T11, and real rights evaluation must be separately designed.
+    """
+    from .benchmark import run_manifest
+
+    frozen = predeclared_holdout_gate_v2(development, validation, holdout, policy)
+    result = run_manifest(holdout, image_root, profile=frozen["profile"],
+                          allow_real=False, synthetic_split=True)
+    rows = _checked_holdout_rows(result, frozen)
+    summary, gates = _engineering_gates(rows, frozen)
+    return {"kind": "segmentation-qualification/2", "mode": "synthetic",
+            "public_qualification": "NOT_AUTHORIZED",
+            "decision": "ENGINEERING_PASS" if all(gates.values()) else "ENGINEERING_FAIL",
+            "engineering_gates": gates,
+            "specimen_count": summary["count"],
+            "writer_count": frozen["holdout_writers"],
+            "line_coverage": summary["lines"]["coverage"],
+            "word_coverage": summary["words"]["coverage"],
+            "nonempty_line_f1": summary["lines"]["nonempty_macro_f1"],
+            "nonempty_word_f1": summary["words"]["nonempty_macro_f1"],
+            "policy_digest": frozen["policy_digest"],
+            "manifest_digest": frozen["holdout_manifest_sha256"]}
+
+
+def public_safe_receipt(receipt: dict) -> dict:
+    """Allowlisted redacted output; no private paths, IDs, or manifest hashes."""
+    if not isinstance(receipt, dict) or receipt.get("kind") != "segmentation-qualification/2" or (
+        receipt.get("mode") != "synthetic" or receipt.get("public_qualification") != "NOT_AUTHORIZED"
+    ) or receipt.get("decision") not in ("ENGINEERING_PASS", "ENGINEERING_FAIL"):
+        raise ValueError("no publishable qualification receipt")
+    # Counts/metrics are deliberately not released for tiny cells, even though
+    # current mode is synthetic. Real-publication policy is separately gated.
+    count = receipt.get("specimen_count")
+    return {"kind": "segmentation-public-summary/1", "mode": "synthetic",
+            "public_qualification": "NOT_AUTHORIZED",
+            "decision": receipt["decision"],
+            "specimen_count": count if type(count) is int and count >= 5 else None,
+            "metrics": "WITHHELD_SMALL_CELL_OR_UNREVIEWED"}

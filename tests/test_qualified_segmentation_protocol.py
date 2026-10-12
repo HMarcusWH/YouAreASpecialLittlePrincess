@@ -38,7 +38,9 @@ def test_writer_disjoint_manifest_hash_and_frozen_acceptance(tmp_path):
     metrics = {"overall": {"count": 1, "measured": 1, "partial": 0,
                            "false_zero_words": 0,
                            "lines": {"macro_f1": .9}, "words": {"macro_f1": .8}}}
-    assert score_holdout(metrics, qualified)["accepted"]
+    # V1 structural checks alone never bind a metric to an executed holdout.
+    assert not score_holdout(metrics, qualified)["accepted"]
+    assert score_holdout(metrics, qualified)["reason"] == "unverifiable_legacy_aggregate"
     metrics["overall"]["words"]["macro_f1"] = None
     assert not score_holdout(metrics, qualified)["accepted"]
 

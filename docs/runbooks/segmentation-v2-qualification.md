@@ -85,3 +85,37 @@ Deterministic OpenCV/NumPy only; **no learned local model, OCR, network AI,
 face/person/writer identity model, or third-party source/code copied**.
 Source code licenses do not establish rights to photographs or reference datasets.
 No pixels, user specimen identifiers, paths or private diagnostics in public CI.
+
+## Next evaluation-integrity slice — synthetic-only frozen runner
+
+The protected real-data run remains **NOT AUTHORIZED** while T11
+`pilot_rights_consent` is pending. This engineering slice does not change
+the `legacy` runtime default or the 64 canonical Free outputs.
+
+- Preserve the old v1 protocol checker for historical tests, but
+  `score_holdout` no longer permits an unverified caller-supplied aggregate
+  to return `accepted: true`.
+- For v2 engineering tests, freeze **development, validation and holdout**
+  synthetic manifest hashes. Partition by writer, capture, source specimen,
+  input digest and specimen ID across all three splits. Missing `lines` and
+  `words` annotations are unknown, not explicit empty ground truth.
+- Pin the actual local checkout commit, evaluator file bytes, qualification
+  implementation bytes and qualified-v2 processing configuration in a
+  separately prepared reviewed synthetic policy. This is not signed
+  execution attestation or permission to ingest real photographs.
+- Run the full synthetic holdout through `run_frozen_synthetic_qualification`
+  rather than passing the scorer an aggregate. Per-family annotated/nonempty
+  coverage retains refused specimens in its denominator. Empty cases cannot
+  inflate nonempty handwriting F1. Unset thresholds fail closed.
+- Only the synthetic engineering receipt may say `ENGINEERING_PASS`.
+  `public_qualification` remains `NOT_AUTHORIZED`; the redacted exporter
+  never includes specimen-level IDs, paths or private digests.
+- Run `python -m pytest -q tests/test_segmentation_qualification_integrity.py
+  tests/test_qualified_segmentation_protocol.py
+  tests/test_segmentation_benchmark_frames.py` and all exact-head CI. No
+  empirical T06 completion, holdout opening, real-device signoff, Issue #92
+  closure or production activation is permitted by a green synthetic run.
+
+Next independent changes: paired comparison and source-frame annotation
+families; separate T11-authorized real evaluation and finally exact-SHA
+physical-handset qualification.
