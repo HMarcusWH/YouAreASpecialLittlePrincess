@@ -167,6 +167,7 @@ def _fake_results(manifests, *, drop=0, refuse_last=False):
         scored_word = benchmark.match(reference_word, reference_word)
         rejected = refuse_last and i == len(hold["specimens"]) - 1
         rows.append({"specimen_id": item["specimen_id"], "split": "holdout",
+                     "data_origin": "SYNTHETIC_FIXTURE",
                      "paper": item["paper"], "status": "REJECTED" if rejected else "MEASURED",
                      "line_reference_n": len(reference_line),
                      "word_reference_n": len(reference_word),
@@ -174,9 +175,12 @@ def _fake_results(manifests, *, drop=0, refuse_last=False):
                      "words": None if rejected else scored_word,
                      "false_zero_words": None if rejected else False})
     return {"version": 2, "profile": "qualified-v2", "split": "holdout",
+            "data_origin": "SYNTHETIC_FIXTURE",
             "manifest_sha256": hashlib.sha256(manifests["holdout"].read_bytes()).hexdigest(),
             # Deliberately false aggregate: qualification must compute from the rows.
-            "summary": {"overall": {"count": 999999, "lines": {"macro_f1": 1}}},
+            "summary": {"data_origin": "SYNTHETIC_FIXTURE",
+                        "overall": {"data_origin": "SYNTHETIC_FIXTURE",
+                                    "count": 999999, "lines": {"macro_f1": 1}}},
             "results": rows[:len(rows) - drop] if drop else rows}
 
 
@@ -197,6 +201,7 @@ def test_pinned_synthetic_qualification_recomputes_summary_and_never_authorizes(
     assert receipt["decision"] == "ENGINEERING_PASS"
     assert receipt["specimen_count"] == 2  # Not the 999999 supplied summary.
     assert receipt["public_qualification"] == "NOT_AUTHORIZED"
+    assert receipt["data_origin"] == "SYNTHETIC_FIXTURE"
     assert receipt["engineering_gates"]["min_nonempty_line_coverage"]
 
 
@@ -316,6 +321,7 @@ def test_real_or_unknown_source_is_never_admitted_by_synthetic_runner(tmp_path):
 def test_public_receipt_cannot_echo_private_identifiers():
     secret = "PRIVATE-WRITER-OR-IMAGE-LOCATION"
     entry = {"kind": "segmentation-qualification/2", "mode": "synthetic",
+             "data_origin": "SYNTHETIC_FIXTURE",
              "public_qualification": "NOT_AUTHORIZED",
              "decision": "ENGINEERING_PASS", "specimen_count": 1,
              "specimen_id": secret, "image_path": secret,
@@ -383,6 +389,9 @@ def test_validation_split_is_evaluable_only_as_explicit_synthetic_fixture(tmp_pa
         synthetic_split=True,
     )
     assert result["split"] == "validation"
+    assert result["data_origin"] == "SYNTHETIC_FIXTURE"
+    assert result["summary"]["overall"]["data_origin"] == "SYNTHETIC_FIXTURE"
+    assert all(row["data_origin"] == "SYNTHETIC_FIXTURE" for row in result["results"])
     assert result["manifest_sha256"] == hashlib.sha256(
         manifests["validation"].read_bytes()
     ).hexdigest()
@@ -540,7 +549,7 @@ def test_blank_annotation_is_not_inferred_from_unruled_paper_field():
 
     box = Box(1, 1, 20, 8)
     row = {"specimen_id": "synthetic-plain-paper", "paper": "blank",
-           "split": "synthetic", "status": "MEASURED",
+           "split": "synthetic", "data_origin": "SYNTHETIC_FIXTURE", "status": "MEASURED",
            "line_reference_n": 1, "word_reference_n": 1,
            "lines": match([box], [box]), "words": match([box], [box]),
            "false_zero_words": False}
@@ -793,3 +802,49 @@ def test_reapproved_bytes_are_not_proof_of_prior_independent_authorization(tmp_p
             manifests["development"], manifests["validation"], manifests["holdout"],
             policy, expected_policy_sha256=digest,
         )
+
+
+@pytest.mark.parametrize("malformed", ("row_missing", "row_real", "top_missing", "top_real"))
+def test_synthetic_qualification_rejects_lost_or_forged_data_origin(monkeypatch, tmp_path, malformed):
+    manifests, policy, root = _fixtures(tmp_path)
+    fake = _fake_results(manifests)
+    if malformed.startswith("row"):
+        target = fake["results"][0]
+    else:
+        target = fake
+    if malformed.endswith("missing"):
+        target.pop("data_origin")
+    else:
+        target["data_origin"] = "REAL_SOURCE_DECLARED"
+    monkeypatch.setattr(benchmark, "run_manifest", lambda *args, **kwargs: fake)
+    with pytest.raises(ValueError, match="metadata mismatch|benchmark identity"):
+        run_frozen_synthetic_qualification(
+            manifests["development"], manifests["validation"], manifests["holdout"], policy, root,
+        )
+
+
+def test_mixed_or_unknown_benchmark_provenance_never_aggregates_as_real():
+    from evaluation.segmentation.benchmark import summarize
+
+    base = {"specimen_id": "a", "split": "holdout", "paper": "blank",
+            "data_origin": "SYNTHETIC_FIXTURE", "status": "REJECTED",
+            "line_reference_n": 0, "word_reference_n": 0,
+            "lines": None, "words": None, "false_zero_words": None}
+    for bad in ({**base, "specimen_id": "b", "data_origin": "REAL_SOURCE_DECLARED"},
+                {**base, "specimen_id": "b", "data_origin": None},
+                {k: v for k, v in base.items() if k != "data_origin"}):
+        with pytest.raises(ValueError, match="unknown or mixed benchmark data origin"):
+            summarize([base, bad])
+    summary = summarize([base])
+    assert summary["data_origin"] == "SYNTHETIC_FIXTURE"
+    assert summary["overall"]["data_origin"] == "SYNTHETIC_FIXTURE"
+    assert all(r["data_origin"] == "SYNTHETIC_FIXTURE" for r in summary["conditions"].values())
+
+
+def test_synthetic_manifest_cannot_use_real_data_admission(tmp_path):
+    manifests, _, image_root = _fixtures(tmp_path)
+    for split in ("development", "validation", "holdout"):
+        with pytest.raises(ValueError, match="synthetic inputs cannot use"):
+            benchmark.run_manifest(
+                manifests[split], image_root, allow_real=True, synthetic_split=True,
+            )

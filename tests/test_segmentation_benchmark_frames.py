@@ -44,7 +44,7 @@ def test_annotation_frame_rejects_invalid_matrix_and_out_of_bounds():
 
 def test_shadow_scores_aggregate_independently():
     base = {"specimen_id": "fixture-1", "split": "synthetic", "paper": "blank",
-            "status": "MEASURED", "words": match([], []),
+            "status": "MEASURED", "data_origin": "SYNTHETIC_FIXTURE", "words": match([], []),
             "lines": match([Box(10, 10, 50, 10)], [Box(10, 10, 50, 10)]),
             "line_shadow": match([Box(10, 10, 50, 10)], []),
             "word_shadow": match([], []), "false_zero_words": False}
@@ -67,6 +67,9 @@ def test_v2_original_frame_manifest_roundtrip(tmp_path):
                                     "specimens": [item]}))
     result = run_manifest(manifest, tmp_path, shadow_projection=True, shadow_words=True)
     assert result["annotation_frame"] == "original_image"
+    assert result["data_origin"] == "SYNTHETIC_FIXTURE"
+    assert result["summary"]["data_origin"] == "SYNTHETIC_FIXTURE"
+    assert all(row["data_origin"] == "SYNTHETIC_FIXTURE" for row in result["results"])
     assert result["summary"]["overall"]["line_shadow"]["annotated_n"] == 1
     assert result["summary"]["overall"]["word_shadow"]["annotated_n"] == 1
 
@@ -121,7 +124,7 @@ def test_rejected_nonempty_sample_remains_in_coverage_denominator():
                 "words": match([Box(1, 1, 20, 5)], [Box(1, 1, 20, 5)]),
                 "false_zero_words": False}
     rejected = {"specimen_id": "hard-ink", "split": "synthetic",
-                "paper": "grid", "status": "REJECTED",
+                "paper": "grid", "status": "REJECTED", "data_origin": "SYNTHETIC_FIXTURE",
                 "line_reference_n": 1, "word_reference_n": 1,
                 "lines": None, "words": None, "false_zero_words": None}
     block = summarize([measured, rejected])["overall"]

@@ -338,11 +338,15 @@ def predeclared_holdout_gate_v2(
 
 
 def _checked_holdout_rows(result, frozen):
-    """Fail if a runner truncates, duplicates, reorders identity, or drops rows."""
+    """Fail on untrusted provenance, truncated results or altered identities."""
+    from .benchmark import DATA_ORIGIN_SYNTHETIC
+
     expected = {r["specimen_id"]: r for r in frozen["holdout_records"]}
     if not isinstance(result, dict) or result.get("profile") != frozen["profile"] or (
         result.get("split") != "holdout"
-    ) or result.get("manifest_sha256") != frozen["holdout_manifest_sha256"]:
+    ) or result.get("manifest_sha256") != frozen["holdout_manifest_sha256"] or (
+        result.get("data_origin") != DATA_ORIGIN_SYNTHETIC
+    ):
         raise ValueError("wrong frozen benchmark identity")
     rows = result.get("results")
     if not isinstance(rows, list) or len(rows) != len(expected):
@@ -356,7 +360,9 @@ def _checked_holdout_rows(result, frozen):
             raise ValueError("duplicate frozen benchmark result")
         seen.add(ident)
         original = expected[ident]
-        if row.get("split") != "holdout" or row.get("paper") != original["paper"]:
+        if row.get("split") != "holdout" or row.get("paper") != original["paper"] or (
+            row.get("data_origin") != DATA_ORIGIN_SYNTHETIC
+        ):
             raise ValueError("frozen benchmark metadata mismatch")
         for family in ("line", "word"):
             number = row.get(family + "_reference_n")
@@ -483,6 +489,7 @@ def run_frozen_synthetic_qualification(
     rows = _checked_holdout_rows(result, frozen)
     summary, gates = _engineering_gates(rows, frozen)
     return {"kind": "segmentation-qualification/2", "mode": "synthetic",
+            "data_origin": "SYNTHETIC_FIXTURE",
             "public_qualification": "NOT_AUTHORIZED",
             "decision": "ENGINEERING_PASS" if all(gates.values()) else "ENGINEERING_FAIL",
             "engineering_gates": gates,
@@ -499,13 +506,15 @@ def run_frozen_synthetic_qualification(
 def public_safe_receipt(receipt: dict) -> dict:
     """Allowlisted redacted output; no private paths, IDs, or manifest hashes."""
     if not isinstance(receipt, dict) or receipt.get("kind") != "segmentation-qualification/2" or (
-        receipt.get("mode") != "synthetic" or receipt.get("public_qualification") != "NOT_AUTHORIZED"
+        receipt.get("mode") != "synthetic" or receipt.get("data_origin") != "SYNTHETIC_FIXTURE"
+        or receipt.get("public_qualification") != "NOT_AUTHORIZED"
     ) or receipt.get("decision") not in ("ENGINEERING_PASS", "ENGINEERING_FAIL"):
         raise ValueError("no publishable qualification receipt")
     # Counts/metrics are deliberately not released for tiny cells, even though
     # current mode is synthetic. Real-publication policy is separately gated.
     count = receipt.get("specimen_count")
     return {"kind": "segmentation-public-summary/1", "mode": "synthetic",
+            "data_origin": "SYNTHETIC_FIXTURE",
             "public_qualification": "NOT_AUTHORIZED",
             "decision": receipt["decision"],
             "specimen_count": count if type(count) is int and count >= 5 else None,

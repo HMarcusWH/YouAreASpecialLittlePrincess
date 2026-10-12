@@ -20,6 +20,9 @@ from .strict_json import strict_loads
 
 PAPER = frozenset(("blank", "lined", "grid", "form", "unknown"))
 SPLIT = frozenset(("synthetic", "development", "validation", "holdout"))
+DATA_ORIGIN_SYNTHETIC = "SYNTHETIC_FIXTURE"
+DATA_ORIGIN_REAL = "REAL_SOURCE_DECLARED"  # Provenance classification, not a rights attestation.
+DATA_ORIGINS = frozenset((DATA_ORIGIN_SYNTHETIC, DATA_ORIGIN_REAL))
 FRAMES = frozenset(("analysis_canvas", "original_image"))
 MAX_SPECIMENS = 256
 MAX_FILE_BYTES = 25 * 1024 * 1024
@@ -143,6 +146,8 @@ def validate_record(row, split, *, allow_real=False, synthetic_fixture=False):
         raise ValueError("authorized rights decision required for real data")
     if synthetic_fixture and allow_real:
         raise ValueError("fixture mode and real-data mode cannot be combined")
+    if split == "synthetic" and allow_real:
+        raise ValueError("synthetic split cannot be evaluated as real data")
     # Missing annotations are unknown, never a ground-truth empty page.
     return (_validated_boxes(row["lines"], label="line") if "lines" in row else None), (
         _validated_boxes(row["words"], label="word") if "words" in row else None)
@@ -161,6 +166,8 @@ def evaluate(image, row, *, split="synthetic", profile="grid-v1", allow_real=Fal
     if image.shape[0] * image.shape[1] > MAX_PIXELS:
         raise ValueError("decoded image exceeds benchmark pixel budget")
     label = {"specimen_id": row["specimen_id"], "split": split, "paper": row["paper"],
+             "data_origin": DATA_ORIGIN_SYNTHETIC if (split == "synthetic" or synthetic_fixture)
+                            else DATA_ORIGIN_REAL,
              "line_reference_n": len(expected_lines) if expected_lines is not None else None,
              "word_reference_n": len(expected_words) if expected_words is not None else None}
     trace = {}
@@ -218,11 +225,15 @@ def evaluate(image, row, *, split="synthetic", profile="grid-v1", allow_real=Fal
 
 
 def summarize(rows):
-    """Report accuracy only where annotated and available, with full-denominator coverage.
+    """Report provenance-safe accuracy and abstentions; never mix source origins.
 
-    Empty references are tracked separately. A selective estimator cannot improve
-    its nonempty-handwriting F1 merely by refusing or excluding hard specimens.
+    An unknown origin is not real evidence. Reject mixed or unmarked rows rather
+    than silently laundering synthetic results into a human population.
     """
+    origins = {r.get("data_origin") for r in rows if isinstance(r, dict)}
+    if len(origins) != 1 or not origins.issubset(DATA_ORIGINS) or len(rows) == 0:
+        raise ValueError("unknown or mixed benchmark data origin")
+    data_origin = next(iter(origins))
     groups = defaultdict(list)
     for row in rows:
         groups[row["split"] + "/" + row["paper"]].append(row)
@@ -275,7 +286,7 @@ def summarize(rows):
                     "macro_matched_iou": avg("mean_iou", values),
                     "macro_center_error_px": avg("mean_center_error_px", values)}
 
-        return {"count": len(items), "measured": len(measured),
+        return {"data_origin": data_origin, "count": len(items), "measured": len(measured),
                 "partial": sum(r["status"] == "PARTIAL" for r in measured),
                 "rejected": sum(r["status"] == "REJECTED" for r in items),
                 "unavailable_words": sum(r.get("unavailable_words") is True for r in items),
@@ -283,7 +294,7 @@ def summarize(rows):
                 "lines": family("lines"), "words": family("words"),
                 "line_shadow": family("line_shadow"), "word_shadow": family("word_shadow")}
 
-    return {"version": 2, "overall": stats(rows),
+    return {"version": 2, "data_origin": data_origin, "overall": stats(rows),
             "conditions": {key: stats(group) for key, group in sorted(groups.items())}}
 
 
@@ -299,11 +310,23 @@ def run_manifest(manifest: Path, root: Path, *, profile="grid-v1", allow_real=Fa
     if frame not in FRAMES or (version == 2 and "annotation_frame" not in document):
         raise ValueError("v2 manifests require explicit annotation_frame")
     split = document["split"]
-    # Synthetic split fixtures exercise the full writer-disjoint protocol
-    # without falsely claiming a human-data rights decision.
-    fixture = (synthetic_split is True and version == 2 and document.get("synthetic") is True)
+    # Provenance comes from the admitted input mode, not a caller-supplied
+    # result label. A synthetic-marked manifest cannot use the real-data path.
+    marked_synthetic = document.get("synthetic")
+    if version == 2 and marked_synthetic is not None and type(marked_synthetic) is not bool:
+        raise ValueError("invalid synthetic provenance declaration")
+    if split == "synthetic" and marked_synthetic is False:
+        raise ValueError("synthetic split contradicts source provenance")
+    if synthetic_split and not (version == 2 and marked_synthetic is True):
+        raise ValueError("synthetic fixture requires explicit synthetic manifest")
+    if allow_real and (marked_synthetic is True or split == "synthetic"):
+        raise ValueError("synthetic inputs cannot use the real-data admission path")
+    # Synthetic split fixtures exercise development/validation/holdout partitions
+    # without manufacturing a participant-rights decision.
+    fixture = (synthetic_split is True and version == 2 and marked_synthetic is True)
     if split != "synthetic" and not (allow_real or fixture):
         raise ValueError("real-data execution requires authorization")
+    data_origin = DATA_ORIGIN_SYNTHETIC if (split == "synthetic" or fixture) else DATA_ORIGIN_REAL
     resolved_root = root.resolve(strict=True)
     specimens = document.get("specimens")
     if not isinstance(specimens, list) or len(specimens) > MAX_SPECIMENS:
@@ -333,6 +356,7 @@ def run_manifest(manifest: Path, root: Path, *, profile="grid-v1", allow_real=Fa
                              shadow_projection=shadow_projection, shadow_words=shadow_words,
                              annotation_frame=frame))
     return {"version": 2, "profile": profile, "split": split, "annotation_frame": frame,
+            "data_origin": data_origin,
             "manifest_sha256": hashlib.sha256(manifest_bytes).hexdigest(),
             "summary": summarize(rows), "results": rows}
 

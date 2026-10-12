@@ -46,6 +46,8 @@ def test_benchmark_is_readonly_and_hash_verified(tmp_path):
                                     "specimens": [record]}))
     report = run_manifest(manifest, tmp_path)
     assert report["summary"]["overall"]["count"] == 1
+    assert report["data_origin"] == "SYNTHETIC_FIXTURE"
+    assert report["summary"]["data_origin"] == "SYNTHETIC_FIXTURE"
     assert "image_path" not in json.dumps(report)
     record["sha256"] = "f" * 64
     manifest.write_text(json.dumps({"schema_version": 1, "split": "synthetic",
