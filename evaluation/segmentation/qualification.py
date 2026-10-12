@@ -368,7 +368,7 @@ def _synthetic_manifest(path: Path, split: str):
     for field in ("specimen_id", "sha256"):
         if len({r[field] for r in rows}) != len(rows):
             raise ValueError("duplicate " + field)
-    return data, hashlib.sha256(raw).hexdigest()
+    return data, hashlib.sha256(raw).hexdigest(), raw
 
 
 def _validate_thresholds(targets):
@@ -410,10 +410,11 @@ def predeclared_holdout_gate_v2(
         raise ValueError("independently approved policy digest mismatch")
     documents = {}
     digests = {}
+    manifest_bytes = {}
     for split, path in (
         ("development", development), ("validation", validation), ("holdout", holdout)
     ):
-        documents[split], digests[split] = _synthetic_manifest(path, split)
+        documents[split], digests[split], manifest_bytes[split] = _synthetic_manifest(path, split)
     for i, left in enumerate(documents):
         for right in list(documents)[i + 1:]:
             for field in ("specimen_id", "writer_group", "capture_group",
@@ -448,6 +449,7 @@ def predeclared_holdout_gate_v2(
             "holdout_manifest_sha256": digests["holdout"],
             "holdout_writers": len({r["writer_group"] for r in documents["holdout"]["specimens"]}),
             "holdout_records": documents["holdout"]["specimens"],
+            "holdout_manifest_bytes": manifest_bytes["holdout"],
             "thresholds": approved["thresholds"]}
 
 
@@ -598,8 +600,11 @@ def run_frozen_synthetic_qualification(
         development, validation, holdout, policy,
         expected_policy_sha256=expected_policy_sha256,
     )
-    result = run_manifest(holdout, image_root, profile=frozen["profile"],
-                          allow_real=False, synthetic_split=True)
+    result = run_manifest(
+        holdout, image_root, profile=frozen["profile"],
+        allow_real=False, synthetic_split=True,
+        manifest_bytes=frozen["holdout_manifest_bytes"],
+    )
     _verify_loaded_evaluation_modules()
     rows = _checked_holdout_rows(result, frozen)
     summary, gates = _engineering_gates(rows, frozen)

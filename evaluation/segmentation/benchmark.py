@@ -4,8 +4,10 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
+import stat
 from collections import defaultdict
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 import cv2
 import numpy as np
@@ -298,10 +300,58 @@ def summarize(rows):
             "conditions": {key: stats(group) for key, group in sorted(groups.items())}}
 
 
+
+def _read_verified_image(root: Path, relative: str, expected_digest: str) -> bytes:
+    """Open under the reviewed root without following symlinks or decoding unverified bytes."""
+    path = PurePosixPath(relative)
+    if (not relative or path.is_absolute() or not path.parts
+            or any(part in ("", ".", "..") for part in relative.split("/"))
+            or "\\" in relative or "\x00" in relative):
+        raise ValueError("invalid specimen image path")
+    if not hasattr(os, "O_NOFOLLOW") or not hasattr(os, "O_DIRECTORY"):
+        raise ValueError("symlink-safe specimen admission is unavailable")
+    current_fd = None
+    try:
+        current_fd = os.open(root, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+        for component in path.parts[:-1]:
+            child_fd = os.open(
+                component, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW,
+                dir_fd=current_fd,
+            )
+            os.close(current_fd)
+            current_fd = child_fd
+        file_fd = os.open(
+            path.parts[-1], os.O_RDONLY | os.O_NOFOLLOW | getattr(os, "O_NONBLOCK", 0),
+            dir_fd=current_fd,
+        )
+        try:
+            metadata = os.fstat(file_fd)
+            if not stat.S_ISREG(metadata.st_mode) or metadata.st_size > MAX_FILE_BYTES:
+                raise ValueError("specimen exceeds encoded byte budget or is not a regular file")
+            with os.fdopen(file_fd, "rb", closefd=False) as stream:
+                blob = stream.read(MAX_FILE_BYTES + 1)
+            if len(blob) > MAX_FILE_BYTES:
+                raise ValueError("specimen exceeds encoded byte budget")
+        finally:
+            os.close(file_fd)
+        if hashlib.sha256(blob).hexdigest() != expected_digest:
+            raise ValueError("image SHA256 mismatch")
+        return blob
+    except OSError as exc:
+        raise ValueError("specimen admission failed") from exc
+    finally:
+        if current_fd is not None:
+            os.close(current_fd)
+
+
 def run_manifest(manifest: Path, root: Path, *, profile="grid-v1", allow_real=False,
-                 shadow_projection=False, shadow_words=False, synthetic_split=False):
-    """Only explicitly authorized local reads; no image bytes in JSON output."""
-    manifest_bytes = manifest.read_bytes()
+                 shadow_projection=False, shadow_words=False, synthetic_split=False,
+                 manifest_bytes: bytes | None = None):
+    """Execute frozen approved bytes, or read an ordinary benchmark manifest once."""
+    if manifest_bytes is None:
+        manifest_bytes = manifest.read_bytes()
+    elif not isinstance(manifest_bytes, bytes):
+        raise ValueError("frozen manifest must be encoded bytes")
     document = strict_loads(manifest_bytes)
     version = document.get("schema_version")
     if version not in (1, 2) or document.get("split") not in SPLIT:
@@ -338,14 +388,7 @@ def run_manifest(manifest: Path, root: Path, *, profile="grid-v1", allow_real=Fa
         if name in seen:
             raise ValueError("duplicate specimen id")
         seen.add(name)
-        path = (resolved_root / record["image_path"]).resolve(strict=True)
-        if not path.is_relative_to(resolved_root) or not path.is_file():
-            raise ValueError("specimen outside approved root")
-        if path.stat().st_size > MAX_FILE_BYTES:
-            raise ValueError("specimen exceeds encoded byte budget")
-        blob = path.read_bytes()
-        if hashlib.sha256(blob).hexdigest() != record["sha256"]:
-            raise ValueError("image SHA256 mismatch")
+        blob = _read_verified_image(resolved_root, record["image_path"], record["sha256"])
         image = cv2.imdecode(np.frombuffer(blob, np.uint8), cv2.IMREAD_UNCHANGED)
         if image is None:
             raise ValueError("undecodable image")

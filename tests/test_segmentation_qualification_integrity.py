@@ -994,3 +994,80 @@ def test_isolated_launcher_returns_only_redacted_synthetic_receipt(tmp_path):
     assert safe["public_qualification"] == "NOT_AUTHORIZED"
     assert safe["specimen_count"] is None
     assert str(tmp_path) not in result.stdout
+
+
+def test_holdout_manifest_is_not_reopened_after_preflight(monkeypatch, tmp_path):
+    manifests, policy, root = _fixtures(tmp_path)
+    target = manifests["holdout"].resolve()
+    original_read = Path.read_bytes
+    seen = []
+
+    def observed_read(path):
+        if path.resolve() == target:
+            seen.append("read")
+            if len(seen) > 1:
+                raise AssertionError("holdout manifest reopened after validation")
+        return original_read(path)
+
+    monkeypatch.setattr(Path, "read_bytes", observed_read)
+    receipt = run_frozen_synthetic_qualification(
+        manifests["development"], manifests["validation"],
+        manifests["holdout"], policy, root,
+    )
+    assert len(seen) == 1
+    assert receipt["public_qualification"] == "NOT_AUTHORIZED"
+
+
+def test_frozen_manifest_snapshot_survives_replacement_before_benchmark(monkeypatch, tmp_path):
+    manifests, policy, root = _fixtures(tmp_path)
+    original_runner = benchmark.run_manifest
+    approved = manifests["holdout"].read_bytes()
+    bad_pixels = cv2.imencode(".png", np.zeros((50, 50, 3), np.uint8))[1].tobytes()
+    (root / "unapproved.png").write_bytes(bad_pixels)
+    changed = json.loads(approved)
+    changed["specimens"][0]["image_path"] = "unapproved.png"
+    changed["specimens"][0]["sha256"] = hashlib.sha256(bad_pixels).hexdigest()
+    observed = []
+    decoder = cv2.imdecode
+
+    def verified_decode(data, flags):
+        raw = data.tobytes()
+        observed.append(raw)
+        assert raw != bad_pixels, "unapproved pixels were decoded"
+        return decoder(data, flags)
+
+    def swap_after_preflight(*args, **kwargs):
+        manifests["holdout"].write_text(json.dumps(changed))
+        assert kwargs["manifest_bytes"] == approved
+        return original_runner(*args, **kwargs)
+
+    monkeypatch.setattr(cv2, "imdecode", verified_decode)
+    monkeypatch.setattr(benchmark, "run_manifest", swap_after_preflight)
+    receipt = run_frozen_synthetic_qualification(
+        manifests["development"], manifests["validation"],
+        manifests["holdout"], policy, root,
+    )
+    assert receipt["public_qualification"] == "NOT_AUTHORIZED"
+    assert observed and bad_pixels not in observed
+
+
+def test_verified_image_bytes_refuse_symlinks_and_swapped_digest(tmp_path):
+    from evaluation.segmentation.benchmark import _read_verified_image
+
+    root = tmp_path / "root"
+    root.mkdir()
+    outside = tmp_path / "secret.png"
+    outside.write_bytes(b"private pixels")
+    (root / "link.png").symlink_to(outside)
+    digest = hashlib.sha256(outside.read_bytes()).hexdigest()
+    with pytest.raises(ValueError, match="specimen admission failed"):
+        _read_verified_image(root, "link.png", digest)
+
+    approved = root / "approved.png"
+    approved.write_bytes(b"original reviewed bytes")
+    digest = hashlib.sha256(approved.read_bytes()).hexdigest()
+    approved.write_bytes(b"replaced image")
+    with pytest.raises(ValueError, match="image SHA256 mismatch"):
+        _read_verified_image(root, "approved.png", digest)
+    with pytest.raises(ValueError, match="invalid specimen image path"):
+        _read_verified_image(root, "../secret.png", digest)
