@@ -142,7 +142,7 @@ digest calculated by the same actor after seeing holdout results is not
 proof of prior approval. An independent approval record and its access
 controls are out-of-repo governance obligations, not created by tests.
 
-Use the reviewed python -I evaluation/segmentation/run_qualification.py
+Use the reviewed python -I -S -B evaluation/segmentation/run_qualification.py
 launcher with an independent --approved-digest-file. It preloads numerical
 wheels before admitting source paths and verifies loaded module origins and
 installed wheel RECORD digests, also after lazy imports. A changed imported
@@ -156,3 +156,28 @@ unknown origins cannot be combined into human statistics. Public receipts
 are allowlisted, redacted and synthetic-only. The unchanged legacy default,
 T11 rights gate, Issue #92, real-photo evaluation and physical-device
 qualification remain outstanding.
+
+### Round-five closure: immutable inputs and externally authenticated runtime
+
+Freeze each parsed synthetic manifest together with its exact encoded bytes.
+The holdout scorer receives this *same* byte snapshot; a changed pathname or
+symlink cannot change which records or image digests are evaluated. Every
+specimen is opened using a no-follow directory-relative descriptor, read
+within a bounded encoded-file budget, hashed, and decoded only from its
+verified buffer. Changing unapproved image bytes therefore fails before
+decoding.
+
+Use the isolated worktree launcher with original reviewed wheel archives,
+verified against `requirements/ci-pyXYZ.lock` before importing any of those
+dependencies. The full Python import graph (including standard-library
+shadow modules and transitive wheel dependencies) is checked and source
+bytecode caches are excluded by fresh Git staging, `-S` and `-B`.
+Installed distribution `RECORD` metadata is never accepted as the source
+of expected executable-file hashes. This does not attest an untrusted OS,
+interpreter, malicious co-process or separately supplied policy digest.
+
+Round five also updates the existing explicit synthetic provenance test
+fixtures and the expected early-verifier rejection message. Preserve
+`public_qualification: NOT_AUTHORIZED`, T11 pending, Issue #92 open,
+and the `legacy` runtime default. Exact-head CI and independent review
+remain release prerequisites.

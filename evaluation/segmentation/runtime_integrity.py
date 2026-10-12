@@ -7,6 +7,7 @@ in-process consistency check under a trusted host/interpreter, not a sandbox.
 from __future__ import annotations
 
 import hashlib
+import io
 import importlib
 import importlib.metadata
 import marshal
@@ -76,14 +77,13 @@ def _trusted_files(wheelhouse_name: str, lock_name: str, site_names: tuple[str, 
         if key not in expected or key in seen:
             raise ValueError("wheel not uniquely present in reviewed lock")
         seen.add(key)
-        hasher = hashlib.sha256()
-        with wheel.open("rb") as stream:
-            for chunk in iter(lambda: stream.read(1024 * 1024), b""):
-                hasher.update(chunk)
-        if hasher.hexdigest() != expected[key]:
+        # One immutable archive snapshot: never hash a wheel by path and
+        # reopen that pathname later (a second TOCTOU opportunity).
+        archive_bytes = wheel.read_bytes()
+        if hashlib.sha256(archive_bytes).hexdigest() != expected[key]:
             raise ValueError("wheel archive differs from independently reviewed lock")
 
-        with zipfile.ZipFile(wheel) as archive:
+        with zipfile.ZipFile(io.BytesIO(archive_bytes)) as archive:
             if archive.testzip() is not None:
                 raise ValueError("invalid reviewed wheel payload")
             names = set()

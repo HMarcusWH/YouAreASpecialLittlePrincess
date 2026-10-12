@@ -60,13 +60,14 @@ distinct approved-digest fixture.
 For local synthetic qualification use the isolated runner, not a bare
 PYTHONPATH=src invocation (which remains a general developer benchmark mode):
 
-    python -I evaluation/segmentation/run_qualification.py \
+    python -I -S -B evaluation/segmentation/run_qualification.py \
       --development /protected/development.json \
       --validation /protected/validation.json \
       --holdout /protected/holdout.json \
       --policy /protected/frozen-policy.json \
       --approved-digest-file /independent/prior-review.sha256 \
-      --image-root /protected/fixtures
+      --image-root /protected/fixtures \
+      --wheelhouse /approved/authenticated-wheelhouse
 
 The launcher preloads NumPy/OpenCV before adding the source tree, verifies
 evaluation/application/core source module origins, and checks numeric Python
@@ -81,3 +82,27 @@ source provenance and does not independently establish rights. Mixed, missing
 and unknown origins cannot be aggregated. Frozen synthetic qualification
 requires the synthetic marker for each row, and any successful receipt
 still has public_qualification: NOT_AUTHORIZED.
+
+### Trusted execution boundary (round five)
+
+The synthetic-only entrypoint requires `python -I -S -B`. It authenticates its own
+launcher bytes against the current Git commit and creates a *fresh detached Git
+worktree* from that commit; it never inherits untracked checkout files or
+`__pycache__`. The worker imports only standard-library modules first,
+authenticates **the original wheels from the Python-target-specific reviewed
+lock** and checks installed executable bytes before admitting site-packages.
+It then loads the reviewed project and verifies all loaded modules (including
+stdlib and transitive packages) against the interpreter, approved source roots
+or the independent wheel manifest. It audits again after benchmark execution.
+The reviewed wheelhouse can be supplied with `--wheelhouse`; CI's
+`$RUNNER_TEMP/ci-wheelhouse` is used if available. Missing or altered wheels
+fail closed; mutating an installed `RECORD` does not confer approval.
+
+The holdout runner consumes the exact validated encoded manifest bytes, never
+reopening its pathname after approval. Image files are opened relative to a
+reviewed directory descriptor, without following symlinks, capped, hashed
+against the frozen record and only then decoded from that immutable byte buffer.
+
+These controls are process-local and rely on a trustworthy OS, Git checkout
+and interpreter. They are **not** a signature, external policy approval,
+container-level sandbox or authorization to process human data.
