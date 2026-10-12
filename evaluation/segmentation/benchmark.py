@@ -244,6 +244,8 @@ def summarize(rows):
             nonempty = [r[kind] for r, n in available if n > 0]
             nonempty_eligible_n = sum(n > 0 for _, n in eligible)
             empty = [r[kind] for r, n in available if n == 0]
+            empty_eligible_n = sum(n == 0 for _, n in eligible)
+            empty_correct_n = sum(v["detected_n"] == 0 for v in empty)
             def avg(field, subset):
                 numbers = [v[field] for v in subset if v.get(field) is not None]
                 return float(np.mean(numbers)) if numbers else None
@@ -259,8 +261,13 @@ def summarize(rows):
                     "nonempty_coverage": len(nonempty) / nonempty_eligible_n
                                           if nonempty_eligible_n else None,
                     "nonempty_macro_f1": avg("f1", nonempty),
+                    "empty_eligible_n": empty_eligible_n,
                     "empty_annotated_n": len(empty),
-                    "empty_correct_n": sum(v["detected_n"] == 0 for v in empty),
+                    "empty_available_n": len(empty),
+                    "empty_unavailable_n": empty_eligible_n - len(empty),
+                    "empty_correct_n": empty_correct_n,
+                    "empty_false_positive_n": len(empty) - empty_correct_n,
+                    "empty_coverage": len(empty) / empty_eligible_n if empty_eligible_n else None,
                     "macro_precision": avg("precision", values),
                     "macro_recall": avg("recall", values),
                     "macro_f1": avg("f1", values),

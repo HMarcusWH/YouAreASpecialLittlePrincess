@@ -90,12 +90,16 @@ THRESHOLD_KEYS = frozenset((
     "min_line_nonempty_macro_f1", "min_word_nonempty_macro_f1",
     "min_line_coverage", "min_word_coverage",
     "min_nonempty_line_coverage", "min_nonempty_word_coverage",
+    "minimum_empty_line_n", "minimum_empty_word_n",
+    "min_empty_line_coverage", "min_empty_word_coverage",
+    "max_empty_line_false_positive_pages", "max_empty_word_false_positive_pages",
     "max_false_zero_words",
 ))
 FRACTION_TARGETS = frozenset((
     "min_line_nonempty_macro_f1", "min_word_nonempty_macro_f1",
     "min_line_coverage", "min_word_coverage",
     "min_nonempty_line_coverage", "min_nonempty_word_coverage",
+    "min_empty_line_coverage", "min_empty_word_coverage",
 ))
 INTEGER_TARGETS = THRESHOLD_KEYS - FRACTION_TARGETS
 
@@ -181,7 +185,7 @@ def _validate_thresholds(targets):
             raise ValueError("invalid frozen fraction: " + key)
     for key in INTEGER_TARGETS:
         value = targets[key]
-        if type(value) is not int or value < (0 if key == "max_false_zero_words" else 1):
+        if type(value) is not int or value < (0 if key.startswith("max_") else 1):
             raise ValueError("invalid frozen count: " + key)
 
 
@@ -336,6 +340,20 @@ def _engineering_gates(rows, frozen):
                                      line["nonempty_coverage"] >= targets["min_nonempty_line_coverage"],
         "min_nonempty_word_coverage": word["nonempty_coverage"] is not None and
                                      word["nonempty_coverage"] >= targets["min_nonempty_word_coverage"],
+        "minimum_empty_line_n":
+            line["empty_eligible_n"] >= targets["minimum_empty_line_n"],
+        "minimum_empty_word_n":
+            word["empty_eligible_n"] >= targets["minimum_empty_word_n"],
+        "min_empty_line_coverage":
+            line["empty_coverage"] is not None
+            and line["empty_coverage"] >= targets["min_empty_line_coverage"],
+        "min_empty_word_coverage":
+            word["empty_coverage"] is not None
+            and word["empty_coverage"] >= targets["min_empty_word_coverage"],
+        "max_empty_line_false_positive_pages":
+            line["empty_false_positive_n"] <= targets["max_empty_line_false_positive_pages"],
+        "max_empty_word_false_positive_pages":
+            word["empty_false_positive_n"] <= targets["max_empty_word_false_positive_pages"],
         "max_false_zero_words": overall["false_zero_words"] <= targets["max_false_zero_words"],
     }
     return overall, checks

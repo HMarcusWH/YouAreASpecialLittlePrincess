@@ -30,20 +30,28 @@ TARGETS = {
     "min_word_coverage": 1.0,
     "min_nonempty_line_coverage": 1.0,
     "min_nonempty_word_coverage": 1.0,
+    "minimum_empty_line_n": 1,
+    "minimum_empty_word_n": 1,
+    "min_empty_line_coverage": 1.0,
+    "min_empty_word_coverage": 1.0,
+    "max_empty_line_false_positive_pages": 0,
+    "max_empty_word_false_positive_pages": 0,
     "max_false_zero_words": 0,
 }
 
 
-def _fixtures(tmp_path, holdout_n=1):
+def _fixtures(tmp_path, holdout_n=2, *, blank_last=True):
     root = tmp_path / "images"
     root.mkdir(exist_ok=True)
     manifests = {}
     for split, count in (("development", 1), ("validation", 1), ("holdout", holdout_n)):
         rows = []
         for i in range(count):
+            is_empty = split == "holdout" and blank_last and i == count - 1
             image = np.full((140, 340, 3), 251, np.uint8)
-            cv2.putText(image, f"{split[:2]}{i}", (18, 80), cv2.FONT_HERSHEY_SIMPLEX,
-                        1, (10, 10, 10), 3)
+            if not is_empty:
+                cv2.putText(image, f"{split[:2]}{i}", (18, 80), cv2.FONT_HERSHEY_SIMPLEX,
+                            1, (10, 10, 10), 3)
             raw = cv2.imencode(".png", image)[1].tobytes()
             filename = f"{split}-{i}.png"
             (root / filename).write_bytes(raw)
@@ -55,8 +63,8 @@ def _fixtures(tmp_path, holdout_n=1):
                 "image_path": filename,
                 "sha256": hashlib.sha256(raw).hexdigest(),
                 "paper": "blank",
-                "lines": [[10, 45, 160, 45]],
-                "words": [[10, 45, 160, 45]],
+                "lines": [] if is_empty else [[10, 45, 160, 45]],
+                "words": [] if is_empty else [[10, 45, 160, 45]],
             })
         path = tmp_path / (split + ".json")
         path.write_text(json.dumps({
@@ -84,13 +92,17 @@ def _fake_results(manifests, *, drop=0, refuse_last=False):
     rows = []
     for i, item in enumerate(hold["specimens"]):
         box = Box(10, 45, 160, 45)
-        success = benchmark.match([box], [box])
+        reference_line = [box] if item["lines"] else []
+        reference_word = [box] if item["words"] else []
+        scored_line = benchmark.match(reference_line, reference_line)
+        scored_word = benchmark.match(reference_word, reference_word)
         rejected = refuse_last and i == len(hold["specimens"]) - 1
         rows.append({"specimen_id": item["specimen_id"], "split": "holdout",
                      "paper": item["paper"], "status": "REJECTED" if rejected else "MEASURED",
-                     "line_reference_n": 1, "word_reference_n": 1,
-                     "lines": None if rejected else success,
-                     "words": None if rejected else success,
+                     "line_reference_n": len(reference_line),
+                     "word_reference_n": len(reference_word),
+                     "lines": None if rejected else scored_line,
+                     "words": None if rejected else scored_word,
                      "false_zero_words": None if rejected else False})
     return {"version": 2, "profile": "qualified-v2", "split": "holdout",
             "manifest_sha256": hashlib.sha256(manifests["holdout"].read_bytes()).hexdigest(),
@@ -114,7 +126,7 @@ def test_pinned_synthetic_qualification_recomputes_summary_and_never_authorizes(
         policy, root,
     )
     assert receipt["decision"] == "ENGINEERING_PASS"
-    assert receipt["specimen_count"] == 1  # Not the 999999 supplied summary.
+    assert receipt["specimen_count"] == 2  # Not the 999999 supplied summary.
     assert receipt["public_qualification"] == "NOT_AUTHORIZED"
     assert receipt["engineering_gates"]["min_nonempty_line_coverage"]
 
@@ -142,7 +154,7 @@ def test_one_rejected_hard_image_fails_full_coverage(monkeypatch, tmp_path):
     )
     assert receipt["decision"] == "ENGINEERING_FAIL"
     assert not receipt["engineering_gates"]["min_line_coverage"]
-    assert not receipt["engineering_gates"]["min_nonempty_word_coverage"]
+    assert not receipt["engineering_gates"]["min_empty_word_coverage"]
 
 
 @pytest.mark.parametrize("overlap", [
@@ -254,7 +266,7 @@ def test_actual_synthetic_image_pipeline_fails_closed_or_scores_without_authoriz
     )
     assert receipt["decision"] in ("ENGINEERING_PASS", "ENGINEERING_FAIL")
     assert receipt["public_qualification"] == "NOT_AUTHORIZED"
-    assert receipt["specimen_count"] == 1
+    assert receipt["specimen_count"] == 2
     assert len(receipt["engineering_gates"]) == len(TARGETS)
 
 
@@ -385,3 +397,79 @@ def test_nonstandard_nonfinite_json_constant_fails_before_threshold_review(tmp_p
             manifests["development"], manifests["validation"],
             manifests["holdout"], policy,
         )
+
+
+def test_false_positive_line_and_word_on_every_empty_page_block_qualification(monkeypatch, tmp_path):
+    manifests, policy, root = _fixtures(tmp_path)
+    fake = _fake_results(manifests)
+    blank = fake["results"][-1]
+    candidate = Box(10, 40, 65, 20)
+    blank["lines"] = benchmark.match([], [candidate])
+    blank["words"] = benchmark.match([], [candidate])
+    # Both nonempty F1 scores are perfect, but both empty false-positive gates fail.
+    monkeypatch.setattr(benchmark, "run_manifest", lambda *a, **k: fake)
+    receipt = run_frozen_synthetic_qualification(
+        manifests["development"], manifests["validation"],
+        manifests["holdout"], policy, root,
+    )
+    assert receipt["decision"] == "ENGINEERING_FAIL"
+    assert receipt["nonempty_line_f1"] == 1.0
+    assert receipt["nonempty_word_f1"] == 1.0
+    assert not receipt["engineering_gates"]["max_empty_line_false_positive_pages"]
+    assert not receipt["engineering_gates"]["max_empty_word_false_positive_pages"]
+
+
+def test_abstaining_from_empty_pages_is_not_a_false_positive_but_loses_coverage(monkeypatch, tmp_path):
+    manifests, policy, root = _fixtures(tmp_path)
+    fake = _fake_results(manifests, refuse_last=True)
+    monkeypatch.setattr(benchmark, "run_manifest", lambda *a, **k: fake)
+    receipt = run_frozen_synthetic_qualification(
+        manifests["development"], manifests["validation"],
+        manifests["holdout"], policy, root,
+    )
+    assert receipt["decision"] == "ENGINEERING_FAIL"
+    assert receipt["engineering_gates"]["max_empty_line_false_positive_pages"]
+    assert receipt["engineering_gates"]["max_empty_word_false_positive_pages"]
+    assert not receipt["engineering_gates"]["min_empty_line_coverage"]
+    assert not receipt["engineering_gates"]["min_empty_word_coverage"]
+
+
+def test_no_empty_annotation_cannot_pass_required_blank_evidence(monkeypatch, tmp_path):
+    manifests, policy, root = _fixtures(tmp_path, blank_last=False)
+    fake = _fake_results(manifests)
+    monkeypatch.setattr(benchmark, "run_manifest", lambda *a, **k: fake)
+    receipt = run_frozen_synthetic_qualification(
+        manifests["development"], manifests["validation"],
+        manifests["holdout"], policy, root,
+    )
+    assert receipt["decision"] == "ENGINEERING_FAIL"
+    assert not receipt["engineering_gates"]["minimum_empty_line_n"]
+    assert not receipt["engineering_gates"]["minimum_empty_word_n"]
+    assert not receipt["engineering_gates"]["min_empty_line_coverage"]
+
+
+def test_correctly_empty_and_written_samples_pass_the_predeclared_engineering_gates(monkeypatch, tmp_path):
+    manifests, policy, root = _fixtures(tmp_path)
+    fake = _fake_results(manifests)
+    monkeypatch.setattr(benchmark, "run_manifest", lambda *a, **k: fake)
+    receipt = run_frozen_synthetic_qualification(
+        manifests["development"], manifests["validation"],
+        manifests["holdout"], policy, root,
+    )
+    assert receipt["decision"] == "ENGINEERING_PASS"
+    assert all(receipt["engineering_gates"].values())
+    assert receipt["public_qualification"] == "NOT_AUTHORIZED"
+
+
+def test_blank_annotation_is_not_inferred_from_unruled_paper_field():
+    from evaluation.segmentation.benchmark import match, summarize
+
+    box = Box(1, 1, 20, 8)
+    row = {"specimen_id": "synthetic-plain-paper", "paper": "blank",
+           "split": "synthetic", "status": "MEASURED",
+           "line_reference_n": 1, "word_reference_n": 1,
+           "lines": match([box], [box]), "words": match([box], [box]),
+           "false_zero_words": False}
+    stats = summarize([row])["overall"]
+    assert stats["lines"]["empty_eligible_n"] == 0
+    assert stats["lines"]["nonempty_eligible_n"] == 1
