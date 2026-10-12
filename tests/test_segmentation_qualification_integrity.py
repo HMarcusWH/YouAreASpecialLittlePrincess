@@ -692,7 +692,7 @@ def test_foreign_imported_lock_verifier_refused(monkeypatch):
     unrelated_file = REPOSITORY / "tests" / "test_ci_lock.py"
     assert unrelated_file.is_file()
     monkeypatch.setattr(locks, "__file__", str(unrelated_file))
-    with pytest.raises(ValueError, match="lock verifier module origin"):
+    with pytest.raises(ValueError, match="unreviewed imported evaluation module|lock verifier module origin"):
         current_local_identity()
 
 

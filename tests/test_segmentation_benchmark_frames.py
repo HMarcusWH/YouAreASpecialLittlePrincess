@@ -105,6 +105,7 @@ def test_missing_line_annotation_is_unknown_not_an_empty_page():
 
 def test_empty_reference_does_not_improve_nonempty_handwriting_accuracy():
     base = {"specimen_id": "synthetic-blank", "split": "synthetic",
+            "data_origin": "SYNTHETIC_FIXTURE",
             "paper": "blank", "status": "MEASURED",
             "line_reference_n": 0, "word_reference_n": 0,
             "lines": match([], []), "words": match([], []),
@@ -118,6 +119,7 @@ def test_empty_reference_does_not_improve_nonempty_handwriting_accuracy():
 
 def test_rejected_nonempty_sample_remains_in_coverage_denominator():
     measured = {"specimen_id": "some-ink", "split": "synthetic",
+                "data_origin": "SYNTHETIC_FIXTURE",
                 "paper": "blank", "status": "MEASURED",
                 "line_reference_n": 1, "word_reference_n": 1,
                 "lines": match([Box(1, 1, 20, 5)], [Box(1, 1, 20, 5)]),
