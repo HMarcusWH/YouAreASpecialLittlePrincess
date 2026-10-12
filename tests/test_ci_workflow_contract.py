@@ -106,3 +106,60 @@ def test_reviewed_renderer_keeps_all_mandatory_steps_and_has_no_failure_masks():
     ):
         assert command in text
     assert "python-version: ${{ matrix.python }}" in text and '"${{ matrix.lock }}"' in text
+
+# CI concurrency is part of the mandatory generated-workflow policy.
+CONCURRENCY_POLICY = (
+    "concurrency:\n"
+    "  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number || github.run_id }}\n"
+    "  cancel-in-progress: ${{ github.event_name == 'pull_request' }}\n"
+)
+
+
+def _move_concurrency_into_one_matrix_job(source: str) -> str:
+    return source.replace(CONCURRENCY_POLICY, "", 1).replace(
+        "  test:\n",
+        "  test:\n"
+        "    concurrency:\n"
+        "      group: orphan\n"
+        "      cancel-in-progress: true\n",
+        1,
+    )
+
+
+@pytest.mark.parametrize(
+    "mutation",
+    [
+        lambda s: s.replace(CONCURRENCY_POLICY, "", 1),
+        lambda s: s.replace("github.event.pull_request.number", "github.sha", 1),
+        lambda s: s.replace("github.run_id", "github.ref", 1),
+        lambda s: s.replace("github.workflow", "global", 1),
+        lambda s: s.replace(
+            "  cancel-in-progress: ${{ github.event_name == 'pull_request' }}",
+            "  cancel-in-progress: true",
+            1,
+        ),
+        lambda s: s.replace(CONCURRENCY_POLICY, CONCURRENCY_POLICY * 2, 1),
+        _move_concurrency_into_one_matrix_job,
+    ],
+)
+def test_concurrency_mutations_fail_canonical_ci_check(tmp_path, mutation):
+    requirements, workflow = write_reviewed_interpreters(tmp_path, (10, 11, 12))
+    original = workflow.read_text()
+    assert CONCURRENCY_POLICY in original
+    changed = mutation(original)
+    assert changed != original
+    workflow.write_text(changed)
+    covered, errors = policy.interpreter_coverage(requirements, workflow)
+    assert covered == set()
+    assert errors and "canonical mandatory-job policy" in errors[0]
+
+
+def test_removing_concurrency_from_generator_source_fails_check(monkeypatch):
+    root = Path(__file__).resolve().parents[1]
+    prefix = renderer.WORKFLOW_PREFIX
+    assert CONCURRENCY_POLICY in prefix
+    monkeypatch.setattr(
+        renderer, "WORKFLOW_PREFIX", prefix.replace(CONCURRENCY_POLICY, "", 1)
+    )
+    with pytest.raises(ValueError, match="canonical mandatory-job policy"):
+        renderer.verified_targets(root)
