@@ -16,6 +16,7 @@ import os
 import re
 import sys
 import sysconfig
+import types
 import zipfile
 from functools import lru_cache
 from pathlib import Path, PurePosixPath
@@ -146,10 +147,12 @@ def preflight_reviewed_environment(root: Path) -> None:
                 if cache.is_symlink() or not cache.is_file():
                     raise ValueError("unreviewed installed bytecode cache")
                 cached_bytes = cache.read_bytes()
-                expected_code = marshal.dumps(compile(source, str(path), "exec"))
                 if (len(cached_bytes) < 16
-                        or cached_bytes[:4] != importlib.util.MAGIC_NUMBER
-                        or cached_bytes[16:] != expected_code):
+                        or cached_bytes[:4] != importlib.util.MAGIC_NUMBER):
+                    raise ValueError("unreviewed installed bytecode cache")
+                expected_code = compile(source, str(path), "exec")
+                actual_code = marshal.loads(cached_bytes[16:])
+                if not isinstance(actual_code, types.CodeType) or actual_code != expected_code:
                     raise ValueError("unreviewed installed bytecode cache")
 
 
@@ -186,8 +189,11 @@ def _check_project_bytecode(module, source: Path) -> None:
         encoded = cache_path.read_bytes()
         if len(encoded) < 16:
             raise ValueError("malformed cached bytecode")
-        expected = marshal.dumps(compile(source.read_bytes(), str(source), "exec"))
-        if encoded[16:] != expected:
+        # marshal may encode reference sharing differently for equivalent code
+        # objects, so compare the deserialized compiled code, not raw bytes.
+        expected = compile(source.read_bytes(), str(source), "exec")
+        actual = marshal.loads(encoded[16:])
+        if not isinstance(actual, types.CodeType) or actual != expected:
             raise ValueError("cached project bytecode differs from reviewed source")
     except (OSError, SyntaxError, ValueError, TypeError) as exc:
         raise ValueError("unverified cached project bytecode") from exc
@@ -225,15 +231,18 @@ def verify_loaded_module_closure(root: Path) -> None:
                 continue
             if spec_origin in (None, "namespace"):
                 paths = getattr(module, "__path__", None)
-                if paths:
+                if paths is not None:
                     approved_roots = (*sites, stdlib, root / "src", root / "evaluation",
                                       root / "tools", root / "tests",
                                       root / "apps" / "api", root / "apps" / "workers",
                                       root / "infra", root / "migrations",
                                       root / "docs" / "roadmap")
-                    if all(any(Path(p).resolve(strict=True).is_relative_to(a)
-                               for a in approved_roots) for p in paths):
-                        continue
+                    try:
+                        if all(any(Path(p).resolve(strict=True).is_relative_to(a)
+                                   for a in approved_roots) for p in tuple(paths)):
+                            continue
+                    except (OSError, ValueError, AttributeError, ImportError, TypeError) as exc:
+                        raise ValueError("unreviewed imported evaluation module") from exc
                 parent_name, _, child = name.rpartition(".")
                 parent = sys.modules.get(parent_name)
                 if parent is not None and getattr(parent, child, None) is module:
