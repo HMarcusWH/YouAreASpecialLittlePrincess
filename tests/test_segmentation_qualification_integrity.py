@@ -72,6 +72,8 @@ TARGETS = {
     "min_nonempty_word_coverage": 1.0,
     "minimum_empty_line_n": 1,
     "minimum_empty_word_n": 1,
+    "minimum_available_empty_line_n": 1,
+    "minimum_available_empty_word_n": 1,
     "min_empty_line_coverage": 1.0,
     "min_empty_word_coverage": 1.0,
     "max_empty_line_false_positive_pages": 0,
@@ -80,15 +82,17 @@ TARGETS = {
 }
 
 
-def _fixtures(tmp_path, holdout_n=2, *, blank_last=True):
+def _fixtures(tmp_path, holdout_n=2, *, blank_last=True, empty_count=1):
     root = tmp_path / "images"
     root.mkdir(exist_ok=True)
     manifests = {}
     for split, count in (("development", 1), ("validation", 1), ("holdout", holdout_n)):
         rows = []
         for i in range(count):
-            is_empty = split == "holdout" and blank_last and i == count - 1
-            image = np.full((140, 340, 3), 251, np.uint8)
+            is_empty = split == "holdout" and blank_last and i >= count - empty_count
+            # Different empty captures must have distinct exact encoded bytes.
+            background = 245 + (i % 9) if is_empty else 251
+            image = np.full((140, 340, 3), background, np.uint8)
             if not is_empty:
                 cv2.putText(image, f"{split[:2]}{i}", (18, 80), cv2.FONT_HERSHEY_SIMPLEX,
                             1, (10, 10, 10), 3)
@@ -229,7 +233,7 @@ def test_mutated_manifest_fails_frozen_digest(bad, tmp_path):
 
 @pytest.mark.parametrize("key", [
     "source_commit_sha", "analysis_config_sha256", "evaluator_sha256",
-    "qualification_sha256",
+    "qualification_sha256", "lock_verifier_sha256",
 ])
 def test_code_and_processing_identity_are_checked_against_checkout(key, tmp_path):
     manifests, policy, _ = _fixtures(tmp_path)
@@ -589,3 +593,123 @@ def test_modified_lock_to_manifest_mapping_is_refused(monkeypatch, tmp_path):
             manifests["development"], manifests["validation"],
             manifests["holdout"], policy,
         )
+
+
+def test_lock_verifier_source_hash_is_frozen_and_pinned(tmp_path):
+    manifests, policy, _ = _fixtures(tmp_path)
+    expected = hashlib.sha256(
+        (REPOSITORY / "tools" / "verify_ci_lock.py").read_bytes()
+    ).hexdigest()
+    identity = current_local_identity()
+    assert identity["lock_verifier_sha256"] == expected
+    assert json.loads(policy.read_text())["lock_verifier_sha256"] == expected
+    assert predeclared_holdout_gate_v2(
+        manifests["development"], manifests["validation"], manifests["holdout"], policy
+    )["identity"]["lock_verifier_sha256"] == expected
+
+
+@pytest.mark.parametrize("modified_file", [
+    "tools/verify_ci_lock.py",
+    "requirements/ci-py310.lock",
+    "requirements/ci-py311.txt",
+    "requirements/ci-targets.json",
+])
+def test_dirty_dependency_verifier_or_reviewed_snapshot_refuses_qualification(
+    monkeypatch, modified_file,
+):
+    # No tracked files are modified; simulate Git's actual dirty signal while
+    # also checking that the pathspec includes the modified file.
+    import evaluation.segmentation.qualification as qualification
+
+    real_run = qualification.subprocess.run
+    observed = []
+    def mocked_run(command, **kwargs):
+        if command[:3] == ["git", "status", "--porcelain"]:
+            paths = command[command.index("--") + 1:]
+            assert any(
+                modified_file == path or modified_file.startswith(path.rstrip("/") + "/")
+                for path in paths
+            ), "integrity pathspec does not cover trusted dependency input"
+            observed.append(modified_file)
+            return subprocess.CompletedProcess(
+                command, 0, stdout=f" M {modified_file}\n", stderr=""
+            )
+        return real_run(command, **kwargs)
+
+    monkeypatch.setattr(qualification.subprocess, "run", mocked_run)
+    with pytest.raises(ValueError, match="unreviewed evaluation changes"):
+        current_local_identity()
+    assert observed == [modified_file]
+
+
+def test_foreign_imported_lock_verifier_refused(monkeypatch):
+    from tools import verify_ci_lock as locks
+
+    unrelated_file = REPOSITORY / "tests" / "test_ci_lock.py"
+    assert unrelated_file.is_file()
+    monkeypatch.setattr(locks, "__file__", str(unrelated_file))
+    with pytest.raises(ValueError, match="lock verifier module origin"):
+        current_local_identity()
+
+
+@pytest.mark.parametrize("target", ("min_empty_line_coverage", "min_empty_word_coverage"))
+@pytest.mark.parametrize("value", (0, 0.0, -0.1, None, float("nan")))
+def test_zero_or_invalid_blank_coverage_policy_is_refused_before_scoring(
+    target, value, tmp_path,
+):
+    manifests, policy, root = _fixtures(tmp_path)
+    configuration = json.loads(policy.read_text())
+    configuration["thresholds"][target] = value
+    policy.write_text(json.dumps(configuration))
+    # The strict JSON decoder rejects NaN before threshold validation.
+    expected_error = "nonfinite JSON" if value != value else "invalid frozen fraction"
+    with pytest.raises(ValueError, match=expected_error):
+        run_frozen_synthetic_qualification(
+            manifests["development"], manifests["validation"], manifests["holdout"],
+            policy, root,
+        )
+
+
+@pytest.mark.parametrize(
+    "target", ("minimum_available_empty_line_n", "minimum_available_empty_word_n")
+)
+def test_zero_available_empty_minimum_is_refused(target, tmp_path):
+    manifests, policy, _ = _fixtures(tmp_path)
+    configuration = json.loads(policy.read_text())
+    configuration["thresholds"][target] = 0
+    policy.write_text(json.dumps(configuration))
+    with pytest.raises(ValueError, match="invalid frozen count"):
+        predeclared_holdout_gate_v2(
+            manifests["development"], manifests["validation"], manifests["holdout"], policy
+        )
+
+
+def test_available_blank_minimum_blocks_abstentions_even_with_positive_coverage(
+    monkeypatch, tmp_path,
+):
+    # One nonempty and two genuinely empty annotated images. The detector
+    # measures only one blank (50% blank coverage) but the reviewed policy
+    # requires two available blank measurements in each family.
+    manifests, policy, root = _fixtures(tmp_path, holdout_n=3, empty_count=2)
+    thresholds = {
+        **TARGETS,
+        "min_line_coverage": 0.6,
+        "min_word_coverage": 0.6,
+        "min_empty_line_coverage": 0.5,
+        "min_empty_word_coverage": 0.5,
+        "minimum_available_empty_line_n": 2,
+        "minimum_available_empty_word_n": 2,
+    }
+    _freeze_policy(manifests, policy, thresholds=thresholds)
+    fake = _fake_results(manifests, refuse_last=True)
+    monkeypatch.setattr(benchmark, "run_manifest", lambda *a, **k: fake)
+    receipt = run_frozen_synthetic_qualification(
+        manifests["development"], manifests["validation"], manifests["holdout"],
+        policy, root,
+    )
+    assert receipt["decision"] == "ENGINEERING_FAIL"
+    assert receipt["engineering_gates"]["min_empty_line_coverage"]
+    assert receipt["engineering_gates"]["min_empty_word_coverage"]
+    assert not receipt["engineering_gates"]["minimum_available_empty_line_n"]
+    assert not receipt["engineering_gates"]["minimum_available_empty_word_n"]
+    assert receipt["public_qualification"] == "NOT_AUTHORIZED"

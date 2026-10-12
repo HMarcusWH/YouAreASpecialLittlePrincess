@@ -125,3 +125,9 @@ physical-handset qualification.
 The synthetic v2 gate requires independently scored nonempty handwriting and explicitly annotated empty line/word conditions, with predeclared minimum empty counts, maxima for false-positive pages and minimum empty coverage. It accepts a validation split only under the explicit synthetic-fixture path and rejects duplicate JSON keys and nonfinite constants. Frozen manifest digests use the exact parsed input bytes.
 
 The frozen policy now pins the actual reviewed CI dependency target on Python 3.10/3.11/3.12 (Linux x86_64), NumPy/OpenCV imported and distribution versions, the reviewed lock/manifest digests and the installed distribution map. Unreviewed environments refuse qualification; separate platform qualification needs its own approved lock. Neither source nor dependency hashes replace legal data authorization, independent photo ground truth or device checks.
+
+### Follow-up integrity closeout: trusted verifier and blank abstentions
+
+The checkout integrity pathspec includes `tools/verify_ci_lock.py` and all reviewed `requirements/` snapshots. The frozen policy binds `lock_verifier_sha256`; the imported verifier must resolve to the reviewed file. This is an engineering consistency fence, not a signed attestation against process compromise.
+
+Both `min_empty_line_coverage` and `min_empty_word_coverage` must be strictly positive, and both `minimum_available_empty_line_n` and `minimum_available_empty_word_n` must be positive predeclared counts. A policy allowing zero blank coverage is invalid, not merely a negative score. The scorer independently verifies the number of eligible and actually available blank observations. Unavailable blank pages remain abstentions and never count as measured negatives.

@@ -93,6 +93,7 @@ THRESHOLD_KEYS = frozenset((
     "min_line_coverage", "min_word_coverage",
     "min_nonempty_line_coverage", "min_nonempty_word_coverage",
     "minimum_empty_line_n", "minimum_empty_word_n",
+    "minimum_available_empty_line_n", "minimum_available_empty_word_n",
     "min_empty_line_coverage", "min_empty_word_coverage",
     "max_empty_line_false_positive_pages", "max_empty_word_false_positive_pages",
     "max_false_zero_words",
@@ -104,6 +105,7 @@ FRACTION_TARGETS = frozenset((
     "min_empty_line_coverage", "min_empty_word_coverage",
 ))
 INTEGER_TARGETS = THRESHOLD_KEYS - FRACTION_TARGETS
+POSITIVE_COVERAGE_TARGETS = frozenset(("min_empty_line_coverage", "min_empty_word_coverage"))
 
 
 def _reviewed_runtime_identity() -> dict:
@@ -115,6 +117,15 @@ def _reviewed_runtime_identity() -> dict:
     import cv2
     import numpy as np
     from tools import verify_ci_lock as locks
+
+    verifier_file = ROOT / "tools" / "verify_ci_lock.py"
+    try:
+        module_origin = Path(locks.__file__).resolve(strict=True)
+        expected_origin = verifier_file.resolve(strict=True)
+    except (AttributeError, OSError, TypeError) as exc:
+        raise ValueError("unreviewed lock verifier module origin") from exc
+    if verifier_file.is_symlink() or module_origin != expected_origin:
+        raise ValueError("unreviewed lock verifier module origin")
 
     target = locks.running_target()
     if target[1:] != ("Linux", "x86_64") or target[0] not in ("3.10", "3.11", "3.12"):
@@ -189,7 +200,7 @@ def current_local_identity() -> dict:
         dirty = subprocess.run(
             ["git", "status", "--porcelain", "--untracked-files=normal", "--",
              "src/princess_graphology", "src/princess_app/application/intake.py",
-             "evaluation/segmentation"],
+             "evaluation/segmentation", "tools/verify_ci_lock.py", "requirements"],
             cwd=ROOT, text=True, capture_output=True, check=True, timeout=10,
         )
     except (OSError, subprocess.SubprocessError) as exc:
@@ -200,10 +211,14 @@ def current_local_identity() -> dict:
     if not COMMIT_PATTERN.fullmatch(commit):
         raise ValueError("invalid source revision")
     from . import benchmark
+    verifier_file = ROOT / "tools" / "verify_ci_lock.py"
+    if verifier_file.is_symlink() or not verifier_file.is_file():
+        raise ValueError("unreviewed lock verifier source")
     return {"source_commit_sha": commit,
             "analysis_config_sha256": analysis_config_sha256(grid_profile="qualified-v2"),
             "evaluator_sha256": hashlib.sha256(Path(benchmark.__file__).read_bytes()).hexdigest(),
             "qualification_sha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
+            "lock_verifier_sha256": hashlib.sha256(verifier_file.read_bytes()).hexdigest(),
             "environment": _reviewed_runtime_identity()}
 
 
@@ -246,7 +261,13 @@ def _validate_thresholds(targets):
         raise ValueError("incomplete frozen thresholds")
     for key in FRACTION_TARGETS:
         value = targets[key]
-        if type(value) not in (int, float) or not math.isfinite(value) or not 0 <= value <= 1:
+        if type(value) not in (int, float) or not math.isfinite(value):
+            raise ValueError("invalid frozen fraction: " + key)
+        if key in POSITIVE_COVERAGE_TARGETS:
+            allowed = 0 < value <= 1
+        else:
+            allowed = 0 <= value <= 1
+        if not allowed:
             raise ValueError("invalid frozen fraction: " + key)
     for key in INTEGER_TARGETS:
         value = targets[key]
@@ -279,7 +300,7 @@ def predeclared_holdout_gate_v2(
                      "development_manifest_sha256", "validation_manifest_sha256",
                      "holdout_manifest_sha256", "source_commit_sha",
                      "analysis_config_sha256", "evaluator_sha256",
-                     "qualification_sha256", "environment", "thresholds"}
+                     "qualification_sha256", "lock_verifier_sha256", "environment", "thresholds"}
     if not isinstance(approved, dict) or set(approved) != policy_fields:
         raise ValueError("invalid frozen qualification policy shape")
     if approved["schema_version"] != 2 or approved["mode"] != "synthetic" or (
@@ -409,6 +430,10 @@ def _engineering_gates(rows, frozen):
             line["empty_eligible_n"] >= targets["minimum_empty_line_n"],
         "minimum_empty_word_n":
             word["empty_eligible_n"] >= targets["minimum_empty_word_n"],
+        "minimum_available_empty_line_n":
+            line["empty_available_n"] >= targets["minimum_available_empty_line_n"],
+        "minimum_available_empty_word_n":
+            word["empty_available_n"] >= targets["minimum_available_empty_word_n"],
         "min_empty_line_coverage":
             line["empty_coverage"] is not None
             and line["empty_coverage"] >= targets["min_empty_line_coverage"],
