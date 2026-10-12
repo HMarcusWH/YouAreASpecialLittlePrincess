@@ -150,9 +150,18 @@ def preflight_reviewed_environment(root: Path) -> None:
                 if (len(cached_bytes) < 16
                         or cached_bytes[:4] != importlib.util.MAGIC_NUMBER):
                     raise ValueError("unreviewed installed bytecode cache")
-                expected_code = compile(source, str(path), "exec")
                 actual_code = marshal.loads(cached_bytes[16:])
-                if not isinstance(actual_code, types.CodeType) or actual_code != expected_code:
+                if (not isinstance(actual_code, types.CodeType)
+                        or not isinstance(actual_code.co_filename, str)
+                        or len(actual_code.co_filename) > 4096):
+                    raise ValueError("unreviewed installed bytecode cache")
+                # compileall/pip may encode a relative or normalized filename;
+                # that is informational, not executable bytecode. Disable
+                # inheritance of this verifier module's future flags.
+                expected_code = compile(
+                    source, actual_code.co_filename, "exec", dont_inherit=True
+                )
+                if actual_code != expected_code:
                     raise ValueError("unreviewed installed bytecode cache")
 
 
@@ -189,11 +198,18 @@ def _check_project_bytecode(module, source: Path) -> None:
         encoded = cache_path.read_bytes()
         if len(encoded) < 16:
             raise ValueError("malformed cached bytecode")
-        # marshal may encode reference sharing differently for equivalent code
-        # objects, so compare the deserialized compiled code, not raw bytes.
-        expected = compile(source.read_bytes(), str(source), "exec")
+        # marshal backrefs and compileall's embedded filename can differ
+        # without changing execution. Recompile authenticated source with
+        # the recorded informational filename and *no* inherited future flags.
         actual = marshal.loads(encoded[16:])
-        if not isinstance(actual, types.CodeType) or actual != expected:
+        if (not isinstance(actual, types.CodeType)
+                or not isinstance(actual.co_filename, str)
+                or len(actual.co_filename) > 4096):
+            raise ValueError("invalid cached project code object")
+        expected = compile(
+            source.read_bytes(), actual.co_filename, "exec", dont_inherit=True
+        )
+        if actual != expected:
             raise ValueError("cached project bytecode differs from reviewed source")
     except (OSError, SyntaxError, ValueError, TypeError) as exc:
         raise ValueError("unverified cached project bytecode") from exc

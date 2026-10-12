@@ -1127,7 +1127,7 @@ def test_forged_timestamp_matching_bytecode_is_rejected(tmp_path):
     cached = tmp_path / "__pycache__" / "reviewed.cpython.pyc"
     cached.parent.mkdir()
     magic = importlib.util.MAGIC_NUMBER + b"\x00" * 12
-    good = marshal.dumps(compile(source.read_bytes(), str(source), "exec"))
+    good = marshal.dumps(compile(source.read_bytes(), str(source), "exec", dont_inherit=True))
     fake = marshal.dumps(compile(b"answer = 0\n", str(source), "exec"))
     module = types.SimpleNamespace(__cached__=str(cached))
     cached.write_bytes(magic + good)
@@ -1176,7 +1176,7 @@ def test_preflight_refuses_forged_installed_bytecode_before_import(monkeypatch, 
     cache = Path(importlib.util.cache_from_source(str(source)))
     cache.parent.mkdir()
     header = importlib.util.MAGIC_NUMBER + b"\x00" * 12
-    cache.write_bytes(header + marshal.dumps(compile(good, str(source), "exec")))
+    cache.write_bytes(header + marshal.dumps(compile(good, str(source), "exec", dont_inherit=True)))
     monkeypatch.setattr(trust, "_wheelhouse_path", lambda: wheelhouse)
     monkeypatch.setattr(trust, "_site_roots", lambda: (site,))
     trust._trusted_files.cache_clear()
