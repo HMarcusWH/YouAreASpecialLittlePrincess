@@ -4,6 +4,8 @@
 
 Status: **DRAFT.** These cover the mechanisms that exist in the code today, with commands you can run against a local or staging database. No hosting, alerting or paging provider has been chosen yet. Every step that depends on one is marked **PENDING DEPLOYMENT** instead of guessed. Alert owners and escalation channels are owner decisions ([18](../roadmap/18-observability-support-and-cost-control.md)).
 
+**GitHub Actions:** [PR cancellation and main-branch verification](actions-concurrency.md) covers Actions scheduling; it does not activate application runtime.
+
 Conventions:
 - Commands below are operator templates after the correct component environment and reviewed role have been prepared. Follow [command safety and outputs](../reference/commands.md); an undefined `$API_ENV` expansion is not a setup command.
 - SQL requires the approved diagnostic/operator role and verified environment. Ordinary API principals must never receive owner/BYPASSRLS privileges for troubleshooting. Cross-owner completion needs the actual authorized worker/operator scope.
