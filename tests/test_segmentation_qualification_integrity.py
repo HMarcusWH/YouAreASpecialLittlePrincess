@@ -14,6 +14,7 @@ import pytest
 
 from evaluation.segmentation import benchmark
 from evaluation.segmentation.qualification import (
+    _verify_loaded_evaluation_modules,
     current_local_identity,
     predeclared_holdout_gate_v2 as _production_predeclared_holdout_gate_v2,
     public_safe_receipt,
@@ -68,8 +69,8 @@ def _unit_test_with_clean_reviewed_distribution_view(monkeypatch):
 def test_actual_reviewed_runtime_matches_lock_in_fresh_interpreter():
     """Independently verify live distributions without the unit-test shim."""
     script = (
-        "from evaluation.segmentation.qualification import _reviewed_runtime_identity; "
-        "record = _reviewed_runtime_identity(); "
+        "from evaluation.segmentation.qualification import current_local_identity; "
+        "record = current_local_identity()['environment']; "
         "assert record['lock_sha256']; "
         "assert record['installed_distributions_sha256']"
     )
@@ -650,6 +651,9 @@ def test_lock_verifier_source_hash_is_frozen_and_pinned(tmp_path):
 
 @pytest.mark.parametrize("modified_file", [
     "tools/verify_ci_lock.py",
+    "src/princess_app/application/intake.py",
+    "src/princess_contracts/runtime.py",
+    "evaluation/segmentation/benchmark.py",
     "requirements/ci-py310.lock",
     "requirements/ci-py311.txt",
     "requirements/ci-targets.json",
@@ -848,3 +852,145 @@ def test_synthetic_manifest_cannot_use_real_data_admission(tmp_path):
             benchmark.run_manifest(
                 manifests[split], image_root, allow_real=True, synthetic_split=True,
             )
+
+
+@pytest.mark.parametrize("module_name", (
+    "evaluation.segmentation.benchmark",
+    "princess_graphology.context",
+    "princess_app.application.intake",
+    "princess_contracts.runtime",
+))
+def test_shadowed_project_module_refused(monkeypatch, tmp_path, module_name):
+    import importlib
+    import importlib.util
+    import sys
+    import types
+
+    importlib.import_module(module_name)
+    shadow = tmp_path / "shadowed.py"
+    shadow.write_text("# unreviewed source\n")
+    injected = types.ModuleType(module_name)
+    injected.__file__ = str(shadow)
+    injected.__spec__ = importlib.util.spec_from_file_location(module_name, shadow)
+    monkeypatch.setitem(sys.modules, module_name, injected)
+    with pytest.raises(ValueError, match="unreviewed imported evaluation module"):
+        _verify_loaded_evaluation_modules()
+
+
+@pytest.mark.parametrize("module_name", ("numpy", "cv2"))
+def test_shadowed_numerical_module_with_matching_version_refused(monkeypatch, tmp_path, module_name):
+    import importlib
+    import importlib.util
+    import sys
+    import types
+
+    original = importlib.import_module(module_name)
+    shadow = tmp_path / (module_name + ".py")
+    shadow.write_text("__version__ = " + repr(original.__version__) + "\n")
+    injected = types.ModuleType(module_name)
+    injected.__file__ = str(shadow)
+    injected.__version__ = original.__version__
+    injected.__spec__ = importlib.util.spec_from_file_location(module_name, shadow)
+    monkeypatch.setitem(sys.modules, module_name, injected)
+    with pytest.raises(ValueError, match="unreviewed imported evaluation module"):
+        _verify_loaded_evaluation_modules()
+
+
+def test_shadow_numpy_cannot_pass_in_fresh_interpreter(tmp_path):
+    shadow = tmp_path / "numpy"
+    shadow.mkdir()
+    (shadow / "__init__.py").write_text("__version__ = '999.0'\n")
+    script = (
+        "import sys; "
+        f"sys.path.insert(0, {str(tmp_path)!r}); "
+        "import numpy; "
+        "from evaluation.segmentation.qualification import _verify_loaded_evaluation_modules; "
+        "_verify_loaded_evaluation_modules()"
+    )
+    env = os.environ.copy()
+    env["PYTHONPATH"] = os.pathsep.join((str(REPOSITORY / "src"), str(REPOSITORY)))
+    run = subprocess.run(
+        [sys.executable, "-c", script], cwd=REPOSITORY,
+        env=env, text=True, capture_output=True, timeout=45,
+    )
+    assert run.returncode != 0
+    assert "unreviewed imported evaluation module" in run.stderr
+
+
+def test_unreviewed_lazy_import_after_benchmark_is_refused(monkeypatch, tmp_path):
+    import importlib.util
+    import sys
+    import types
+
+    manifests, policy, image_root = _fixtures(tmp_path)
+    original = _fake_results(manifests)
+    shadow = tmp_path / "shadow_benchmark.py"
+    shadow.write_text("# injected during execution\n")
+
+    def runner(*args, **kwargs):
+        injected = types.ModuleType("princess_graphology.shadowed_lazy")
+        injected.__file__ = str(shadow)
+        injected.__spec__ = importlib.util.spec_from_file_location(injected.__name__, shadow)
+        sys.modules[injected.__name__] = injected
+        return original
+
+    monkeypatch.setattr(benchmark, "run_manifest", runner)
+    try:
+        with pytest.raises(ValueError, match="unreviewed imported evaluation module"):
+            run_frozen_synthetic_qualification(
+                manifests["development"], manifests["validation"],
+                manifests["holdout"], policy, image_root,
+            )
+    finally:
+        sys.modules.pop("princess_graphology.shadowed_lazy", None)
+
+
+def test_isolated_launcher_refuses_unapproved_policy_and_hides_paths(tmp_path):
+    manifests, policy, image_root = _fixtures(tmp_path)
+    approval = tmp_path / "external-review.sha256"
+    approval.write_text("0" * 64)
+    launcher = REPOSITORY / "evaluation" / "segmentation" / "run_qualification.py"
+    args = [
+        "--development", str(manifests["development"]),
+        "--validation", str(manifests["validation"]),
+        "--holdout", str(manifests["holdout"]),
+        "--policy", str(policy),
+        "--approved-digest-file", str(approval),
+        "--image-root", str(image_root),
+    ]
+    rejected = subprocess.run(
+        [sys.executable, str(launcher), *args],
+        cwd=REPOSITORY, text=True, capture_output=True, timeout=45,
+    )
+    assert rejected.returncode == 2
+    assert "Isolation required" in rejected.stderr
+    result = subprocess.run(
+        [sys.executable, "-I", str(launcher), *args],
+        cwd=REPOSITORY, text=True, capture_output=True, timeout=45,
+    )
+    assert result.returncode == 2
+    assert "Frozen synthetic evaluation rejected" in result.stderr
+    assert str(tmp_path) not in result.stdout + result.stderr
+
+
+def test_isolated_launcher_returns_only_redacted_synthetic_receipt(tmp_path):
+    manifests, policy, image_root = _fixtures(tmp_path)
+    approval = tmp_path / "prior-review.sha256"
+    approval.write_text(_approval_file(policy).read_text())
+    launcher = REPOSITORY / "evaluation" / "segmentation" / "run_qualification.py"
+    result = subprocess.run([
+        sys.executable, "-I", str(launcher),
+        "--development", str(manifests["development"]),
+        "--validation", str(manifests["validation"]),
+        "--holdout", str(manifests["holdout"]),
+        "--policy", str(policy),
+        "--approved-digest-file", str(approval),
+        "--image-root", str(image_root),
+    ], cwd=REPOSITORY, text=True, capture_output=True, timeout=45)
+    assert result.returncode == 0, result.stderr
+    safe = json.loads(result.stdout)
+    assert safe["mode"] == "synthetic"
+    assert safe["data_origin"] == "SYNTHETIC_FIXTURE"
+    assert safe["public_qualification"] == "NOT_AUTHORIZED"
+    assert safe["specimen_count"] is None
+    assert str(tmp_path) not in result.stdout

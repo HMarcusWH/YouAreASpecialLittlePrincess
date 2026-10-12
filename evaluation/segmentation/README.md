@@ -43,3 +43,41 @@ Qualification separately gates explicit-empty line/word evidence: minimum annota
 The synthetic v2 policy also binds the effective numerical runtime: the selected Python-target-specific reviewed manifest/lock SHA-256, installed-distribution digest, running Python patch version, platform/architecture, and imported NumPy/OpenCV module and distribution versions. The gate refuses an unlocked or unsupported environment; a separate protected platform requires a separately reviewed lock. This reuses the existing standard-library tools/verify_ci_lock.py utilities and is not a signed attestation or a real-data rights approval.
 
 The frozen identity also binds the source digest of `tools/verify_ci_lock.py` and verifies the imported module originates from that exact file. Git cleanliness checks cover the verifier plus the reviewed `requirements/` snapshots, as well as the engine and evaluation code. Blank-page coverage thresholds must be **strictly positive** and the reviewed policy must require a positive **absolute number of available** empty line/word observations; rejecting every blank page cannot qualify even if the nonempty subset scores perfectly.
+
+
+## Round-four evaluation integrity (synthetic only)
+
+The frozen v2 gate requires an independent, prior approved policy digest.
+Programmatic calls to predeclared_holdout_gate_v2 and
+run_frozen_synthetic_qualification must pass the keyword-only argument
+expected_policy_sha256. It is checked against exact policy-file bytes before
+any holdout manifest evaluation or image processing. A freshly calculated
+self-hash does not establish independent preregistration. Keep the actual
+prior approval, reviewer identity, timestamp and audit trail in separately
+controlled storage. Synthetic unit tests simulate the prior approval with a
+distinct approved-digest fixture.
+
+For local synthetic qualification use the isolated runner, not a bare
+PYTHONPATH=src invocation (which remains a general developer benchmark mode):
+
+    python -I evaluation/segmentation/run_qualification.py \
+      --development /protected/development.json \
+      --validation /protected/validation.json \
+      --holdout /protected/holdout.json \
+      --policy /protected/frozen-policy.json \
+      --approved-digest-file /independent/prior-review.sha256 \
+      --image-root /protected/fixtures
+
+The launcher preloads NumPy/OpenCV before adding the source tree, verifies
+evaluation/application/core source module origins, and checks numeric Python
+and extension files against the installed reviewed wheel RECORD. The guard
+runs again after the benchmark to detect lazy shadow imports. Existing Git
+cleanliness, source SHA, CI locks and verifier origin checks remain mandatory.
+These process-local checks are not a sandbox, signature or hardware attestation.
+
+Every benchmark result row, top-level result and summarize aggregation carries
+data_origin: SYNTHETIC_FIXTURE or REAL_SOURCE_DECLARED. The latter describes
+source provenance and does not independently establish rights. Mixed, missing
+and unknown origins cannot be aggregated. Frozen synthetic qualification
+requires the synthetic marker for each row, and any successful receipt
+still has public_qualification: NOT_AUTHORIZED.

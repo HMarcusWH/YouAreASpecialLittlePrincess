@@ -131,3 +131,28 @@ The frozen policy now pins the actual reviewed CI dependency target on Python 3.
 The checkout integrity pathspec includes `tools/verify_ci_lock.py` and all reviewed `requirements/` snapshots. The frozen policy binds `lock_verifier_sha256`; the imported verifier must resolve to the reviewed file. This is an engineering consistency fence, not a signed attestation against process compromise.
 
 Both `min_empty_line_coverage` and `min_empty_word_coverage` must be strictly positive, and both `minimum_available_empty_line_n` and `minimum_available_empty_word_n` must be positive predeclared counts. A policy allowing zero blank coverage is invalid, not merely a negative score. The scorer independently verifies the number of eligible and actually available blank observations. Unavailable blank pages remain abstentions and never count as measured negatives.
+
+
+### Round-four repair: independent policy, trusted execution, provenance
+
+An independently approved policy SHA must be recorded before holdout
+evaluation. The evaluator requires this externally supplied digest and
+rejects a missing, malformed or mismatched approval before scoring. A
+digest calculated by the same actor after seeing holdout results is not
+proof of prior approval. An independent approval record and its access
+controls are out-of-repo governance obligations, not created by tests.
+
+Use the reviewed python -I evaluation/segmentation/run_qualification.py
+launcher with an independent --approved-digest-file. It preloads numerical
+wheels before admitting source paths and verifies loaded module origins and
+installed wheel RECORD digests, also after lazy imports. A changed imported
+module fails closed rather than producing an engineering pass. Process-local
+checks are not cryptographic attestations or a substitute for a trusted host.
+
+Synthetic benchmark rows, results and aggregates carry
+data_origin: SYNTHETIC_FIXTURE; rights-gated real-source records carry
+REAL_SOURCE_DECLARED without claiming legal clearance. Mixed, missing and
+unknown origins cannot be combined into human statistics. Public receipts
+are allowlisted, redacted and synthetic-only. The unchanged legacy default,
+T11 rights gate, Issue #92, real-photo evaluation and physical-device
+qualification remain outstanding.

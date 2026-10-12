@@ -318,7 +318,7 @@ def run_manifest(manifest: Path, root: Path, *, profile="grid-v1", allow_real=Fa
     if split == "synthetic" and marked_synthetic is False:
         raise ValueError("synthetic split contradicts source provenance")
     if synthetic_split and not (version == 2 and marked_synthetic is True):
-        raise ValueError("synthetic fixture requires explicit synthetic manifest")
+        raise ValueError("synthetic fixture authorization requires explicit synthetic manifest")
     if allow_real and (marked_synthetic is True or split == "synthetic"):
         raise ValueError("synthetic inputs cannot use the real-data admission path")
     # Synthetic split fixtures exercise development/validation/holdout partitions
