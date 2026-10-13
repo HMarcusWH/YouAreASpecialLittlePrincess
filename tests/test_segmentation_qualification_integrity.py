@@ -1218,9 +1218,11 @@ def test_direct_staged_worker_rejects_modified_checkout_before_import(tmp_path):
     )
     try:
         qualification = checkout / "evaluation" / "segmentation" / "qualification.py"
+        # Append rather than prepend: imports before __future__ annotations
+        # would cause SyntaxError and let a vulnerable worker appear safe.
         qualification.write_text(
-            "from pathlib import Path\nPath(" + repr(str(marker)) +
-            ").write_text('bad import executed')\n" + qualification.read_text()
+            qualification.read_text() + "\nfrom pathlib import Path\nPath(" +
+            repr(str(marker)) + ").write_text('bad import executed')\n"
         )
         launcher = checkout / "evaluation" / "segmentation" / "run_qualification.py"
         result = subprocess.run(
