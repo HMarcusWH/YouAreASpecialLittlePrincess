@@ -186,9 +186,17 @@ def _phase(code: str, fn):
         for marker, label in _SANITIZED_FAILURES.get(code, ()):
             if marker in reason:
                 if label == "Q_WHEEL_HASH":
-                    package = re.search(r"\[([a-z0-9-]{1,40})\]", reason)
+                    package = re.search(
+                        r"\[([a-z0-9-]{1,40}):([a-zA-Z0-9_./-]{1,300})\]", reason
+                    )
                     if package:
+                        # Report only a public wheel member basename, NEVER
+                        # an installed absolute path or private specimen path.
+                        member = "_".join(package.group(2).split("/")[-2:])
+                        component = re.sub(r"[^A-Z0-9]", "_", member.upper())[-42:]
                         label += "_" + package.group(1).upper().replace("-", "_")
+                        label += "_" + component
+                        label = label[:90]
                 raise _QualificationPhaseError(label) from exc
         raise _QualificationPhaseError(code + "_OTHER") from exc
 

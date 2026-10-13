@@ -23,7 +23,7 @@ from pathlib import Path
 
 _DIGEST = re.compile(r"^[0-9a-f]{64}$")
 _REVISION = re.compile(r"^[0-9a-f]{40}$")
-_REJECTED = re.compile(r"\[(Q_[A-Z_]{1,60})\]")
+_REJECTED = re.compile(r"\[(Q_[A-Z0-9_]{1,100})\]")
 _MAX_POLICY_BYTES = 128 * 1024
 _RUNNER_PATH = "evaluation/segmentation/run_qualification.py"
 _FILES = ("development", "validation", "holdout", "policy", "approved_digest_file")

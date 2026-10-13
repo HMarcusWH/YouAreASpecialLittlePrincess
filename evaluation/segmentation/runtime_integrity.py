@@ -189,7 +189,7 @@ def _trusted_files(wheelhouse_name: str, lock_name: str, site_names: tuple[str, 
                     digest = hashlib.sha256()
                     for chunk in iter(lambda: stream.read(1024 * 1024), b""):
                         digest.update(chunk)
-                files[target] = (digest.hexdigest(), key[0])
+                files[target] = (digest.hexdigest(), key[0], entry.filename)
     if seen != set(expected):
         raise ValueError("missing reviewed wheel artifact")
     return files
@@ -212,7 +212,7 @@ def preflight_reviewed_environment(root: Path) -> None:
     wheelhouse = _wheelhouse_path()
     lock = root / "requirements" / f"ci-py{sys.version_info.major}{sys.version_info.minor}.lock"
     approved = _trusted_files(str(wheelhouse), str(lock), tuple(map(str, sites)))
-    for path, (digest, package) in approved.items():
+    for path, (digest, package, wheel_member) in approved.items():
         if path.is_symlink() or not path.is_file():
             raise ValueError("missing or redirected locked executable artifact")
         source = path.read_bytes()
@@ -220,7 +220,8 @@ def preflight_reviewed_environment(root: Path) -> None:
             # Package ID is from the independently hash-approved lock, not
             # from a potentially private path, and is the only diagnostic hint.
             raise ValueError(
-                "installed file differs from authenticated locked wheel [" + package + "]"
+                "installed file differs from authenticated locked wheel ["
+                + package + ":" + wheel_member + "]"
             )
         if path.suffix == ".py":
             # -B prevents writing caches, but CPython can still READ existing
