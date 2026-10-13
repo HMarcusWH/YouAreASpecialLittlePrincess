@@ -1465,4 +1465,5 @@ def test_actual_frozen_holdout_has_nonzero_available_uniform_blank_evidence(tmp_
     assert overall["words"]["empty_available_n"] >= 1
     assert overall["lines"]["empty_coverage"] > 0
     assert overall["words"]["empty_coverage"] > 0
-    assert actual["public_qualification"] if "public_qualification" in actual else True
+    assert actual["data_origin"] == "SYNTHETIC_FIXTURE"
+    assert "public_qualification" not in actual  # Direct benchmark is not a rights receipt.
