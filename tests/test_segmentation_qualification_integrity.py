@@ -1238,6 +1238,27 @@ def test_direct_staged_worker_rejects_modified_checkout_before_import(tmp_path):
         assert result.returncode == 2
         assert not marker.exists(), "unapproved source ran before stage verification"
         assert "Frozen synthetic evaluation rejected" in result.stderr
+
+        # Even ignored untracked source is not permitted in a supposedly
+        # authenticated stage: ordinary git status would hide this payload.
+        qualification.write_text(qualification.read_text().split(
+            "\nfrom pathlib import Path\nPath("
+        )[0])
+        ignored = checkout / "dist" / "unreviewed.py"
+        ignored.parent.mkdir(parents=True)
+        ignored.write_text("print('unreviewed')")
+        second = subprocess.run(
+            [sys.executable, "-I", "-S", "-B", str(launcher), "--_staged",
+             "--development", str(manifests["development"]),
+             "--validation", str(manifests["validation"]),
+             "--holdout", str(manifests["holdout"]),
+             "--policy", str(policy),
+             "--approved-digest-file", str(_approval_file(policy)),
+             "--image-root", str(image_root)],
+            cwd=checkout, capture_output=True, text=True, timeout=45,
+        )
+        assert second.returncode == 2
+        assert "Frozen synthetic evaluation rejected" in second.stderr
     finally:
         subprocess.run(
             ["git", "-c", "core.hooksPath=/dev/null",

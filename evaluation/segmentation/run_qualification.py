@@ -76,8 +76,12 @@ def _verify_staged_worktree(root: Path) -> None:
     )
     if branch.returncode != 1:
         raise ValueError("worker checkout is not detached")
+    # Git's normal porcelain status hides ignored files. Those include
+    # arbitrary executable code under build/, dist/ and .venv/, so include
+    # ignored files in the source-stage integrity check.
     if _checked_subprocess([
-        "git", "status", "--porcelain", "--untracked-files=all"
+        "git", "status", "--porcelain", "--ignored=matching",
+        "--untracked-files=all",
     ], cwd=root):
         raise ValueError("staged checkout contains unreviewed changes")
     for path in (root / "evaluation" / "segmentation" / "run_qualification.py",
