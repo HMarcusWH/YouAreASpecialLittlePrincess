@@ -1,8 +1,8 @@
-"""Offline frozen synthetic qualification with independently staged execution.
+"""Internal synthetic qualification worker, not an independently trusted entrypoint.
 
-Run: python -I -S -B evaluation/segmentation/run_qualification.py ...
-No checkout code, cached bytecode or third-party wheels are imported until a
-fresh reviewed worktree and original locked wheels have been authenticated.
+Start with an independently provisioned out-of-checkout qualification_bootstrap.py.
+This worker checks a policy-approved staged commit before importing any project
+code. Direct execution from this checkout is not a trusted invocation.
 """
 from __future__ import annotations
 
@@ -14,7 +14,6 @@ import os
 import re
 import subprocess
 import sys
-import tempfile
 from pathlib import Path
 
 
@@ -144,104 +143,54 @@ def _verify_staged_worktree(root: Path, approved_revision: str) -> None:
         raise ValueError("staged source contains unreviewed bytecode")
 
 
+class _QualificationPhaseError(ValueError):
+    def __init__(self, code: str):
+        super().__init__(code)
+        self.code = code
+
+
+def _phase(code: str, fn):
+    """One fixed, privacy-safe failure category; never echo exceptions or paths."""
+    try:
+        return fn()
+    except Exception as exc:
+        raise _QualificationPhaseError(code) from exc
+
+
 def _staged_worker(args) -> int:
     root = Path(__file__).resolve(strict=True).parents[2]
-    if any(not getattr(args, name).is_absolute()
-           for name in _INPUT_FILES + _INPUT_DIRECTORIES):
-        raise ValueError("worker inputs must be bound to original absolute paths")
-    approved_revision = _verified_policy_revision(args)
-    _verify_staged_worktree(root, approved_revision)
+    def verify_policy_and_source():
+        if any(not getattr(args, name).is_absolute()
+               for name in _INPUT_FILES + _INPUT_DIRECTORIES):
+            raise ValueError("worker input paths not frozen")
+        revision = _verified_policy_revision(args)
+        _verify_staged_worktree(root, revision)
+    _phase("Q_SOURCE", verify_policy_and_source)
+
+    # The entire source stage is checked *before* the first project import.
     original = tuple(sys.path)
-    project_paths = (str(root / "src"), str(root))
-    # -S skips pyvenv.cfg initialization on Python 3.10-3.12. Resolve the
-    # interpreter's reviewed site once and use it consistently for both
-    # locked-wheel preflight and subsequent imports.
-    sys.path[:] = list(original) + list(project_paths)
+    sys.path[:] = list(original) + [str(root / "src"), str(root)]
     from evaluation.segmentation.runtime_integrity import (
         _site_roots, preflight_reviewed_environment,
     )
-    sites = _site_roots()
-    preflight_reviewed_environment(root)
+    sites = _phase("Q_SITE", _site_roots)
+    _phase("Q_WHEEL", lambda: preflight_reviewed_environment(root))
     sys.path.extend(str(site) for site in sites)
-    from evaluation.segmentation.qualification import (
-        public_safe_receipt, run_frozen_synthetic_qualification,
-    )
 
-    approved_digest = args.approved_digest_file.read_text(encoding="ascii").strip()
-    receipt = run_frozen_synthetic_qualification(
-        args.development, args.validation, args.holdout, args.policy,
-        args.image_root, expected_policy_sha256=approved_digest,
-    )
-    print(json.dumps(public_safe_receipt(receipt), sort_keys=True, allow_nan=False))
+    def evaluate_reviewed_holdout():
+        from evaluation.segmentation.qualification import (
+            public_safe_receipt, run_frozen_synthetic_qualification,
+        )
+        approved_digest = args.approved_digest_file.read_text(encoding="ascii").strip()
+        result = run_frozen_synthetic_qualification(
+            args.development, args.validation, args.holdout, args.policy,
+            args.image_root, expected_policy_sha256=approved_digest,
+        )
+        return public_safe_receipt(result)
+
+    receipt = _phase("Q_EVALUATION", evaluate_reviewed_holdout)
+    print(json.dumps(receipt, sort_keys=True, allow_nan=False))
     return 0
-
-
-def _stage_and_execute(args) -> int:
-    _resolve_input_arguments(args)
-    approved_revision = _verified_policy_revision(args)
-    original = Path(__file__).resolve(strict=True).parents[2]
-    # Never stage edited checkout files: checkout from the reviewed Git object
-    # instead, yielding a pristine worktree with no inherited bytecode caches.
-    head = _checked_subprocess(["git", "rev-parse", "--verify", "HEAD"], cwd=original)
-    if head != approved_revision:
-        raise ValueError("checkout source does not match prior approved policy revision")
-    source = Path(__file__).read_bytes()
-    canonical = subprocess.run(
-        ["git", "show", f"{head}:evaluation/segmentation/run_qualification.py"],
-        cwd=original, capture_output=True, check=False, timeout=20,
-    )
-    if canonical.returncode != 0 or canonical.stdout != source:
-        raise ValueError("unreviewed qualification launcher source")
-    with tempfile.TemporaryDirectory(prefix="frozen-qualification-") as temp:
-        stage = Path(temp) / "checkout"
-        _checked_subprocess([
-            "git", "-c", "core.hooksPath=/dev/null", "worktree",
-            "add", "--detach", str(stage), head,
-        ], cwd=original)
-        try:
-            if _checked_subprocess(["git", "rev-parse", "HEAD"], cwd=stage) != head:
-                raise ValueError("staged source revision mismatch")
-            if _checked_subprocess([
-                "git", "status", "--porcelain", "--untracked-files=all"
-            ], cwd=stage):
-                raise ValueError("unreviewed staged source changes")
-            entry = stage / "evaluation" / "segmentation" / "run_qualification.py"
-            cmd = [
-                sys.executable, "-I", "-S", "-B", str(entry), "--_staged",
-                "--development", str(args.development),
-                "--validation", str(args.validation),
-                "--holdout", str(args.holdout),
-                "--policy", str(args.policy),
-                "--approved-digest-file", str(args.approved_digest_file),
-                "--image-root", str(args.image_root),
-            ]
-            if args.wheelhouse is not None:
-                cmd.extend(["--wheelhouse", str(args.wheelhouse)])
-            env = {k: v for k, v in os.environ.items() if not k.startswith(
-                ("PYTHON", "GIT_", "PIP_")
-            )}
-            if args.wheelhouse is not None:
-                env["QUALIFICATION_WHEELHOUSE"] = str(args.wheelhouse)
-            output = subprocess.run(
-                cmd, cwd=stage, env=env, capture_output=True, text=True,
-                timeout=240, check=False,
-            )
-            if output.returncode:
-                raise ValueError("isolated qualification failed")
-            # The staged child already emits only public_safe_receipt JSON.
-            record = json.loads(output.stdout)
-            if (record.get("mode") != "synthetic"
-                    or record.get("data_origin") != "SYNTHETIC_FIXTURE"
-                    or record.get("public_qualification") != "NOT_AUTHORIZED"):
-                raise ValueError("untrusted qualification receipt")
-            print(json.dumps(record, sort_keys=True, allow_nan=False))
-            return 0
-        finally:
-            subprocess.run(
-                ["git", "-c", "core.hooksPath=/dev/null",
-                 "worktree", "remove", "--force", str(stage)],
-                cwd=original, capture_output=True, timeout=60, check=False,
-            )
 
 
 def main() -> int:
@@ -257,13 +206,20 @@ def main() -> int:
     args = parser.parse_args()
     if not (sys.flags.isolated and sys.flags.no_site and sys.flags.dont_write_bytecode):
         parser.exit(2, "Isolation requires python -I -S -B.\n")
+    if not args._staged:
+        # The authoritative entrypoint is the independently provisioned
+        # tools/qualification_bootstrap.py, executed OUTSIDE this checkout.
+        # A repository script cannot authenticate itself before its top-level
+        # code has already run.
+        parser.exit(2, "Frozen synthetic evaluation rejected [Q_BOOTSTRAP]; details withheld.\n")
     try:
         if args.wheelhouse is not None:
             os.environ["QUALIFICATION_WHEELHOUSE"] = str(args.wheelhouse.resolve(strict=True))
-        return _staged_worker(args) if args._staged else _stage_and_execute(args)
+        return _staged_worker(args)
+    except _QualificationPhaseError as exc:
+        parser.exit(2, f"Frozen synthetic evaluation rejected [{exc.code}]; details withheld.\n")
     except Exception:
-        # Never publish paths, private records, untrusted stderr or stack traces.
-        parser.exit(2, "Frozen synthetic evaluation rejected; details withheld.\n")
+        parser.exit(2, "Frozen synthetic evaluation rejected [Q_UNKNOWN]; details withheld.\n")
 
 
 if __name__ == "__main__":
