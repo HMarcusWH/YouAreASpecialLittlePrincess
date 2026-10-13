@@ -44,7 +44,7 @@ def test_annotation_frame_rejects_invalid_matrix_and_out_of_bounds():
 
 def test_shadow_scores_aggregate_independently():
     base = {"specimen_id": "fixture-1", "split": "synthetic", "paper": "blank",
-            "status": "MEASURED", "words": match([], []),
+            "status": "MEASURED", "data_origin": "SYNTHETIC_FIXTURE", "words": match([], []),
             "lines": match([Box(10, 10, 50, 10)], [Box(10, 10, 50, 10)]),
             "line_shadow": match([Box(10, 10, 50, 10)], []),
             "word_shadow": match([], []), "false_zero_words": False}
@@ -67,6 +67,9 @@ def test_v2_original_frame_manifest_roundtrip(tmp_path):
                                     "specimens": [item]}))
     result = run_manifest(manifest, tmp_path, shadow_projection=True, shadow_words=True)
     assert result["annotation_frame"] == "original_image"
+    assert result["data_origin"] == "SYNTHETIC_FIXTURE"
+    assert result["summary"]["data_origin"] == "SYNTHETIC_FIXTURE"
+    assert all(row["data_origin"] == "SYNTHETIC_FIXTURE" for row in result["results"])
     assert result["summary"]["overall"]["line_shadow"]["annotated_n"] == 1
     assert result["summary"]["overall"]["word_shadow"]["annotated_n"] == 1
 
@@ -85,3 +88,49 @@ def test_evaluate_rejects_unsupported_frame():
     im = np.full((100, 200), 255, np.uint8)
     with pytest.raises(ValueError, match="frame"):
         evaluate(im, record(), annotation_frame="pixel_magic")
+
+def test_missing_line_annotation_is_unknown_not_an_empty_page():
+    im = np.full((100, 200), 255, np.uint8)
+    item = record()
+    item.pop("lines")
+    assert validate_record(item, "synthetic")[0] is None
+    result = evaluate(im, item, split="synthetic")
+    assert result["line_reference_n"] is None
+    assert result["lines"] is None
+    summary = summarize([result])["overall"]["lines"]
+    assert summary["eligible_n"] == 0
+    assert summary["annotation_unknown_n"] == 1
+    assert summary["nonempty_macro_f1"] is None
+
+
+def test_empty_reference_does_not_improve_nonempty_handwriting_accuracy():
+    base = {"specimen_id": "synthetic-blank", "split": "synthetic",
+            "data_origin": "SYNTHETIC_FIXTURE",
+            "paper": "blank", "status": "MEASURED",
+            "line_reference_n": 0, "word_reference_n": 0,
+            "lines": match([], []), "words": match([], []),
+            "false_zero_words": False}
+    group = summarize([base])["overall"]["lines"]
+    assert group["macro_f1"] == 1
+    assert group["nonempty_macro_f1"] is None
+    assert group["nonempty_eligible_n"] == 0
+    assert group["empty_correct_n"] == 1
+
+
+def test_rejected_nonempty_sample_remains_in_coverage_denominator():
+    measured = {"specimen_id": "some-ink", "split": "synthetic",
+                "data_origin": "SYNTHETIC_FIXTURE",
+                "paper": "blank", "status": "MEASURED",
+                "line_reference_n": 1, "word_reference_n": 1,
+                "lines": match([Box(1, 1, 20, 5)], [Box(1, 1, 20, 5)]),
+                "words": match([Box(1, 1, 20, 5)], [Box(1, 1, 20, 5)]),
+                "false_zero_words": False}
+    rejected = {"specimen_id": "hard-ink", "split": "synthetic",
+                "paper": "grid", "status": "REJECTED", "data_origin": "SYNTHETIC_FIXTURE",
+                "line_reference_n": 1, "word_reference_n": 1,
+                "lines": None, "words": None, "false_zero_words": None}
+    block = summarize([measured, rejected])["overall"]
+    assert block["count"] == 2 and block["rejected"] == 1
+    assert block["lines"]["coverage"] == 0.5
+    assert block["words"]["nonempty_coverage"] == 0.5
+    assert block["lines"]["nonempty_macro_f1"] == 1

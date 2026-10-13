@@ -85,3 +85,174 @@ Deterministic OpenCV/NumPy only; **no learned local model, OCR, network AI,
 face/person/writer identity model, or third-party source/code copied**.
 Source code licenses do not establish rights to photographs or reference datasets.
 No pixels, user specimen identifiers, paths or private diagnostics in public CI.
+
+## Next evaluation-integrity slice — synthetic-only frozen runner
+
+The protected real-data run remains **NOT AUTHORIZED** while T11
+`pilot_rights_consent` is pending. This engineering slice does not change
+the `legacy` runtime default or the 64 canonical Free outputs.
+
+- Preserve the old v1 protocol checker for historical tests, but
+  `score_holdout` no longer permits an unverified caller-supplied aggregate
+  to return `accepted: true`.
+- For v2 engineering tests, freeze **development, validation and holdout**
+  synthetic manifest hashes. Partition by writer, capture, source specimen,
+  input digest and specimen ID across all three splits. Missing `lines` and
+  `words` annotations are unknown, not explicit empty ground truth.
+- Pin the actual local checkout commit, evaluator file bytes, qualification
+  implementation bytes and qualified-v2 processing configuration in a
+  separately prepared reviewed synthetic policy. This is not signed
+  execution attestation or permission to ingest real photographs.
+- Run the full synthetic holdout through `run_frozen_synthetic_qualification`
+  rather than passing the scorer an aggregate. Per-family annotated/nonempty
+  coverage retains refused specimens in its denominator. Empty cases cannot
+  inflate nonempty handwriting F1. Unset thresholds fail closed.
+- Only the synthetic engineering receipt may say `ENGINEERING_PASS`.
+  `public_qualification` remains `NOT_AUTHORIZED`; the redacted exporter
+  never includes specimen-level IDs, paths or private digests.
+- Run `python -m pytest -q tests/test_segmentation_qualification_integrity.py
+  tests/test_qualified_segmentation_protocol.py
+  tests/test_segmentation_benchmark_frames.py` and all exact-head CI. No
+  empirical T06 completion, holdout opening, real-device signoff, Issue #92
+  closure or production activation is permitted by a green synthetic run.
+
+Next independent changes: paired comparison and source-frame annotation
+families; separate T11-authorized real evaluation and finally exact-SHA
+physical-handset qualification.
+
+### Codex qualification integrity repairs
+
+The synthetic v2 gate requires independently scored nonempty handwriting and explicitly annotated empty line/word conditions, with predeclared minimum empty counts, maxima for false-positive pages and minimum empty coverage. It accepts a validation split only under the explicit synthetic-fixture path and rejects duplicate JSON keys and nonfinite constants. Frozen manifest digests use the exact parsed input bytes.
+
+The frozen policy now pins the actual reviewed CI dependency target on Python 3.10/3.11/3.12 (Linux x86_64), NumPy/OpenCV imported and distribution versions, the reviewed lock/manifest digests and the installed distribution map. Unreviewed environments refuse qualification; separate platform qualification needs its own approved lock. Neither source nor dependency hashes replace legal data authorization, independent photo ground truth or device checks.
+
+### Follow-up integrity closeout: trusted verifier and blank abstentions
+
+The checkout integrity pathspec includes `tools/verify_ci_lock.py` and all reviewed `requirements/` snapshots. The frozen policy binds `lock_verifier_sha256`; the imported verifier must resolve to the reviewed file. This is an engineering consistency fence, not a signed attestation against process compromise.
+
+Both `min_empty_line_coverage` and `min_empty_word_coverage` must be strictly positive, and both `minimum_available_empty_line_n` and `minimum_available_empty_word_n` must be positive predeclared counts. A policy allowing zero blank coverage is invalid, not merely a negative score. The scorer independently verifies the number of eligible and actually available blank observations. Unavailable blank pages remain abstentions and never count as measured negatives.
+
+
+### Round-four repair: independent policy, trusted execution, provenance
+
+An independently approved policy SHA must be recorded before holdout
+evaluation. The evaluator requires this externally supplied digest and
+rejects a missing, malformed or mismatched approval before scoring. A
+digest calculated by the same actor after seeing holdout results is not
+proof of prior approval. An independent approval record and its access
+controls are out-of-repo governance obligations, not created by tests.
+
+Use an independently approved **external** python -I -S -B
+qualification_bootstrap.py (installed outside the evaluated checkout) with
+an independent --approved-digest-file. Do not directly execute the repository
+worker as the trusted entrypoint. It imports only
+standard-library code during bootstrap, authenticates reviewed wheel archives
+before third-party imports and verifies installed files against those archives,
+not against installed RECORD metadata. A changed imported
+module fails closed rather than producing an engineering pass. Process-local
+checks are not cryptographic attestations or a substitute for a trusted host.
+
+Synthetic benchmark rows, results and aggregates carry
+data_origin: SYNTHETIC_FIXTURE; rights-gated real-source records carry
+REAL_SOURCE_DECLARED without claiming legal clearance. Mixed, missing and
+unknown origins cannot be combined into human statistics. Public receipts
+are allowlisted, redacted and synthetic-only. The unchanged legacy default,
+T11 rights gate, Issue #92, real-photo evaluation and physical-device
+qualification remain outstanding.
+
+### Round-five closure: immutable inputs and externally authenticated runtime
+
+Freeze each parsed synthetic manifest together with its exact encoded bytes.
+The holdout scorer receives this *same* byte snapshot; a changed pathname or
+symlink cannot change which records or image digests are evaluated. Every
+specimen is opened using a no-follow directory-relative descriptor, read
+within a bounded encoded-file budget, hashed, and decoded only from its
+verified buffer. Changing unapproved image bytes therefore fails before
+decoding.
+
+Use the isolated worktree launcher with original reviewed wheel archives,
+verified against `requirements/ci-pyXYZ.lock` before importing any of those
+dependencies. The full Python import graph (including standard-library
+shadow modules and transitive wheel dependencies) is checked and source
+bytecode caches are excluded by fresh Git staging, `-S` and `-B`.
+Installed distribution `RECORD` metadata is never accepted as the source
+of expected executable-file hashes. This does not attest an untrusted OS,
+interpreter, malicious co-process or separately supplied policy digest.
+
+Round five also updates the existing explicit synthetic provenance test
+fixtures and the expected early-verifier rejection message. Preserve
+`public_qualification: NOT_AUTHORIZED`, T11 pending, Issue #92 open,
+and the `legacy` runtime default. Exact-head CI and independent review
+remain release prerequisites.
+
+
+### Round-six synthetic qualification security closeout
+
+Bind all operator-selected paths before switching to the detached worktree.
+The internal worker must verify detached worktree identity and cleanliness
+before any project import, and must refuse ordinary checkout invocation.
+Source bytecode caches are absent from clean source staging; -B by itself
+does not guarantee that existing bytecode could not be read. Direct Python
+calls outside the approved execution procedure are engineering-only.
+
+Authenticate the execution-relevant reviewed wheel footprint, including
+package resources, reviewed installed metadata other than pip-regenerated
+RECORD, supported .data relocations, native extensions and versioned shared
+objects. Native ELF dependency loads require authentication even without
+a corresponding sys.modules entry. The original reviewed wheel archive
+SHA-256 remains the independent reference.
+
+Review evidence should include direct worker rejection before altered code
+can run, successful relative-path invocation outside the repository, failure
+of forged/deleted caches, modified versioned native libraries and unowned
+Cython namespaces, and a clean redacted synthetic receipt. Preserve exact-head
+CI on Python 3.10/3.11/3.12 and request fresh Codex review. None of these
+checks attest an untrusted operating system/interpreter or authorize real data.
+
+
+### Round-six independent source revision and nonempty-F1 gates
+
+Verify the separately approved policy's raw digest using standard-library
+code before project imports, and require its source_commit_sha to match the
+revision that the launcher and detached worker will execute. Merely
+authenticating files against a *different*, internally consistent clean Git
+HEAD is insufficient. The worker must refuse a clean-but-unapproved alternate
+commit before loading any project module.
+
+Frozen nonempty line and word F1 acceptance thresholds must be greater than
+zero. A policy allowing zero measured segmentation accuracy is invalid, even
+if selective coverage and blank specificity look good. Added negative
+tests for both zero floors and a fully available but completely mismatched
+nonempty detection. All public authority remains NOT_AUTHORIZED.
+
+
+### Round-seven: external bootstrap, split library roots and honest blank evidence
+
+The earlier command that directly executed
+`evaluation/segmentation/run_qualification.py` is superseded. To prevent
+unapproved committed launcher code from running before self-verification, an
+**externally provisioned and independently authenticated stdlib-only
+bootstrap** must run first. Its source template is
+`tools/qualification_bootstrap.py`, but copying it from a mutable checkout
+without independently validating its expected digest is **not trusted
+execution**. The bootstrap checks exact approved policy bytes and pinned
+Git revision and stages that approved object, ignoring an unapproved current
+checkout HEAD. The worker runs under `-I -S -B` from the verified stage.
+External approval of the bootstrap itself remains an operator-governance
+step and cannot be manufactured by a unit test.
+
+Wheel validation selects the archive root using authenticated
+`Root-Is-Purelib` metadata and retains both interpreter-derived
+`purelib` and `platlib` roots, including split lib/lib64 virtualenvs.
+The same approved wheel bytes determine verified relocated files, native
+libraries and Python modules. Fixed `Q_POLICY`, `Q_SOURCE`, `Q_SITE`,
+`Q_WHEEL`, `Q_IMPORT`, `Q_IDENTITY`, `Q_SCORE`, `Q_RECEIPT` and related codes diagnose synthetic rejections
+without exposing protected specimen information.
+
+The qualified-empty outcome used to make the synthetic blank accounting
+testable is a deliberately narrow, input-only uniform-light fixture
+oracle; it is **not native qualified-v2 blank detection**. The redacted
+synthetic receipt always says
+`blank_evidence_scope: SYNTHETIC_FIXTURE_ORACLE_ONLY`. No scientific
+empirical blank accuracy claim, real participant authorization, Issue #92
+closure or production activation follows from an engineering pass.

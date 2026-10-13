@@ -66,6 +66,7 @@ Inventory only: consult [command safety](commands.md) and [testing](../developme
 | [tools/generate_report_fixtures.py](../../tools/generate_report_fixtures.py) | Generate shared report fixtures for web, native, PDF and share-card consumers. |
 | [tools/graphology_db_common.py](../../tools/graphology_db_common.py) | Shared integrity helpers for the graphology interpretation database. |
 | [tools/product_contract_common.py](../../tools/product_contract_common.py) | Shared build-time helpers for T01 product contracts. |
+| [tools/qualification_bootstrap.py](../../tools/qualification_bootstrap.py) | Externally provisioned stdlib-only bootstrap for synthetic qualification. |
 | [tools/qualify_supabase_identity.py](../../tools/qualify_supabase_identity.py) | Supabase Auth account-profile qualification; emits no credential material. |
 | [tools/render_ci_workflow.py](../../tools/render_ci_workflow.py) | Render the complete, mandatory CI workflow from strictly typed reviewed targets. |
 | [tools/test_contract_faults.py](../../tools/test_contract_faults.py) | Run named fault-injection controls in isolated pytest subprocesses. |
