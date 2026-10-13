@@ -89,8 +89,8 @@ TARGETS = {
     "minimum_holdout_writers": 1,
     "minimum_nonempty_line_n": 1,
     "minimum_nonempty_word_n": 1,
-    "min_line_nonempty_macro_f1": 0.0,
-    "min_word_nonempty_macro_f1": 0.0,
+    "min_line_nonempty_macro_f1": 0.01,
+    "min_word_nonempty_macro_f1": 0.01,
     "min_line_coverage": 1.0,
     "min_word_coverage": 1.0,
     "min_nonempty_line_coverage": 1.0,
@@ -1467,3 +1467,88 @@ def test_actual_frozen_holdout_has_nonzero_available_uniform_blank_evidence(tmp_
     assert overall["words"]["empty_coverage"] > 0
     assert actual["data_origin"] == "SYNTHETIC_FIXTURE"
     assert "public_qualification" not in actual  # Direct benchmark is not a rights receipt.
+
+
+
+@pytest.mark.parametrize("key", ("min_line_nonempty_macro_f1", "min_word_nonempty_macro_f1"))
+@pytest.mark.parametrize("invalid", (0, 0.0, -0.01, None))
+def test_frozen_nonempty_f1_floor_must_be_strictly_positive(tmp_path, key, invalid):
+    manifests, policy, _ = _fixtures(tmp_path)
+    record = json.loads(policy.read_text())
+    record["thresholds"][key] = invalid
+    policy.write_text(json.dumps(record))
+    _reapprove_policy_for_validation_test(policy)
+    with pytest.raises(ValueError, match="invalid frozen fraction"):
+        predeclared_holdout_gate_v2(
+            manifests["development"], manifests["validation"],
+            manifests["holdout"], policy,
+        )
+
+
+def test_fully_available_but_zero_f1_does_not_pass_engineering_gate(monkeypatch, tmp_path):
+    manifests, policy, root = _fixtures(tmp_path)
+    fake = _fake_results(manifests)
+    reference = Box(10, 45, 160, 45)
+    mismatched = Box(230, 95, 50, 15)
+    assert benchmark.match([reference], [mismatched])["f1"] == 0
+    fake["results"][0]["lines"] = benchmark.match([reference], [mismatched])
+    monkeypatch.setattr(benchmark, "run_manifest", lambda *args, **kwargs: fake)
+    receipt = run_frozen_synthetic_qualification(
+        manifests["development"], manifests["validation"],
+        manifests["holdout"], policy, root,
+    )
+    assert receipt["decision"] == "ENGINEERING_FAIL"
+    assert receipt["engineering_gates"]["min_line_coverage"]
+    assert not receipt["engineering_gates"]["min_line_nonempty_macro_f1"]
+    assert receipt["public_qualification"] == "NOT_AUTHORIZED"
+
+
+
+def test_clean_but_unapproved_commit_cannot_import_modified_worker_code(tmp_path):
+    """The approved policy's source SHA, not merely clean Git HEAD, owns execution."""
+    manifests, policy, image_root = _fixtures(tmp_path)
+    checkout = tmp_path / "unapproved-committed-worktree"
+    marker = tmp_path / "UNAPPROVED_MODULE_EXECUTED"
+    subprocess.run(
+        ["git", "-c", "core.hooksPath=/dev/null", "worktree", "add",
+         "--detach", str(checkout), "HEAD"],
+        cwd=REPOSITORY, capture_output=True, text=True, check=True, timeout=45,
+    )
+    try:
+        module = checkout / "evaluation" / "segmentation" / "runtime_integrity.py"
+        module.write_text(
+            module.read_text() + "\nfrom pathlib import Path\nPath(" +
+            repr(str(marker)) + ").write_text('unreviewed module executed')\n"
+        )
+        subprocess.run(
+            ["git", "-c", "user.name=synthetic-test",
+             "-c", "user.email=synthetic-test@example.invalid",
+             "-c", "core.hooksPath=/dev/null", "commit", "-am",
+             "synthetic adversarial committed source change"],
+            cwd=checkout, capture_output=True, text=True, check=True, timeout=45,
+        )
+        check = subprocess.run(
+            ["git", "status", "--porcelain"], cwd=checkout,
+            text=True, capture_output=True, check=True, timeout=20,
+        )
+        assert check.stdout == "", "the attack must use a genuinely clean committed checkout"
+        runner = checkout / "evaluation" / "segmentation" / "run_qualification.py"
+        attempted = subprocess.run(
+            [sys.executable, "-I", "-S", "-B", str(runner), "--_staged",
+             "--development", str(manifests["development"]),
+             "--validation", str(manifests["validation"]),
+             "--holdout", str(manifests["holdout"]),
+             "--policy", str(policy),
+             "--approved-digest-file", str(_approval_file(policy)),
+             "--image-root", str(image_root)],
+            cwd=checkout, capture_output=True, text=True, timeout=45,
+        )
+        assert attempted.returncode == 2
+        assert not marker.exists(), "unapproved committed source executed before approved revision check"
+        assert "Frozen synthetic evaluation rejected" in attempted.stderr
+    finally:
+        subprocess.run(
+            ["git", "-c", "core.hooksPath=/dev/null", "worktree",
+             "remove", "--force", str(checkout)],
+            cwd=REPOSITORY, capture_output=True, check=False, timeout=45,
+        )

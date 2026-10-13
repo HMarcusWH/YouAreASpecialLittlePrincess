@@ -106,7 +106,10 @@ FRACTION_TARGETS = frozenset((
     "min_empty_line_coverage", "min_empty_word_coverage",
 ))
 INTEGER_TARGETS = THRESHOLD_KEYS - FRACTION_TARGETS
-POSITIVE_COVERAGE_TARGETS = frozenset(("min_empty_line_coverage", "min_empty_word_coverage"))
+POSITIVE_FRACTION_TARGETS = frozenset((
+    "min_empty_line_coverage", "min_empty_word_coverage",
+    "min_line_nonempty_macro_f1", "min_word_nonempty_macro_f1",
+))
 
 
 
@@ -281,7 +284,7 @@ def _validate_thresholds(targets):
         value = targets[key]
         if type(value) not in (int, float) or not math.isfinite(value):
             raise ValueError("invalid frozen fraction: " + key)
-        if key in POSITIVE_COVERAGE_TARGETS:
+        if key in POSITIVE_FRACTION_TARGETS:
             allowed = 0 < value <= 1
         else:
             allowed = 0 <= value <= 1

@@ -139,3 +139,19 @@ store, plus independent prior policy approval. Public-safe JSON is redacted
 evidence of a synthetic engineering evaluation, not signed attestation.
 No change to public_qualification: NOT_AUTHORIZED, T11, Issue #92 or the
 legacy production default.
+
+
+### Approved revision binding and minimum meaningful nonempty accuracy
+
+A clean Git HEAD is not sufficient evidence of an approved executable. The
+standard-library-only bootstrap authenticates exact frozen policy bytes
+against the independently supplied expected SHA-256, strictly parses the
+policy, and checks the HEAD revision against that policy's source_commit_sha
+BEFORE adding any project path or importing evaluator code. The internal
+detached-worktree worker independently repeats this check. Thus a clean,
+committed alternate checkout cannot self-approve merely by being clean.
+Operator-created policy hashes do not establish independent prior approval.
+
+Both min_line_nonempty_macro_f1 and min_word_nonempty_macro_f1 now require
+strictly positive predeclared thresholds. Zero F1 with otherwise plausible
+coverage and nonempty detections never produces ENGINEERING_PASS.

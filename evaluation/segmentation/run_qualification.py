@@ -7,11 +7,13 @@ fresh reviewed worktree and original locked wheels have been authenticated.
 from __future__ import annotations
 
 import argparse
+import hashlib
+import hmac
 import json
 import os
+import re
 import subprocess
 import sys
-import sysconfig
 import tempfile
 from pathlib import Path
 
@@ -25,6 +27,51 @@ def _checked_subprocess(command, *, cwd):
         raise ValueError("reviewed checkout staging failed")
     return result.stdout.strip()
 
+
+
+
+_APPROVED_SHA256 = re.compile(r"^[0-9a-f]{64}$")
+_COMMIT_SHA = re.compile(r"^[0-9a-f]{40}$")
+_MAX_POLICY_BYTES = 128 * 1024
+
+
+def _verified_policy_revision(args) -> str:
+    """Authenticate the independently approved source revision before imports.
+
+    A clean, detached worktree is not itself authority: a committed malicious
+    revision must never execute merely because it matches its own Git HEAD.
+    """
+    expected = args.approved_digest_file.read_text(encoding="ascii").strip()
+    if not _APPROVED_SHA256.fullmatch(expected):
+        raise ValueError("independently approved policy digest required")
+    with args.policy.open("rb") as stream:
+        raw = stream.read(_MAX_POLICY_BYTES + 1)
+    if len(raw) > _MAX_POLICY_BYTES or not hmac.compare_digest(
+        hashlib.sha256(raw).hexdigest(), expected
+    ):
+        raise ValueError("frozen policy differs from prior approval")
+
+    def strict_object(items):
+        obj = {}
+        for key, value in items:
+            if key in obj:
+                raise ValueError("duplicate frozen policy field")
+            obj[key] = value
+        return obj
+
+    def invalid_constant(value):
+        raise ValueError("nonfinite frozen policy constant")
+
+    policy = json.loads(raw.decode("utf-8"), object_pairs_hook=strict_object,
+                        parse_constant=invalid_constant)
+    if not isinstance(policy, dict) or policy.get("schema_version") != 2 or (
+        policy.get("mode") != "synthetic" or policy.get("profile") != "qualified-v2"
+    ):
+        raise ValueError("unapproved frozen qualification mode")
+    commit = policy.get("source_commit_sha")
+    if not isinstance(commit, str) or not _COMMIT_SHA.fullmatch(commit):
+        raise ValueError("invalid independently approved source revision")
+    return commit
 
 
 _INPUT_FILES = ("development", "validation", "holdout", "policy", "approved_digest_file")
@@ -47,7 +94,7 @@ def _resolve_input_arguments(args):
     return args
 
 
-def _verify_staged_worktree(root: Path) -> None:
+def _verify_staged_worktree(root: Path, approved_revision: str) -> None:
     """Check source provenance BEFORE any project module can be imported.
 
     A hidden worker argument is not authority. Direct calls from an ordinary
@@ -60,8 +107,8 @@ def _verify_staged_worktree(root: Path) -> None:
     revision = _checked_subprocess(
         ["git", "rev-parse", "--verify", "HEAD"], cwd=root
     )
-    if len(revision) != 40 or any(c not in "0123456789abcdef" for c in revision):
-        raise ValueError("invalid staged source revision")
+    if revision != approved_revision:
+        raise ValueError("staged source does not match independently approved policy revision")
     common_dir = Path(_checked_subprocess(
         ["git", "rev-parse", "--path-format=absolute", "--git-common-dir"], cwd=root
     )).resolve(strict=True)
@@ -99,10 +146,11 @@ def _verify_staged_worktree(root: Path) -> None:
 
 def _staged_worker(args) -> int:
     root = Path(__file__).resolve(strict=True).parents[2]
-    _verify_staged_worktree(root)
     if any(not getattr(args, name).is_absolute()
            for name in _INPUT_FILES + _INPUT_DIRECTORIES):
         raise ValueError("worker inputs must be bound to original absolute paths")
+    approved_revision = _verified_policy_revision(args)
+    _verify_staged_worktree(root, approved_revision)
     original = tuple(sys.path)
     project_paths = (str(root / "src"), str(root))
     # -S skips pyvenv.cfg initialization on Python 3.10-3.12. Resolve the
@@ -130,12 +178,13 @@ def _staged_worker(args) -> int:
 
 def _stage_and_execute(args) -> int:
     _resolve_input_arguments(args)
+    approved_revision = _verified_policy_revision(args)
     original = Path(__file__).resolve(strict=True).parents[2]
     # Never stage edited checkout files: checkout from the reviewed Git object
     # instead, yielding a pristine worktree with no inherited bytecode caches.
     head = _checked_subprocess(["git", "rev-parse", "--verify", "HEAD"], cwd=original)
-    if len(head) != 40 or any(ch not in "0123456789abcdef" for ch in head):
-        raise ValueError("invalid source revision")
+    if head != approved_revision:
+        raise ValueError("checkout source does not match prior approved policy revision")
     source = Path(__file__).read_bytes()
     canonical = subprocess.run(
         ["git", "show", f"{head}:evaluation/segmentation/run_qualification.py"],

@@ -206,3 +206,19 @@ of forged/deleted caches, modified versioned native libraries and unowned
 Cython namespaces, and a clean redacted synthetic receipt. Preserve exact-head
 CI on Python 3.10/3.11/3.12 and request fresh Codex review. None of these
 checks attest an untrusted operating system/interpreter or authorize real data.
+
+
+### Round-six independent source revision and nonempty-F1 gates
+
+Verify the separately approved policy's raw digest using standard-library
+code before project imports, and require its source_commit_sha to match the
+revision that the launcher and detached worker will execute. Merely
+authenticating files against a *different*, internally consistent clean Git
+HEAD is insufficient. The worker must refuse a clean-but-unapproved alternate
+commit before loading any project module.
+
+Frozen nonempty line and word F1 acceptance thresholds must be greater than
+zero. A policy allowing zero measured segmentation accuracy is invalid, even
+if selective coverage and blank specificity look good. Added negative
+tests for both zero floors and a fully available but completely mismatched
+nonempty detection. All public authority remains NOT_AUTHORIZED.
