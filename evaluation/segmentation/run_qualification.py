@@ -177,18 +177,25 @@ def _staged_worker(args) -> int:
     _phase("Q_WHEEL", lambda: preflight_reviewed_environment(root))
     sys.path.extend(str(site) for site in sites)
 
-    def evaluate_reviewed_holdout():
+    def import_reviewed_components():
         from evaluation.segmentation.qualification import (
-            public_safe_receipt, run_frozen_synthetic_qualification,
+            current_local_identity, public_safe_receipt,
+            run_frozen_synthetic_qualification,
         )
+        return current_local_identity, public_safe_receipt, run_frozen_synthetic_qualification
+
+    identity_fn, redact_fn, qualify_fn = _phase("Q_IMPORT", import_reviewed_components)
+    _phase("Q_IDENTITY", identity_fn)
+
+    def score_reviewed_holdout():
         approved_digest = args.approved_digest_file.read_text(encoding="ascii").strip()
-        result = run_frozen_synthetic_qualification(
+        return qualify_fn(
             args.development, args.validation, args.holdout, args.policy,
             args.image_root, expected_policy_sha256=approved_digest,
         )
-        return public_safe_receipt(result)
 
-    receipt = _phase("Q_EVALUATION", evaluate_reviewed_holdout)
+    engineering = _phase("Q_SCORE", score_reviewed_holdout)
+    receipt = _phase("Q_RECEIPT", lambda: redact_fn(engineering))
     print(json.dumps(receipt, sort_keys=True, allow_nan=False))
     return 0
 
