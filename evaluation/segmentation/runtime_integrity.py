@@ -189,7 +189,7 @@ def _trusted_files(wheelhouse_name: str, lock_name: str, site_names: tuple[str, 
                     digest = hashlib.sha256()
                     for chunk in iter(lambda: stream.read(1024 * 1024), b""):
                         digest.update(chunk)
-                files[target] = digest.hexdigest()
+                files[target] = (digest.hexdigest(), key[0])
     if seen != set(expected):
         raise ValueError("missing reviewed wheel artifact")
     return files
@@ -212,12 +212,16 @@ def preflight_reviewed_environment(root: Path) -> None:
     wheelhouse = _wheelhouse_path()
     lock = root / "requirements" / f"ci-py{sys.version_info.major}{sys.version_info.minor}.lock"
     approved = _trusted_files(str(wheelhouse), str(lock), tuple(map(str, sites)))
-    for path, digest in approved.items():
+    for path, (digest, package) in approved.items():
         if path.is_symlink() or not path.is_file():
             raise ValueError("missing or redirected locked executable artifact")
         source = path.read_bytes()
         if hashlib.sha256(source).hexdigest() != digest:
-            raise ValueError("installed file differs from authenticated locked wheel")
+            # Package ID is from the independently hash-approved lock, not
+            # from a potentially private path, and is the only diagnostic hint.
+            raise ValueError(
+                "installed file differs from authenticated locked wheel [" + package + "]"
+            )
         if path.suffix == ".py":
             # -B prevents writing caches, but CPython can still READ existing
             # timestamp-matched .pyc files. Verify all approved dependency
@@ -398,7 +402,7 @@ def verify_loaded_module_closure(root: Path) -> None:
                 raise ValueError("unreviewed package import search path")
             if any(path.is_relative_to(s) for s in sites):
                 expected = files.get(path)
-                if expected is None or hashlib.sha256(path.read_bytes()).hexdigest() != expected:
+                if expected is None or hashlib.sha256(path.read_bytes()).hexdigest() != expected[0]:
                     raise ValueError("unreviewed installed executable file")
             elif _project_path(path, root):
                 if path.suffix != ".py":

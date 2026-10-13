@@ -185,6 +185,10 @@ def _phase(code: str, fn):
         reason = str(exc)
         for marker, label in _SANITIZED_FAILURES.get(code, ()):
             if marker in reason:
+                if label == "Q_WHEEL_HASH":
+                    package = re.search(r"\[([a-z0-9-]{1,40})\]", reason)
+                    if package:
+                        label += "_" + package.group(1).upper().replace("-", "_")
                 raise _QualificationPhaseError(label) from exc
         raise _QualificationPhaseError(code + "_OTHER") from exc
 
@@ -207,7 +211,10 @@ def _staged_worker(args) -> int:
     )
     sites = _phase("Q_SITE", _site_roots)
     _phase("Q_WHEEL", lambda: preflight_reviewed_environment(root))
-    sys.path.extend(str(site) for site in sites)
+    # Both logical wheel targets must be preserved for file authentication,
+    # but duplicate physical site paths would make importlib.metadata discover
+    # each installed distribution twice and fail the closed lock-set check.
+    sys.path.extend(str(site) for site in dict.fromkeys(sites))
 
     def import_reviewed_components():
         from evaluation.segmentation.qualification import (
