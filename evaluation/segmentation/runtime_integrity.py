@@ -172,7 +172,7 @@ def _trusted_files(wheelhouse_name: str, lock_name: str, site_names: tuple[str, 
                     scheme = parts[1]
                     mapping = sysconfig.get_paths()
                     target_root = {
-                        "purelib": site, "platlib": Path(site_names[-1]),
+                        "purelib": Path(site_names[0]), "platlib": Path(site_names[-1]),
                         "scripts": Path(mapping["scripts"]),
                         "data": Path(mapping["data"]),
                         "headers": Path(mapping["include"]),
