@@ -26,13 +26,79 @@ def _checked_subprocess(command, *, cwd):
     return result.stdout.strip()
 
 
+
+_INPUT_FILES = ("development", "validation", "holdout", "policy", "approved_digest_file")
+_INPUT_DIRECTORIES = ("image_root",)
+
+
+def _resolve_input_arguments(args):
+    """Bind user-selected paths to the original invocation directory."""
+    for name in _INPUT_FILES + _INPUT_DIRECTORIES + ("wheelhouse",):
+        value = getattr(args, name)
+        if value is None:
+            continue
+        resolved = value.resolve(strict=True)
+        if name in _INPUT_DIRECTORIES or name == "wheelhouse":
+            if not resolved.is_dir():
+                raise ValueError("invalid reviewed input directory")
+        elif not resolved.is_file():
+            raise ValueError("invalid reviewed input file")
+        setattr(args, name, resolved)
+    return args
+
+
+def _verify_staged_worktree(root: Path) -> None:
+    """Check source provenance BEFORE any project module can be imported.
+
+    A hidden worker argument is not authority. Direct calls from an ordinary
+    checkout or a modified detached checkout are rejected before sys.path
+    admits any project code. The trusted host and Git objects remain assumptions.
+    """
+    git_pointer = root / ".git"
+    if not git_pointer.is_file() or git_pointer.is_symlink():
+        raise ValueError("staged worker requires a detached worktree")
+    revision = _checked_subprocess(
+        ["git", "rev-parse", "--verify", "HEAD"], cwd=root
+    )
+    if len(revision) != 40 or any(c not in "0123456789abcdef" for c in revision):
+        raise ValueError("invalid staged source revision")
+    common_dir = Path(_checked_subprocess(
+        ["git", "rev-parse", "--path-format=absolute", "--git-common-dir"], cwd=root
+    )).resolve(strict=True)
+    git_dir = Path(_checked_subprocess(
+        ["git", "rev-parse", "--path-format=absolute", "--git-dir"], cwd=root
+    )).resolve(strict=True)
+    if git_dir == common_dir or not git_dir.is_relative_to(common_dir / "worktrees"):
+        raise ValueError("worker was not launched from a detached Git worktree")
+    branch = subprocess.run(
+        ["git", "symbolic-ref", "-q", "HEAD"], cwd=root,
+        capture_output=True, text=True, timeout=10, check=False,
+    )
+    if branch.returncode != 1:
+        raise ValueError("worker checkout is not detached")
+    if _checked_subprocess([
+        "git", "status", "--porcelain", "--untracked-files=all"
+    ], cwd=root):
+        raise ValueError("staged checkout contains unreviewed changes")
+    for path in (root / "evaluation" / "segmentation" / "run_qualification.py",
+                 root / "evaluation" / "segmentation" / "qualification.py",
+                 root / "evaluation" / "segmentation" / "runtime_integrity.py"):
+        canonical = subprocess.run(
+            ["git", "show", f"{revision}:{path.relative_to(root).as_posix()}"],
+            cwd=root, capture_output=True, timeout=20, check=False,
+        )
+        if canonical.returncode or path.is_symlink() or canonical.stdout != path.read_bytes():
+            raise ValueError("staged executable differs from reviewed commit")
+    if any(root.rglob("*.pyc")):
+        raise ValueError("staged source contains unreviewed bytecode")
+
+
 def _staged_worker(args) -> int:
     root = Path(__file__).resolve(strict=True).parents[2]
-    for dirname in ("src", "evaluation", "tools"):
-        # The staged checkout was newly created from Git and must remain free
-        # of inherited .pyc / __pycache__ files before any project import.
-        if any(root.joinpath(dirname).rglob("*.pyc")):
-            raise ValueError("cached bytecode in reviewed source")
+    _verify_staged_worktree(root)
+    if any(not getattr(args, name).is_absolute()
+           for name in _INPUT_FILES + _INPUT_DIRECTORIES):
+        raise ValueError("worker inputs must be bound to original absolute paths")
     original = tuple(sys.path)
     project_paths = (str(root / "src"), str(root))
     sites = tuple(dict.fromkeys(
@@ -59,6 +125,7 @@ def _staged_worker(args) -> int:
 
 
 def _stage_and_execute(args) -> int:
+    _resolve_input_arguments(args)
     original = Path(__file__).resolve(strict=True).parents[2]
     # Never stage edited checkout files: checkout from the reviewed Git object
     # instead, yielding a pristine worktree with no inherited bytecode caches.
