@@ -66,13 +66,22 @@ def _site_roots() -> tuple[Path, ...]:
     if executable.parent.name == "bin" and config.is_file():
         if config.is_symlink():
             raise ValueError("unreviewed virtualenv configuration")
-        site = venv / "lib" / f"python{sys.version_info.major}.{sys.version_info.minor}" / "site-packages"
-        if not site.is_dir() or site.is_symlink():
-            raise ValueError("missing reviewed virtualenv dependency root")
-        return (site.resolve(strict=True),)
+        version = f"python{sys.version_info.major}.{sys.version_info.minor}"
+        # The virtualenv scheme can use lib for purelib and lib64 for native
+        # platlib. Under -S the interpreter has not installed pyvenv.cfg's
+        # prefixes, so derive both explicitly from the selected executable.
+        pure = venv / "lib" / version / "site-packages"
+        plat = venv / sys.platlibdir / version / "site-packages"
+        if not pure.is_dir() or not plat.is_dir():
+            raise ValueError("missing reviewed virtualenv library root")
+        approved_prefix = venv.resolve(strict=True)
+        roots = (pure.resolve(strict=True), plat.resolve(strict=True))
+        if any(not root.is_relative_to(approved_prefix) for root in roots):
+            raise ValueError("reviewed virtualenv library root escapes prefix")
+        return roots
     paths = sysconfig.get_paths()
-    return tuple(dict.fromkeys(Path(paths[k]).resolve(strict=True)
-                               for k in ("purelib", "platlib")))
+    return (Path(paths["purelib"]).resolve(strict=True),
+            Path(paths["platlib"]).resolve(strict=True))
 
 
 @lru_cache(maxsize=4)
@@ -95,7 +104,8 @@ def _trusted_files(wheelhouse_name: str, lock_name: str, site_names: tuple[str, 
             raise ValueError("duplicate reviewed wheel name")
         expected[key] = digest
 
-    site = Path(site_names[0])
+    if not site_names or len(site_names) not in (1, 2):
+        raise ValueError("reviewed package installation roots must be declared")
     files = {}
     seen = set()
     for wheel in sorted(wheelhouse.iterdir()):
@@ -117,6 +127,26 @@ def _trusted_files(wheelhouse_name: str, lock_name: str, site_names: tuple[str, 
         with zipfile.ZipFile(io.BytesIO(archive_bytes)) as archive:
             if archive.testzip() is not None:
                 raise ValueError("invalid reviewed wheel payload")
+            # Root-Is-Purelib is inside the already hash-authenticated wheel
+            # archive. Guessing the first site root silently misplaces native
+            # wheels on interpreters where purelib and platlib differ.
+            wheel_records = [
+                info for info in archive.infolist()
+                if len(PurePosixPath(info.filename).parts) == 2
+                and PurePosixPath(info.filename).parts[0].endswith(".dist-info")
+                and PurePosixPath(info.filename).parts[1] == "WHEEL"
+                and not info.is_dir()
+            ]
+            if len(wheel_records) != 1:
+                raise ValueError("reviewed wheel lacks unique WHEEL metadata")
+            wheel_lines = archive.read(wheel_records[0]).decode("utf-8").splitlines()
+            settings = [
+                line.split(":", 1)[1].strip().lower()
+                for line in wheel_lines if line.lower().startswith("root-is-purelib:")
+            ]
+            if len(settings) != 1 or settings[0] not in ("true", "false"):
+                raise ValueError("reviewed wheel has invalid Root-Is-Purelib")
+            site = Path(site_names[0 if settings[0] == "true" else -1])
             names = set()
             for entry in archive.infolist():
                 if entry.filename in names:
