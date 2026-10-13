@@ -1184,3 +1184,160 @@ def test_preflight_refuses_forged_installed_bytecode_before_import(monkeypatch, 
     cache.write_bytes(header + marshal.dumps(compile(b"answer = 0\n", str(source), "exec")))
     with pytest.raises(ValueError, match="unreviewed installed bytecode cache"):
         trust.preflight_reviewed_environment(root)
+
+
+
+def test_direct_staged_worker_from_normal_checkout_is_not_authorized(tmp_path):
+    """Hidden worker selection must not bypass source-stage authentication."""
+    manifests, policy, image_root = _fixtures(tmp_path)
+    launcher = REPOSITORY / "evaluation" / "segmentation" / "run_qualification.py"
+    result = subprocess.run(
+        [sys.executable, "-I", "-S", "-B", str(launcher), "--_staged",
+         "--development", str(manifests["development"]),
+         "--validation", str(manifests["validation"]),
+         "--holdout", str(manifests["holdout"]),
+         "--policy", str(policy),
+         "--approved-digest-file", str(_approval_file(policy)),
+         "--image-root", str(image_root)],
+        cwd=REPOSITORY, capture_output=True, text=True, timeout=45,
+    )
+    assert result.returncode == 2
+    assert "Frozen synthetic evaluation rejected" in result.stderr
+    assert str(tmp_path) not in result.stdout + result.stderr
+
+
+def test_direct_staged_worker_rejects_modified_checkout_before_import(tmp_path):
+    """Exercise a truly dirty detached worktree without touching repository files."""
+    manifests, policy, image_root = _fixtures(tmp_path)
+    checkout = tmp_path / "attacker-worktree"
+    marker = tmp_path / "ATTACK_EXECUTED"
+    subprocess.run(
+        ["git", "-c", "core.hooksPath=/dev/null", "worktree", "add",
+         "--detach", str(checkout), "HEAD"],
+        cwd=REPOSITORY, capture_output=True, text=True, check=True, timeout=45,
+    )
+    try:
+        qualification = checkout / "evaluation" / "segmentation" / "qualification.py"
+        qualification.write_text(
+            "from pathlib import Path\nPath(" + repr(str(marker)) +
+            ").write_text('bad import executed')\n" + qualification.read_text()
+        )
+        launcher = checkout / "evaluation" / "segmentation" / "run_qualification.py"
+        result = subprocess.run(
+            [sys.executable, "-I", "-S", "-B", str(launcher), "--_staged",
+             "--development", str(manifests["development"]),
+             "--validation", str(manifests["validation"]),
+             "--holdout", str(manifests["holdout"]),
+             "--policy", str(policy),
+             "--approved-digest-file", str(_approval_file(policy)),
+             "--image-root", str(image_root)],
+            cwd=checkout, capture_output=True, text=True, timeout=45,
+        )
+        assert result.returncode == 2
+        assert not marker.exists(), "unapproved source ran before stage verification"
+        assert "Frozen synthetic evaluation rejected" in result.stderr
+    finally:
+        subprocess.run(
+            ["git", "-c", "core.hooksPath=/dev/null",
+             "worktree", "remove", "--force", str(checkout)],
+            cwd=REPOSITORY, capture_output=True, check=False, timeout=45,
+        )
+
+
+def test_isolated_launcher_binds_relative_inputs_to_invocation_directory(tmp_path):
+    manifests, policy, image_root = _fixtures(tmp_path)
+    launcher = REPOSITORY / "evaluation" / "segmentation" / "run_qualification.py"
+    result = subprocess.run(
+        [sys.executable, "-I", "-S", "-B", str(launcher),
+         "--development", "development.json",
+         "--validation", "validation.json",
+         "--holdout", "holdout.json",
+         "--policy", "policy.json",
+         "--approved-digest-file", "policy.json.approved.sha256",
+         "--image-root", "images"],
+        cwd=tmp_path, capture_output=True, text=True, timeout=120,
+    )
+    assert result.returncode == 0, result.stderr
+    safe = json.loads(result.stdout)
+    assert safe["mode"] == "synthetic"
+    assert safe["data_origin"] == "SYNTHETIC_FIXTURE"
+    assert safe["public_qualification"] == "NOT_AUTHORIZED"
+    assert safe["decision"] in ("ENGINEERING_PASS", "ENGINEERING_FAIL")
+    assert str(tmp_path) not in result.stdout
+
+
+def test_masked_or_deleted_project_cache_never_proves_trusted_execution(tmp_path):
+    import importlib.util
+    import marshal
+    import types
+    from evaluation.segmentation.runtime_integrity import _check_project_bytecode
+
+    source = tmp_path / "reviewed.py"
+    source.write_bytes(b"value = 42\n")
+    cache = Path(importlib.util.cache_from_source(str(source)))
+    cache.parent.mkdir(parents=True)
+    altered = marshal.dumps(compile(
+        b"value = 'tampered'\n", str(source), "exec", dont_inherit=True,
+    ))
+    cache.write_bytes(importlib.util.MAGIC_NUMBER + b"\x00" * 12 + altered)
+    with pytest.raises(ValueError, match="unverified cached project bytecode"):
+        _check_project_bytecode(types.SimpleNamespace(__cached__=None), source)
+    cache.unlink()
+    if not sys.flags.dont_write_bytecode:
+        with pytest.raises(ValueError, match="unverified cached project bytecode"):
+            _check_project_bytecode(types.SimpleNamespace(__cached__=None), source)
+
+
+def test_versioned_native_wheel_libraries_and_relocated_files_are_authenticated(monkeypatch, tmp_path):
+    import zipfile
+    from evaluation.segmentation import runtime_integrity as trust
+
+    root = tmp_path / "repo"
+    (root / "requirements").mkdir(parents=True)
+    wheelhouse = tmp_path / "wheels"
+    wheelhouse.mkdir()
+    site = tmp_path / "site"
+    site.mkdir()
+    wheel = wheelhouse / "demo-1.0-py3-none-any.whl"
+    payloads = {
+        "demo/__init__.py": b"ANSWER = 42\n",
+        "demo.libs/libexample.so.5": b"reviewed-native-binary",
+        "demo.libs/libexample.so.5.0.0": b"reviewed-versioned-binary",
+        "demo-1.0.data/purelib/relocated.py": b"FLAG = 1\n",
+    }
+    with zipfile.ZipFile(wheel, "w") as archive:
+        for name, content in payloads.items():
+            archive.writestr(name, content)
+    for name, content in payloads.items():
+        parts = name.split("/")
+        target = site.joinpath(*(parts[2:] if parts[0].endswith(".data") else parts))
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(content)
+    lock = root / "requirements" / f"ci-py{sys.version_info.major}{sys.version_info.minor}.lock"
+    lock.write_text(
+        "demo==1.0 --hash=sha256:" + hashlib.sha256(wheel.read_bytes()).hexdigest()
+    )
+    monkeypatch.setattr(trust, "_wheelhouse_path", lambda: wheelhouse)
+    monkeypatch.setattr(trust, "_site_roots", lambda: (site,))
+    trust._trusted_files.cache_clear()
+    trust.preflight_reviewed_environment(root)
+    for changed in ("libexample.so.5", "libexample.so.5.0.0"):
+        target = site / "demo.libs" / changed
+        original = target.read_bytes()
+        target.write_bytes(b"modified-native-code")
+        with pytest.raises(ValueError, match="differs from authenticated locked wheel"):
+            trust.preflight_reviewed_environment(root)
+        target.write_bytes(original)
+    (site / "demo.libs" / "unreviewed.so.5").write_bytes(b"extra-native-code")
+    with pytest.raises(ValueError, match="unreviewed installed native library"):
+        trust.preflight_reviewed_environment(root)
+
+
+def test_unowned_cython_namespace_module_is_not_whitelisted(monkeypatch):
+    import types
+    from evaluation.segmentation.runtime_integrity import verify_loaded_module_closure
+
+    injected = types.ModuleType("cython.fake_unowned")
+    monkeypatch.setitem(sys.modules, "cython.fake_unowned", injected)
+    with pytest.raises(ValueError, match="unreviewed imported evaluation module"):
+        verify_loaded_module_closure(REPOSITORY)

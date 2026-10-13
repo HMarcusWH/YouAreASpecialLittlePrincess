@@ -143,9 +143,10 @@ proof of prior approval. An independent approval record and its access
 controls are out-of-repo governance obligations, not created by tests.
 
 Use the reviewed python -I -S -B evaluation/segmentation/run_qualification.py
-launcher with an independent --approved-digest-file. It preloads numerical
-wheels before admitting source paths and verifies loaded module origins and
-installed wheel RECORD digests, also after lazy imports. A changed imported
+launcher with an independent --approved-digest-file. It imports only
+standard-library code during bootstrap, authenticates reviewed wheel archives
+before third-party imports and verifies installed files against those archives,
+not against installed RECORD metadata. A changed imported
 module fails closed rather than producing an engineering pass. Process-local
 checks are not cryptographic attestations or a substitute for a trusted host.
 
@@ -181,3 +182,27 @@ fixtures and the expected early-verifier rejection message. Preserve
 `public_qualification: NOT_AUTHORIZED`, T11 pending, Issue #92 open,
 and the `legacy` runtime default. Exact-head CI and independent review
 remain release prerequisites.
+
+
+### Round-six synthetic qualification security closeout
+
+Bind all operator-selected paths before switching to the detached worktree.
+The internal worker must verify detached worktree identity and cleanliness
+before any project import, and must refuse ordinary checkout invocation.
+Source bytecode caches are absent from clean source staging; -B by itself
+does not guarantee that existing bytecode could not be read. Direct Python
+calls outside the approved execution procedure are engineering-only.
+
+Authenticate the execution-relevant reviewed wheel footprint, including
+package resources, reviewed installed metadata other than pip-regenerated
+RECORD, supported .data relocations, native extensions and versioned shared
+objects. Native ELF dependency loads require authentication even without
+a corresponding sys.modules entry. The original reviewed wheel archive
+SHA-256 remains the independent reference.
+
+Review evidence should include direct worker rejection before altered code
+can run, successful relative-path invocation outside the repository, failure
+of forged/deleted caches, modified versioned native libraries and unowned
+Cython namespaces, and a clean redacted synthetic receipt. Preserve exact-head
+CI on Python 3.10/3.11/3.12 and request fresh Codex review. None of these
+checks attest an untrusted operating system/interpreter or authorize real data.

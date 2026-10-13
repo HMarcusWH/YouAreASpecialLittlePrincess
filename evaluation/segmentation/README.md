@@ -69,11 +69,14 @@ PYTHONPATH=src invocation (which remains a general developer benchmark mode):
       --image-root /protected/fixtures \
       --wheelhouse /approved/authenticated-wheelhouse
 
-The launcher preloads NumPy/OpenCV before adding the source tree, verifies
-evaluation/application/core source module origins, and checks numeric Python
-and extension files against the installed reviewed wheel RECORD. The guard
-runs again after the benchmark to detect lazy shadow imports. Existing Git
-cleanliness, source SHA, CI locks and verifier origin checks remain mandatory.
+The launcher initially imports only standard-library modules. It verifies
+a fresh detached Git worktree and authenticates original wheel archives
+against the reviewed per-interpreter lock before admitting third-party imports.
+Installed wheel payloads, including versioned native libraries, are checked
+against those authenticated archive bytes rather than mutable installed
+RECORD metadata. The import graph is audited before and after qualification.
+The internal worker argument does not grant trust by itself; source staging
+must be verified before importing evaluator code.
 These process-local checks are not a sandbox, signature or hardware attestation.
 
 Every benchmark result row, top-level result and summarize aggregation carries
@@ -106,3 +109,33 @@ against the frozen record and only then decoded from that immutable byte buffer.
 These controls are process-local and rely on a trustworthy OS, Git checkout
 and interpreter. They are **not** a signature, external policy approval,
 container-level sandbox or authorization to process human data.
+
+
+### Round-six closeout: worker authority, paths, and native wheel evidence
+
+The operator's manifest, policy, independent approval, image-root and
+wheelhouse paths are resolved against the original invocation directory
+before creating the isolated detached worktree. The worker receives absolute
+paths. The internal worker option is not a permission grant: it refuses an
+ordinary checkout, a non-detached worktree, a dirty stage and inherited
+project bytecode before importing project evaluator code.
+
+Clean staging under python -I -S -B establishes the pre-import project
+bytecode boundary. Cache checks derive the expected source cache path rather
+than trusting module.__cached__; deleting a cache after executing hostile
+code in an arbitrary process cannot prove clean execution. Direct
+programmatic engineering results are not signed or independently attested.
+
+Dependency preflight authenticates wheel-provided installed artifacts,
+including versioned .so.5/.so.5.0.0 libraries that do not appear in
+sys.modules. Wheel .data relocations are mapped to installed destinations.
+Expected file digests always come from original reviewed wheel archives.
+Cython virtual-module exemptions are narrowed to known version-form runtime
+aliases in the separately verified execution environment; no arbitrary
+cython namespace is approved.
+
+The trust model assumes an uncompromised host, interpreter and Git object
+store, plus independent prior policy approval. Public-safe JSON is redacted
+evidence of a synthetic engineering evaluation, not signed attestation.
+No change to public_qualification: NOT_AUTHORIZED, T11, Issue #92 or the
+legacy production default.
