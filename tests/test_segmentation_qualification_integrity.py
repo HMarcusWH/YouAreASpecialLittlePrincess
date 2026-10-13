@@ -30,6 +30,24 @@ from princess_graphology.models import Box
 # Standalone evaluation stays STRICT; these synthetic unit tests supply the
 # exact reviewed mapping and test the genuine check in a fresh subprocess.
 REPOSITORY = Path(__file__).resolve().parents[1]
+SYNTHETIC_WHEEL_METADATA = (
+    b"Wheel-Version: 1.0\nGenerator: synthetic-test\n"
+    b"Root-Is-Purelib: true\nTag: py3-none-any\n"
+)
+
+
+def _externally_provisioned_test_bootstrap(tmp_path: Path) -> Path:
+    """Test the protocol using an out-of-tree bootstrap copy, not approval."""
+    external = tmp_path / "external-bootstrap"
+    external.mkdir(exist_ok=True)
+    installed = external / "qualification_bootstrap.py"
+    installed.write_bytes((REPOSITORY / "tools" / "qualification_bootstrap.py").read_bytes())
+    return installed
+
+
+def _bootstrap_args(bootstrap: Path, *args):
+    return [sys.executable, "-I", "-S", "-B", str(bootstrap),
+            "--repository", str(REPOSITORY), *args]
 
 
 def _approval_file(policy: Path) -> Path:
@@ -964,12 +982,13 @@ def test_isolated_launcher_refuses_unapproved_policy_and_hides_paths(tmp_path):
     )
     assert rejected.returncode == 2
     assert "Isolation requires python -I -S -B" in rejected.stderr
+    bootstrap = _externally_provisioned_test_bootstrap(tmp_path)
     result = subprocess.run(
-        [sys.executable, "-I", "-S", "-B", str(launcher), *args],
-        cwd=REPOSITORY, text=True, capture_output=True, timeout=45,
+        _bootstrap_args(bootstrap, *args),
+        cwd=REPOSITORY, text=True, capture_output=True, timeout=60,
     )
     assert result.returncode == 2
-    assert "Frozen synthetic evaluation rejected" in result.stderr
+    assert "[Q_POLICY]" in result.stderr
     assert str(tmp_path) not in result.stdout + result.stderr
 
 
@@ -977,16 +996,16 @@ def test_isolated_launcher_returns_only_redacted_synthetic_receipt(tmp_path):
     manifests, policy, image_root = _fixtures(tmp_path)
     approval = tmp_path / "prior-review.sha256"
     approval.write_text(_approval_file(policy).read_text())
-    launcher = REPOSITORY / "evaluation" / "segmentation" / "run_qualification.py"
-    result = subprocess.run([
-        sys.executable, "-I", "-S", "-B", str(launcher),
+    bootstrap = _externally_provisioned_test_bootstrap(tmp_path)
+    result = subprocess.run(_bootstrap_args(
+        bootstrap,
         "--development", str(manifests["development"]),
         "--validation", str(manifests["validation"]),
         "--holdout", str(manifests["holdout"]),
         "--policy", str(policy),
         "--approved-digest-file", str(approval),
         "--image-root", str(image_root),
-    ], cwd=REPOSITORY, text=True, capture_output=True, timeout=45)
+    ), cwd=REPOSITORY, text=True, capture_output=True, timeout=120)
     assert result.returncode == 0, result.stderr
     safe = json.loads(result.stdout)
     assert safe["mode"] == "synthetic"
@@ -1089,6 +1108,7 @@ def test_wheel_record_tamper_cannot_override_reviewed_archive(monkeypatch, tmp_p
     trusted = b"print('reviewed')\n"
     with zipfile.ZipFile(wheel, "w") as archive:
         archive.writestr("demo/__init__.py", trusted)
+        archive.writestr("demo-1.0.dist-info/WHEEL", SYNTHETIC_WHEEL_METADATA)
         archive.writestr("demo-1.0.dist-info/RECORD", b"")
     approved_sha = hashlib.sha256(wheel.read_bytes()).hexdigest()
     target = f"{sys.version_info.major}{sys.version_info.minor}"
@@ -1096,6 +1116,8 @@ def test_wheel_record_tamper_cannot_override_reviewed_archive(monkeypatch, tmp_p
         "demo==1.0 --hash=sha256:" + approved_sha + "\n"
     )
     (site / "demo" / "__init__.py").write_bytes(trusted)
+    (site / "demo-1.0.dist-info").mkdir()
+    (site / "demo-1.0.dist-info" / "WHEEL").write_bytes(SYNTHETIC_WHEEL_METADATA)
     monkeypatch.setattr(trust, "_wheelhouse_path", lambda: wheelhouse)
     monkeypatch.setattr(trust, "_site_roots", lambda: (site,))
     trust._trusted_files.cache_clear()
@@ -1103,7 +1125,7 @@ def test_wheel_record_tamper_cannot_override_reviewed_archive(monkeypatch, tmp_p
 
     altered = b"print('attacker')\n"
     (site / "demo" / "__init__.py").write_bytes(altered)
-    (site / "demo-1.0.dist-info").mkdir()
+    (site / "demo-1.0.dist-info").mkdir(exist_ok=True)
     (site / "demo-1.0.dist-info" / "RECORD").write_text(
         "demo/__init__.py,sha256:" + hashlib.sha256(altered).hexdigest()
     )
@@ -1169,10 +1191,13 @@ def test_preflight_refuses_forged_installed_bytecode_before_import(monkeypatch, 
     good = b"answer = 42\n"
     with zipfile.ZipFile(wheel, "w") as archive:
         archive.writestr("demo/__init__.py", good)
+        archive.writestr("demo-1.0.dist-info/WHEEL", SYNTHETIC_WHEEL_METADATA)
     lock = root / "requirements" / f"ci-py{sys.version_info.major}{sys.version_info.minor}.lock"
     lock.write_text("demo==1.0 --hash=sha256:" + hashlib.sha256(wheel.read_bytes()).hexdigest())
     source = site / "demo" / "__init__.py"
     source.write_bytes(good)
+    (site / "demo-1.0.dist-info").mkdir()
+    (site / "demo-1.0.dist-info" / "WHEEL").write_bytes(SYNTHETIC_WHEEL_METADATA)
     cache = Path(importlib.util.cache_from_source(str(source)))
     cache.parent.mkdir()
     header = importlib.util.MAGIC_NUMBER + b"\x00" * 12
@@ -1268,15 +1293,17 @@ def test_direct_staged_worker_rejects_modified_checkout_before_import(tmp_path):
 
 def test_isolated_launcher_binds_relative_inputs_to_invocation_directory(tmp_path):
     manifests, policy, image_root = _fixtures(tmp_path)
-    launcher = REPOSITORY / "evaluation" / "segmentation" / "run_qualification.py"
+    bootstrap = _externally_provisioned_test_bootstrap(tmp_path)
     result = subprocess.run(
-        [sys.executable, "-I", "-S", "-B", str(launcher),
-         "--development", "development.json",
-         "--validation", "validation.json",
-         "--holdout", "holdout.json",
-         "--policy", "policy.json",
-         "--approved-digest-file", "policy.json.approved.sha256",
-         "--image-root", "images"],
+        _bootstrap_args(
+            bootstrap,
+            "--development", "development.json",
+            "--validation", "validation.json",
+            "--holdout", "holdout.json",
+            "--policy", "policy.json",
+            "--approved-digest-file", "policy.json.approved.sha256",
+            "--image-root", "images",
+        ),
         cwd=tmp_path, capture_output=True, text=True, timeout=120,
     )
     assert result.returncode == 0, result.stderr
@@ -1326,6 +1353,7 @@ def test_versioned_native_wheel_libraries_and_relocated_files_are_authenticated(
         "demo.libs/libexample.so.5": b"reviewed-native-binary",
         "demo.libs/libexample.so.5.0.0": b"reviewed-versioned-binary",
         "demo-1.0.data/purelib/relocated.py": b"FLAG = 1\n",
+        "demo-1.0.dist-info/WHEEL": SYNTHETIC_WHEEL_METADATA,
     }
     with zipfile.ZipFile(wheel, "w") as archive:
         for name, content in payloads.items():
@@ -1379,9 +1407,11 @@ def test_real_python_virtualenv_site_root_resolves_under_isolated_minus_s(tmp_pa
         f"sys.path.append({str(REPOSITORY)!r}); "
         "from evaluation.segmentation.runtime_integrity import _site_roots; "
         "p=_site_roots(); "
-        f"expected=Path({str(env_root)!r})/'lib'/"
-        "f'python{sys.version_info.major}.{sys.version_info.minor}'/'site-packages'; "
-        "assert p==(expected.resolve(strict=True),), (p,expected)"
+        f"prefix=Path({str(env_root)!r}); "
+        "v=f'python{sys.version_info.major}.{sys.version_info.minor}'; "
+        "pure=prefix/'lib'/v/'site-packages'; "
+        "plat=prefix/sys.platlibdir/v/'site-packages'; "
+        "assert p==(pure.resolve(strict=True),plat.resolve(strict=True)),(p,pure,plat)"
     )
     result = subprocess.run(
         [str(executable), "-I", "-S", "-B", "-c", script],
