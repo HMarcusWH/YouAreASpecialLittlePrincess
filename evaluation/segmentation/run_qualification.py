@@ -149,12 +149,44 @@ class _QualificationPhaseError(ValueError):
         self.code = code
 
 
+_SANITIZED_FAILURES = {
+    "Q_WHEEL": (
+        ("missing or redirected locked executable artifact", "Q_WHEEL_MISSING"),
+        ("installed file differs from authenticated locked wheel", "Q_WHEEL_HASH"),
+        ("unreviewed installed bytecode cache", "Q_WHEEL_CACHE"),
+        ("unreviewed installed native library", "Q_WHEEL_NATIVE"),
+        ("wheel archive differs", "Q_WHEEL_ARCHIVE"),
+        ("wheel not uniquely present", "Q_WHEEL_LOCK"),
+        ("missing reviewed wheel artifact", "Q_WHEEL_LOCK"),
+        ("invalid Root-Is-Purelib", "Q_WHEEL_METADATA"),
+        ("lacks unique WHEEL metadata", "Q_WHEEL_METADATA"),
+        ("wheel payload", "Q_WHEEL_PAYLOAD"),
+        ("wheel install scheme", "Q_WHEEL_LAYOUT"),
+    ),
+    "Q_IDENTITY": (
+        ("unreviewed imported evaluation module", "Q_IDENTITY_IMPORT"),
+        ("reviewed dependency versions", "Q_IDENTITY_DEPENDENCIES"),
+        ("installed environment differs", "Q_IDENTITY_LOCKSET"),
+        ("source checkout contains", "Q_IDENTITY_DIRTY"),
+        ("source revision", "Q_IDENTITY_REVISION"),
+        ("dependency snapshot", "Q_IDENTITY_DEPENDENCIES"),
+        ("source checkout cleanliness", "Q_IDENTITY_DIRTY"),
+        ("unreviewed lock verifier", "Q_IDENTITY_VERIFIER"),
+        ("modified numerical", "Q_IDENTITY_WHEEL"),
+    ),
+}
+
+
 def _phase(code: str, fn):
-    """One fixed, privacy-safe failure category; never echo exceptions or paths."""
+    """Emit fixed, privacy-safe reason categories, never raw error messages."""
     try:
         return fn()
     except Exception as exc:
-        raise _QualificationPhaseError(code) from exc
+        reason = str(exc)
+        for marker, label in _SANITIZED_FAILURES.get(code, ()):
+            if marker in reason:
+                raise _QualificationPhaseError(label) from exc
+        raise _QualificationPhaseError(code + "_OTHER") from exc
 
 
 def _staged_worker(args) -> int:
