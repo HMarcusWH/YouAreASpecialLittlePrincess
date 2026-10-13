@@ -516,6 +516,7 @@ def run_frozen_synthetic_qualification(
     summary, gates = _engineering_gates(rows, frozen)
     return {"kind": "segmentation-qualification/2", "mode": "synthetic",
             "data_origin": "SYNTHETIC_FIXTURE",
+            "blank_evidence_scope": "SYNTHETIC_FIXTURE_ORACLE_ONLY",
             "public_qualification": "NOT_AUTHORIZED",
             "decision": "ENGINEERING_PASS" if all(gates.values()) else "ENGINEERING_FAIL",
             "engineering_gates": gates,
@@ -541,6 +542,7 @@ def public_safe_receipt(receipt: dict) -> dict:
     count = receipt.get("specimen_count")
     return {"kind": "segmentation-public-summary/1", "mode": "synthetic",
             "data_origin": "SYNTHETIC_FIXTURE",
+            "blank_evidence_scope": "SYNTHETIC_FIXTURE_ORACLE_ONLY",
             "public_qualification": "NOT_AUTHORIZED",
             "decision": receipt["decision"],
             "specimen_count": count if type(count) is int and count >= 5 else None,

@@ -57,10 +57,19 @@ prior approval, reviewer identity, timestamp and audit trail in separately
 controlled storage. Synthetic unit tests simulate the prior approval with a
 distinct approved-digest fixture.
 
-For local synthetic qualification use the isolated runner, not a bare
-PYTHONPATH=src invocation (which remains a general developer benchmark mode):
+For synthetic qualification, **never execute an unchecked launcher from the
+checkout being evaluated**. `tools/qualification_bootstrap.py` is a
+distribution *template*, not automatically trusted merely because it is in
+Git. An independent reviewer/operator must inspect and install the bootstrap
+**outside the evaluated checkout** and verify its hash against a separately
+approved record *before executing it*. In CI, test code copies it outside
+the checkout to test the protocol only; that fixture is not human approval.
 
-    python -I -S -B evaluation/segmentation/run_qualification.py \
+Once the independently approved bootstrap has been provisioned at
+`/trusted/qualification_bootstrap.py`, invoke:
+
+    python -I -S -B /trusted/qualification_bootstrap.py \
+      --repository /checked-out/YouAreASpecialLittlePrincess \
       --development /protected/development.json \
       --validation /protected/validation.json \
       --holdout /protected/holdout.json \
@@ -69,14 +78,22 @@ PYTHONPATH=src invocation (which remains a general developer benchmark mode):
       --image-root /protected/fixtures \
       --wheelhouse /approved/authenticated-wheelhouse
 
-The launcher initially imports only standard-library modules. It verifies
-a fresh detached Git worktree and authenticates original wheel archives
-against the reviewed per-interpreter lock before admitting third-party imports.
-Installed wheel payloads, including versioned native libraries, are checked
-against those authenticated archive bytes rather than mutable installed
-RECORD metadata. The import graph is audited before and after qualification.
-The internal worker argument does not grant trust by itself; source staging
-must be verified before importing evaluator code.
+The external bootstrap uses only stdlib code to validate the prior-approved
+policy digest and source commit, then checks out that exact Git object into
+a fresh detached worktree. It verifies the launcher bytes **before** Python
+executes them and runs the internal worker under `-I -S -B`. A direct
+invocation of `evaluation/segmentation/run_qualification.py` from the
+evaluated checkout is expressly not the trusted entrypoint. Its internal
+`--_staged` mode checks the approved revision before any project imports,
+but cannot retroactively establish trust in an unapproved script that
+someone explicitly executed.
+
+Wheel preflight authenticates `Root-Is-Purelib` from the hash-reviewed wheel
+metadata, differentiates `purelib` and `platlib` (including Linux lib64),
+checks relocated files and versioned native libraries, and refuses mutated
+installed files. No installed RECORD metadata is used as a trust anchor.
+Failure diagnostics contain only fixed `Q_*` stage codes; private paths,
+specimen records and image bytes are never printed.
 These process-local checks are not a sandbox, signature or hardware attestation.
 
 Every benchmark result row, top-level result and summarize aggregation carries
@@ -88,9 +105,10 @@ still has public_qualification: NOT_AUTHORIZED.
 
 ### Trusted execution boundary (round five)
 
-The synthetic-only entrypoint requires `python -I -S -B`. It authenticates its own
-launcher bytes against the current Git commit and creates a *fresh detached Git
-worktree* from that commit; it never inherits untracked checkout files or
+The synthetic-only external bootstrap requires `python -I -S -B`.
+After independent bootstrap installation, it authenticates approved launcher
+bytes from the policy-pinned Git commit and creates a *fresh detached Git
+worktree* from that approved revision; it never inherits untracked checkout files or
 `__pycache__`. The worker imports only standard-library modules first,
 authenticates **the original wheels from the Python-target-specific reviewed
 lock** and checks installed executable bytes before admitting site-packages.
@@ -155,3 +173,18 @@ Operator-created policy hashes do not establish independent prior approval.
 Both min_line_nonempty_macro_f1 and min_word_nonempty_macro_f1 now require
 strictly positive predeclared thresholds. Zero F1 with otherwise plausible
 coverage and nonempty detections never produces ENGINEERING_PASS.
+
+
+### Synthetic blank-page evidence limitation
+
+The `qualified_empty` status in the offline benchmark is produced only by
+a deliberately uniform-light **synthetic fixture oracle**. It is image-only
+and does not consult annotations, but it is **not evidence that the production
+qualified-v2 detector itself can classify blank handwriting pages**. The
+engineering and public-safe receipts explicitly carry
+`blank_evidence_scope: SYNTHETIC_FIXTURE_ORACLE_ONLY`. These synthetic
+available-empty observations test denominator accounting, not empirical
+real-photo blank specificity. Real-world qualified-empty evidence and
+preregistered scientific accuracy requirements require separate rights-gated
+evaluation. A positive structural F1 threshold such as 0.01 is not a
+real-world quality target.

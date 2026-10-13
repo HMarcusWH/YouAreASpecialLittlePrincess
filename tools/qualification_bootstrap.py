@@ -148,12 +148,13 @@ def _run(args) -> int:
                 receipt = json.loads(proc.stdout)
                 if (not isinstance(receipt, dict)
                         or set(receipt) != {
-                            "kind", "mode", "data_origin", "public_qualification",
-                            "decision", "specimen_count", "metrics",
+                            "kind", "mode", "data_origin", "blank_evidence_scope",
+                            "public_qualification", "decision", "specimen_count", "metrics",
                         }
                         or receipt["kind"] != "segmentation-public-summary/1"
                         or receipt["mode"] != "synthetic"
                         or receipt["data_origin"] != "SYNTHETIC_FIXTURE"
+                        or receipt["blank_evidence_scope"] != "SYNTHETIC_FIXTURE_ORACLE_ONLY"
                         or receipt["public_qualification"] != "NOT_AUTHORIZED"
                         or receipt["decision"] not in ("ENGINEERING_PASS", "ENGINEERING_FAIL")):
                     raise ValueError("not a redacted frozen receipt")

@@ -349,6 +349,7 @@ def test_public_receipt_cannot_echo_private_identifiers():
     assert secret not in json.dumps(output)
     assert "manifest_digest" not in output
     assert output["specimen_count"] is None
+    assert output["blank_evidence_scope"] == "SYNTHETIC_FIXTURE_ORACLE_ONLY"
     assert output["public_qualification"] == "NOT_AUTHORIZED"
     with pytest.raises(ValueError, match="no publishable"):
         public_safe_receipt({**entry, "mode": "real"})

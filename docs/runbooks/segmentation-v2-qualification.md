@@ -142,8 +142,10 @@ digest calculated by the same actor after seeing holdout results is not
 proof of prior approval. An independent approval record and its access
 controls are out-of-repo governance obligations, not created by tests.
 
-Use the reviewed python -I -S -B evaluation/segmentation/run_qualification.py
-launcher with an independent --approved-digest-file. It imports only
+Use an independently approved **external** python -I -S -B
+qualification_bootstrap.py (installed outside the evaluated checkout) with
+an independent --approved-digest-file. Do not directly execute the repository
+worker as the trusted entrypoint. It imports only
 standard-library code during bootstrap, authenticates reviewed wheel archives
 before third-party imports and verifies installed files against those archives,
 not against installed RECORD metadata. A changed imported
@@ -222,3 +224,35 @@ zero. A policy allowing zero measured segmentation accuracy is invalid, even
 if selective coverage and blank specificity look good. Added negative
 tests for both zero floors and a fully available but completely mismatched
 nonempty detection. All public authority remains NOT_AUTHORIZED.
+
+
+### Round-seven: external bootstrap, split library roots and honest blank evidence
+
+The earlier command that directly executed
+`evaluation/segmentation/run_qualification.py` is superseded. To prevent
+unapproved committed launcher code from running before self-verification, an
+**externally provisioned and independently authenticated stdlib-only
+bootstrap** must run first. Its source template is
+`tools/qualification_bootstrap.py`, but copying it from a mutable checkout
+without independently validating its expected digest is **not trusted
+execution**. The bootstrap checks exact approved policy bytes and pinned
+Git revision and stages that approved object, ignoring an unapproved current
+checkout HEAD. The worker runs under `-I -S -B` from the verified stage.
+External approval of the bootstrap itself remains an operator-governance
+step and cannot be manufactured by a unit test.
+
+Wheel validation selects the archive root using authenticated
+`Root-Is-Purelib` metadata and retains both interpreter-derived
+`purelib` and `platlib` roots, including split lib/lib64 virtualenvs.
+The same approved wheel bytes determine verified relocated files, native
+libraries and Python modules. Fixed `Q_POLICY`, `Q_SOURCE`, `Q_SITE`,
+`Q_WHEEL`, `Q_EVALUATION` and related codes diagnose synthetic rejections
+without exposing protected specimen information.
+
+The qualified-empty outcome used to make the synthetic blank accounting
+testable is a deliberately narrow, input-only uniform-light fixture
+oracle; it is **not native qualified-v2 blank detection**. The redacted
+synthetic receipt always says
+`blank_evidence_scope: SYNTHETIC_FIXTURE_ORACLE_ONLY`. No scientific
+empirical blank accuracy claim, real participant authorization, Issue #92
+closure or production activation follows from an engineering pass.
