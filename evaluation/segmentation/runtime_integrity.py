@@ -21,7 +21,25 @@ import zipfile
 from functools import lru_cache
 from pathlib import Path, PurePosixPath
 
-EXECUTABLE_SUFFIXES = (".py", ".pyw", ".so", ".pyd", ".dll", ".dylib")
+# Authenticate every wheel-installed payload except pip-generated RECORD metadata.
+# In particular, native .so.5/.so.5.0 libraries are NOT Python modules and
+# Path.suffix cannot identify them reliably.
+_NATIVE_SUFFIXES = (".so", ".pyd", ".dll", ".dylib")
+_CYTHON_VERSION_MODULE = re.compile(r"^_cython_[0-9]+_[0-9]+_[0-9]+$")
+
+
+def _reviewed_virtual_cython_module(name: str, module) -> bool:
+    """Narrow Cython runtime exception for synthetic modules emitted by
+    authenticated native extensions. The trusted staged import boundary is
+    essential; this check is not an independent process attestation.
+    """
+    return (
+        (name == "cython_runtime" or _CYTHON_VERSION_MODULE.fullmatch(name) is not None)
+        and type(module) is types.ModuleType
+        and getattr(module, "__spec__", None) is None
+        and getattr(module, "__file__", None) is None
+        and getattr(module, "__loader__", None) is None
+    )
 LOCK_ENTRY = re.compile(r"^([a-zA-Z0-9_.-]+)==([^\s]+) --hash=sha256:([0-9a-f]{64})$")
 ROOTS = ("evaluation", "princess_graphology", "princess_contracts", "princess_app")
 
@@ -99,17 +117,33 @@ def _trusted_files(wheelhouse_name: str, lock_name: str, site_names: tuple[str, 
                 if (entry_path.is_absolute()
                         or any(part in (".", "..") for part in entry_path.parts)):
                     raise ValueError("unsafe reviewed wheel entry")
-                suffix = Path(entry.filename).suffix
-                if suffix not in EXECUTABLE_SUFFIXES:
-                    continue
-                target = site / entry.filename
-                if ".data/" in entry.filename:
-                    # Wheel .data files are not importable Python modules under
-                    # ordinary package roots. Reject an import from such a path.
-                    continue
+                parts = entry_path.parts
+                if any(part in ("", ".", "..") for part in entry.filename.split("/")):
+                    raise ValueError("unsafe reviewed wheel entry component")
+                if len(parts) >= 2 and parts[0].endswith(".dist-info"):
+                    # pip rewrites RECORD at installation time. All other
+                    # wheel-supplied distribution metadata remains checked.
+                    if parts[1] == "RECORD":
+                        continue
+                if parts[0].endswith(".data"):
+                    if len(parts) < 3:
+                        raise ValueError("unrecognized wheel data relocation")
+                    scheme = parts[1]
+                    mapping = sysconfig.get_paths()
+                    target_root = {
+                        "purelib": site, "platlib": Path(site_names[-1]),
+                        "scripts": Path(mapping["scripts"]),
+                        "data": Path(mapping["data"]),
+                        "headers": Path(mapping["include"]),
+                    }.get(scheme)
+                    if target_root is None:
+                        raise ValueError("unknown reviewed wheel install scheme")
+                    target = target_root.joinpath(*parts[2:])
+                else:
+                    target = site.joinpath(*parts)
                 target = target.absolute()
                 if target in files:
-                    raise ValueError("overlapping reviewed executable package files")
+                    raise ValueError("overlapping reviewed wheel payload")
                 with archive.open(entry) as stream:
                     digest = hashlib.sha256()
                     for chunk in iter(lambda: stream.read(1024 * 1024), b""):
@@ -119,6 +153,11 @@ def _trusted_files(wheelhouse_name: str, lock_name: str, site_names: tuple[str, 
         raise ValueError("missing reviewed wheel artifact")
     return files
 
+
+
+def _is_native_artifact(path: Path) -> bool:
+    name = path.name.lower()
+    return name.endswith(_NATIVE_SUFFIXES) or ".so." in name or ".dylib." in name
 
 
 def preflight_reviewed_environment(root: Path) -> None:
@@ -164,6 +203,15 @@ def preflight_reviewed_environment(root: Path) -> None:
                 if actual_code != expected_code:
                     raise ValueError("unreviewed installed bytecode cache")
 
+    # Native dlopen() calls do not create Python sys.modules entries. Refuse
+    # unreviewed loadable libraries in installed dependency locations.
+    for site in sites:
+        for native in site.rglob("*"):
+            if _is_native_artifact(native):
+                if (native.is_symlink() or not native.is_file()
+                        or native.absolute() not in approved):
+                    raise ValueError("unreviewed installed native library")
+
 
 def _project_path(path: Path, root: Path) -> bool:
     allowed = (
@@ -188,11 +236,19 @@ def _check_project_bytecode(module, source: Path) -> None:
     The official isolated launcher additionally uses a newly created Git
     worktree, -B, and checks there are no inherited pycache files.
     """
-    cached = getattr(module, "__cached__", None)
-    if cached is None or source.suffix != ".py":
+    if source.suffix != ".py":
         return
-    cache_path = Path(cached)
+    # A loaded module may erase or rewrite its own __cached__ metadata.
+    # Derive the cache path from reviewed source instead.
+    cache_path = Path(importlib.util.cache_from_source(str(source)))
+    claimed = getattr(module, "__cached__", None)
+    if claimed is not None and Path(claimed).resolve(strict=False) != cache_path.resolve(strict=False):
+        raise ValueError("unverified cached project bytecode")
     if not cache_path.is_file():
+        # The isolated official worker imports from a clean verified Git
+        # worktree under -B and therefore has no caches to examine.
+        if not sys.flags.dont_write_bytecode:
+            raise ValueError("unverified cached project bytecode")
         return
     try:
         encoded = cache_path.read_bytes()
@@ -234,8 +290,7 @@ def verify_loaded_module_closure(root: Path) -> None:
         origin = getattr(module, "__file__", None)
         spec_origin = getattr(spec, "origin", None)
         if origin is None:
-            if (name == "cython_runtime" or name.startswith("_cython_")
-                    or name.startswith("cython.")):
+            if _reviewed_virtual_cython_module(name, module):
                 # Native Cython wheels create virtual runtime modules whose
                 # metadata does not describe separate importable source files.
                 continue
@@ -265,8 +320,7 @@ def verify_loaded_module_closure(root: Path) -> None:
                     # Alias modules inherit a parent whose actual source is
                     # separately authenticated in the same complete scan.
                     continue
-                if (name == "cython_runtime" or name.startswith("_cython_")
-                        or name.startswith("cython.")):
+                if _reviewed_virtual_cython_module(name, module):
                     # Cython extensions create runtime-only module objects
                     # without separately importable .py/.so files. Their
                     # native wheel artifacts are independently preverified.
