@@ -1582,3 +1582,123 @@ def test_clean_but_unapproved_commit_cannot_import_modified_worker_code(tmp_path
              "remove", "--force", str(checkout)],
             cwd=REPOSITORY, capture_output=True, check=False, timeout=45,
         )
+
+
+
+def test_split_virtualenv_roots_are_separately_selected(monkeypatch, tmp_path):
+    """Simulate a genuine lib/lib64 layout independent of this host platlibdir."""
+    from evaluation.segmentation import runtime_integrity as trust
+
+    venv_root = tmp_path / "reviewed-virtualenv"
+    (venv_root / "bin").mkdir(parents=True)
+    (venv_root / "pyvenv.cfg").write_text("home = /reviewed/python\n")
+    version = f"python{sys.version_info.major}.{sys.version_info.minor}"
+    pure = venv_root / "lib" / version / "site-packages"
+    plat = venv_root / "lib64" / version / "site-packages"
+    pure.mkdir(parents=True)
+    plat.mkdir(parents=True)
+    monkeypatch.setattr(sys, "executable", str(venv_root / "bin" / "python"))
+    monkeypatch.setattr(sys, "platlibdir", "lib64")
+    assert trust._site_roots() == (pure.resolve(strict=True), plat.resolve(strict=True))
+
+
+def test_reviewed_native_wheel_uses_platlib_not_purelib(monkeypatch, tmp_path):
+    import zipfile
+    from evaluation.segmentation import runtime_integrity as trust
+
+    root = tmp_path / "source"
+    (root / "requirements").mkdir(parents=True)
+    wheelhouse = tmp_path / "wheelhouse"
+    wheelhouse.mkdir()
+    pure = tmp_path / "purelib"
+    plat = tmp_path / "platlib"
+    pure.mkdir()
+    plat.mkdir()
+    wheel = wheelhouse / "demo-1.0-py3-none-any.whl"
+    native_metadata = SYNTHETIC_WHEEL_METADATA.replace(
+        b"Root-Is-Purelib: true", b"Root-Is-Purelib: false",
+    )
+    payloads = {
+        "demo/__init__.py": b"import os\n",
+        "demo.libs/libsample.so.5": b"reviewed-native-object",
+        "demo-1.0.dist-info/WHEEL": native_metadata,
+        "demo-1.0.data/purelib/relocated.py": b"RELOCATED = True\n",
+    }
+    with zipfile.ZipFile(wheel, "w") as archive:
+        for name, raw in payloads.items():
+            archive.writestr(name, raw)
+    for name, raw in payloads.items():
+        parts = name.split("/")
+        dest = pure if parts[0].endswith(".data") else plat
+        relative = parts[2:] if parts[0].endswith(".data") else parts
+        target = dest.joinpath(*relative)
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(raw)
+    lock = root / "requirements" / f"ci-py{sys.version_info.major}{sys.version_info.minor}.lock"
+    lock.write_text(
+        "demo==1.0 --hash=sha256:" + hashlib.sha256(wheel.read_bytes()).hexdigest()
+    )
+    monkeypatch.setattr(trust, "_site_roots", lambda: (pure, plat))
+    monkeypatch.setattr(trust, "_wheelhouse_path", lambda: wheelhouse)
+    trust._trusted_files.cache_clear()
+    trust.preflight_reviewed_environment(root)
+    changed = plat / "demo.libs" / "libsample.so.5"
+    changed.write_bytes(b"tampered")
+    with pytest.raises(ValueError, match="differs from authenticated locked wheel"):
+        trust.preflight_reviewed_environment(root)
+
+
+def test_external_bootstrap_never_executes_unapproved_launcher(tmp_path):
+    """A clean, unapproved HEAD with executable injected launcher must not run."""
+    manifests, policy, images = _fixtures(tmp_path)
+    bootstrap = _externally_provisioned_test_bootstrap(tmp_path)
+    marker = tmp_path / "UNAPPROVED_LAUNCHER_EXECUTED"
+    alternate = tmp_path / "alternate-checked-out-revision"
+    subprocess.run(
+        ["git", "-c", "core.hooksPath=/dev/null", "worktree", "add",
+         "--detach", str(alternate), "HEAD"],
+        cwd=REPOSITORY, capture_output=True, check=True, timeout=45,
+    )
+    try:
+        launcher = alternate / "evaluation" / "segmentation" / "run_qualification.py"
+        source = launcher.read_text()
+        anchor = "from __future__ import annotations\n"
+        assert source.count(anchor) == 1
+        injected = (
+            "from pathlib import Path\nPath(" + repr(str(marker)) +
+            ").write_text('unapproved launcher executed')\n"
+        )
+        launcher.write_text(source.replace(anchor, anchor + injected))
+        subprocess.run(
+            ["git", "-c", "user.name=synthetic-test",
+             "-c", "user.email=synthetic-test@example.invalid",
+             "-c", "core.hooksPath=/dev/null", "commit", "-am",
+             "synthetic malicious launcher revision"],
+            cwd=alternate, capture_output=True, check=True, timeout=45,
+        )
+        assert not subprocess.run(
+            ["git", "status", "--porcelain"], cwd=alternate,
+            capture_output=True, check=True, timeout=15,
+        ).stdout.strip()
+        result = subprocess.run(
+            [sys.executable, "-I", "-S", "-B", str(bootstrap),
+             "--repository", str(alternate),
+             "--development", str(manifests["development"]),
+             "--validation", str(manifests["validation"]),
+             "--holdout", str(manifests["holdout"]),
+             "--policy", str(policy),
+             "--approved-digest-file", str(_approval_file(policy)),
+             "--image-root", str(images)],
+            cwd=tmp_path, text=True, capture_output=True, timeout=120,
+        )
+        assert result.returncode == 0, result.stderr
+        assert not marker.exists(), "unapproved launcher executed"
+        output = json.loads(result.stdout)
+        assert output["public_qualification"] == "NOT_AUTHORIZED"
+        assert output["data_origin"] == "SYNTHETIC_FIXTURE"
+    finally:
+        subprocess.run(
+            ["git", "-c", "core.hooksPath=/dev/null", "worktree",
+             "remove", "--force", str(alternate)],
+            cwd=REPOSITORY, capture_output=True, check=False, timeout=45,
+        )
