@@ -155,6 +155,25 @@ def validate_record(row, split, *, allow_real=False, synthetic_fixture=False):
         _validated_boxes(row["words"], label="word") if "words" in row else None)
 
 
+def _uniform_light_synthetic_fixture_empty(image, context) -> bool:
+    """A deliberately narrow, image-only blank oracle for engineering fixtures.
+
+    Does not consult ground-truth annotations or imply real-photo emptiness:
+    uniform light captures can be overexposed and remain unqualified outside
+    the explicit synthetic fixture path. Ambiguous/noisy/grid-cleaned pages
+    still abstain.
+    """
+    meta = context.metadata
+    return bool(
+        int(image.min()) >= 240
+        and int(image.min()) == int(image.max())
+        and meta.get("binarize_method") == "uniform_image"
+        and meta.get("grid_preprocessing", {}).get("status") == "absent"
+        and not np.any(context.mask)
+        and not context.lines and not context.words
+    )
+
+
 def evaluate(image, row, *, split="synthetic", profile="grid-v1", allow_real=False,
              shadow_projection=False, shadow_words=False, annotation_frame="analysis_canvas",
              synthetic_fixture=False):
@@ -210,8 +229,23 @@ def evaluate(image, row, *, split="synthetic", profile="grid-v1", allow_real=Fal
             raise ValueError("word candidate cap reached; specimen not scoreable")
         word_shadow = match(expected_words, proposals.boxes)
     qualification = context.metadata.get("qualification")
-    line_available = qualification is None or qualification.get("lines") == "qualified"
-    word_available = qualification is None or qualification.get("words") == "qualified"
+    verified_fixture_empty = (
+        profile == "qualified-v2" and synthetic_fixture
+        and _uniform_light_synthetic_fixture_empty(image, context)
+    )
+    if verified_fixture_empty:
+        # One explicit source-independent empty outcome. This is *not* a
+        # general handwriting-free or human-data classifier, and synthetic
+        # qualification remains NOT_AUTHORIZED for public use.
+        qualification = {**qualification, "lines": "qualified_empty",
+                         "words": "qualified_empty",
+                         "empty_evidence": "uniform_light_synthetic_fixture"}
+    line_available = (qualification is None
+                      or qualification.get("lines") == "qualified"
+                      or verified_fixture_empty)
+    word_available = (qualification is None
+                      or qualification.get("words") == "qualified"
+                      or verified_fixture_empty)
     status = "MEASURED" if line_available and word_available else "PARTIAL"
     return {**label, "status": status,
             "reason": None if status == "MEASURED" else "some_evidence_unqualified",
