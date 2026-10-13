@@ -1363,3 +1363,106 @@ def test_unowned_cython_namespace_module_is_not_whitelisted(monkeypatch):
     monkeypatch.setitem(sys.modules, "cython.fake_unowned", injected)
     with pytest.raises(ValueError, match="unreviewed imported evaluation module"):
         verify_loaded_module_closure(REPOSITORY)
+
+
+
+def test_real_python_virtualenv_site_root_resolves_under_isolated_minus_s(tmp_path):
+    """Exercise the documented -I -S -B invocation on an actual local venv."""
+    import venv
+
+    env_root = tmp_path / "qualified-venv"
+    venv.EnvBuilder(with_pip=False).create(env_root)
+    executable = env_root / "bin" / "python"
+    assert executable.is_file()
+    script = (
+        "import sys; from pathlib import Path; "
+        f"sys.path.append({str(REPOSITORY)!r}); "
+        "from evaluation.segmentation.runtime_integrity import _site_roots; "
+        "p=_site_roots(); "
+        f"expected=Path({str(env_root)!r})/'lib'/"
+        "f'python{sys.version_info.major}.{sys.version_info.minor}'/'site-packages'; "
+        "assert p==(expected.resolve(strict=True),), (p,expected)"
+    )
+    result = subprocess.run(
+        [str(executable), "-I", "-S", "-B", "-c", script],
+        cwd=tmp_path, capture_output=True, text=True, timeout=45,
+    )
+    assert result.returncode == 0, result.stderr
+
+
+def test_uniform_light_synthetic_blank_is_scored_without_annotation_leakage(tmp_path):
+    """Only independent uniform-light fixture evidence makes empty measured."""
+    image = np.full((140, 340, 3), 245, dtype=np.uint8)
+    base = {
+        "specimen_id": "synthetic-uniform-white",
+        "writer_group": "synthetic-writer",
+        "capture_group": "synthetic-capture",
+        "image_path": "fixture.png",
+        "sha256": "a" * 64,
+        "paper": "blank",
+        "lines": [],
+        "words": [],
+    }
+    clean = benchmark.evaluate(
+        image, base, split="holdout", profile="qualified-v2",
+        synthetic_fixture=True, annotation_frame="original_image",
+    )
+    assert clean["status"] == "MEASURED"
+    assert clean["qualification"]["lines"] == "qualified_empty"
+    assert clean["qualification"]["words"] == "qualified_empty"
+    assert clean["qualification"]["empty_evidence"] == "uniform_light_synthetic_fixture"
+    assert clean["lines"]["detected_n"] == clean["words"]["detected_n"] == 0
+    assert clean["lines"]["f1"] == clean["words"]["f1"] == 1.0
+
+    # The blank decision never consults the reference annotation: a falsely
+    # annotated nonempty fixture must score FNs, not magically pass.
+    not_empty_reference = {
+        **base,
+        "lines": [[10, 45, 100, 15]],
+        "words": [[10, 45, 100, 15]],
+    }
+    missed = benchmark.evaluate(
+        image, not_empty_reference, split="holdout", profile="qualified-v2",
+        synthetic_fixture=True, annotation_frame="original_image",
+    )
+    assert missed["status"] == "MEASURED"
+    assert missed["qualification"]["empty_evidence"] == "uniform_light_synthetic_fixture"
+    assert missed["lines"]["fn"] == missed["words"]["fn"] == 1
+    assert missed["false_zero_words"] is True
+
+    # Synthetic or real-looking direct programmatic calls cannot gain the
+    # special authority merely from a white page or annotated-empty labels.
+    no_fixture = benchmark.evaluate(image, base, split="synthetic", profile="qualified-v2")
+    assert no_fixture["status"] != "MEASURED"
+    assert no_fixture.get("qualification", {}).get("empty_evidence") is None
+
+    ambiguous = image.copy()
+    ambiguous[25, 25, :] = 30
+    noisy = benchmark.evaluate(
+        ambiguous, base, split="holdout", profile="qualified-v2",
+        synthetic_fixture=True, annotation_frame="original_image",
+    )
+    assert noisy.get("qualification", {}).get("empty_evidence") is None
+
+
+def test_actual_frozen_holdout_has_nonzero_available_uniform_blank_evidence(tmp_path):
+    """P1 regression: the existing positive blank gates must be reachable."""
+    manifests, _, image_root = _fixtures(tmp_path)
+    actual = benchmark.run_manifest(
+        manifests["holdout"], image_root,
+        profile="qualified-v2", synthetic_split=True,
+    )
+    empty = [r for r in actual["results"]
+             if r["line_reference_n"] == 0 and r["word_reference_n"] == 0]
+    assert empty
+    assert all(r["status"] == "MEASURED" for r in empty)
+    assert all(r["qualification"]["empty_evidence"] == "uniform_light_synthetic_fixture"
+               for r in empty)
+    assert all(r["lines"]["detected_n"] == 0 and r["words"]["detected_n"] == 0
+               for r in empty)
+    overall = actual["summary"]["overall"]
+    assert overall["lines"]["empty_available_n"] >= 1
+    assert overall["words"]["empty_available_n"] >= 1
+    assert overall["lines"]["empty_coverage"] > 0
+    assert overall["words"]["empty_coverage"] > 0
+    assert actual["public_qualification"] if "public_qualification" in actual else True
