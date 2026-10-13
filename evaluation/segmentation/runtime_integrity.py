@@ -59,6 +59,17 @@ def _wheelhouse_path() -> Path:
 
 
 def _site_roots() -> tuple[Path, ...]:
+    """Honor selected Linux virtualenv site roots when Python -S skips pyvenv.cfg."""
+    executable = Path(sys.executable).absolute()
+    venv = executable.parent.parent
+    config = venv / "pyvenv.cfg"
+    if executable.parent.name == "bin" and config.is_file():
+        if config.is_symlink():
+            raise ValueError("unreviewed virtualenv configuration")
+        site = venv / "lib" / f"python{sys.version_info.major}.{sys.version_info.minor}" / "site-packages"
+        if not site.is_dir() or site.is_symlink():
+            raise ValueError("missing reviewed virtualenv dependency root")
+        return (site.resolve(strict=True),)
     paths = sysconfig.get_paths()
     return tuple(dict.fromkeys(Path(paths[k]).resolve(strict=True)
                                for k in ("purelib", "platlib")))

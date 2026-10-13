@@ -105,16 +105,16 @@ def _staged_worker(args) -> int:
         raise ValueError("worker inputs must be bound to original absolute paths")
     original = tuple(sys.path)
     project_paths = (str(root / "src"), str(root))
-    sites = tuple(dict.fromkeys(
-        sysconfig.get_paths()[key] for key in ("purelib", "platlib")
-    ))
-    # -I -S uses interpreter/stdlib paths only; append, never prepend, sources.
-    # The approved third-party paths are not admitted until preflight finishes.
+    # -S skips pyvenv.cfg initialization on Python 3.10-3.12. Resolve the
+    # interpreter's reviewed site once and use it consistently for both
+    # locked-wheel preflight and subsequent imports.
     sys.path[:] = list(original) + list(project_paths)
-    from evaluation.segmentation.runtime_integrity import preflight_reviewed_environment
-
+    from evaluation.segmentation.runtime_integrity import (
+        _site_roots, preflight_reviewed_environment,
+    )
+    sites = _site_roots()
     preflight_reviewed_environment(root)
-    sys.path.extend(sites)
+    sys.path.extend(str(site) for site in sites)
     from evaluation.segmentation.qualification import (
         public_safe_receipt, run_frozen_synthetic_qualification,
     )
