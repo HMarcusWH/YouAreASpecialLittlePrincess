@@ -246,7 +246,7 @@ Wheel validation selects the archive root using authenticated
 `purelib` and `platlib` roots, including split lib/lib64 virtualenvs.
 The same approved wheel bytes determine verified relocated files, native
 libraries and Python modules. Fixed `Q_POLICY`, `Q_SOURCE`, `Q_SITE`,
-`Q_WHEEL`, `Q_EVALUATION` and related codes diagnose synthetic rejections
+`Q_WHEEL`, `Q_IMPORT`, `Q_IDENTITY`, `Q_SCORE`, `Q_RECEIPT` and related codes diagnose synthetic rejections
 without exposing protected specimen information.
 
 The qualified-empty outcome used to make the synthetic blank accounting
