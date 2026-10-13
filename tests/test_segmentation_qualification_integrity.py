@@ -1124,7 +1124,7 @@ def test_forged_timestamp_matching_bytecode_is_rejected(tmp_path):
 
     source = tmp_path / "reviewed.py"
     source.write_bytes(b"answer = 42\n")
-    cached = tmp_path / "__pycache__" / "reviewed.cpython.pyc"
+    cached = Path(importlib.util.cache_from_source(str(source)))
     cached.parent.mkdir()
     magic = importlib.util.MAGIC_NUMBER + b"\x00" * 12
     good = marshal.dumps(compile(source.read_bytes(), str(source), "exec", dont_inherit=True))
@@ -1218,10 +1218,11 @@ def test_direct_staged_worker_rejects_modified_checkout_before_import(tmp_path):
     )
     try:
         qualification = checkout / "evaluation" / "segmentation" / "qualification.py"
+        original_source = qualification.read_text()
         # Append rather than prepend: imports before __future__ annotations
         # would cause SyntaxError and let a vulnerable worker appear safe.
         qualification.write_text(
-            qualification.read_text() + "\nfrom pathlib import Path\nPath(" +
+            original_source + "\nfrom pathlib import Path\nPath(" +
             repr(str(marker)) + ").write_text('bad import executed')\n"
         )
         launcher = checkout / "evaluation" / "segmentation" / "run_qualification.py"
@@ -1241,9 +1242,7 @@ def test_direct_staged_worker_rejects_modified_checkout_before_import(tmp_path):
 
         # Even ignored untracked source is not permitted in a supposedly
         # authenticated stage: ordinary git status would hide this payload.
-        qualification.write_text(qualification.read_text().split(
-            "\nfrom pathlib import Path\nPath("
-        )[0])
+        qualification.write_text(original_source)
         ignored = checkout / "dist" / "unreviewed.py"
         ignored.parent.mkdir(parents=True)
         ignored.write_text("print('unreviewed')")
