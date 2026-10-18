@@ -201,6 +201,44 @@ def _is_native_artifact(path: Path) -> bool:
     return name.endswith(_NATIVE_SUFFIXES) or ".so." in name or ".dylib." in name
 
 
+
+def _verify_cached_code_matches_source(
+    cache: Path, source_file: Path, approved_files: dict[Path, tuple],
+) -> None:
+    """Check installed bytecode code objects against independently approved source.
+
+    Wheel archives sometimes contain stale build-cache .pyc files. A rewritten
+    .pyc may be accepted only if matching .py source is itself in the
+    hash-locked wheel and *the compiled code is identical*. Sourceless or
+    forged bytecode remains untrusted, regardless of package/version.
+    """
+    source_identity = approved_files.get(source_file.absolute())
+    if source_identity is None or source_file.is_symlink() or not source_file.is_file():
+        raise ValueError("unverified installed bytecode cache")
+    raw_source = source_file.read_bytes()
+    if hashlib.sha256(raw_source).hexdigest() != source_identity[0]:
+        raise ValueError("unverified installed bytecode cache")
+    if cache.is_symlink() or not cache.is_file():
+        raise ValueError("unverified installed bytecode cache")
+    # Reject oversized marshal payloads before deserialization.
+    if cache.stat().st_size > 8 * 1024 * 1024:
+        raise ValueError("unverified installed bytecode cache")
+    blob = cache.read_bytes()
+    if len(blob) < 16 or blob[:4] != importlib.util.MAGIC_NUMBER:
+        raise ValueError("unverified installed bytecode cache")
+    try:
+        candidate = marshal.loads(blob[16:])
+        if (not isinstance(candidate, types.CodeType)
+                or not isinstance(candidate.co_filename, str)
+                or len(candidate.co_filename) > 4096):
+            raise ValueError("invalid bytecode")
+        reference = compile(raw_source, candidate.co_filename, "exec", dont_inherit=True)
+        if candidate != reference:
+            raise ValueError("cached code differs from approved source")
+    except (ValueError, TypeError, SyntaxError, EOFError) as exc:
+        raise ValueError("unverified installed bytecode cache") from exc
+
+
 def preflight_reviewed_environment(root: Path) -> None:
     """Validate installed executable bytes BEFORE numerical wheels are imported.
 
@@ -217,12 +255,21 @@ def preflight_reviewed_environment(root: Path) -> None:
             raise ValueError("missing or redirected locked executable artifact")
         source = path.read_bytes()
         if hashlib.sha256(source).hexdigest() != digest:
-            # Package ID is from the independently hash-approved lock, not
-            # from a potentially private path, and is the only diagnostic hint.
-            raise ValueError(
-                "installed file differs from authenticated locked wheel ["
-                + package + ":" + wheel_member + "]"
-            )
+            # A wheel-bundled .pyc can be regenerated during installation.
+            # Accept such cache changes ONLY if its deserialized executable
+            # code is identical to recompiled, wheel-authenticated .py source.
+            # In particular, never exempt __pycache__ directories wholesale.
+            if path.suffix == ".pyc":
+                try:
+                    origin = Path(importlib.util.source_from_cache(str(path)))
+                except ValueError as exc:
+                    raise ValueError("unverified installed bytecode cache") from exc
+                _verify_cached_code_matches_source(path, origin, approved)
+            else:
+                raise ValueError(
+                    "installed file differs from authenticated locked wheel ["
+                    + package + ":" + wheel_member + "]"
+                )
         if path.suffix == ".py":
             # -B prevents writing caches, but CPython can still READ existing
             # timestamp-matched .pyc files. Verify all approved dependency

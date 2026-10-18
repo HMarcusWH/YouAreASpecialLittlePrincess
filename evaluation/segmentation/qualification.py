@@ -109,6 +109,8 @@ INTEGER_TARGETS = THRESHOLD_KEYS - FRACTION_TARGETS
 POSITIVE_FRACTION_TARGETS = frozenset((
     "min_empty_line_coverage", "min_empty_word_coverage",
     "min_line_nonempty_macro_f1", "min_word_nonempty_macro_f1",
+    "min_line_coverage", "min_word_coverage",
+    "min_nonempty_line_coverage", "min_nonempty_word_coverage",
 ))
 
 

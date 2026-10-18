@@ -164,9 +164,18 @@ def _uniform_light_synthetic_fixture_empty(image, context) -> bool:
     still abstain.
     """
     meta = context.metadata
+    # Normalize BGRA onto white by the same compositing rule as
+    # prepare_context(), before testing for synthetic uniform light. Inspecting
+    # raw alpha would misclassify a fully transparent white image as dark.
+    pixels = image
+    if image.ndim == 3 and image.shape[2] == 4:
+        alpha = image[:, :, 3:4].astype(float) / 255
+        pixels = np.rint(
+            image[:, :, :3].astype(float) * alpha + 255 * (1 - alpha)
+        ).astype(np.uint8)
     return bool(
-        int(image.min()) >= 240
-        and int(image.min()) == int(image.max())
+        int(pixels.min()) >= 240
+        and int(pixels.min()) == int(pixels.max())
         and meta.get("binarize_method") == "uniform_image"
         and meta.get("grid_preprocessing", {}).get("status") == "absent"
         and not np.any(context.mask)
