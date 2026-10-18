@@ -22,9 +22,10 @@ def _source(tmp_path, *, attributes=False):
     _git(repo, "config", "user.name", "Synthetic Review")
     _git(repo, "config", "user.email", "review@example.invalid")
     (repo / "evaluation" / "segmentation").mkdir(parents=True)
-    (repo / "evaluation" / "segmentation" / "run_qualification.py").write_text(
-        "REVIEWED_SOURCE = True\n", encoding="utf-8"
-    )
+    for name in ("run_qualification.py", "qualification.py", "runtime_integrity.py"):
+        (repo / "evaluation" / "segmentation" / name).write_text(
+            "REVIEWED_SOURCE = True\n", encoding="utf-8"
+        )
     (repo / "note.txt").write_bytes(b"approved raw blob\n")
     if attributes:
         (repo / ".gitattributes").write_text("note.txt filter=attack\n")
@@ -214,3 +215,30 @@ def test_policy_digest_checked_before_any_source_read(tmp_path, monkeypatch):
     with pytest.raises(bootstrap._Rejected) as exc:
         bootstrap._run(args)
     assert exc.value.code == "Q_POLICY"
+
+
+def test_corrupted_git_blob_fails_before_any_source_materialization(tmp_path):
+    repo, approved = _source(tmp_path)
+    sha = _git(repo, "hash-object", "note.txt")
+    object_file = repo / ".git" / "objects" / sha[:2] / sha[2:]
+    assert object_file.is_file()
+    object_file.write_bytes(b"this is not a Git zlib object")
+    with pytest.raises(bootstrap._Rejected) as exc:
+        _stage(repo, approved, tmp_path)
+    assert exc.value.code == "Q_SOURCE"
+    assert not (tmp_path / "isolated" / "checkout").exists()
+
+
+def test_missing_promisor_blob_fails_closed_without_late_fetch(tmp_path):
+    repo, approved = _source(tmp_path)
+    sha = _git(repo, "hash-object", "note.txt")
+    object_file = repo / ".git" / "objects" / sha[:2] / sha[2:]
+    assert object_file.is_file()
+    object_file.unlink()
+    _git(repo, "config", "remote.origin.promisor", "true")
+    _git(repo, "config", "remote.origin.partialclonefilter", "blob:none")
+    _git(repo, "config", "remote.origin.url", "file:///nonexistent/remote")
+    with pytest.raises(bootstrap._Rejected) as exc:
+        _stage(repo, approved, tmp_path)
+    assert exc.value.code == "Q_SOURCE"
+    assert not (tmp_path / "isolated" / "checkout").exists()
