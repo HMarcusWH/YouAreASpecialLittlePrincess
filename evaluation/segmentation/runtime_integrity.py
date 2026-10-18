@@ -321,6 +321,8 @@ def preflight_reviewed_environment(root: Path) -> None:
                     raise ValueError("unreviewed installed bytecode cache") from exc
                 _verify_cached_code_matches_source(artifact, source, approved)
                 continue
+            if _is_native_artifact(artifact):
+                raise ValueError("unreviewed installed native library")
             raise ValueError("unreviewed installed Python or native artifact")
 
 

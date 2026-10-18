@@ -1878,3 +1878,59 @@ def test_sealed_policy_is_immune_to_both_original_files_rotating(monkeypatch, tm
     public = json.loads(capsys.readouterr().out)
     assert public["public_qualification"] == "NOT_AUTHORIZED"
     assert public["data_origin"] == "SYNTHETIC_FIXTURE"
+
+
+
+def test_unreviewed_python_shadow_in_purelib_is_blocked_before_platlib_import(
+    monkeypatch, tmp_path,
+):
+    """Codex P1: a loose cv2.py must not shadow the reviewed native cv2 wheel."""
+    import zipfile
+    from evaluation.segmentation import runtime_integrity as trust
+
+    root = tmp_path / "reviewed-source"
+    (root / "requirements").mkdir(parents=True)
+    purelib = tmp_path / "purelib"
+    platlib = tmp_path / "platlib"
+    wheels = tmp_path / "wheels"
+    for directory in (purelib, platlib, wheels):
+        directory.mkdir()
+    wheel = wheels / "cv2-1.0-py3-none-any.whl"
+    metadata = SYNTHETIC_WHEEL_METADATA.replace(
+        b"Root-Is-Purelib: true", b"Root-Is-Purelib: false"
+    )
+    signed_source = b"REVIEWED = True\n"
+    with zipfile.ZipFile(wheel, "w") as archive:
+        archive.writestr("cv2/__init__.py", signed_source)
+        archive.writestr("cv2-1.0.dist-info/WHEEL", metadata)
+    (platlib / "cv2").mkdir()
+    (platlib / "cv2" / "__init__.py").write_bytes(signed_source)
+    (platlib / "cv2-1.0.dist-info").mkdir()
+    (platlib / "cv2-1.0.dist-info" / "WHEEL").write_bytes(metadata)
+    lock = root / "requirements" / f"ci-py{sys.version_info.major}{sys.version_info.minor}.lock"
+    lock.write_text(
+        "cv2==1.0 --hash=sha256:" + hashlib.sha256(wheel.read_bytes()).hexdigest()
+    )
+    monkeypatch.setattr(trust, "_wheelhouse_path", lambda: wheels)
+    monkeypatch.setattr(trust, "_site_roots", lambda: (purelib, platlib))
+    trust._trusted_files.cache_clear()
+    trust.preflight_reviewed_environment(root)
+
+    attacker = purelib / "cv2.py"
+    attacker.write_text("REVIEWED = False\n")
+    with pytest.raises(ValueError, match="unreviewed installed Python"):
+        trust.preflight_reviewed_environment(root)
+    attacker.unlink()
+
+    import importlib.util
+    import marshal
+    cache = purelib / "__pycache__" / (
+        f"cv2.cpython-{sys.version_info.major}{sys.version_info.minor}.pyc"
+    )
+    cache.parent.mkdir()
+    cache.write_bytes(
+        importlib.util.MAGIC_NUMBER + b"\x00" * 12
+        + marshal.dumps(compile(b"REVIEWED = False\n", "/unapproved/cv2.py", "exec"))
+    )
+    with pytest.raises(ValueError, match="unverified installed bytecode cache"):
+        trust.preflight_reviewed_environment(root)
