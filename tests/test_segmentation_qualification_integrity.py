@@ -1803,7 +1803,7 @@ def test_installed_wheel_cache_must_match_hash_reviewed_source(monkeypatch, tmp_
     cache.write_bytes(header + marshal.dumps(compile(
         b"answer = -1\n", "/different/installer/location.py", "exec", dont_inherit=True
     )))
-    with pytest.raises(ValueError, match="unverified installed bytecode cache"):
+    with pytest.raises(ValueError, match="unreviewed installed bytecode cache"):
         trust.preflight_reviewed_environment(root)
 
 
