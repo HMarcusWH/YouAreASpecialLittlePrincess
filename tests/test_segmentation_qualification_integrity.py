@@ -1703,3 +1703,178 @@ def test_external_bootstrap_never_executes_unapproved_launcher(tmp_path):
              "remove", "--force", str(alternate)],
             cwd=REPOSITORY, capture_output=True, check=False, timeout=45,
         )
+
+
+
+@pytest.mark.parametrize(
+    "key",
+    ("min_line_coverage", "min_word_coverage",
+     "min_nonempty_line_coverage", "min_nonempty_word_coverage"),
+)
+@pytest.mark.parametrize("invalid", (0, 0.0, -0.01, None))
+def test_frozen_nonempty_and_overall_coverage_cannot_be_zero(tmp_path, key, invalid):
+    manifests, policy, _ = _fixtures(tmp_path)
+    reviewed = json.loads(policy.read_text())
+    reviewed["thresholds"][key] = invalid
+    policy.write_text(json.dumps(reviewed))
+    _reapprove_policy_for_validation_test(policy)
+    with pytest.raises(ValueError, match="invalid frozen fraction"):
+        predeclared_holdout_gate_v2(
+            manifests["development"], manifests["validation"],
+            manifests["holdout"], policy,
+        )
+
+
+def test_alpha_composited_synthetic_blanks_use_visible_pixels_not_raw_alpha():
+    record = {
+        "specimen_id": "synthetic-alpha-blank",
+        "writer_group": "synthetic-alpha-writer",
+        "capture_group": "synthetic-alpha-capture",
+        "image_path": "fixture.png",
+        "sha256": "a" * 64,
+        "paper": "blank",
+        "lines": [], "words": [],
+    }
+    image = np.zeros((120, 320, 4), dtype=np.uint8)
+    image[:, :, :3] = 2  # Opaque black would NOT be qualified empty.
+    image[:, :, 3] = 0  # Fully transparent: composites to solid white.
+    result = benchmark.evaluate(
+        image, record, split="holdout", profile="qualified-v2",
+        synthetic_fixture=True, annotation_frame="original_image",
+    )
+    assert result["status"] == "MEASURED"
+    assert result["qualification"]["empty_evidence"] == "uniform_light_synthetic_fixture"
+    assert result["lines"]["detected_n"] == result["words"]["detected_n"] == 0
+
+    opaque = image.copy()
+    opaque[30:35, 20:40, 3] = 255
+    changed = benchmark.evaluate(
+        opaque, record, split="holdout", profile="qualified-v2",
+        synthetic_fixture=True, annotation_frame="original_image",
+    )
+    assert changed.get("qualification", {}).get("empty_evidence") is None
+
+    # The production/non-fixture path cannot borrow synthetic oracle authority.
+    ordinary = benchmark.evaluate(image, record, split="synthetic", profile="qualified-v2")
+    assert ordinary.get("qualification", {}).get("empty_evidence") is None
+
+
+def test_installed_wheel_cache_must_match_hash_reviewed_source(monkeypatch, tmp_path):
+    """Bundled/generated pycs may differ bytewise; executable code may not."""
+    import importlib.util
+    import marshal
+    import zipfile
+    from evaluation.segmentation import runtime_integrity as trust
+
+    root = tmp_path / "repo"
+    (root / "requirements").mkdir(parents=True)
+    site = tmp_path / "site"
+    (site / "demo").mkdir(parents=True)
+    wheels = tmp_path / "wheels"
+    wheels.mkdir()
+    filename = "demo/__pycache__/__init__.cpython-" + str(sys.version_info.major) + str(sys.version_info.minor) + ".pyc"
+    original_source = b"answer = 42\n"
+    header = importlib.util.MAGIC_NUMBER + b"\x00" * 12
+    original_cache = header + marshal.dumps(
+        compile(original_source, "/approved/build/demo/__init__.py", "exec", dont_inherit=True)
+    )
+    wheel = wheels / "demo-1.0-py3-none-any.whl"
+    with zipfile.ZipFile(wheel, "w") as archive:
+        archive.writestr("demo/__init__.py", original_source)
+        archive.writestr(filename, original_cache)
+        archive.writestr("demo-1.0.dist-info/WHEEL", SYNTHETIC_WHEEL_METADATA)
+    lock = root / "requirements" / f"ci-py{sys.version_info.major}{sys.version_info.minor}.lock"
+    lock.write_text("demo==1.0 --hash=sha256:" + hashlib.sha256(wheel.read_bytes()).hexdigest())
+    (site / "demo" / "__init__.py").write_bytes(original_source)
+    (site / "demo-1.0.dist-info").mkdir()
+    (site / "demo-1.0.dist-info" / "WHEEL").write_bytes(SYNTHETIC_WHEEL_METADATA)
+    cache = site / filename
+    cache.parent.mkdir(parents=True, exist_ok=True)
+    regenerated = header + marshal.dumps(compile(
+        original_source, "/different/installer/location.py", "exec", dont_inherit=True
+    ))
+    assert regenerated != original_cache
+    cache.write_bytes(regenerated)
+    monkeypatch.setattr(trust, "_wheelhouse_path", lambda: wheels)
+    monkeypatch.setattr(trust, "_site_roots", lambda: (site,))
+    trust._trusted_files.cache_clear()
+    trust.preflight_reviewed_environment(root)
+
+    cache.write_bytes(header + marshal.dumps(compile(
+        b"answer = -1\n", "/different/installer/location.py", "exec", dont_inherit=True
+    )))
+    with pytest.raises(ValueError, match="unverified installed bytecode cache"):
+        trust.preflight_reviewed_environment(root)
+
+
+def test_orphan_wheel_cache_drift_is_not_an_executable_whitelist(monkeypatch, tmp_path):
+    """Without independently approved source, changed bytecode is refused."""
+    import importlib.util
+    import marshal
+    import zipfile
+    from evaluation.segmentation import runtime_integrity as trust
+
+    root = tmp_path / "root"
+    (root / "requirements").mkdir(parents=True)
+    site = tmp_path / "site"
+    site.mkdir()
+    wheels = tmp_path / "wheelhouse"
+    wheels.mkdir()
+    cache_name = "demo/__pycache__/orphan.cpython-" + str(sys.version_info.major) + str(sys.version_info.minor) + ".pyc"
+    baseline = importlib.util.MAGIC_NUMBER + b"\x00" * 12 + marshal.dumps(
+        compile(b"test = 1\n", "/builder/orphan.py", "exec", dont_inherit=True)
+    )
+    wheel = wheels / "demo-1.0-py3-none-any.whl"
+    with zipfile.ZipFile(wheel, "w") as z:
+        z.writestr(cache_name, baseline)
+        z.writestr("demo-1.0.dist-info/WHEEL", SYNTHETIC_WHEEL_METADATA)
+    (site / "demo" / "__pycache__").mkdir(parents=True)
+    installed = site / cache_name
+    installed.write_bytes(baseline + b"attacker")
+    (site / "demo-1.0.dist-info").mkdir()
+    (site / "demo-1.0.dist-info" / "WHEEL").write_bytes(SYNTHETIC_WHEEL_METADATA)
+    lock = root / "requirements" / f"ci-py{sys.version_info.major}{sys.version_info.minor}.lock"
+    lock.write_text("demo==1.0 --hash=sha256:" + hashlib.sha256(wheel.read_bytes()).hexdigest())
+    monkeypatch.setattr(trust, "_wheelhouse_path", lambda: wheels)
+    monkeypatch.setattr(trust, "_site_roots", lambda: (site,))
+    trust._trusted_files.cache_clear()
+    with pytest.raises(ValueError, match="unverified installed bytecode cache"):
+        trust.preflight_reviewed_environment(root)
+
+
+def test_sealed_policy_is_immune_to_both_original_files_rotating(monkeypatch, tmp_path, capsys):
+    """The child must score the original approved policy, not swapped paths."""
+    from types import SimpleNamespace
+    from tools import qualification_bootstrap as bootstrap
+
+    manifests, policy, images = _fixtures(tmp_path)
+    bootstrap_file = _approval_file(policy)
+    original_digest = bootstrap_file.read_text()
+    original_runner = subprocess.run
+    replaced = []
+
+    def swap_at_child_start(command, *args, **kwargs):
+        if isinstance(command, list) and "--_staged" in command and not replaced:
+            replaced.append(True)
+            tampered = json.loads(policy.read_text())
+            tampered["holdout_manifest_sha256"] = "0" * 64
+            policy.write_text(json.dumps(tampered))
+            bootstrap_file.write_text(hashlib.sha256(policy.read_bytes()).hexdigest())
+            assert bootstrap_file.read_text() != original_digest
+            assert len(kwargs.get("pass_fds", ())) == 2
+        return original_runner(command, *args, **kwargs)
+
+    monkeypatch.setattr(bootstrap.subprocess, "run", swap_at_child_start)
+    inputs = SimpleNamespace(
+        repository=REPOSITORY,
+        development=manifests["development"],
+        validation=manifests["validation"],
+        holdout=manifests["holdout"],
+        policy=policy, approved_digest_file=bootstrap_file,
+        image_root=images, wheelhouse=None,
+    )
+    assert bootstrap._run(inputs) == 0
+    assert replaced
+    public = json.loads(capsys.readouterr().out)
+    assert public["public_qualification"] == "NOT_AUTHORIZED"
+    assert public["data_origin"] == "SYNTHETIC_FIXTURE"
