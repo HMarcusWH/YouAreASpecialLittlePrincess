@@ -54,11 +54,11 @@ export PYTHONPATH="$PWD/src:$PWD/apps/api:$PWD"
 .venv-qualification/bin/python -m pytest -q
 ```
 
-Use matching \`ci-py310.lock\` or \`ci-py311.lock\` and interpreter for the other
+Use matching `ci-py310.lock` or `ci-py311.lock` and interpreter for the other
 reviewed targets. Downloading the pinned archives is the sole networked step
 and must happen before enforcing offline installation. The wheelhouse is
 authenticated against the reviewed SHA-256 lock every time qualification runs.
-An installed \`.dist-info/RECORD\` is **not** the source of expected hashes.
+An installed `.dist-info/RECORD` is **not** the source of expected hashes.
 
 To execute a trusted frozen synthetic qualification, separately approve and
 install the bootstrap template outside the checkout, check its independently
@@ -67,7 +67,7 @@ recorded SHA-256, and use the invocation in
 Merely copying the bootstrap from the evaluated checkout, or generating an
 approval digest during the evaluation, is not independent authorization.
 The bootstrap and worker refuse unsupported hosts, and synthetic output
-always retains \`public_qualification: NOT_AUTHORIZED\`.
+always retains `public_qualification: NOT_AUTHORIZED`.
 
 
 ## 2. Start the disposable local database and migrate

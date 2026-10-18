@@ -258,7 +258,7 @@ def main() -> int:
     parser.add_argument("--wheelhouse", type=Path)
     parser.add_argument("--_staged", action="store_true", help=argparse.SUPPRESS)
     args = parser.parse_args()
-    if not (sys.flags.isolated and sys.flags.no_site and sys.flags.dont_write_bytecode):
+    if not (sys.flags.isolated and sys.flags.no_site and sys.flags.dont_write_bytecode) or sys.flags.optimize != 0:
         parser.exit(2, "Isolation requires python -I -S -B.\n")
     if not args._staged:
         # The authoritative entrypoint is the independently provisioned

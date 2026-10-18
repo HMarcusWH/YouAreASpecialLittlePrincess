@@ -222,7 +222,7 @@ def main() -> int:
     parser.add_argument("--image-root", type=Path, required=True)
     parser.add_argument("--wheelhouse", type=Path)
     args = parser.parse_args()
-    if not (sys.flags.isolated and sys.flags.no_site and sys.flags.dont_write_bytecode):
+    if not (sys.flags.isolated and sys.flags.no_site and sys.flags.dont_write_bytecode) or sys.flags.optimize != 0:
         parser.exit(2, "Frozen synthetic evaluation rejected [Q_ISOLATION]; details withheld.\n")
     try:
         return _run(args)

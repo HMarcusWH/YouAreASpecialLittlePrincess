@@ -195,10 +195,10 @@ real-world quality target.
 For the official trusted Linux bootstrap, the exact policy bytes and the
 separately supplied, independently approved digest are placed in two sealed
 anonymous memory descriptors before spawning the worker. The child receives
-\`/proc/self/fd/...\` references through \`pass_fds\`; it must never reopen
+`/proc/self/fd/...` references through `pass_fds`; it must never reopen
 mutable original policy and approval pathnames. A simultaneous replacement
 of both original files cannot change the policy scored by that run. Sealing
-requires Linux \`memfd_create\`/\`F_ADD_SEALS\` and fails closed where missing.
+requires Linux `memfd_create`/`F_ADD_SEALS` and fails closed where missing.
 
 All overall and nonempty line/word coverage floors must be strictly positive.
 An arbitrarily small positive floor is only a syntactic anti-vacuity control,
@@ -206,7 +206,7 @@ not empirical validation; the independent reviewer must preregister useful
 threshold values and inspect actual available denominators.
 
 Only within explicitly synthetic fixture evaluation, uniformly light BGRA
-images are composited onto white exactly as \`prepare_context\` does before
+images are composited onto white exactly as `prepare_context` does before
 the blank oracle checks their lightness. Alpha zero is not dark handwriting.
 Ambiguous/ruled/non-fixture captures cannot gain synthetic blank authority.
 
@@ -214,3 +214,14 @@ For standalone Linux developer qualification, preserve the hash-locked
 wheelhouse using the reviewed recipe in
 [local setup](../../docs/development/local-setup.md). Do not claim installed
 package metadata alone is a reproducible, authenticated runtime.
+
+
+### Optimized dependency caches
+
+The trusted preflight recognizes only canonical `__pycache__` paths for
+optimization levels 0, 1 and 2. Every installed cache not matching the
+reviewed wheel bytes must contain exactly the executable code obtained by
+recompiling the matching hash-authenticated source at its cache's optimization
+level. A legitimate `.opt-1.pyc` or `.opt-2.pyc` may be present on disk,
+but the qualification worker itself runs unoptimized; passing `-O` or
+`-OO` to the bootstrap is rejected. No broad bytecode-cache exemptions.

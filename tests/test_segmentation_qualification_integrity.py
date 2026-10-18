@@ -1934,3 +1934,126 @@ def test_unreviewed_python_shadow_in_purelib_is_blocked_before_platlib_import(
     )
     with pytest.raises(ValueError, match="unverified installed bytecode cache"):
         trust.preflight_reviewed_environment(root)
+
+
+
+@pytest.mark.parametrize("optimize", (0, 1, 2))
+@pytest.mark.parametrize("wheel_bundled_cache", (False, True))
+def test_optimized_installed_cache_requires_canonical_tag_and_reviewed_code(
+    tmp_path, monkeypatch, optimize, wheel_bundled_cache,
+):
+    """Generated and wheel-bundled optimized caches are validated against
+    independently hash-reviewed source with the matching optimization level.
+    """
+    import importlib.util
+    import marshal
+    import zipfile
+    from evaluation.segmentation import runtime_integrity as trust
+
+    root = tmp_path / "reviewed"
+    (root / "requirements").mkdir(parents=True)
+    site = tmp_path / "site"
+    package = site / "demo"
+    package.mkdir(parents=True)
+    wheels = tmp_path / "wheelhouse"
+    wheels.mkdir()
+    source = package / "__init__.py"
+    source_bytes = b'"""source docstring"""\nassert 1 + 1 == 2\nanswer = 42\n'
+    source.write_bytes(source_bytes)
+    cache = Path(importlib.util.cache_from_source(
+        str(source), optimization=str(optimize) if optimize else "",
+    ))
+    cache.parent.mkdir(parents=True)
+    name = cache.relative_to(site).as_posix()
+    prefix = importlib.util.MAGIC_NUMBER + b"\x00" * 12
+    compiled_approved = prefix + marshal.dumps(compile(
+        source_bytes, "/wheel-builder/demo/__init__.py",
+        "exec", dont_inherit=True, optimize=optimize,
+    ))
+    compiled_installed = prefix + marshal.dumps(compile(
+        source_bytes, "/installed/demo/__init__.py",
+        "exec", dont_inherit=True, optimize=optimize,
+    ))
+    assert compiled_approved != compiled_installed
+    if optimize:
+        assert compile(
+            source_bytes, "/builder/file.py", "exec",
+            dont_inherit=True, optimize=0,
+        ) != compile(
+            source_bytes, "/builder/file.py", "exec",
+            dont_inherit=True, optimize=optimize,
+        )
+    wheel = wheels / "demo-1.0-py3-none-any.whl"
+    with zipfile.ZipFile(wheel, "w") as archive:
+        archive.writestr("demo/__init__.py", source_bytes)
+        archive.writestr("demo-1.0.dist-info/WHEEL", SYNTHETIC_WHEEL_METADATA)
+        if wheel_bundled_cache:
+            archive.writestr(name, compiled_approved)
+    (site / "demo-1.0.dist-info").mkdir()
+    (site / "demo-1.0.dist-info" / "WHEEL").write_bytes(SYNTHETIC_WHEEL_METADATA)
+    cache.write_bytes(compiled_installed)
+    lock = root / "requirements" / (
+        f"ci-py{sys.version_info.major}{sys.version_info.minor}.lock"
+    )
+    lock.write_text(
+        "demo==1.0 --hash=sha256:" + hashlib.sha256(wheel.read_bytes()).hexdigest()
+    )
+    monkeypatch.setattr(trust, "_wheelhouse_path", lambda: wheels)
+    monkeypatch.setattr(trust, "_site_roots", lambda: (site,))
+    trust._trusted_files.cache_clear()
+
+    trust.preflight_reviewed_environment(root)
+    cache.write_bytes(prefix + marshal.dumps(compile(
+        b'"""source docstring"""\nassert 1 + 1 == 2\nanswer = -1\n',
+        "/installed/demo/__init__.py", "exec",
+        dont_inherit=True, optimize=optimize,
+    )))
+    with pytest.raises(ValueError, match="unverified installed bytecode cache"):
+        trust.preflight_reviewed_environment(root)
+
+
+@pytest.mark.parametrize("tag", ("3", "01", "unexpected"))
+def test_unrecognized_optimized_cache_names_fail_closed(tmp_path, tag):
+    import importlib.util
+    import marshal
+    from evaluation.segmentation.runtime_integrity import _verify_cached_code_matches_source
+
+    source = tmp_path / "package" / "reviewed.py"
+    source.parent.mkdir()
+    original = b'"""source docstring"""\nassert True\nanswer = 42\n'
+    source.write_bytes(original)
+    malformed = Path(importlib.util.cache_from_source(
+        str(source), optimization=tag,
+    ))
+    malformed.parent.mkdir()
+    malformed.write_bytes(
+        importlib.util.MAGIC_NUMBER + b"\x00" * 12
+        + marshal.dumps(compile(
+            original, "/builder/reviewed.py", "exec",
+            dont_inherit=True, optimize=1,
+        ))
+    )
+    approved = {source.absolute(): (hashlib.sha256(original).hexdigest(), "test", "package/reviewed.py")}
+    with pytest.raises(ValueError, match="unverified installed bytecode cache"):
+        _verify_cached_code_matches_source(malformed, source, approved)
+
+
+def test_externally_provisioned_bootstrap_refuses_optimized_interpreter(tmp_path):
+    manifests, policy, images = _fixtures(tmp_path)
+    bootstrap = _externally_provisioned_test_bootstrap(tmp_path)
+    args = _bootstrap_args(
+        bootstrap,
+        "--development", str(manifests["development"]),
+        "--validation", str(manifests["validation"]),
+        "--holdout", str(manifests["holdout"]),
+        "--policy", str(policy),
+        "--approved-digest-file", str(_approval_file(policy)),
+        "--image-root", str(images),
+    )
+    args.insert(1, "-O")
+    run = subprocess.run(
+        args, cwd=REPOSITORY, text=True, capture_output=True, timeout=25,
+    )
+    assert run.returncode == 2
+    assert "[Q_ISOLATION]" in run.stderr
+    assert not run.stdout

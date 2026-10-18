@@ -202,6 +202,21 @@ def _is_native_artifact(path: Path) -> bool:
 
 
 
+def _cache_optimization_level(cache: Path, source_file: Path) -> int:
+    """Accept only canonical CPython cache names for optimization 0, 1 or 2.
+
+    Source must be separately authenticated against the reviewed wheel;
+    optimization is never inferred from an arbitrary user-chosen suffix.
+    """
+    for level, tag in ((0, ""), (1, "1"), (2, "2")):
+        canonical = Path(importlib.util.cache_from_source(
+            str(source_file), optimization=tag,
+        ))
+        if cache.absolute() == canonical.absolute():
+            return level
+    raise ValueError("unverified installed bytecode cache")
+
+
 def _verify_cached_code_matches_source(
     cache: Path, source_file: Path, approved_files: dict[Path, tuple],
 ) -> None:
@@ -212,6 +227,7 @@ def _verify_cached_code_matches_source(
     hash-locked wheel and *the compiled code is identical*. Sourceless or
     forged bytecode remains untrusted, regardless of package/version.
     """
+    level = _cache_optimization_level(cache, source_file)
     source_identity = approved_files.get(source_file.absolute())
     if source_identity is None or source_file.is_symlink() or not source_file.is_file():
         raise ValueError("unverified installed bytecode cache")
@@ -232,7 +248,10 @@ def _verify_cached_code_matches_source(
                 or not isinstance(candidate.co_filename, str)
                 or len(candidate.co_filename) > 4096):
             raise ValueError("invalid bytecode")
-        reference = compile(raw_source, candidate.co_filename, "exec", dont_inherit=True)
+        reference = compile(
+            raw_source, candidate.co_filename, "exec",
+            dont_inherit=True, optimize=level,
+        )
         if candidate != reference:
             raise ValueError("cached code differs from approved source")
     except (ValueError, TypeError, SyntaxError, EOFError) as exc:
