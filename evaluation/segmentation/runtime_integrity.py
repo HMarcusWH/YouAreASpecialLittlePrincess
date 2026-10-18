@@ -296,14 +296,32 @@ def preflight_reviewed_environment(root: Path) -> None:
                 if actual_code != expected_code:
                     raise ValueError("unreviewed installed bytecode cache")
 
-    # Native dlopen() calls do not create Python sys.modules entries. Refuse
-    # unreviewed loadable libraries in installed dependency locations.
-    for site in sites:
-        for native in site.rglob("*"):
-            if _is_native_artifact(native):
-                if (native.is_symlink() or not native.is_file()
-                        or native.absolute() not in approved):
-                    raise ValueError("unreviewed installed native library")
+    # Nothing unreviewed can be importable from ANY exposed site root, even
+    # when the approved wheel lives in a *different* root (purelib/platlib).
+    # A forged purelib/cv2.py otherwise executes before the post-import audit.
+    # Verified, installer-generated cache files are allowed ONLY when their
+    # code objects exactly match the independently approved source.
+    for site in dict.fromkeys(sites):
+        for artifact in site.rglob("*"):
+            if artifact.is_dir():
+                if artifact.is_symlink():
+                    raise ValueError("unreviewed installed import path")
+                continue
+            if not (artifact.suffix in (".py", ".pyw", ".pyc")
+                    or _is_native_artifact(artifact)):
+                continue
+            if artifact.is_symlink() or not artifact.is_file():
+                raise ValueError("unreviewed installed Python or native artifact")
+            if artifact.absolute() in approved:
+                continue  # Already authenticated byte-for-byte or against source.
+            if artifact.suffix == ".pyc" and artifact.parent.name == "__pycache__":
+                try:
+                    source = Path(importlib.util.source_from_cache(str(artifact)))
+                except ValueError as exc:
+                    raise ValueError("unreviewed installed bytecode cache") from exc
+                _verify_cached_code_matches_source(artifact, source, approved)
+                continue
+            raise ValueError("unreviewed installed Python or native artifact")
 
 
 def _project_path(path: Path, root: Path) -> bool:
