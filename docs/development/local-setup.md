@@ -32,6 +32,44 @@ export PYTHONPATH="$PWD/src:$PWD/apps/api"
 
 For core-only work, replace the app lock with the `requirements/ci-py310`, `ci-py311` or `ci-py312` lock matching the reviewed interpreter/architecture, then use the core checks in [testing](testing.md). Do not mix locks in the same environment and call it an exact locked environment.
 
+## Offline frozen synthetic qualification (separate from the app environment)
+
+The frozen Segmentation V2 engineering tests require the **CI** lock, not the
+backend/application lock. Keep a completely separate Linux x86_64 environment;
+do not mix the application, Free or learned-signature extras with this exact
+installed-distribution set. Example for the reviewed Python 3.12 target:
+
+```bash
+python3.12 -m venv .venv-qualification
+.venv-qualification/bin/python -m pip download \
+  --require-hashes --only-binary=:all: --no-deps \
+  --dest .venv-qualification/wheelhouse -r requirements/ci-py312.lock
+.venv-qualification/bin/python -m pip install \
+  --no-index --find-links .venv-qualification/wheelhouse \
+  --require-hashes --no-deps -r requirements/ci-py312.lock
+.venv-qualification/bin/python -m pip install \
+  --no-index --no-deps --no-build-isolation -e '.[dev]'
+export QUALIFICATION_WHEELHOUSE="$PWD/.venv-qualification/wheelhouse"
+export PYTHONPATH="$PWD/src:$PWD/apps/api:$PWD"
+.venv-qualification/bin/python -m pytest -q
+```
+
+Use matching \`ci-py310.lock\` or \`ci-py311.lock\` and interpreter for the other
+reviewed targets. Downloading the pinned archives is the sole networked step
+and must happen before enforcing offline installation. The wheelhouse is
+authenticated against the reviewed SHA-256 lock every time qualification runs.
+An installed \`.dist-info/RECORD\` is **not** the source of expected hashes.
+
+To execute a trusted frozen synthetic qualification, separately approve and
+install the bootstrap template outside the checkout, check its independently
+recorded SHA-256, and use the invocation in
+[evaluation/segmentation/README.md](../../evaluation/segmentation/README.md).
+Merely copying the bootstrap from the evaluated checkout, or generating an
+approval digest during the evaluation, is not independent authorization.
+The bootstrap and worker refuse unsupported hosts, and synthetic output
+always retains \`public_qualification: NOT_AUTHORIZED\`.
+
+
 ## 2. Start the disposable local database and migrate
 
 **Mutating local setup.** The database in this recipe is `princess_local` on loopback port 5432. Never substitute a production host or dump. The documented passwords below are local-only examples, not production credentials. Run the following as one Bash block; a failed readiness check must stop before migration.

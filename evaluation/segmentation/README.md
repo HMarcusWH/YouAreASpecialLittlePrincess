@@ -188,3 +188,29 @@ real-photo blank specificity. Real-world qualified-empty evidence and
 preregistered scientific accuracy requirements require separate rights-gated
 evaluation. A positive structural F1 threshold such as 0.01 is not a
 real-world quality target.
+
+
+### Round-eight: policy handoff and acceptance guardrails
+
+For the official trusted Linux bootstrap, the exact policy bytes and the
+separately supplied, independently approved digest are placed in two sealed
+anonymous memory descriptors before spawning the worker. The child receives
+\`/proc/self/fd/...\` references through \`pass_fds\`; it must never reopen
+mutable original policy and approval pathnames. A simultaneous replacement
+of both original files cannot change the policy scored by that run. Sealing
+requires Linux \`memfd_create\`/\`F_ADD_SEALS\` and fails closed where missing.
+
+All overall and nonempty line/word coverage floors must be strictly positive.
+An arbitrarily small positive floor is only a syntactic anti-vacuity control,
+not empirical validation; the independent reviewer must preregister useful
+threshold values and inspect actual available denominators.
+
+Only within explicitly synthetic fixture evaluation, uniformly light BGRA
+images are composited onto white exactly as \`prepare_context\` does before
+the blank oracle checks their lightness. Alpha zero is not dark handwriting.
+Ambiguous/ruled/non-fixture captures cannot gain synthetic blank authority.
+
+For standalone Linux developer qualification, preserve the hash-locked
+wheelhouse using the reviewed recipe in
+[local setup](../../docs/development/local-setup.md). Do not claim installed
+package metadata alone is a reproducible, authenticated runtime.

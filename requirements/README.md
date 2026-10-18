@@ -103,3 +103,22 @@ replacement for branch protection or a trusted required workflow. A contributor
 who can change/disable the verifier, renderer and all checks must still be stopped
 by repository review/protection outside these files. This PR does not change
 repository administration settings.
+
+
+## Local offline qualification wheelhouse (synthetic only)
+
+A core-only qualification environment must retain the original **reviewed**
+wheel archives as well as their installed files. \`-S\` prevents ordinary
+virtualenv startup; \`QUALIFICATION_WHEELHOUSE\` must point to the pinned
+artifact set for the selected Python 3.10/3.11/3.12 Linux x86_64 lock.
+A successful plain pip install without a retained authenticated wheelhouse
+does not establish qualification runtime provenance. Local setup provides
+the standalone \`.venv-qualification/wheelhouse\` recipe. Keep it separate
+from the backend's \`app-py312.lock\` environment; never silently fall back
+to an online index or mutable installed \`RECORD\` hashes.
+
+Some upstream wheels contain build-time \`__pycache__\` objects. A generated
+cache with different bytes may only be treated as equivalent when its code
+object exactly matches compilation of separately hash-authenticated wheel
+source; altered or orphaned executable caches remain rejected. This is not a
+general bypass for cached bytecode.
