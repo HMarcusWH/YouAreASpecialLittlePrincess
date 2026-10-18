@@ -6,7 +6,8 @@ import hashlib
 import json
 import os
 import stat
-from collections import defaultdict
+from bisect import bisect_left, bisect_right
+from collections import defaultdict, deque
 from pathlib import Path, PurePosixPath
 
 import cv2
@@ -34,6 +35,27 @@ MAX_SPECIMENS = 256
 MAX_FILE_BYTES = 25 * 1024 * 1024
 MAX_PIXELS = 24_000_000
 MAX_BOXES_PER_FAMILY = 4096
+MATCHER_METHOD = "iou-maxcard-hk/1"
+MAX_MATCH_COMPARISONS = 4_000_000
+MAX_MATCH_EDGES = 1_500_000
+MAX_MATCH_TRAVERSALS = 10_000_000
+MAX_RUN_MATCH_WORK = 50_000_000
+
+
+class _MatchingBudget:
+    """Shared deterministic work cap across one manifest and all shadow methods."""
+
+    def __init__(self, units: int = MAX_RUN_MATCH_WORK):
+        if type(units) is not int or units < 0:
+            raise ValueError("matching_complexity_exceeded")
+        self.remaining = units
+
+    def consume(self, units: int) -> None:
+        if units > self.remaining:
+            raise ValueError("matching_complexity_exceeded")
+        self.remaining -= units
+
+
 
 
 def _box(seq):
@@ -91,34 +113,133 @@ def iou(a: Box, b: Box) -> float:
     return overlap / union if union else 0.0
 
 
-def match(reference, detected, threshold=0.5):
-    """One-to-one maximum-cardinality IoU match; duplicates cannot inflate recall."""
+def match(reference, detected, threshold=0.5, *, budget: _MatchingBudget | None = None):
+    """Bounded deterministic maximum-cardinality IoU match, with no recursion.
+
+    Candidate indices are swept by their x-intervals before checking y, area,
+    and true IoU. Neighbor order is higher IoU first, then lower box index.
+    A complexity refusal is NOT a measured zero or a partial successful score.
+    """
     if not 0 < threshold <= 1:
         raise ValueError("invalid IoU threshold")
     refs, boxes = tuple(reference), tuple(detected)
-    graph = [[j for j, score in sorted(
-        ((j, iou(ref, box)) for j, box in enumerate(boxes)),
-        key=lambda pair: (-pair[1], pair[0])) if score >= threshold] for ref in refs]
-    assigned = {}
-
-    def augment(i, visited):
-        for j in graph[i]:
-            if j in visited:
+    if len(refs) > MAX_BOXES_PER_FAMILY or len(boxes) > MAX_BOXES_PER_FAMILY:
+        raise ValueError("matching_complexity_exceeded")
+    if budget is not None and not isinstance(budget, _MatchingBudget):
+        raise ValueError("matching_complexity_exceeded")
+    starts = sorted((box.x, j) for j, box in enumerate(boxes))
+    ends = sorted((box.x2, j) for j, box in enumerate(boxes))
+    start_x = [x for x, _ in starts]
+    end_x = [x for x, _ in ends]
+    inspected = edges = 0
+    graph = []
+    for ref in refs:
+        # One of the two x-interval filters is necessarily selective on
+        # spatially sparse layouts. Do NOT materialize all n_ref*n_det pairs.
+        before_right = bisect_left(start_x, ref.x2)
+        after_left = bisect_right(end_x, ref.x)
+        candidates = (starts[:before_right] if before_right <= len(ends) - after_left
+                      else ends[after_left:])
+        scored = []
+        for _, j in candidates:
+            inspected += 1
+            if inspected > MAX_MATCH_COMPARISONS or (
+                budget is not None and inspected > budget.remaining
+            ):
+                raise ValueError("matching_complexity_exceeded")
+            box = boxes[j]
+            if (box.x >= ref.x2 or box.x2 <= ref.x
+                    or box.y >= ref.y2 or box.y2 <= ref.y):
                 continue
-            visited.add(j)
-            if j not in assigned or augment(assigned[j], visited):
-                assigned[j] = i
-                return True
-        return False
+            # A necessary upper bound on IoU; valid edges are never pruned
+            # merely because candidate rectangles have very different areas.
+            if min(ref.area, box.area) / max(ref.area, box.area) < threshold:
+                continue
+            score = iou(ref, box)
+            if score >= threshold:
+                scored.append((score, j))
+                edges += 1
+                if edges > MAX_MATCH_EDGES:
+                    raise ValueError("matching_complexity_exceeded")
+        scored.sort(key=lambda item: (-item[0], item[1]))
+        graph.append([j for _, j in scored])
 
-    for i in range(len(refs)):
-        augment(i, set())
-    tp = len(assigned)
+    # Iterative Hopcroft-Karp: BFS layering plus an explicit-stack augment.
+    # Every explored edge has an auditable deterministic cost.
+    left = [-1] * len(refs)
+    right = [-1] * len(boxes)
+    traversals = 0
+    infinity = len(refs) + 1
+
+    def used_edge():
+        nonlocal traversals
+        traversals += 1
+        if traversals > MAX_MATCH_TRAVERSALS or (
+            budget is not None and inspected + traversals > budget.remaining
+        ):
+            raise ValueError("matching_complexity_exceeded")
+
+    while True:
+        dist = [infinity] * len(refs)
+        queue = deque()
+        for u, assigned in enumerate(left):
+            if assigned == -1:
+                dist[u] = 0
+                queue.append(u)
+        reachable_free = False
+        while queue:
+            u = queue.popleft()
+            for v in graph[u]:
+                used_edge()
+                owner = right[v]
+                if owner == -1:
+                    reachable_free = True
+                elif dist[owner] == infinity:
+                    dist[owner] = dist[u] + 1
+                    queue.append(owner)
+        if not reachable_free:
+            break
+        for seed in range(len(refs)):
+            if left[seed] != -1:
+                continue
+            stack = [seed]
+            offsets = [0]
+            alternating_edges = []
+            while stack:
+                u = stack[-1]
+                if offsets[-1] >= len(graph[u]):
+                    dist[u] = infinity
+                    stack.pop()
+                    offsets.pop()
+                    if len(alternating_edges) >= len(stack) and alternating_edges:
+                        alternating_edges.pop()
+                    continue
+                v = graph[u][offsets[-1]]
+                offsets[-1] += 1
+                used_edge()
+                owner = right[v]
+                if owner == -1:
+                    left[u] = v
+                    right[v] = u
+                    for level in range(len(stack) - 2, -1, -1):
+                        prev = stack[level]
+                        choice = alternating_edges[level]
+                        left[prev] = choice
+                        right[choice] = prev
+                    break
+                if dist[owner] == dist[u] + 1:
+                    stack.append(owner)
+                    offsets.append(0)
+                    alternating_edges.append(v)
+
+    if budget is not None:
+        budget.consume(inspected + traversals)
+    tp = sum(j >= 0 for j in left)
     fp, fn = len(boxes) - tp, len(refs) - tp
     precision = tp / len(boxes) if boxes else (1.0 if not refs else 0.0)
     recall = tp / len(refs) if refs else (1.0 if not boxes else 0.0)
     f1 = 2 * precision * recall / (precision + recall) if precision + recall else 0.0
-    matches = sorted((i, j) for j, i in assigned.items())
+    matches = [(i, j) for i, j in enumerate(left) if j >= 0]
     center_errors = [float(np.hypot(
         refs[i].x + refs[i].width / 2 - boxes[j].x - boxes[j].width / 2,
         refs[i].y + refs[i].height / 2 - boxes[j].y - boxes[j].height / 2))
@@ -189,7 +310,7 @@ def _uniform_light_synthetic_fixture_empty(image, context) -> bool:
 
 def evaluate(image, row, *, split="synthetic", profile="grid-v1", allow_real=False,
              shadow_projection=False, shadow_words=False, annotation_frame="analysis_canvas",
-             synthetic_fixture=False):
+             synthetic_fixture=False, matching_budget: _MatchingBudget | None = None):
     expected_lines, expected_words = validate_record(
         row, split, allow_real=allow_real, synthetic_fixture=synthetic_fixture
     )
@@ -200,6 +321,7 @@ def evaluate(image, row, *, split="synthetic", profile="grid-v1", allow_real=Fal
     if image.shape[0] * image.shape[1] > MAX_PIXELS:
         raise ValueError("decoded image exceeds benchmark pixel budget")
     label = {"specimen_id": row["specimen_id"], "split": split, "paper": row["paper"],
+             "matching_method": MATCHER_METHOD,
              "data_origin": DATA_ORIGIN_SYNTHETIC if (split == "synthetic" or synthetic_fixture)
                             else DATA_ORIGIN_REAL,
              "line_reference_n": len(expected_lines) if expected_lines is not None else None,
@@ -234,13 +356,13 @@ def evaluate(image, row, *, split="synthetic", profile="grid-v1", allow_real=Fal
         projection = propose_lines(context.mask)
         if projection.diagnostics["truncated"]:
             raise ValueError("line candidate cap reached; specimen not scoreable")
-        shadow = match(expected_lines, projection.boxes)
+        shadow = match(expected_lines, projection.boxes, budget=matching_budget)
     word_shadow = None
     if shadow_words and expected_words is not None:
         proposals = propose_words(context.mask, context.lines)
         if proposals.diagnostics["truncated"]:
             raise ValueError("word candidate cap reached; specimen not scoreable")
-        word_shadow = match(expected_words, proposals.boxes)
+        word_shadow = match(expected_words, proposals.boxes, budget=matching_budget)
     qualification = context.metadata.get("qualification")
     verified_fixture_empty = (
         profile == "qualified-v2" and synthetic_fixture
@@ -264,9 +386,9 @@ def evaluate(image, row, *, split="synthetic", profile="grid-v1", allow_real=Fal
             "reason": None if status == "MEASURED" else "some_evidence_unqualified",
             "qualification": qualification, "line_shadow": shadow, "word_shadow": word_shadow,
             "word_trace": trace,
-            "lines": match(expected_lines, context.lines)
+            "lines": match(expected_lines, context.lines, budget=matching_budget)
                      if expected_lines is not None and line_available else None,
-            "words": match(expected_words, context.words)
+            "words": match(expected_words, context.words, budget=matching_budget)
                      if expected_words is not None and word_available else None,
             "unavailable_words": expected_words is not None and not word_available,
             "false_zero_words": (bool(expected_words) and not context.words)
@@ -450,6 +572,7 @@ def run_manifest(manifest: Path, root: Path, *, profile="grid-v1", allow_real=Fa
     if not isinstance(specimens, list) or len(specimens) > MAX_SPECIMENS:
         raise ValueError("invalid specimen count/budget")
     rows, seen = [], set()
+    matching_budget = _MatchingBudget(MAX_RUN_MATCH_WORK)
     for record in specimens:
         validate_record(record, split, allow_real=allow_real, synthetic_fixture=fixture)
         name = record["specimen_id"]
@@ -472,8 +595,9 @@ def run_manifest(manifest: Path, root: Path, *, profile="grid-v1", allow_real=Fa
         rows.append(evaluate(image, record, split=split, profile=profile,
                              allow_real=allow_real, synthetic_fixture=fixture,
                              shadow_projection=shadow_projection, shadow_words=shadow_words,
-                             annotation_frame=frame))
+                             annotation_frame=frame, matching_budget=matching_budget))
     return {"version": 2, "profile": profile, "split": split, "annotation_frame": frame,
+            "matching_method": MATCHER_METHOD,
             "data_origin": data_origin,
             "manifest_sha256": hashlib.sha256(manifest_bytes).hexdigest(),
             "summary": summarize(rows), "results": rows}
