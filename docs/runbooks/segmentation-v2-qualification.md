@@ -276,3 +276,39 @@ closure or production activation follows from an engineering pass.
 5. Document a reproducible offline core-only local wheelhouse independent
    from application/runtime installations, and prove all Python 3.10–3.12
    exact-head CI checks and new adversarial regressions.
+
+### PR #95 closeout: image resource admission and decoder-parity boundary
+
+The frozen engineering evaluator now enforces application-compatible, header-
+only JPEG/PNG dimensions on the exact hash-verified specimen bytes before
+OpenCV allocation. Single-frame images are limited to 24 million pixels, and
+both width and height must be between 32 and 12,000 pixels. This **does not**
+change the benchmark's 25 MiB encoded-file budget or any segmentation score,
+measurement formula, report version or production profile. The exact
+post-decode dtype, channel and header-dimension checks remain fail-closed.
+
+Production decodes with Pillow plus EXIF transpose, but the synthetic
+benchmark still uses OpenCV IMREAD_UNCHANGED. The current evaluator rejects
+EXIF orientation 2–8 JPEGs, instead of silently comparing boxes in a different
+frame. Parity tests cover high-contrast, orientation-1 gray/RGB/RGBA PNG and
+JPEG fixtures; any real-photo decoder harmonization belongs in a separately
+versioned/approved evaluation step with coordinate-lineage verification.
+Do not classify a header check as complete decompression safety or hardware
+RSS/latency qualification.
+
+Finding #14's direct-call caveat remains a trust-scope restriction, not a
+license to accept self-reported execution. -B alone is insufficient;
+existing .pyc files can be read. A fresh detached worktree sourced from the
+**independently approved** commit must be checked for ignored/untracked code
+and all project bytecode before first project import. A direct in-process
+ENGINEERING_PASS or manually supplied --_staged flag is **not independent
+provenance**. Only a separately authenticated external bootstrap and a
+recorded independent prior policy approval can support *synthetic-only*
+engineering acceptance. Neither proves host integrity or authorizes real
+handwriting. Keep public_qualification: NOT_AUTHORIZED, legacy active,
+T11 pending and Issue #92 open.
+
+Closeout after implementation requires the complete **new-head** CI matrix,
+a genuine independent code/security review of that SHA and individual
+evidence-backed review-thread reconciliation. A Codex usage-limit message is
+not a review. Do not close historical threads or merge merely on green CI.

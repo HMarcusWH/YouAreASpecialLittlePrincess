@@ -225,3 +225,39 @@ recompiling the matching hash-authenticated source at its cache's optimization
 level. A legitimate `.opt-1.pyc` or `.opt-2.pyc` may be present on disk,
 but the qualification worker itself runs unoptimized; passing `-O` or
 `-OO` to the bootstrap is rejected. No broad bytecode-cache exemptions.
+
+### Bounded benchmark decoding and input-frame contract
+
+The benchmark verifies SHA-256 from a no-follow, size-limited image read **before**
+inspecting any bytes. It then calls the existing application image-header
+inspector (princess_app.adapters.imaging.inspect_header) and intake checker
+(princess_app.domain.intake.check_header) on that same authenticated buffer.
+Only supported single-frame JPEG/PNG images within the 24-million-pixel,
+32–12,000-pixel-per-axis admission limits reach the native OpenCV decoder. The
+benchmark keeps its distinct 25 MiB **encoded** size cap (application intake
+has 20 MiB). Decoded dtype, channels, shape and the verified header dimensions
+are checked again after decoding. A compressed oversize PNG is never decoded
+merely to learn its dimensions. These checks bound admitted dimensions, not
+total CPU/RSS.
+
+The benchmark deliberately continues to decode with OpenCV IMREAD_UNCHANGED
+and preserves the existing evaluation/annotation mathematics. Production
+image intake uses Pillow and applies EXIF orientation and alpha compositing;
+the benchmark **rejects EXIF orientations 2–8** until a separately reviewed
+source-frame/parity contract is available. Its current native pipeline also
+rejects unsupported decoded dtypes/channels (e.g. 16-bit PNG). The synthetic
+decoder-parity regression compares supported orientation-1 gray/RGB/RGBA PNG
+and JPEG outputs to the worker's pixels and segmentation geometry. A passing
+test does not validate human photos or every encoding variation. A later
+decoder change requires updated evaluator identity, independently approved
+policy bytes and separate real-data rights review.
+
+Direct run_frozen_synthetic_qualification calls and a directly invoked
+run_qualification.py --_staged are **not independently authenticated run
+receipts**. The -B flag does not prevent Python from reading existing cached
+bytecode in arbitrary checkouts. Only a bootstrap that was independently
+provisioned, authenticated outside the evaluated checkout, tied to the
+separately approved policy and source SHA, and that stages a verified,
+bytecode-free detached worktree may supply accepted *synthetic engineering*
+execution evidence. Even this is not signed attestation or authorization for
+real people, public qualification or profile activation.

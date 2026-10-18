@@ -1937,6 +1937,73 @@ def test_unreviewed_python_shadow_in_purelib_is_blocked_before_platlib_import(
 
 
 
+
+
+def test_direct_isolated_worker_rejects_timestamp_valid_project_cache_before_import(tmp_path):
+    """-B reads caches; stage validation must reject an attack before project imports."""
+    import importlib.util
+    import marshal
+    import struct
+
+    manifests, policy, image_root = _fixtures(tmp_path)
+    stage = tmp_path / "unreviewed-bytecode-worktree"
+    marker = tmp_path / "FORGED_BYTECODE_EXECUTED"
+    subprocess.run(
+        ["git", "-c", "core.hooksPath=/dev/null",
+         "worktree", "add", "--detach", str(stage), "HEAD"],
+        cwd=REPOSITORY, capture_output=True, text=True, check=True, timeout=45,
+    )
+    try:
+        source = stage / "evaluation" / "segmentation" / "runtime_integrity.py"
+        cached = Path(importlib.util.cache_from_source(str(source)))
+        cached.parent.mkdir(parents=True)
+        stat = source.stat()
+        # Legitimate timestamp cache header: matches reviewed .py mtime and size.
+        # The executable code, however, has an extra synthetic marker side effect.
+        payload = compile(
+            "from pathlib import Path\nPath(" + repr(str(marker)) +
+            ").write_text('synthetic-bytecode-marker')\n",
+            str(source), "exec",
+        )
+        cached.write_bytes(
+            importlib.util.MAGIC_NUMBER + b"\x00" * 4
+            + struct.pack("<II", int(stat.st_mtime), stat.st_size)
+            + marshal.dumps(payload)
+        )
+        # Prove the payload is actually importable under -I -S -B, so the
+        # worker rejection cannot pass merely due to a malformed cache.
+        proof = subprocess.run(
+            [sys.executable, "-I", "-S", "-B", "-c",
+             "import sys;sys.path.insert(0," + repr(str(stage)) +
+             ");import evaluation.segmentation.runtime_integrity"],
+            cwd=tmp_path, capture_output=True, text=True, timeout=30,
+        )
+        assert proof.returncode == 0, proof.stderr
+        assert marker.is_file(), "attack fixture must execute if the guard is bypassed"
+        marker.unlink()
+
+        launcher = stage / "evaluation" / "segmentation" / "run_qualification.py"
+        attempt = subprocess.run(
+            [sys.executable, "-I", "-S", "-B", str(launcher), "--_staged",
+             "--development", str(manifests["development"]),
+             "--validation", str(manifests["validation"]),
+             "--holdout", str(manifests["holdout"]),
+             "--policy", str(policy),
+             "--approved-digest-file", str(_approval_file(policy)),
+             "--image-root", str(image_root)],
+            cwd=stage, capture_output=True, text=True, timeout=45,
+        )
+        assert attempt.returncode == 2
+        assert "Frozen synthetic evaluation rejected [Q_SOURCE" in attempt.stderr
+        assert not marker.exists(), "unapproved cached code executed before stage rejection"
+        assert str(tmp_path) not in attempt.stdout + attempt.stderr
+    finally:
+        subprocess.run(
+            ["git", "-c", "core.hooksPath=/dev/null", "worktree",
+             "remove", "--force", str(stage)],
+            cwd=REPOSITORY, capture_output=True, check=False, timeout=45,
+        )
+
 @pytest.mark.parametrize("optimize", (0, 1, 2))
 @pytest.mark.parametrize("wheel_bundled_cache", (False, True))
 def test_optimized_installed_cache_requires_canonical_tag_and_reviewed_code(
