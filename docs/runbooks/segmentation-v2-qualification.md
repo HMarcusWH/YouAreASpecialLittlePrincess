@@ -312,3 +312,41 @@ Closeout after implementation requires the complete **new-head** CI matrix,
 a genuine independent code/security review of that SHA and individual
 evidence-backed review-thread reconciliation. A Codex usage-limit message is
 not a review. Do not close historical threads or merge merely on green CI.
+
+### Authenticated snapshot & bounded matcher — final PR #95 repair
+
+Git checkout and Git status on the caller's source repository are not
+acceptable trust primitives: replace refs can redirect Git objects, and
+checkout filters/fsmonitor hooks can execute before a post-checkout hash
+comparison. The external bootstrap instead verifies exact approved SHA-1
+commit/tree/blob objects, imports only those objects into a fresh isolated
+store, and materializes all files directly without checkout conversion.
+It rejects symlinks, gitlinks, nonstandard modes, content/path collisions,
+missing/oversized objects and unreviewed pyc before project imports. The
+source repository's refs, config, hooks, worktree list and working files
+must remain untouched. Tests use disposable repositories; never install
+malicious Git configs or replacement refs into the real project checkout.
+
+All remaining worker and final identity Git calls use a controlled, replacement-
+disabled and fsmonitor-disabled subprocess environment. The independently
+provisioned bootstrap itself and the trusted OS/Git/Python remain explicit
+assumptions; the source tree cannot self-approve by matching its own HEAD.
+Preserve sealed policy/digest FDs, exact approved source SHA, pre-import
+reviewed dependency authentication and only redacted synthetic receipts.
+
+The benchmark now pins the matcher to iou-maxcard-hk/1 with bounded spatial
+candidate generation, iterative maximum-cardinality matching and a shared
+manifest-wide deterministic complexity budget. A matching limit refusal is
+an error, not zero evidence, an abstention, or a passing benchmark. The
+secondary pair-dependent IoU/center metrics must never be interpreted as
+bitwise comparable with the old recursive matching implementation without
+a matcher-method version check. Re-register an independently approved frozen
+policy for the new source SHA before any synthetic holdout run; old digest
+approvals cannot be carried forward. This remains NOT_AUTHORIZED for real
+human-data or public production promotion.
+
+Review and release gates: exact-new-head Python 3.10/3.11/3.12 CI, app
+environments, docs, roadmap, adversarial Git tests and matcher budget tests;
+a fresh independent code/security review; evidence-backed reconciliation
+of all historical Codex threads. Do not merge on unit-test success alone.
+Issue #92 and T11 remain separate product/rights blockers.

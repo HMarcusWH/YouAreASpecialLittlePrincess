@@ -261,3 +261,50 @@ separately approved policy and source SHA, and that stages a verified,
 bytecode-free detached worktree may supply accepted *synthetic engineering*
 execution evidence. Even this is not signed attestation or authorization for
 real people, public qualification or profile activation.
+
+### Raw-object source staging and bounded matching (PR #95 security closeout)
+
+The externally provisioned **independently authenticated** standard-library
+bootstrap is the only approved synthetic engineering launch entrypoint.
+Its independently approved exact source commit SHA is the root of authority.
+It reads commit/tree/blob objects by **raw Git object IDs** (replacements
+disabled, no source worktree checkouts), independently checks Git object
+types, lengths and SHA-1 hashes, and rejects unsupported tree modes, path
+collisions, escaped names, excessive contents and inherited bytecode.
+
+Authenticated objects are written into an entirely new private Git store.
+The fresh store uses a scrubbed Git subprocess environment with no inherited
+global/system/source Git config, aliases, lazy fetch, prompts, replacement
+objects, hooks or filesystem monitoring. It stages with
+worktree add --no-checkout --detach, writes exact reviewed blob bytes directly
+using exclusive no-follow file creation, builds the index with read-tree
+without checkout conversion, and verifies every file/mode, complete path
+inventory and clean status before executing project imports. Source-local
+Git smudge filters, info/attributes, replace refs, core.fsmonitor and
+environment Git-config injection are never authority or executable inputs.
+A trusted OS, Git binary, interpreter and independently provisioned bootstrap
+remain necessary; this is not a sandbox or signed attestation.
+
+The offline evaluator's one-to-one thresholded IoU score now uses
+MATCHER_METHOD = iou-maxcard-hk/1. Candidate pairs are built with a
+bounded x-interval sweep and verified y-overlap/area/IoU tests. An iterative
+Hopcroft-Karp algorithm supplies **maximum-cardinality**, with stable
+higher-IoU-first then original candidate-index ordering; no recursive
+augmenting calls. Per-call limits: 4,096 boxes per family,
+4,000,000 inspected candidates, 1,500,000 valid graph edges and
+10,000,000 matching traversals. One manifest shares a 50,000,000-unit
+budget across all specimens and shadow matches. Exhausting any limit raises
+matching_complexity_exceeded and prevents publishing partial accuracy or
+an engineering pass. These are *engineering resource safeguards*, not
+scientific accuracy requirements. The method identifier appears in direct
+benchmark result metadata and is additionally frozen through the evaluator
+source SHA in the approved policy. Different valid maximum matchings can
+change mean IoU/center-error values without changing F1; comparability
+therefore requires this versioned matcher identity.
+
+Any new implementation commit changes the evaluator/qualifier source identity
+and invalidates previous policy or bootstrap approvals. An operator must
+independently approve the new source revision, launcher template hash,
+policy digest and relevant frozen manifests **before** trusted synthetic
+execution. No change to legacy production defaults, consent policy,
+Issue #92 or public_qualification: NOT_AUTHORIZED.

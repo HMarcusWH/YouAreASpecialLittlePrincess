@@ -248,3 +248,18 @@ The script replaces only the generated `apps/mobile/android/` project and refuse
 ## Shutdown and deletion
 
 Use Ctrl-C in API/worker/native-dev terminals. `docker compose -f infra/local/compose.yaml stop` preserves the development database. **Destructive cleanup:** `docker compose -f infra/local/compose.yaml down -v` removes its local database volume. Application-private `.local-storage` and `.local-tombstones` directories are separate; delete them only after verifying they contain this disposable development data and all processes are stopped. Never put either into Git. Do not use a documentation cleanup command against production evidence or tombstones.
+
+### External Git source-stage approval for PR #95
+
+The independently provisioned bootstrap now streams SHA-validated Git object
+bytes into a fresh private repository instead of asking the source repo to
+check out files. Use a trusted Linux Git executable at /usr/bin/git and an
+independently recorded digest of the external bootstrap template. The approved
+policy must already record the exact *new* source SHA and evaluator hash:
+reusing an earlier source/policy approval after changing matching or staging
+code is not valid. The bootstrap scrubs inherited Git configuration; no
+developer-supplied source Git filters, global attributes, replacement refs
+or fsmonitor commands are allowed to execute. The installed wheelhouse still
+must be separately authenticated with the reviewed lock and kept outside the
+untrusted source tree. See evaluation/segmentation/README.md for the
+command-line invocation and synthetic-only evidence limitations.

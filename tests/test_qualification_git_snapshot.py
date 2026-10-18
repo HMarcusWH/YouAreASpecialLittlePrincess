@@ -2,10 +2,7 @@
 from __future__ import annotations
 
 import argparse
-import hashlib
-import os
 import subprocess
-from pathlib import Path
 
 import pytest
 
