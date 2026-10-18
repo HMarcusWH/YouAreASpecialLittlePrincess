@@ -127,21 +127,76 @@ def match(reference, detected, threshold=0.5, *, budget: _MatchingBudget | None 
         raise ValueError("matching_complexity_exceeded")
     if budget is not None and not isinstance(budget, _MatchingBudget):
         raise ValueError("matching_complexity_exceeded")
-    starts = sorted((box.x, j) for j, box in enumerate(boxes))
-    ends = sorted((box.x2, j) for j, box in enumerate(boxes))
-    start_x = [x for x, _ in starts]
-    end_x = [x for x, _ in ends]
+    # Centered x-interval index: a small query visits only intervals that
+    # can geometrically cross its x-range. The previous min(starts, ends)
+    # shortcut still inspected O(n^2) pairs for a sparse diagonal layout.
+    class _IntervalNode:
+        __slots__ = ("center", "spanning", "by_start", "starts",
+                     "by_end", "ends", "left", "right")
+
+        def __init__(self):
+            self.center = 0
+            self.spanning = []
+            self.by_start = []
+            self.starts = []
+            self.by_end = []
+            self.ends = []
+            self.left = None
+            self.right = None
+
+    root = _IntervalNode() if boxes else None
+    if root is not None:
+        pending = [(root, list(range(len(boxes))))]
+        while pending:
+            node, indices = pending.pop()
+            start_points = sorted(boxes[j].x for j in indices)
+            pivot = start_points[len(start_points) // 2]
+            node.center = pivot
+            left_indices, right_indices = [], []
+            for j in indices:
+                candidate = boxes[j]
+                if candidate.x2 <= pivot:
+                    left_indices.append(j)
+                elif candidate.x > pivot:
+                    right_indices.append(j)
+                else:
+                    node.spanning.append(j)
+            node.by_start = sorted((boxes[j].x, j) for j in node.spanning)
+            node.starts = [x for x, _ in node.by_start]
+            node.by_end = sorted((boxes[j].x2, j) for j in node.spanning)
+            node.ends = [x for x, _ in node.by_end]
+            if left_indices:
+                node.left = _IntervalNode()
+                pending.append((node.left, left_indices))
+            if right_indices:
+                node.right = _IntervalNode()
+                pending.append((node.right, right_indices))
+
     inspected = edges = 0
     graph = []
     for ref in refs:
-        # One of the two x-interval filters is necessarily selective on
-        # spatially sparse layouts. Do NOT materialize all n_ref*n_det pairs.
-        before_right = bisect_left(start_x, ref.x2)
-        after_left = bisect_right(end_x, ref.x)
-        candidates = (starts[:before_right] if before_right <= len(ends) - after_left
-                      else ends[after_left:])
+        candidates = []
+        nodes = [root] if root is not None else []
+        while nodes:
+            node = nodes.pop()
+            if ref.x2 <= node.center:
+                limit = bisect_left(node.starts, ref.x2)
+                candidates.extend(j for _, j in node.by_start[:limit])
+                if node.left is not None:
+                    nodes.append(node.left)
+            elif ref.x > node.center:
+                first = bisect_right(node.ends, ref.x)
+                candidates.extend(j for _, j in node.by_end[first:])
+                if node.right is not None:
+                    nodes.append(node.right)
+            else:
+                candidates.extend(node.spanning)
+                if node.left is not None:
+                    nodes.append(node.left)
+                if node.right is not None:
+                    nodes.append(node.right)
         scored = []
-        for _, j in candidates:
+        for j in candidates:
             inspected += 1
             if inspected > MAX_MATCH_COMPARISONS or (
                 budget is not None and inspected > budget.remaining
@@ -151,8 +206,6 @@ def match(reference, detected, threshold=0.5, *, budget: _MatchingBudget | None 
             if (box.x >= ref.x2 or box.x2 <= ref.x
                     or box.y >= ref.y2 or box.y2 <= ref.y):
                 continue
-            # A necessary upper bound on IoU; valid edges are never pruned
-            # merely because candidate rectangles have very different areas.
             if min(ref.area, box.area) / max(ref.area, box.area) < threshold:
                 continue
             score = iou(ref, box)
