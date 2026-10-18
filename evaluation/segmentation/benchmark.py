@@ -12,6 +12,10 @@ from pathlib import Path, PurePosixPath
 import cv2
 import numpy as np
 
+from princess_app.adapters.imaging import inspect_header
+from princess_app.domain.intake import MAX_DECODED_PIXELS, check_header
+from princess_app.ports.base import InvalidInput
+
 from princess_graphology.context import prepare_context
 from princess_graphology.models import Box
 from princess_graphology.preprocessing.grid import GridQualityError
@@ -387,6 +391,27 @@ def _read_verified_image(root: Path, relative: str, expected_digest: str) -> byt
             os.close(current_fd)
 
 
+
+def _checked_benchmark_image_header(blob: bytes):
+    """Authenticate the image header before OpenCV can allocate decoded pixels.
+
+    Use the exact digest-verified image buffer and the application intake
+    policy. EXIF transforms are not yet part of this evaluator's frame contract.
+    """
+    if MAX_PIXELS != MAX_DECODED_PIXELS:
+        raise ValueError("benchmark and intake pixel budgets disagree")
+    try:
+        header = inspect_header(blob)
+        check_header(header, header.media_type)
+    except InvalidInput:
+        raise ValueError("benchmark image header rejected") from None
+    if header.width * header.height > MAX_PIXELS:
+        raise ValueError("benchmark image exceeds pixel budget")
+    if header.exif_orientation != 1:
+        raise ValueError("benchmark EXIF orientation unsupported") from None
+    return header
+
+
 def run_manifest(manifest: Path, root: Path, *, profile="grid-v1", allow_real=False,
                  shadow_projection=False, shadow_words=False, synthetic_split=False,
                  manifest_bytes: bytes | None = None):
@@ -432,9 +457,16 @@ def run_manifest(manifest: Path, root: Path, *, profile="grid-v1", allow_real=Fa
             raise ValueError("duplicate specimen id")
         seen.add(name)
         blob = _read_verified_image(resolved_root, record["image_path"], record["sha256"])
+        header = _checked_benchmark_image_header(blob)
         image = cv2.imdecode(np.frombuffer(blob, np.uint8), cv2.IMREAD_UNCHANGED)
         if image is None:
             raise ValueError("undecodable image")
+        if (not isinstance(image, np.ndarray) or image.dtype != np.uint8
+                or image.ndim not in (2, 3)
+                or (image.ndim == 3 and image.shape[2] not in (3, 4))):
+            raise ValueError("unsupported decoded benchmark image")
+        if image.shape[:2] != (header.height, header.width):
+            raise ValueError("decoded benchmark image dimensions disagree with verified header")
         if image.shape[0] * image.shape[1] > MAX_PIXELS:
             raise ValueError("decoded image exceeds benchmark pixel budget")
         rows.append(evaluate(image, record, split=split, profile=profile,
