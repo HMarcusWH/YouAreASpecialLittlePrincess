@@ -14,6 +14,7 @@ import platform
 from pathlib import Path
 
 from .strict_json import strict_loads
+from .run_qualification import _trusted_git_env
 
 
 def _records(path: Path, expected_split: str):
@@ -209,7 +210,7 @@ def current_local_identity() -> dict:
     _verify_loaded_evaluation_modules()
     try:
         run = subprocess.run(
-            ["git", "rev-parse", "--verify", "HEAD"], cwd=ROOT, text=True,
+            ["git", "rev-parse", "--verify", "HEAD"], cwd=ROOT, env=_trusted_git_env(), text=True,
             capture_output=True, check=True, timeout=10,
         )
     except (OSError, subprocess.SubprocessError) as exc:
@@ -222,7 +223,7 @@ def current_local_identity() -> dict:
              "src/princess_graphology", "src/princess_app", "src/princess_contracts",
              "evaluation", "tools", "requirements", "tests",
              "apps/api", "apps/workers", "infra", "migrations", "docs/roadmap"],
-            cwd=ROOT, text=True, capture_output=True, check=True, timeout=10,
+            cwd=ROOT, env=_trusted_git_env(), text=True, capture_output=True, check=True, timeout=10,
         )
     except (OSError, subprocess.SubprocessError) as exc:
         raise ValueError("source checkout cleanliness cannot be verified") from exc

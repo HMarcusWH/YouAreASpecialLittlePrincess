@@ -20,6 +20,7 @@ import re
 import subprocess
 import sys
 import tempfile
+import zlib
 from pathlib import Path
 
 _DIGEST = re.compile(r"^[0-9a-f]{64}$")
@@ -37,14 +38,236 @@ class _Rejected(ValueError):
         self.code = code
 
 
-def _git(args, *, cwd: Path, timeout: int = 90) -> subprocess.CompletedProcess:
-    completed = subprocess.run(
-        ["git", "-c", "core.hooksPath=/dev/null", *args],
-        cwd=cwd, capture_output=True, timeout=timeout, check=False,
-    )
+# The external bootstrap is the trust root: no helper is imported from a
+# caller-controlled checkout. Only exact SHA-1 Git objects are ever staged.
+_MAX_SOURCE_OBJECTS = 16000
+_MAX_SOURCE_BYTES = 64 * 1024 * 1024
+_MAX_OBJECT_BYTES = 16 * 1024 * 1024
+_MAX_SOURCE_DEPTH = 32
+_GIT_BINARY = "/usr/bin/git"
+
+
+def _git_environment(private: Path) -> dict:
+    """No inherited Git config, replacement refs, prompts or lazy-fetch hooks."""
+    home, xdg, template = (private / "home", private / "xdg", private / "empty-template")
+    for folder in (home, xdg, template):
+        folder.mkdir(exist_ok=True, mode=0o700)
+    return {
+        "PATH": "/usr/bin:/bin",
+        "HOME": str(home), "XDG_CONFIG_HOME": str(xdg),
+        "GIT_CONFIG_NOSYSTEM": "1", "GIT_CONFIG_GLOBAL": "/dev/null",
+        "GIT_NO_REPLACE_OBJECTS": "1", "GIT_NO_LAZY_FETCH": "1",
+        "GIT_ATTR_NOSYSTEM": "1", "GIT_TERMINAL_PROMPT": "0",
+        "GIT_TEMPLATE_DIR": str(template), "LC_ALL": "C",
+    }
+
+
+def _git(args, *, cwd: Path, env: dict, timeout: int = 90,
+         input_bytes: bytes | None = None) -> subprocess.CompletedProcess:
+    if not Path(_GIT_BINARY).is_file():
+        raise _Rejected("Q_SOURCE")
+    try:
+        completed = subprocess.run(
+            [_GIT_BINARY, "--no-replace-objects", "-c", "core.fsmonitor=false",
+             "-c", "core.hooksPath=/dev/null", *args],
+            cwd=cwd, env=env, input=input_bytes, capture_output=True,
+            timeout=timeout, check=False,
+        )
+    except (OSError, subprocess.SubprocessError) as exc:
+        raise _Rejected("Q_SOURCE") from exc
     if completed.returncode:
         raise _Rejected("Q_SOURCE")
     return completed
+
+
+def _verified_object_batch(source: Path, object_ids: list[str],
+                           env: dict) -> dict[str, tuple[str, bytes]]:
+    """Read packed/loose objects by exact SHA, with no revision/ref replacement."""
+    unique = list(dict.fromkeys(object_ids))
+    if not unique:
+        return {}
+    if len(unique) > _MAX_SOURCE_OBJECTS or any(
+        not _REVISION.fullmatch(key) for key in unique
+    ):
+        raise _Rejected("Q_SOURCE")
+    request = ("\n".join(unique) + "\n").encode("ascii")
+    listing = _git(["cat-file", "--batch-check=%(objectname) %(objecttype) %(objectsize)"],
+                   cwd=source, env=env, input_bytes=request).stdout.splitlines()
+    if len(listing) != len(unique):
+        raise _Rejected("Q_SOURCE")
+    kinds, sizes = [], []
+    total = 0
+    for key, line in zip(unique, listing):
+        tokens = line.split(b" ")
+        if (len(tokens) != 3 or tokens[0] != key.encode("ascii")
+                or tokens[1] not in (b"commit", b"tree", b"blob")
+                or not tokens[2].isdigit()):
+            raise _Rejected("Q_SOURCE")
+        size = int(tokens[2])
+        total += size
+        if size > _MAX_OBJECT_BYTES or total > _MAX_SOURCE_BYTES:
+            raise _Rejected("Q_SOURCE")
+        kinds.append(tokens[1].decode("ascii"))
+        sizes.append(size)
+    output = _git(["cat-file", "--batch"], cwd=source, env=env,
+                  input_bytes=request).stdout
+    pos, found = 0, {}
+    for key, kind, size in zip(unique, kinds, sizes):
+        end = output.find(b"\n", pos)
+        if end < 0 or output[pos:end] != (
+            key + " " + kind + " " + str(size)
+        ).encode("ascii"):
+            raise _Rejected("Q_SOURCE")
+        pos = end + 1
+        payload = output[pos:pos + size]
+        if len(payload) != size or output[pos + size:pos + size + 1] != b"\n":
+            raise _Rejected("Q_SOURCE")
+        pos += size + 1
+        actual = hashlib.sha1(
+            (kind + " " + str(size)).encode("ascii") + b"\x00" + payload
+        ).hexdigest()
+        if not hmac.compare_digest(actual, key):
+            raise _Rejected("Q_SOURCE")
+        found[key] = (kind, payload)
+    if pos != len(output):
+        raise _Rejected("Q_SOURCE")
+    return found
+
+
+def _approved_tree(source: Path, revision: str, env: dict):
+    """Walk only the SHA-authenticated commit tree; reject exotic file modes."""
+    objects = _verified_object_batch(source, [revision], env)
+    kind, commit_bytes = objects[revision]
+    if kind != "commit":
+        raise _Rejected("Q_SOURCE")
+    tree_lines = [
+        line[5:] for line in commit_bytes.split(b"\n\n", 1)[0].splitlines()
+        if line.startswith(b"tree ")
+    ]
+    if len(tree_lines) != 1 or not _REVISION.fullmatch(
+        tree_lines[0].decode("ascii", errors="replace")
+    ):
+        raise _Rejected("Q_SOURCE")
+    pending = [(tree_lines[0].decode("ascii"), "", 0)]
+    files, directories, seen_paths = [], set(), set()
+    total_bytes, item_count = 0, 0
+    while pending:
+        batch = list(dict.fromkeys(key for key, _, _ in pending if key not in objects))
+        for offset in range(0, len(batch), 256):
+            objects.update(_verified_object_batch(source, batch[offset:offset + 256], env))
+        children = []
+        for tree_sha, prefix, depth in pending:
+            if depth > _MAX_SOURCE_DEPTH or objects[tree_sha][0] != "tree":
+                raise _Rejected("Q_SOURCE")
+            raw = objects[tree_sha][1]
+            cursor, local_names = 0, set()
+            while cursor < len(raw):
+                space = raw.find(b" ", cursor)
+                nul = raw.find(b"\x00", space + 1)
+                if space < 0 or nul < 0 or nul + 21 > len(raw):
+                    raise _Rejected("Q_SOURCE")
+                mode, encoded = raw[cursor:space], raw[space + 1:nul]
+                cursor = nul + 21
+                try:
+                    name = encoded.decode("utf-8")
+                except UnicodeDecodeError as exc:
+                    raise _Rejected("Q_SOURCE") from exc
+                if (not name or name in (".", "..") or "/" in name
+                        or "\\" in name or "\x00" in name
+                        or name.casefold() == ".git"
+                        or name.casefold() in local_names):
+                    raise _Rejected("Q_SOURCE")
+                local_names.add(name.casefold())
+                path = prefix + name
+                if path in seen_paths:
+                    raise _Rejected("Q_SOURCE")
+                seen_paths.add(path)
+                sha = raw[nul + 1:nul + 21].hex()
+                item_count += 1
+                if item_count > _MAX_SOURCE_OBJECTS:
+                    raise _Rejected("Q_SOURCE")
+                if mode in (b"40000", b"040000"):
+                    directories.add(path)
+                    children.append((sha, path + "/", depth + 1))
+                elif mode in (b"100644", b"100755"):
+                    files.append((path, mode.decode("ascii"), sha))
+                else:
+                    # No symlinks, gitlinks, special files or unknown extensions.
+                    raise _Rejected("Q_SOURCE")
+        pending = children
+    blob_ids = list(dict.fromkeys(sha for _, _, sha in files))
+    for offset in range(0, len(blob_ids), 256):
+        batch = [sha for sha in blob_ids[offset:offset + 256] if sha not in objects]
+        objects.update(_verified_object_batch(source, batch, env))
+    for path, _mode, sha in files:
+        if objects[sha][0] != "blob" or path.endswith(".pyc"):
+            raise _Rejected("Q_SOURCE")
+        total_bytes += len(objects[sha][1])
+        if total_bytes > _MAX_SOURCE_BYTES:
+            raise _Rejected("Q_SOURCE")
+    if len(objects) > _MAX_SOURCE_OBJECTS:
+        raise _Rejected("Q_SOURCE")
+    return objects, sorted(directories, key=lambda p: (p.count("/"), p)), files
+
+
+def _stage_approved_source(source: Path, revision: str, private: Path):
+    """Copy authenticated raw objects to a new Git store, never checkout source."""
+    env = _git_environment(private)
+    objects, dirs, files = _approved_tree(source, revision, env)
+    isolated = private / "reviewed.git"
+    stage = private / "checkout"
+    _git(["init", "--bare", "--template", str(private / "empty-template"),
+          str(isolated)], cwd=private, env=env)
+    for sha, (kind, data) in objects.items():
+        path = isolated / "objects" / sha[:2] / sha[2:]
+        path.parent.mkdir(mode=0o700, exist_ok=True)
+        encoded = zlib.compress(
+            (kind + " " + str(len(data))).encode("ascii") + b"\x00" + data
+        )
+        flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL | getattr(os, "O_NOFOLLOW", 0)
+        descriptor = os.open(path, flags, 0o600)
+        with os.fdopen(descriptor, "wb") as stream:
+            stream.write(encoded)
+    _git(["--git-dir", str(isolated), "worktree", "add", "--no-checkout",
+          "--detach", str(stage), revision], cwd=private, env=env)
+    for dirname in dirs:
+        (stage / dirname).mkdir(mode=0o700, parents=True, exist_ok=False)
+    approved_paths = {}
+    for name, mode, sha in files:
+        path = stage / name
+        if not path.parent.is_dir():
+            raise _Rejected("Q_SOURCE")
+        flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL | getattr(os, "O_NOFOLLOW", 0)
+        descriptor = os.open(path, flags, 0o600)
+        with os.fdopen(descriptor, "wb") as stream:
+            stream.write(objects[sha][1])
+        path.chmod(0o755 if mode == "100755" else 0o644)
+        approved_paths[name] = (mode, sha)
+    # This updates ONLY the isolated index; no Git checkout conversion/filter.
+    _git(["read-tree", "--reset", revision], cwd=stage, env=env)
+    if _git(["rev-parse", "--verify", "HEAD"], cwd=stage, env=env).stdout.strip() != (
+        revision.encode("ascii")
+    ):
+        raise _Rejected("Q_SOURCE")
+    all_paths = {p.relative_to(stage).as_posix() for p in stage.rglob("*")}
+    if all_paths != {".git", *dirs, *approved_paths}:
+        raise _Rejected("Q_SOURCE")
+    for name, (mode, digest) in approved_paths.items():
+        path = stage / name
+        if (path.is_symlink() or not path.is_file()
+                or (path.stat().st_mode & 0o777) != (0o755 if mode == "100755" else 0o644)
+                or hashlib.sha1(
+                    b"blob " + str(path.stat().st_size).encode("ascii")
+                    + b"\x00" + path.read_bytes()
+                ).hexdigest() != digest):
+            raise _Rejected("Q_SOURCE")
+    if _git(["status", "--porcelain", "--ignored=matching", "--untracked-files=all"],
+            cwd=stage, env=env).stdout.strip():
+        raise _Rejected("Q_SOURCE")
+    entry = stage / _RUNNER_PATH
+    if not entry.is_file() or entry.is_symlink():
+        raise _Rejected("Q_SOURCE")
+    return stage, env
 
 
 def _validated_policy_sha(args) -> str:
@@ -130,25 +353,13 @@ def _run(args) -> int:
     revision, frozen_policy, frozen_approval = _validated_policy_sha(args)
     source = args.repository
 
-    # Never execute the checked-out launcher or use the unapproved current
-    # checkout HEAD as authority. Get the launcher from the Git object
-    # identified by the independently approved policy revision.
-    object_bytes = _git(["show", revision + ":" + _RUNNER_PATH], cwd=source).stdout
-    if not object_bytes:
-        raise _Rejected("Q_SOURCE")
+    # Read only authenticated objects. The caller-controlled repository is
+    # never checked out or used for mutable worktree operations.
     with tempfile.TemporaryDirectory(prefix="frozen-qualification-") as temp:
-        stage = Path(temp) / "checkout"
-        _git(["worktree", "add", "--detach", str(stage), revision], cwd=source)
+        private = Path(temp)
+        stage, git_env = _stage_approved_source(source, revision, private)
+        entry = stage / _RUNNER_PATH
         try:
-            if _git(["rev-parse", "--verify", "HEAD"], cwd=stage).stdout.strip().decode("ascii") != revision:
-                raise _Rejected("Q_SOURCE")
-            # Do not accidentally trust ignored or untracked executables.
-            if _git(["status", "--porcelain", "--ignored=matching",
-                     "--untracked-files=all"], cwd=stage).stdout.strip():
-                raise _Rejected("Q_SOURCE")
-            entry = stage / _RUNNER_PATH
-            if entry.is_symlink() or entry.read_bytes() != object_bytes:
-                raise _Rejected("Q_SOURCE")
             # The authenticated policy and digest must not be reopened via
             # attacker-mutable original paths after this point. Sealed fd
             # snapshots survive a simultaneous policy+approval rotation.
@@ -170,11 +381,18 @@ def _run(args) -> int:
                 ]
                 if args.wheelhouse is not None:
                     cmd.extend(["--wheelhouse", str(args.wheelhouse)])
-                env = {k: v for k, v in os.environ.items() if not k.startswith(
-                    ("PYTHON", "GIT_", "PIP_")
-                )}
+                # Preserve no ambient Git/Python/loader configuration.
+                env = dict(git_env)
                 if args.wheelhouse is not None:
                     env["QUALIFICATION_WHEELHOUSE"] = str(args.wheelhouse)
+                elif os.environ.get("QUALIFICATION_WHEELHOUSE"):
+                    env["QUALIFICATION_WHEELHOUSE"] = os.environ["QUALIFICATION_WHEELHOUSE"]
+                elif os.environ.get("RUNNER_TEMP"):
+                    env["RUNNER_TEMP"] = os.environ["RUNNER_TEMP"]
+                # Some reviewed CI interpreters need their own libpython path.
+                base_lib = Path(sys.base_prefix).resolve() / "lib"
+                if base_lib.is_dir():
+                    env["LD_LIBRARY_PATH"] = str(base_lib)
                 proc = subprocess.run(
                     cmd, cwd=stage, env=env, capture_output=True, text=True,
                     timeout=240, check=False, pass_fds=(policy_fd, approval_fd),
@@ -204,11 +422,9 @@ def _run(args) -> int:
             print(json.dumps(receipt, sort_keys=True, allow_nan=False))
             return 0
         finally:
-            subprocess.run(
-                ["git", "-c", "core.hooksPath=/dev/null",
-                 "worktree", "remove", "--force", str(stage)],
-                cwd=source, capture_output=True, timeout=60, check=False,
-            )
+            # TemporaryDirectory owns both the isolated object store and stage.
+            # Never mutate the source repository's worktree registrations.
+            pass
 
 
 def main() -> int:

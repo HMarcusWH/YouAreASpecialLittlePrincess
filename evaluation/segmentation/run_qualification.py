@@ -17,10 +17,24 @@ import sys
 from pathlib import Path
 
 
+def _trusted_git_env():
+    """Worker-side Git is read-only and cannot inherit executable config."""
+    return {
+        "PATH": "/usr/bin:/bin", "HOME": "/nonexistent",
+        "XDG_CONFIG_HOME": "/nonexistent", "LC_ALL": "C",
+        "GIT_NO_REPLACE_OBJECTS": "1", "GIT_NO_LAZY_FETCH": "1",
+        "GIT_CONFIG_NOSYSTEM": "1", "GIT_CONFIG_GLOBAL": "/dev/null",
+        "GIT_TERMINAL_PROMPT": "0", "GIT_ATTR_NOSYSTEM": "1",
+        "GIT_CONFIG_COUNT": "2",
+        "GIT_CONFIG_KEY_0": "core.fsmonitor", "GIT_CONFIG_VALUE_0": "false",
+        "GIT_CONFIG_KEY_1": "core.hooksPath", "GIT_CONFIG_VALUE_1": "/dev/null",
+    }
+
+
 def _checked_subprocess(command, *, cwd):
     result = subprocess.run(
-        command, cwd=cwd, capture_output=True, text=True,
-        timeout=90, check=False,
+        command, cwd=cwd, env=_trusted_git_env(),
+        capture_output=True, text=True, timeout=90, check=False,
     )
     if result.returncode:
         raise ValueError("reviewed checkout staging failed")
@@ -118,7 +132,7 @@ def _verify_staged_worktree(root: Path, approved_revision: str) -> None:
         raise ValueError("worker was not launched from a detached Git worktree")
     branch = subprocess.run(
         ["git", "symbolic-ref", "-q", "HEAD"], cwd=root,
-        capture_output=True, text=True, timeout=10, check=False,
+        env=_trusted_git_env(), capture_output=True, text=True, timeout=10, check=False,
     )
     if branch.returncode != 1:
         raise ValueError("worker checkout is not detached")
@@ -135,7 +149,8 @@ def _verify_staged_worktree(root: Path, approved_revision: str) -> None:
                  root / "evaluation" / "segmentation" / "runtime_integrity.py"):
         canonical = subprocess.run(
             ["git", "show", f"{revision}:{path.relative_to(root).as_posix()}"],
-            cwd=root, capture_output=True, timeout=20, check=False,
+            cwd=root, env=_trusted_git_env(), capture_output=True,
+            timeout=20, check=False,
         )
         if canonical.returncode or path.is_symlink() or canonical.stdout != path.read_bytes():
             raise ValueError("staged executable differs from reviewed commit")
