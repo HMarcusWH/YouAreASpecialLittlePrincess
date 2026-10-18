@@ -2008,7 +2008,11 @@ def test_optimized_installed_cache_requires_canonical_tag_and_reviewed_code(
         "/installed/demo/__init__.py", "exec",
         dont_inherit=True, optimize=optimize,
     )))
-    with pytest.raises(ValueError, match="unverified installed bytecode cache"):
+    # Installed unoptimized (active) and optimized (inactive) caches reach
+    # separate existing fail-closed checks with different stable messages.
+    with pytest.raises(
+        ValueError, match="unreviewed installed bytecode cache|unverified installed bytecode cache"
+    ):
         trust.preflight_reviewed_environment(root)
 
 
