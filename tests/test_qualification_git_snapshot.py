@@ -222,6 +222,9 @@ def test_corrupted_git_blob_fails_before_any_source_materialization(tmp_path):
     sha = _git(repo, "hash-object", "note.txt")
     object_file = repo / ".git" / "objects" / sha[:2] / sha[2:]
     assert object_file.is_file()
+    # Git loose objects are normally read-only; replace the file in this
+    # disposable repo rather than trying to overwrite its protected inode.
+    object_file.unlink()
     object_file.write_bytes(b"this is not a Git zlib object")
     with pytest.raises(bootstrap._Rejected) as exc:
         _stage(repo, approved, tmp_path)
