@@ -117,7 +117,10 @@ def test_v1_manifest_cap_applies_before_json_parse(tmp_path, monkeypatch, file_i
     policy, _ = _policy(tmp_path)
     longest = max(len(f.read_bytes()) for f in documents.values())
     monkeypatch.setattr(qualification, "MAX_MANIFEST_JSON_BYTES", longest + 2)
-    documents[file_index].write_bytes(documents[file_index].read_bytes() + b" " * 10)
+    # Always exceed the shared budget, even when this partition is shorter.
+    documents[file_index].write_bytes(
+        documents[file_index].read_bytes() + b" " * (longest + 10)
+    )
     with pytest.raises(ValueError, match="frozen JSON exceeds byte budget"):
         qualification.predeclared_holdout_gate(
             documents["development"], documents["holdout"], policy,

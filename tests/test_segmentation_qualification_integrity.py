@@ -1020,17 +1020,19 @@ def test_isolated_launcher_returns_only_redacted_synthetic_receipt(tmp_path):
 def test_holdout_manifest_is_not_reopened_after_preflight(monkeypatch, tmp_path):
     manifests, policy, root = _fixtures(tmp_path)
     target = manifests["holdout"].resolve()
-    original_read = Path.read_bytes
+    from evaluation.segmentation import qualification
+
+    original_read = qualification.read_bounded_json_bytes
     seen = []
 
-    def observed_read(path):
-        if path.resolve() == target:
+    def observed_read(path, maximum):
+        if Path(path).resolve() == target:
             seen.append("read")
             if len(seen) > 1:
                 raise AssertionError("holdout manifest reopened after validation")
-        return original_read(path)
+        return original_read(path, maximum)
 
-    monkeypatch.setattr(Path, "read_bytes", observed_read)
+    monkeypatch.setattr(qualification, "read_bounded_json_bytes", observed_read)
     receipt = run_frozen_synthetic_qualification(
         manifests["development"], manifests["validation"],
         manifests["holdout"], policy, root,
