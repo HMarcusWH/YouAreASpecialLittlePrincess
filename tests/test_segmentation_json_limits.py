@@ -249,7 +249,9 @@ def test_shared_parser_keeps_finite_number_and_annotation_semantics():
 def test_strict_json_still_rejects_duplicate_nested_keys_and_deep_nesting():
     with pytest.raises(ValueError, match="duplicate JSON"):
         strict_json.strict_loads(b'{"top":{"a":1,"a":2}}')
-    deep = b"[" * 2500 + b"0" + b"]" * 2500
+    # CPython's JSON C decoder tolerates deeper arrays on 3.12 than on
+    # 3.10/3.11. Exercise actual depth refusal on every supported runtime.
+    deep = b"[" * 20_000 + b"0" + b"]" * 20_000
     with pytest.raises(ValueError, match="invalid frozen JSON"):
         strict_json.strict_loads(deep)
 
