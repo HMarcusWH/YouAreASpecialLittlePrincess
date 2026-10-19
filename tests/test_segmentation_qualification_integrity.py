@@ -489,11 +489,12 @@ def test_duplicate_keys_rejected_in_direct_benchmark_invocation(tmp_path):
         run_manifest(manifest, image_root, synthetic_split=True)
 
 
-def test_nonstandard_nonfinite_json_constant_fails_before_threshold_review(tmp_path):
+@pytest.mark.parametrize("nonfinite_token", ("NaN", "1e309", "-1e9999"))
+def test_nonstandard_nonfinite_json_constant_fails_before_threshold_review(tmp_path, nonfinite_token):
     manifests, policy, _ = _fixtures(tmp_path)
     raw = policy.read_text()
     policy.write_text(raw.replace('"min_line_coverage": 1.0',
-                                  '"min_line_coverage": NaN', 1))
+                                  '"min_line_coverage": ' + nonfinite_token, 1))
     _reapprove_policy_for_validation_test(policy)
     with pytest.raises(ValueError, match="nonfinite JSON"):
         predeclared_holdout_gate_v2(

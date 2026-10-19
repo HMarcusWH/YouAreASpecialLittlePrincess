@@ -63,3 +63,19 @@ def test_invalid_and_safe_zero_word_metrics():
     assert result["status"] == "MEASURED"
     assert result["false_zero_words"] is True
     assert summarize([result])["overall"]["false_zero_words"] == 1
+
+
+def test_benchmark_path_and_frozen_byte_snapshot_share_admission_limit(tmp_path, monkeypatch):
+    from evaluation.segmentation import benchmark
+
+    raw = b'{"schema_version":1,"split":"synthetic","specimens":[]}'
+    path = tmp_path / "oversize-benchmark.json"
+    path.write_bytes(raw)
+    monkeypatch.setattr(benchmark, "MAX_MANIFEST_JSON_BYTES", len(raw) - 1)
+    def refuse_parse(*_args):
+        pytest.fail("oversize JSON was parsed")
+    monkeypatch.setattr(benchmark, "strict_loads", refuse_parse)
+    with pytest.raises(ValueError, match="frozen JSON exceeds byte budget"):
+        benchmark.run_manifest(path, tmp_path)
+    with pytest.raises(ValueError, match="frozen JSON exceeds byte budget"):
+        benchmark.run_manifest(path, tmp_path, manifest_bytes=raw)
