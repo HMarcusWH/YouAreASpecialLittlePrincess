@@ -4,11 +4,18 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
-from collections import defaultdict
-from pathlib import Path
+import os
+import stat
+from bisect import bisect_left, bisect_right
+from collections import defaultdict, deque
+from pathlib import Path, PurePosixPath
 
 import cv2
 import numpy as np
+
+from princess_app.adapters.imaging import inspect_header
+from princess_app.domain.intake import MAX_DECODED_PIXELS, check_header
+from princess_app.ports.base import InvalidInput
 
 from princess_graphology.context import prepare_context
 from princess_graphology.models import Box
@@ -16,13 +23,39 @@ from princess_graphology.preprocessing.grid import GridQualityError
 from princess_graphology.segmentation_projection import propose_lines
 from princess_graphology.segmentation_words import propose_words
 
+from .strict_json import MAX_MANIFEST_JSON_BYTES, read_bounded_json_bytes, strict_loads
+
 PAPER = frozenset(("blank", "lined", "grid", "form", "unknown"))
-SPLIT = frozenset(("synthetic", "development", "holdout"))
+SPLIT = frozenset(("synthetic", "development", "validation", "holdout"))
+DATA_ORIGIN_SYNTHETIC = "SYNTHETIC_FIXTURE"
+DATA_ORIGIN_REAL = "REAL_SOURCE_DECLARED"  # Provenance classification, not a rights attestation.
+DATA_ORIGINS = frozenset((DATA_ORIGIN_SYNTHETIC, DATA_ORIGIN_REAL))
 FRAMES = frozenset(("analysis_canvas", "original_image"))
 MAX_SPECIMENS = 256
 MAX_FILE_BYTES = 25 * 1024 * 1024
 MAX_PIXELS = 24_000_000
 MAX_BOXES_PER_FAMILY = 4096
+MATCHER_METHOD = "iou-maxcard-hk/1"
+MAX_MATCH_COMPARISONS = 4_000_000
+MAX_MATCH_EDGES = 1_500_000
+MAX_MATCH_TRAVERSALS = 10_000_000
+MAX_RUN_MATCH_WORK = 50_000_000
+
+
+class _MatchingBudget:
+    """Shared deterministic work cap across one manifest and all shadow methods."""
+
+    def __init__(self, units: int = MAX_RUN_MATCH_WORK):
+        if type(units) is not int or units < 0:
+            raise ValueError("matching_complexity_exceeded")
+        self.remaining = units
+
+    def consume(self, units: int) -> None:
+        if units > self.remaining:
+            raise ValueError("matching_complexity_exceeded")
+        self.remaining -= units
+
+
 
 
 def _box(seq):
@@ -80,34 +113,186 @@ def iou(a: Box, b: Box) -> float:
     return overlap / union if union else 0.0
 
 
-def match(reference, detected, threshold=0.5):
-    """One-to-one maximum-cardinality IoU match; duplicates cannot inflate recall."""
+def match(reference, detected, threshold=0.5, *, budget: _MatchingBudget | None = None):
+    """Bounded deterministic maximum-cardinality IoU match, with no recursion.
+
+    Candidate indices are swept by their x-intervals before checking y, area,
+    and true IoU. Neighbor order is higher IoU first, then lower box index.
+    A complexity refusal is NOT a measured zero or a partial successful score.
+    """
     if not 0 < threshold <= 1:
         raise ValueError("invalid IoU threshold")
     refs, boxes = tuple(reference), tuple(detected)
-    graph = [[j for j, score in sorted(
-        ((j, iou(ref, box)) for j, box in enumerate(boxes)),
-        key=lambda pair: (-pair[1], pair[0])) if score >= threshold] for ref in refs]
-    assigned = {}
+    if len(refs) > MAX_BOXES_PER_FAMILY or len(boxes) > MAX_BOXES_PER_FAMILY:
+        raise ValueError("matching_complexity_exceeded")
+    if budget is not None and not isinstance(budget, _MatchingBudget):
+        raise ValueError("matching_complexity_exceeded")
+    # Centered x-interval index: a small query visits only intervals that
+    # can geometrically cross its x-range. The previous min(starts, ends)
+    # shortcut still inspected O(n^2) pairs for a sparse diagonal layout.
+    class _IntervalNode:
+        __slots__ = ("center", "spanning", "by_start", "starts",
+                     "by_end", "ends", "left", "right")
 
-    def augment(i, visited):
-        for j in graph[i]:
-            if j in visited:
+        def __init__(self):
+            self.center = 0
+            self.spanning = []
+            self.by_start = []
+            self.starts = []
+            self.by_end = []
+            self.ends = []
+            self.left = None
+            self.right = None
+
+    root = _IntervalNode() if boxes else None
+    if root is not None:
+        pending = [(root, list(range(len(boxes))))]
+        while pending:
+            node, indices = pending.pop()
+            start_points = sorted(boxes[j].x for j in indices)
+            pivot = start_points[len(start_points) // 2]
+            node.center = pivot
+            left_indices, right_indices = [], []
+            for j in indices:
+                candidate = boxes[j]
+                if candidate.x2 <= pivot:
+                    left_indices.append(j)
+                elif candidate.x > pivot:
+                    right_indices.append(j)
+                else:
+                    node.spanning.append(j)
+            node.by_start = sorted((boxes[j].x, j) for j in node.spanning)
+            node.starts = [x for x, _ in node.by_start]
+            node.by_end = sorted((boxes[j].x2, j) for j in node.spanning)
+            node.ends = [x for x, _ in node.by_end]
+            if left_indices:
+                node.left = _IntervalNode()
+                pending.append((node.left, left_indices))
+            if right_indices:
+                node.right = _IntervalNode()
+                pending.append((node.right, right_indices))
+
+    inspected = edges = 0
+    graph = []
+    for ref in refs:
+        candidates = []
+        nodes = [root] if root is not None else []
+        while nodes:
+            node = nodes.pop()
+            if ref.x2 <= node.center:
+                limit = bisect_left(node.starts, ref.x2)
+                candidates.extend(j for _, j in node.by_start[:limit])
+                if node.left is not None:
+                    nodes.append(node.left)
+            elif ref.x > node.center:
+                first = bisect_right(node.ends, ref.x)
+                candidates.extend(j for _, j in node.by_end[first:])
+                if node.right is not None:
+                    nodes.append(node.right)
+            else:
+                candidates.extend(node.spanning)
+                if node.left is not None:
+                    nodes.append(node.left)
+                if node.right is not None:
+                    nodes.append(node.right)
+        scored = []
+        for j in candidates:
+            inspected += 1
+            if inspected > MAX_MATCH_COMPARISONS or (
+                budget is not None and inspected > budget.remaining
+            ):
+                raise ValueError("matching_complexity_exceeded")
+            box = boxes[j]
+            if (box.x >= ref.x2 or box.x2 <= ref.x
+                    or box.y >= ref.y2 or box.y2 <= ref.y):
                 continue
-            visited.add(j)
-            if j not in assigned or augment(assigned[j], visited):
-                assigned[j] = i
-                return True
-        return False
+            if min(ref.area, box.area) / max(ref.area, box.area) < threshold:
+                continue
+            score = iou(ref, box)
+            if score >= threshold:
+                scored.append((score, j))
+                edges += 1
+                if edges > MAX_MATCH_EDGES:
+                    raise ValueError("matching_complexity_exceeded")
+        scored.sort(key=lambda item: (-item[0], item[1]))
+        graph.append([j for _, j in scored])
 
-    for i in range(len(refs)):
-        augment(i, set())
-    tp = len(assigned)
+    # Iterative Hopcroft-Karp: BFS layering plus an explicit-stack augment.
+    # Every explored edge has an auditable deterministic cost.
+    left = [-1] * len(refs)
+    right = [-1] * len(boxes)
+    traversals = 0
+    infinity = len(refs) + 1
+
+    def used_edge():
+        nonlocal traversals
+        traversals += 1
+        if traversals > MAX_MATCH_TRAVERSALS or (
+            budget is not None and inspected + traversals > budget.remaining
+        ):
+            raise ValueError("matching_complexity_exceeded")
+
+    while True:
+        dist = [infinity] * len(refs)
+        queue = deque()
+        for u, assigned in enumerate(left):
+            if assigned == -1:
+                dist[u] = 0
+                queue.append(u)
+        reachable_free = False
+        while queue:
+            u = queue.popleft()
+            for v in graph[u]:
+                used_edge()
+                owner = right[v]
+                if owner == -1:
+                    reachable_free = True
+                elif dist[owner] == infinity:
+                    dist[owner] = dist[u] + 1
+                    queue.append(owner)
+        if not reachable_free:
+            break
+        for seed in range(len(refs)):
+            if left[seed] != -1:
+                continue
+            stack = [seed]
+            offsets = [0]
+            alternating_edges = []
+            while stack:
+                u = stack[-1]
+                if offsets[-1] >= len(graph[u]):
+                    dist[u] = infinity
+                    stack.pop()
+                    offsets.pop()
+                    if len(alternating_edges) >= len(stack) and alternating_edges:
+                        alternating_edges.pop()
+                    continue
+                v = graph[u][offsets[-1]]
+                offsets[-1] += 1
+                used_edge()
+                owner = right[v]
+                if owner == -1:
+                    left[u] = v
+                    right[v] = u
+                    for level in range(len(stack) - 2, -1, -1):
+                        prev = stack[level]
+                        choice = alternating_edges[level]
+                        left[prev] = choice
+                        right[choice] = prev
+                    break
+                if dist[owner] == dist[u] + 1:
+                    stack.append(owner)
+                    offsets.append(0)
+                    alternating_edges.append(v)
+
+    if budget is not None:
+        budget.consume(inspected + traversals)
+    tp = sum(j >= 0 for j in left)
     fp, fn = len(boxes) - tp, len(refs) - tp
     precision = tp / len(boxes) if boxes else (1.0 if not refs else 0.0)
     recall = tp / len(refs) if refs else (1.0 if not boxes else 0.0)
     f1 = 2 * precision * recall / (precision + recall) if precision + recall else 0.0
-    matches = sorted((i, j) for j, i in assigned.items())
+    matches = [(i, j) for i, j in enumerate(left) if j >= 0]
     center_errors = [float(np.hypot(
         refs[i].x + refs[i].width / 2 - boxes[j].x - boxes[j].width / 2,
         refs[i].y + refs[i].height / 2 - boxes[j].y - boxes[j].height / 2))
@@ -121,7 +306,7 @@ def match(reference, detected, threshold=0.5):
             "mean_center_error_px": float(np.mean(center_errors)) if matches else None}
 
 
-def validate_record(row, split, *, allow_real=False):
+def validate_record(row, split, *, allow_real=False, synthetic_fixture=False):
     if split not in SPLIT:
         raise ValueError("unknown split")
     if not isinstance(row, dict):
@@ -135,22 +320,65 @@ def validate_record(row, split, *, allow_real=False):
     digest = row.get("sha256")
     if not isinstance(digest, str) or len(digest) != 64 or any(x not in "0123456789abcdef" for x in digest):
         raise ValueError("invalid image digest")
-    if split != "synthetic" and (not allow_real or not row.get("rights_decision_id")):
+    if split != "synthetic" and not synthetic_fixture and (
+        not allow_real or not row.get("rights_decision_id")
+    ):
         raise ValueError("authorized rights decision required for real data")
-    return _validated_boxes(row.get("lines", []), label="line"), (
+    if synthetic_fixture and allow_real:
+        raise ValueError("fixture mode and real-data mode cannot be combined")
+    if split == "synthetic" and allow_real:
+        raise ValueError("synthetic split cannot be evaluated as real data")
+    # Missing annotations are unknown, never a ground-truth empty page.
+    return (_validated_boxes(row["lines"], label="line") if "lines" in row else None), (
         _validated_boxes(row["words"], label="word") if "words" in row else None)
 
 
+def _uniform_light_synthetic_fixture_empty(image, context) -> bool:
+    """A deliberately narrow, image-only blank oracle for engineering fixtures.
+
+    Does not consult ground-truth annotations or imply real-photo emptiness:
+    uniform light captures can be overexposed and remain unqualified outside
+    the explicit synthetic fixture path. Ambiguous/noisy/grid-cleaned pages
+    still abstain.
+    """
+    meta = context.metadata
+    # Normalize BGRA onto white by the same compositing rule as
+    # prepare_context(), before testing for synthetic uniform light. Inspecting
+    # raw alpha would misclassify a fully transparent white image as dark.
+    pixels = image
+    if image.ndim == 3 and image.shape[2] == 4:
+        alpha = image[:, :, 3:4].astype(float) / 255
+        pixels = np.rint(
+            image[:, :, :3].astype(float) * alpha + 255 * (1 - alpha)
+        ).astype(np.uint8)
+    return bool(
+        int(pixels.min()) >= 240
+        and int(pixels.min()) == int(pixels.max())
+        and meta.get("binarize_method") == "uniform_image"
+        and meta.get("grid_preprocessing", {}).get("status") == "absent"
+        and not np.any(context.mask)
+        and not context.lines and not context.words
+    )
+
+
 def evaluate(image, row, *, split="synthetic", profile="grid-v1", allow_real=False,
-             shadow_projection=False, shadow_words=False, annotation_frame="analysis_canvas"):
-    expected_lines, expected_words = validate_record(row, split, allow_real=allow_real)
+             shadow_projection=False, shadow_words=False, annotation_frame="analysis_canvas",
+             synthetic_fixture=False, matching_budget: _MatchingBudget | None = None):
+    expected_lines, expected_words = validate_record(
+        row, split, allow_real=allow_real, synthetic_fixture=synthetic_fixture
+    )
     if annotation_frame not in FRAMES:
         raise ValueError("unrecognized annotation frame")
     if not isinstance(image, np.ndarray) or image.dtype != np.uint8 or image.ndim not in (2, 3):
         raise ValueError("invalid benchmark image")
     if image.shape[0] * image.shape[1] > MAX_PIXELS:
         raise ValueError("decoded image exceeds benchmark pixel budget")
-    label = {"specimen_id": row["specimen_id"], "split": split, "paper": row["paper"]}
+    label = {"specimen_id": row["specimen_id"], "split": split, "paper": row["paper"],
+             "matching_method": MATCHER_METHOD,
+             "data_origin": DATA_ORIGIN_SYNTHETIC if (split == "synthetic" or synthetic_fixture)
+                            else DATA_ORIGIN_REAL,
+             "line_reference_n": len(expected_lines) if expected_lines is not None else None,
+             "word_reference_n": len(expected_words) if expected_words is not None else None}
     trace = {}
     try:
         context = prepare_context(image, grid_profile=profile, word_trace=trace)
@@ -161,40 +389,59 @@ def evaluate(image, row, *, split="synthetic", profile="grid-v1", allow_real=Fal
         matrix = context.metadata["original_to_analysis"]
         source = (image.shape[1], image.shape[0])
         target = (context.width, context.height)
-        expected_lines = to_analysis_boxes(expected_lines, matrix,
-                                           source_size=source, destination_size=target)
+        if expected_lines is not None:
+            expected_lines = to_analysis_boxes(expected_lines, matrix,
+                                               source_size=source, destination_size=target)
         if expected_words is not None:
             expected_words = to_analysis_boxes(expected_words, matrix,
                                                source_size=source, destination_size=target)
     else:
-        if any(b.x2 > context.width or b.y2 > context.height for b in expected_lines):
+        if expected_lines is not None and any(
+            b.x2 > context.width or b.y2 > context.height for b in expected_lines
+        ):
             raise ValueError("line annotation exceeds analysis canvas")
         if expected_words is not None and any(
             b.x2 > context.width or b.y2 > context.height for b in expected_words
         ):
             raise ValueError("word annotation exceeds analysis canvas")
     shadow = None
-    if shadow_projection:
+    if shadow_projection and expected_lines is not None:
         projection = propose_lines(context.mask)
         if projection.diagnostics["truncated"]:
             raise ValueError("line candidate cap reached; specimen not scoreable")
-        shadow = match(expected_lines, projection.boxes)
+        shadow = match(expected_lines, projection.boxes, budget=matching_budget)
     word_shadow = None
     if shadow_words and expected_words is not None:
         proposals = propose_words(context.mask, context.lines)
         if proposals.diagnostics["truncated"]:
             raise ValueError("word candidate cap reached; specimen not scoreable")
-        word_shadow = match(expected_words, proposals.boxes)
+        word_shadow = match(expected_words, proposals.boxes, budget=matching_budget)
     qualification = context.metadata.get("qualification")
-    line_available = qualification is None or qualification.get("lines") == "qualified"
-    word_available = qualification is None or qualification.get("words") == "qualified"
+    verified_fixture_empty = (
+        profile == "qualified-v2" and synthetic_fixture
+        and _uniform_light_synthetic_fixture_empty(image, context)
+    )
+    if verified_fixture_empty:
+        # One explicit source-independent empty outcome. This is *not* a
+        # general handwriting-free or human-data classifier, and synthetic
+        # qualification remains NOT_AUTHORIZED for public use.
+        qualification = {**qualification, "lines": "qualified_empty",
+                         "words": "qualified_empty",
+                         "empty_evidence": "uniform_light_synthetic_fixture"}
+    line_available = (qualification is None
+                      or qualification.get("lines") == "qualified"
+                      or verified_fixture_empty)
+    word_available = (qualification is None
+                      or qualification.get("words") == "qualified"
+                      or verified_fixture_empty)
     status = "MEASURED" if line_available and word_available else "PARTIAL"
     return {**label, "status": status,
             "reason": None if status == "MEASURED" else "some_evidence_unqualified",
             "qualification": qualification, "line_shadow": shadow, "word_shadow": word_shadow,
             "word_trace": trace,
-            "lines": match(expected_lines, context.lines) if line_available else None,
-            "words": match(expected_words, context.words)
+            "lines": match(expected_lines, context.lines, budget=matching_budget)
+                     if expected_lines is not None and line_available else None,
+            "words": match(expected_words, context.words, budget=matching_budget)
                      if expected_words is not None and word_available else None,
             "unavailable_words": expected_words is not None and not word_available,
             "false_zero_words": (bool(expected_words) and not context.words)
@@ -202,39 +449,155 @@ def evaluate(image, row, *, split="synthetic", profile="grid-v1", allow_real=Fal
 
 
 def summarize(rows):
+    """Report provenance-safe accuracy and abstentions; never mix source origins.
+
+    An unknown origin is not real evidence. Reject mixed or unmarked rows rather
+    than silently laundering synthetic results into a human population.
+    """
+    origins = {r.get("data_origin") for r in rows if isinstance(r, dict)}
+    if len(origins) != 1 or not origins.issubset(DATA_ORIGINS) or len(rows) == 0:
+        raise ValueError("unknown or mixed benchmark data origin")
+    data_origin = next(iter(origins))
     groups = defaultdict(list)
     for row in rows:
         groups[row["split"] + "/" + row["paper"]].append(row)
+
     def stats(items):
         measured = [r for r in items if r["status"] in ("MEASURED", "PARTIAL")]
+
         def family(kind):
-            values = [r.get(kind) for r in measured if r.get(kind) is not None]
-            return {"annotated_n": len(values),
-                    "macro_precision": float(np.mean([v["precision"] for v in values])) if values else None,
-                    "macro_recall": float(np.mean([v["recall"] for v in values])) if values else None,
-                    "macro_f1": float(np.mean([v["f1"] for v in values])) if values else None,
-                    "macro_count_mae": float(np.mean([v["count_mae"] for v in values])) if values else None,
-                    "macro_matched_iou": float(np.mean([v["mean_iou"] for v in values
-                                                       if v["mean_iou"] is not None]))
-                                         if any(v["mean_iou"] is not None for v in values) else None,
-                    "macro_center_error_px": float(np.mean([v["mean_center_error_px"] for v in values
-                                                            if v["mean_center_error_px"] is not None]))
-                                             if any(v["mean_center_error_px"] is not None for v in values) else None}
-        return {"count": len(items), "measured": len(measured),
+            key = "line_reference_n" if kind in ("lines", "line_shadow") else "word_reference_n"
+            eligible = []
+            for r in items:
+                n = r.get(key)
+                if n is None and isinstance(r.get(kind), dict):
+                    n = r[kind].get("reference_n")
+                if n is not None:
+                    eligible.append((r, n))
+            available = [(r, n) for r, n in eligible if isinstance(r.get(kind), dict)]
+            values = [r[kind] for r, _ in available]
+            nonempty = [r[kind] for r, n in available if n > 0]
+            nonempty_eligible_n = sum(n > 0 for _, n in eligible)
+            empty = [r[kind] for r, n in available if n == 0]
+            empty_eligible_n = sum(n == 0 for _, n in eligible)
+            empty_correct_n = sum(v["detected_n"] == 0 for v in empty)
+            def avg(field, subset):
+                numbers = [v[field] for v in subset if v.get(field) is not None]
+                return float(np.mean(numbers)) if numbers else None
+
+            return {"eligible_n": len(eligible),
+                    "annotation_unknown_n": len(items) - len(eligible),
+                    "annotated_n": len(values),
+                    "available_n": len(available),
+                    "unavailable_n": len(eligible) - len(available),
+                    "coverage": len(available) / len(eligible) if eligible else None,
+                    "nonempty_eligible_n": nonempty_eligible_n,
+                    "nonempty_available_n": len(nonempty),
+                    "nonempty_coverage": len(nonempty) / nonempty_eligible_n
+                                          if nonempty_eligible_n else None,
+                    "nonempty_macro_f1": avg("f1", nonempty),
+                    "empty_eligible_n": empty_eligible_n,
+                    "empty_annotated_n": len(empty),
+                    "empty_available_n": len(empty),
+                    "empty_unavailable_n": empty_eligible_n - len(empty),
+                    "empty_correct_n": empty_correct_n,
+                    "empty_false_positive_n": len(empty) - empty_correct_n,
+                    "empty_coverage": len(empty) / empty_eligible_n if empty_eligible_n else None,
+                    "macro_precision": avg("precision", values),
+                    "macro_recall": avg("recall", values),
+                    "macro_f1": avg("f1", values),
+                    "macro_count_mae": avg("count_mae", values),
+                    "macro_matched_iou": avg("mean_iou", values),
+                    "macro_center_error_px": avg("mean_center_error_px", values)}
+
+        return {"data_origin": data_origin, "count": len(items), "measured": len(measured),
                 "partial": sum(r["status"] == "PARTIAL" for r in measured),
-                "rejected": len(items) - len(measured),
-                "unavailable_words": sum(r.get("unavailable_words") is True for r in measured),
-                "false_zero_words": sum(r.get("false_zero_words") is True for r in measured),
+                "rejected": sum(r["status"] == "REJECTED" for r in items),
+                "unavailable_words": sum(r.get("unavailable_words") is True for r in items),
+                "false_zero_words": sum(r.get("false_zero_words") is True for r in items),
                 "lines": family("lines"), "words": family("words"),
                 "line_shadow": family("line_shadow"), "word_shadow": family("word_shadow")}
-    return {"version": 1, "overall": stats(rows),
+
+    return {"version": 2, "data_origin": data_origin, "overall": stats(rows),
             "conditions": {key: stats(group) for key, group in sorted(groups.items())}}
 
 
+
+def _read_verified_image(root: Path, relative: str, expected_digest: str) -> bytes:
+    """Open under the reviewed root without following symlinks or decoding unverified bytes."""
+    path = PurePosixPath(relative)
+    if (not relative or path.is_absolute() or not path.parts
+            or any(part in ("", ".", "..") for part in relative.split("/"))
+            or "\\" in relative or "\x00" in relative):
+        raise ValueError("invalid specimen image path")
+    if not hasattr(os, "O_NOFOLLOW") or not hasattr(os, "O_DIRECTORY"):
+        raise ValueError("symlink-safe specimen admission is unavailable")
+    current_fd = None
+    try:
+        current_fd = os.open(root, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+        for component in path.parts[:-1]:
+            child_fd = os.open(
+                component, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW,
+                dir_fd=current_fd,
+            )
+            os.close(current_fd)
+            current_fd = child_fd
+        file_fd = os.open(
+            path.parts[-1], os.O_RDONLY | os.O_NOFOLLOW | getattr(os, "O_NONBLOCK", 0),
+            dir_fd=current_fd,
+        )
+        try:
+            metadata = os.fstat(file_fd)
+            if not stat.S_ISREG(metadata.st_mode) or metadata.st_size > MAX_FILE_BYTES:
+                raise ValueError("specimen exceeds encoded byte budget or is not a regular file")
+            with os.fdopen(file_fd, "rb", closefd=False) as stream:
+                blob = stream.read(MAX_FILE_BYTES + 1)
+            if len(blob) > MAX_FILE_BYTES:
+                raise ValueError("specimen exceeds encoded byte budget")
+        finally:
+            os.close(file_fd)
+        if hashlib.sha256(blob).hexdigest() != expected_digest:
+            raise ValueError("image SHA256 mismatch")
+        return blob
+    except OSError as exc:
+        raise ValueError("specimen admission failed") from exc
+    finally:
+        if current_fd is not None:
+            os.close(current_fd)
+
+
+
+def _checked_benchmark_image_header(blob: bytes):
+    """Authenticate the image header before OpenCV can allocate decoded pixels.
+
+    Use the exact digest-verified image buffer and the application intake
+    policy. EXIF transforms are not yet part of this evaluator's frame contract.
+    """
+    if MAX_PIXELS != MAX_DECODED_PIXELS:
+        raise ValueError("benchmark and intake pixel budgets disagree")
+    try:
+        header = inspect_header(blob)
+        check_header(header, header.media_type)
+    except InvalidInput:
+        raise ValueError("benchmark image header rejected") from None
+    if header.width * header.height > MAX_PIXELS:
+        raise ValueError("benchmark image exceeds pixel budget")
+    if header.exif_orientation != 1:
+        raise ValueError("benchmark EXIF orientation unsupported") from None
+    return header
+
+
 def run_manifest(manifest: Path, root: Path, *, profile="grid-v1", allow_real=False,
-                 shadow_projection=False, shadow_words=False):
-    """Only explicitly authorized local reads; no image bytes in JSON output."""
-    document = json.loads(manifest.read_text("utf-8"))
+                 shadow_projection=False, shadow_words=False, synthetic_split=False,
+                 manifest_bytes: bytes | None = None):
+    """Execute frozen approved bytes, or read an ordinary benchmark manifest once."""
+    if manifest_bytes is None:
+        manifest_bytes = read_bounded_json_bytes(manifest, MAX_MANIFEST_JSON_BYTES)
+    elif not isinstance(manifest_bytes, bytes):
+        raise ValueError("frozen manifest must be encoded bytes")
+    elif len(manifest_bytes) > MAX_MANIFEST_JSON_BYTES:
+        raise ValueError("frozen JSON exceeds byte budget")
+    document = strict_loads(manifest_bytes)
     version = document.get("schema_version")
     if version not in (1, 2) or document.get("split") not in SPLIT:
         raise ValueError("invalid manifest")
@@ -242,37 +605,56 @@ def run_manifest(manifest: Path, root: Path, *, profile="grid-v1", allow_real=Fa
     if frame not in FRAMES or (version == 2 and "annotation_frame" not in document):
         raise ValueError("v2 manifests require explicit annotation_frame")
     split = document["split"]
-    if split != "synthetic" and not allow_real:
+    # Provenance comes from the admitted input mode, not a caller-supplied
+    # result label. A synthetic-marked manifest cannot use the real-data path.
+    marked_synthetic = document.get("synthetic")
+    if version == 2 and marked_synthetic is not None and type(marked_synthetic) is not bool:
+        raise ValueError("invalid synthetic provenance declaration")
+    if split == "synthetic" and marked_synthetic is False:
+        raise ValueError("synthetic split contradicts source provenance")
+    if synthetic_split and not (version == 2 and marked_synthetic is True):
+        raise ValueError("synthetic fixture authorization requires explicit synthetic manifest")
+    if allow_real and (marked_synthetic is True or split == "synthetic"):
+        raise ValueError("synthetic inputs cannot use the real-data admission path")
+    # Synthetic split fixtures exercise development/validation/holdout partitions
+    # without manufacturing a participant-rights decision.
+    fixture = (synthetic_split is True and version == 2 and marked_synthetic is True)
+    if split != "synthetic" and not (allow_real or fixture):
         raise ValueError("real-data execution requires authorization")
+    data_origin = DATA_ORIGIN_SYNTHETIC if (split == "synthetic" or fixture) else DATA_ORIGIN_REAL
     resolved_root = root.resolve(strict=True)
     specimens = document.get("specimens")
     if not isinstance(specimens, list) or len(specimens) > MAX_SPECIMENS:
         raise ValueError("invalid specimen count/budget")
     rows, seen = [], set()
+    matching_budget = _MatchingBudget(MAX_RUN_MATCH_WORK)
     for record in specimens:
-        validate_record(record, split, allow_real=allow_real)
+        validate_record(record, split, allow_real=allow_real, synthetic_fixture=fixture)
         name = record["specimen_id"]
         if name in seen:
             raise ValueError("duplicate specimen id")
         seen.add(name)
-        path = (resolved_root / record["image_path"]).resolve(strict=True)
-        if not path.is_relative_to(resolved_root) or not path.is_file():
-            raise ValueError("specimen outside approved root")
-        if path.stat().st_size > MAX_FILE_BYTES:
-            raise ValueError("specimen exceeds encoded byte budget")
-        blob = path.read_bytes()
-        if hashlib.sha256(blob).hexdigest() != record["sha256"]:
-            raise ValueError("image SHA256 mismatch")
+        blob = _read_verified_image(resolved_root, record["image_path"], record["sha256"])
+        header = _checked_benchmark_image_header(blob)
         image = cv2.imdecode(np.frombuffer(blob, np.uint8), cv2.IMREAD_UNCHANGED)
         if image is None:
             raise ValueError("undecodable image")
+        if (not isinstance(image, np.ndarray) or image.dtype != np.uint8
+                or image.ndim not in (2, 3)
+                or (image.ndim == 3 and image.shape[2] not in (3, 4))):
+            raise ValueError("unsupported decoded benchmark image")
+        if image.shape[:2] != (header.height, header.width):
+            raise ValueError("decoded benchmark image dimensions disagree with verified header")
         if image.shape[0] * image.shape[1] > MAX_PIXELS:
             raise ValueError("decoded image exceeds benchmark pixel budget")
-        rows.append(evaluate(image, record, split=split, profile=profile, allow_real=allow_real,
+        rows.append(evaluate(image, record, split=split, profile=profile,
+                             allow_real=allow_real, synthetic_fixture=fixture,
                              shadow_projection=shadow_projection, shadow_words=shadow_words,
-                             annotation_frame=frame))
-    return {"version": 2, "profile": profile, "annotation_frame": frame,
-            "manifest_sha256": hashlib.sha256(manifest.read_bytes()).hexdigest(),
+                             annotation_frame=frame, matching_budget=matching_budget))
+    return {"version": 2, "profile": profile, "split": split, "annotation_frame": frame,
+            "matching_method": MATCHER_METHOD,
+            "data_origin": data_origin,
+            "manifest_sha256": hashlib.sha256(manifest_bytes).hexdigest(),
             "summary": summarize(rows), "results": rows}
 
 
@@ -285,11 +667,23 @@ def main():
     parser.add_argument("--shadow-projection", action="store_true")
     parser.add_argument("--shadow-words", action="store_true")
     args = parser.parse_args()
-    result = run_manifest(args.manifest, args.image_root, profile=args.profile,
-                          allow_real=args.allow_authorized_real,
-                          shadow_projection=args.shadow_projection,
-                          shadow_words=args.shadow_words)
-    print(json.dumps(result, indent=2, sort_keys=True))
+    try:
+        result = run_manifest(args.manifest, args.image_root, profile=args.profile,
+                              allow_real=args.allow_authorized_real,
+                              shadow_projection=args.shadow_projection,
+                              shadow_words=args.shadow_words)
+    except (OSError, ValueError, cv2.error):
+        if args.allow_authorized_real:
+            parser.exit(2, "Protected evaluation failed; details withheld from CLI.\n")
+        raise
+    # Real specimen-level IDs and diagnostics must not flow to public stdout.
+    if args.allow_authorized_real:
+        print(json.dumps({"status": "PROTECTED_RESULTS_WITHHELD",
+                          "publication": "NOT_AUTHORIZED",
+                          "message": "Keep protected evaluation details offline."},
+                         sort_keys=True))
+    else:
+        print(json.dumps(result, indent=2, sort_keys=True))
 
 
 if __name__ == "__main__":
