@@ -308,3 +308,24 @@ independently approve the new source revision, launcher template hash,
 policy digest and relevant frozen manifests **before** trusted synthetic
 execution. No change to legacy production defaults, consent policy,
 Issue #92 or public_qualification: NOT_AUTHORIZED.
+
+### JSON admission ceilings (synthetic engineering)
+
+Frozen policies are capped at **128 KiB** of UTF-8 JSON. Each development,
+validation or holdout manifest (including a direct benchmark invocation or a
+pre-supplied immutable `manifest_bytes` snapshot) is capped at **64 MiB**.
+The frozen three-split protocol has a combined **128 MiB** manifest budget,
+checked before parsing the split that would exceed it. Bytes are verified
+through an already-opened regular-file descriptor, bounded with an additional
+`limit + 1` read, and hashed without re-encoding or JSON normalization.
+This still permits sealed Linux memfd policy snapshots. These engineering
+input limits are **not total process RSS/CPU bounds**; the encoded-image,
+decoded-pixel, annotation, and matcher-work budgets remain independent.
+
+All frozen JSON parsers, including the trusted standalone bootstrap and staged
+worker, reject duplicate keys, nonstandard NaN/Infinity constants, numeric
+exponent overflow such as `1e309`, and malformed/deeply nested inputs.
+A limit or parsing error is not a valid empty measurement or abstention.
+The independently approved policy and source SHA must be refreshed after
+any evaluator/bootstrap change; synthetic qualification is never public
+authorization.

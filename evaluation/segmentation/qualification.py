@@ -13,12 +13,15 @@ import math
 import platform
 from pathlib import Path
 
-from .strict_json import strict_loads
+from .strict_json import (
+    MAX_MANIFEST_JSON_BYTES, MAX_POLICY_JSON_BYTES,
+    MAX_THREE_SPLIT_JSON_BYTES, read_bounded_json_bytes, strict_loads,
+)
 from .run_qualification import _trusted_git_env
 
 
 def _records(path: Path, expected_split: str):
-    raw = path.read_bytes()
+    raw = read_bounded_json_bytes(path, MAX_MANIFEST_JSON_BYTES)
     data = strict_loads(raw)
     if data.get("schema_version") != 2 or data.get("split") != expected_split:
         raise ValueError("expected v2 " + expected_split + " manifest")
@@ -42,7 +45,7 @@ def predeclared_holdout_gate(development: Path, holdout: Path, policy: Path) -> 
     """Check frozen policy/holdout identity without disclosing writer IDs."""
     dev, _ = _records(development, "development")
     held, digest = _records(holdout, "holdout")
-    approved = strict_loads(policy.read_bytes())
+    approved = strict_loads(read_bounded_json_bytes(policy, MAX_POLICY_JSON_BYTES))
     if approved.get("schema_version") != 1 or approved.get("holdout_manifest_sha256") != digest:
         raise ValueError("holdout manifest does not match predeclared reviewed SHA")
     for label in ("writer_group", "capture_group", "sha256"):
@@ -246,11 +249,11 @@ def current_local_identity() -> dict:
             "environment": environment}
 
 
-def _synthetic_manifest(path: Path, split: str):
+def _synthetic_manifest(path: Path, split: str, *, max_bytes: int = MAX_MANIFEST_JSON_BYTES):
     """Strict closed-shape fixture manifests. Human-data admission is absent."""
     from .benchmark import validate_record
 
-    raw = path.read_bytes()
+    raw = read_bounded_json_bytes(path, max_bytes)
     data = strict_loads(raw)
     if not isinstance(data, dict) or set(data) != {
         "schema_version", "annotation_frame", "split", "synthetic", "specimens"
@@ -313,17 +316,25 @@ def predeclared_holdout_gate_v2(
         expected_policy_sha256
     ):
         raise ValueError("independently approved policy digest required")
-    raw_policy = policy.read_bytes()
+    raw_policy = read_bounded_json_bytes(policy, MAX_POLICY_JSON_BYTES)
     policy_digest = hashlib.sha256(raw_policy).hexdigest()
     if not hmac.compare_digest(policy_digest, expected_policy_sha256):
         raise ValueError("independently approved policy digest mismatch")
     documents = {}
     digests = {}
     manifest_bytes = {}
+    admitted_total = 0
     for split, path in (
         ("development", development), ("validation", validation), ("holdout", holdout)
     ):
-        documents[split], digests[split], manifest_bytes[split] = _synthetic_manifest(path, split)
+        remaining = MAX_THREE_SPLIT_JSON_BYTES - admitted_total
+        if remaining <= 0:
+            raise ValueError("frozen JSON exceeds aggregate byte budget")
+        allowed = min(MAX_MANIFEST_JSON_BYTES, remaining)
+        documents[split], digests[split], manifest_bytes[split] = _synthetic_manifest(
+            path, split, max_bytes=allowed,
+        )
+        admitted_total += len(manifest_bytes[split])
     for i, left in enumerate(documents):
         for right in list(documents)[i + 1:]:
             for field in ("specimen_id", "writer_group", "capture_group",

@@ -350,3 +350,26 @@ environments, docs, roadmap, adversarial Git tests and matcher budget tests;
 a fresh independent code/security review; evidence-backed reconciliation
 of all historical Codex threads. Do not merge on unit-test success alone.
 Issue #92 and T11 remain separate product/rights blockers.
+
+### Frozen JSON input resource and numeric validation
+
+The frozen synthetic evaluator admits policies of at most 128 KiB and manifests
+of at most 64 MiB each, with a three-split combined cap of 128 MiB. Every
+direct, v1 and v2 manifest/policy file is opened once and read with an
+`fstat`-checked byte ceiling. The benchmark's caller-supplied
+`manifest_bytes` input is independently size checked. The existing
+holdout digest continues to bind precisely the admitted bytes, not
+reformatted JSON. Aggregate admission occurs before parsing a split that
+would exceed the remaining budget; the holdout is never read twice during
+qualification.
+
+The independent bootstrap and isolated worker enforce identical finite-number
+parsing before importing project evaluation code. Nonstandard constants and
+float-exponent overflow are refused; duplicate members and unbounded nesting
+remain rejected. Rejections preserve fixed categories and withhold private
+paths and sample identifiers. These are provisional engineering resource
+limits, **not** a RAM, performance or scientific accuracy certificate.
+
+Retain the `legacy` production default, separate T11 rights gate, Issue #92,
+`public_qualification: NOT_AUTHORIZED` and the need for independent
+re-approval of changed bootstrap, source and frozen policy identities.

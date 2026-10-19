@@ -15,6 +15,7 @@ import fcntl
 import hashlib
 import hmac
 import json
+import math
 import os
 import re
 import subprocess
@@ -289,8 +290,13 @@ def _validated_policy_sha(args) -> str:
             return obj
         def reject_constant(value):
             raise ValueError("nonfinite policy value")
+        def finite_float(token):
+            number = float(token)
+            if not math.isfinite(number):
+                raise ValueError("nonfinite policy value")
+            return number
         policy = json.loads(raw.decode("utf-8"), object_pairs_hook=strict_pairs,
-                            parse_constant=reject_constant)
+                            parse_constant=reject_constant, parse_float=finite_float)
         if (not isinstance(policy, dict) or policy.get("schema_version") != 2
                 or policy.get("mode") != "synthetic"
                 or policy.get("profile") != "qualified-v2"):
@@ -301,6 +307,27 @@ def _validated_policy_sha(args) -> str:
         return revision, raw, digest.encode("ascii")
     except (OSError, UnicodeError, ValueError, TypeError) as exc:
         raise _Rejected("Q_POLICY") from exc
+
+
+
+def _unique_receipt_pairs(pairs):
+    result = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValueError("duplicate qualification receipt key")
+        result[key] = value
+    return result
+
+
+def _reject_receipt_constant(_value):
+    raise ValueError("nonfinite qualification receipt")
+
+
+def _finite_receipt_float(token):
+    value = float(token)
+    if not math.isfinite(value):
+        raise ValueError("nonfinite qualification receipt")
+    return value
 
 
 def _absolute_inputs(args):
@@ -404,7 +431,11 @@ def _run(args) -> int:
                 match = _REJECTED.search(proc.stderr)
                 raise _Rejected(match.group(1) if match else "Q_WORKER")
             try:
-                receipt = json.loads(proc.stdout)
+                receipt = json.loads(
+                    proc.stdout, object_pairs_hook=lambda pairs: _unique_receipt_pairs(pairs),
+                    parse_constant=_reject_receipt_constant,
+                    parse_float=_finite_receipt_float,
+                )
                 if (not isinstance(receipt, dict)
                         or set(receipt) != {
                             "kind", "mode", "data_origin", "blank_evidence_scope",

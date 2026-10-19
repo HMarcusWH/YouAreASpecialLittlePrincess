@@ -10,6 +10,7 @@ import argparse
 import hashlib
 import hmac
 import json
+import math
 import os
 import re
 import subprocess
@@ -75,8 +76,14 @@ def _verified_policy_revision(args) -> str:
     def invalid_constant(value):
         raise ValueError("nonfinite frozen policy constant")
 
+    def finite_float(token):
+        number = float(token)
+        if not math.isfinite(number):
+            raise ValueError("nonfinite frozen policy number")
+        return number
+
     policy = json.loads(raw.decode("utf-8"), object_pairs_hook=strict_object,
-                        parse_constant=invalid_constant)
+                        parse_constant=invalid_constant, parse_float=finite_float)
     if not isinstance(policy, dict) or policy.get("schema_version") != 2 or (
         policy.get("mode") != "synthetic" or policy.get("profile") != "qualified-v2"
     ):

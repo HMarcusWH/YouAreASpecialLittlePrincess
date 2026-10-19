@@ -23,7 +23,7 @@ from princess_graphology.preprocessing.grid import GridQualityError
 from princess_graphology.segmentation_projection import propose_lines
 from princess_graphology.segmentation_words import propose_words
 
-from .strict_json import strict_loads
+from .strict_json import MAX_MANIFEST_JSON_BYTES, read_bounded_json_bytes, strict_loads
 
 PAPER = frozenset(("blank", "lined", "grid", "form", "unknown"))
 SPLIT = frozenset(("synthetic", "development", "validation", "holdout"))
@@ -592,9 +592,11 @@ def run_manifest(manifest: Path, root: Path, *, profile="grid-v1", allow_real=Fa
                  manifest_bytes: bytes | None = None):
     """Execute frozen approved bytes, or read an ordinary benchmark manifest once."""
     if manifest_bytes is None:
-        manifest_bytes = manifest.read_bytes()
+        manifest_bytes = read_bounded_json_bytes(manifest, MAX_MANIFEST_JSON_BYTES)
     elif not isinstance(manifest_bytes, bytes):
         raise ValueError("frozen manifest must be encoded bytes")
+    elif len(manifest_bytes) > MAX_MANIFEST_JSON_BYTES:
+        raise ValueError("frozen JSON exceeds byte budget")
     document = strict_loads(manifest_bytes)
     version = document.get("schema_version")
     if version not in (1, 2) or document.get("split") not in SPLIT:
