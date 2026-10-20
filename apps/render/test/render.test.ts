@@ -4,9 +4,6 @@ import { readFileSync } from "node:fs";
 import { test } from "node:test";
 
 import { formatFact } from "@princess/report-core";
-import { ShareCard, cardFacts } from "@princess/report-web";
-import { createElement } from "react";
-import { renderToStaticMarkup } from "react-dom/server";
 
 const BIN = new URL("../dist/render.mjs", import.meta.url).pathname;
 const fixture = (name: string) =>
@@ -135,25 +132,36 @@ test("ineligible research sample is explicitly shown in EN/SV exports while exac
 
 
 test("missing-only and ineligible share cards never impersonate a handwriting result", () => {
-  const share = structuredClone(fixture("share-v2"));
-  // SHARE may omit the sample section altogether. All measured handwriting
-  // facts can still be missing, so avoid an implied successful analysis.
-  share.facts = share.facts.map((fact: { availability: string; value: unknown }) =>
+  const missing = structuredClone(fixture("share-v2"));
+  // SHARE may omit sample suitability. When all selected facts are withheld,
+  // the branded card must not imply a successful handwriting analysis.
+  missing.facts = missing.facts.map((fact: { availability: string; value: unknown }) =>
     ({ ...fact, availability: "MISSING", value: null }));
-  assert.deepEqual(cardFacts(share), []);
   for (const locale of ["en", "sv"] as const) {
-    const html = renderToStaticMarkup(createElement(ShareCard, { view: share, locale, shape: "square" }));
+    const result = run({ view: missing, layout: "CARD_SQUARE", locale, generated_at: GENERATED }, "--html");
+    assert.equal(result.status, 0, result.stderr);
+    const html = result.stdout.toString();
     assert.ok(html.includes(locale === "en" ? "Handwriting structure unverified"
                                            : "Handskriftens struktur är inte verifierad"));
-    assert.ok(!html.includes("Slant"));
+    assert.equal((html.match(/data-fact-id/g) ?? []).length, 0);
   }
   const ineligible = structuredClone(fixture("export-v2-no-image"));
   const sample = ineligible.sections.find((s: { section_id: string }) => s.section_id === "section.sample");
   assert.ok(sample);
-  sample.availability = "INELIGIBLE";
-  const selected = cardFacts(ineligible);
-  assert.ok(selected.length > 0);
-  assert.ok(selected.every((fact) => new Set([
-    "IMG_WIDTH_PX", "IMG_HEIGHT_PX", "IMG_MEGAPIXELS", "IMG_ASPECT_RATIO",
-  ]).has(fact.feature_id)));
+  const imageFacts = new Set(["IMG_WIDTH_PX", "IMG_HEIGHT_PX", "IMG_MEGAPIXELS", "IMG_ASPECT_RATIO"]);
+  ineligible.facts = ineligible.facts.filter((fact: { feature_id: string }) => imageFacts.has(fact.feature_id));
+  ineligible.sections = [{ ...sample, availability: "INELIGIBLE",
+                           fact_ids: sample.fact_ids.filter((id: string) => imageFacts.has(id.replace("fact.", ""))) }];
+  ineligible.projection = "SHARE";
+  ineligible.actions = [];
+  ineligible.authorized_asset_ids = [];
+  for (const locale of ["en", "sv"] as const) {
+    const result = run({ view: ineligible, layout: "CARD_SQUARE", locale, generated_at: GENERATED }, "--html");
+    assert.equal(result.status, 0, result.stderr);
+    const html = result.stdout.toString();
+    assert.ok(html.includes(locale === "en" ? "Handwriting structure unverified"
+                                           : "Handskriftens struktur är inte verifierad"));
+    assert.ok(html.includes(locale === "en" ? "Image width" : "Bildbredd"));
+    assert.ok(!html.includes('data-fact-id="fact.SLANT_ANGLE_MEAN"'));
+  }
 });
