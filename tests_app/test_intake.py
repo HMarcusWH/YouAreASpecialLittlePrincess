@@ -699,6 +699,15 @@ def test_guarded_private_job_publishes_v3_and_preserves_missingness(env, world):
     assert len(saved.data["facts"]) == 64
     assert sum(f["value"] is not None for f in saved.data["facts"]) == 4
     assert next(s for s in saved.data["sections"] if s["section_id"] == "section.sample")["availability"] == "INELIGIBLE"
+    assert next(s for s in saved.data["sections"] if s["section_id"] == "section.premium")["availability"] == "INELIGIBLE"
+    assert any(n["localization_key"] == "notice.image_only" for n in saved.data["notices"])
+    from princess_app.application.commerce import CommerceService
+    from princess_app.domain.commerce import Platform
+    commerce = CommerceService.__new__(CommerceService)
+    commerce._reports = lambda owner_id: PostgresReportStore(env.app_db, owner_id)
+    with pytest.raises(InvalidInput) as rejected:
+        commerce.request_premium(owner, status.report_id, Platform.WEB)
+    assert rejected.value.code == "premium_sample_ineligible"
     view = ReportReader(store, env.clock).view(report_id=status.report_id,
                                                  principal_id=owner, projection="FREE")
     assert len(view.data["facts"]) == 64

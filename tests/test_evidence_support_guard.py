@@ -11,6 +11,9 @@ import numpy as np
 import pytest
 
 from princess_app.application.intake import (analysis_config_sha256, engine_config_sha256, resolve_analysis_runtime)
+from princess_app.application.commerce import CommerceService
+from princess_app.domain.commerce import Platform
+from princess_app.ports.base import InvalidInput
 from princess_app.domain.intake import INTAKE_POLICY_VERSION
 from princess_app.domain.analysis import analysis_reference
 from princess_app.domain.content.presentation import feature_label
@@ -240,6 +243,32 @@ def test_withheld_report_projection_and_revision_parity():
     assert revised.value.data["facts"] == report.value.data["facts"]
     assert revised.value.data["analysis"] == report.value.data["analysis"]
     assert revised.value.data["sections"] == report.value.data["sections"]
+    assert next(s for s in report.value.data["sections"] if s["section_id"] == "section.premium")["availability"] == "INELIGIBLE"
+    assert any(n["localization_key"] == "notice.image_only" for n in report.value.data["notices"])
+    assert not any(n["localization_key"] == "notice.measured" for n in report.value.data["notices"])
+    for projection in ("OWNER", "FREE"):
+        view = project_report(report.value, ProjectionRequest(
+            projection=projection, generated_at=now, actions={"PURCHASE": None, "EXPORT": None}))
+        assert view.ok, view.issues
+        assert not any(action["kind"] == "PURCHASE" for action in view.value.data["actions"])
+        assert any(action["kind"] == "EXPORT" for action in view.value.data["actions"])
+    denied = revise_report(report.value, created_at=now, premium_overlay_id="overlay_not_allowed")
+    assert {issue.code for issue in denied.issues} == {"PREMIUM_SAMPLE_INELIGIBLE"}
+    denied_initial = assemble_report(
+        report_id="report_guard_paywall", analysis=analysis, result=result.to_dict(),
+        created_at=now, locale="en", evidence=evidence.value, premium_overlay_id="overlay_not_allowed")
+    assert {issue.code for issue in denied_initial.issues} == {"PREMIUM_SAMPLE_INELIGIBLE"}
+
+    class Store:
+        def latest(self, report_id):
+            assert report_id == "report_guard_parity"
+            return ("owner_guard_parity", report.value)
+
+    commerce = CommerceService.__new__(CommerceService)
+    commerce._reports = lambda owner: Store()
+    with pytest.raises(InvalidInput) as err:
+        commerce.request_premium("owner_guard_parity", "report_guard_parity", Platform.WEB)
+    assert err.value.code == "premium_sample_ineligible"
 
 
 def test_short_legible_structures_are_not_rejected_by_resolution_alone():
@@ -254,3 +283,33 @@ def test_short_legible_structures_are_not_rejected_by_resolution_alone():
     fake.words = fake.words[:1]
     fake.components = fake.components[:1]
     assert support_warning(fake) is None
+
+
+def test_qualified_research_sample_keeps_existing_notice_and_premium_option():
+    image = synthetic_paper("text")
+    engine = GraphologyEngine(evidence_guard_enabled=True)
+    result, payload = engine.analyze_with_evidence(image)
+    assert "evidence_support" not in result.metadata
+    now = datetime(2026, 10, 20, tzinfo=timezone.utc)
+    analysis = analysis_reference(
+        analysis_id="analysis_guard_eligible", run_id="run_guard_eligible",
+        owner_id="owner_guard_eligible", input_asset_id="asset_guard_eligible",
+        input_sha256=hashlib.sha256(image.tobytes()).hexdigest(),
+        processed_sha256=result.metadata["input_pixels_sha256"], created_at=now,
+        engine_version="0.1.0", analysis_config_sha256=engine_config_sha256(engine),
+        template=EVIDENCE_SUPPORT_TEMPLATE_VERSION)
+    evidence = build_evidence_bundle(payload, analysis, "bundle_guard_eligible")
+    assert evidence.ok, evidence.issues
+    report = assemble_report(report_id="report_guard_eligible", analysis=analysis,
+                             result=result.to_dict(), created_at=now, locale="sv-SE",
+                             evidence=evidence.value)
+    assert report.ok, report.issues
+    sample = next(s for s in report.value.data["sections"] if s["section_id"] == "section.sample")
+    premium = next(s for s in report.value.data["sections"] if s["section_id"] == "section.premium")
+    assert sample["availability"] != "INELIGIBLE"
+    assert premium["availability"] == "LOCKED"
+    assert any(n["localization_key"] == "notice.measured" for n in report.value.data["notices"])
+    view = project_report(report.value, ProjectionRequest(
+        projection="OWNER", generated_at=now, actions={"PURCHASE": None}))
+    assert view.ok, view.issues
+    assert any(a["kind"] == "PURCHASE" and a["enabled"] for a in view.value.data["actions"])

@@ -95,6 +95,9 @@ def test_missing_stays_missing_and_values_are_never_coerced():
     by_id = {s["section_id"]: s for s in data["sections"]}
     assert by_id["section.slant"]["availability"] == "MISSING"
     assert by_id["section.sample"]["availability"] == "READY"  # historical /2: exact image dimensions
+    assert by_id["section.premium"]["availability"] == "LOCKED"
+    assert any(n["localization_key"] == "notice.measured" for n in data["notices"])
+    assert not any(n["localization_key"] == "notice.image_only" for n in data["notices"])
 
 
 def test_compound_highlight_is_uncalibrated_when_any_support_is_uncalibrated():
