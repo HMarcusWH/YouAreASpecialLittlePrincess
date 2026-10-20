@@ -77,6 +77,11 @@ function SectionView({ section, locale, compactMissing = false }: {
   const [showMissing, setShowMissing] = useState(false);
   const fullyMissing = compactMissing && section.sectionId !== "section.sample"
     && section.facts.length > 0 && section.facts.every((fact) => fact.availability === "MISSING");
+  const sampleMissing = compactMissing && section.sectionId === "section.sample"
+    ? section.facts.filter((fact) => fact.availability === "MISSING") : [];
+  const shownFacts = sampleMissing.length ? section.facts.filter((fact) => fact.availability !== "MISSING")
+    : section.facts;
+  const compactedFacts = fullyMissing ? section.facts : sampleMissing;
   return (
     <EditorialSection style={highlight ? local.highlightSection : undefined}>
       <SectionLabel>{section.title}</SectionLabel>
@@ -100,15 +105,16 @@ function SectionView({ section, locale, compactMissing = false }: {
       ) : section.facts.length === 0 && section.availability !== "READY" && section.availability !== "UNCALIBRATED" ? (
         <Body muted>{section.availabilityText}</Body>
       ) : null}
-      {fullyMissing ? (
+      {!fullyMissing ? shownFacts.map((fact) => <FactRow key={fact.factId} fact={fact} locale={locale} />) : null}
+      {compactedFacts.length > 0 ? (
         <View style={{ gap: space("2") }}>
-          <Body muted>{reportText(locale, "report.withheld_family").replace("{count}", String(section.facts.length))}</Body>
+          <Body muted>{reportText(locale, "report.withheld_family").replace("{count}", String(compactedFacts.length))}</Body>
           <Button tone="secondary" label={reportText(locale, showMissing
                    ? "report.hide_withheld_details" : "report.withheld_details")}
                   onPress={() => setShowMissing((value) => !value)} />
-          {showMissing ? section.facts.map((fact) => <FactRow key={fact.factId} fact={fact} locale={locale} />) : null}
+          {showMissing ? compactedFacts.map((fact) => <FactRow key={fact.factId} fact={fact} locale={locale} />) : null}
         </View>
-      ) : section.facts.map((fact) => <FactRow key={fact.factId} fact={fact} locale={locale} />)}
+      ) : null}
     </EditorialSection>
   );
 }

@@ -60,6 +60,10 @@ function SectionBlock({ section, facts, locale, compactMissing }: { section: Rep
   const highlight = section.template === "HIGHLIGHT_PRIMARY" || section.template === "HIGHLIGHT_SECONDARY";
   const fullyMissing = compactMissing && section.section_id !== "section.sample"
     && rows.length > 0 && rows.every((fact) => fact.availability === "MISSING");
+  const sampleMissing = compactMissing && section.section_id === "section.sample"
+    ? rows.filter((fact) => fact.availability === "MISSING") : [];
+  const shownRows = sampleMissing.length ? rows.filter((fact) => fact.availability !== "MISSING") : rows;
+  const compactedRows = fullyMissing ? rows : sampleMissing;
   const copy = section.content_ids
     .map((contentId) => contentText(contentId, locale))
     .filter((value): value is string => value !== undefined);
@@ -105,25 +109,26 @@ function SectionBlock({ section, facts, locale, compactMissing }: { section: Rep
       ) : section.availability !== "READY" && section.availability !== "UNCALIBRATED" && rows.length === 0 ? (
         <p className="pr-unavailable">{t(locale, `availability.${section.availability}`)}</p>
       ) : null}
-      {fullyMissing ? (
-        <div className="pr-missing-summary" data-withheld-count={rows.length}>
-          <p className="pr-unavailable">{t(locale, "report.withheld_family").replace("{count}", String(rows.length))}</p>
+      {!fullyMissing && shownRows.length > 0 ? (
+        <div className="pr-table-wrap">
+          <table className="pr-facts">
+            <caption className="pr-visually-hidden">{heading}: {t(locale, "report.facts")}</caption>
+            <tbody>{shownRows.map((fact) => <FactRow key={fact.fact_id} fact={fact} locale={locale} />)}</tbody>
+          </table>
+        </div>
+      ) : null}
+      {compactedRows.length > 0 ? (
+        <div className="pr-missing-summary" data-withheld-count={compactedRows.length}>
+          <p className="pr-unavailable">{t(locale, "report.withheld_family").replace("{count}", String(compactedRows.length))}</p>
           <details className="pr-missing-details">
             <summary>{t(locale, "report.withheld_details")}</summary>
             <div className="pr-table-wrap">
               <table className="pr-facts">
                 <caption className="pr-visually-hidden">{heading}: {t(locale, "report.facts")}</caption>
-                <tbody>{rows.map((fact) => <FactRow key={fact.fact_id} fact={fact} locale={locale} />)}</tbody>
+                <tbody>{compactedRows.map((fact) => <FactRow key={fact.fact_id} fact={fact} locale={locale} />)}</tbody>
               </table>
             </div>
           </details>
-        </div>
-      ) : rows.length > 0 ? (
-        <div className="pr-table-wrap">
-          <table className="pr-facts">
-            <caption className="pr-visually-hidden">{heading}: {t(locale, "report.facts")}</caption>
-            <tbody>{rows.map((fact) => <FactRow key={fact.fact_id} fact={fact} locale={locale} />)}</tbody>
-          </table>
         </div>
       ) : null}
     </section>

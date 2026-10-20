@@ -118,3 +118,9 @@ These are premerge changes to the unreleased `/3` research template. They are
 not a production release, not consent for retroactively changing the separate
 `presentation/1` PAGE_WORD_COUNT label, not real-handwriting calibration,
 and not an independent external code/security signoff. T11 and #92 remain open.
+
+The rejected-sample suitability section additionally keeps four exact image
+facts visible and groups its six missing sample descriptors behind the same
+expandable web/native details. The printed version keeps the image facts and
+one missing-values summary, reducing the synthetic PDF without dropping any
+stored facts.
