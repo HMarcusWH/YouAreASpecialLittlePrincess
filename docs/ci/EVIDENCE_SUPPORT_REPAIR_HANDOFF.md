@@ -75,3 +75,17 @@ The current PR repair batch additionally covers:
 - The guarded analysis digest derives from the source policy version, so a future policy bump changes its processing identity without perturbing guard-off legacy hashes.
 
 These changes do **not** imply that the owner has approved the presentation/1 retroactive copy change, that an independent security review completed, or that real-handwriting accuracy was calibrated. Inspect exact-final-head CI and render artifacts before determining merge readiness. Guard activation remains private local/test only; T11 and Issue #92 remain separate production/public gates.
+
+## Genuine /3 render inspection qualification (PR #96 follow-up)
+
+The Application environments `live-web` job now generates an actual
+`GraphologyEngine(evidence_guard_enabled=True)` synthetic ruled-paper result,
+assembles immutable `individual-report/3`, projects it through the production
+Python `project_report` path, and renders EN/SV A4, Letter, square and story
+outputs through the same bundled offline Chromium renderer. Its upload artifact
+is `t06-guarded-v3-inspection-<commit>`. The included manifest binds source
+report digest, analysis config, artifact hashes and dimensions. The synthetic
+case must preserve 64 facts, four exact image values, 60 missing handwriting
+values and `INELIGIBLE` sample status. No handwriting photo or personal data is
+used. Visual inspection of actual PDF pages and cards is still a **human review
+step** and must not be inferred from upload success.

@@ -11,7 +11,8 @@
     "typecheck": "tsc -p tsconfig.json",
     "test": "pnpm run build && node --test \"test/**/*.test.ts\"",
     "inspect:test": "pnpm run build && node --test \"test/inspection.test.ts\"",
-    "inspect:artifacts": "pnpm run build && node scripts/render-inspection.mjs"
+    "inspect:artifacts": "pnpm run build && node scripts/render-inspection.mjs",
+    "inspect:guarded": "pnpm run build && node scripts/render-guarded-inspection.mjs"
   },
   "dependencies": {
     "@princess/api-client": "workspace:*",
