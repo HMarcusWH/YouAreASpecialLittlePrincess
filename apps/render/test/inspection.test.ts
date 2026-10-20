@@ -106,3 +106,25 @@ test("share cards remain inside their fixed redacted canvas in both locales", { 
     await instance.close();
   }
 });
+
+test("research-ineligible sample keeps its EN/SV suitability explanation visible in print", { timeout: 120_000 }, async () => {
+  const instance = await browser();
+  try {
+    for (const locale of ["en", "sv"] as const) {
+      const view = structuredClone(fixture("export-v2-no-image"));
+      const sample = view.sections.find((s: { section_id: string }) => s.section_id === "section.sample");
+      assert.ok(sample);
+      sample.availability = "INELIGIBLE";
+      const page = await instance.newPage({ viewport: { width: 794, height: 1123 } });
+      await page.emulateMedia({ media: "print", colorScheme: "light" });
+      await page.setContent(html(view, "A4", locale), { waitUntil: "load" });
+      const notice = page.locator('[data-section="section.sample"] .pr-unavailable[role="status"]');
+      assert.equal(await notice.count(), 1);
+      assert.match(await notice.innerText(), locale === "en" ? /could not be verified/ : /kunde inte verifieras/);
+      assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), true);
+      await page.close();
+    }
+  } finally {
+    await instance.close();
+  }
+});

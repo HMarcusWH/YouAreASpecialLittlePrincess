@@ -16,6 +16,7 @@ const PRINT_TEXT: Record<Locale, Record<string, string>> = {
       "group is shown. This is not a personality, health or ability assessment.",
     "print.not_recallable": "A downloaded copy cannot be recalled once it has been saved elsewhere.",
     "card.context": "Handwriting measurements — not a personality test",
+    "card.unverified": "Handwriting structure unverified — no supported handwriting result",
   },
   sv: {
     "print.report": "Rapport", "print.generated": "Renderad", "print.dossier": "Personlig dossier",
@@ -25,6 +26,7 @@ const PRINT_TEXT: Record<Locale, Record<string, string>> = {
       "Detta är ingen bedömning av personlighet, hälsa eller förmåga.",
     "print.not_recallable": "En nedladdad kopia kan inte återkallas när den har sparats någon annanstans.",
     "card.context": "Handstilsmätningar — inget personlighetstest",
+    "card.unverified": "Handskriftens struktur är inte verifierad — inget styrkt handskriftsresultat",
   },
 };
 
@@ -59,14 +61,26 @@ export function PrintReport({ view, locale, generatedAt }: { view: ReportViewMod
   );
 }
 
+const IMAGE_ONLY_FACTS = new Set(["IMG_WIDTH_PX", "IMG_HEIGHT_PX", "IMG_MEGAPIXELS", "IMG_ASPECT_RATIO"]);
+
+function unqualifiedShare(view: ReportViewModel): boolean {
+  if (view.sections.some((section) => section.section_id === "section.sample"
+      && section.availability === "INELIGIBLE")) return true;
+  // SHARE may omit section.sample; missing-only views must not look analyzed.
+  return !view.facts.some((fact) => !IMAGE_ONLY_FACTS.has(fact.feature_id)
+    && (fact.availability === "READY" || fact.availability === "UNCALIBRATED") && fact.value !== null);
+}
+
 /** Deterministic pick: the first present scalar facts of the shared projection, in section order. */
 export function cardFacts(view: ReportViewModel, limit = 4): Fact[] {
   const byId = new Map(view.facts.map((f) => [f.fact_id, f]));
   const picked: Fact[] = [];
+  const unqualified = unqualifiedShare(view);
   for (const section of view.sections) {
     for (const id of section.fact_ids) {
       const fact = byId.get(id);
-      if (fact && (fact.availability === "READY" || fact.availability === "UNCALIBRATED")
+      if (fact && (!unqualified || IMAGE_ONLY_FACTS.has(fact.feature_id))
+          && (fact.availability === "READY" || fact.availability === "UNCALIBRATED")
           && (typeof fact.value === "number" || typeof fact.value === "string") && !picked.includes(fact)) {
         picked.push(fact);
       }
@@ -79,11 +93,12 @@ export function cardFacts(view: ReportViewModel, limit = 4): Fact[] {
 export function ShareCard({ view, locale, shape }: { view: ReportViewModel; locale: Locale;
                                                      shape: "square" | "story" }) {
   const facts = cardFacts(view, shape === "story" ? 6 : 4);
+  const unqualified = unqualifiedShare(view);
   return (
     <div className={`pr-card pr-card-${shape}`} lang={locale}>
       <header className="pr-card-header">
         <p className="pr-card-brand">Inktrospect</p>
-        <p className="pr-card-context">{p(locale, "card.context")}</p>
+        <p className="pr-card-context">{p(locale, unqualified ? "card.unverified" : "card.context")}</p>
       </header>
       <dl className="pr-card-facts">
         {facts.map((fact) => {

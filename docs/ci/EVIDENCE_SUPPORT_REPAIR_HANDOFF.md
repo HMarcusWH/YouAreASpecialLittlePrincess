@@ -63,3 +63,15 @@ T11 participant rights and [Issue #92](https://github.com/HMarcusWH/YouAreASpeci
    synthetic-only guard; no claims of accuracy from font-derived images.
 4. Controlled rollout and rollback; `PRINCESS_EVIDENCE_SUPPORT_RESEARCH_OPT_IN`
    remains unset/`0` outside explicitly authorized local/test infrastructure.
+
+## Follow-up repair batch (merge checks remain mandatory)
+
+The current PR repair batch additionally covers:
+
+- Combined Railway private test-stack forwarding for the independently pinned evidence-support flag, with public-guest rejection on both roles.
+- Retention of only safe profile/policy provenance on withheld measurements; all measured-dependent metadata and confidence remain suppressed.
+- Visible SAMPLE_SUITABILITY/INELIGIBLE explanation in web/native and export, and a neutral, image-only share-card fallback when no handwriting facts are supported.
+- Unit, PostgreSQL worker/persistence, projection/revision and EN/SV renderer regression coverage, including synthetic false-abstention boundaries.
+- The guarded analysis digest derives from the source policy version, so a future policy bump changes its processing identity without perturbing guard-off legacy hashes.
+
+These changes do **not** imply that the owner has approved the presentation/1 retroactive copy change, that an independent security review completed, or that real-handwriting accuracy was calibrated. Inspect exact-final-head CI and render artifacts before determining merge readiness. Guard activation remains private local/test only; T11 and Issue #92 remain separate production/public gates.

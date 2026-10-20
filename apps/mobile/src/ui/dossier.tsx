@@ -86,6 +86,9 @@ function SectionView({ section, locale }: { section: DossierSection; locale: Loc
           )}
         </View>
       ))}
+      {section.sectionId === "section.sample" && section.availability === "INELIGIBLE" ? (
+        <Body muted>{reportText(locale, "report.handwriting_unverified")}</Body>
+      ) : null}
       {section.premiumSectionId !== null ? <Body muted>{reportText(locale, "report.premium_saved")}</Body> : null}
       {section.facts.length === 0 && section.availability !== "READY" && section.availability !== "UNCALIBRATED" ? (
         <Body muted>{section.availabilityText}</Body>

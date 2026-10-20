@@ -13,6 +13,8 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Callable, Mapping, Protocol
 
+from princess_graphology.evidence_support import GUARD_POLICY_VERSION
+
 from ..domain import intake as policy
 from ..domain.intake import ImageHeader
 from ..domain.permissions import Decision, Scope
@@ -47,7 +49,7 @@ def analysis_config_sha256(max_dimension: int = ENGINE_MAX_DIMENSION, deskew: bo
         raise ValueError("evidence_guard_enabled must be boolean")
     old = f"engine:max_dimension={max_dimension};deskew={'true' if deskew else 'false'};"
     # Keep all historical configurations bit-for-bit stable when opt-in is OFF.
-    guard = "evidence_support=evidence-support/1;" if evidence_guard_enabled else ""
+    guard = f"evidence_support={GUARD_POLICY_VERSION};" if evidence_guard_enabled else ""
     if grid_profile == "legacy":
         return hashlib.sha256((old + guard + policy.INTAKE_POLICY_VERSION).encode()).hexdigest()
     if grid_profile == "grid-v1":

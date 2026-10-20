@@ -91,6 +91,9 @@ function SectionBlock({ section, facts, locale }: { section: ReportSection; fact
     <section className="pr-section" aria-labelledby={headingId} data-section={section.section_id}
              data-availability={section.availability}>
       <h2 id={headingId}>{sectionTitle(section.template)}</h2>
+      {section.template === "SAMPLE_SUITABILITY" && section.availability === "INELIGIBLE" && (
+        <p className="pr-unavailable" role="status">{t(locale, "report.handwriting_unverified")}</p>
+      )}
       {section.premium_section_id !== null && (
         <p className="pr-premium"><EvidenceBadge evidence="AI_SYNTHESIS" locale={locale} /> {t(locale, "report.premium_saved")}</p>
       )}

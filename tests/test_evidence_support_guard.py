@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import hashlib
 from datetime import datetime, timezone
+from dataclasses import replace
 from types import SimpleNamespace
 
 import cv2
@@ -10,13 +11,15 @@ import numpy as np
 import pytest
 
 from princess_app.application.intake import (analysis_config_sha256, engine_config_sha256, resolve_analysis_runtime)
+from princess_app.domain.intake import INTAKE_POLICY_VERSION
 from princess_app.domain.analysis import analysis_reference
 from princess_app.domain.content.presentation import feature_label
 from princess_app.domain.evidence import build_evidence_bundle
-from princess_app.domain.reports import assemble_report
+from princess_app.domain.reports import assemble_report, revise_report
+from princess_app.domain.reports.projection import ProjectionRequest, project_report
 from princess_app.domain.reports.template import EVIDENCE_SUPPORT_TEMPLATE_VERSION
 from princess_graphology import GraphologyEngine
-from princess_graphology.evidence_support import support_warning
+from princess_graphology.evidence_support import GUARD_POLICY_VERSION, support_warning, withhold_unqualified
 from princess_graphology.models import Box
 
 
@@ -170,3 +173,84 @@ def test_report_template_v2_and_v3_have_distinct_blank_suitability_semantics():
         return next(s["availability"] for s in sections if s["section_id"] == "section.sample")
     assert sample_availability(HIGHLIGHT_TEMPLATE_VERSION) == "READY"  # immutable historical /2
     assert sample_availability(EVIDENCE_SUPPORT_TEMPLATE_VERSION) == "INELIGIBLE"
+
+def test_guarded_digest_uses_policy_authority_and_historical_digest_is_unchanged():
+    legacy = ("engine:max_dimension=2200;deskew=true;" + INTAKE_POLICY_VERSION).encode()
+    guarded = ("engine:max_dimension=2200;deskew=true;"
+               f"evidence_support={GUARD_POLICY_VERSION};" + INTAKE_POLICY_VERSION).encode()
+    assert analysis_config_sha256() == hashlib.sha256(legacy).hexdigest()
+    assert analysis_config_sha256(evidence_guard_enabled=True) == hashlib.sha256(guarded).hexdigest()
+
+
+def test_withholding_keeps_only_safe_processing_identifiers():
+    record = GraphologyEngine().analyze(synthetic_paper("text")).measurements["PAGE_LINE_COUNT"]
+    source = replace(record, method_metadata={
+        "processing_profile": "qualified-v2", "grid_preprocessing": "grid-v2",
+        "quality_policy": "quality-policy/2", "qualified_support": True,
+        "unsupported_estimate": 0.91,
+    })
+    missing = withhold_unqualified(source, "synthetic_unqualified")
+    assert (missing.raw_value, missing.confidence, missing.std_dev) == (None, None, None)
+    assert missing.quality_flag == "MISSING" and missing.missing_reason == "synthetic_unqualified"
+    assert missing.n_observations == 0 and missing.source_regions == []
+    assert missing.method_metadata == {
+        "processing_profile": "qualified-v2", "grid_preprocessing": "grid-v2",
+        "quality_policy": "quality-policy/2", "qualified_support": False,
+        "evidence_support_policy": GUARD_POLICY_VERSION,
+        "evidence_support_status": "unqualified",
+    }
+
+
+def test_withheld_report_projection_and_revision_parity():
+    image = synthetic_paper("lined")
+    engine = GraphologyEngine(evidence_guard_enabled=True)
+    result, payload = engine.analyze_with_evidence(image)
+    now = datetime(2026, 10, 20, tzinfo=timezone.utc)
+    analysis = analysis_reference(
+        analysis_id="analysis_guard_parity", run_id="run_guard_parity", owner_id="owner_guard_parity",
+        input_asset_id="asset_guard_parity", input_sha256=hashlib.sha256(image.tobytes()).hexdigest(),
+        processed_sha256=result.metadata["input_pixels_sha256"],
+        created_at=now, engine_version="0.1.0", analysis_config_sha256=engine_config_sha256(engine),
+        template=EVIDENCE_SUPPORT_TEMPLATE_VERSION,
+    )
+    evidence = build_evidence_bundle(payload, analysis, "bundle_guard_parity")
+    assert evidence.ok, evidence.issues
+    report = assemble_report(report_id="report_guard_parity", analysis=analysis, result=result.to_dict(),
+                             created_at=now, locale="en", evidence=evidence.value)
+    assert report.ok, report.issues
+    expected = {f["feature_id"]: f["value"] for f in report.value.data["facts"]}
+    for scope in ("FREE", "OWNER", "EXPORT", "SHARE"):
+        request = ProjectionRequest(
+            projection=scope, generated_at=now, include_source_image=False,
+            share_scope=frozenset(("section.sample", "section.highlight.primary")) if scope == "SHARE"
+            else frozenset(),
+        )
+        view = project_report(report.value, request)
+        assert view.ok, (scope, view.issues)
+        assert {f["feature_id"]: f["value"] for f in view.value.data["facts"]} == {
+            f["feature_id"]: expected[f["feature_id"]] for f in view.value.data["facts"]
+        }
+        sample = next(s for s in view.value.data["sections"] if s["section_id"] == "section.sample")
+        assert sample["availability"] == "INELIGIBLE"
+        assert not any(f["value"] is not None for f in view.value.data["facts"]
+                       if f["feature_id"] not in {"IMG_WIDTH_PX", "IMG_HEIGHT_PX",
+                                                  "IMG_MEGAPIXELS", "IMG_ASPECT_RATIO"})
+    revised = revise_report(report.value, created_at=now, premium_overlay_id=None)
+    assert revised.ok, revised.issues
+    assert revised.value.data["facts"] == report.value.data["facts"]
+    assert revised.value.data["analysis"] == report.value.data["analysis"]
+    assert revised.value.data["sections"] == report.value.data["sections"]
+
+
+def test_short_legible_structures_are_not_rejected_by_resolution_alone():
+    fake = SimpleNamespace(width=400, height=520, original_width=400, original_height=520,
+                           lines=[Box(50, 100, 180, 15), Box(50, 220, 180, 15)],
+                           words=[Box(50 + i * 10, 100, 9, 15) for i in range(10)],
+                           components=[Box(50 + i * 10, 100, 8, 15) for i in range(17)],
+                           x_height_px=None)
+    assert support_warning(fake) is None
+    # A 1-line note is not rejected on sparse components alone.
+    fake.lines = [Box(50, 100, 180, 15)]
+    fake.words = fake.words[:1]
+    fake.components = fake.components[:1]
+    assert support_warning(fake) is None

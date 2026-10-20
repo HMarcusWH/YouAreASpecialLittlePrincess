@@ -24,6 +24,7 @@ COMMON = (
     "PRINCESS_TOMBSTONE_DIR", "PRINCESS_PUBLIC_API_BASE",
     "PRINCESS_ANALYSIS_PROFILE", "PRINCESS_GRID_V1_RESEARCH_OPT_IN",
     "PRINCESS_SEGMENTATION_V2_RESEARCH_OPT_IN",
+    "PRINCESS_EVIDENCE_SUPPORT_RESEARCH_OPT_IN",
 )
 
 
@@ -38,17 +39,26 @@ def role_env(role: str) -> dict[str, str]:
     })
     environment["PRINCESS_ENV"] = "test"
     environment["PRINCESS_COMPONENT"] = role
-    if (os.environ.get("PRINCESS_TEST_PUBLIC_GUEST_ONLY") == "1"
+    # The public-only fence must be present BEFORE resolving either child role.
+    if os.environ.get("PRINCESS_TEST_PUBLIC_GUEST_ONLY") == "1":
+        environment["PRINCESS_TEST_PUBLIC_GUEST_ONLY"] = "1"
+    if (environment.get("PRINCESS_TEST_PUBLIC_GUEST_ONLY") == "1"
             and environment.get("PRINCESS_ANALYSIS_PROFILE") in ("grid-v1", "qualified-v2")):
         raise RuntimeError(environment["PRINCESS_ANALYSIS_PROFILE"] +
                            " is not approved for the public synthetic guest stack")
+    if (environment.get("PRINCESS_TEST_PUBLIC_GUEST_ONLY") == "1"
+            and environment.get("PRINCESS_EVIDENCE_SUPPORT_RESEARCH_OPT_IN") == "1"):
+        raise RuntimeError("evidence-support is not approved for the public synthetic guest stack")
+    # No implicit legacy pin may stand in for a research processing identity.
+    if (environment.get("PRINCESS_EVIDENCE_SUPPORT_RESEARCH_OPT_IN") == "1"
+            and not os.environ.get("PRINCESS_EXPECTED_ANALYSIS_CONFIG_SHA256")):
+        raise RuntimeError("research evidence-support requires an explicit paired API/worker config pin")
     environment["PRINCESS_EXPECTED_ANALYSIS_CONFIG_SHA256"] = os.environ.get(
         "PRINCESS_EXPECTED_ANALYSIS_CONFIG_SHA256",
         analysis_config_sha256(grid_profile=environment.get("PRINCESS_ANALYSIS_PROFILE", "legacy")),
     )
     runtime_analysis_profile_and_config(environment)
-    if role == "api" and os.environ.get("PRINCESS_TEST_PUBLIC_GUEST_ONLY") == "1":
-        environment["PRINCESS_TEST_PUBLIC_GUEST_ONLY"] = "1"
+    if role == "api" and environment.get("PRINCESS_TEST_PUBLIC_GUEST_ONLY") == "1":
         environment["PRINCESS_GUEST_ADMISSIONS_PER_MINUTE"] = "5"
     database_key = "PRINCESS_API_DATABASE_URL" if role == "api" else "PRINCESS_WORKER_DATABASE_URL"
     environment["PRINCESS_DATABASE_URL"] = os.environ[database_key]

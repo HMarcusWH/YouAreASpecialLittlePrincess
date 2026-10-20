@@ -53,10 +53,19 @@ def withhold_unqualified(measurement, reason: str):
     """Keep feature identity/unit/method; remove unsupported numeric evidence."""
     if measurement.feature_id in IMAGE_DIMENSION_FACTS:
         return measurement
+    # Keep processing identity, never unsupported per-feature estimates or
+    # diagnostics (e.g. observed counts/gap distributions). In particular a
+    # qualified-v2 measurement cannot retain a truthful-looking support=true.
+    source = measurement.method_metadata
+    safe = {name: source[name] for name in
+            ("processing_profile", "grid_preprocessing", "quality_policy")
+            if name in source}
+    if "qualified_support" in source:
+        safe["qualified_support"] = False
     return replace(measurement,
                    raw_value=None, normalized_value=None, std_dev=None,
                    confidence=None, confidence_kind="UNCALIBRATED",
                    n_observations=0, source_regions=[], quality_flag="MISSING",
                    missing_reason=reason,
-                   method_metadata={"evidence_support_policy": GUARD_POLICY_VERSION,
+                   method_metadata={**safe, "evidence_support_policy": GUARD_POLICY_VERSION,
                                     "evidence_support_status": "unqualified"})

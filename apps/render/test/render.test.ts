@@ -4,6 +4,9 @@ import { readFileSync } from "node:fs";
 import { test } from "node:test";
 
 import { formatFact } from "@princess/report-core";
+import { ShareCard, cardFacts } from "@princess/report-web";
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
 
 const BIN = new URL("../dist/render.mjs", import.meta.url).pathname;
 const fixture = (name: string) =>
@@ -112,4 +115,45 @@ test("projection/layout mismatches and bad input fail with a code", () => {
   const corrupt = structuredClone(fixture("export-v2-no-image"));
   corrupt.contract_version = "9.0.0";
   assert.equal(run({ view: corrupt, layout: "A4", locale: "en", generated_at: GENERATED }).status, 1);
+});
+
+test("ineligible research sample is explicitly shown in EN/SV exports while exact image facts remain", () => {
+  const view = structuredClone(fixture("export-v2-no-image"));
+  const section = view.sections.find((s: { section_id: string }) => s.section_id === "section.sample");
+  assert.ok(section && section.fact_ids.length > 0);
+  section.availability = "INELIGIBLE";
+  for (const locale of ["en", "sv"] as const) {
+    const output = run({ view, layout: "A4", locale, generated_at: GENERATED }, "--html");
+    assert.equal(output.status, 0, output.stderr);
+    const html = output.stdout.toString();
+    assert.ok(html.includes(locale === "en" ? "Handwriting structure could not be verified"
+                                           : "Handskriftens struktur kunde inte verifieras"));
+    assert.ok(html.includes(locale === "en" ? "Detected geometric word groups"
+                                           : "Upptäckta geometriska ordgrupper"));
+  }
+});
+
+
+test("missing-only and ineligible share cards never impersonate a handwriting result", () => {
+  const share = structuredClone(fixture("share-v2"));
+  // SHARE may omit the sample section altogether. All measured handwriting
+  // facts can still be missing, so avoid an implied successful analysis.
+  share.facts = share.facts.map((fact: { availability: string; value: unknown }) =>
+    ({ ...fact, availability: "MISSING", value: null }));
+  assert.deepEqual(cardFacts(share), []);
+  for (const locale of ["en", "sv"] as const) {
+    const html = renderToStaticMarkup(createElement(ShareCard, { view: share, locale, shape: "square" }));
+    assert.ok(html.includes(locale === "en" ? "Handwriting structure unverified"
+                                           : "Handskriftens struktur är inte verifierad"));
+    assert.ok(!html.includes("Slant"));
+  }
+  const ineligible = structuredClone(fixture("export-v2-no-image"));
+  const sample = ineligible.sections.find((s: { section_id: string }) => s.section_id === "section.sample");
+  assert.ok(sample);
+  sample.availability = "INELIGIBLE";
+  const selected = cardFacts(ineligible);
+  assert.ok(selected.length > 0);
+  assert.ok(selected.every((fact) => new Set([
+    "IMG_WIDTH_PX", "IMG_HEIGHT_PX", "IMG_MEGAPIXELS", "IMG_ASPECT_RATIO",
+  ]).has(fact.feature_id)));
 });
