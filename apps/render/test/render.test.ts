@@ -165,3 +165,17 @@ test("missing-only and ineligible share cards never impersonate a handwriting re
     assert.ok(!html.includes('data-fact-id="fact.SLANT_ANGLE_MEAN"'));
   }
 });
+
+
+test("the Swedish PDF uses reviewed section headings instead of English template identifiers", () => {
+  const view = fixture("export-v2-no-image");
+  const out = run({ view, layout: "A4", locale: "sv", generated_at: GENERATED }, "--html");
+  assert.equal(out.status, 0, out.stderr);
+  const markup = out.stdout.toString();
+  for (const heading of ["Provets lämplighet", "Teckenstorlek", "Strecklutning",
+                         "Baslinjeförlopp", "Sidlayout", "Bläckegenskaper"]) {
+    assert.ok(markup.includes(heading), heading);
+  }
+  assert.ok(!markup.includes(">Sample suitability<"));
+  assert.ok(!markup.includes(">Metric grid<"));
+});

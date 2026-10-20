@@ -68,6 +68,11 @@ def main() -> None:
     assert len(report.data["facts"]) == 64
     assert {f["feature_id"] for f in report.data["facts"] if f["value"] is not None} == EXACT
     assert next(s for s in report.data["sections"] if s["section_id"] == "section.sample")["availability"] == "INELIGIBLE"
+    assert next(s for s in report.data["sections"] if s["section_id"] == "section.premium")["availability"] == "INELIGIBLE"
+    assert any(n["localization_key"] == "notice.image_only" for n in report.data["notices"])
+    owner = need(project_report(report, ProjectionRequest(
+        "OWNER", STAMP, actions={"PURCHASE": None, "EXPORT": None})), "owner")
+    assert all(action["kind"] != "PURCHASE" for action in owner.data["actions"])
     export = need(project_report(report, ProjectionRequest(
         "EXPORT", STAMP, include_source_image=False)), "export")
     share = need(project_report(report, ProjectionRequest(
@@ -78,6 +83,7 @@ def main() -> None:
     assert not export.data["authorized_asset_ids"] and not share.data["authorized_asset_ids"]
     OUT.mkdir(parents=True, exist_ok=True)
     write(OUT / "report-document-v3.synthetic.json", report.to_dict())
+    write(OUT / "view.owner-v3.synthetic.json", owner.to_dict())
     write(OUT / "view.export-v3.synthetic.json", export.to_dict())
     write(OUT / "view.share-v3.synthetic.json", share.to_dict())
     print("PASS: actual guarded v3 report, 64 canonical facts, four exact image facts, 60 missing")

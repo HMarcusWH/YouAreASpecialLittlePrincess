@@ -191,3 +191,23 @@ test("research suitability remains visible in the shared EN/SV dossier model eve
   assert.match(t("en", "report.handwriting_unverified"), /could not be verified/);
   assert.match(t("sv", "report.handwriting_unverified"), /kunde inte verifieras/);
 });
+
+
+test("EN/SV section headings and guarded abstention copy share one reviewed registry", async () => {
+  const { sectionTitle, buildDossier, t } = await import("../src/index.ts");
+  assert.equal(sectionTitle("SAMPLE_SUITABILITY", "sv", "section.sample"), "Provets lämplighet");
+  assert.equal(sectionTitle("METRIC_GRID", "sv", "section.size"), "Teckenstorlek");
+  assert.equal(sectionTitle("METRIC_GRID", "sv", "section.ink"), "Bläckegenskaper");
+  assert.equal(sectionTitle("DISTRIBUTION", "sv", "section.slant"), "Strecklutning");
+  assert.equal(sectionTitle("BASELINE_TRACE", "sv", "section.baseline"), "Baslinjeförlopp");
+  assert.equal(sectionTitle("PAGE_LAYOUT", "sv", "section.layout"), "Sidlayout");
+  assert.equal(sectionTitle("FUTURE_TEMPLATE", "sv"), "Future template");
+  const report = fixture<ReportViewModel>("view.free-v2.json");
+  const model = buildDossier(report, "sv");
+  assert.equal(model.sections.find((s) => s.sectionId === "section.sample")?.title, "Provets lämplighet");
+  assert.equal(model.sections.find((s) => s.sectionId === "section.ink")?.title, "Bläckegenskaper");
+  assert.match(t("en", "notice.image_only"), /Image properties/);
+  assert.match(t("sv", "notice.image_only"), /Bildens egenskaper/);
+  assert.match(t("sv", "report.premium_ineligible"), /inte tillgängligt/);
+  assert.match(t("en", "report.withheld_details"), /Show all missing/);
+});

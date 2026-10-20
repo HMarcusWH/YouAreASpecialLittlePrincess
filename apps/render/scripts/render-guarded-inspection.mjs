@@ -46,17 +46,40 @@ for (const [file, source, layout, locale] of cases) {
     if (!markup.includes(expected) || markup.includes("fact.SLANT_ANGLE_MEAN")) {
       throw Error(file + ": missing neutral share fallback or leaked slant");
     }
-  } else if (!markup.includes(locale === "en"
-      ? "Handwriting structure could not be verified"
-      : "Handskriftens struktur kunde inte verifieras")) {
-    throw Error(file + ": missing suitability explanation");
+  } else {
+    if (!markup.includes(locale === "en"
+        ? "Handwriting structure could not be verified"
+        : "Handskriftens struktur kunde inte verifieras")) {
+      throw Error(file + ": missing suitability explanation");
+    }
+    if (!markup.includes(locale === "en"
+        ? "Image properties remain available"
+        : "Bildens egenskaper kan fortfarande mätas")) {
+      throw Error(file + ": wrong image-only notice");
+    }
+    if (!markup.includes(locale === "en"
+        ? "Premium is unavailable for this sample"
+        : "Premium är inte tillgängligt för detta prov")) {
+      throw Error(file + ": Premium wrongly appears available");
+    }
+    if (markup.includes(locale === "en" ? "Available with Premium" : "Ingår i Premium")) {
+      throw Error(file + ": misleading Premium lock status");
+    }
+    const collapsed = (markup.match(/data-withheld-count=/g) ?? []).length;
+    if (collapsed < 5) throw Error(file + ": unavailable families were not compacted");
+    if (locale === "sv" && (!markup.includes("Provets lämplighet")
+        || !markup.includes("Bläckegenskaper") || markup.includes(">Metric grid<"))) {
+      throw Error(file + ": Swedish section heading localization failed");
+    }
   }
   const bytes = run(input);
   writeFileSync(new URL(file, OUT), bytes);
   const pdf = file.endsWith(".pdf");
   const info = pdf ? { pages: (bytes.toString("latin1").match(/\/Type \/Page\b/g) ?? []).length }
     : { width: bytes.readUInt32BE(16), height: bytes.readUInt32BE(20) };
-  if (pdf && info.pages < 1) throw Error(file + ": missing PDF pages");
+  if (pdf && (info.pages < 1 || info.pages > 4)) {
+    throw Error(file + ": unqualified PDF should fit within four pages");
+  }
   if (!pdf && (info.width !== 1080 || info.height !== (layout === "CARD_STORY" ? 1920 : 1080))) {
     throw Error(file + ": invalid card dimensions");
   }
