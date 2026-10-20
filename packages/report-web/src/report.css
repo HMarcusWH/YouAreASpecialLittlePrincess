@@ -40,6 +40,9 @@
   /* Printed research summaries stay short; all 64 facts remain available in
      the source report and expandable screen dossier. */
   .pr-missing-details { display: none !important; }
+  /* Only the v3 unqualified presentation needs tighter vertical spacing;
+     historical v1/v2 print pagination stays untouched. */
+  .pr-print .pr-report.pr-compact-unqualified .pr-section { margin-block: var(--space-2); }
 }
 /* Print mode: expanded, static, paged. */
 .pr-print { font-size: 10.5pt; color: var(--color-text); }

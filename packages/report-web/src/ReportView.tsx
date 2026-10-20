@@ -179,7 +179,8 @@ export function ReportView({ view, locale, evidence, onAction, showHeader = true
     && section.availability === "INELIGIBLE");
 
   return (
-    <article className="pr-report pr-dossier" data-projection={view.projection} lang={locale}>
+    <article className={`pr-report pr-dossier${compactMissing ? " pr-compact-unqualified" : ""}`}
+             data-projection={view.projection} lang={locale}>
       {showHeader && (
         <header className="pr-header pr-dossier-header">
           <p className="pr-eyebrow">{t(locale, "report.dossier")}</p>
