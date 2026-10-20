@@ -174,10 +174,14 @@ test("dossier model keeps server order, resolves copy and never invents values",
 
 test("research suitability remains visible in the shared EN/SV dossier model even with image facts", async () => {
   const { buildDossier, t } = await import("../src/index.ts");
-  const view = structuredClone(fixture<ReportViewModel>("view.free-v2.json"));
+  const baseline = fixture<ReportViewModel>("view.free-v2.json");
+  const view: ReportViewModel = {
+    ...baseline,
+    sections: baseline.sections.map((section) => section.section_id === "section.sample"
+      ? { ...section, availability: "INELIGIBLE" as const } : section),
+  };
   const sample = view.sections.find((s) => s.section_id === "section.sample");
   assert.ok(sample);
-  sample.availability = "INELIGIBLE";
   assert.ok(sample.fact_ids.length > 0);
   const en = buildDossier(view, "en").sections.find((s) => s.sectionId === "section.sample");
   const sv = buildDossier(view, "sv").sections.find((s) => s.sectionId === "section.sample");
