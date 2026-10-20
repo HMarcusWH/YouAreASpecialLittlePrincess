@@ -16,7 +16,7 @@ const PRINT_TEXT: Record<Locale, Record<string, string>> = {
       "group is shown. This is not a personality, health or ability assessment.",
     "print.not_recallable": "A downloaded copy cannot be recalled once it has been saved elsewhere.",
     "card.context": "Handwriting measurements — not a personality test",
-    "card.unverified": "Handwriting structure unverified — no supported handwriting result",
+    "card.no_handwriting_measurements": "No supported handwriting measurements shown",
   },
   sv: {
     "print.report": "Rapport", "print.generated": "Renderad", "print.dossier": "Personlig dossier",
@@ -26,7 +26,7 @@ const PRINT_TEXT: Record<Locale, Record<string, string>> = {
       "Detta är ingen bedömning av personlighet, hälsa eller förmåga.",
     "print.not_recallable": "En nedladdad kopia kan inte återkallas när den har sparats någon annanstans.",
     "card.context": "Handstilsmätningar — inget personlighetstest",
-    "card.unverified": "Handskriftens struktur är inte verifierad — inget styrkt handskriftsresultat",
+    "card.no_handwriting_measurements": "Inga styrkta handskriftsmätvärden visas",
   },
 };
 
@@ -98,7 +98,7 @@ export function ShareCard({ view, locale, shape }: { view: ReportViewModel; loca
     <div className={`pr-card pr-card-${shape}`} lang={locale}>
       <header className="pr-card-header">
         <p className="pr-card-brand">Inktrospect</p>
-        <p className="pr-card-context">{p(locale, unqualified ? "card.unverified" : "card.context")}</p>
+        <p className="pr-card-context">{p(locale, unqualified ? "card.no_handwriting_measurements" : "card.context")}</p>
       </header>
       <dl className="pr-card-facts">
         {facts.map((fact) => {

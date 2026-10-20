@@ -141,8 +141,8 @@ test("missing-only and ineligible share cards never impersonate a handwriting re
     const result = run({ view: missing, layout: "CARD_SQUARE", locale, generated_at: GENERATED }, "--html");
     assert.equal(result.status, 0, result.stderr);
     const html = result.stdout.toString();
-    assert.ok(html.includes(locale === "en" ? "Handwriting structure unverified"
-                                           : "Handskriftens struktur är inte verifierad"));
+    assert.ok(html.includes(locale === "en" ? "No supported handwriting measurements shown"
+                                           : "Inga styrkta handskriftsmätvärden visas"));
     assert.equal((html.match(/data-fact-id/g) ?? []).length, 0);
   }
   const ineligible = structuredClone(fixture("export-v2-no-image"));
@@ -159,8 +159,8 @@ test("missing-only and ineligible share cards never impersonate a handwriting re
     const result = run({ view: ineligible, layout: "CARD_SQUARE", locale, generated_at: GENERATED }, "--html");
     assert.equal(result.status, 0, result.stderr);
     const html = result.stdout.toString();
-    assert.ok(html.includes(locale === "en" ? "Handwriting structure unverified"
-                                           : "Handskriftens struktur är inte verifierad"));
+    assert.ok(html.includes(locale === "en" ? "No supported handwriting measurements shown"
+                                           : "Inga styrkta handskriftsmätvärden visas"));
     assert.ok(html.includes(locale === "en" ? "Image width" : "Bildbredd"));
     assert.ok(!html.includes('data-fact-id="fact.SLANT_ANGLE_MEAN"'));
   }
