@@ -9,7 +9,7 @@ import cv2
 import numpy as np
 
 from .context import prepare_context
-from .evidence_support import GUARD_POLICY_VERSION, support_warning, withhold_unqualified
+from .evidence_support import GUARD_POLICY_VERSION, assess_support, withhold_unqualified
 from .measurements import IMPLEMENTED_FEATURE_IDS, MEASUREMENT_STAGES, STAGE_FEATURE_IDS
 from .models import AnalysisResult, Box, Region
 from .schema_validation import load_contract, validate_result
@@ -68,9 +68,15 @@ class GraphologyEngine:
     def _analyze(self, image, source):
         if not isinstance(source, str):
             raise ValueError('source must be a string')
+        word_trace = {} if self.evidence_guard_enabled else None
         ctx = prepare_context(image, max_dimension=self.max_dimension, deskew_enabled=self.deskew_enabled,
-                              grid_profile=self.grid_profile)
-        support_reason = support_warning(ctx) if self.evidence_guard_enabled else None
+                              grid_profile=self.grid_profile, word_trace=word_trace)
+        audit = assess_support(ctx, word_trace) if self.evidence_guard_enabled else None
+        support_reason = audit['reason'] if audit is not None else None
+        if audit is not None:
+            # Aggregate counts/reasons only, no image pixels or text. Even a
+            # non-abstaining candidate remains uncalibrated research evidence.
+            ctx.metadata['evidence_support_audit'] = audit
         if support_reason is not None:
             ctx.metadata['evidence_support'] = {
                 'policy': GUARD_POLICY_VERSION,
