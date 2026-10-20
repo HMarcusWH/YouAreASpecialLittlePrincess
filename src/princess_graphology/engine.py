@@ -70,7 +70,8 @@ class GraphologyEngine:
             raise ValueError('source must be a string')
         word_trace = {} if self.evidence_guard_enabled else None
         ctx = prepare_context(image, max_dimension=self.max_dimension, deskew_enabled=self.deskew_enabled,
-                              grid_profile=self.grid_profile, word_trace=word_trace)
+                              grid_profile=self.grid_profile, word_trace=word_trace,
+                              audit_preselection=self.evidence_guard_enabled)
         audit = assess_support(ctx, word_trace) if self.evidence_guard_enabled else None
         support_reason = audit['reason'] if audit is not None else None
         if audit is not None:

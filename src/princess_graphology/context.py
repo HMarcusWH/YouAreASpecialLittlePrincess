@@ -12,6 +12,7 @@ from .preprocessing.binarize import binarize
 from .preprocessing.denoise import denoise
 from .preprocessing.geometry import deskew, estimate_skew
 from .preprocessing.grid import GRID_PROFILE, GridQualityError, require_qualified, separate_grid
+from .evidence_support import foreground_ruling_counts
 from .preprocessing.document import detect_document
 from .preprocessing.grid_v2 import separate_grid_v2
 from .segmentation_v2 import qualified_lines, qualified_words
@@ -132,7 +133,7 @@ def build_measurement_context(gray, mask, *, lines=(), words=(), original_width=
 
 
 def prepare_context(image, *, max_dimension=2200, deskew_enabled=True, grid_profile='legacy',
-                    word_trace=None):
+                    word_trace=None, audit_preselection=False):
     """Aligned color/rule detection with one authoritative handwriting mask.
 
     Legacy reproduces the pre-grid measurements. grid-v1 conservatively
@@ -212,6 +213,12 @@ def prepare_context(image, *, max_dimension=2200, deskew_enabled=True, grid_prof
         removed = report.removed_pixels
     if grid_profile != 'legacy' and grid_metadata['status'] != 'absent' and not np.any(mask):
         raise GridQualityError('no_handwriting_after_grid_removal')
+    # This count is sampled BEFORE qualified_lines discards any residual paper
+    # ruling. The analysis mask itself is not persisted in audit metadata.
+    pre_line_ruling_audit = (
+        foreground_ruling_counts(mask)
+        if audit_preselection and grid_profile == 'qualified-v2' else None
+    )
     qualification = None
     if grid_profile == 'qualified-v2':
         selected = qualified_lines(mask)
@@ -260,10 +267,21 @@ def prepare_context(image, *, max_dimension=2200, deskew_enabled=True, grid_prof
         metadata['line_qualification_diagnostics'] = line_trace
         metadata['word_qualification_diagnostics'] = word_selection.diagnostics
         metadata['qualification'] = qualification
+        if pre_line_ruling_audit is not None:
+            metadata['pre_line_ruling_audit'] = pre_line_ruling_audit
+    # qualified_words() recorded the original candidate/rejection stage above.
+    # A second attach_words() normalizes the finalized canonical boxes, but
+    # its diagnostic counters must never overwrite the earlier stage.
+    attachment_trace = ({} if word_trace is not None and grid_profile == 'qualified-v2'
+                        else word_trace)
     result = build_measurement_context(corrected, mask, lines=lines,
                                        words=[p.box for p in proposals],
                                        original_width=original_w, original_height=original_h,
-                                       rotation_deg=rotation, metadata=metadata, word_trace=word_trace)
+                                       rotation_deg=rotation, metadata=metadata,
+                                       word_trace=attachment_trace)
+    if word_trace is not None and grid_profile == 'qualified-v2':
+        # Bounded integer-only stage trace, no geometry or image pixels.
+        result.metadata['word_reattachment_diagnostics'] = attachment_trace
     if grid_profile == 'qualified-v2' and not result.words:
         result.metadata['qualification']['words'] = 'unavailable'
     return result

@@ -30,27 +30,39 @@ WORD_COUNTERS = (
 MAX_TRACE_COUNT = 1_000_000
 
 
-def _word_audit(ctx, trace) -> dict:
-    """Unavailable proposal stages are None, never an asserted zero.
-
-    Only fixed count names are allowed; no boxes, coordinates, pixels, raw
-    transcription, provider response, specimen identifier or arbitrary trace.
-    """
+def _safe_stage_counts(trace) -> dict:
     trace = trace if isinstance(trace, dict) else {}
     counts = {}
     for name in WORD_COUNTERS:
         value = trace.get(name)
         counts[name] = value if type(value) is int and 0 <= value <= MAX_TRACE_COUNT else None
-    lines = bool(ctx.lines)
-    status = ("not_invoked" if not lines else
-              "accepted_groups" if ctx.words else "no_accepted_groups")
+    return counts
+
+
+def _word_audit(ctx, trace) -> dict:
+    """Do not conflate an unrun detector with measured empty proposals.
+
+    WordDetector/qualified_words and the later canonical word-box attachment
+    are separate stages, and their rejection counters must not overwrite one
+    another. Unknown counters always remain JSON null, never invented zero.
+    """
+    invoked = bool(ctx.lines)
+    counts = _safe_stage_counts(trace) if invoked else _safe_stage_counts(None)
+    metadata = getattr(ctx, "metadata", {})
+    attachment = (metadata.get("word_reattachment_diagnostics")
+                  if isinstance(metadata, dict) else None)
+    attached = invoked and isinstance(attachment, dict)
     return {
         "version": WORD_AUDIT_VERSION,
-        "status": status,
-        "accepted_geometric_groups": min(len(ctx.words), MAX_TRACE_COUNT),
+        "status": ("not_invoked" if not invoked else
+                   "accepted_groups" if ctx.words else "no_accepted_groups"),
+        "accepted_geometric_groups": min(len(ctx.words), MAX_TRACE_COUNT) if invoked else None,
         "counts": counts,
+        "reattachment": {
+            "status": "not_invoked" if not invoked else "performed" if attached else "unavailable",
+            "counts": _safe_stage_counts(attachment if attached else None),
+        },
     }
-
 
 MAX_HOUGH_SEGMENTS = 8192
 
