@@ -23,9 +23,9 @@ from princess_contracts import generated as g
 
 from ..analysis import method_versions, rfc3339
 from ..content import presentation_registry, select_highlights
-from .template import (BASE_TEMPLATE_VERSION, FACT_SECTIONS, HIGHLIGHT_POLICY_VERSION,
+from .template import (BASE_TEMPLATE_VERSION, EVIDENCE_SUPPORT_TEMPLATE_VERSION, FACT_SECTIONS, HIGHLIGHT_POLICY_VERSION,
                        HIGHLIGHT_PRESENTATION_VERSION, PREMIUM_SECTION, REFERENCE_SECTION,
-                       SUPPORTED_TEMPLATE_VERSIONS, TEMPLATE_VERSION, formatting_for)
+                       SUPPORTED_TEMPLATE_VERSIONS, TEMPLATE_VERSION, formatting_for, is_unqualified_research_report)
 
 MAX_SOURCE_REGIONS = 128
 EVIDENCE_CLASS = {"MEASURED_VISUAL_FEATURE": "MEASURED", "COMPUTATIONAL_PROXY": "COMPUTATIONAL_PROXY"}
@@ -115,6 +115,16 @@ def _section_availability(facts: Sequence[Mapping[str, Any]]) -> str:
     return "READY" if "READY" in states else "UNCALIBRATED"
 
 
+def _sample_support_availability(facts: Sequence[Mapping[str, Any]]) -> str:
+    """Dimensions alone never claim suitability for handwriting analysis."""
+    by_feature = {f['feature_id']: f for f in facts}
+    line = by_feature.get('PAGE_LINE_COUNT')
+    if line is not None and (line.get('availability') == 'MISSING'
+                             or line.get('value') == 0):
+        return 'INELIGIBLE'
+    return _section_availability(facts)
+
+
 def _highlight_availability(facts: Sequence[Mapping[str, Any]]) -> str:
     """A compound statement is only as calibrated as its least-ready support."""
     return "READY" if facts and all(f["availability"] == "READY" for f in facts) else "UNCALIBRATED"
@@ -156,12 +166,18 @@ def build_sections(facts: Sequence[Mapping[str, Any]], *, reference_claims: Sequ
     if template_version not in SUPPORTED_TEMPLATE_VERSIONS:
         raise ValueError(f"unsupported report template {template_version!r}")
     by_feature = {f["feature_id"]: f for f in facts}
+    sample_facts = [by_feature[f] for f in FACT_SECTIONS[0][2] if f in by_feature]
+    unqualified = (template_version == EVIDENCE_SUPPORT_TEMPLATE_VERSION
+                   and _sample_support_availability(sample_facts) == "INELIGIBLE")
     sections = [] if template_version == BASE_TEMPLATE_VERSION else _highlight_sections(facts)
     for section_id, template, feature_ids in FACT_SECTIONS:
         members = [by_feature[f] for f in feature_ids if f in by_feature]
         if members:
             sections.append({"section_id": section_id, "template": template,
-                             "availability": _section_availability(members),
+                             "availability": (_sample_support_availability(members)
+                                              if template == 'SAMPLE_SUITABILITY'
+                                              and template_version == EVIDENCE_SUPPORT_TEMPLATE_VERSION
+                                              else _section_availability(members)),
                              "fact_ids": [f["fact_id"] for f in members], "content_ids": [],
                              "premium_section_id": None})
     claimed = [by_feature[c["feature_id"]]["fact_id"] for c in reference_claims if c["feature_id"] in by_feature]
@@ -169,18 +185,25 @@ def build_sections(facts: Sequence[Mapping[str, Any]], *, reference_claims: Sequ
                      "availability": "READY" if claimed else "INELIGIBLE", "fact_ids": list(dict.fromkeys(claimed)),
                      "content_ids": [], "premium_section_id": None})
     sections.append({"section_id": PREMIUM_SECTION[0], "template": PREMIUM_SECTION[1],
-                     "availability": "READY" if premium_overlay_id else "LOCKED", "fact_ids": [],
+                     "availability": ("INELIGIBLE" if unqualified else
+                                      "READY" if premium_overlay_id else "LOCKED"), "fact_ids": [],
                      "content_ids": [],
                      "premium_section_id": f"premium.{premium_overlay_id}" if premium_overlay_id else None})
     return sections
 
 
 def build_notices(facts: Sequence[Mapping[str, Any]], *, has_reference: bool,
-                  premium_overlay_id: str | None) -> list[dict[str, str]]:
+                  premium_overlay_id: str | None,
+                  template_version: str = TEMPLATE_VERSION) -> list[dict[str, str]]:
     classes = {f["evidence_class"] for f in facts if f["availability"] in PRESENT}
+    by_feature = {f["feature_id"]: f for f in facts}
+    sample_facts = [by_feature[f] for f in FACT_SECTIONS[0][2] if f in by_feature]
+    unqualified = (template_version == EVIDENCE_SUPPORT_TEMPLATE_VERSION
+                   and _sample_support_availability(sample_facts) == "INELIGIBLE")
     notices = []
     if "MEASURED" in classes:
-        notices.append({"notice_id": "notice.measured", "class": "MEASURED", "localization_key": "notice.measured"})
+        notices.append({"notice_id": "notice.measured", "class": "MEASURED",
+                        "localization_key": "notice.image_only" if unqualified else "notice.measured"})
     if "COMPUTATIONAL_PROXY" in classes:
         notices.append({"notice_id": "notice.proxy", "class": "PROXY",
                         "localization_key": "notice.proxy_uncalibrated"})
@@ -230,6 +253,11 @@ def assemble_report(*, report_id: str, analysis: Mapping[str, Any], result: Mapp
     facts, issues = facts_from_result(result, evidence_region_ids=kept)
     if issues:
         return ValidationResult(None, tuple(issues))
+    if (template_version == EVIDENCE_SUPPORT_TEMPLATE_VERSION and premium_overlay_id is not None
+            and _sample_support_availability(
+                [f for f in facts if f["feature_id"] in FACT_SECTIONS[0][2]]) == "INELIGIBLE"):
+        return _fail("PREMIUM_SAMPLE_INELIGIBLE", "/premium_overlay_id",
+                     "unqualified handwriting cannot support a paid overlay")
     claims = [dict(c) for c in reference_claims]
     document = {
         "contract_version": g.CONTRACT_VERSION,
@@ -244,7 +272,8 @@ def assemble_report(*, report_id: str, analysis: Mapping[str, Any], result: Mapp
         "reference_claims": claims,
         "sections": build_sections(facts, reference_claims=claims, premium_overlay_id=premium_overlay_id,
                                    template_version=template_version),
-        "notices": build_notices(facts, has_reference=bool(claims), premium_overlay_id=premium_overlay_id),
+        "notices": build_notices(facts, has_reference=bool(claims), premium_overlay_id=premium_overlay_id,
+                                 template_version=template_version),
         "premium_overlay_id": premium_overlay_id,
     }
     return _finish(document)
@@ -260,6 +289,9 @@ def revise_report(previous: ValidatedDocument, *, created_at: datetime,
     if previous.schema_name != "ReportDocument":
         return _fail("WRONG_DOCUMENT_KIND", "", "expected a ReportDocument")
     old = previous.to_dict()
+    if premium_overlay_id is not None and is_unqualified_research_report(old):
+        return _fail("PREMIUM_SAMPLE_INELIGIBLE", "/premium_overlay_id",
+                     "unqualified handwriting cannot support a paid overlay")
     if created_at < datetime.fromisoformat(old["created_at"].replace("Z", "+00:00")):
         return _fail("REVISION_BEFORE_PREVIOUS", "/created_at", "a revision cannot predate its predecessor")
     document = {**old, "revision": old["revision"] + 1, "created_at": rfc3339(created_at),
@@ -268,7 +300,8 @@ def revise_report(previous: ValidatedDocument, *, created_at: datetime,
                                            premium_overlay_id=premium_overlay_id,
                                            template_version=old["analysis"]["versions"]["template"]),
                 "notices": build_notices(old["facts"], has_reference=bool(old["reference_claims"]),
-                                         premium_overlay_id=premium_overlay_id)}
+                                         premium_overlay_id=premium_overlay_id,
+                                         template_version=old["analysis"]["versions"]["template"])}
     return _finish(document)
 
 
@@ -287,12 +320,16 @@ def check_revision(previous: ValidatedDocument, candidate: ValidatedDocument) ->
     # Sections and notices are derived, never authored: a revision cannot hide
     # facts or reword notices by recompiling a self-consistent document.
     overlay = new.get("premium_overlay_id")
+    if overlay is not None and is_unqualified_research_report(new):
+        issues.append(ContractIssue("PREMIUM_SAMPLE_INELIGIBLE", "/premium_overlay_id",
+                                    "unqualified handwriting cannot carry a paid overlay"))
     if new["sections"] != build_sections(new["facts"], reference_claims=new["reference_claims"],
                                          premium_overlay_id=overlay,
                                          template_version=new["analysis"]["versions"]["template"]):
         issues.append(ContractIssue("REVISION_SECTIONS_NOT_DERIVED", "/sections", "sections must be derived"))
     if new["notices"] != build_notices(new["facts"], has_reference=bool(new["reference_claims"]),
-                                       premium_overlay_id=overlay):
+                                       premium_overlay_id=overlay,
+                                       template_version=new["analysis"]["versions"]["template"]):
         issues.append(ContractIssue("REVISION_NOTICES_NOT_DERIVED", "/notices", "notices must be derived"))
     if _parse_time(new["created_at"]) < _parse_time(old["created_at"]):
         issues.append(ContractIssue("REVISION_BEFORE_PREVIOUS", "/created_at", "a revision cannot predate its predecessor"))

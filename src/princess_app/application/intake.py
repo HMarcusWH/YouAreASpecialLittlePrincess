@@ -13,6 +13,8 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Callable, Mapping, Protocol
 
+from princess_graphology.evidence_support import GUARD_POLICY_VERSION
+
 from ..domain import intake as policy
 from ..domain.intake import ImageHeader
 from ..domain.permissions import Decision, Scope
@@ -39,25 +41,30 @@ ENGINE_MAX_DIMENSION = 2200
 
 
 def analysis_config_sha256(max_dimension: int = ENGINE_MAX_DIMENSION, deskew: bool = True,
-                           grid_profile: str = "legacy") -> str:
+                           grid_profile: str = "legacy", evidence_guard_enabled: bool = False) -> str:
     """Digest preprocessing settings; legacy reproduces the exact previous digest."""
     if grid_profile not in ("legacy", "grid-v1", "qualified-v2"):
         raise ValueError("unknown grid preprocessing profile")
+    if type(evidence_guard_enabled) is not bool:
+        raise ValueError("evidence_guard_enabled must be boolean")
     old = f"engine:max_dimension={max_dimension};deskew={'true' if deskew else 'false'};"
+    # Keep all historical configurations bit-for-bit stable when opt-in is OFF.
+    guard = f"evidence_support={GUARD_POLICY_VERSION};" if evidence_guard_enabled else ""
     if grid_profile == "legacy":
-        return hashlib.sha256((old + policy.INTAKE_POLICY_VERSION).encode()).hexdigest()
+        return hashlib.sha256((old + guard + policy.INTAKE_POLICY_VERSION).encode()).hexdigest()
     if grid_profile == "grid-v1":
-        return hashlib.sha256((old + "grid_preprocessing=grid-v1;" +
+        return hashlib.sha256((old + "grid_preprocessing=grid-v1;" + guard +
                                policy.INTAKE_POLICY_VERSION).encode()).hexdigest()
     return hashlib.sha256((old + "document=document-roi-v1;grid=grid-v2;"
                            "lines=qualified-lines-v2;words=ink-groups-v2;"
-                           "quality=qualification-v2;" +
+                           "quality=qualification-v2;" + guard +
                            policy.INTAKE_POLICY_VERSION).encode()).hexdigest()
 
 
 def engine_config_sha256(engine: object) -> str:
     return analysis_config_sha256(getattr(engine, "max_dimension"), getattr(engine, "deskew_enabled"),
-                                  getattr(engine, "grid_profile", "legacy"))
+                                  getattr(engine, "grid_profile", "legacy"),
+                                  getattr(engine, "evidence_guard_enabled", False))
 
 ANALYSIS_CONFIG_SHA256 = analysis_config_sha256()
 
@@ -67,16 +74,23 @@ ANALYSIS_PROFILE_ENV = "PRINCESS_ANALYSIS_PROFILE"
 GRID_V1_EVALUATION_ENV = "PRINCESS_GRID_V1_RESEARCH_OPT_IN"
 V2_EVALUATION_ENV = "PRINCESS_SEGMENTATION_V2_RESEARCH_OPT_IN"
 ANALYSIS_CONFIG_PIN_ENV = "PRINCESS_EXPECTED_ANALYSIS_CONFIG_SHA256"
+EVIDENCE_GUARD_OPT_IN_ENV = "PRINCESS_EVIDENCE_SUPPORT_RESEARCH_OPT_IN"
 
 
-def runtime_analysis_profile_and_config(environ: Mapping[str, str]) -> tuple[str, str]:
-    """Resolve one processing identity for both the API and analysis worker.
+@dataclass(frozen=True)
+class ResolvedAnalysisRuntime:
+    profile: str
+    digest: str
+    evidence_guard_enabled: bool
 
-    grid-v1 requires a private local/test environment AND an explicit research
-    opt-in. Public guest testing, staging and production may use only legacy
-    until the separate Segmentation v2 qualification/release decision.
-    An expected digest is a startup fence; queued jobs have an independent
-    per-job digest check when an analysis worker claims them.
+
+def resolve_analysis_runtime(environ: Mapping[str, str]) -> ResolvedAnalysisRuntime:
+    """One independently pinned API/worker identity; no request-controlled opt-in.
+
+    Research guard is NEVER active in staging/production or public guest mode.
+    Old unguarded config SHA bytes and the two-item compatibility resolver stay
+    bit-for-bit identical. The active worker job fence separately rejects
+    queued work created with the other policy identity.
     """
     profile = environ.get(ANALYSIS_PROFILE_ENV, "legacy")
     if profile not in ("legacy", "grid-v1", "qualified-v2"):
@@ -88,14 +102,29 @@ def runtime_analysis_profile_and_config(environ: Mapping[str, str]) -> tuple[str
             raise ValueError(profile + " requires explicit private local/test evaluation opt-in")
         if environ.get("PRINCESS_TEST_PUBLIC_GUEST_ONLY") == "1":
             raise ValueError(profile + " cannot serve the public synthetic guest endpoint")
-    digest = analysis_config_sha256(grid_profile=profile)
+    choice = environ.get(EVIDENCE_GUARD_OPT_IN_ENV)
+    if choice not in (None, "", "0", "1"):
+        raise ValueError("unrecognized evidence-support research flag")
+    guard = choice == "1"
+    if guard and (environ.get("PRINCESS_ENV") not in ("local", "test")
+                  or environ.get("PRINCESS_TEST_PUBLIC_GUEST_ONLY") == "1"):
+        raise ValueError("evidence-support requires private local/test research mode")
+    digest = analysis_config_sha256(grid_profile=profile, evidence_guard_enabled=guard)
     pin = environ.get(ANALYSIS_CONFIG_PIN_ENV)
-    if (profile == "qualified-v2" and environ.get("PRINCESS_COMPONENT") in ("api", "analysis_worker")
+    if ((profile == "qualified-v2" or guard)
+            and environ.get("PRINCESS_COMPONENT") in ("api", "analysis_worker")
             and pin is None):
-        raise ValueError("qualified-v2 requires explicit paired API/worker config pin")
+        raise ValueError("research processing requires explicit paired API/worker config pin")
     if pin is not None and pin != digest:
         raise ValueError("analysis_config_mismatch")
-    return profile, digest
+    return ResolvedAnalysisRuntime(profile, digest, guard)
+
+
+
+def runtime_analysis_profile_and_config(environ: Mapping[str, str]) -> tuple[str, str]:
+    """Legacy two-field caller compatibility; services use resolved runtime."""
+    resolved = resolve_analysis_runtime(environ)
+    return resolved.profile, resolved.digest
 
 
 @dataclass(frozen=True)

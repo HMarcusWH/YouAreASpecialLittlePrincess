@@ -70,8 +70,18 @@ export function FactRow({ fact, locale }: { fact: FactPresentation; locale: Loca
   );
 }
 
-function SectionView({ section, locale }: { section: DossierSection; locale: Locale }) {
+function SectionView({ section, locale, compactMissing = false }: {
+  section: DossierSection; locale: Locale; compactMissing?: boolean;
+}) {
   const highlight = section.kind !== "SECTION";
+  const [showMissing, setShowMissing] = useState(false);
+  const fullyMissing = compactMissing && section.sectionId !== "section.sample"
+    && section.facts.length > 0 && section.facts.every((fact) => fact.availability === "MISSING");
+  const sampleMissing = compactMissing && section.sectionId === "section.sample"
+    ? section.facts.filter((fact) => fact.availability === "MISSING") : [];
+  const shownFacts = sampleMissing.length ? section.facts.filter((fact) => fact.availability !== "MISSING")
+    : section.facts;
+  const compactedFacts = fullyMissing ? section.facts : sampleMissing;
   return (
     <EditorialSection style={highlight ? local.highlightSection : undefined}>
       <SectionLabel>{section.title}</SectionLabel>
@@ -86,11 +96,25 @@ function SectionView({ section, locale }: { section: DossierSection; locale: Loc
           )}
         </View>
       ))}
+      {section.sectionId === "section.sample" && section.availability === "INELIGIBLE" ? (
+        <Body muted>{reportText(locale, "report.handwriting_unverified")}</Body>
+      ) : null}
       {section.premiumSectionId !== null ? <Body muted>{reportText(locale, "report.premium_saved")}</Body> : null}
-      {section.facts.length === 0 && section.availability !== "READY" && section.availability !== "UNCALIBRATED" ? (
+      {section.sectionId === "section.premium" && section.availability === "INELIGIBLE" ? (
+        <Body muted>{reportText(locale, "report.premium_ineligible")}</Body>
+      ) : section.facts.length === 0 && section.availability !== "READY" && section.availability !== "UNCALIBRATED" ? (
         <Body muted>{section.availabilityText}</Body>
       ) : null}
-      {section.facts.map((fact) => <FactRow key={fact.factId} fact={fact} locale={locale} />)}
+      {!fullyMissing ? shownFacts.map((fact) => <FactRow key={fact.factId} fact={fact} locale={locale} />) : null}
+      {compactedFacts.length > 0 ? (
+        <View style={{ gap: space("2") }}>
+          <Body muted>{reportText(locale, "report.withheld_family").replace("{count}", String(compactedFacts.length))}</Body>
+          <Button tone="secondary" label={reportText(locale, showMissing
+                   ? "report.hide_withheld_details" : "report.withheld_details")}
+                  onPress={() => setShowMissing((value) => !value)} />
+          {showMissing ? compactedFacts.map((fact) => <FactRow key={fact.factId} fact={fact} locale={locale} />) : null}
+        </View>
+      ) : null}
     </EditorialSection>
   );
 }
@@ -443,6 +467,8 @@ export function DossierView({ model, onAction, busyAction }: {
 }) {
   const { theme } = useApp();
   const locale = model.locale;
+  const compactMissing = model.sections.some((section) => section.sectionId === "section.sample"
+    && section.availability === "INELIGIBLE");
   return (
     <Paper style={local.dossier} elevated>
       <View style={local.header}>
@@ -465,7 +491,8 @@ export function DossierView({ model, onAction, busyAction }: {
       </View>
       <View style={local.group}>
         <SectionLabel>{reportText(locale, "report.mechanical_dossier")}</SectionLabel>
-        {model.sections.map((section) => <SectionView key={section.sectionId} section={section} locale={locale} />)}
+        {model.sections.map((section) => <SectionView key={section.sectionId} section={section} locale={locale}
+                                                      compactMissing={compactMissing} />)}
       </View>
       <EditorialSection>
         <View accessibilityRole="toolbar" style={local.actions}>

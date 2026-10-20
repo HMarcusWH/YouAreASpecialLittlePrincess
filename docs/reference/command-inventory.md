@@ -23,6 +23,7 @@ Inventory only: consult [command safety](commands.md) and [testing](../developme
 | [@princess/mobile](../../apps/mobile/package.json) | `typecheck` | `tsc -p tsconfig.json` |
 | [@princess/render](../../apps/render/package.json) | `build` | `esbuild src/cli.tsx --bundle --platform=node --target=node22 --format=esm --outfile=dist/render.mjs --loader:.css=text --jsx=automatic --external:playwright-core --banner:js="import { createRequire } from 'node:module'; const require = createRequire(import.meta.url);" --log-level=warning` |
 | [@princess/render](../../apps/render/package.json) | `inspect:artifacts` | `pnpm run build && node scripts/render-inspection.mjs` |
+| [@princess/render](../../apps/render/package.json) | `inspect:guarded` | `pnpm run build && node scripts/render-guarded-inspection.mjs` |
 | [@princess/render](../../apps/render/package.json) | `inspect:test` | `pnpm run build && node --test "test/inspection.test.ts"` |
 | [@princess/render](../../apps/render/package.json) | `test` | `pnpm run build && node --test "test/**/*.test.ts"` |
 | [@princess/render](../../apps/render/package.json) | `typecheck` | `tsc -p tsconfig.json` |
@@ -45,6 +46,7 @@ Inventory only: consult [command safety](commands.md) and [testing](../developme
 
 | Path | Source description |
 |---|---|
+| [tools/build_guarded_render_inspection.py](../../tools/build_guarded_render_inspection.py) | Rights-safe real engine/report/projection inputs for PR #96 visual qualification. |
 | [tools/build_runtime_release.py](../../tools/build_runtime_release.py) | Generate runtime-release/1 from one exact source checkout using stdlib only. |
 | [tools/build_supabase_auth_settings_snapshot.py](../../tools/build_supabase_auth_settings_snapshot.py) | Build a Git-safe Supabase staging Auth-settings snapshot from protected account evidence. |
 | [tools/build_supabase_staging_cleanup_evidence.py](../../tools/build_supabase_staging_cleanup_evidence.py) | Build Git-safe evidence for disposable Supabase staging identity cleanup. |

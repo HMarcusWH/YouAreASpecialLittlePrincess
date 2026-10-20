@@ -21,6 +21,7 @@ const EN: Record<string, string> = {
   "evidence.TRADITIONAL_ASSOCIATION": "Traditional graphology",
   "evidence.AI_SYNTHESIS": "AI-assisted",
   "notice.measured": "Measured values come directly from your handwriting image.",
+  "notice.image_only": "Image properties remain available, but reliable handwriting structure could not be established from this sample.",
   "notice.proxy_uncalibrated": "Computed proxies are engineering indices. They are not calibrated and are not percentiles.",
   "notice.reference_unavailable": "No reference group is available yet, so nothing here is ranked against other writers.",
   "notice.reference_named_cohort": "Comparisons use the named reference group shown next to each rank.",
@@ -62,6 +63,11 @@ const EN: Record<string, string> = {
   "report.what_stands_out": "What stands out",
   "report.also_noticeable": "Also noticeable",
   "report.image_omitted": "Source image omitted.",
+  "report.handwriting_unverified": "Handwriting structure could not be verified. Handwriting-dependent results may be unavailable; image measurements remain separate.",
+  "report.premium_ineligible": "Premium is unavailable for this sample because the handwriting could not be assessed reliably. Paying cannot restore missing evidence.",
+  "report.withheld_family": "{count} measurements were withheld or could not be established from this sample.",
+  "report.withheld_details": "Show all missing measurements",
+  "report.hide_withheld_details": "Hide missing measurements",
   "quality.observations": "observations",
   "evidence.title": "Evidence behind the measurements",
   "evidence.intro": "These views use the stored observations behind this report. Missing or rejected observations are never replaced with zero.",
@@ -126,6 +132,7 @@ const SV: Record<string, string> = {
   "evidence.TRADITIONAL_ASSOCIATION": "Traditionell grafologi",
   "evidence.AI_SYNTHESIS": "AI-stött",
   "notice.measured": "Uppmätta värden kommer direkt från bilden av din handstil.",
+  "notice.image_only": "Bildens egenskaper kan fortfarande mätas, men handskriftens struktur kunde inte fastställas tillförlitligt i detta prov.",
   "notice.proxy_uncalibrated": "Beräknade närmevärden är tekniska index. De är inte kalibrerade och är inte percentiler.",
   "notice.reference_unavailable": "Det finns ännu ingen referensgrupp, så inget här rangordnas mot andra skribenter.",
   "notice.reference_named_cohort": "Jämförelser använder den namngivna referensgruppen som visas vid varje rang.",
@@ -167,6 +174,11 @@ const SV: Record<string, string> = {
   "report.what_stands_out": "Det som sticker ut",
   "report.also_noticeable": "Också tydligt",
   "report.image_omitted": "Källbilden är utelämnad.",
+  "report.handwriting_unverified": "Handskriftens struktur kunde inte verifieras. Handskriftsberoende resultat kan saknas; bildmått redovisas separat.",
+  "report.premium_ineligible": "Premium är inte tillgängligt för detta prov eftersom handskriften inte kunde bedömas tillförlitligt. Betalning kan inte återskapa saknat underlag.",
+  "report.withheld_family": "{count} mätvärden har utelämnats eller kunde inte fastställas i detta prov.",
+  "report.withheld_details": "Visa alla saknade mätvärden",
+  "report.hide_withheld_details": "Dölj saknade mätvärden",
   "quality.observations": "observationer",
   "evidence.title": "Underlag bakom mätvärdena",
   "evidence.intro": "Dessa vyer använder de sparade observationerna bakom rapporten. Saknade eller underkända observationer ersätts aldrig med noll.",
@@ -228,7 +240,34 @@ export function contentText(contentId: string, locale: Locale): string | undefin
   return presentationContent(contentId, locale);
 }
 
-export function sectionTitle(template: string): string {
+/** Reviewed localized names; METRIC_GRID serves distinct size and ink sections. */
+const SECTION_TITLES: Record<string, Record<Locale, string>> = {
+  "section.sample": { en: "Sample suitability", sv: "Provets lämplighet" },
+  "section.size": { en: "Letterform size", sv: "Teckenstorlek" },
+  "section.slant": { en: "Stroke slant", sv: "Strecklutning" },
+  "section.baseline": { en: "Baseline traces", sv: "Baslinjeförlopp" },
+  "section.spacing": { en: "Spacing", sv: "Avstånd" },
+  "section.layout": { en: "Page layout", sv: "Sidlayout" },
+  "section.ink": { en: "Ink appearance", sv: "Bläckegenskaper" },
+  "section.reference": { en: "Reference comparison", sv: "Referensjämförelse" },
+  "section.premium": { en: "Premium", sv: "Premium" },
+};
+const TEMPLATE_TITLES: Record<string, Record<Locale, string>> = {
+  SAMPLE_SUITABILITY: SECTION_TITLES["section.sample"]!,
+  METRIC_GRID: { en: "Measurements", sv: "Mätvärden" },
+  DISTRIBUTION: { en: "Distribution", sv: "Fördelning" },
+  BASELINE_TRACE: { en: "Baseline traces", sv: "Baslinjeförlopp" },
+  SPACING: SECTION_TITLES["section.spacing"]!,
+  PAGE_LAYOUT: SECTION_TITLES["section.layout"]!,
+  REFERENCE: SECTION_TITLES["section.reference"]!,
+  PREMIUM: SECTION_TITLES["section.premium"]!,
+};
+
+export function sectionTitle(template: string, locale: Locale = "en", sectionId?: string): string {
+  const generic = TEMPLATE_TITLES[template];
+  const reviewed = (generic && sectionId && SECTION_TITLES[sectionId]) || generic;
+  if (reviewed) return reviewed[locale];
+  // Unknown future templates use a readable fallback, not invented translation.
   const name = template.replace(/^section\./i, "").replace(/[._-]+/g, " ").toLowerCase().trim();
   return name.charAt(0).toUpperCase() + name.slice(1);
 }

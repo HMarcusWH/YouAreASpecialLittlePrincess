@@ -24,6 +24,7 @@ from typing import Callable, Mapping, Protocol, Sequence
 from ..domain import commerce as policy
 from ..domain.commerce import GrantDecision, Platform
 from ..domain.permissions import Scope
+from ..domain.reports.template import is_unqualified_research_report
 from ..ports.base import (
     CallContext,
     Clock,
@@ -271,6 +272,10 @@ class CommerceService:
         report = latest[1]
         if report.data["premium_overlay_id"] is not None:
             raise InvalidInput("premium_already_published")
+        if is_unqualified_research_report(report.data):
+            # Reject before consent lookup and credit reservation: no charge for
+            # missing handwriting evidence, even through a direct API request.
+            raise InvalidInput("premium_sample_ineligible")
         epoch = self._permissions.require(owner_id, AI_PURPOSE, Scope("REPORT", report_id))
         revision = report.data["revision"]
         key = policy.premium_operation_key(owner_id, report_id, revision, report.data["locale"], POLICY_ID)

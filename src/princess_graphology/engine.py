@@ -9,6 +9,7 @@ import cv2
 import numpy as np
 
 from .context import prepare_context
+from .evidence_support import GUARD_POLICY_VERSION, support_warning, withhold_unqualified
 from .measurements import IMPLEMENTED_FEATURE_IDS, MEASUREMENT_STAGES, STAGE_FEATURE_IDS
 from .models import AnalysisResult, Box, Region
 from .schema_validation import load_contract, validate_result
@@ -28,16 +29,20 @@ def input_pixels_sha256(image):
 class GraphologyEngine:
     """Deterministic static-image descriptors; no personality or pressure inference."""
 
-    def __init__(self, max_dimension=2200, *, deskew_enabled=True, grid_profile="legacy"):
+    def __init__(self, max_dimension=2200, *, deskew_enabled=True, grid_profile="legacy",
+                 evidence_guard_enabled=False):
         if type(max_dimension) is not int or max_dimension < 1:
             raise ValueError('max_dimension must be a positive integer')
         if type(deskew_enabled) is not bool:
             raise ValueError('deskew_enabled must be boolean')
         if grid_profile not in ("legacy", "grid-v1", "qualified-v2"):
             raise ValueError("unknown grid preprocessing profile")
+        if type(evidence_guard_enabled) is not bool:
+            raise ValueError("evidence_guard_enabled must be boolean")
         self.max_dimension = max_dimension
         self.deskew_enabled = deskew_enabled
         self.grid_profile = grid_profile
+        self.evidence_guard_enabled = evidence_guard_enabled
 
     def analyze_file(self, path):
         path = os.fspath(path)
@@ -65,6 +70,13 @@ class GraphologyEngine:
             raise ValueError('source must be a string')
         ctx = prepare_context(image, max_dimension=self.max_dimension, deskew_enabled=self.deskew_enabled,
                               grid_profile=self.grid_profile)
+        support_reason = support_warning(ctx) if self.evidence_guard_enabled else None
+        if support_reason is not None:
+            ctx.metadata['evidence_support'] = {
+                'policy': GUARD_POLICY_VERSION,
+                'status': 'unqualified',
+                'reason': support_reason,
+            }
         pixels_sha256 = input_pixels_sha256(image)
         contract = load_contract()
         result = AnalysisResult(source=source, width=ctx.width, height=ctx.height)
@@ -77,11 +89,15 @@ class GraphologyEngine:
                                 'empirically_validated_feature_count': 0,
                                 'confidence_policy': 'null means uncalibrated, not zero confidence'})
         result.regions.append(Region('page_0', 'PAGE', Box(0, 0, ctx.width, ctx.height)))
-        result.regions.extend(Region(f'line_{i}', 'LINE', box, 'page_0') for i, box in enumerate(ctx.lines))
-        result.regions.extend(Region(f'word_{i}', 'WORD', box, f'line_{ctx.word_lines[i]}')
-                              for i, box in enumerate(ctx.words))
-        result.regions.extend(Region(f'component_{i}', 'COMPONENT', box, 'page_0')
-                              for i, box in enumerate(ctx.components))
+        if support_reason is None:
+            result.regions.extend(Region(f'line_{i}', 'LINE', box, 'page_0') for i, box in enumerate(ctx.lines))
+            result.regions.extend(Region(f'word_{i}', 'WORD', box, f'line_{ctx.word_lines[i]}')
+                                  for i, box in enumerate(ctx.words))
+            result.regions.extend(Region(f'component_{i}', 'COMPONENT', box, 'page_0')
+                                  for i, box in enumerate(ctx.components))
+        else:
+            result.warnings.append('Insufficient verified handwriting structure;'
+                                   ' handwriting-dependent measurements were withheld.')
         if not ctx.components:
             result.warnings.append('No usable foreground detected; this is not evidence of an empty physical page.')
         if ctx.x_height_px is None:
@@ -103,6 +119,8 @@ class GraphologyEngine:
                         'quality_policy': 'quality-policy/2',
                         'qualified_support': measurement.raw_value is not None,
                     })
+                if support_reason is not None:
+                    measurement = withhold_unqualified(measurement, support_reason)
                 result.add(measurement)
         if self.grid_profile == 'qualified-v2':
             status = ctx.metadata['qualification']

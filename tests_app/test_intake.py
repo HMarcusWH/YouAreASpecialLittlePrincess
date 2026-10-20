@@ -19,7 +19,7 @@ from princess_app.adapters.postgres.outbox import PostgresErasureOutbox
 from princess_app.adapters.postgres.stores import PostgresIdentityStore, PostgresPermissionStore, PostgresReportStore
 from princess_app.application.analysis_worker import MAX_ATTEMPTS, AnalysisWorker
 from princess_app.application.erasure import ErasureWorker
-from princess_app.application.intake import ChallengeProof, IntakeService, propagate_withdrawal
+from princess_app.application.intake import ChallengeProof, IntakeService, analysis_config_sha256, propagate_withdrawal
 from princess_app.application.permissions import PermissionService
 from princess_app.application.reports import ReportReader
 from princess_app.domain.permissions import SUBJECT_WIDE, Decision, Scope
@@ -668,3 +668,60 @@ def test_challenges_are_bound_to_the_server_owned_action_and_site(env, world):  
     for action, site in (("login", "app.test"), ("upload", "elsewhere.test")):
         with pytest.raises(NotAuthorized):
             env.upload(owner, b"x", proof=ChallengeProof(env.challenge.issue_token(action, site)))
+
+def test_guarded_private_job_publishes_v3_and_preserves_missingness(env, world):  # noqa: F811
+    owner = account(world, "sub-guard").principal_id
+    paper = np.full((800, 640, 3), 248, dtype=np.uint8)
+    for y in range(45, 790, 96):
+        cv2.line(paper, (0, y), (639, y), (210, 190, 170), 2)
+    data = cv2.imencode(".png", paper)[1].tobytes()
+    capture = env.capture(owner, data=data)
+    env.grant(owner, capture.capture_id)
+    guarded_intake = IntakeService(
+        repo=env.repo, store=env.store, permissions=env.permissions,
+        challenge=env.challenge, inspect=inspect_header, clock=env.clock,
+        ids=SequentialIds(), challenge_site="app.test",
+        analysis_config=analysis_config_sha256(evidence_guard_enabled=True),
+    )
+    run_id = guarded_intake.start_analysis(owner, capture.capture_id)
+    guarded_worker = AnalysisWorker(
+        queue=env.queue, store=env.store, decode=decode_image,
+        engine=GraphologyEngine(evidence_guard_enabled=True),
+        clock=env.clock, context=env.ctx, worker_id="guarded-worker",
+        engine_version=__version__, lease_seconds=60,
+    )
+    assert guarded_worker.run_once().outcome == "SUCCEEDED"
+    status = guarded_intake.status(owner, run_id)
+    assert status.report_id is not None and status.state == "SUCCEEDED"
+    store = PostgresReportStore(env.app_db, owner)
+    _, saved = store.latest(status.report_id)
+    assert saved.data["analysis"]["versions"]["template"] == "individual-report/3"
+    assert len(saved.data["facts"]) == 64
+    assert sum(f["value"] is not None for f in saved.data["facts"]) == 4
+    assert next(s for s in saved.data["sections"] if s["section_id"] == "section.sample")["availability"] == "INELIGIBLE"
+    assert next(s for s in saved.data["sections"] if s["section_id"] == "section.premium")["availability"] == "INELIGIBLE"
+    assert any(n["localization_key"] == "notice.image_only" for n in saved.data["notices"])
+    from princess_app.application.commerce import CommerceService
+    from princess_app.domain.commerce import Platform
+    commerce = CommerceService.__new__(CommerceService)
+    commerce._reports = lambda owner_id: PostgresReportStore(env.app_db, owner_id)
+    with pytest.raises(InvalidInput) as rejected:
+        commerce.request_premium(owner, status.report_id, Platform.WEB)
+    assert rejected.value.code == "premium_sample_ineligible"
+    view = ReportReader(store, env.clock).view(report_id=status.report_id,
+                                                 principal_id=owner, projection="FREE")
+    assert len(view.data["facts"]) == 64
+    assert next(s for s in view.data["sections"] if s["section_id"] == "section.sample")["availability"] == "INELIGIBLE"
+
+
+def test_guarded_worker_rejects_unguarded_queued_job(env, world):  # noqa: F811
+    owner = account(world, "sub-guard-mismatch").principal_id
+    _, run_id = env.analysis(owner)
+    worker = AnalysisWorker(
+        queue=env.queue, store=env.store, decode=decode_image,
+        engine=GraphologyEngine(evidence_guard_enabled=True),
+        clock=env.clock, context=env.ctx, worker_id="guarded-mismatch",
+        engine_version=__version__, lease_seconds=60,
+    )
+    assert worker.run_once().outcome == "FAILED"
+    assert env.intake.status(owner, run_id).error_code == "analysis_config_mismatch"

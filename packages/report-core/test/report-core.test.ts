@@ -23,6 +23,8 @@ function fact(featureId: string): Fact {
 test("presentation registry resolves reviewed EN/SV labels, content and fixed domains", () => {
   assert.equal(featureLabel("SLANT_ANGLE_MEAN", "en-US"), "Mean dominant stroke slant");
   assert.equal(featureLabel("SLANT_ANGLE_MEAN", "sv-SE"), "Genomsnittlig dominerande strecklutning");
+  assert.equal(featureLabel("PAGE_WORD_COUNT", "en"), "Detected geometric word groups");
+  assert.equal(featureLabel("PAGE_WORD_COUNT", "sv-SE"), "Upptäckta geometriska ordgrupper");
   assert.equal(featureLabel("NOT_A_FEATURE", "en"), undefined);
   assert.match(presentationContent("content.highlight.v1.slant.right.almost_all", "sv") ?? "", /lutningsobservationer/);
   assert.equal(presentationContent("content.unknown", "en"), undefined);
@@ -168,4 +170,44 @@ test("dossier model keeps server order, resolves copy and never invents values",
   assert.equal(displayLocale("sv-SE"), "sv");
   assert.equal(displayLocale("de-DE"), "en");
   assert.equal(t("en", "premium.answer.NOT_ASSESSABLE"), "Could not be assessed from this sample");
+});
+
+test("research suitability remains visible in the shared EN/SV dossier model even with image facts", async () => {
+  const { buildDossier, t } = await import("../src/index.ts");
+  const baseline = fixture<ReportViewModel>("view.free-v2.json");
+  const view: ReportViewModel = {
+    ...baseline,
+    sections: baseline.sections.map((section) => section.section_id === "section.sample"
+      ? { ...section, availability: "INELIGIBLE" as const } : section),
+  };
+  const sample = view.sections.find((s) => s.section_id === "section.sample");
+  assert.ok(sample);
+  assert.ok(sample.fact_ids.length > 0);
+  const en = buildDossier(view, "en").sections.find((s) => s.sectionId === "section.sample");
+  const sv = buildDossier(view, "sv").sections.find((s) => s.sectionId === "section.sample");
+  assert.equal(en?.availability, "INELIGIBLE");
+  assert.equal(sv?.availability, "INELIGIBLE");
+  assert.ok(en!.facts.length > 0 && sv!.facts.length > 0);
+  assert.match(t("en", "report.handwriting_unverified"), /could not be verified/);
+  assert.match(t("sv", "report.handwriting_unverified"), /kunde inte verifieras/);
+});
+
+
+test("EN/SV section headings and guarded abstention copy share one reviewed registry", async () => {
+  const { sectionTitle, buildDossier, t } = await import("../src/index.ts");
+  assert.equal(sectionTitle("SAMPLE_SUITABILITY", "sv", "section.sample"), "Provets lämplighet");
+  assert.equal(sectionTitle("METRIC_GRID", "sv", "section.size"), "Teckenstorlek");
+  assert.equal(sectionTitle("METRIC_GRID", "sv", "section.ink"), "Bläckegenskaper");
+  assert.equal(sectionTitle("DISTRIBUTION", "sv", "section.slant"), "Strecklutning");
+  assert.equal(sectionTitle("BASELINE_TRACE", "sv", "section.baseline"), "Baslinjeförlopp");
+  assert.equal(sectionTitle("PAGE_LAYOUT", "sv", "section.layout"), "Sidlayout");
+  assert.equal(sectionTitle("FUTURE_TEMPLATE", "sv"), "Future template");
+  const report = fixture<ReportViewModel>("view.free-v2.json");
+  const model = buildDossier(report, "sv");
+  assert.equal(model.sections.find((s) => s.sectionId === "section.sample")?.title, "Provets lämplighet");
+  assert.equal(model.sections.find((s) => s.sectionId === "section.ink")?.title, "Bläckegenskaper");
+  assert.match(t("en", "notice.image_only"), /Image properties/);
+  assert.match(t("sv", "notice.image_only"), /Bildens egenskaper/);
+  assert.match(t("sv", "report.premium_ineligible"), /inte tillgängligt/);
+  assert.match(t("en", "report.withheld_details"), /Show all missing/);
 });

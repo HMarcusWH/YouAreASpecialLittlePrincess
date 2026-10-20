@@ -94,6 +94,18 @@ def collect_evidence(ctx, result):
     the result metadata.
     """
     warnings = [PAGE_WARNING]
+    if ctx.metadata.get('evidence_support', {}).get('status') == 'unqualified':
+        warnings.append('Handwriting observations withheld: insufficient structural evidence.')
+        # The page is only an analysis-canvas coordinate frame, not a paper edge.
+        return {
+            'evidence_version': EVIDENCE_VERSION,
+            'input_pixels_sha256': result.metadata['input_pixels_sha256'],
+            'frames': _frames(ctx),
+            'regions': [_region(r.region_id, r.scope, r.box.as_tuple(), r.parent_id)
+                        for r in result.regions if r.scope == 'PAGE'],
+            'observations': [],
+            'warnings': warnings,
+        }
     fits = baseline_fits(ctx)
     groups = [
         [_region(r.region_id, r.scope, r.box.as_tuple(), r.parent_id) for r in result.regions

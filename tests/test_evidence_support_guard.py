@@ -1,0 +1,315 @@
+"""Synthetic image-only opt-in guard: no handwriting rights, AI, or real-person data."""
+from __future__ import annotations
+
+import hashlib
+from datetime import datetime, timezone
+from dataclasses import replace
+from types import SimpleNamespace
+
+import cv2
+import numpy as np
+import pytest
+
+from princess_app.application.intake import (analysis_config_sha256, engine_config_sha256, resolve_analysis_runtime)
+from princess_app.application.commerce import CommerceService
+from princess_app.domain.commerce import Platform
+from princess_app.ports.base import InvalidInput
+from princess_app.domain.intake import INTAKE_POLICY_VERSION
+from princess_app.domain.analysis import analysis_reference
+from princess_app.domain.content.presentation import feature_label
+from princess_app.domain.evidence import build_evidence_bundle
+from princess_app.domain.reports import assemble_report, revise_report
+from princess_app.domain.reports.projection import ProjectionRequest, project_report
+from princess_app.domain.reports.template import EVIDENCE_SUPPORT_TEMPLATE_VERSION
+from princess_graphology import GraphologyEngine
+from princess_graphology.evidence_support import GUARD_POLICY_VERSION, support_warning, withhold_unqualified
+from princess_graphology.models import Box
+
+
+def synthetic_paper(kind: str) -> np.ndarray:
+    image = np.full((800, 640, 3), 248, dtype=np.uint8)
+    if kind in ("lined", "grid"):
+        for y in range(45, 790, 96):
+            cv2.line(image, (0, y), (639, y), (210, 190, 170), 2)
+    if kind == "grid":
+        for x in range(35, 630, 63):
+            cv2.line(image, (x, 0), (x, 799), (210, 190, 170), 2)
+    if kind == "text":
+        for i, txt in enumerate(("Alpha Beta Gamma", "Delta Zeta Eta", "Theta Iota Kappa", "Mu Nu Omicron")):
+            cv2.putText(image, txt, (45, 120 + i * 146), cv2.FONT_HERSHEY_SIMPLEX,
+                        0.85, (20, 24, 32), 2, cv2.LINE_AA)
+    return image
+
+
+def _run(image, *, profile="legacy", guard=True):
+    return GraphologyEngine(grid_profile=profile, evidence_guard_enabled=guard).analyze_with_evidence(image)
+
+
+def test_opt_in_is_independent_and_changes_source_configuration_identity():
+    reference = analysis_config_sha256()
+    off = GraphologyEngine()
+    on = GraphologyEngine(evidence_guard_enabled=True)
+    assert off.evidence_guard_enabled is False
+    assert engine_config_sha256(off) == reference
+    assert engine_config_sha256(on) == analysis_config_sha256(evidence_guard_enabled=True)
+    assert engine_config_sha256(on) != reference
+    for profile in ("legacy", "grid-v1", "qualified-v2"):
+        assert (analysis_config_sha256(grid_profile=profile, evidence_guard_enabled=True)
+                != analysis_config_sha256(grid_profile=profile))
+    with pytest.raises(ValueError, match="boolean"):
+        GraphologyEngine(evidence_guard_enabled=1)
+
+
+def test_excessively_long_thin_ruling_abstains_instead_of_reporting_fake_lines():
+    image = synthetic_paper("lined")
+    original = GraphologyEngine().analyze(image)
+    assert original.measurements['PAGE_LINE_COUNT'].raw_value >= 4
+    repaired, evidence = _run(image)
+    measurements = repaired.measurements
+    exact = {'IMG_WIDTH_PX', 'IMG_HEIGHT_PX', 'IMG_MEGAPIXELS', 'IMG_ASPECT_RATIO'}
+    assert set(measurements) and len(measurements) == 64
+    assert {key for key, value in measurements.items() if value.raw_value is not None} == exact
+    assert all(measurements[key].raw_value is None for key in ('PAGE_LINE_COUNT', 'PAGE_WORD_COUNT',
+                                                               'LINE_SPACING_CV', 'PAGE_HORIZONTAL_DENSITY'))
+    assert all(measurements[key].missing_reason == 'dominant_thin_page_ruling'
+               for key in ('PAGE_LINE_COUNT', 'PAGE_WORD_COUNT', 'LINE_SPACING_CV'))
+    assert [(r.region_id, r.scope) for r in repaired.regions] == [('page_0', 'PAGE')]
+    assert len(evidence['observations']) == 0
+    assert {r['scope'] for r in evidence['regions']} == {'PAGE'}
+
+
+def test_one_page_spanning_nontext_contour_abstains():
+    fake = SimpleNamespace(width=640, height=800, original_width=640, original_height=800,
+                           lines=[Box(0, 0, 640, 800)], words=[], components=[Box(0, 0, 640, 800)],
+                           x_height_px=None)
+    assert support_warning(fake) == 'page_spanning_nontext_artifact'
+
+
+def test_low_resolution_sparse_layout_abstains_without_claiming_empty():
+    fake = SimpleNamespace(width=400, height=520, original_width=400, original_height=520,
+                           lines=[Box(50, 150, 180, 12), Box(80, 270, 160, 12), Box(70, 390, 140, 12)],
+                           words=[Box(50, 150, 180, 12)] * 5,
+                           components=[Box(50, 150, 180, 12)] * 5,
+                           x_height_px=None)
+    assert support_warning(fake) == 'low_resolution_structure_collapsed'
+    fake.original_width, fake.original_height = 1600, 2000
+    assert support_warning(fake) is None
+    fake.original_width, fake.original_height = 400, 520
+    fake.components = [Box(i, 200, 7, 12) for i in range(15)]
+    assert support_warning(fake) is None
+
+
+def test_regular_synthetic_text_keeps_word_line_region_evidence_and_facts():
+    raw = synthetic_paper('text')
+    baseline = GraphologyEngine().analyze(raw)
+    guarded, evidence = _run(raw)
+    assert guarded.metadata.get('evidence_support') is None
+    assert guarded.to_dict()['measurements'] == baseline.to_dict()['measurements']
+    assert guarded.to_dict()['regions'] == baseline.to_dict()['regions']
+    assert len(guarded.regions) > 1
+    assert any(item['scope'] == 'LINE' for item in evidence['regions'])
+
+
+def test_qualified_original_input_policy_stays_off_by_default():
+    assert feature_label('PAGE_WORD_COUNT', 'en') == 'Detected geometric word groups'
+    assert feature_label('PAGE_WORD_COUNT', 'sv-SE') == 'Upptäckta geometriska ordgrupper'
+
+
+def test_repaired_report_and_evidence_compile_without_any_false_highlights():
+    image = synthetic_paper('lined')
+    engine = GraphologyEngine(evidence_guard_enabled=True)
+    result, evidence = engine.analyze_with_evidence(image, source='synthetic-ruling')
+    raw = result.to_dict()
+    now = datetime(2026, 10, 20, tzinfo=timezone.utc)
+    ref = analysis_reference(
+        analysis_id='analysis_synthetic_guard', run_id='run_synthetic_guard',
+        owner_id='owner_synthetic_guard', input_asset_id='asset_synthetic_guard',
+        input_sha256=hashlib.sha256(image.tobytes()).hexdigest(),
+        processed_sha256=raw['metadata']['input_pixels_sha256'], created_at=now,
+        engine_version='0.1.0', analysis_config_sha256=engine_config_sha256(engine),
+        template=EVIDENCE_SUPPORT_TEMPLATE_VERSION,
+    )
+    bundle = build_evidence_bundle(evidence, ref, 'bundle_synthetic_guard')
+    assert bundle.ok, bundle.issues
+    assembled = assemble_report(
+        report_id='report_synthetic_guard', analysis=ref, result=raw,
+        created_at=now, locale='en', evidence=bundle.value,
+    )
+    assert assembled.ok, assembled.issues
+    report = assembled.value.to_dict()
+    assert len(report['facts']) == 64
+    assert sum(f['value'] is not None for f in report['facts']) == 4
+    assert next(s for s in report['sections'] if s['section_id'] == 'section.sample')['availability'] == 'INELIGIBLE'
+    assert [s['content_ids'] for s in report['sections'] if s['section_id'].startswith('section.highlight.')] == [
+        ['content.highlight.v1.none']
+    ]
+
+
+def test_explicit_local_research_guard_requires_paired_digest_and_is_rejected_in_public():
+    digest = analysis_config_sha256(evidence_guard_enabled=True)
+    local = {"PRINCESS_ENV": "local", "PRINCESS_COMPONENT": "analysis_worker",
+             "PRINCESS_EVIDENCE_SUPPORT_RESEARCH_OPT_IN": "1",
+             "PRINCESS_EXPECTED_ANALYSIS_CONFIG_SHA256": digest}
+    resolved = resolve_analysis_runtime(local)
+    assert (resolved.profile, resolved.digest, resolved.evidence_guard_enabled) == ("legacy", digest, True)
+    assert resolve_analysis_runtime({}).evidence_guard_enabled is False
+    for changed in ({**local, "PRINCESS_ENV": "production"},
+                    {**local, "PRINCESS_ENV": "staging"},
+                    {**local, "PRINCESS_TEST_PUBLIC_GUEST_ONLY": "1"},
+                    {**local, "PRINCESS_EXPECTED_ANALYSIS_CONFIG_SHA256": analysis_config_sha256()},
+                    {k: v for k, v in local.items() if k != "PRINCESS_EXPECTED_ANALYSIS_CONFIG_SHA256"},
+                    {**local, "PRINCESS_EVIDENCE_SUPPORT_RESEARCH_OPT_IN": "true"}):
+        with pytest.raises(ValueError):
+            resolve_analysis_runtime(changed)
+
+
+def test_report_template_v2_and_v3_have_distinct_blank_suitability_semantics():
+    from princess_app.domain.reports.assembly import build_sections, facts_from_result
+    from princess_app.domain.reports.template import HIGHLIGHT_TEMPLATE_VERSION
+
+    sample = GraphologyEngine().analyze(np.full((80, 120), 255, np.uint8)).to_dict()
+    facts, issues = facts_from_result(sample)
+    assert not issues
+    def sample_availability(template):
+        sections = build_sections(facts, reference_claims=(), premium_overlay_id=None,
+                                  template_version=template)
+        return next(s["availability"] for s in sections if s["section_id"] == "section.sample")
+    assert sample_availability(HIGHLIGHT_TEMPLATE_VERSION) == "READY"  # immutable historical /2
+    assert sample_availability(EVIDENCE_SUPPORT_TEMPLATE_VERSION) == "INELIGIBLE"
+
+def test_guarded_digest_uses_policy_authority_and_historical_digest_is_unchanged():
+    legacy = ("engine:max_dimension=2200;deskew=true;" + INTAKE_POLICY_VERSION).encode()
+    guarded = ("engine:max_dimension=2200;deskew=true;"
+               f"evidence_support={GUARD_POLICY_VERSION};" + INTAKE_POLICY_VERSION).encode()
+    assert analysis_config_sha256() == hashlib.sha256(legacy).hexdigest()
+    assert analysis_config_sha256(evidence_guard_enabled=True) == hashlib.sha256(guarded).hexdigest()
+
+
+def test_withholding_keeps_only_safe_processing_identifiers():
+    record = GraphologyEngine().analyze(synthetic_paper("text")).measurements["PAGE_LINE_COUNT"]
+    source = replace(record, method_metadata={
+        "processing_profile": "qualified-v2", "grid_preprocessing": "grid-v2",
+        "quality_policy": "quality-policy/2", "qualified_support": True,
+        "unsupported_estimate": 0.91,
+    })
+    missing = withhold_unqualified(source, "synthetic_unqualified")
+    assert (missing.raw_value, missing.confidence, missing.std_dev) == (None, None, None)
+    assert missing.quality_flag == "MISSING" and missing.missing_reason == "synthetic_unqualified"
+    assert missing.n_observations == 0 and missing.source_regions == []
+    assert missing.method_metadata == {
+        "processing_profile": "qualified-v2", "grid_preprocessing": "grid-v2",
+        "quality_policy": "quality-policy/2", "qualified_support": False,
+        "evidence_support_policy": GUARD_POLICY_VERSION,
+        "evidence_support_status": "unqualified",
+    }
+
+
+def test_withheld_report_projection_and_revision_parity():
+    image = synthetic_paper("lined")
+    engine = GraphologyEngine(evidence_guard_enabled=True)
+    result, payload = engine.analyze_with_evidence(image)
+    now = datetime(2026, 10, 20, tzinfo=timezone.utc)
+    analysis = analysis_reference(
+        analysis_id="analysis_guard_parity", run_id="run_guard_parity", owner_id="owner_guard_parity",
+        input_asset_id="asset_guard_parity", input_sha256=hashlib.sha256(image.tobytes()).hexdigest(),
+        processed_sha256=result.metadata["input_pixels_sha256"],
+        created_at=now, engine_version="0.1.0", analysis_config_sha256=engine_config_sha256(engine),
+        template=EVIDENCE_SUPPORT_TEMPLATE_VERSION,
+    )
+    evidence = build_evidence_bundle(payload, analysis, "bundle_guard_parity")
+    assert evidence.ok, evidence.issues
+    report = assemble_report(report_id="report_guard_parity", analysis=analysis, result=result.to_dict(),
+                             created_at=now, locale="en", evidence=evidence.value)
+    assert report.ok, report.issues
+    expected = {f["feature_id"]: f["value"] for f in report.value.data["facts"]}
+    for scope in ("FREE", "OWNER", "EXPORT", "SHARE"):
+        request = ProjectionRequest(
+            projection=scope, generated_at=now, include_source_image=False,
+            share_scope=frozenset(("section.sample", "section.highlight.primary")) if scope == "SHARE"
+            else frozenset(),
+        )
+        view = project_report(report.value, request)
+        assert view.ok, (scope, view.issues)
+        assert {f["feature_id"]: f["value"] for f in view.value.data["facts"]} == {
+            f["feature_id"]: expected[f["feature_id"]] for f in view.value.data["facts"]
+        }
+        sample = next(s for s in view.value.data["sections"] if s["section_id"] == "section.sample")
+        assert sample["availability"] == "INELIGIBLE"
+        assert not any(f["value"] is not None for f in view.value.data["facts"]
+                       if f["feature_id"] not in {"IMG_WIDTH_PX", "IMG_HEIGHT_PX",
+                                                  "IMG_MEGAPIXELS", "IMG_ASPECT_RATIO"})
+    revised = revise_report(report.value, created_at=now, premium_overlay_id=None)
+    assert revised.ok, revised.issues
+    assert revised.value.data["facts"] == report.value.data["facts"]
+    assert revised.value.data["analysis"] == report.value.data["analysis"]
+    assert revised.value.data["sections"] == report.value.data["sections"]
+    assert next(s for s in report.value.data["sections"] if s["section_id"] == "section.premium")["availability"] == "INELIGIBLE"
+    assert any(n["localization_key"] == "notice.image_only" for n in report.value.data["notices"])
+    assert not any(n["localization_key"] == "notice.measured" for n in report.value.data["notices"])
+    for projection in ("OWNER", "FREE"):
+        view = project_report(report.value, ProjectionRequest(
+            projection=projection, generated_at=now, actions={"PURCHASE": None, "EXPORT": None}))
+        assert view.ok, view.issues
+        assert not any(action["kind"] == "PURCHASE" for action in view.value.data["actions"])
+        assert any(action["kind"] == "EXPORT" for action in view.value.data["actions"])
+    denied = revise_report(report.value, created_at=now, premium_overlay_id="overlay_not_allowed")
+    assert {issue.code for issue in denied.issues} == {"PREMIUM_SAMPLE_INELIGIBLE"}
+    denied_initial = assemble_report(
+        report_id="report_guard_paywall", analysis=analysis, result=result.to_dict(),
+        created_at=now, locale="en", evidence=evidence.value, premium_overlay_id="overlay_not_allowed")
+    assert {issue.code for issue in denied_initial.issues} == {"PREMIUM_SAMPLE_INELIGIBLE"}
+
+    class Store:
+        def latest(self, report_id):
+            assert report_id == "report_guard_parity"
+            return ("owner_guard_parity", report.value)
+
+    commerce = CommerceService.__new__(CommerceService)
+    commerce._reports = lambda owner: Store()
+    with pytest.raises(InvalidInput) as err:
+        commerce.request_premium("owner_guard_parity", "report_guard_parity", Platform.WEB)
+    assert err.value.code == "premium_sample_ineligible"
+
+
+def test_short_legible_structures_are_not_rejected_by_resolution_alone():
+    fake = SimpleNamespace(width=400, height=520, original_width=400, original_height=520,
+                           lines=[Box(50, 100, 180, 15), Box(50, 220, 180, 15)],
+                           words=[Box(50 + i * 10, 100, 9, 15) for i in range(10)],
+                           components=[Box(50 + i * 10, 100, 8, 15) for i in range(17)],
+                           x_height_px=None)
+    assert support_warning(fake) is None
+    # A 1-line note is not rejected on sparse components alone.
+    fake.lines = [Box(50, 100, 180, 15)]
+    fake.words = fake.words[:1]
+    fake.components = fake.components[:1]
+    assert support_warning(fake) is None
+
+
+def test_qualified_research_sample_keeps_existing_notice_and_premium_option():
+    image = synthetic_paper("text")
+    engine = GraphologyEngine(evidence_guard_enabled=True)
+    result, payload = engine.analyze_with_evidence(image)
+    assert "evidence_support" not in result.metadata
+    now = datetime(2026, 10, 20, tzinfo=timezone.utc)
+    analysis = analysis_reference(
+        analysis_id="analysis_guard_eligible", run_id="run_guard_eligible",
+        owner_id="owner_guard_eligible", input_asset_id="asset_guard_eligible",
+        input_sha256=hashlib.sha256(image.tobytes()).hexdigest(),
+        processed_sha256=result.metadata["input_pixels_sha256"], created_at=now,
+        engine_version="0.1.0", analysis_config_sha256=engine_config_sha256(engine),
+        template=EVIDENCE_SUPPORT_TEMPLATE_VERSION)
+    evidence = build_evidence_bundle(payload, analysis, "bundle_guard_eligible")
+    assert evidence.ok, evidence.issues
+    report = assemble_report(report_id="report_guard_eligible", analysis=analysis,
+                             result=result.to_dict(), created_at=now, locale="sv-SE",
+                             evidence=evidence.value)
+    assert report.ok, report.issues
+    sample = next(s for s in report.value.data["sections"] if s["section_id"] == "section.sample")
+    premium = next(s for s in report.value.data["sections"] if s["section_id"] == "section.premium")
+    assert sample["availability"] != "INELIGIBLE"
+    assert premium["availability"] == "LOCKED"
+    assert any(n["localization_key"] == "notice.measured" for n in report.value.data["notices"])
+    view = project_report(report.value, ProjectionRequest(
+        projection="OWNER", generated_at=now, actions={"PURCHASE": None}))
+    assert view.ok, view.issues
+    assert any(a["kind"] == "PURCHASE" and a["enabled"] for a in view.value.data["actions"])

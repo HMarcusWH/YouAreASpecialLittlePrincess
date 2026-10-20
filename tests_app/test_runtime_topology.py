@@ -279,3 +279,40 @@ def test_qualified_v2_independent_services_require_identical_reviewed_pin():
     assert preflight(expected, ROOT).component == 'api'
     with pytest.raises(ValueError, match='analysis_config_mismatch'):
         preflight({**api, 'PRINCESS_EXPECTED_ANALYSIS_CONFIG_SHA256': '0' * 64}, ROOT)
+
+def test_railway_private_evidence_guard_propagates_only_with_explicit_pin(monkeypatch):
+    from princess_app.application.intake import resolve_analysis_runtime
+    monkeypatch.setattr(railway_test_stack, "preflight", lambda _env, _root: None)
+    for key in ("PRINCESS_ANALYSIS_PROFILE", "PRINCESS_GRID_V1_RESEARCH_OPT_IN",
+                "PRINCESS_SEGMENTATION_V2_RESEARCH_OPT_IN", "PRINCESS_TEST_PUBLIC_GUEST_ONLY",
+                "PRINCESS_EXPECTED_ANALYSIS_CONFIG_SHA256"):
+        monkeypatch.delenv(key, raising=False)
+    for key, value in {
+        "PRINCESS_ENV": "test",
+        "PRINCESS_EVIDENCE_SUPPORT_RESEARCH_OPT_IN": "1",
+        "PRINCESS_API_DATABASE_URL": "postgresql://api:synthetic@db/princess_test",
+        "PRINCESS_WORKER_DATABASE_URL": "postgresql://worker:synthetic@db/princess_test",
+        "PRINCESS_SESSION_SECRET": "synthetic-only-api-session",
+        "PRINCESS_IDENTITY_AUDIENCE": "princess-api",
+        "PRINCESS_STORAGE_SIGNING_KEY": "synthetic-only-api-storage",
+        "PRINCESS_STORAGE_READ_KEY": "synthetic-only-worker-storage",
+    }.items():
+        monkeypatch.setenv(key, value)
+    with pytest.raises(RuntimeError, match="explicit paired"):
+        railway_test_stack.role_env("api")
+    guard_digest = analysis_config_sha256(evidence_guard_enabled=True)
+    monkeypatch.setenv("PRINCESS_EXPECTED_ANALYSIS_CONFIG_SHA256", guard_digest)
+    a, w = railway_test_stack.role_env("api"), railway_test_stack.role_env("analysis_worker")
+    for child in (a, w):
+        assert child["PRINCESS_EVIDENCE_SUPPORT_RESEARCH_OPT_IN"] == "1"
+        resolved = resolve_analysis_runtime(child)
+        assert resolved.digest == guard_digest and resolved.evidence_guard_enabled
+    monkeypatch.setenv("PRINCESS_TEST_PUBLIC_GUEST_ONLY", "1")
+    for role in ("api", "analysis_worker"):
+        with pytest.raises(RuntimeError, match="not approved for the public synthetic guest"):
+            railway_test_stack.role_env(role)
+    monkeypatch.delenv("PRINCESS_TEST_PUBLIC_GUEST_ONLY")
+    monkeypatch.setenv("PRINCESS_EXPECTED_ANALYSIS_CONFIG_SHA256", "0" * 64)
+    for role in ("api", "analysis_worker"):
+        with pytest.raises(ValueError, match="analysis_config_mismatch"):
+            railway_test_stack.role_env(role)

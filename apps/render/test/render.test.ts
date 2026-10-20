@@ -113,3 +113,69 @@ test("projection/layout mismatches and bad input fail with a code", () => {
   corrupt.contract_version = "9.0.0";
   assert.equal(run({ view: corrupt, layout: "A4", locale: "en", generated_at: GENERATED }).status, 1);
 });
+
+test("ineligible research sample is explicitly shown in EN/SV exports while exact image facts remain", () => {
+  const view = structuredClone(fixture("export-v2-no-image"));
+  const section = view.sections.find((s: { section_id: string }) => s.section_id === "section.sample");
+  assert.ok(section && section.fact_ids.length > 0);
+  section.availability = "INELIGIBLE";
+  for (const locale of ["en", "sv"] as const) {
+    const output = run({ view, layout: "A4", locale, generated_at: GENERATED }, "--html");
+    assert.equal(output.status, 0, output.stderr);
+    const html = output.stdout.toString();
+    assert.ok(html.includes(locale === "en" ? "Handwriting structure could not be verified"
+                                           : "Handskriftens struktur kunde inte verifieras"));
+    assert.ok(html.includes(locale === "en" ? "Detected geometric word groups"
+                                           : "Upptäckta geometriska ordgrupper"));
+  }
+});
+
+
+test("missing-only and ineligible share cards never impersonate a handwriting result", () => {
+  const missing = structuredClone(fixture("share-v2"));
+  // SHARE may omit sample suitability. When all selected facts are withheld,
+  // the branded card must not imply a successful handwriting analysis.
+  missing.facts = missing.facts.map((fact: { availability: string; value: unknown }) =>
+    ({ ...fact, availability: "MISSING", value: null }));
+  for (const locale of ["en", "sv"] as const) {
+    const result = run({ view: missing, layout: "CARD_SQUARE", locale, generated_at: GENERATED }, "--html");
+    assert.equal(result.status, 0, result.stderr);
+    const html = result.stdout.toString();
+    assert.ok(html.includes(locale === "en" ? "No supported handwriting measurements shown"
+                                           : "Inga styrkta handskriftsmätvärden visas"));
+    assert.equal((html.match(/data-fact-id/g) ?? []).length, 0);
+  }
+  const ineligible = structuredClone(fixture("export-v2-no-image"));
+  const sample = ineligible.sections.find((s: { section_id: string }) => s.section_id === "section.sample");
+  assert.ok(sample);
+  const imageFacts = new Set(["IMG_WIDTH_PX", "IMG_HEIGHT_PX", "IMG_MEGAPIXELS", "IMG_ASPECT_RATIO"]);
+  ineligible.facts = ineligible.facts.filter((fact: { feature_id: string }) => imageFacts.has(fact.feature_id));
+  ineligible.sections = [{ ...sample, availability: "INELIGIBLE",
+                           fact_ids: sample.fact_ids.filter((id: string) => imageFacts.has(id.replace("fact.", ""))) }];
+  ineligible.projection = "SHARE";
+  ineligible.actions = [];
+  ineligible.authorized_asset_ids = [];
+  for (const locale of ["en", "sv"] as const) {
+    const result = run({ view: ineligible, layout: "CARD_SQUARE", locale, generated_at: GENERATED }, "--html");
+    assert.equal(result.status, 0, result.stderr);
+    const html = result.stdout.toString();
+    assert.ok(html.includes(locale === "en" ? "No supported handwriting measurements shown"
+                                           : "Inga styrkta handskriftsmätvärden visas"));
+    assert.ok(html.includes(locale === "en" ? "Image width" : "Bildbredd"));
+    assert.ok(!html.includes('data-fact-id="fact.SLANT_ANGLE_MEAN"'));
+  }
+});
+
+
+test("the Swedish PDF uses reviewed section headings instead of English template identifiers", () => {
+  const view = fixture("export-v2-no-image");
+  const out = run({ view, layout: "A4", locale: "sv", generated_at: GENERATED }, "--html");
+  assert.equal(out.status, 0, out.stderr);
+  const markup = out.stdout.toString();
+  for (const heading of ["Provets lämplighet", "Teckenstorlek", "Strecklutning",
+                         "Baslinjeförlopp", "Sidlayout", "Bläckegenskaper"]) {
+    assert.ok(markup.includes(heading), heading);
+  }
+  assert.ok(!markup.includes(">Sample suitability<"));
+  assert.ok(!markup.includes(">Metric grid<"));
+});

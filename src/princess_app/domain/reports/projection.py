@@ -23,6 +23,7 @@ from princess_contracts import (
 from princess_contracts import generated as g
 
 from ..analysis import rfc3339
+from .template import is_unqualified_research_report
 
 ACTION_KINDS = ("COMPARE", "EXPORT", "SHARE", "SAVE", "DELETE", "PURCHASE")
 SOURCE_IMAGE_SCOPE = "source_image"
@@ -117,11 +118,15 @@ def project_report(report: ValidatedDocument, request: ProjectionRequest) -> Val
         notices.append({"notice_id": "notice.premium_revoked", "class": "AI",
                         "localization_key": "notice.premium_revoked"})
 
-    # Recipients and renderers never get owner actions.
+    # An ineligible research sample must never offer a purchase, even when
+    # the API caller passed an enabled action. The direct commerce endpoint
+    # independently applies the same saved-report eligibility guard.
+    ineligible_premium = is_unqualified_research_report(source)
     actions = [] if kind in {"SHARE", "EXPORT"} else [
-        {"action_id": f"action.{k.lower()}", "kind": k, "enabled": request.actions[k] is None,
-         "reason": request.actions[k]}
-        for k in ACTION_KINDS if k in request.actions]
+        {"action_id": f"action.{k.lower()}", "kind": k,
+         "enabled": request.actions[k] is None, "reason": request.actions[k]}
+        for k in ACTION_KINDS
+        if k in request.actions and not (k == "PURCHASE" and ineligible_premium)]
     view = {
         "contract_version": g.CONTRACT_VERSION,
         "source_report_id": source["report_id"],

@@ -2,13 +2,25 @@
 display precision. Changing it requires a new ``TEMPLATE_VERSION``."""
 from __future__ import annotations
 
+from typing import Any, Mapping
+
 BASE_TEMPLATE_VERSION = "individual-report/1"
 HIGHLIGHT_TEMPLATE_VERSION = "individual-report/2"
+EVIDENCE_SUPPORT_TEMPLATE_VERSION = "individual-report/3"  # research-only opt-in writer
 HIGHLIGHT_PRESENTATION_VERSION = "presentation/1"
 HIGHLIGHT_POLICY_VERSION = "highlight-policy/1"
 # T17 promotes new analyses only after the web client renders every server-owned first-reveal state.
 TEMPLATE_VERSION = HIGHLIGHT_TEMPLATE_VERSION
-SUPPORTED_TEMPLATE_VERSIONS = frozenset({BASE_TEMPLATE_VERSION, HIGHLIGHT_TEMPLATE_VERSION})
+SUPPORTED_TEMPLATE_VERSIONS = frozenset({BASE_TEMPLATE_VERSION, HIGHLIGHT_TEMPLATE_VERSION,
+                                      EVIDENCE_SUPPORT_TEMPLATE_VERSION})
+
+
+def is_unqualified_research_report(report: Mapping[str, Any]) -> bool:
+    """Consult the saved template and suitability, not any client-supplied flag."""
+    return (report["analysis"]["versions"]["template"] == EVIDENCE_SUPPORT_TEMPLATE_VERSION
+            and any(section["section_id"] == "section.sample" and section["availability"] == "INELIGIBLE"
+                    for section in report["sections"]))
+
 
 # (section_id, template, feature_ids). Every Free feature appears exactly once;
 # tests check this against the engine's registered stages.

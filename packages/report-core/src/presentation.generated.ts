@@ -32,8 +32,8 @@ export const PRESENTATION = {
       "sv": "Upptäckta textrader"
     },
     "PAGE_WORD_COUNT": {
-      "en": "Detected words/components",
-      "sv": "Upptäckta ord/komponenter"
+      "en": "Detected geometric word groups",
+      "sv": "Upptäckta geometriska ordgrupper"
     },
     "PAGE_COMPONENT_COUNT": {
       "en": "Connected components",

@@ -82,7 +82,7 @@ export function buildDossier(view: ReportViewModel, locale: Locale): DossierMode
   const sections = view.sections.map((section): DossierSection => {
     const kind = kindOf(section);
     const title = kind === "HIGHLIGHT_PRIMARY" ? t(locale, "report.what_stands_out")
-      : kind === "HIGHLIGHT_SECONDARY" ? t(locale, "report.also_noticeable") : sectionTitle(section.template);
+      : kind === "HIGHLIGHT_SECONDARY" ? t(locale, "report.also_noticeable") : sectionTitle(section.template, locale, section.section_id);
     return {
       sectionId: section.section_id, kind, title, availability: section.availability,
       availabilityText: t(locale, `availability.${section.availability}`),

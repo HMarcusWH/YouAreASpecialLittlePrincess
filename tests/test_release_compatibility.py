@@ -32,7 +32,7 @@ def test_runtime_release_matches_current_repo_authorities():
     assert manifest["interpretation"]["version"] == "premium-interpretation-db/1"
     assert manifest["reports"] == {
         "write_template":"individual-report/2",
-        "read_templates":["individual-report/1","individual-report/2"],
+        "read_templates":["individual-report/1","individual-report/2","individual-report/3"],
         "presentation":"presentation/1",
         "highlight_policy":"highlight-policy/1",
         "render_template":"render-template/2",
@@ -81,8 +81,8 @@ def test_candidate_must_read_base_report_writer():
 def test_base_must_read_candidate_report_writer():
     candidate = current_manifest()
     base = base_from(candidate)
-    candidate["reports"]["write_template"] = "individual-report/3"
-    candidate["reports"]["read_templates"].append("individual-report/3")
+    candidate["reports"]["write_template"] = "individual-report/4"
+    candidate["reports"]["read_templates"].append("individual-report/4")
     with pytest.raises(CompatibilityError, match="rollback base cannot read candidate report template"):
         compare_manifests(base, candidate, POLICY)
 
