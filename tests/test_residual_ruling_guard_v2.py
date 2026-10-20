@@ -113,7 +113,13 @@ def test_word_trace_allowlist_does_not_export_pixels_or_untrusted_fields():
     assert audit["counts"]["raw_proposals"] == 9
     assert audit["counts"]["reject_exact_duplicate"] is None
     assert audit["counts"]["qualified_gap_candidates"] is None
-    assert set(audit) == {"version", "status", "accepted_geometric_groups", "counts"}
+    assert set(audit) == {"version", "status", "accepted_geometric_groups",
+                          "counts", "reattachment"}
+    assert set(audit["reattachment"]) == {"status", "counts"}
+    assert audit["reattachment"]["status"] == "unavailable"
+    assert all(value is None for value in audit["reattachment"]["counts"].values())
+    assert not any(isinstance(v, (str, bytes, np.ndarray, dict, list))
+                   for v in audit["reattachment"]["counts"].values())
     assert not any(isinstance(v, (str, bytes, np.ndarray, dict, list))
                    for v in audit["counts"].values())
 

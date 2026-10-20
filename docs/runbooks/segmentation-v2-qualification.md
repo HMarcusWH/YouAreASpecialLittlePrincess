@@ -262,7 +262,7 @@ closure or production activation follows from an engineering pass.
 
 1. Confirm Python 3.10 wheel-bundled NumPy bytecode is handled through
    authenticated Python source/code equivalence where applicable, never a
-   blanket \`__pycache__\` exception. Source-less altered bytecode is untrusted.
+   blanket `__pycache__` exception. Source-less altered bytecode is untrusted.
 2. Snapshot both exact approved policy bytes and the matching digest into
    sealed Linux memory descriptors and pass them to the worker; mutate the
    original files together between preflight and child launch and prove the
@@ -272,7 +272,7 @@ closure or production activation follows from an engineering pass.
    scientifically meaningful targets.
 4. Composite BGRA inputs as the reviewed context does before deciding a
    synthetic fixture is uniformly light. Preserve unqualified real/ambiguous
-   inputs and the \`SYNTHETIC_FIXTURE_ORACLE_ONLY\` public evidence label.
+   inputs and the `SYNTHETIC_FIXTURE_ORACLE_ONLY` public evidence label.
 5. Document a reproducible offline core-only local wheelhouse independent
    from application/runtime installations, and prove all Python 3.10–3.12
    exact-head CI checks and new adversarial regressions.
@@ -422,6 +422,6 @@ attachment counts are independent; an uninvoked detector is null, not
 zero. A positive full-engine ruled-writing synthetic fixture is required,
 so rejecting every ruled sample is not an acceptable engineering outcome.
 
-This candidate is still \`evidence-support/2\`, under the already fenced
+This candidate is still `evidence-support/2`, under the already fenced
 private local/test opt-in. No release switch, empirical threshold,
 human-source authorization, T11 completion or Issue #92 closure is implied.
