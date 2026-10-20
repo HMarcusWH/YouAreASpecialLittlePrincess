@@ -95,7 +95,7 @@ export function ShareCard({ view, locale, shape }: { view: ReportViewModel; loca
   const facts = cardFacts(view, shape === "story" ? 6 : 4);
   const unqualified = unqualifiedShare(view);
   return (
-    <div className={`pr-card pr-card-${shape}`} lang={locale}>
+    <div className={`pr-card pr-card-${shape}${unqualified ? " pr-card-unqualified" : ""}`} lang={locale}>
       <header className="pr-card-header">
         <p className="pr-card-brand">Inktrospect</p>
         <p className="pr-card-context">{p(locale, unqualified ? "card.no_handwriting_measurements" : "card.context")}</p>

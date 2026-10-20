@@ -89,3 +89,32 @@ case must preserve 64 facts, four exact image values, 60 missing handwriting
 values and `INELIGIBLE` sample status. No handwriting photo or personal data is
 used. Visual inspection of actual PDF pages and cards is still a **human review
 step** and must not be inferred from upload success.
+
+## Post-review UX and eligibility corrections (2026-10-20)
+
+The P1 findings from the assistant-led visual review were addressed on this
+research-only PR branch. For v3 reports with `section.sample=INELIGIBLE`:
+
+- The stored measured-notice localization key changes to `notice.image_only`,
+  making no assertion that the four available image facts are handwriting.
+- Premium is `INELIGIBLE`, not `LOCKED`; an enabled caller-supplied PURCHASE
+  action is omitted by server projections; direct `CommerceService.request_premium`
+  rejects before consuming/reserving any credit; attaching a Premium overlay
+  in a revision or initial assembly is rejected.
+- English and Swedish section headings use a reviewed shared localization map
+  with section-specific names for size/ink families. Existing /1 and /2 facts,
+  saved notice keys, templates, and numerical data remain unchanged. This is a
+  presentation-copy improvement when older reports are reopened.
+- Fully missing measurement families collapse into honest, counted summaries.
+  Their underlying canonical facts remain in the persisted report and all
+  authorized projections. Web details and native toggles expose the full rows
+  interactively; print PDF omits repetitive detail rows while explaining their
+  unavailability. No facts become fabricated zeroes.
+- The research guarded v3 render-inspection harness checks EN/SV explanatory
+  notices, correct localized headings, payment unavailability, compacted
+  families, and A4/Letter PDF length, plus all four share-card outputs.
+
+These are premerge changes to the unreleased `/3` research template. They are
+not a production release, not consent for retroactively changing the separate
+`presentation/1` PAGE_WORD_COUNT label, not real-handwriting calibration,
+and not an independent external code/security signoff. T11 and #92 remain open.

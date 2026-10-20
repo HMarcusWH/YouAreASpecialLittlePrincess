@@ -43,7 +43,8 @@ for (const [file, source, layout, locale] of cases) {
   const expected = locale === "en" ? "No supported handwriting measurements shown"
                                    : "Inga styrkta handskriftsmätvärden visas";
   if (source === "share") {
-    if (!markup.includes(expected) || markup.includes("fact.SLANT_ANGLE_MEAN")) {
+    if (!markup.includes(expected) || !markup.includes("pr-card-unqualified")
+        || markup.includes("fact.SLANT_ANGLE_MEAN")) {
       throw Error(file + ": missing neutral share fallback or leaked slant");
     }
   } else {
