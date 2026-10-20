@@ -264,7 +264,8 @@ const TEMPLATE_TITLES: Record<string, Record<Locale, string>> = {
 };
 
 export function sectionTitle(template: string, locale: Locale = "en", sectionId?: string): string {
-  const reviewed = (sectionId && SECTION_TITLES[sectionId]) || TEMPLATE_TITLES[template];
+  const generic = TEMPLATE_TITLES[template];
+  const reviewed = (generic && sectionId && SECTION_TITLES[sectionId]) || generic;
   if (reviewed) return reviewed[locale];
   // Unknown future templates use a readable fallback, not invented translation.
   const name = template.replace(/^section\./i, "").replace(/[._-]+/g, " ").toLowerCase().trim();
