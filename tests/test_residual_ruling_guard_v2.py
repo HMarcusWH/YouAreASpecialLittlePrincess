@@ -202,3 +202,111 @@ def test_opencv_hough_endpoint_shape_is_wheel_independent(monkeypatch, extra_axi
     response = detected[:, None, :] if extra_axis else detected
     monkeypatch.setattr(cv2, "HoughLinesP", lambda *args, **kwargs: response)
     assert assess_support(ctx)["ruling"]["near_horizontal_long_bands"] == 2
+
+
+@pytest.mark.parametrize("kind", ["thick", "slanted", "underline"])
+def test_one_real_hough_stroke_is_not_two_independent_ruling_bands(kind):
+    """The actual pinned OpenCV operation, not stubbed HoughSegments."""
+    h, w = 520, 760
+    foreground = np.zeros((h, w), np.uint8)
+    if kind == "slanted":
+        cv2.line(foreground, (0, 105), (w - 1, 180), 255, 2)
+    else:
+        y = 210 if kind == "underline" else 110
+        cv2.line(foreground, (0, y), (w - 1, y), 255, 7)
+    ctx = _context(foreground, lines=[Box(40, 260, 300, 22)],
+                   words=[Box(50, 265, 70, 15)],
+                   components=[Box(70, 265, 12, 15)] * 12)
+    audit = assess_support(ctx)
+    assert audit["ruling"]["near_horizontal_long_bands"] == 1
+    assert audit["reason"] is None
+
+
+@pytest.mark.parametrize("slope", [0, 52])
+def test_two_separate_real_hough_rules_remain_two_bands(slope):
+    h, w = 520, 760
+    foreground = np.zeros((h, w), np.uint8)
+    for y in (105, 205):
+        cv2.line(foreground, (0, y), (w - 1, y + slope), 255, 3)
+    ctx = _context(foreground, lines=[Box(40, 280, 300, 20)],
+                   words=[Box(45, 280, 70, 15)],
+                   components=[Box(45, 280, 12, 15)] * 12)
+    audit = assess_support(ctx)
+    assert audit["ruling"]["near_horizontal_long_bands"] == 2
+    assert audit["reason"] == "residual_page_ruling"
+
+
+def test_actual_engine_blank_never_reports_uninvoked_detector_zero():
+    image = np.full((520, 760, 3), 250, np.uint8)
+    report = GraphologyEngine(evidence_guard_enabled=True).analyze(image)
+    audit = report.metadata["evidence_support_audit"]["word_stages"]
+    assert audit["status"] == "not_invoked"
+    assert audit["accepted_geometric_groups"] is None
+    assert audit["counts"]["raw_contours"] is None
+    assert audit["counts"]["raw_proposals"] is None
+    assert audit["counts"]["after_geometry_filter"] is None
+    assert report.measurements["PAGE_WORD_COUNT"].raw_value is None
+
+
+def test_v2_original_detector_counts_survive_second_word_attachment(monkeypatch):
+    from princess_graphology import context as context_mod
+    from princess_graphology.segmentation_v2 import LineSelection, WordSelection
+    from grid_v2_cases import page
+    image, _, _ = page(ruling="none", pen="black")
+    def fake_lines(mask):
+        h, w = mask.shape
+        return LineSelection(mask.copy(), (Box(0, 0, w, h),), "qualified", {})
+    def fake_words(_gray, _mask, _lines):
+        return WordSelection((Box(100, 220, 150, 32),), "qualified", {
+            "raw_contours": 12,
+            "raw_proposals": 9,
+            "after_geometry_filter": 8,
+            "reject_exact_duplicate": 7,
+            "reject_no_ink_in_crop": 4,
+            "accepted_geometry_groups": 1,
+        })
+    monkeypatch.setattr(context_mod, "qualified_lines", fake_lines)
+    monkeypatch.setattr(context_mod, "qualified_words", fake_words)
+    engine = GraphologyEngine(grid_profile="qualified-v2",
+                             evidence_guard_enabled=True, deskew_enabled=False)
+    report = engine.analyze(image)
+    audit = report.metadata["evidence_support_audit"]["word_stages"]
+    assert audit["counts"]["raw_proposals"] == 9
+    assert audit["counts"]["reject_exact_duplicate"] == 7
+    assert audit["counts"]["reject_no_ink_in_crop"] == 4
+    assert audit["reattachment"]["status"] == "performed"
+    assert audit["reattachment"]["counts"]["reject_exact_duplicate"] == 0
+    assert "pre_line_ruling_audit" in report.metadata
+
+
+def test_real_engine_accepts_predeclared_clean_ruled_handwriting_positive():
+    """Reject-every-ruled-photo cannot satisfy the release engineering test.
+
+    No real user handwriting, OCR, artificially supplied candidate boxes,
+    and no catch-and-pass on a quality refusal.
+    """
+    from grid_v2_cases import page
+    from princess_graphology.preprocessing.grid import GridQualityError
+    image, true_ink, _ = page(ruling="gray", pen="black")
+    engine = GraphologyEngine(grid_profile="qualified-v2",
+                             deskew_enabled=False, evidence_guard_enabled=True)
+    try:
+        report, evidence = engine.analyze_with_evidence(image)
+    except GridQualityError as exc:
+        pytest.fail(f"predeclared ruled-positive was refused: {exc.code}")
+    assert "evidence_support" not in report.metadata, report.metadata.get("evidence_support")
+    assert report.measurements["PAGE_LINE_COUNT"].raw_value == 1
+    assert report.measurements["PAGE_WORD_COUNT"].raw_value >= 2
+    lines = [r for r in report.regions if r.scope == "LINE"]
+    words = [r for r in report.regions if r.scope == "WORD"]
+    assert len(lines) == 1 and len(words) >= 2
+    transform = np.asarray(report.metadata["original_to_analysis"], np.float64)
+    ink = cv2.warpPerspective(true_ink, transform, (report.width, report.height),
+                              flags=cv2.INTER_NEAREST)
+    for region in (*lines, *words):
+        box = region.box
+        assert np.count_nonzero(ink[box.y:box.y2, box.x:box.x2]) > 0
+    assert any(x["scope"] == "LINE" for x in evidence["regions"])
+    assert report.metadata["evidence_support_audit"]["status"] == "no_abstention_not_calibrated"
+    assert report.metadata["evidence_support_audit"]["ruling"]["foreground_stage"] == "qualified_line_selected"
+    assert report.metadata["evidence_support_audit"]["ruling"]["pre_line_selection"] is not None
