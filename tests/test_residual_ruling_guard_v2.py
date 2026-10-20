@@ -189,3 +189,16 @@ def test_qualified_v2_photo_never_publishes_unqualified_baselines():
             assert result.measurements["BASELINE_ANGLE_MEAN"].raw_value is None
         if status["words"] != "qualified":
             assert result.measurements["PAGE_WORD_COUNT"].raw_value is None
+
+
+@pytest.mark.parametrize("extra_axis", [False, True])
+def test_opencv_hough_endpoint_shape_is_wheel_independent(monkeypatch, extra_axis):
+    # Some pinned OpenCV wheels return N×4 and others N×1×4.
+    _image, case = residual_page()
+    ctx = _context(case["observed_foreground"],
+                   lines=_ruling_boxes(case["ruling_mask"]),
+                   words=case["true_words"], components=case["true_words"])
+    detected = np.array([[8, 81, 750, 81], [8, 240, 750, 241]], np.int32)
+    response = detected[:, None, :] if extra_axis else detected
+    monkeypatch.setattr(cv2, "HoughLinesP", lambda *args, **kwargs: response)
+    assert assess_support(ctx)["ruling"]["near_horizontal_long_bands"] == 2
