@@ -392,3 +392,18 @@ See [evidence-support repair handoff](../ci/EVIDENCE_SUPPORT_REPAIR_HANDOFF.md)
 for the synthetic limitations, editorial label compatibility decision,
 rollback constraints and independent release gates. T11 rights and Issue #92
 are unaffected.
+
+## Issue #92 residual ruling research follow-up — evidence-support/2
+
+A new private-only optional screen at `evidence-support/2` audits residual
+foreground ruling independently of accepted detector word groups. The screen
+uses bounded row/near-horizontal line evidence and has an explicit
+`word-stage-audit/1` allowlist; missing proposal counts stay unknown,
+not zero. Synthetic positive near-edge/clear-writing examples prevent
+acceptance by simply rejecting every image. This does **not** modify the
+actual paper ROI, recognized word identities, or the canonical 64 fact IDs.
+
+See [T06 residual ruling research protocol](../ci/T06_RESIDUAL_RULING_RESEARCH.md)
+for test commands, policy-digest changes and deferred T11/Issue #92 gates.
+Keep public/production guard disabled, older report snapshots immutable,
+and synthetic engineering evidence separate from real-source accuracy.
