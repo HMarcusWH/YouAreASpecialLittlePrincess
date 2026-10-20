@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from dataclasses import replace
 
+import cv2
 import numpy as np
 
 GUARD_POLICY_VERSION = "evidence-support/2"
@@ -69,6 +70,7 @@ def _ruling_audit(ctx) -> dict:
     )
     mask = getattr(ctx, "mask", None)
     bands = 0
+    angled = 0
     # Synthetic unit contexts may have no mask; their pre-existing geometry
     # guard still works, but the independent foreground audit is unavailable.
     if (isinstance(mask, np.ndarray) and mask.ndim == 2
@@ -77,8 +79,36 @@ def _ruling_audit(ctx) -> dict:
         dense = np.flatnonzero(row_counts >= 0.70 * w)
         if dense.size:
             bands = 1 + int(np.count_nonzero(np.diff(dense) > 1))
+        # Independent angle-tolerant ruler check. Work is bounded to a maximum
+        # 1024-pixel side, uses no OCR or reconstructed "pen" pixels, and
+        # groups thick/double detections by midpoint to count separate bands.
+        if np.count_nonzero(mask) <= 0.35 * mask.size:
+            scale = min(1.0, 1024.0 / max(h, w))
+            rw, rh = max(1, round(w * scale)), max(1, round(h * scale))
+            small = (cv2.resize(mask, (rw, rh), interpolation=cv2.INTER_AREA)
+                     if scale < 1.0 else mask)
+            edges = (small > 0).astype(np.uint8) * 255
+            segments = cv2.HoughLinesP(
+                edges, rho=1, theta=np.pi / 180,
+                threshold=max(20, int(0.24 * rw)),
+                minLineLength=max(25, int(0.67 * rw)),
+                maxLineGap=max(3, int(0.03 * rw)),
+            )
+            if segments is not None:
+                midpoints = []
+                for x1, y1, x2, y2 in segments[:, 0]:
+                    dx = abs(int(x2) - int(x1))
+                    if dx >= 0.67 * rw and abs(int(y2) - int(y1)) <= 0.15 * dx:
+                        midpoints.append(0.5 * (int(y1) + int(y2)))
+                midpoints.sort()
+                last = None
+                for value in midpoints:
+                    if last is None or value - last > max(5, 0.014 * rh):
+                        angled += 1
+                        last = value
     return {
         "dense_horizontal_bands": bands,
+        "near_horizontal_long_bands": angled,
         "page_spanning_line_boxes": suspicious,
         "compact_component_boxes": compact,
     }
@@ -111,7 +141,8 @@ def assess_support(ctx, word_trace=None) -> dict:
     # V2: two or more wide horizontal foreground bands are suspect even when
     # the word detector admitted apparent groups. A page border can survive
     # periodic grid removal and then contaminate unrelated baseline/layout.
-    if reason is None and ruling["dense_horizontal_bands"] >= 2:
+    if (reason is None and (ruling["dense_horizontal_bands"] >= 2
+                           or ruling["near_horizontal_long_bands"] >= 2)):
         reason = "residual_page_ruling"
 
     # Line boxes and accepted words are *not* independent handwriting proof.
