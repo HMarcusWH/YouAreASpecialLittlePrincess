@@ -52,13 +52,91 @@ def _word_audit(ctx, trace) -> dict:
     }
 
 
-def _ruling_audit(ctx) -> dict:
-    """Independently inspect *retained* foreground, not detector line labels.
+MAX_HOUGH_SEGMENTS = 8192
 
-    Long continuous horizontal ink bands can be printed ruling even when the
-    word detector returns spurious groups. This does not try to reconstruct
-    pen pixels at crossings, and does not crop near-page handwriting.
+
+def _distinct_hough_bands(segments, width: int, height: int) -> tuple[int, bool]:
+    """Cluster physical *line support*, never individual Hough fragments.
+
+    A thick pen stroke yields parallel detections; using segment midpoints as
+    distinct band IDs overcounts it. Normalize endpoints to the same x and
+    merge collinear, overlapping candidates within a bounded stroke corridor.
+    This is conservative evidence of long horizontal structures, not proof
+    that any stroke was printed rather than handwritten.
     """
+    if segments is None:
+        return 0, False
+    raw = np.asarray(segments).reshape(-1, 4)
+    if len(raw) > MAX_HOUGH_SEGMENTS:
+        return 0, True  # exceeded evidence budget; cannot claim qualified
+    candidates = []
+    x_reference = (width - 1) / 2
+    for x1, y1, x2, y2 in raw:
+        dx = int(x2) - int(x1)
+        if abs(dx) < 0.67 * width:
+            continue
+        slope = (int(y2) - int(y1)) / dx
+        if abs(slope) > 0.15:
+            continue
+        y_reference = int(y1) + slope * (x_reference - int(x1))
+        left, right = sorted((int(x1), int(x2)))
+        candidates.append((y_reference, slope, left, right))
+    candidates.sort()  # stable, independent of OpenCV contour order
+    groups = []
+    # Optical thickness / Hough coordinate jitter must not split one band.
+    # A second band must be more than this tolerance apart at the same x.
+    corridor = max(10.0, 0.023 * height)
+    for y, slope, left, right in candidates:
+        for group in groups:
+            overlap = max(0, min(right, group["right"]) - max(left, group["left"]))
+            if (abs(y - group["y"]) <= corridor
+                    and abs(slope - group["slope"]) <= 0.04
+                    and overlap >= 0.45 * min(right - left, group["right"] - group["left"])):
+                count = group["n"] + 1
+                group["y"] = (group["y"] * group["n"] + y) / count
+                group["slope"] = (group["slope"] * group["n"] + slope) / count
+                group["left"] = min(left, group["left"])
+                group["right"] = max(right, group["right"])
+                group["n"] = count
+                break
+        else:
+            groups.append({"y": y, "slope": slope, "left": left, "right": right, "n": 1})
+    return len(groups), False
+
+
+def foreground_ruling_counts(mask: np.ndarray) -> dict:
+    """Bounded, content-free signals from a specific foreground stage.
+
+    Only fixed integer counts and a budget flag leave this routine. The caller
+    must label whether this was before or after qualified line selection.
+    """
+    h, w = mask.shape
+    bands = 0
+    angled = 0
+    exceeded = False
+    if w >= 64:
+        dense = np.flatnonzero(np.count_nonzero(mask, axis=1) >= 0.70 * w)
+        if dense.size:
+            bands = 1 + int(np.count_nonzero(np.diff(dense) > 1))
+        if np.count_nonzero(mask) <= 0.35 * mask.size:
+            scale = min(1.0, 1024.0 / max(h, w))
+            rw, rh = max(1, round(w * scale)), max(1, round(h * scale))
+            small = (cv2.resize(mask, (rw, rh), interpolation=cv2.INTER_AREA)
+                     if scale < 1.0 else mask)
+            segments = cv2.HoughLinesP(
+                (small > 0).astype(np.uint8) * 255, rho=1, theta=np.pi / 180,
+                threshold=max(20, int(0.24 * rw)),
+                minLineLength=max(25, int(0.67 * rw)),
+                maxLineGap=max(3, int(0.03 * rw)),
+            )
+            angled, exceeded = _distinct_hough_bands(segments, rw, rh)
+    return {"dense_horizontal_bands": bands,
+            "near_horizontal_long_bands": angled,
+            "audit_limit_reached": exceeded}
+
+
+def _ruling_audit(ctx) -> dict:
+    """Read post-selection foreground, explicitly separating preselection."""
     h, w = ctx.height, ctx.width
     suspicious = sum(box.width >= 0.83 * w
                      and box.height <= max(12, 0.10 * h) for box in ctx.lines)
@@ -69,52 +147,22 @@ def _ruling_audit(ctx) -> dict:
         for box in ctx.components
     )
     mask = getattr(ctx, "mask", None)
-    bands = 0
-    angled = 0
-    # Synthetic unit contexts may have no mask; their pre-existing geometry
-    # guard still works, but the independent foreground audit is unavailable.
-    if (isinstance(mask, np.ndarray) and mask.ndim == 2
-            and mask.shape == (h, w) and w >= 64):
-        row_counts = np.count_nonzero(mask, axis=1)
-        dense = np.flatnonzero(row_counts >= 0.70 * w)
-        if dense.size:
-            bands = 1 + int(np.count_nonzero(np.diff(dense) > 1))
-        # Independent angle-tolerant ruler check. Work is bounded to a maximum
-        # 1024-pixel side, uses no OCR or reconstructed "pen" pixels, and
-        # groups thick/double detections by midpoint to count separate bands.
-        if np.count_nonzero(mask) <= 0.35 * mask.size:
-            scale = min(1.0, 1024.0 / max(h, w))
-            rw, rh = max(1, round(w * scale)), max(1, round(h * scale))
-            small = (cv2.resize(mask, (rw, rh), interpolation=cv2.INTER_AREA)
-                     if scale < 1.0 else mask)
-            edges = (small > 0).astype(np.uint8) * 255
-            segments = cv2.HoughLinesP(
-                edges, rho=1, theta=np.pi / 180,
-                threshold=max(20, int(0.24 * rw)),
-                minLineLength=max(25, int(0.67 * rw)),
-                maxLineGap=max(3, int(0.03 * rw)),
-            )
-            if segments is not None:
-                midpoints = []
-                # OpenCV wheels differ: HoughLinesP may return N×1×4 or N×4.
-                # Reshape only the four scalar endpoints; never trust ranks.
-                for x1, y1, x2, y2 in np.asarray(segments).reshape(-1, 4):
-                    dx = abs(int(x2) - int(x1))
-                    if dx >= 0.67 * rw and abs(int(y2) - int(y1)) <= 0.15 * dx:
-                        midpoints.append(0.5 * (int(y1) + int(y2)))
-                midpoints.sort()
-                last = None
-                for value in midpoints:
-                    if last is None or value - last > max(5, 0.014 * rh):
-                        angled += 1
-                        last = value
+    signals = (foreground_ruling_counts(mask)
+               if isinstance(mask, np.ndarray) and mask.ndim == 2
+               and mask.shape == (h, w) else
+               {"dense_horizontal_bands": 0, "near_horizontal_long_bands": 0,
+                "audit_limit_reached": False})
+    metadata = getattr(ctx, "metadata", {})
+    profile = metadata.get("segmentation_profile") if isinstance(metadata, dict) else None
+    preselection = metadata.get("pre_line_ruling_audit") if isinstance(metadata, dict) else None
     return {
-        "dense_horizontal_bands": bands,
-        "near_horizontal_long_bands": angled,
+        **signals,
+        "foreground_stage": ("qualified_line_selected" if profile == "qualified-v2"
+                             else "denoised_foreground"),
+        "pre_line_selection": preselection,
         "page_spanning_line_boxes": suspicious,
         "compact_component_boxes": compact,
     }
-
 
 def assess_support(ctx, word_trace=None) -> dict:
     """Return a bounded audit and an abstention reason, never accuracy claims.
@@ -143,6 +191,8 @@ def assess_support(ctx, word_trace=None) -> dict:
     # V2: two or more wide horizontal foreground bands are suspect even when
     # the word detector admitted apparent groups. A page border can survive
     # periodic grid removal and then contaminate unrelated baseline/layout.
+    if reason is None and ruling["audit_limit_reached"]:
+        reason = "residual_ruling_audit_budget"
     if (reason is None and (ruling["dense_horizontal_bands"] >= 2
                            or ruling["near_horizontal_long_bands"] >= 2)):
         reason = "residual_page_ruling"
