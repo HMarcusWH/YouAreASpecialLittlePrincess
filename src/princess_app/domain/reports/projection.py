@@ -118,15 +118,15 @@ def project_report(report: ValidatedDocument, request: ProjectionRequest) -> Val
         notices.append({"notice_id": "notice.premium_revoked", "class": "AI",
                         "localization_key": "notice.premium_revoked"})
 
-    # Client action flags do not grant purchasing authority. Even an erroneously
-    # enabled caller-provided PURCHASE action must fail closed for unqualified v3.
+    # An ineligible research sample must never offer a purchase, even when
+    # the API caller passed an enabled action. The direct commerce endpoint
+    # independently applies the same saved-report eligibility guard.
     ineligible_premium = is_unqualified_research_report(source)
     actions = [] if kind in {"SHARE", "EXPORT"} else [
         {"action_id": f"action.{k.lower()}", "kind": k,
-         "enabled": request.actions[k] is None and not (k == "PURCHASE" and ineligible_premium),
-         "reason": ("premium_sample_ineligible" if k == "PURCHASE" and ineligible_premium
-                    else request.actions[k])}
-        for k in ACTION_KINDS if k in request.actions]
+         "enabled": request.actions[k] is None, "reason": request.actions[k]}
+        for k in ACTION_KINDS
+        if k in request.actions and not (k == "PURCHASE" and ineligible_premium)]
     view = {
         "contract_version": g.CONTRACT_VERSION,
         "source_report_id": source["report_id"],

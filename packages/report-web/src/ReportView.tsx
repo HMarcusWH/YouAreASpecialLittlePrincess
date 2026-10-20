@@ -52,11 +52,14 @@ function FactRow({ fact, locale }: { fact: Fact; locale: Locale }) {
   );
 }
 
-function SectionBlock({ section, facts, locale }: { section: ReportSection; facts: Map<string, Fact>;
-                                                    locale: Locale }) {
+function SectionBlock({ section, facts, locale, compactMissing }: { section: ReportSection; facts: Map<string, Fact>;
+                                                    locale: Locale; compactMissing: boolean }) {
   const rows = section.fact_ids.map((id) => facts.get(id)).filter((f): f is Fact => f !== undefined);
   const headingId = `section-${section.section_id}`;
+  const heading = sectionTitle(section.template, locale, section.section_id);
   const highlight = section.template === "HIGHLIGHT_PRIMARY" || section.template === "HIGHLIGHT_SECONDARY";
+  const fullyMissing = compactMissing && section.section_id !== "section.sample"
+    && rows.length > 0 && rows.every((fact) => fact.availability === "MISSING");
   const copy = section.content_ids
     .map((contentId) => contentText(contentId, locale))
     .filter((value): value is string => value !== undefined);
@@ -90,24 +93,39 @@ function SectionBlock({ section, facts, locale }: { section: ReportSection; fact
   return (
     <section className="pr-section" aria-labelledby={headingId} data-section={section.section_id}
              data-availability={section.availability}>
-      <h2 id={headingId}>{sectionTitle(section.template)}</h2>
+      <h2 id={headingId}>{heading}</h2>
       {section.template === "SAMPLE_SUITABILITY" && section.availability === "INELIGIBLE" && (
         <p className="pr-unavailable" role="status">{t(locale, "report.handwriting_unverified")}</p>
       )}
       {section.premium_section_id !== null && (
         <p className="pr-premium"><EvidenceBadge evidence="AI_SYNTHESIS" locale={locale} /> {t(locale, "report.premium_saved")}</p>
       )}
-      {section.availability !== "READY" && section.availability !== "UNCALIBRATED" && rows.length === 0 && (
+      {section.section_id === "section.premium" && section.availability === "INELIGIBLE" ? (
+        <p className="pr-unavailable">{t(locale, "report.premium_ineligible")}</p>
+      ) : section.availability !== "READY" && section.availability !== "UNCALIBRATED" && rows.length === 0 ? (
         <p className="pr-unavailable">{t(locale, `availability.${section.availability}`)}</p>
-      )}
-      {rows.length > 0 && (
+      ) : null}
+      {fullyMissing ? (
+        <div className="pr-missing-summary" data-withheld-count={rows.length}>
+          <p className="pr-unavailable">{t(locale, "report.withheld_family").replace("{count}", String(rows.length))}</p>
+          <details className="pr-missing-details">
+            <summary>{t(locale, "report.withheld_details")}</summary>
+            <div className="pr-table-wrap">
+              <table className="pr-facts">
+                <caption className="pr-visually-hidden">{heading}: {t(locale, "report.facts")}</caption>
+                <tbody>{rows.map((fact) => <FactRow key={fact.fact_id} fact={fact} locale={locale} />)}</tbody>
+              </table>
+            </div>
+          </details>
+        </div>
+      ) : rows.length > 0 ? (
         <div className="pr-table-wrap">
           <table className="pr-facts">
-            <caption className="pr-visually-hidden">{sectionTitle(section.template)}: {t(locale, "report.facts")}</caption>
+            <caption className="pr-visually-hidden">{heading}: {t(locale, "report.facts")}</caption>
             <tbody>{rows.map((fact) => <FactRow key={fact.fact_id} fact={fact} locale={locale} />)}</tbody>
           </table>
         </div>
-      )}
+      ) : null}
     </section>
   );
 }
@@ -151,6 +169,9 @@ export function ReportView({ view, locale, evidence, onAction, showHeader = true
     section.template === "HIGHLIGHT_PRIMARY" || section.template === "HIGHLIGHT_SECONDARY";
   const highlights = view.sections.filter(isHighlight);
   const reportSections = view.sections.filter((section) => !isHighlight(section));
+  // Presentation only: all canonical facts remain stored and authorized.
+  const compactMissing = reportSections.some((section) => section.section_id === "section.sample"
+    && section.availability === "INELIGIBLE");
 
   return (
     <article className="pr-report pr-dossier" data-projection={view.projection} lang={locale}>
@@ -166,7 +187,8 @@ export function ReportView({ view, locale, evidence, onAction, showHeader = true
         <section className="pr-first-reveal" aria-label={t(locale, "report.first_reveal")}>
           <p className="pr-eyebrow">{t(locale, "report.first_reveal")}</p>
           {highlights.map((section) => (
-            <SectionBlock key={section.section_id} section={section} facts={facts} locale={locale} />
+            <SectionBlock key={section.section_id} section={section} facts={facts} locale={locale}
+                          compactMissing={compactMissing} />
           ))}
         </section>
       )}
@@ -176,7 +198,8 @@ export function ReportView({ view, locale, evidence, onAction, showHeader = true
       <section className="pr-dossier-body" aria-label={t(locale, "report.mechanical_dossier")}>
         <p className="pr-eyebrow">{t(locale, "report.mechanical_dossier")}</p>
         {reportSections.map((section) => (
-          <SectionBlock key={section.section_id} section={section} facts={facts} locale={locale} />
+          <SectionBlock key={section.section_id} section={section} facts={facts} locale={locale}
+                          compactMissing={compactMissing} />
         ))}
       </section>
 
