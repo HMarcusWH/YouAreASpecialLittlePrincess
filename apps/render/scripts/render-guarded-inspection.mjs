@@ -67,7 +67,11 @@ for (const [file, source, layout, locale] of cases) {
       throw Error(file + ": misleading Premium lock status");
     }
     const collapsed = (markup.match(/data-withheld-count=/g) ?? []).length;
-    if (collapsed < 5) throw Error(file + ": unavailable families were not compacted");
+    if (collapsed < 7) throw Error(file + ": unavailable families and sample facts were not compacted");
+    const sample = markup.split('data-section="section.sample"')[1]?.split('data-section="section.size"')[0];
+    if (!sample?.includes('data-withheld-count="6"')) {
+      throw Error(file + ": six missing sample descriptors must be grouped, not printed as rows");
+    }
     if (locale === "sv" && (!markup.includes("Provets lämplighet")
         || !markup.includes("Bläckegenskaper") || markup.includes(">Metric grid<"))) {
       throw Error(file + ": Swedish section heading localization failed");
@@ -78,8 +82,8 @@ for (const [file, source, layout, locale] of cases) {
   const pdf = file.endsWith(".pdf");
   const info = pdf ? { pages: (bytes.toString("latin1").match(/\/Type \/Page\b/g) ?? []).length }
     : { width: bytes.readUInt32BE(16), height: bytes.readUInt32BE(20) };
-  if (pdf && (info.pages < 1 || info.pages > 4)) {
-    throw Error(file + ": unqualified PDF should fit within four pages");
+  if (pdf && (info.pages < 1 || info.pages > 3)) {
+    throw Error(file + ": unqualified PDF should fit within three pages");
   }
   if (!pdf && (info.width !== 1080 || info.height !== (layout === "CARD_STORY" ? 1920 : 1080))) {
     throw Error(file + ": invalid card dimensions");
