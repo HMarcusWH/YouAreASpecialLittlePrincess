@@ -94,7 +94,7 @@ def test_missing_stays_missing_and_values_are_never_coerced():
     assert missing and all(f["value"] is None and f["quality"]["missing_reason"] for f in missing)
     by_id = {s["section_id"]: s for s in data["sections"]}
     assert by_id["section.slant"]["availability"] == "MISSING"
-    assert by_id["section.sample"]["availability"] == "READY"  # exact image dimensions
+    assert by_id["section.sample"]["availability"] == "READY"  # historical /2: exact image dimensions
 
 
 def test_compound_highlight_is_uncalibrated_when_any_support_is_uncalibrated():

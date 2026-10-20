@@ -373,3 +373,22 @@ limits, **not** a RAM, performance or scientific accuracy certificate.
 Retain the `legacy` production default, separate T11 rights gate, Issue #92,
 `public_qualification: NOT_AUTHORIZED` and the need for independent
 re-approval of changed bootstrap, source and frozen policy identities.
+
+
+## Independent evidence-support repair prototype (not public qualification)
+
+After the synthetic paper-only/low-resolution findings, a separate optional
+`evidence-support/1` guard was added to the canonical engine. It is **off** in
+production and is not a new segmentation algorithm or evidence of an empty
+physical page. In private local/test research, set
+`PRINCESS_EVIDENCE_SUPPORT_RESEARCH_OPT_IN=1` and pin the distinct guarded
+`PRINCESS_EXPECTED_ANALYSIS_CONFIG_SHA256` on the API and worker. Staging,
+production and public guest opt-in are refused. The guarded worker writes
+`individual-report/3`, while historical `/1` and `/2` remain readable and
+keep their assembly semantics. Existing per-job processing identity prevents
+processing runs with the wrong configuration.
+
+See [evidence-support repair handoff](../ci/EVIDENCE_SUPPORT_REPAIR_HANDOFF.md)
+for the synthetic limitations, editorial label compatibility decision,
+rollback constraints and independent release gates. T11 rights and Issue #92
+are unaffected.

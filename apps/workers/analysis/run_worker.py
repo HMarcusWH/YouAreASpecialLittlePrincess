@@ -27,7 +27,7 @@ from princess_app.adapters.postgres.stores import Database, PostgresPermissionSt
 from princess_app.application.analysis_worker import AnalysisWorker  # noqa: E402
 from princess_app.application.erasure import ErasureWorker  # noqa: E402
 from princess_app.application.intake import (  # noqa: E402
-    engine_config_sha256, propagate_withdrawal, runtime_analysis_profile_and_config,
+    engine_config_sha256, propagate_withdrawal, resolve_analysis_runtime,
 )
 from princess_app.application.permissions import PermissionService  # noqa: E402
 from princess_app.config import load_runtime_config  # noqa: E402
@@ -55,8 +55,9 @@ def main() -> int:
     config = load_runtime_config(os.environ, ROOT)
     if config.component != "analysis_worker":
         raise SystemExit("PRINCESS_COMPONENT must be analysis_worker")
-    profile, active_config_sha256 = runtime_analysis_profile_and_config(os.environ)
-    engine = GraphologyEngine(grid_profile=profile)
+    runtime = resolve_analysis_runtime(os.environ)
+    active_config_sha256 = runtime.digest
+    engine = GraphologyEngine(grid_profile=runtime.profile, evidence_guard_enabled=runtime.evidence_guard_enabled)
     if engine_config_sha256(engine) != active_config_sha256:
         raise RuntimeError("analysis_config_mismatch")
     if config.provider_mode("ObjectStore") is not ProviderMode.FAKE:

@@ -39,7 +39,7 @@ from princess_app.application.commerce import CommerceService
 from princess_app.application.exports import ExportService
 from princess_app.application.feedback import FeedbackService
 from princess_app.application.identity import GuestAdmission, IdentityService
-from princess_app.application.intake import IntakeService, runtime_analysis_profile_and_config
+from princess_app.application.intake import IntakeService, resolve_analysis_runtime
 from princess_app.application.notices import NoticeCatalog
 from princess_app.application.notifications import NotificationService
 from princess_app.application.permissions import PermissionService
@@ -104,7 +104,7 @@ def compose_identity_provider(config: RuntimeConfig, clock):
 def compose(config: RuntimeConfig) -> Services:
     if config.component != "api":
         raise Unsupported("wrong_component", detail=config.component)
-    _, active_config_sha256 = runtime_analysis_profile_and_config(os.environ)
+    active_config_sha256 = resolve_analysis_runtime(os.environ).digest
     db = Database(make_engine(config.secret("PRINCESS_DATABASE_URL")))
     clock = SystemClock()
     provider = compose_identity_provider(config, clock)

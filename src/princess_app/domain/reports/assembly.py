@@ -23,7 +23,7 @@ from princess_contracts import generated as g
 
 from ..analysis import method_versions, rfc3339
 from ..content import presentation_registry, select_highlights
-from .template import (BASE_TEMPLATE_VERSION, FACT_SECTIONS, HIGHLIGHT_POLICY_VERSION,
+from .template import (BASE_TEMPLATE_VERSION, EVIDENCE_SUPPORT_TEMPLATE_VERSION, FACT_SECTIONS, HIGHLIGHT_POLICY_VERSION,
                        HIGHLIGHT_PRESENTATION_VERSION, PREMIUM_SECTION, REFERENCE_SECTION,
                        SUPPORTED_TEMPLATE_VERSIONS, TEMPLATE_VERSION, formatting_for)
 
@@ -115,6 +115,16 @@ def _section_availability(facts: Sequence[Mapping[str, Any]]) -> str:
     return "READY" if "READY" in states else "UNCALIBRATED"
 
 
+def _sample_support_availability(facts: Sequence[Mapping[str, Any]]) -> str:
+    """Dimensions alone never claim suitability for handwriting analysis."""
+    by_feature = {f['feature_id']: f for f in facts}
+    line = by_feature.get('PAGE_LINE_COUNT')
+    if line is not None and (line.get('availability') == 'MISSING'
+                             or line.get('value') == 0):
+        return 'INELIGIBLE'
+    return _section_availability(facts)
+
+
 def _highlight_availability(facts: Sequence[Mapping[str, Any]]) -> str:
     """A compound statement is only as calibrated as its least-ready support."""
     return "READY" if facts and all(f["availability"] == "READY" for f in facts) else "UNCALIBRATED"
@@ -161,7 +171,10 @@ def build_sections(facts: Sequence[Mapping[str, Any]], *, reference_claims: Sequ
         members = [by_feature[f] for f in feature_ids if f in by_feature]
         if members:
             sections.append({"section_id": section_id, "template": template,
-                             "availability": _section_availability(members),
+                             "availability": (_sample_support_availability(members)
+                                              if template == 'SAMPLE_SUITABILITY'
+                                              and template_version == EVIDENCE_SUPPORT_TEMPLATE_VERSION
+                                              else _section_availability(members)),
                              "fact_ids": [f["fact_id"] for f in members], "content_ids": [],
                              "premium_section_id": None})
     claimed = [by_feature[c["feature_id"]]["fact_id"] for c in reference_claims if c["feature_id"] in by_feature]

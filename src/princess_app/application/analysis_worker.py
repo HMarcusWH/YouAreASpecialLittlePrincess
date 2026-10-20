@@ -18,6 +18,7 @@ from princess_graphology.preprocessing.grid import GridQualityError
 from ..domain.analysis import analysis_reference
 from ..domain.evidence import build_evidence_bundle
 from ..domain.reports import assemble_report
+from ..domain.reports.template import EVIDENCE_SUPPORT_TEMPLATE_VERSION, TEMPLATE_VERSION
 from ..ports.base import CallContext, Clock, Conflict, InvalidInput, PortError
 from ..ports.storage import ObjectStore
 from .intake import CaptureRow, engine_config_sha256
@@ -124,7 +125,9 @@ class AnalysisWorker:
             input_asset_id=capture.asset_id, input_sha256=capture.sha256, processed_sha256=processed,
             created_at=now, engine_version=self._engine_version, analysis_config_sha256=self._config,
             quality_policy=("quality-policy/2" if getattr(self._engine, "grid_profile", "") == "qualified-v2"
-                            else "quality-policy/1"))
+                            else "quality-policy/1"),
+            template=(EVIDENCE_SUPPORT_TEMPLATE_VERSION if getattr(self._engine, "evidence_guard_enabled", False)
+                      else TEMPLATE_VERSION))
         evidence = build_evidence_bundle(payload, reference, f"evidence_{job.run_id}")
         if evidence.value is None:
             raise Conflict("evidence_contract_rejected")
