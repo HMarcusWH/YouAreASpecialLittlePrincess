@@ -96,7 +96,9 @@ def _ruling_audit(ctx) -> dict:
             )
             if segments is not None:
                 midpoints = []
-                for x1, y1, x2, y2 in segments[:, 0]:
+                # OpenCV wheels differ: HoughLinesP may return N×1×4 or N×4.
+                # Reshape only the four scalar endpoints; never trust ranks.
+                for x1, y1, x2, y2 in np.asarray(segments).reshape(-1, 4):
                     dx = abs(int(x2) - int(x1))
                     if dx >= 0.67 * rw and abs(int(y2) - int(y1)) <= 0.15 * dx:
                         midpoints.append(0.5 * (int(y1) + int(y2)))
