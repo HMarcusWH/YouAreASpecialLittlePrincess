@@ -34,3 +34,52 @@ Checks cover deliberately fooled accepted-word candidates with retained ruling, 
 - Rollback is to keep the research opt-in disabled. Existing saved report/feature identities and offline exports are never rewritten.
 
 **Review disposition:** Do not merge before exact-head Python 3.10–3.12, app/backend/native/release/docs/roadmap CI, independent correctness/security review, and synthetic evidence inspection. Merging does not turn this on publicly.
+
+
+## Review repair pass: four correctness findings
+
+The one-stroke Hough false-positive review showed that midpoint-only grouping
+could claim two separate ruling bands from duplicate fragments of one thick
+pen stroke. The repaired \`evidence-support/2\` groups line candidates by
+slope, y position at a shared reference x and overlapping horizontal
+support. A separate candidate requires independently separated long-band
+evidence; this is still only a conservative visual proxy for ruling, not a
+printed-vs-handwritten classifier.
+
+There are now two explicit foreground scopes for the guarded qualified-v2
+profile. \`pre_line_ruling_audit\` contains bounded row/Hough counts on the
+**post-grid, pre-qualified-lines** retained mask. Its counterpart in the
+guard audit has \`foreground_stage=qualified_line_selected\` and describes
+only the *post-selection* mask. A high preselection ruling count by itself
+does not force abstention when the qualified line filter has excluded the
+paper artifact: otherwise every legitimate ruled-writing input could be
+rejected. These counters contain no pixels, mask crops or region locations.
+Other profiles report \`foreground_stage=denoised_foreground\`.
+
+Word proposal diagnostics and final canonical reattachment are separate:
+\`word_stages.counts\` describes the original detector/qualification path;
+\`word_stages.reattachment.counts\` describes only the subsequent
+\`attach_words\` pass. An uninvoked stage returns JSON null counters and
+no fabricated zero accepted-group count. Both are allowlisted, bounded
+integer-only traces. The second pass must not overwrite rejection counts
+from the original detector.
+
+### Regressions required for review closeout
+
+- Actual pinned OpenCV single thick stroke, single slanted stroke and long
+  underline yield one Hough physical-band candidate, not two; two physically
+  separated rules yield two.
+- Actual guarded engine with synthetic gray-ruling and clear writing must
+  **accept** verified line/word evidence and source-frame overlays. This
+  non-vacuous acceptance case must not quietly catch-and-pass on refusal.
+  Synthetic unclear/same-hue cases remain explicitly unavailable/refused.
+- Blank/no-line full-engine outputs show \`not_invoked\` and null detector
+  counters. Injected qualified-v2 detector rejection counts must survive
+  the canonical reattachment unchanged.
+- The 64 canonical IDs, four exact image properties and truthful missingness,
+  private opt-in API/worker fingerprint, and guard-off defaults stay unchanged.
+
+All review repairs are changes to this **unreleased** v2 research candidate;
+they cannot establish empirical real-handwriting accuracy or public
+activation. Preserve the T11 source-rights gate, writer-disjoint holdout
+and physical-handset requirements.

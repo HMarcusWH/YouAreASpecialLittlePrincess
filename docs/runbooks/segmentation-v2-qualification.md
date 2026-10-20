@@ -407,3 +407,21 @@ See [T06 residual ruling research protocol](../ci/T06_RESIDUAL_RULING_RESEARCH.m
 for test commands, policy-digest changes and deferred T11/Issue #92 gates.
 Keep public/production guard disabled, older report snapshots immutable,
 and synthetic engineering evidence separate from real-source accuracy.
+
+
+### PR #97 review closeout: ruling geometry and trace provenance
+
+The optional residual-ruling screen groups long Hough fragments by
+collinearity and common-x intercept rather than by raw y midpoint.
+Fragment duplication from one thick/slanted stroke must not count as
+two physical rules. Distinguish **post-grid/pre-line-selection** residual
+foreground counters from the **post-qualified-lines** accepted mask;
+preselection detections remain diagnostic and are not automatically proof
+that the accepted lines are invalid. Audited detector and final word-box
+attachment counts are independent; an uninvoked detector is null, not
+zero. A positive full-engine ruled-writing synthetic fixture is required,
+so rejecting every ruled sample is not an acceptable engineering outcome.
+
+This candidate is still \`evidence-support/2\`, under the already fenced
+private local/test opt-in. No release switch, empirical threshold,
+human-source authorization, T11 completion or Issue #92 closure is implied.
