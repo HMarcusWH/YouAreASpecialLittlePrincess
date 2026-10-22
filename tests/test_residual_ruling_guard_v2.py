@@ -625,3 +625,13 @@ def test_absent_optional_mask_is_not_accepted_in_required_engine_audit():
     checked = assess_support(compat, require_ruling_audit=True)
     assert checked["reason"] == "residual_ruling_audit_unavailable"
     assert checked["ruling"]["near_horizontal_long_bands"] is None
+
+
+def test_required_audit_parameter_cannot_be_a_truthy_singleton_tuple():
+    """Python's trailing comma must never change an explicit False into True."""
+    mask = np.zeros((520, 760), np.uint8)
+    ctx = _context(mask, lines=[Box(50, 100, 100, 15)],
+                   words=[Box(50, 102, 40, 12)],
+                   components=[Box(50, 102, 10, 10)] * 12)
+    with pytest.raises(ValueError, match="requirement must be boolean"):
+        assess_support(ctx, require_ruling_audit=(False,))

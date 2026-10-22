@@ -252,6 +252,8 @@ def assess_support(ctx, word_trace=None, reattachment_trace=None, *,
     Decisions operate on already-observed pixels and existing segmentation.
     False negatives and conservative refusals require empirical evaluation.
     """
+    if type(require_ruling_audit) is not bool:
+        raise ValueError("ruling audit requirement must be boolean")
     lines, words = ctx.lines, ctx.words
     h, w = ctx.height, ctx.width
     ruling = _ruling_audit(ctx)
@@ -324,9 +326,9 @@ def support_warning(ctx) -> str | None:
     """Compatibility helper for callers that only need the abstention code."""
     # This historical geometry helper is not the authoritative engine gate.
     # Missing optional masks never become invented negative Hough findings.
-    return assess_support(ctx, require_ruling_audit=(
-        getattr(ctx, "mask", None) is not None,
-    ))["reason"]
+    return assess_support(
+        ctx, require_ruling_audit=getattr(ctx, "mask", None) is not None,
+    )["reason"]
 
 
 def withhold_unqualified(measurement, reason: str):
