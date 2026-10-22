@@ -125,16 +125,19 @@ def test_word_trace_allowlist_does_not_export_pixels_or_untrusted_fields():
                    for v in audit["counts"].values())
 
 
-def test_v3_digest_changes_guarded_identity_but_preserves_disabled_production():
-    assert GUARD_POLICY_VERSION == "evidence-support/3"
+def test_v4_digest_changes_guarded_identity_but_preserves_disabled_production():
+    assert GUARD_POLICY_VERSION == "evidence-support/4"
     legacy = ("engine:max_dimension=2200;deskew=true;" + INTAKE_POLICY_VERSION).encode()
     old_v1 = ("engine:max_dimension=2200;deskew=true;"
               "evidence_support=evidence-support/1;" + INTAKE_POLICY_VERSION).encode()
     old_v2 = ("engine:max_dimension=2200;deskew=true;"
               "evidence_support=evidence-support/2;" + INTAKE_POLICY_VERSION).encode()
+    old_v3 = ("engine:max_dimension=2200;deskew=true;"
+              "evidence_support=evidence-support/3;" + INTAKE_POLICY_VERSION).encode()
     current = analysis_config_sha256(evidence_guard_enabled=True)
     assert current != hashlib.sha256(old_v1).hexdigest()
     assert current != hashlib.sha256(old_v2).hexdigest()
+    assert current != hashlib.sha256(old_v3).hexdigest()
     assert analysis_config_sha256() == hashlib.sha256(legacy).hexdigest()
     assert current == hashlib.sha256((
         "engine:max_dimension=2200;deskew=true;"
@@ -289,15 +292,79 @@ def test_v2_original_detector_counts_survive_second_word_attachment(monkeypatch)
     assert "pre_line_ruling_audit" in report.metadata
 
 
-def test_real_engine_accepts_predeclared_clean_ruled_handwriting_positive():
-    """Reject-every-ruled-photo cannot satisfy the release engineering test.
+def _bounding_box(mask):
+    ys, xs = np.nonzero(mask)
+    assert len(xs) > 0, "synthetic ground truth must contain actual pen pixels"
+    return Box(int(xs.min()), int(ys.min()),
+               int(xs.max() - xs.min() + 1),
+               int(ys.max() - ys.min() + 1))
 
-    No real user handwriting, OCR, artificially supplied candidate boxes,
-    and no catch-and-pass on a quality refusal.
+
+def _box_iou(a, b):
+    left, top = max(a.x, b.x), max(a.y, b.y)
+    right, bottom = min(a.x2, b.x2), min(a.y2, b.y2)
+    intersection = max(0, right - left) * max(0, bottom - top)
+    union = a.area + b.area - intersection
+    return intersection / union if union else 0.0
+
+
+def _assert_independent_pen_geometry(line_boxes, word_boxes, pen_mask,
+                                     ruling_mask, independent_word_masks):
+    """Check all reported regions against independent synthetic ink truth.
+
+    This is intentionally stricter than checking one pixel of overlap. The
+    reference boxes come from the drawn pixels, not cv2.getTextSize halos,
+    and are never supplied to the engine as proposed detections.
     """
+    line_reference = _bounding_box(pen_mask)
+    assert len(line_boxes) == 1
+    line = line_boxes[0]
+    assert _box_iou(line, line_reference) >= 0.45
+    assert line.area <= 2.0 * line_reference.area
+    assert np.count_nonzero(pen_mask[line.y:line.y2, line.x:line.x2]) >= (
+        0.75 * np.count_nonzero(pen_mask)
+    )
+    assert np.count_nonzero(ruling_mask[line.y:line.y2, line.x:line.x2]) <= (
+        0.20 * line.area
+    )
+
+    references = [_bounding_box(mask) for mask in independent_word_masks]
+    assert len(references) == 3
+    assert 2 <= len(word_boxes) <= len(references)
+    candidates = sorted(
+        ((_box_iou(box, reference), predicted, actual)
+         for predicted, box in enumerate(word_boxes)
+         for actual, reference in enumerate(references)),
+        key=lambda item: (-item[0], item[1], item[2]),
+    )
+    paired_predictions, paired_references = set(), set()
+    for iou, predicted, actual in candidates:
+        if iou < 0.45 or predicted in paired_predictions or actual in paired_references:
+            continue
+        box = word_boxes[predicted]
+        reference = references[actual]
+        mask = independent_word_masks[actual]
+        assert box.area <= 2.0 * reference.area
+        assert np.count_nonzero(mask[box.y:box.y2, box.x:box.x2]) >= (
+            0.70 * np.count_nonzero(mask)
+        )
+        assert np.count_nonzero(ruling_mask[box.y:box.y2, box.x:box.x2]) <= (
+            0.20 * box.area
+        )
+        paired_predictions.add(predicted)
+        paired_references.add(actual)
+    assert len(paired_predictions) == len(word_boxes)
+    assert len(paired_references) >= 2
+
+
+def test_real_engine_accepts_predeclared_clean_ruled_handwriting_positive():
+    """Full engine must keep actual pen geometry, not paper-rule false boxes."""
     from grid_v2_cases import page
     from princess_graphology.preprocessing.grid import GridQualityError
-    image, true_ink, _ = page(ruling="gray", pen="black")
+
+    image, source_pen, _approximate_boxes, references = page(
+        ruling="gray", pen="black", with_annotations=True,
+    )
     engine = GraphologyEngine(grid_profile="qualified-v2",
                              deskew_enabled=False, evidence_guard_enabled=True)
     try:
@@ -307,20 +374,52 @@ def test_real_engine_accepts_predeclared_clean_ruled_handwriting_positive():
     assert "evidence_support" not in report.metadata, report.metadata.get("evidence_support")
     assert report.measurements["PAGE_LINE_COUNT"].raw_value == 1
     assert report.measurements["PAGE_WORD_COUNT"].raw_value >= 2
-    lines = [r for r in report.regions if r.scope == "LINE"]
-    words = [r for r in report.regions if r.scope == "WORD"]
-    assert len(lines) == 1 and len(words) >= 2
-    transform = np.asarray(report.metadata["original_to_analysis"], np.float64)
-    ink = cv2.warpPerspective(true_ink, transform, (report.width, report.height),
-                              flags=cv2.INTER_NEAREST)
-    for region in (*lines, *words):
-        box = region.box
-        assert np.count_nonzero(ink[box.y:box.y2, box.x:box.x2]) > 0
-    assert any(x["scope"] == "LINE" for x in evidence["regions"])
-    assert report.metadata["evidence_support_audit"]["status"] == "no_abstention_not_calibrated"
-    assert report.metadata["evidence_support_audit"]["ruling"]["foreground_stage"] == "qualified_line_selected"
-    assert report.metadata["evidence_support_audit"]["ruling"]["pre_line_selection"] is not None
 
+    lines = [region.box for region in report.regions if region.scope == "LINE"]
+    words = [region.box for region in report.regions if region.scope == "WORD"]
+    transform = np.asarray(report.metadata["original_to_analysis"], np.float64)
+    size = (report.width, report.height)
+    pen = cv2.warpPerspective(source_pen, transform, size, flags=cv2.INTER_NEAREST)
+    ruling = cv2.warpPerspective(
+        references["ruling_mask"], transform, size, flags=cv2.INTER_NEAREST,
+    )
+    word_masks = tuple(
+        cv2.warpPerspective(mask, transform, size, flags=cv2.INTER_NEAREST)
+        for mask in references["word_masks"]
+    )
+    _assert_independent_pen_geometry(lines, words, pen, ruling, word_masks)
+
+    assert any(region["scope"] == "LINE" for region in evidence["regions"])
+    audit = report.metadata["evidence_support_audit"]
+    assert audit["status"] == "no_abstention_not_calibrated"
+    assert audit["ruling"]["foreground_stage"] == "qualified_line_selected"
+    assert audit["ruling"]["pre_line_selection"] is not None
+
+
+def test_synthetic_positive_geometry_rejects_pagewide_false_regions():
+    from grid_v2_cases import page
+
+    image, ink, _legacy_boxes, reference = page(
+        ruling="gray", pen="black", with_annotations=True,
+    )
+    assert image.shape[:2] == ink.shape
+    expected_line = _bounding_box(ink)
+    words = [_bounding_box(mask) for mask in reference["word_masks"]]
+    _assert_independent_pen_geometry(
+        [expected_line], words, ink, reference["ruling_mask"],
+        reference["word_masks"],
+    )
+    fake_page = Box(0, 0, image.shape[1], image.shape[0])
+    with pytest.raises(AssertionError):
+        _assert_independent_pen_geometry(
+            [fake_page], words, ink, reference["ruling_mask"],
+            reference["word_masks"],
+        )
+    with pytest.raises(AssertionError):
+        _assert_independent_pen_geometry(
+            [expected_line], [fake_page, *words[1:]], ink,
+            reference["ruling_mask"], reference["word_masks"],
+        )
 
 
 @pytest.mark.parametrize("thickness", [2, 7, 25, 35, 65])
@@ -346,7 +445,9 @@ def test_crossing_ruling_remains_two_distinct_bands(thickness):
     cv2.line(foreground, (0, 136), (759, 120), 255, thickness)
     ruling = foreground_ruling_counts(foreground)
     assert ruling["hough_status"] == "checked"
-    assert ruling["dense_horizontal_bands"] == 0
+    # Thick crossing strokes form legitimate dense rows; their presence
+    # does not excuse a broken independent Hough grouping test.
+    assert ruling["hough_status"] == "checked"
     assert ruling["near_horizontal_long_bands"] == 2
     verdict = assess_support(_context(
         foreground, lines=[Box(40, 300, 300, 20)],
@@ -385,14 +486,14 @@ def test_ruling_band_partition_independent_of_hough_output_order():
     assert segments is not None
     normal = _distinct_hough_bands(segments, foreground)
     reversed_order = _distinct_hough_bands(segments[::-1], foreground)
-    assert normal == reversed_order == (2, False)
+    assert normal == reversed_order == (2, "checked")
 
 
 def test_ruling_candidate_budget_refuses_partial_evidence():
     image = np.zeros((520, 760), np.uint8)
     oversized = np.tile(np.array([[0, 110, 759, 110]], np.int32),
                         (MAX_RULING_CANDIDATES + 1, 1))
-    assert _distinct_hough_bands(oversized, image) == (None, True)
+    assert _distinct_hough_bands(oversized, image) == (None, "budget_exceeded")
 
 
 def test_high_density_hough_skip_is_unknown_and_guard_abstains():
@@ -429,3 +530,98 @@ def test_reattachment_diagnostics_audited_not_leaked_to_metadata():
     assert stages["reattachment"]["status"] == "performed"
     assert stages["reattachment"]["counts"]["reject_exact_duplicate"] is not None
     assert stages["counts"]["raw_contours"] is not None
+
+
+@pytest.mark.parametrize("layout", [
+    np.array([[0, 110], [759, 110]], dtype=np.int32),
+    np.array([[0, 110, 759, 110]], dtype=np.float64),
+    np.array([[[[0, 110, 759, 110]]]], dtype=np.int32),
+    np.array([[0, 110, 759]], dtype=np.int32),
+    np.array([[0, 110, 760, 110]], dtype=np.int32),
+    np.array([[-1, 110, 759, 110]], dtype=np.int32),
+])
+def test_malformed_hough_layout_never_becomes_a_measured_line(layout):
+    foreground = np.zeros((520, 760), np.uint8)
+    cv2.line(foreground, (0, 110), (759, 110), 255, 2)
+    assert _distinct_hough_bands(layout, foreground) == (None, "malformed_response")
+
+
+@pytest.mark.parametrize("shape", [(0, 4), (0, 1, 4)])
+def test_valid_empty_hough_layout_is_measured_zero(shape):
+    foreground = np.zeros((520, 760), np.uint8)
+    assert _distinct_hough_bands(np.empty(shape, np.int32), foreground) == (
+        0, "checked",
+    )
+    assert _distinct_hough_bands(None, foreground) == (0, "checked")
+
+
+def test_malformed_hough_response_has_distinct_guard_reason(monkeypatch):
+    foreground = np.zeros((520, 760), np.uint8)
+    cv2.line(foreground, (0, 110), (759, 110), 255, 2)
+    monkeypatch.setattr(cv2, "HoughLinesP", lambda *args, **kwargs:
+                        np.array([[0, 110], [759, 110]], np.int32))
+    result = foreground_ruling_counts(foreground)
+    assert result["hough_status"] == "malformed_response"
+    assert result["near_horizontal_long_bands"] is None
+    assert not result["audit_limit_reached"]
+    audit = assess_support(_context(
+        foreground, lines=[Box(40, 300, 300, 20)],
+        words=[Box(50, 305, 80, 12)], components=[Box(50, 305, 12, 12)] * 12,
+    ))
+    assert audit["reason"] == "residual_ruling_audit_malformed"
+
+
+def test_unsubstantiated_hough_response_is_not_a_budget_overrun(monkeypatch):
+    foreground = np.zeros((520, 760), np.uint8)
+    monkeypatch.setattr(cv2, "HoughLinesP", lambda *args, **kwargs:
+                        np.array([[0, 110, 759, 110]], dtype=np.int32))
+    status = foreground_ruling_counts(foreground)
+    assert status["hough_status"] == "insufficient_support"
+    assert status["near_horizontal_long_bands"] is None
+    assert not status["audit_limit_reached"]
+    verdict = assess_support(_context(
+        foreground, lines=[Box(40, 300, 300, 20)],
+        words=[Box(50, 305, 80, 12)], components=[Box(50, 305, 12, 12)] * 12,
+    ))
+    assert verdict["reason"] == "residual_ruling_audit_insufficient_support"
+
+
+def test_actual_budget_exhaustion_provenance_is_preserved(monkeypatch):
+    foreground = np.zeros((520, 760), np.uint8)
+    oversized = np.tile(np.array([[0, 110, 759, 110]], np.int32),
+                        (MAX_RULING_CANDIDATES + 1, 1))
+    monkeypatch.setattr(cv2, "HoughLinesP", lambda *args, **kwargs: oversized)
+    result = foreground_ruling_counts(foreground)
+    assert result["hough_status"] == "budget_exceeded"
+    assert result["near_horizontal_long_bands"] is None
+    assert result["audit_limit_reached"]
+
+
+@pytest.mark.parametrize("thickness", [25, 35])
+def test_visually_merged_crossing_is_not_certified_as_one_physical_band(thickness):
+    foreground = np.zeros((520, 760), np.uint8)
+    cv2.line(foreground, (0, 120), (759, 136), 255, thickness)
+    cv2.line(foreground, (0, 136), (759, 120), 255, thickness)
+    result = foreground_ruling_counts(foreground)
+    assert result["near_horizontal_long_bands"] is None
+    assert result["hough_status"] == "insufficient_support"
+    verdict = assess_support(_context(
+        foreground, lines=[Box(40, 300, 300, 20)],
+        words=[Box(50, 305, 80, 12)], components=[Box(50, 305, 12, 12)] * 12,
+    ))
+    assert verdict["reason"] == "residual_ruling_audit_insufficient_support"
+
+
+def test_absent_optional_mask_is_not_accepted_in_required_engine_audit():
+    from types import SimpleNamespace
+
+    compat = SimpleNamespace(
+        width=760, height=520, original_width=760, original_height=520,
+        lines=[Box(40, 100, 230, 18)], words=[Box(50, 102, 70, 14)],
+        components=[Box(50, 102, 10, 12)] * 16, x_height_px=20.0,
+    )
+    from princess_graphology.evidence_support import support_warning
+    assert support_warning(compat) is None
+    checked = assess_support(compat, require_ruling_audit=True)
+    assert checked["reason"] == "residual_ruling_audit_unavailable"
+    assert checked["ruling"]["near_horizontal_long_bands"] is None

@@ -393,7 +393,7 @@ for the synthetic limitations, editorial label compatibility decision,
 rollback constraints and independent release gates. T11 rights and Issue #92
 are unaffected.
 
-## Issue #92 residual ruling research follow-up — evidence-support/2
+## Historical Issue #92 residual ruling research — evidence-support/2
 
 A new private-only optional screen at `evidence-support/2` audits residual
 foreground ruling independently of accepted detector word groups. The screen
@@ -409,7 +409,7 @@ Keep public/production guard disabled, older report snapshots immutable,
 and synthetic engineering evidence separate from real-source accuracy.
 
 
-### PR #97 review closeout: ruling geometry and trace provenance
+### Historical PR #97 v2 review: ruling geometry and trace provenance
 
 The optional residual-ruling screen groups long Hough fragments by
 collinearity and common-x intercept rather than by raw y midpoint.
@@ -426,7 +426,7 @@ This candidate is still `evidence-support/2`, under the already fenced
 private local/test opt-in. No release switch, empirical threshold,
 human-source authorization, T11 completion or Issue #92 closure is implied.
 
-### PR #97 — final research guard v3 acceptance boundary
+### Historical PR #97 v3 research guard (superseded)
 
 The optional private residual-ruling guard uses `evidence-support/3` after
 repairing thick-stroke overcount, shallow-crossing undercount, thin tilted-rule
@@ -439,3 +439,27 @@ retain null/MISSING evidence.
 Previously stored report snapshots and the public, guard-off Free default stay
 unchanged. The real-camera evaluation, T11 permissions, real handset qualification,
 Issue #92, and independent final-head review remain separate release gates.
+
+### PR #97 — v4 final engineering repair boundary
+
+The active optional local/test research candidate is `evidence-support/4`,
+which supersedes previously evaluated v1/v2/v3 guarded fingerprints.
+The source now validates only native OpenCV integer `N×4` and `N×1×4`
+Hough segment layouts. Independent statuses distinguish checked, malformed
+responses, actual count budget exhaustion, insufficient sampled geometry
+support and skipped Hough execution. Unknown is always null, never observed
+zero; guarded engine decisions fail closed on unsupported required evidence.
+
+The historical maskless `support_warning` compatibility path does not confer
+image qualification; the actual engine requires a valid pixel-audit input.
+Synthetic clean ruled-writing acceptance now compares actual emitted regions
+with independent pixel-exact pen word masks and rules, refusing page-sized
+spurious boxes, unmatched groups and missing pen support. Some thick joined
+strokes remain visually inseparable and must not be promoted to empirical
+proof of separate physical lines. Earlier synthetic checks do not establish
+field validity, human-data clearance, or physical device qualification.
+
+Run focused guards first, then the full locked Python matrix and seven
+exact-head workflow families. Inspect independent review after the final
+commit; don't merge solely because tests are green. No public/staging/prod
+opt-in or closure of T06/Issue #92 is authorized.

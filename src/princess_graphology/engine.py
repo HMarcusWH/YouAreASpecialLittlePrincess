@@ -74,7 +74,8 @@ class GraphologyEngine:
                               grid_profile=self.grid_profile, word_trace=word_trace,
                               reattachment_trace=reattachment_trace,
                               audit_preselection=self.evidence_guard_enabled)
-        audit = (assess_support(ctx, word_trace, reattachment_trace)
+        audit = (assess_support(ctx, word_trace, reattachment_trace,
+                                require_ruling_audit=True)
                  if self.evidence_guard_enabled else None)
         support_reason = audit['reason'] if audit is not None else None
         if audit is not None:

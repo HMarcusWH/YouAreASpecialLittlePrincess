@@ -1,4 +1,4 @@
-"""Private, opt-in structural evidence audit (research evidence-support/3).
+"""Private, opt-in structural evidence audit (research evidence-support/4).
 
 A conservative guard against contaminating handwriting aggregates with ruling,
 page borders and failed geometric word grouping. It neither recognizes text nor
@@ -12,7 +12,7 @@ from dataclasses import replace
 import cv2
 import numpy as np
 
-GUARD_POLICY_VERSION = "evidence-support/3"
+GUARD_POLICY_VERSION = "evidence-support/4"
 WORD_AUDIT_VERSION = "word-stage-audit/1"
 IMAGE_DIMENSION_FACTS = frozenset((
     "IMG_WIDTH_PX", "IMG_HEIGHT_PX", "IMG_MEGAPIXELS", "IMG_ASPECT_RATIO",
@@ -70,23 +70,35 @@ MAX_RULING_CANDIDATES = 512
 BAND_SAMPLE_COLUMNS = 17
 
 
-def _distinct_hough_bands(segments, mask: np.ndarray) -> tuple[int | None, bool]:
-    """Group actual ink ribbons, not adjacent Hough fragments.
+def _distinct_hough_bands(segments, mask: np.ndarray) -> tuple[int | None, str]:
+    """Bounded grouping of independently supported physical ink ribbons.
 
-    Detections of a thick stroke share vertical foreground runs over their
-    horizontal overlap; shallow crossing lines diverge outside the crossing.
-    Complete-link group compatibility prevents a bridge fragment merging
-    two otherwise independent physical strokes.
+    Only native OpenCV N×4 and N×1×4 *integer* line arrays are accepted.
+    Bad provenance, exhausted budgets and unsupported geometric evidence
+    are different states. None from OpenCV is a valid, measured zero.
     """
     if segments is None:
-        return 0, False
+        return 0, "checked"
     height, width = mask.shape
     try:
-        raw = np.asarray(segments).reshape(-1, 4)
-    except (ValueError, TypeError):
-        return None, True
+        raw = np.asarray(segments)
+    except (TypeError, ValueError):
+        return None, "malformed_response"
+    if raw.ndim == 2 and raw.shape[1] == 4:
+        pass
+    elif raw.ndim == 3 and raw.shape[1:] == (1, 4):
+        raw = raw[:, 0, :]
+    else:
+        return None, "malformed_response"
+    if raw.dtype.kind not in ("i", "u"):
+        return None, "malformed_response"
     if len(raw) > MAX_HOUGH_SEGMENTS:
-        return None, True
+        return None, "budget_exceeded"
+    if (np.any(raw[:, 0] < 0) or np.any(raw[:, 0] >= width)
+            or np.any(raw[:, 2] < 0) or np.any(raw[:, 2] >= width)
+            or np.any(raw[:, 1] < 0) or np.any(raw[:, 1] >= height)
+            or np.any(raw[:, 3] < 0) or np.any(raw[:, 3] >= height)):
+        return None, "malformed_response"
 
     candidates = []
     for x1, y1, x2, y2 in raw:
@@ -102,11 +114,13 @@ def _distinct_hough_bands(segments, mask: np.ndarray) -> tuple[int | None, bool]
         intercept = int(y1) - slope * int(x1)
         candidates.append((intercept, slope, left, right))
     if len(candidates) > MAX_RULING_CANDIDATES:
-        return None, True
+        return None, "budget_exceeded"
     if not candidates:
-        return 0, False
+        return 0, "checked"
 
-    columns = np.unique(np.rint(np.linspace(0, width - 1, BAND_SAMPLE_COLUMNS)).astype(int))
+    columns = np.unique(np.rint(np.linspace(
+        0, width - 1, BAND_SAMPLE_COLUMNS,
+    )).astype(int))
     column_labels = []
     for x in columns:
         rows = np.flatnonzero(mask[:, x])
@@ -133,7 +147,7 @@ def _distinct_hough_bands(segments, mask: np.ndarray) -> tuple[int | None, bool]
                 run = int(adjacent[located[0]]) if located.size else 0
             signature.append(run)
         if sum(bool(run) for run in signature) < 3:
-            return None, True
+            return None, "insufficient_support"
         signatures.append(tuple(signature))
 
     def same_ribbon(i, j):
@@ -142,10 +156,10 @@ def _distinct_hough_bands(segments, mask: np.ndarray) -> tuple[int | None, bool]
         if overlap < 0.45 * min(first[3] - first[2], second[3] - second[2]):
             return False
         shared = matching = 0
-        for left_run, right_run in zip(signatures[i], signatures[j]):
-            if left_run and right_run:
+        for a, b in zip(signatures[i], signatures[j]):
+            if a and b:
                 shared += 1
-                matching += left_run == right_run
+                matching += a == b
         return shared >= 3 and matching >= 3 and 4 * matching >= 3 * shared
 
     ordered = sorted(range(len(candidates)), key=lambda i: (*candidates[i], i))
@@ -157,11 +171,21 @@ def _distinct_hough_bands(segments, mask: np.ndarray) -> tuple[int | None, bool]
                 break
         else:
             groups.append([i])
-    return len(groups), False
+
+    # When Hough reports strongly incompatible directions but the foreground
+    # merges them into a single connected ribbon, the physical band count is
+    # not identifiable. Reject that contradictory evidence instead of
+    # certifying one line. Not every visually merged crossing is separable.
+    if len(groups) == 1:
+        slopes = [candidate[1] for candidate in candidates]
+        if (min(slopes) <= -0.018 and max(slopes) >= 0.018
+                and max(slopes) - min(slopes) >= 0.075):
+            return None, "insufficient_support"
+    return len(groups), "checked"
 
 
 def foreground_ruling_counts(mask: np.ndarray) -> dict:
-    """Bounded visual evidence; an unperformed Hough stage is never zero."""
+    """Bounded visual evidence with explicit unperformed/unavailable states."""
     height, width = mask.shape
     if width < 64:
         return {"dense_horizontal_bands": None, "near_horizontal_long_bands": None,
@@ -179,18 +203,15 @@ def foreground_ruling_counts(mask: np.ndarray) -> dict:
     small = (cv2.resize(mask, (reduced_width, reduced_height),
                         interpolation=cv2.INTER_AREA) if scale < 1.0 else mask)
     binary = (small > 0).astype(np.uint8) * 255
-    # Quarter-degree voting retains shallow, thin paper rules which the
-    # previous one-degree Hough step could miss on synthetic inputs.
     segments = cv2.HoughLinesP(
         binary, rho=1, theta=np.pi / 720,
         threshold=max(20, int(0.16 * reduced_width)),
         minLineLength=max(25, int(0.67 * reduced_width)),
         maxLineGap=max(3, int(0.03 * reduced_width)),
     )
-    angled, exceeded = _distinct_hough_bands(segments, binary)
+    angled, status = _distinct_hough_bands(segments, binary)
     return {"dense_horizontal_bands": bands, "near_horizontal_long_bands": angled,
-            "hough_status": "budget_exceeded" if exceeded else "checked",
-            "audit_limit_reached": exceeded}
+            "hough_status": status, "audit_limit_reached": status == "budget_exceeded"}
 
 
 def _ruling_audit(ctx) -> dict:
@@ -223,7 +244,8 @@ def _ruling_audit(ctx) -> dict:
         "compact_component_boxes": compact,
     }
 
-def assess_support(ctx, word_trace=None, reattachment_trace=None) -> dict:
+def assess_support(ctx, word_trace=None, reattachment_trace=None, *,
+                   require_ruling_audit=True) -> dict:
     """Return a bounded audit and an abstention reason, never accuracy claims.
 
     Every full abstention withholds the 60 handwriting-dependent aggregates.
@@ -250,13 +272,9 @@ def assess_support(ctx, word_trace=None, reattachment_trace=None) -> dict:
     # V2: two or more wide horizontal foreground bands are suspect even when
     # the word detector admitted apparent groups. A page border can survive
     # periodic grid removal and then contaminate unrelated baseline/layout.
-    if reason is None and ruling["audit_limit_reached"]:
-        reason = "residual_ruling_audit_budget"
     if (reason is None and ((ruling["dense_horizontal_bands"] or 0) >= 2
                            or (ruling["near_horizontal_long_bands"] or 0) >= 2)):
         reason = "residual_page_ruling"
-    if reason is None and ruling["hough_status"] != "checked":
-        reason = "residual_ruling_audit_unavailable"
 
     # Line boxes and accepted words are *not* independent handwriting proof.
     # Reject repeated page-span candidates only if compact glyph-like support
@@ -279,6 +297,20 @@ def assess_support(ctx, word_trace=None, reattachment_trace=None) -> dict:
     if reason is None and not words:
         reason = "word_groups_unqualified"
 
+    # Compatibility-only callers may supply geometry without a pixel mask.
+    # The real GraphologyEngine *always* requires a qualified pixel audit,
+    # including explicit refusal of malformed, skipped and unsupported Hough.
+    if reason is None and require_ruling_audit:
+        status = ruling["hough_status"]
+        if status == "budget_exceeded":
+            reason = "residual_ruling_audit_budget"
+        elif status == "malformed_response":
+            reason = "residual_ruling_audit_malformed"
+        elif status == "insufficient_support":
+            reason = "residual_ruling_audit_insufficient_support"
+        elif status != "checked":
+            reason = "residual_ruling_audit_unavailable"
+
     return {
         "policy": GUARD_POLICY_VERSION,
         "status": "unqualified" if reason else "no_abstention_not_calibrated",
@@ -290,7 +322,11 @@ def assess_support(ctx, word_trace=None, reattachment_trace=None) -> dict:
 
 def support_warning(ctx) -> str | None:
     """Compatibility helper for callers that only need the abstention code."""
-    return assess_support(ctx)["reason"]
+    # This historical geometry helper is not the authoritative engine gate.
+    # Missing optional masks never become invented negative Hough findings.
+    return assess_support(ctx, require_ruling_audit=(
+        getattr(ctx, "mask", None) is not None,
+    ))["reason"]
 
 
 def withhold_unqualified(measurement, reason: str):
