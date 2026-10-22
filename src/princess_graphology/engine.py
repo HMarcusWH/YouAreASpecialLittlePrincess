@@ -69,10 +69,13 @@ class GraphologyEngine:
         if not isinstance(source, str):
             raise ValueError('source must be a string')
         word_trace = {} if self.evidence_guard_enabled else None
+        reattachment_trace = {} if self.evidence_guard_enabled else None
         ctx = prepare_context(image, max_dimension=self.max_dimension, deskew_enabled=self.deskew_enabled,
                               grid_profile=self.grid_profile, word_trace=word_trace,
+                              reattachment_trace=reattachment_trace,
                               audit_preselection=self.evidence_guard_enabled)
-        audit = assess_support(ctx, word_trace) if self.evidence_guard_enabled else None
+        audit = (assess_support(ctx, word_trace, reattachment_trace)
+                 if self.evidence_guard_enabled else None)
         support_reason = audit['reason'] if audit is not None else None
         if audit is not None:
             # Aggregate counts/reasons only, no image pixels or text. Even a

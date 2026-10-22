@@ -133,7 +133,7 @@ def build_measurement_context(gray, mask, *, lines=(), words=(), original_width=
 
 
 def prepare_context(image, *, max_dimension=2200, deskew_enabled=True, grid_profile='legacy',
-                    word_trace=None, audit_preselection=False):
+                    word_trace=None, reattachment_trace=None, audit_preselection=False):
     """Aligned color/rule detection with one authoritative handwriting mask.
 
     Legacy reproduces the pre-grid measurements. grid-v1 conservatively
@@ -272,16 +272,14 @@ def prepare_context(image, *, max_dimension=2200, deskew_enabled=True, grid_prof
     # qualified_words() recorded the original candidate/rejection stage above.
     # A second attach_words() normalizes the finalized canonical boxes, but
     # its diagnostic counters must never overwrite the earlier stage.
-    attachment_trace = ({} if word_trace is not None and grid_profile == 'qualified-v2'
-                        else word_trace)
+    # Final attachment is an independent, ephemeral stage in ALL profiles.
+    attachment_trace = (reattachment_trace if reattachment_trace is not None
+                        else {} if word_trace is not None else None)
     result = build_measurement_context(corrected, mask, lines=lines,
                                        words=[p.box for p in proposals],
                                        original_width=original_w, original_height=original_h,
                                        rotation_deg=rotation, metadata=metadata,
                                        word_trace=attachment_trace)
-    if word_trace is not None and grid_profile == 'qualified-v2':
-        # Bounded integer-only stage trace, no geometry or image pixels.
-        result.metadata['word_reattachment_diagnostics'] = attachment_trace
     if grid_profile == 'qualified-v2' and not result.words:
         result.metadata['qualification']['words'] = 'unavailable'
     return result

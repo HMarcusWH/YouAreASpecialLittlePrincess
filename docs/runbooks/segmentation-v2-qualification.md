@@ -425,3 +425,17 @@ so rejecting every ruled sample is not an acceptable engineering outcome.
 This candidate is still `evidence-support/2`, under the already fenced
 private local/test opt-in. No release switch, empirical threshold,
 human-source authorization, T11 completion or Issue #92 closure is implied.
+
+### PR #97 — final research guard v3 acceptance boundary
+
+The optional private residual-ruling guard uses `evidence-support/3` after
+repairing thick-stroke overcount, shallow-crossing undercount, thin tilted-rule
+voting, skipped-Hough provenance and duplicate reattachment metadata. Tests
+exercise actual pinned OpenCV on synthetic inputs; clear gray-ruled writing
+must remain accepted through the full engine. Hough skips and exceeded budgets
+cannot imply a negative ruling observation, and unqualified research results
+retain null/MISSING evidence.
+
+Previously stored report snapshots and the public, guard-off Free default stay
+unchanged. The real-camera evaluation, T11 permissions, real handset qualification,
+Issue #92, and independent final-head review remain separate release gates.

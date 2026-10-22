@@ -14,6 +14,7 @@ from princess_app.domain.intake import INTAKE_POLICY_VERSION
 from princess_graphology import GraphologyEngine
 from princess_graphology.evidence_support import (
     GUARD_POLICY_VERSION, IMAGE_DIMENSION_FACTS, WORD_AUDIT_VERSION, assess_support,
+    foreground_ruling_counts, _distinct_hough_bands, MAX_RULING_CANDIDATES,
 )
 from princess_graphology.models import Box
 
@@ -124,13 +125,16 @@ def test_word_trace_allowlist_does_not_export_pixels_or_untrusted_fields():
                    for v in audit["counts"].values())
 
 
-def test_v2_digest_changes_guarded_identity_but_preserves_disabled_production():
-    assert GUARD_POLICY_VERSION == "evidence-support/2"
+def test_v3_digest_changes_guarded_identity_but_preserves_disabled_production():
+    assert GUARD_POLICY_VERSION == "evidence-support/3"
     legacy = ("engine:max_dimension=2200;deskew=true;" + INTAKE_POLICY_VERSION).encode()
     old_v1 = ("engine:max_dimension=2200;deskew=true;"
               "evidence_support=evidence-support/1;" + INTAKE_POLICY_VERSION).encode()
+    old_v2 = ("engine:max_dimension=2200;deskew=true;"
+              "evidence_support=evidence-support/2;" + INTAKE_POLICY_VERSION).encode()
     current = analysis_config_sha256(evidence_guard_enabled=True)
     assert current != hashlib.sha256(old_v1).hexdigest()
+    assert current != hashlib.sha256(old_v2).hexdigest()
     assert analysis_config_sha256() == hashlib.sha256(legacy).hexdigest()
     assert current == hashlib.sha256((
         "engine:max_dimension=2200;deskew=true;"
@@ -316,3 +320,112 @@ def test_real_engine_accepts_predeclared_clean_ruled_handwriting_positive():
     assert report.metadata["evidence_support_audit"]["status"] == "no_abstention_not_calibrated"
     assert report.metadata["evidence_support_audit"]["ruling"]["foreground_stage"] == "qualified_line_selected"
     assert report.metadata["evidence_support_audit"]["ruling"]["pre_line_selection"] is not None
+
+
+
+@pytest.mark.parametrize("thickness", [2, 7, 25, 35, 65])
+def test_one_heavy_stroke_is_one_physical_ribbon(thickness):
+    foreground = np.zeros((520, 760), np.uint8)
+    cv2.line(foreground, (0, 110), (759, 110), 255, thickness)
+    ruling = foreground_ruling_counts(foreground)
+    assert ruling["hough_status"] == "checked"
+    assert ruling["near_horizontal_long_bands"] == 1
+    assert not ruling["audit_limit_reached"]
+    audit = assess_support(_context(
+        foreground, lines=[Box(40, 300, 300, 20)],
+        words=[Box(50, 305, 80, 12)], components=[Box(50, 305, 12, 12)] * 12,
+    ))
+    assert audit["reason"] is None
+
+
+@pytest.mark.parametrize("thickness", [2, 3, 7])
+def test_crossing_ruling_remains_two_distinct_bands(thickness):
+    foreground = np.zeros((520, 760), np.uint8)
+    # Equal center intercept but nonparallel source geometry.
+    cv2.line(foreground, (0, 120), (759, 136), 255, thickness)
+    cv2.line(foreground, (0, 136), (759, 120), 255, thickness)
+    ruling = foreground_ruling_counts(foreground)
+    assert ruling["hough_status"] == "checked"
+    assert ruling["dense_horizontal_bands"] == 0
+    assert ruling["near_horizontal_long_bands"] == 2
+    verdict = assess_support(_context(
+        foreground, lines=[Box(40, 300, 300, 20)],
+        words=[Box(50, 305, 80, 12)], components=[Box(50, 305, 12, 12)] * 12,
+    ))
+    assert verdict["reason"] == "residual_page_ruling"
+
+
+def test_subdegree_thin_parallel_rule_detection():
+    foreground = np.zeros((520, 760), np.uint8)
+    for y in (55, 135):
+        cv2.line(foreground, (0, y), (759, y + 7), 255, 2)
+    ruling = foreground_ruling_counts(foreground)
+    assert ruling["hough_status"] == "checked"
+    assert ruling["dense_horizontal_bands"] == 0
+    assert ruling["near_horizontal_long_bands"] == 2
+
+
+@pytest.mark.parametrize("gap, thickness", [(15, 3), (40, 2), (40, 25)])
+def test_separated_near_parallel_rules_not_merged(gap, thickness):
+    foreground = np.zeros((520, 760), np.uint8)
+    cv2.line(foreground, (0, 110), (759, 110), 255, thickness)
+    cv2.line(foreground, (0, 110 + gap), (759, 110 + gap), 255, thickness)
+    ruling = foreground_ruling_counts(foreground)
+    assert ruling["near_horizontal_long_bands"] == 2
+
+
+def test_ruling_band_partition_independent_of_hough_output_order():
+    foreground = np.zeros((520, 760), np.uint8)
+    for y in (100, 160):
+        cv2.line(foreground, (0, y), (759, y + 6), 255, 7)
+    segments = cv2.HoughLinesP(
+        foreground, rho=1, theta=np.pi / 720, threshold=max(20, int(0.16 * 760)),
+        minLineLength=int(0.67 * 760), maxLineGap=int(0.03 * 760),
+    )
+    assert segments is not None
+    normal = _distinct_hough_bands(segments, foreground)
+    reversed_order = _distinct_hough_bands(segments[::-1], foreground)
+    assert normal == reversed_order == (2, False)
+
+
+def test_ruling_candidate_budget_refuses_partial_evidence():
+    image = np.zeros((520, 760), np.uint8)
+    oversized = np.tile(np.array([[0, 110, 759, 110]], np.int32),
+                        (MAX_RULING_CANDIDATES + 1, 1))
+    assert _distinct_hough_bands(oversized, image) == (None, True)
+
+
+def test_high_density_hough_skip_is_unknown_and_guard_abstains():
+    foreground = np.zeros((520, 760), np.uint8)
+    foreground[:, :300] = 255  # >35% foreground without full-width rows.
+    for y in (60, 170):
+        cv2.line(foreground, (0, y), (759, y + 50), 255, 2)
+    ruling = foreground_ruling_counts(foreground)
+    assert ruling["dense_horizontal_bands"] == 0
+    assert ruling["near_horizontal_long_bands"] is None
+    assert ruling["hough_status"] == "skipped_dense_foreground"
+    verdict = assess_support(_context(
+        foreground, lines=[Box(40, 300, 300, 20)],
+        words=[Box(50, 305, 80, 12)], components=[Box(50, 305, 12, 12)] * 12,
+    ))
+    assert verdict["reason"] == "residual_ruling_audit_unavailable"
+
+
+def test_small_canvas_hough_skipped_does_not_report_zero():
+    foreground = np.zeros((80, 54), np.uint8)
+    ruling = foreground_ruling_counts(foreground)
+    assert ruling["near_horizontal_long_bands"] is None
+    assert ruling["hough_status"] == "skipped_small_canvas"
+
+
+def test_reattachment_diagnostics_audited_not_leaked_to_metadata():
+    image = np.full((800, 640, 3), 248, np.uint8)
+    for i, text in enumerate(("ALPHA BETA GAMMA", "DELTA ZETA ETA")):
+        cv2.putText(image, text, (40, 150 + i * 260), cv2.FONT_HERSHEY_SIMPLEX,
+                    0.9, (18, 18, 18), 2, cv2.LINE_AA)
+    report = GraphologyEngine(evidence_guard_enabled=True).analyze(image)
+    assert "word_reattachment_diagnostics" not in report.metadata
+    stages = report.metadata["evidence_support_audit"]["word_stages"]
+    assert stages["reattachment"]["status"] == "performed"
+    assert stages["reattachment"]["counts"]["reject_exact_duplicate"] is not None
+    assert stages["counts"]["raw_contours"] is not None

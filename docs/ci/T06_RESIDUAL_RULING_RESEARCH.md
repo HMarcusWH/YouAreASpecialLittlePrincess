@@ -4,12 +4,12 @@
 
 ## Implementation and provenance
 
-- `evidence-support/2` is a versioned update to the existing opt-in guarded analysis. The flag `PRINCESS_EVIDENCE_SUPPORT_RESEARCH_OPT_IN=1` remains permitted **only** in explicitly paired and digest-pinned private local/test API + analysis-worker processes. Public guest, staging and production still reject it. Default guard-off processing hashes, outputs and the historical report writer are unchanged.
+- `evidence-support/3` is a versioned update to the existing opt-in guarded analysis. The flag `PRINCESS_EVIDENCE_SUPPORT_RESEARCH_OPT_IN=1` remains permitted **only** in explicitly paired and digest-pinned private local/test API + analysis-worker processes. Public guest, staging and production still reject it. Default guard-off processing hashes, outputs and the historical report writer are unchanged.
 - A bounded independent retained-foreground audit counts (a) wide horizontal ink rows, (b) near-horizontal long Hough segments, and (c) page-width line boxes versus compact component support. It does not crop pages or alter pen/ruling pixels. The prior page-spanning, dominant-thin and low-resolution checks remain in front of the new checks to retain prior refusal reasons.
 - Multiple suspect foreground bands cause **full conservative abstention even when a word detector admitted some groups**. Zero accepted word groups and zero accepted text lines are treated as unavailable evidence, not as proof a page contains no handwriting.
 - The private `evidence_support_audit` records only versioned statuses, bounded counts and fixed reasons; it has no pixel arrays, boxes, source image paths, transcriptions, participant IDs, or raw detector payloads. Missing stages are JSON null, not fabricated zero.
 - If abstaining, all 64 canonical features remain, with the four exact input-image facts still present and 60 unsupported handwriting-dependent facts `MISSING` with explicit reasons/null values. Suppress unsupported LINE/WORD/COMPONENT and baseline evidence; the existing `individual-report/3` projection and honest Premium eligibility behavior apply.
-- The separately versioned guard digest prevents an old `evidence-support/1` job from silently executing under policy v2. Explicit version changes require API/worker startup pin updates; an unmodified default remains legacy.
+- The separately versioned guard digest prevents old v1/v2 guarded jobs from silently executing under policy v3. Explicit version changes require API/worker startup pin updates; an unmodified default remains legacy.
 
 ## Synthetic regressions
 
@@ -40,7 +40,7 @@ Checks cover deliberately fooled accepted-word candidates with retained ruling, 
 
 The one-stroke Hough false-positive review showed that midpoint-only grouping
 could claim two separate ruling bands from duplicate fragments of one thick
-pen stroke. The repaired `evidence-support/2` groups line candidates by
+pen stroke. The repaired `evidence-support/3` groups line candidates by
 slope, y position at a shared reference x and overlapping horizontal
 support. A separate candidate requires independently separated long-band
 evidence; this is still only a conservative visual proxy for ruling, not a
@@ -83,3 +83,29 @@ All review repairs are changes to this **unreleased** v2 research candidate;
 they cannot establish empirical real-handwriting accuracy or public
 activation. Preserve the T11 source-rights gate, writer-disjoint holdout
 and physical-handset requirements.
+
+## Final v3 ruling-audit repairs (synthetic only)
+
+- Hough detections are grouped by actual foreground-ribbon continuity over 17
+  fixed sampled columns, requiring complete group compatibility. This separates
+  intersecting shallow paper lines without splitting a single thick stroke.
+  Exceeding 8192 raw Hough detections or 512 qualifying candidates makes the
+  stage unavailable and the guarded sample abstain.
+- One-quarter-degree angle voting at bounded image size detects thin, subdegree
+  synthetic ruled lines missed by earlier one-degree voting. This establishes no
+  sensitivity figure for natural handwriting photographs.
+- `hough_status` explicitly distinguishes checked, skipped-small-canvas,
+  skipped-dense-foreground, unavailable-foreground and budget-exceeded cases.
+  A skipped or unavailable Hough stage has `near_horizontal_long_bands: null`
+  instead of a falsely measured zero. Research-guard processing abstains when
+  that stage is unavailable, preserving the 60-dependent-measurement missingness
+  and region-withholding rules.
+- Word detector and final reattachment are separate ephemeral traces across all
+  guarded profiles. Only fixed allowlisted counts from `word_stages.reattachment`
+  may be serialized; the raw reattachment dictionary never enters report metadata.
+- The research policy identity advances to `evidence-support/3`, keeping
+  previous opt-in v1/v2 digests distinct while guard-off hashes remain unchanged.
+
+These tests and controls do **not** approve protected source collection, empirical
+T06 calibration, public/staging activation, physical handset testing or closing
+Issue #92. Exact-head CI and independent code/security review remain required.
