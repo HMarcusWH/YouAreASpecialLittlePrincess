@@ -125,8 +125,8 @@ def test_word_trace_allowlist_does_not_export_pixels_or_untrusted_fields():
                    for v in audit["counts"].values())
 
 
-def test_v4_digest_changes_guarded_identity_but_preserves_disabled_production():
-    assert GUARD_POLICY_VERSION == "evidence-support/4"
+def test_v5_digest_changes_guarded_identity_but_preserves_disabled_production():
+    assert GUARD_POLICY_VERSION == "evidence-support/5"
     legacy = ("engine:max_dimension=2200;deskew=true;" + INTAKE_POLICY_VERSION).encode()
     old_v1 = ("engine:max_dimension=2200;deskew=true;"
               "evidence_support=evidence-support/1;" + INTAKE_POLICY_VERSION).encode()
@@ -134,10 +134,13 @@ def test_v4_digest_changes_guarded_identity_but_preserves_disabled_production():
               "evidence_support=evidence-support/2;" + INTAKE_POLICY_VERSION).encode()
     old_v3 = ("engine:max_dimension=2200;deskew=true;"
               "evidence_support=evidence-support/3;" + INTAKE_POLICY_VERSION).encode()
+    old_v4 = ("engine:max_dimension=2200;deskew=true;"
+              "evidence_support=evidence-support/4;" + INTAKE_POLICY_VERSION).encode()
     current = analysis_config_sha256(evidence_guard_enabled=True)
     assert current != hashlib.sha256(old_v1).hexdigest()
     assert current != hashlib.sha256(old_v2).hexdigest()
     assert current != hashlib.sha256(old_v3).hexdigest()
+    assert current != hashlib.sha256(old_v4).hexdigest()
     assert analysis_config_sha256() == hashlib.sha256(legacy).hexdigest()
     assert current == hashlib.sha256((
         "engine:max_dimension=2200;deskew=true;"
@@ -635,3 +638,148 @@ def test_required_audit_parameter_cannot_be_a_truthy_singleton_tuple():
                    components=[Box(50, 102, 10, 10)] * 12)
     with pytest.raises(ValueError, match="requirement must be boolean"):
         assess_support(ctx, require_ruling_audit=(False,))
+
+
+def _bridge_ruling(*, connector_type, width=760, height=520):
+    """Two distinct long rules with thin perpendicular graph-paper bridges."""
+    mask = np.zeros((height, width), np.uint8)
+    cv2.line(mask, (0, 100), (width - 1, 105), 255, 2)
+    cv2.line(mask, (0, 170), (width - 1, 175), 255, 2)
+    if connector_type == "probe_columns":
+        xs = np.unique(np.rint(np.linspace(0, width - 1, 17)).astype(int))
+    elif connector_type == "shifted_probes":
+        xs = np.unique(np.rint(np.linspace(0, width - 1, 17)).astype(int) + 4)
+    elif connector_type in ("periodic_20", "periodic_40"):
+        pitch = 20 if connector_type == "periodic_20" else 40
+        xs = range(0, width, pitch)
+    else:
+        raise ValueError("unknown synthetic bridge layout")
+    for x in xs:
+        if 0 <= int(x) < width:
+            cv2.line(mask, (int(x), 90), (int(x), 185), 255, 1)
+    return mask
+
+
+@pytest.mark.parametrize("connector_type", [
+    "probe_columns", "shifted_probes", "periodic_20", "periodic_40",
+])
+def test_connected_grid_lines_never_qualify_as_one_physical_ribbon(connector_type):
+    """The 17-point signature may connect two rules through thin grid lines."""
+    mask = _bridge_ruling(connector_type=connector_type)
+    result = foreground_ruling_counts(mask)
+    assert result["dense_horizontal_bands"] == 0
+    assert (result["hough_status"] == "insufficient_support"
+            and result["near_horizontal_long_bands"] is None) or (
+            result["hough_status"] == "checked"
+            and result["near_horizontal_long_bands"] >= 2
+    ), result
+    context = _context(
+        mask, lines=[Box(30, 300, 300, 24)],
+        words=[Box(35, 304, 65, 15)], components=[Box(35, 304, 10, 12)] * 12,
+    )
+    verdict = assess_support(context)
+    assert verdict["reason"] in (
+        "residual_page_ruling", "residual_ruling_audit_insufficient_support",
+    )
+
+
+@pytest.mark.parametrize("delta_y", [3, 5, 7, 9, 15])
+def test_thin_shallow_rules_are_detected_or_explicitly_unqualified(delta_y):
+    mask = np.zeros((520, 760), np.uint8)
+    for top in (150, 180):
+        cv2.line(mask, (0, top), (759, top + delta_y), 255, 1)
+    result = foreground_ruling_counts(mask)
+    assert result["dense_horizontal_bands"] == 0
+    assert (result["hough_status"] == "insufficient_support"
+            and result["near_horizontal_long_bands"] is None) or (
+            result["hough_status"] == "checked"
+            and result["near_horizontal_long_bands"] >= 2
+    ), result
+    verdict = assess_support(_context(
+        mask, lines=[Box(50, 310, 350, 22)],
+        words=[Box(60, 313, 75, 15)], components=[Box(60, 313, 12, 12)] * 12,
+    ))
+    assert verdict["reason"] in (
+        "residual_page_ruling", "residual_ruling_audit_insufficient_support",
+    )
+
+
+@pytest.mark.parametrize("thickness", [1, 2, 3, 7, 15, 25, 35, 65])
+def test_secondary_line_evidence_never_splits_a_single_stroke(thickness):
+    mask = np.zeros((520, 760), np.uint8)
+    cv2.line(mask, (0, 110), (759, 110), 255, thickness)
+    result = foreground_ruling_counts(mask)
+    assert result["near_horizontal_long_bands"] == 1
+    assert result["hough_status"] == "checked"
+
+
+def test_supplementary_line_detector_does_not_hallucinate_text_ruling():
+    mask = np.zeros((520, 760), np.uint8)
+    for i, text in enumerate(("ALPHA BETA GAMMA", "DELTA ZETA ETA",
+                              "THETA IOTA KAPPA")):
+        cv2.putText(mask, text, (40, 140 + i * 150),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.9, 255, 2, cv2.LINE_AA)
+    result = foreground_ruling_counts(mask)
+    assert result["hough_status"] == "checked"
+    assert result["near_horizontal_long_bands"] == 0
+    assert result["dense_horizontal_bands"] == 0
+
+
+def test_supplementary_line_detector_does_not_split_a_real_underline():
+    mask = np.zeros((520, 760), np.uint8)
+    cv2.putText(mask, "ALPHA BETA GAMMA", (40, 140),
+                cv2.FONT_HERSHEY_SIMPLEX, 0.9, 255, 2, cv2.LINE_AA)
+    cv2.line(mask, (0, 175), (759, 175), 255, 1)
+    result = foreground_ruling_counts(mask)
+    assert result["hough_status"] == "checked"
+    assert result["near_horizontal_long_bands"] == 1
+
+
+def test_secondary_peak_response_not_published_as_physical_band_count(monkeypatch):
+    from princess_graphology import evidence_support as module
+    mask = np.zeros((520, 760), np.uint8)
+    # No ink: a mocked strong peak still requires measured foreground support.
+    monkeypatch.setattr(cv2, "HoughLinesP", lambda *args, **kwargs: None)
+    monkeypatch.setattr(
+        cv2, "HoughLines", lambda *args, **kwargs:
+        np.array([[[110.0, np.pi / 2]], [[140.0, np.pi / 2]]], np.float32),
+    )
+    count, status = module._supplementary_hough_bands(mask)
+    assert (count, status) == (0, "checked")
+    result = foreground_ruling_counts(mask)
+    assert result["near_horizontal_long_bands"] == 0
+    assert result["hough_status"] == "checked"
+
+
+def test_supplementary_hough_invalid_layout_and_budget_are_distinct(monkeypatch):
+    from princess_graphology import evidence_support as module
+    mask = np.zeros((520, 760), np.uint8)
+    monkeypatch.setattr(cv2, "HoughLines", lambda *args, **kwargs:
+                        np.ones((2, 2, 2), np.float32))
+    assert module._supplementary_hough_bands(mask) == (None, "malformed_response")
+    monkeypatch.setattr(cv2, "HoughLines", lambda *args, **kwargs:
+                        np.ones((module.MAX_HOUGH_SEGMENTS + 1, 1, 2), np.float32))
+    assert module._supplementary_hough_bands(mask) == (None, "budget_exceeded")
+
+
+def test_supplementary_detector_not_run_for_clear_primary_ruling(monkeypatch):
+    mask = np.zeros((520, 760), np.uint8)
+    for y in (110, 190):
+        cv2.line(mask, (0, y), (759, y), 255, 3)
+    def unexpected_fallback(*args, **kwargs):
+        pytest.fail("secondary Hough must not run when primary already found two bands")
+    monkeypatch.setattr(cv2, "HoughLines", unexpected_fallback)
+    audit = foreground_ruling_counts(mask)
+    assert audit["hough_status"] == "checked"
+    assert audit["near_horizontal_long_bands"] == 2
+
+
+def test_supplementary_detector_not_run_for_heavy_single_stroke(monkeypatch):
+    mask = np.zeros((520, 760), np.uint8)
+    cv2.line(mask, (0, 110), (759, 110), 255, 65)
+    def unexpected_fallback(*args, **kwargs):
+        pytest.fail("secondary Hough must not reinterpret dense thick-stroke peaks")
+    monkeypatch.setattr(cv2, "HoughLines", unexpected_fallback)
+    audit = foreground_ruling_counts(mask)
+    assert audit["hough_status"] == "checked"
+    assert audit["near_horizontal_long_bands"] == 1

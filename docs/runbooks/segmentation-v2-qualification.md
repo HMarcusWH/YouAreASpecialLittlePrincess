@@ -440,7 +440,7 @@ Previously stored report snapshots and the public, guard-off Free default stay
 unchanged. The real-camera evaluation, T11 permissions, real handset qualification,
 Issue #92, and independent final-head review remain separate release gates.
 
-### PR #97 — v4 final engineering repair boundary
+### Historical PR #97 v4 engineering repair (superseded)
 
 The active optional local/test research candidate is `evidence-support/4`,
 which supersedes previously evaluated v1/v2/v3 guarded fingerprints.
@@ -463,3 +463,30 @@ Run focused guards first, then the full locked Python matrix and seven
 exact-head workflow families. Inspect independent review after the final
 commit; don't merge solely because tests are green. No public/staging/prod
 opt-in or closure of T06/Issue #92 is authorized.
+
+### PR #97 — v5 final synthetic research scope
+
+The optional private local/test guard is now `evidence-support/5`. The v4
+17-column connected-run comparison was not sufficient when vertical paper
+grid strokes bridged two independent shallow horizontal lines. The new
+physical-band equivalence also compares predicted vertical separation
+against robust local observed stroke thickness across adjacent columns.
+
+For thin tilted lines missed by probabilistic Hough, restricted near-horizontal
+standard-Hough peaks are examined only as *untrusted proposals*: they require
+substantial observed ink along the predicted stroke and physical-ribbon
+deduplication before any count is issued. The bounded secondary path runs
+only when the primary has 0/1 bands and sparse foreground support is suitable.
+The source keeps genuine zero detections distinct from `insufficient_support`,
+`malformed_response`, `budget_exceeded` and `skipped_*` outcomes.
+
+Tests must keep a nonvacuous full-engine gray-ruled handwriting acceptance,
+check adversarial graph connectors and 1px slopes using actual locked OpenCV,
+reject spurious multiple bands on one underline/thick stroke, and prove
+unchanged disabled Free configuration digests and guarded evidence withholding.
+Both pre- and post-selection audit costs count toward the research resource
+budget; neither is an empirical permission to process real handwritten pages.
+
+This remains disabled in public/staging/production and does not change prior
+snapshots or resolve T06, T11 or Issue #92. CI and independent review apply
+to the exact final head, not prior successful revisions.

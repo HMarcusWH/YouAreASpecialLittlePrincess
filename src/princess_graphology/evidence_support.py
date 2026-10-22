@@ -1,4 +1,4 @@
-"""Private, opt-in structural evidence audit (research evidence-support/4).
+"""Private, opt-in structural evidence audit (research evidence-support/5).
 
 A conservative guard against contaminating handwriting aggregates with ruling,
 page borders and failed geometric word grouping. It neither recognizes text nor
@@ -12,7 +12,7 @@ from dataclasses import replace
 import cv2
 import numpy as np
 
-GUARD_POLICY_VERSION = "evidence-support/4"
+GUARD_POLICY_VERSION = "evidence-support/5"
 WORD_AUDIT_VERSION = "word-stage-audit/1"
 IMAGE_DIMENSION_FACTS = frozenset((
     "IMG_WIDTH_PX", "IMG_HEIGHT_PX", "IMG_MEGAPIXELS", "IMG_ASPECT_RATIO",
@@ -118,35 +118,56 @@ def _distinct_hough_bands(segments, mask: np.ndarray) -> tuple[int | None, str]:
     if not candidates:
         return 0, "checked"
 
+    # Probe vertical connected ink at and beside each fixed sample column.
+    # A thin vertical graph-paper connector must not make two separate
+    # horizontal strokes look like one 70-pixel-thick ink ribbon.
     columns = np.unique(np.rint(np.linspace(
         0, width - 1, BAND_SAMPLE_COLUMNS,
     )).astype(int))
-    column_labels = []
-    for x in columns:
+    offsets = (-7, 0, 7)
+    probe_columns = sorted(set(
+        max(0, min(width - 1, int(x + shift)))
+        for x in columns for shift in offsets
+    ))
+    column_runs = {}
+    for x in probe_columns:
         rows = np.flatnonzero(mask[:, x])
         labels = np.zeros(height, dtype=np.int32)
         if rows.size:
             labels[rows] = np.cumsum(np.r_[True, np.diff(rows) > 1])
-        column_labels.append(labels)
+        column_runs[x] = labels, np.bincount(labels)[1:]
+
+    def ink_run(x, y):
+        labels, lengths = column_runs[x]
+        if not 0 <= y < height:
+            return 0, 0
+        run = int(labels[y])
+        if not run:
+            nearby = labels[max(0, y - 2):min(height, y + 3)]
+            found = np.flatnonzero(nearby)
+            run = int(nearby[found[0]]) if found.size else 0
+        return run, int(lengths[run - 1]) if run else 0
 
     signatures = []
     for intercept, slope, left, right in candidates:
         signature = []
-        for x, labels in zip(columns, column_labels):
+        for x in columns:
             if x < left or x > right:
-                signature.append(0)
+                signature.append((0, 0., 0))
                 continue
             y = int(round(intercept + slope * x))
-            if y < 0 or y >= height:
-                signature.append(0)
-                continue
-            run = int(labels[y])
-            if not run:
-                adjacent = labels[max(0, y - 1):min(height, y + 2)]
-                located = np.flatnonzero(adjacent)
-                run = int(adjacent[located[0]]) if located.size else 0
-            signature.append(run)
-        if sum(bool(run) for run in signature) < 3:
+            run, _ = ink_run(int(x), y)
+            nearby_thicknesses = []
+            for shift in offsets:
+                shifted = max(0, min(width - 1, int(x + shift)))
+                sample_y = int(round(intercept + slope * shifted))
+                _, thickness = ink_run(shifted, sample_y)
+                if thickness:
+                    nearby_thicknesses.append(thickness)
+            thickness = (float(np.median(nearby_thicknesses))
+                         if nearby_thicknesses else 0.)
+            signature.append((run, thickness, y))
+        if sum(bool(value[0]) for value in signature) < 3:
             return None, "insufficient_support"
         signatures.append(tuple(signature))
 
@@ -156,10 +177,16 @@ def _distinct_hough_bands(segments, mask: np.ndarray) -> tuple[int | None, str]:
         if overlap < 0.45 * min(first[3] - first[2], second[3] - second[2]):
             return False
         shared = matching = 0
-        for a, b in zip(signatures[i], signatures[j]):
-            if a and b:
+        for left_support, right_support in zip(signatures[i], signatures[j]):
+            if left_support[0] and right_support[0]:
                 shared += 1
-                matching += a == b
+                # Ink connectivity is insufficient when caused by a narrow
+                # perpendicular bridge. Require geometrical separation to be
+                # compatible with the robust local ink-ribbon thickness too.
+                if (left_support[0] == right_support[0]
+                        and abs(left_support[2] - right_support[2])
+                        <= max(3., 1.2 * max(left_support[1], right_support[1]))):
+                    matching += 1
         return shared >= 3 and matching >= 3 and 4 * matching >= 3 * shared
 
     ordered = sorted(range(len(candidates)), key=lambda i: (*candidates[i], i))
@@ -183,6 +210,57 @@ def _distinct_hough_bands(segments, mask: np.ndarray) -> tuple[int | None, str]:
             return None, "insufficient_support"
     return len(groups), "checked"
 
+
+
+def _supplementary_hough_bands(mask: np.ndarray) -> tuple[int | None, str]:
+    """Bounded thin-line evidence when probabilistic Hough has ≤1 band.
+
+    Standard-Hough peaks are *only proposals*. Verify sustained observed ink
+    along each near-horizontal candidate and pass supported lines through the
+    SAME physical-band deduplication; accumulator peaks are never counts.
+    """
+    height, width = mask.shape
+    peaks = cv2.HoughLines(
+        mask, rho=1, theta=np.pi / 720,
+        threshold=max(32, int(0.27 * width)),
+        min_theta=np.pi / 2 - 0.15, max_theta=np.pi / 2 + 0.15,
+    )
+    if peaks is None:
+        return 0, "checked"
+    raw = np.asarray(peaks)
+    if raw.ndim == 3 and raw.shape[1:] == (1, 2):
+        raw = raw[:, 0, :]
+    elif raw.ndim != 2 or raw.shape[1] != 2:
+        return None, "malformed_response"
+    if raw.dtype.kind != "f" or not np.isfinite(raw).all():
+        return None, "malformed_response"
+    if len(raw) > MAX_HOUGH_SEGMENTS:
+        return None, "budget_exceeded"
+
+    samples_x = np.arange(0, width, max(1, width // 96))
+    supported = []
+    for rho, theta in raw:
+        sine = float(np.sin(theta))
+        cosine = float(np.cos(theta))
+        if abs(sine) < 0.75:
+            continue
+        start_y = float(rho) / sine
+        end_y = (float(rho) - (width - 1) * cosine) / sine
+        if not (0 <= start_y < height and 0 <= end_y < height):
+            continue
+        predicted_y = np.rint((float(rho) - samples_x * cosine) / sine).astype(int)
+        has_ink = np.zeros(len(samples_x), dtype=bool)
+        for offset in (-1, 0, 1):
+            rows = np.clip(predicted_y + offset, 0, height - 1)
+            has_ink |= mask[rows, samples_x] > 0
+        if np.count_nonzero(has_ink) < 0.78 * len(samples_x):
+            continue
+        supported.append((0, round(start_y), width - 1, round(end_y)))
+        if len(supported) > MAX_RULING_CANDIDATES:
+            return None, "budget_exceeded"
+    if not supported:
+        return 0, "checked"
+    return _distinct_hough_bands(np.asarray(supported, dtype=np.int32), mask)
 
 def foreground_ruling_counts(mask: np.ndarray) -> dict:
     """Bounded visual evidence with explicit unperformed/unavailable states."""
@@ -210,6 +288,17 @@ def foreground_ruling_counts(mask: np.ndarray) -> dict:
         maxLineGap=max(3, int(0.03 * reduced_width)),
     )
     angled, status = _distinct_hough_bands(segments, binary)
+    if status == "checked" and angled <= 1:
+        # A full-width thick stroke already confirmed by the primary pass
+        # produces many duplicate standard-Hough peaks. Inspect a secondary
+        # source only for absent/very sparse primary linear evidence.
+        stroke_equivalent = np.count_nonzero(binary) / reduced_width
+        if angled == 0 or stroke_equivalent <= 12.0:
+            second, second_status = _supplementary_hough_bands(binary)
+            if second_status != "checked":
+                angled, status = None, second_status
+            elif second > angled:
+                angled = second
     return {"dense_horizontal_bands": bands, "near_horizontal_long_bands": angled,
             "hough_status": status, "audit_limit_reached": status == "budget_exceeded"}
 
