@@ -255,7 +255,10 @@ def _supplementary_hough_bands(mask: np.ndarray) -> tuple[int | None, str]:
             has_ink |= mask[rows, samples_x] > 0
         if np.count_nonzero(has_ink) < 0.78 * len(samples_x):
             continue
-        supported.append((0, round(start_y), width - 1, round(end_y)))
+        # In-canvas floating intercepts may round to height at the border.
+        # Their source evidence is valid; clamp before integer endpoint audit.
+        supported.append((0, max(0, min(height - 1, round(start_y))),
+                          width - 1, max(0, min(height - 1, round(end_y)))))
         if len(supported) > MAX_RULING_CANDIDATES:
             return None, "budget_exceeded"
     if not supported:

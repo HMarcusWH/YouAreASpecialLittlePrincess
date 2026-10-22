@@ -783,3 +783,14 @@ def test_supplementary_detector_not_run_for_heavy_single_stroke(monkeypatch):
     audit = foreground_ruling_counts(mask)
     assert audit["hough_status"] == "checked"
     assert audit["near_horizontal_long_bands"] == 1
+
+
+def test_supplementary_hough_border_rounding_is_not_malformed(monkeypatch):
+    from princess_graphology import evidence_support as module
+    mask = np.zeros((520, 760), np.uint8)
+    mask[519, :] = 255
+    # A valid float rho < height can round to height before int conversion.
+    monkeypatch.setattr(cv2, "HoughLines", lambda *args, **kwargs:
+                        np.array([[[519.8, np.pi / 2]]], np.float32))
+    count, status = module._supplementary_hough_bands(mask)
+    assert (count, status) == (1, "checked")
