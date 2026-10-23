@@ -262,7 +262,7 @@ closure or production activation follows from an engineering pass.
 
 1. Confirm Python 3.10 wheel-bundled NumPy bytecode is handled through
    authenticated Python source/code equivalence where applicable, never a
-   blanket \`__pycache__\` exception. Source-less altered bytecode is untrusted.
+   blanket `__pycache__` exception. Source-less altered bytecode is untrusted.
 2. Snapshot both exact approved policy bytes and the matching digest into
    sealed Linux memory descriptors and pass them to the worker; mutate the
    original files together between preflight and child launch and prove the
@@ -272,7 +272,7 @@ closure or production activation follows from an engineering pass.
    scientifically meaningful targets.
 4. Composite BGRA inputs as the reviewed context does before deciding a
    synthetic fixture is uniformly light. Preserve unqualified real/ambiguous
-   inputs and the \`SYNTHETIC_FIXTURE_ORACLE_ONLY\` public evidence label.
+   inputs and the `SYNTHETIC_FIXTURE_ORACLE_ONLY` public evidence label.
 5. Document a reproducible offline core-only local wheelhouse independent
    from application/runtime installations, and prove all Python 3.10–3.12
    exact-head CI checks and new adversarial regressions.
@@ -392,3 +392,101 @@ See [evidence-support repair handoff](../ci/EVIDENCE_SUPPORT_REPAIR_HANDOFF.md)
 for the synthetic limitations, editorial label compatibility decision,
 rollback constraints and independent release gates. T11 rights and Issue #92
 are unaffected.
+
+## Historical Issue #92 residual ruling research — evidence-support/2
+
+A new private-only optional screen at `evidence-support/2` audits residual
+foreground ruling independently of accepted detector word groups. The screen
+uses bounded row/near-horizontal line evidence and has an explicit
+`word-stage-audit/1` allowlist; missing proposal counts stay unknown,
+not zero. Synthetic positive near-edge/clear-writing examples prevent
+acceptance by simply rejecting every image. This does **not** modify the
+actual paper ROI, recognized word identities, or the canonical 64 fact IDs.
+
+See [T06 residual ruling research protocol](../ci/T06_RESIDUAL_RULING_RESEARCH.md)
+for test commands, policy-digest changes and deferred T11/Issue #92 gates.
+Keep public/production guard disabled, older report snapshots immutable,
+and synthetic engineering evidence separate from real-source accuracy.
+
+
+### Historical PR #97 v2 review: ruling geometry and trace provenance
+
+The optional residual-ruling screen groups long Hough fragments by
+collinearity and common-x intercept rather than by raw y midpoint.
+Fragment duplication from one thick/slanted stroke must not count as
+two physical rules. Distinguish **post-grid/pre-line-selection** residual
+foreground counters from the **post-qualified-lines** accepted mask;
+preselection detections remain diagnostic and are not automatically proof
+that the accepted lines are invalid. Audited detector and final word-box
+attachment counts are independent; an uninvoked detector is null, not
+zero. A positive full-engine ruled-writing synthetic fixture is required,
+so rejecting every ruled sample is not an acceptable engineering outcome.
+
+This candidate is still `evidence-support/2`, under the already fenced
+private local/test opt-in. No release switch, empirical threshold,
+human-source authorization, T11 completion or Issue #92 closure is implied.
+
+### Historical PR #97 v3 research guard (superseded)
+
+The optional private residual-ruling guard uses `evidence-support/3` after
+repairing thick-stroke overcount, shallow-crossing undercount, thin tilted-rule
+voting, skipped-Hough provenance and duplicate reattachment metadata. Tests
+exercise actual pinned OpenCV on synthetic inputs; clear gray-ruled writing
+must remain accepted through the full engine. Hough skips and exceeded budgets
+cannot imply a negative ruling observation, and unqualified research results
+retain null/MISSING evidence.
+
+Previously stored report snapshots and the public, guard-off Free default stay
+unchanged. The real-camera evaluation, T11 permissions, real handset qualification,
+Issue #92, and independent final-head review remain separate release gates.
+
+### Historical PR #97 v4 engineering repair (superseded)
+
+The active optional local/test research candidate is `evidence-support/4`,
+which supersedes previously evaluated v1/v2/v3 guarded fingerprints.
+The source now validates only native OpenCV integer `N×4` and `N×1×4`
+Hough segment layouts. Independent statuses distinguish checked, malformed
+responses, actual count budget exhaustion, insufficient sampled geometry
+support and skipped Hough execution. Unknown is always null, never observed
+zero; guarded engine decisions fail closed on unsupported required evidence.
+
+The historical maskless `support_warning` compatibility path does not confer
+image qualification; the actual engine requires a valid pixel-audit input.
+Synthetic clean ruled-writing acceptance now compares actual emitted regions
+with independent pixel-exact pen word masks and rules, refusing page-sized
+spurious boxes, unmatched groups and missing pen support. Some thick joined
+strokes remain visually inseparable and must not be promoted to empirical
+proof of separate physical lines. Earlier synthetic checks do not establish
+field validity, human-data clearance, or physical device qualification.
+
+Run focused guards first, then the full locked Python matrix and seven
+exact-head workflow families. Inspect independent review after the final
+commit; don't merge solely because tests are green. No public/staging/prod
+opt-in or closure of T06/Issue #92 is authorized.
+
+### PR #97 — v5 final synthetic research scope
+
+The optional private local/test guard is now `evidence-support/5`. The v4
+17-column connected-run comparison was not sufficient when vertical paper
+grid strokes bridged two independent shallow horizontal lines. The new
+physical-band equivalence also compares predicted vertical separation
+against robust local observed stroke thickness across adjacent columns.
+
+For thin tilted lines missed by probabilistic Hough, restricted near-horizontal
+standard-Hough peaks are examined only as *untrusted proposals*: they require
+substantial observed ink along the predicted stroke and physical-ribbon
+deduplication before any count is issued. The bounded secondary path runs
+only when the primary has 0/1 bands and sparse foreground support is suitable.
+The source keeps genuine zero detections distinct from `insufficient_support`,
+`malformed_response`, `budget_exceeded` and `skipped_*` outcomes.
+
+Tests must keep a nonvacuous full-engine gray-ruled handwriting acceptance,
+check adversarial graph connectors and 1px slopes using actual locked OpenCV,
+reject spurious multiple bands on one underline/thick stroke, and prove
+unchanged disabled Free configuration digests and guarded evidence withholding.
+Both pre- and post-selection audit costs count toward the research resource
+budget; neither is an empirical permission to process real handwritten pages.
+
+This remains disabled in public/staging/production and does not change prior
+snapshots or resolve T06, T11 or Issue #92. CI and independent review apply
+to the exact final head, not prior successful revisions.
