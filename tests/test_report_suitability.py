@@ -141,3 +141,12 @@ def test_validated_document_like_input_is_read_without_mutation():
             return copy.deepcopy(self.value)
 
     assert assess_report_suitability(ReadOnlySnapshot(_report())) is ReportSuitability.SUPPORTED
+
+
+def test_forged_fact_ids_do_not_satisfy_critical_measurement_gate():
+    doc = _report()
+    doc["facts"][0]["fact_id"] = "fact.UNRELATED"
+    assert assess_report_suitability(doc) is ReportSuitability.UNQUALIFIED
+    doc = _report()
+    doc["facts"][1]["fact_id"] = "fact.UNRELATED"
+    assert assess_report_suitability(doc) is ReportSuitability.PARTIAL
