@@ -347,31 +347,89 @@ def render_typescript(data: dict[str, Any]) -> str:
         "export const PRESENTATION = " + payload + " as const;\n"
     )
 
+
+V2_SOURCE = ROOT / "content" / "presentation" / "v2" / "presentation.json"
+V2_OUTPUTS = (
+    ROOT / "src" / "princess_app" / "domain" / "content" / "_presentation_v2.json",
+    ROOT / "contracts" / "product" / "v1" / "presentation-content.v2.json",
+)
+
+
+def validate_v2(data: dict[str, Any], baseline: dict[str, Any]) -> None:
+    """V2 changes editorial copy only, never the 54 reviewed predicates."""
+    validate(baseline)
+    if data.get("version") != "presentation/2" or data.get("policy_version") != "highlight-policy/2":
+        raise ValueError("unexpected presentation/2 identity")
+    normalized = json.loads(json.dumps(data, ensure_ascii=False, allow_nan=False))
+    normalized["version"] = "presentation/1"
+    normalized["policy_version"] = "highlight-policy/1"
+    validate(normalized)
+    if len(data["candidates"]) != len(baseline["candidates"]) or len(baseline["candidates"]) != 54:
+        raise ValueError("all 54 original highlight candidates must be preserved")
+    for name in ("family_order", "primary_families", "threshold_policy",
+                 "selection_strength_semantics", "display_domains"):
+        if data[name] != baseline[name]:
+            raise ValueError(f"presentation/2 changes frozen {name}")
+    before = {row["candidate_id"]: row for row in baseline["candidates"]}
+    after = {row["candidate_id"]: row for row in data["candidates"]}
+    if set(before) != set(after):
+        raise ValueError("presentation/2 candidate identity drift")
+    old_copy_ids = {row["content_id"] for row in baseline["candidates"]}
+    old_copy_ids.add(baseline["fallback_content_id"])
+    if old_copy_ids.intersection(data["content"]):
+        raise ValueError("presentation/2 must use versioned copy IDs")
+    for cid in before:
+        original = {key: value for key, value in before[cid].items() if key != "content_id"}
+        revised = {key: value for key, value in after[cid].items() if key != "content_id"}
+        if original != revised:
+            raise ValueError(f"{cid}: presentation/2 changed a reviewed eligibility rule")
+
+
+def _run_version(*, check: bool, version: str) -> bool:
+    if version == "1":
+        data = _load_json(SOURCE)
+        validate(data)
+        outputs = OUTPUTS
+        ts_output = TS_OUTPUT
+    else:
+        data = _load_json(V2_SOURCE)
+        validate_v2(data, _load_json(SOURCE))
+        outputs = V2_OUTPUTS
+        ts_output = None
+    compiled = compiled_registry(data)
+    expected = render(compiled)
+    stale = [path for path in outputs if not path.is_file()
+             or path.read_text(encoding="utf-8") != expected]
+    if ts_output is not None:
+        expected_ts = render_typescript(compiled)
+        if not ts_output.is_file() or ts_output.read_text(encoding="utf-8") != expected_ts:
+            stale.append(ts_output)
+    if check:
+        if stale:
+            print("stale presentation outputs: " + ", ".join(str(path.relative_to(ROOT)) for path in stale))
+            return False
+        print(f"PASS presentation/{version}: {len(data['feature_labels'])} labels, {len(data['candidates'])} candidates")
+        return True
+    for path in outputs:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(expected, encoding="utf-8")
+    if ts_output is not None:
+        ts_output.parent.mkdir(parents=True, exist_ok=True)
+        ts_output.write_text(expected_ts, encoding="utf-8")
+    print("wrote " + ", ".join(str(path.relative_to(ROOT)) for path in
+                              (*outputs, *((ts_output,) if ts_output is not None else ()))))
+    return True
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--check", action="store_true")
+    # Existing CI keeps checking v1 until the approved proposed/ source is
+    # installed; "all" explicitly fails if v2 is missing or stale.
+    parser.add_argument("--version", choices=("1", "2", "all"), default="1")
     args = parser.parse_args()
-    data = _load_json(SOURCE)
-    validate(data)
-    compiled = compiled_registry(data)
-    expected = render(compiled)
-    expected_ts = render_typescript(compiled)
-    stale = [path for path in OUTPUTS if not path.is_file() or path.read_text(encoding="utf-8") != expected]
-    if not TS_OUTPUT.is_file() or TS_OUTPUT.read_text(encoding="utf-8") != expected_ts:
-        stale.append(TS_OUTPUT)
-    if args.check:
-        if stale:
-            print("stale presentation outputs: " + ", ".join(str(path.relative_to(ROOT)) for path in stale))
-            return 1
-        print(f"PASS presentation/1: {len(data['feature_labels'])} labels, {len(data['candidates'])} candidates")
-        return 0
-    for path in OUTPUTS:
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(expected, encoding="utf-8")
-    TS_OUTPUT.parent.mkdir(parents=True, exist_ok=True)
-    TS_OUTPUT.write_text(expected_ts, encoding="utf-8")
-    print("wrote " + ", ".join(str(path.relative_to(ROOT)) for path in (*OUTPUTS, TS_OUTPUT)))
-    return 0
+    versions = ("1", "2") if args.version == "all" else (args.version,)
+    results = [_run_version(check=args.check, version=version) for version in versions]
+    return 0 if all(results) else 1
 
 
 if __name__ == "__main__":
