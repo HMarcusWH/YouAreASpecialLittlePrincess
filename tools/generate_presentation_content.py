@@ -380,6 +380,8 @@ def validate_v2(data: dict[str, Any], baseline: dict[str, Any]) -> None:
     except (KeyError, TypeError) as exc:
         raise ValueError("presentation/2 references unknown copy IDs") from exc
     validate(normalized)
+    if data["feature_labels"] != baseline["feature_labels"]:
+        raise ValueError("presentation/2 must preserve the 64 reviewed feature labels")
     if len(data["candidates"]) != len(baseline["candidates"]) or len(baseline["candidates"]) != 54:
         raise ValueError("all 54 original highlight candidates must be preserved")
     for name in ("family_order", "primary_families", "threshold_policy",
