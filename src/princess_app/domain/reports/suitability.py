@@ -56,8 +56,13 @@ def _positive_fact(facts: object, feature_id: str) -> bool:
         return False
     fact = matches[0]
     value = fact.get("value")
-    return (fact.get("availability") in PRESENT_FACT_STATES
-            and type(value) in (int, float) and isfinite(value) and value > 0)
+    state = fact.get("availability")
+    if not isinstance(state, str) or state not in PRESENT_FACT_STATES or type(value) not in (int, float):
+        return False
+    try:
+        return isfinite(float(value)) and value > 0
+    except (TypeError, ValueError, OverflowError):
+        return False
 
 
 def assess_report_suitability(report: object) -> ReportSuitability:
@@ -75,7 +80,7 @@ def assess_report_suitability(report: object) -> ReportSuitability:
     analysis = source.get("analysis")
     versions = analysis.get("versions") if isinstance(analysis, Mapping) else None
     template = versions.get("template") if isinstance(versions, Mapping) else None
-    if template not in SUPPORT_ASSESSMENT_TEMPLATES:
+    if not isinstance(template, str) or template not in SUPPORT_ASSESSMENT_TEMPLATES:
         return ReportSuitability.UNSUPPORTED_TEMPLATE
 
     sections = source.get("sections")
