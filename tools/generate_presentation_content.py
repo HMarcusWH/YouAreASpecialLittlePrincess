@@ -427,9 +427,12 @@ def main() -> int:
     # installed; "all" explicitly fails if v2 is missing or stale.
     parser.add_argument("--version", choices=("1", "2", "all"), default="1")
     args = parser.parse_args()
-    versions = ("1", "2") if args.version == "all" else (args.version,)
-    results = [_run_version(check=args.check, version=version) for version in versions]
-    return 0 if all(results) else 1
+    if args.version == "all":
+        # Historical generated outputs are frozen: verify, never rewrite them.
+        old_ok = _run_version(check=True, version="1")
+        new_ok = _run_version(check=args.check, version="2") if old_ok else False
+        return 0 if old_ok and new_ok else 1
+    return 0 if _run_version(check=args.check, version=args.version) else 1
 
 
 if __name__ == "__main__":
