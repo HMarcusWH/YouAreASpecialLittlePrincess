@@ -57,9 +57,8 @@ def _load_v2_registry() -> dict[str, Any]:
                  "selection_strength_semantics", "display_domains"):
         if data.get(name) != _DATA[name]:
             raise ValueError("presentation/2 modifies frozen selection semantics")
-    if (not isinstance(data.get("feature_labels"), dict)
-            or set(data["feature_labels"]) != set(_DATA["feature_labels"])):
-        raise ValueError("presentation/2 feature-id drift")
+    if data.get("feature_labels") != _DATA["feature_labels"]:
+        raise ValueError("presentation/2 modifies frozen feature labels")
 
     source = {row["candidate_id"]: row for row in _DATA["candidates"]}
     candidates = data.get("candidates")
@@ -79,8 +78,10 @@ def _load_v2_registry() -> dict[str, Any]:
             raise ValueError("presentation/2 modifies a frozen highlight predicate")
 
     content = data.get("content")
-    if not isinstance(content, dict):
-        raise ValueError("presentation/2 content invalid")
+    if (not isinstance(content, dict)
+            or not all(isinstance(cid, str) and cid.startswith("content.highlight.v2.")
+                       for cid in content)):
+        raise ValueError("presentation/2 content must use versioned copy IDs")
     reachable = {data.get("fallback_content_id"), *(row.get("content_id") for row in candidates)}
     if set(content) != reachable:
         raise ValueError("presentation/2 copy-id closure failed")
