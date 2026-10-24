@@ -357,6 +357,13 @@ def test_v2_compiler_preserves_54_reviewed_rules_and_locale_closure():
     drift["feature_labels"].pop("SLANT_ANGLE_MEAN")
     cases.append(drift)
     drift = copy.deepcopy(v2)
+    drift["feature_labels"]["SLANT_ANGLE_MEAN"]["en"] = "Altered numerical label"
+    cases.append(drift)
+    drift = copy.deepcopy(v2)
+    key = next(iter(drift["content"]))
+    drift["content"]["content.highlight.v1.regression"] = drift["content"].pop(key)
+    cases.append(drift)
+    drift = copy.deepcopy(v2)
     drift["display_domains"]["SLANT_ANGLE_MEAN"]["max"] = 180
     cases.append(drift)
     drift = copy.deepcopy(v2)
@@ -407,15 +414,23 @@ def test_runtime_version_dispatch_requires_frozen_rule_parity(tmp_path, monkeypa
                 pass
             else:
                 raise AssertionError("unknown runtime presentation version was accepted")
-        compiled["candidates"][0]["priority"] += 1
-        path.write_text(generator.render(compiled), encoding="utf-8")
-        runtime._load_v2_registry.cache_clear()
-        try:
-            runtime.presentation_registry(version="presentation/2")
-        except ValueError:
-            pass
-        else:
-            raise AssertionError("runtime accepted a mutated historical highlight rule")
+        for mutated in ("priority", "feature_label", "legacy_copy_id"):
+            invalid = copy.deepcopy(compiled)
+            if mutated == "priority":
+                invalid["candidates"][0]["priority"] += 1
+            elif mutated == "feature_label":
+                invalid["feature_labels"]["SLANT_ANGLE_MEAN"]["sv"] = "Obehörig etikett"
+            else:
+                old_id = next(iter(invalid["content"]))
+                invalid["content"]["content.highlight.v1.not_v2"] = invalid["content"].pop(old_id)
+            path.write_text(generator.render(invalid), encoding="utf-8")
+            runtime._load_v2_registry.cache_clear()
+            try:
+                runtime.presentation_registry(version="presentation/2")
+            except ValueError:
+                pass
+            else:
+                raise AssertionError(f"runtime accepted v2 {mutated} mutation")
     finally:
         runtime._load_v2_registry.cache_clear()
 
