@@ -360,9 +360,25 @@ def validate_v2(data: dict[str, Any], baseline: dict[str, Any]) -> None:
     validate(baseline)
     if data.get("version") != "presentation/2" or data.get("policy_version") != "highlight-policy/2":
         raise ValueError("unexpected presentation/2 identity")
+    # Validate all existing v1 structural/wording/feature rules with a temporary
+    # ID translation. This never edits source v1 or broadens its validator.
     normalized = json.loads(json.dumps(data, ensure_ascii=False, allow_nan=False))
     normalized["version"] = "presentation/1"
     normalized["policy_version"] = "highlight-policy/1"
+    copy_ids = data.get("content")
+    if not isinstance(copy_ids, dict) or not all(
+        isinstance(key, str) and key.startswith("content.highlight.v2.") for key in copy_ids
+    ):
+        raise ValueError("presentation/2 copy IDs must be explicitly versioned")
+    rewrite = {key: f"content.highlight.v1.validation_{index}"
+               for index, key in enumerate(sorted(copy_ids))}
+    normalized["content"] = {rewrite[key]: value for key, value in copy_ids.items()}
+    try:
+        normalized["fallback_content_id"] = rewrite[data["fallback_content_id"]]
+        for row in normalized["candidates"]:
+            row["content_id"] = rewrite[row["content_id"]]
+    except (KeyError, TypeError) as exc:
+        raise ValueError("presentation/2 references unknown copy IDs") from exc
     validate(normalized)
     if len(data["candidates"]) != len(baseline["candidates"]) or len(baseline["candidates"]) != 54:
         raise ValueError("all 54 original highlight candidates must be preserved")
