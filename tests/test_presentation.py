@@ -316,3 +316,136 @@ def test_ink_content_is_image_qualified_not_physical_pressure():
         sv = content_text(row["content_id"], "sv").lower()
         assert "image" in en and "bild" in sv
         assert "pressure" not in en and "pentryck" not in sv
+
+
+def _synthetic_v2_presentation_fixture() -> dict:
+    """Synthetic editorial test ONLY; never shipped as reviewed v2 content."""
+    baseline = json.loads(generator.SOURCE.read_text(encoding="utf-8"))
+    data = copy.deepcopy(baseline)
+    data["version"] = "presentation/2"
+    data["policy_version"] = "highlight-policy/2"
+    def v2_id(key: str) -> str:
+        assert key.startswith("content.highlight.v1.")
+        return key.replace("content.highlight.v1.", "content.highlight.v2.", 1)
+
+    data["content"] = {v2_id(key): value for key, value in baseline["content"].items()}
+    data["fallback_content_id"] = v2_id(baseline["fallback_content_id"])
+    for row in data["candidates"]:
+        row["content_id"] = v2_id(row["content_id"])
+    return data
+
+
+def test_v2_compiler_preserves_54_reviewed_rules_and_locale_closure():
+    baseline = json.loads(generator.SOURCE.read_text(encoding="utf-8"))
+    v2 = _synthetic_v2_presentation_fixture()
+    generator.validate_v2(v2, baseline)
+    assert len(v2["candidates"]) == 54
+    assert len(v2["feature_labels"]) == 64
+    assert set(v2["content"]) == {v2["fallback_content_id"],
+                                  *(row["content_id"] for row in v2["candidates"])}
+    cases = []
+    drift = copy.deepcopy(v2)
+    drift["candidates"][0]["clauses"][0]["min"] = -999
+    cases.append(drift)
+    drift = copy.deepcopy(v2)
+    drift["candidates"][0]["priority"] += 1
+    cases.append(drift)
+    drift = copy.deepcopy(v2)
+    drift["candidates"].pop()
+    cases.append(drift)
+    drift = copy.deepcopy(v2)
+    drift["feature_labels"].pop("SLANT_ANGLE_MEAN")
+    cases.append(drift)
+    drift = copy.deepcopy(v2)
+    drift["feature_labels"]["SLANT_ANGLE_MEAN"]["en"] = "Altered numerical label"
+    cases.append(drift)
+    drift = copy.deepcopy(v2)
+    key = next(iter(drift["content"]))
+    drift["content"]["content.highlight.v1.regression"] = drift["content"].pop(key)
+    cases.append(drift)
+    drift = copy.deepcopy(v2)
+    drift["display_domains"]["SLANT_ANGLE_MEAN"]["max"] = 180
+    cases.append(drift)
+    drift = copy.deepcopy(v2)
+    drift["content"][v2["fallback_content_id"]].pop("sv")
+    cases.append(drift)
+    for bad in cases:
+        try:
+            generator.validate_v2(bad, baseline)
+        except ValueError:
+            pass
+        else:
+            raise AssertionError("mutated v2 presentation contract unexpectedly compiled")
+
+
+def test_runtime_version_dispatch_requires_frozen_rule_parity(tmp_path, monkeypatch):
+    from princess_app.domain.content import presentation as runtime
+    synthetic = _synthetic_v2_presentation_fixture()
+    compiled = generator.compiled_registry(synthetic)
+    path = tmp_path / "presentation_v2.json"
+    path.write_text(generator.render(compiled), encoding="utf-8")
+    monkeypatch.setattr(runtime, "_V2_PATH", path)
+    runtime._load_v2_registry.cache_clear()
+    try:
+        assert runtime.presentation_registry(version="presentation/2")["version"] == "presentation/2"
+        assert (runtime.feature_label("SLANT_ANGLE_MEAN", "sv", version="presentation/2")
+                == feature_label("SLANT_ANGLE_MEAN", "sv"))
+        facts = witness_facts(synthetic["candidates"][0])
+        default = runtime.select_highlights(facts)
+        selected = runtime.select_highlights(facts, version="presentation/2")
+        assert [x.candidate_id for x in selected] == [x.candidate_id for x in default]
+        assert [x.support_fact_ids for x in selected] == [x.support_fact_ids for x in default]
+        # Every one of the original 54 witness states must remain identical
+        # under the independently versioned rule registry.
+        for source_row in synthetic["candidates"]:
+            witness = witness_facts(source_row)
+            old_candidates = runtime.eligible_candidates(witness)
+            new_candidates = runtime.eligible_candidates(witness, version="presentation/2")
+            assert [(x.candidate_id, x.support_fact_ids, x.strength) for x in new_candidates] == [
+                (x.candidate_id, x.support_fact_ids, x.strength) for x in old_candidates
+            ]
+        clone = runtime.presentation_registry(version="presentation/2")
+        clone["feature_labels"]["SLANT_ANGLE_MEAN"]["sv"] = "BAD"
+        assert runtime.feature_label("SLANT_ANGLE_MEAN", "sv", version="presentation/2") != "BAD"
+        for invalid in ("presentation/9", "individual-report/4", ""):
+            try:
+                runtime.select_highlights(facts, version=invalid)
+            except ValueError:
+                pass
+            else:
+                raise AssertionError("unknown runtime presentation version was accepted")
+        for mutated in ("priority", "feature_label", "legacy_copy_id"):
+            invalid = copy.deepcopy(compiled)
+            if mutated == "priority":
+                invalid["candidates"][0]["priority"] += 1
+            elif mutated == "feature_label":
+                invalid["feature_labels"]["SLANT_ANGLE_MEAN"]["sv"] = "Obehörig etikett"
+            else:
+                old_id = next(iter(invalid["content"]))
+                invalid["content"]["content.highlight.v1.not_v2"] = invalid["content"].pop(old_id)
+            path.write_text(generator.render(invalid), encoding="utf-8")
+            runtime._load_v2_registry.cache_clear()
+            try:
+                runtime.presentation_registry(version="presentation/2")
+            except ValueError:
+                pass
+            else:
+                raise AssertionError(f"runtime accepted v2 {mutated} mutation")
+    finally:
+        runtime._load_v2_registry.cache_clear()
+
+
+def test_missing_v2_compiled_registry_fails_closed_without_reusing_v1(tmp_path, monkeypatch):
+    from princess_app.domain.content import presentation as runtime
+    monkeypatch.setattr(runtime, "_V2_PATH", tmp_path / "missing.json")
+    runtime._load_v2_registry.cache_clear()
+    try:
+        try:
+            runtime.presentation_registry(version="presentation/2")
+        except ValueError as exc:
+            assert "not installed" in str(exc)
+        else:
+            raise AssertionError("missing v2 authority must never silently use presentation/1")
+        assert runtime.presentation_registry()["version"] == "presentation/1"
+    finally:
+        runtime._load_v2_registry.cache_clear()

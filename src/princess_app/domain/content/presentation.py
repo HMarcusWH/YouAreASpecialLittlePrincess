@@ -12,12 +12,95 @@ import copy
 import json
 import math
 from pathlib import Path
+from functools import lru_cache
 from typing import Any, Mapping, Sequence
 
 _DATA = json.loads(Path(__file__).with_name("_presentation_v1.json").read_text(encoding="utf-8"))
 PRESENTATION_VERSION: str = _DATA["version"]
 HIGHLIGHT_POLICY_VERSION: str = _DATA["policy_version"]
 PRESENT = frozenset({"READY", "UNCALIBRATED"})
+
+_V2_PATH = Path(__file__).with_name("_presentation_v2.json")
+V2_PRESENTATION_VERSION = "presentation/2"
+V2_HIGHLIGHT_POLICY_VERSION = "highlight-policy/2"
+
+
+@lru_cache(maxsize=1)
+def _load_v2_registry() -> dict[str, Any]:
+    """Load only generated content, preserving historical predicate semantics."""
+    if _V2_PATH.is_symlink() or not _V2_PATH.is_file():
+        raise ValueError("presentation/2 registry is not installed")
+
+    def unique_pairs(items: list[tuple[str, Any]]) -> dict[str, Any]:
+        result: dict[str, Any] = {}
+        for key, value in items:
+            if key in result:
+                raise ValueError("duplicate presentation/2 key")
+            result[key] = value
+        return result
+
+    try:
+        data = json.loads(
+            _V2_PATH.read_text(encoding="utf-8"), object_pairs_hook=unique_pairs,
+            parse_constant=lambda value: (_ for _ in ()).throw(ValueError("nonfinite presentation/2")),
+        )
+    except (OSError, UnicodeError, json.JSONDecodeError, RecursionError) as exc:
+        raise ValueError("presentation/2 registry could not be loaded") from exc
+
+    if not isinstance(data, dict) or set(data) != set(_DATA):
+        raise ValueError("presentation/2 registry shape mismatch")
+    if (data.get("version"), data.get("policy_version")) != (
+        V2_PRESENTATION_VERSION, V2_HIGHLIGHT_POLICY_VERSION
+    ):
+        raise ValueError("presentation/2 registry identity mismatch")
+    for name in ("locales", "family_order", "primary_families", "threshold_policy",
+                 "selection_strength_semantics", "display_domains"):
+        if data.get(name) != _DATA[name]:
+            raise ValueError("presentation/2 modifies frozen selection semantics")
+    if data.get("feature_labels") != _DATA["feature_labels"]:
+        raise ValueError("presentation/2 modifies frozen feature labels")
+
+    source = {row["candidate_id"]: row for row in _DATA["candidates"]}
+    candidates = data.get("candidates")
+    if not isinstance(candidates, list) or len(candidates) != len(source) or len(source) != 54:
+        raise ValueError("presentation/2 candidate-count drift")
+    seen: set[str] = set()
+    for row in candidates:
+        if not isinstance(row, dict):
+            raise ValueError("presentation/2 candidate invalid")
+        candidate_id = row.get("candidate_id")
+        if candidate_id in seen or candidate_id not in source:
+            raise ValueError("presentation/2 candidate identity drift")
+        seen.add(candidate_id)
+        old_rule = {key: value for key, value in source[candidate_id].items() if key != "content_id"}
+        new_rule = {key: value for key, value in row.items() if key != "content_id"}
+        if old_rule != new_rule:
+            raise ValueError("presentation/2 modifies a frozen highlight predicate")
+
+    content = data.get("content")
+    if (not isinstance(content, dict)
+            or not all(isinstance(cid, str) and cid.startswith("content.highlight.v2.")
+                       for cid in content)):
+        raise ValueError("presentation/2 content must use versioned copy IDs")
+    reachable = {data.get("fallback_content_id"), *(row.get("content_id") for row in candidates)}
+    if set(content) != reachable:
+        raise ValueError("presentation/2 copy-id closure failed")
+    for records in (data["feature_labels"], content):
+        for localized in records.values():
+            if (not isinstance(localized, dict) or set(localized) != {"en", "sv"}
+                    or any(not isinstance(value, str) or not value.strip()
+                           for value in localized.values())):
+                raise ValueError("presentation/2 locale closure failed")
+    return data
+
+
+def _registry_for_version(version: str) -> Mapping[str, Any]:
+    if version == PRESENTATION_VERSION:
+        return _DATA
+    if version == V2_PRESENTATION_VERSION:
+        return _load_v2_registry()
+    raise ValueError("unsupported presentation version")
+
 
 
 @dataclass(frozen=True)
@@ -29,37 +112,39 @@ class HighlightCandidate:
     strength: float
 
 
-def presentation_registry() -> Mapping[str, Any]:
+def presentation_registry(*, version: str = PRESENTATION_VERSION) -> Mapping[str, Any]:
     """Return a defensive copy of the reviewed registry.
 
     Callers may inspect presentation authority but cannot mutate process-global
     selection/content state for later reports.
     """
-    return copy.deepcopy(_DATA)
+    return copy.deepcopy(_registry_for_version(version))
 
 
-def feature_label(feature_id: str, locale: str) -> str:
+def feature_label(feature_id: str, locale: str, *, version: str = PRESENTATION_VERSION) -> str:
+    registry = _registry_for_version(version)
     language = locale.split("-", 1)[0].lower()
-    if language not in _DATA["locales"]:
+    if language not in registry["locales"]:
         language = "en"
     try:
-        return _DATA["feature_labels"][feature_id][language]
+        return registry["feature_labels"][feature_id][language]
     except KeyError as exc:
         raise KeyError(f"unreviewed presentation feature {feature_id!r}") from exc
 
 
-def content_text(content_id: str, locale: str) -> str:
+def content_text(content_id: str, locale: str, *, version: str = PRESENTATION_VERSION) -> str:
+    registry = _registry_for_version(version)
     language = locale.split("-", 1)[0].lower()
-    if language not in _DATA["locales"]:
+    if language not in registry["locales"]:
         language = "en"
     try:
-        return _DATA["content"][content_id][language]
+        return registry["content"][content_id][language]
     except KeyError as exc:
         raise KeyError(f"unknown presentation content {content_id!r}") from exc
 
 
-def display_domain(feature_id: str) -> Mapping[str, Any] | None:
-    domain = _DATA["display_domains"].get(feature_id)
+def display_domain(feature_id: str, *, version: str = PRESENTATION_VERSION) -> Mapping[str, Any] | None:
+    domain = _registry_for_version(version)["display_domains"].get(feature_id)
     return copy.deepcopy(domain) if domain is not None else None
 
 
@@ -148,11 +233,11 @@ def _strength(spec: Mapping[str, Any], values: Mapping[str, float]) -> float:
         raise ValueError(f"unsupported presentation strength {op!r}")
     return _clip(raw * weight)
 
-def eligible_candidates(facts: Sequence[Mapping[str, Any]]) -> tuple[HighlightCandidate, ...]:
+def eligible_candidates(facts: Sequence[Mapping[str, Any]], *, version: str = PRESENTATION_VERSION) -> tuple[HighlightCandidate, ...]:
     """Evaluate every reviewed candidate against saved report facts."""
     by_feature = _numeric_fact_map(facts)
     result: list[HighlightCandidate] = []
-    for row in _DATA["candidates"]:
+    for row in _registry_for_version(version)["candidates"]:
         values = _values_for(row, by_feature)
         if values is None or not all(_matches(clause, values) for clause in row["clauses"]):
             continue
@@ -166,10 +251,10 @@ def eligible_candidates(facts: Sequence[Mapping[str, Any]]) -> tuple[HighlightCa
     return tuple(result)
 
 
-def group_nominees(facts: Sequence[Mapping[str, Any]]) -> tuple[HighlightCandidate, ...]:
+def group_nominees(facts: Sequence[Mapping[str, Any]], *, version: str = PRESENTATION_VERSION) -> tuple[HighlightCandidate, ...]:
     """Collapse mutually related states to one nominee per correlation group."""
-    candidates = eligible_candidates(facts)
-    spec = {row["candidate_id"]: row for row in _DATA["candidates"]}
+    candidates = eligible_candidates(facts, version=version)
+    spec = {row["candidate_id"]: row for row in _registry_for_version(version)["candidates"]}
     groups: dict[tuple[str, str], list[HighlightCandidate]] = {}
     for candidate in candidates:
         row = spec[candidate.candidate_id]
@@ -186,12 +271,12 @@ def group_nominees(facts: Sequence[Mapping[str, Any]]) -> tuple[HighlightCandida
     return tuple(nominees)
 
 
-def family_nominees(facts: Sequence[Mapping[str, Any]]) -> tuple[HighlightCandidate, ...]:
+def family_nominees(facts: Sequence[Mapping[str, Any]], *, version: str = PRESENTATION_VERSION) -> tuple[HighlightCandidate, ...]:
     """Return at most one candidate per family after correlation collapse."""
-    candidates = group_nominees(facts)
-    spec = {row["candidate_id"]: row for row in _DATA["candidates"]}
+    candidates = group_nominees(facts, version=version)
+    spec = {row["candidate_id"]: row for row in _registry_for_version(version)["candidates"]}
     nominees: list[HighlightCandidate] = []
-    for family in _DATA["family_order"]:
+    for family in _registry_for_version(version)["family_order"]:
         pool = [candidate for candidate in candidates if candidate.family == family]
         if not pool:
             continue
@@ -204,18 +289,19 @@ def family_nominees(facts: Sequence[Mapping[str, Any]]) -> tuple[HighlightCandid
     return tuple(nominees)
 
 
-def select_highlights(facts: Sequence[Mapping[str, Any]], limit: int = 3) -> tuple[HighlightCandidate, ...]:
+def select_highlights(facts: Sequence[Mapping[str, Any]], limit: int = 3, *, version: str = PRESENTATION_VERSION) -> tuple[HighlightCandidate, ...]:
     """Select one hero plus diverse secondaries deterministically.
 
     Capture-sensitive image-proxy families may be useful supporting observations
     without being allowed to become the primary first-reveal statement.
     """
-    if type(limit) is not int or limit < 1 or limit > len(_DATA["family_order"]):
+    registry = _registry_for_version(version)
+    if type(limit) is not int or limit < 1 or limit > len(registry["family_order"]):
         raise ValueError("highlight limit must be 1..number of families")
-    order = {family: index for index, family in enumerate(_DATA["family_order"])}
-    nominees = list(family_nominees(facts))
+    order = {family: index for index, family in enumerate(registry["family_order"])}
+    nominees = list(family_nominees(facts, version=version))
     nominees.sort(key=lambda candidate: (-candidate.strength, order[candidate.family], candidate.candidate_id))
-    primary_families = set(_DATA["primary_families"])
+    primary_families = set(registry["primary_families"])
     primary = next((candidate for candidate in nominees if candidate.family in primary_families), None)
     if primary is None:
         return ()
