@@ -93,9 +93,19 @@ async function forward(request: Request, params: Promise<{ path: string[] }>): P
       }
     }
   }
-  const upstream = await fetch(target, { method, headers, body: body ?? null, cache: "no-store", redirect: "manual" });
-  // Bytes pass through untouched (JSON, or an export PDF/PNG); nothing is cached.
-  const payload = upstream.status === 204 ? null : await upstream.arrayBuffer();
+  // A refused/blocked port or an unavailable upstream is a bounded gateway
+  // failure, not an unhandled Next.js 500. Never expose internal origins,
+  // session credentials or network exception details in the response.
+  let upstream: Response;
+  let payload: ArrayBuffer | null;
+  try {
+    upstream = await fetch(target, { method, headers, body: body ?? null, cache: "no-store", redirect: "manual" });
+    // Bytes pass through untouched (JSON, or an export PDF/PNG); nothing is cached.
+    payload = upstream.status === 204 ? null : await upstream.arrayBuffer();
+  } catch {
+    return NextResponse.json({ error: "upstream_unavailable" },
+      { status: 502, headers: { "cache-control": "no-store" } });
+  }
   const responseHeaders: Record<string, string> = {
     "content-type": upstream.headers.get("content-type") ?? "application/json", "cache-control": "no-store",
     "x-content-type-options": "nosniff",
