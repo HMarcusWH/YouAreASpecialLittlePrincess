@@ -324,10 +324,14 @@ def _synthetic_v2_presentation_fixture() -> dict:
     data = copy.deepcopy(baseline)
     data["version"] = "presentation/2"
     data["policy_version"] = "highlight-policy/2"
-    data["content"] = {"v2." + key: value for key, value in baseline["content"].items()}
-    data["fallback_content_id"] = "v2." + baseline["fallback_content_id"]
+    def v2_id(key: str) -> str:
+        assert key.startswith("content.highlight.v1.")
+        return key.replace("content.highlight.v1.", "content.highlight.v2.", 1)
+
+    data["content"] = {v2_id(key): value for key, value in baseline["content"].items()}
+    data["fallback_content_id"] = v2_id(baseline["fallback_content_id"])
     for row in data["candidates"]:
-        row["content_id"] = "v2." + row["content_id"]
+        row["content_id"] = v2_id(row["content_id"])
     return data
 
 
