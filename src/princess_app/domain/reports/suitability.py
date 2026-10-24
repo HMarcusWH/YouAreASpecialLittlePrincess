@@ -55,6 +55,8 @@ def _positive_fact(facts: object, feature_id: str) -> bool:
     if len(matches) != 1:
         return False
     fact = matches[0]
+    if fact.get("fact_id") != f"fact.{feature_id}":
+        return False
     value = fact.get("value")
     state = fact.get("availability")
     if not isinstance(state, str) or state not in PRESENT_FACT_STATES or type(value) not in (int, float):
