@@ -388,6 +388,15 @@ def test_runtime_version_dispatch_requires_frozen_rule_parity(tmp_path, monkeypa
         selected = runtime.select_highlights(facts, version="presentation/2")
         assert [x.candidate_id for x in selected] == [x.candidate_id for x in default]
         assert [x.support_fact_ids for x in selected] == [x.support_fact_ids for x in default]
+        # Every one of the original 54 witness states must remain identical
+        # under the independently versioned rule registry.
+        for source_row in synthetic["candidates"]:
+            witness = witness_facts(source_row)
+            old_candidates = runtime.eligible_candidates(witness)
+            new_candidates = runtime.eligible_candidates(witness, version="presentation/2")
+            assert [(x.candidate_id, x.support_fact_ids, x.strength) for x in new_candidates] == [
+                (x.candidate_id, x.support_fact_ids, x.strength) for x in old_candidates
+            ]
         clone = runtime.presentation_registry(version="presentation/2")
         clone["feature_labels"]["SLANT_ANGLE_MEAN"]["sv"] = "BAD"
         assert runtime.feature_label("SLANT_ANGLE_MEAN", "sv", version="presentation/2") != "BAD"
@@ -407,5 +416,21 @@ def test_runtime_version_dispatch_requires_frozen_rule_parity(tmp_path, monkeypa
             pass
         else:
             raise AssertionError("runtime accepted a mutated historical highlight rule")
+    finally:
+        runtime._load_v2_registry.cache_clear()
+
+
+def test_missing_v2_compiled_registry_fails_closed_without_reusing_v1(tmp_path, monkeypatch):
+    from princess_app.domain.content import presentation as runtime
+    monkeypatch.setattr(runtime, "_V2_PATH", tmp_path / "missing.json")
+    runtime._load_v2_registry.cache_clear()
+    try:
+        try:
+            runtime.presentation_registry(version="presentation/2")
+        except ValueError as exc:
+            assert "not installed" in str(exc)
+        else:
+            raise AssertionError("missing v2 authority must never silently use presentation/1")
+        assert runtime.presentation_registry()["version"] == "presentation/1"
     finally:
         runtime._load_v2_registry.cache_clear()
