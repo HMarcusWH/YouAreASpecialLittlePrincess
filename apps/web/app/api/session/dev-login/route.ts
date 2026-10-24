@@ -9,12 +9,21 @@ export async function POST(request: Request) {
   const body = (await request.json().catch(() => null)) as { subject?: unknown } | null;
   const subject = typeof body?.subject === "string" && /^[a-z0-9-]{1,64}$/.test(body.subject) ? body.subject : null;
   if (!subject) return NextResponse.json({ error: "invalid_subject" }, { status: 422 });
-  const upstream = await fetch(`${apiBase()}/v1/dev/id-tokens`, {
-    method: "POST", cache: "no-store", headers: { "content-type": "application/json" },
-    body: JSON.stringify({ subject }),
-  });
-  if (!upstream.ok) return NextResponse.json({ error: "login_unavailable" }, { status: 502 });
-  const { id_token: token } = (await upstream.json()) as { id_token: string };
+  let token: string;
+  try {
+    const upstream = await fetch(`${apiBase()}/v1/dev/id-tokens`, {
+      method: "POST", cache: "no-store", headers: { "content-type": "application/json" },
+      body: JSON.stringify({ subject }),
+    });
+    if (!upstream.ok) return NextResponse.json({ error: "login_unavailable" }, { status: 502 });
+    const data = (await upstream.json()) as { id_token?: unknown };
+    if (!data || typeof data.id_token !== "string" || !data.id_token) {
+      return NextResponse.json({ error: "login_unavailable" }, { status: 502 });
+    }
+    token = data.id_token;
+  } catch {
+    return NextResponse.json({ error: "login_unavailable" }, { status: 502 });
+  }
   const response = NextResponse.json({ signed_in: true }, { status: 201 });
   response.cookies.set(credentialCookie(token));
   return response;
