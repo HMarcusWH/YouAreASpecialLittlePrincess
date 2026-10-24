@@ -102,7 +102,7 @@ jobs:
       - name: Generate T21 Dossier render-inspection bundle
         run: pnpm --filter @princess/render inspect:artifacts
       - name: Upload T21 Dossier render-inspection bundle
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2 / Node 24
         with:
           name: t21-render-inspection-${{ github.sha }}
           path: apps/render/artifacts/t21-render-inspection/
@@ -178,7 +178,7 @@ jobs:
       - name: Render and self-check guarded v3 PDFs and share cards in both locales
         run: pnpm --filter @princess/render inspect:guarded
       - name: Upload genuine guarded v3 render-inspection bundle
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2 / Node 24
         with:
           name: t06-guarded-v3-inspection-${{ github.sha }}
           path: apps/render/artifacts/t06-evidence-support-v3/
