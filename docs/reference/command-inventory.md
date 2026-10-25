@@ -72,6 +72,7 @@ Inventory only: consult [command safety](commands.md) and [testing](../developme
 | [tools/qualification_bootstrap.py](../../tools/qualification_bootstrap.py) | Externally provisioned stdlib-only bootstrap for synthetic qualification. |
 | [tools/qualify_supabase_identity.py](../../tools/qualify_supabase_identity.py) | Supabase Auth account-profile qualification; emits no credential material. |
 | [tools/render_ci_workflow.py](../../tools/render_ci_workflow.py) | Render the complete, mandatory CI workflow from strictly typed reviewed targets. |
+| [tools/stage_report_source_bundle.py](../../tools/stage_report_source_bundle.py) | Stage a digest-pinned R1 handover ZIP outside the checkout, without approval. |
 | [tools/test_contract_faults.py](../../tools/test_contract_faults.py) | Run named fault-injection controls in isolated pytest subprocesses. |
 | [tools/test_graphology_research.py](../../tools/test_graphology_research.py) | Offline regression tests for the supporting-materials importer only. |
 | [tools/test_product_contract_faults.py](../../tools/test_product_contract_faults.py) | Exercise T01 invariants by removing one enforcement predicate at a time. |
