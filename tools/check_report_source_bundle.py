@@ -203,8 +203,23 @@ def inspect_bundle(archive: Path, *, expected_sha256: str | None = None) -> dict
     if manifest.get("spec_version") != VERSION or manifest.get("baseline") != (
             "0c50c577231ae633c6910114f1dad731ffc7a978"):
         raise SourceBundleError("manifest version/baseline mismatch")
-    if not isinstance(manifest.get("operations"), list) or len(manifest["operations"]) != 127:
+    operations = manifest.get("operations")
+    if not isinstance(operations, list) or len(operations) != 127:
         raise SourceBundleError("manifest is not the complete 127-path implementation plan")
+    indexed: dict[str, str] = {}
+    for operation in operations:
+        if (not isinstance(operation, dict) or not isinstance(operation.get("path"), str)
+                or operation.get("action") not in {"CREATE", "MODIFY", "REGENERATE"}):
+            raise SourceBundleError("manifest has an invalid operation")
+        path = operation["path"]
+        if path in indexed:
+            raise SourceBundleError("manifest contains duplicate destination paths")
+        indexed[path] = operation["action"]
+    for source in (*CONTENT, *SCHEMAS):
+        destination = source.removeprefix("proposed/")
+        expected = "MODIFY" if destination.endswith("/common.schema.json") else "CREATE"
+        if indexed.get(destination) != expected:
+            raise SourceBundleError(f"missing/incorrect R1 manifest operation: {destination}")
     return {
         "status": "STRUCTURAL_PREFLIGHT_ONLY_NOT_APPROVED",
         "spec_version": VERSION,
