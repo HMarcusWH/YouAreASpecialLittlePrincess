@@ -77,6 +77,8 @@ def _fact_map(facts: object) -> dict[str, Mapping[str, Any]]:
             raise ValueError("unknown, repeated or malformed story fact")
         if row["availability"] == "MISSING" and row.get("value") is not None:
             raise ValueError("missing fact cannot have a numeric value")
+        if row["availability"] in PRESENT and row.get("value") is None:
+            raise ValueError("present fact must have a saved value")
         by_feature[feature_id] = row
     if set(by_feature) != expected:
         raise ValueError("story Free fact coverage is incomplete")
@@ -142,10 +144,10 @@ def build_story_sections(
     if policy.presentation_version != STORY_PRESENTATION_VERSION:
         raise ValueError("story requires reviewed presentation/2")
     if (len(policy.chapters) != len(CHAPTER_ORDER)
-            or tuple(ch.section_id for ch in policy.chapters) != CHAPTER_ORDER
             or any(not isinstance(ch, ChapterCopy)
                    or not ch.neutral_content_id or not ch.unavailable_content_id
                    for ch in policy.chapters)
+            or tuple(ch.section_id for ch in policy.chapters) != CHAPTER_ORDER
             or not policy.neutral_overview_content_id
             or not policy.unqualified_overview_content_id):
         raise ValueError("incomplete or misordered six-chapter content policy")
