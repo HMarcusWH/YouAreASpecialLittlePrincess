@@ -23,6 +23,7 @@ from princess_contracts import generated as g
 
 from ..analysis import method_versions, rfc3339
 from ..content import presentation_registry, select_highlights
+from .suitability import premium_sample_eligible
 from .template import (BASE_TEMPLATE_VERSION, EVIDENCE_SUPPORT_TEMPLATE_VERSION, FACT_SECTIONS, HIGHLIGHT_POLICY_VERSION,
                        HIGHLIGHT_PRESENTATION_VERSION, PREMIUM_SECTION, REFERENCE_SECTION,
                        SUPPORTED_TEMPLATE_VERSIONS, TEMPLATE_VERSION, formatting_for, is_unqualified_research_report)
@@ -253,11 +254,6 @@ def assemble_report(*, report_id: str, analysis: Mapping[str, Any], result: Mapp
     facts, issues = facts_from_result(result, evidence_region_ids=kept)
     if issues:
         return ValidationResult(None, tuple(issues))
-    if (template_version == EVIDENCE_SUPPORT_TEMPLATE_VERSION and premium_overlay_id is not None
-            and _sample_support_availability(
-                [f for f in facts if f["feature_id"] in FACT_SECTIONS[0][2]]) == "INELIGIBLE"):
-        return _fail("PREMIUM_SAMPLE_INELIGIBLE", "/premium_overlay_id",
-                     "unqualified handwriting cannot support a paid overlay")
     claims = [dict(c) for c in reference_claims]
     document = {
         "contract_version": g.CONTRACT_VERSION,
@@ -276,6 +272,11 @@ def assemble_report(*, report_id: str, analysis: Mapping[str, Any], result: Mapp
                                  template_version=template_version),
         "premium_overlay_id": premium_overlay_id,
     }
+    # New paid publication is prohibited for any unsuitable saved report
+    # version. Existing historical snapshots remain read-only unchanged.
+    if premium_overlay_id is not None and not premium_sample_eligible(document):
+        return _fail("PREMIUM_SAMPLE_INELIGIBLE", "/premium_overlay_id",
+                     "unqualified handwriting cannot support a paid overlay")
     return _finish(document)
 
 
@@ -289,7 +290,7 @@ def revise_report(previous: ValidatedDocument, *, created_at: datetime,
     if previous.schema_name != "ReportDocument":
         return _fail("WRONG_DOCUMENT_KIND", "", "expected a ReportDocument")
     old = previous.to_dict()
-    if premium_overlay_id is not None and is_unqualified_research_report(old):
+    if premium_overlay_id is not None and not premium_sample_eligible(old):
         return _fail("PREMIUM_SAMPLE_INELIGIBLE", "/premium_overlay_id",
                      "unqualified handwriting cannot support a paid overlay")
     if created_at < datetime.fromisoformat(old["created_at"].replace("Z", "+00:00")):
