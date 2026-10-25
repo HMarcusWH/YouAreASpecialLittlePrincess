@@ -84,7 +84,7 @@ def main() -> int:
     worker = AnalysisWorker(
         queue=PostgresJobQueue(db, allow_draft_policy=local), store=store, decode=decode_image, engine=engine, clock=clock,
         context=context, worker_id=f"analysis-{uuid.uuid4().hex[:8]}", engine_version=__version__,
-        report_reading_runtime=report_runtime)
+        writer_template=report_runtime.writer_template)
     permissions = PermissionService(PostgresPermissionStore(db), clock, UuidIds(), allow_draft_policy=local)
     repo = PostgresIntakeRepository(db, engine_version=__version__)
     erasure = ErasureWorker(outbox=PostgresErasureOutbox(db), store=store, permissions=permissions, clock=clock,
