@@ -23,13 +23,16 @@ from ...application.analysis_worker import MAX_ATTEMPTS, ClaimedJob, Fenced
 from ...application.intake import (
     ANALYSIS_CONFIG_SHA256,
     ANALYSIS_KIND,
+    REPORT_TEMPLATES,
     SERVICE_PURPOSE,
     CaptureRow,
     RunStatus,
     RunSummary,
     UploadRow,
 )
-from ...ports.base import Conflict, NotFound, RateLimited
+from ...ports.base import Conflict, InvalidInput, NotFound, RateLimited
+from ...domain.reports.story import STORY_TEMPLATE_VERSION
+from ...domain.reports.template import EVIDENCE_SUPPORT_TEMPLATE_VERSION, TEMPLATE_VERSION
 from ...domain.permissions import Scope, evaluate
 from .stores import (
     Database,
@@ -42,7 +45,10 @@ from .stores import (
     write_result,
 )
 
-TERMINAL_FENCES = frozenset({"capture_deleted", "permission_changed", "owner_deleted"})
+TERMINAL_FENCES = frozenset({
+    "capture_deleted", "permission_changed", "owner_deleted",
+    "writer_template_changed", "report_template_mismatch",
+})
 CAPTURE_SELECT = ("SELECT c.capture_id, c.owner_id, c.upload_id, c.asset_id, c.media_type, c.width, c.height, "
                   "c.exif_orientation, c.sha256, a.version_ref, a.size_bytes, (c.deleted_at IS NOT NULL) AS deleted, "
                   "(a.deleted_at IS NOT NULL) AS original_erased "
@@ -147,7 +153,10 @@ class PostgresIntakeRepository:
                                 {"k": dedupe_key}).scalar()
 
     def create_analysis(self, capture: CaptureRow, *, run_id: str, job_id: str, dedupe_key: str,
-                        permission_epoch: int, analysis_config: str, at: datetime, max_active: int) -> str:
+                        permission_epoch: int, analysis_config: str, report_template: str,
+                        at: datetime, max_active: int) -> str:
+        if type(report_template) is not str or report_template not in REPORT_TEMPLATES:
+            raise InvalidInput("report_writer_template_unknown")
         owner = capture.owner_id
         try:
             with self.db.session(owner) as conn:
@@ -175,7 +184,7 @@ class PostgresIntakeRepository:
                     "updated_at) VALUES (:j, :k, :o, :r, 'QUEUED', :d, CAST(:p AS jsonb), :t, :t)"),
                     {"j": job_id, "k": ANALYSIS_KIND, "o": owner, "r": run_id, "d": dedupe_key, "t": at,
                      "p": json.dumps({"capture_id": capture.capture_id, "permission_epoch": permission_epoch,
-                                      "analysis_config": analysis_config})})
+                                      "analysis_config": analysis_config, "report_template": report_template})})
             return run_id
         except IntegrityError:
             # A concurrent submission won the unique dedupe key; converge on its run.
@@ -314,14 +323,28 @@ class PostgresJobQueue:
         self.db = db
         self.allow_draft_policy = allow_draft_policy
 
-    def claim(self, worker_id: str, lease_seconds: int, now: datetime) -> ClaimedJob | None:
+    def claim(self, worker_id: str, lease_seconds: int, now: datetime, *,
+              report_template: str = TEMPLATE_VERSION,
+              analysis_config: str = ANALYSIS_CONFIG_SHA256) -> ClaimedJob | None:
+        if type(report_template) is not str or report_template not in REPORT_TEMPLATES:
+            raise InvalidInput("report_writer_template_unknown")
         with self.db.session() as conn:
             # Workers that crash repeatedly must not reclaim a poison job forever.
             exhausted = conn.execute(text(
                 "UPDATE app.job SET state = 'FAILED', lease_owner = NULL, lease_expires_at = NULL, "
                 "last_error = 'attempts_exhausted', updated_at = :now WHERE kind = :k "
                 "AND state = 'LEASED' AND lease_expires_at < :now AND attempts >= :max "
-                "RETURNING owner_id, subject_ref, payload"), {"now": now, "k": ANALYSIS_KIND, "max": MAX_ATTEMPTS}).all()
+                "AND (payload->>'report_template' = :template OR "
+                "(NOT (payload ? 'report_template') AND "
+                "((:template = :legacy AND COALESCE(payload->>'analysis_config', :legacy_cfg) = :cfg) "
+                "OR (:template = :guard AND payload->>'analysis_config' = :cfg)))) "
+                "AND ((:template = :story AND right(dedupe_key, length(:marker)) = :marker) "
+                "OR (:template <> :story AND right(dedupe_key, length(:marker)) <> :marker)) "
+                "RETURNING owner_id, subject_ref, payload"),
+                {"now": now, "k": ANALYSIS_KIND, "max": MAX_ATTEMPTS, "template": report_template,
+                 "legacy": TEMPLATE_VERSION, "guard": EVIDENCE_SUPPORT_TEMPLATE_VERSION,
+                 "legacy_cfg": ANALYSIS_CONFIG_SHA256, "cfg": analysis_config,
+                 "story": STORY_TEMPLATE_VERSION, "marker": ":" + STORY_TEMPLATE_VERSION}).all()
             for owner_id, run_id, payload in exhausted:
                 # Terminalize the run too, so clients stop polling a QUEUED run,
                 # and review the original like every other terminal path.
@@ -337,20 +360,36 @@ class PostgresJobQueue:
                 "UPDATE app.job SET state = 'LEASED', lease_owner = :w, lease_expires_at = :exp, "
                 "fencing_token = fencing_token + 1, attempts = attempts + 1, updated_at = :now "
                 "WHERE job_id = (SELECT job_id FROM app.job WHERE kind = :k AND attempts < :max AND (state = 'QUEUED' "
-                "OR (state = 'LEASED' AND lease_expires_at < :now)) ORDER BY created_at "
+                "OR (state = 'LEASED' AND lease_expires_at < :now)) "
+                "AND (payload->>'report_template' = :template OR "
+                "(NOT (payload ? 'report_template') AND "
+                "((:template = :legacy AND COALESCE(payload->>'analysis_config', :legacy_cfg) = :cfg) "
+                "OR (:template = :guard AND payload->>'analysis_config' = :cfg)))) "
+                "AND ((:template = :story AND right(dedupe_key, length(:marker)) = :marker) "
+                "OR (:template <> :story AND right(dedupe_key, length(:marker)) <> :marker)) "
+                "ORDER BY created_at "
                 "FOR UPDATE SKIP LOCKED LIMIT 1) "
                 "RETURNING job_id, owner_id, subject_ref, fencing_token, attempts, payload"),
                 {"w": worker_id, "exp": now + timedelta(seconds=lease_seconds), "now": now,
-                 "k": ANALYSIS_KIND, "max": MAX_ATTEMPTS}).mappings().first()
+                 "k": ANALYSIS_KIND, "max": MAX_ATTEMPTS, "template": report_template,
+                 "legacy": TEMPLATE_VERSION, "guard": EVIDENCE_SUPPORT_TEMPLATE_VERSION,
+                 "legacy_cfg": ANALYSIS_CONFIG_SHA256, "cfg": analysis_config,
+                 "story": STORY_TEMPLATE_VERSION, "marker": ":" + STORY_TEMPLATE_VERSION}).mappings().first()
             if row is None:
                 return None
             conn.execute(text("INSERT INTO app.job_attempt (job_id, fencing_token, worker_id, started_at) "
                               "VALUES (:j, :f, :w, :t)"),
                          {"j": row["job_id"], "f": row["fencing_token"], "w": worker_id, "t": now})
         payload = row["payload"]
+        # Unpinned historical jobs are /2, except old research /3 work
+        # explicitly claimed with its original guarded engine digest.
+        pinned = payload["report_template"] if "report_template" in payload else (
+            EVIDENCE_SUPPORT_TEMPLATE_VERSION if report_template == EVIDENCE_SUPPORT_TEMPLATE_VERSION
+            else TEMPLATE_VERSION
+        )
         return ClaimedJob(row["job_id"], row["owner_id"], row["subject_ref"], payload["capture_id"],
                           int(row["fencing_token"]), int(row["attempts"]), int(payload["permission_epoch"]),
-                          payload.get("analysis_config", ANALYSIS_CONFIG_SHA256))
+                          payload.get("analysis_config", ANALYSIS_CONFIG_SHA256), pinned)
 
     def capture(self, job: ClaimedJob) -> CaptureRow | None:
         with self.db.session(job.owner_id) as conn:
@@ -358,14 +397,28 @@ class PostgresJobQueue:
                                          {"c": job.capture_id}).mappings().first())
 
     def _lock(self, conn: Connection, job: ClaimedJob, now: datetime) -> None:
-        row = conn.execute(text("SELECT state, fencing_token, lease_expires_at FROM app.job WHERE job_id = :j "
-                                "FOR UPDATE"), {"j": job.job_id}).mappings().first()
+        row = conn.execute(text("SELECT state, fencing_token, lease_expires_at, payload, dedupe_key "
+                                "FROM app.job WHERE job_id = :j FOR UPDATE"),
+                           {"j": job.job_id}).mappings().first()
         if row is None or row["fencing_token"] != job.fencing_token:
             raise Fenced("stale_fencing_token")
         if row["state"] != "LEASED":
             raise Fenced("job_cancelled" if row["state"] == "CANCELLED" else "job_not_leased")
         if row["lease_expires_at"] <= now:
             raise Fenced("lease_expired")
+        payload = row["payload"]
+        # Reconfirm the pin under the publication transaction lock.
+        persisted = payload.get("report_template") if "report_template" in payload else (
+            EVIDENCE_SUPPORT_TEMPLATE_VERSION if job.report_template == EVIDENCE_SUPPORT_TEMPLATE_VERSION
+            and payload.get("analysis_config") == job.analysis_config else TEMPLATE_VERSION
+        )
+        if type(persisted) is not str or persisted != job.report_template:
+            raise Fenced("writer_template_changed")
+        # A saved /4 job has a version-specific idempotency identity.
+        # Changing its JSONB payload alone can never reinterpret a /2 job.
+        story_key = row["dedupe_key"].endswith(":" + STORY_TEMPLATE_VERSION)
+        if story_key != (job.report_template == STORY_TEMPLATE_VERSION):
+            raise Fenced("writer_template_changed")
 
     def _finish_attempt(self, conn: Connection, job: ClaimedJob, outcome: str, code: str | None,
                         now: datetime) -> None:
@@ -417,6 +470,15 @@ class PostgresJobQueue:
                                    allow_draft_policy=self.allow_draft_policy)
                 if not current.allowed:
                     raise Fenced("permission_changed")
+                # Reject a valid but wrong-template snapshot before persisting
+                # result, measurements, evidence, report or notification.
+                try:
+                    report_template = report.data["analysis"]["versions"]["template"]
+                    report_run = report.data["analysis"]["run_id"]
+                except (TypeError, KeyError):
+                    raise Fenced("report_template_mismatch") from None
+                if report_template != job.report_template or report_run != job.run_id:
+                    raise Fenced("report_template_mismatch")
                 write_result(conn, job.owner_id, job.run_id, result=result, processed_sha256=processed_sha256,
                              at=now, evidence=evidence)
                 insert_first_revision(conn, job.owner_id, report)

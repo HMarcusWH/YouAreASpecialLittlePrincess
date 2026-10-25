@@ -37,6 +37,7 @@ class ClaimedJob:
     attempts: int
     permission_epoch: int
     analysis_config: str  # engine settings the run was requested under
+    report_template: str  # saved at admission; NEVER selected by a later deployment
 
 
 class Fenced(Exception):
@@ -48,7 +49,8 @@ class Fenced(Exception):
 
 
 class JobQueue(Protocol):
-    def claim(self, worker_id: str, lease_seconds: int, now: datetime) -> ClaimedJob | None: ...
+    def claim(self, worker_id: str, lease_seconds: int, now: datetime, *,
+              report_template: str, analysis_config: str) -> ClaimedJob | None: ...
 
     def capture(self, job: ClaimedJob) -> CaptureRow | None: ...
 
@@ -104,7 +106,14 @@ class AnalysisWorker:
         self._story_policy = story_policy
 
     def run_once(self) -> WorkOutcome | None:
-        job = self._queue.claim(self._worker_id, self._lease, self._clock.now())
+        # Select only jobs pinned to the writer this process can execute.
+        # Old queued /2 work must stay QUEUED during a /4-only rollout;
+        # it may be resumed by a compatible /2 worker after rollback.
+        report_template = (EVIDENCE_SUPPORT_TEMPLATE_VERSION
+                           if getattr(self._engine, "evidence_guard_enabled", False)
+                           else self._writer_template)
+        job = self._queue.claim(self._worker_id, self._lease, self._clock.now(),
+                                report_template=report_template, analysis_config=self._config)
         if job is None:
             return None
         try:
@@ -124,6 +133,11 @@ class AnalysisWorker:
         if job.analysis_config != self._config:
             # Never publish results computed under settings other than the run's.
             raise InvalidInput("analysis_config_mismatch")
+        expected_template = (EVIDENCE_SUPPORT_TEMPLATE_VERSION
+                             if getattr(self._engine, "evidence_guard_enabled", False)
+                             else self._writer_template)
+        if job.report_template != expected_template:
+            raise InvalidInput("report_writer_template_mismatch")
         capture = self._queue.capture(job)
         if capture is None or capture.deleted:
             raise Fenced("capture_deleted")
@@ -143,8 +157,7 @@ class AnalysisWorker:
             created_at=now, engine_version=self._engine_version, analysis_config_sha256=self._config,
             quality_policy=("quality-policy/2" if getattr(self._engine, "grid_profile", "") == "qualified-v2"
                             else "quality-policy/1"),
-            template=(EVIDENCE_SUPPORT_TEMPLATE_VERSION if getattr(self._engine, "evidence_guard_enabled", False)
-                      else self._writer_template))
+            template=job.report_template)
         evidence = build_evidence_bundle(payload, reference, f"evidence_{job.run_id}")
         if evidence.value is None:
             raise Conflict("evidence_contract_rejected")
