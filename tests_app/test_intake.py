@@ -682,6 +682,7 @@ def test_guarded_private_job_publishes_v3_and_preserves_missingness(env, world):
         challenge=env.challenge, inspect=inspect_header, clock=env.clock,
         ids=SequentialIds(), challenge_site="app.test",
         analysis_config=analysis_config_sha256(evidence_guard_enabled=True),
+        report_template="individual-report/3",
     )
     run_id = guarded_intake.start_analysis(owner, capture.capture_id)
     guarded_worker = AnalysisWorker(
@@ -723,8 +724,13 @@ def test_guarded_worker_rejects_unguarded_queued_job(env, world):  # noqa: F811
         clock=env.clock, context=env.ctx, worker_id="guarded-mismatch",
         engine_version=__version__, lease_seconds=60,
     )
-    assert worker.run_once().outcome == "FAILED"
-    assert env.intake.status(owner, run_id).error_code == "analysis_config_mismatch"
+    assert worker.run_once() is None  # incompatible /2 pin is not consumed
+    assert env.intake.status(owner, run_id).state == "QUEUED"
+    with env.app_db.session(owner) as conn:
+        row = conn.execute(text("SELECT state, attempts FROM app.job WHERE subject_ref = :r"),
+                           {"r": run_id}).one()
+        assert row == ("QUEUED", 0)
+    assert env.worker("legacy-after-guard").run_once().outcome == "SUCCEEDED"
 
 
 def test_story_worker_selects_v4_before_reference_and_persists_exact_free_report(
@@ -768,7 +774,18 @@ def test_story_worker_selects_v4_before_reference_and_persists_exact_free_report
             relation_registry={"policy_version": "combination-policy/1", "relations": []},
         )
         owner = account(world, "sub-v4-worker-synthetic").principal_id
-        _, run_id = env.analysis(owner)
+        capture, old_run = env.analysis(owner)  # already-queued /2 job
+        # The *same* capture/engine gets a new queue identity only when the
+        # server opts into /4; request input never chooses the template.
+        pinned_intake = IntakeService(
+            repo=env.repo, store=env.store, permissions=env.permissions,
+            challenge=env.challenge, inspect=inspect_header, clock=env.clock,
+            ids=env.intake._ids, challenge_site="app.test",
+            report_template="individual-report/4",
+        )
+        run_id = pinned_intake.start_analysis(owner, capture.capture_id)
+        assert run_id != old_run
+        assert pinned_intake.start_analysis(owner, capture.capture_id) == run_id
         worker = AnalysisWorker(
             queue=env.queue, store=env.store, decode=decode_image,
             engine=GraphologyEngine(), clock=env.clock, context=env.ctx,
@@ -777,6 +794,11 @@ def test_story_worker_selects_v4_before_reference_and_persists_exact_free_report
         )
         outcome = worker.run_once()
         assert outcome.outcome == "SUCCEEDED", outcome
+        assert env.intake.status(owner, old_run).state == "QUEUED"
+        with env.app_db.session(owner) as conn:
+            old_job = conn.execute(text("SELECT state, attempts FROM app.job WHERE subject_ref = :r"),
+                                   {"r": old_run}).one()
+            assert old_job == ("QUEUED", 0)
         status = env.intake.status(owner, run_id)
         assert status.state == "SUCCEEDED"
         store = PostgresReportStore(env.app_db, owner)
@@ -795,6 +817,9 @@ def test_story_worker_selects_v4_before_reference_and_persists_exact_free_report
         assert view.data["source_revision"] == 1
         assert len(view.data["facts"]) == 64
         assert all(section["premium_section_id"] is None for section in view.data["sections"])
+        assert env.worker("rollback-to-v2").run_once().outcome == "SUCCEEDED"
+        _, old_doc = store.latest(f"report_{old_run}")
+        assert old_doc.data["analysis"]["versions"]["template"] == "individual-report/2"
     finally:
         content_runtime._load_v2_registry.cache_clear()
 
