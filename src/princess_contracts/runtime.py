@@ -637,6 +637,182 @@ def _grant_semantics(data: dict[str, Any], issues: list[ContractIssue]) -> None:
     _add(issues, effective >= recorded, "GRANT_BACKDATING", "/effective_at", "grant snapshot cannot claim effect before its recorded decision")
 
 
+def _reading_support_semantics(data: dict[str, Any], issues: list[ContractIssue]) -> None:
+    """Validate saved support's internal bindings; report/rights checks remain upstream."""
+    descriptors = _unique(data["descriptors"], "descriptor_id", issues,
+                          "/descriptors", "DUPLICATE_READING_DESCRIPTOR")
+    regions = _unique(data["regions"], "region_ref", issues,
+                      "/regions", "DUPLICATE_READING_REGION")
+    _unique(data["relations"], "relation_id", issues,
+            "/relations", "DUPLICATE_READING_RELATION")
+    seen_candidates: set[str] = set()
+    for i, descriptor in enumerate(data["descriptors"]):
+        path = f"/descriptors/{i}"
+        candidate_id = descriptor["source_candidate_id"]
+        _add(issues, descriptor["descriptor_id"] == f"descriptor.{candidate_id}",
+             "READING_DESCRIPTOR_ID_MISMATCH", f"{path}/descriptor_id",
+             "descriptor must bind its versioned candidate ID")
+        _add(issues, candidate_id not in seen_candidates,
+             "READING_DUPLICATE_SOURCE_CANDIDATE", f"{path}/source_candidate_id",
+             "one selected descriptor per source candidate")
+        seen_candidates.add(candidate_id)
+        facts = descriptor["support_fact_ids"]
+        _add(issues, bool(facts) and len(facts) == len(set(facts))
+             and all(fid.startswith("fact.") for fid in facts),
+             "READING_DESCRIPTOR_SUPPORT_INVALID", f"{path}/support_fact_ids",
+             "descriptor needs distinct measured fact references")
+        region_ids = descriptor["support_region_ids"]
+        _add(issues, len(region_ids) == len(set(region_ids))
+             and set(region_ids) <= set(regions),
+             "READING_FOREIGN_REGION", f"{path}/support_region_ids",
+             "descriptor cannot cite an unbound region")
+    for i, relation in enumerate(data["relations"]):
+        path = f"/relations/{i}"
+        members = [descriptors.get(cid) for cid in relation["descriptor_ids"]]
+        _add(issues, len(members) >= 2 and all(row is not None for row in members),
+             "READING_FOREIGN_DESCRIPTOR", f"{path}/descriptor_ids",
+             "relation must cite selected descriptors")
+        if any(row is None for row in members):
+            continue
+        _add(issues, len(relation["descriptor_ids"]) == len(set(relation["descriptor_ids"]))
+             and len({row["family"] for row in members}) >= 2,
+             "READING_SAME_FAMILY_RELATION", f"{path}/descriptor_ids",
+             "relationship needs at least two distinct feature families")
+        support_facts = {fid for row in members for fid in row["support_fact_ids"]}
+        support_regions = {rid for row in members for rid in row["support_region_ids"]}
+        _add(issues, set(relation["support_fact_ids"]) == support_facts
+             and len(relation["support_fact_ids"]) == len(support_facts),
+             "READING_RELATION_FACT_MISMATCH", f"{path}/support_fact_ids",
+             "relationship cannot add or omit member facts")
+        _add(issues, set(relation["support_region_ids"]) <= support_regions
+             and len(relation["support_region_ids"]) == len(set(relation["support_region_ids"])),
+             "READING_RELATION_REGION_ESCAPE", f"{path}/support_region_ids",
+             "relationship cannot cite foreign evidence")
+    expected = canonical_digest({**data, "support_digest": None})
+    _add(issues, data["support_digest"] == expected,
+         "READING_SUPPORT_DIGEST_MISMATCH", "/support_digest",
+         "support must bind all fields with a canonical snapshot hash")
+
+
+def _reading_packet_semantics(data: dict[str, Any], issues: list[ContractIssue]) -> None:
+    """The new packet wraps, but never weakens, the frozen T26 selector packet."""
+    base = data["selector_packet"]
+    support = data["support"]
+    _packet_semantics(base, issues)
+    _reading_support_semantics(support, issues)
+    _add(issues, data["packet_id"] == base["packet_id"],
+         "READING_PACKET_ID_MISMATCH", "/packet_id", "wrapper and T26 packet must agree")
+    for key, old in (("report_id", "report_id"), ("report_revision", "report_revision"),
+                     ("report_digest", "report_digest")):
+        _add(issues, support[key] == base[old], "READING_PACKET_REPORT_MISMATCH",
+             f"/support/{key}", "wrapper cannot switch its source report")
+    _unique(data["block_specs"], "block_id", issues,
+            "/block_specs", "DUPLICATE_READING_BLOCK_SPEC")
+    descriptor_ids = {d["descriptor_id"] for d in support["descriptors"]}
+    relation_ids = {r["relation_id"] for r in support["relations"]}
+    selector_ids = {c["candidate_id"] for c in base["candidates"]}
+    selector_questions = {q["question_id"] for q in base["questions"]}
+    allowed_facts = set(base["allowed_fact_ids"])
+    support_facts = {fid for d in support["descriptors"] for fid in d["support_fact_ids"]}
+    regions = {r["region_ref"] for r in support["regions"]}
+    for i, block in enumerate(data["block_specs"]):
+        path = f"/block_specs/{i}"
+        if block["question_id"] is not None:
+            _add(issues, block["kind"] == "VISUAL_OBSERVATION"
+                 and block["question_id"] in selector_questions,
+                 "READING_BLOCK_QUESTION_INVALID", f"{path}/question_id",
+                 "visual block must bind a selector question")
+        valid_candidates = selector_ids if block["kind"] == "VISUAL_OBSERVATION" else (
+            relation_ids if block["kind"] == "RELATIONSHIP" else descriptor_ids
+        )
+        _add(issues, set(block["allowed_candidate_ids"]) <= valid_candidates,
+             "READING_BLOCK_CANDIDATE_ESCAPE", f"{path}/allowed_candidate_ids",
+             "block candidate IDs must be compiled, not invented")
+        _add(issues, set(block["allowed_fact_ids"]) <= allowed_facts
+             and set(block["allowed_fact_ids"]) <= support_facts | allowed_facts,
+             "READING_BLOCK_FACT_ESCAPE", f"{path}/allowed_fact_ids",
+             "block facts cannot exceed the frozen T26 packet")
+        _add(issues, set(block["allowed_region_refs"]) <= regions,
+             "READING_BLOCK_REGION_ESCAPE", f"{path}/allowed_region_refs",
+             "block regions must be present in saved support")
+
+
+def _reading_output_semantics(data: dict[str, Any], issues: list[ContractIssue]) -> None:
+    """Internal shape checks only. Cross-packet validation is a separate gate."""
+    _output_semantics(data["selector_output"], issues)
+    _add(issues, data["packet_id"] == data["selector_output"]["packet_id"],
+         "READING_OUTPUT_PACKET_MISMATCH", "/packet_id",
+         "editorial output cannot switch T26 packet identity")
+    _unique(data["blocks"], "block_id", issues,
+            "/blocks", "DUPLICATE_READING_OUTPUT_BLOCK")
+    for i, block in enumerate(data["blocks"]):
+        path = f"/blocks/{i}"
+        if block["answer_state"] != "ANSWERED":
+            _add(issues, block["text"] is None
+                 and not block["selected_candidate_ids"]
+                 and not block["support_fact_ids"]
+                 and not block["support_region_refs"],
+                 "READING_UNANSWERED_PAYLOAD", path,
+                 "non-answer cannot contain text or evidence")
+        else:
+            _add(issues, isinstance(block["text"], str) and bool(block["text"].strip()),
+                 "READING_EMPTY_ANSWER", f"{path}/text",
+                 "answered editorial block must contain text")
+
+
+def _reading_view_semantics(data: dict[str, Any], issues: list[ContractIssue]) -> None:
+    _add(issues, data["basis_revision"] < data["source_revision"],
+         "READING_BASIS_REVISION_MISMATCH", "/basis_revision",
+         "published Premium reading must reference an earlier source revision")
+    _add(issues, data["basis_digest"] != data["source_digest"],
+         "READING_BASIS_DIGEST_MISMATCH", "/basis_digest",
+         "Premium base and published immutable snapshot are distinct")
+    _unique(data["blocks"], "block_id", issues,
+            "/blocks", "DUPLICATE_READING_VIEW_BLOCK")
+
+
+def _reading_offer_semantics(data: dict[str, Any], issues: list[ContractIssue]) -> None:
+    action = data["action"]
+    if action in {"PURCHASE", "GENERATE", "RETRY"}:
+        _add(issues, data["sample_state"] == "SUPPORTED"
+             and data["source_image_state"] == "AVAILABLE"
+             and data["support_state"] == "SUFFICIENT"
+             and data["runtime_state"] == "AVAILABLE",
+             "READING_UNAVAILABLE_ACTION", "/action",
+             "new paid actions require a supported, enabled offer")
+        _add(issues, data["permission_state"] == "GRANTED",
+             "READING_CONSENT_REQUIRED", "/permission_state",
+             "an offer cannot bypass separate AI-processing permission")
+    if action in {"GENERATE", "RETRY"}:
+        _add(issues, data["entitlement_state"] == "CREDIT",
+             "READING_CREDIT_REQUIRED", "/entitlement_state",
+             "client flags never grant a credit")
+    if action == "VIEW":
+        _add(issues, data["entitlement_state"] == "PUBLISHED",
+             "READING_VIEW_UNAUTHORIZED", "/entitlement_state",
+             "saved Premium requires a verified published entitlement")
+    if action == "WAIT":
+        _add(issues, data["job_state"] in {"QUEUED", "RUNNING", "AMBIGUOUS"},
+             "READING_WAIT_WITHOUT_JOB", "/job_state",
+             "waiting requires an existing durable job")
+
+
+def _render_envelope_semantics(data: dict[str, Any], issues: list[ContractIssue]) -> None:
+    premium = data["premium"]
+    if premium is None:
+        return
+    view = data["view"]
+    for left, right in (
+        ("source_report_id", "source_report_id"),
+        ("source_revision", "source_revision"),
+        ("source_digest", "source_digest"),
+        ("locale", "locale"),
+    ):
+        _add(issues, premium[left] == view[right],
+             "RENDER_PREMIUM_SOURCE_MISMATCH", f"/premium/{left}",
+             "Premium render must refer to the same authorized published view")
+
+
 def _semantic_issues(schema_name: str, data: dict[str, Any]) -> list[ContractIssue]:
     issues: list[ContractIssue] = []
     if schema_name == "AnalysisReference":
@@ -655,6 +831,18 @@ def _semantic_issues(schema_name: str, data: dict[str, Any]) -> list[ContractIss
         _output_semantics(data, issues)
     elif schema_name == "GrantSnapshot":
         _grant_semantics(data, issues)
+    elif schema_name == "ReadingSupport":
+        _reading_support_semantics(data, issues)
+    elif schema_name == "PremiumReadingPacket":
+        _reading_packet_semantics(data, issues)
+    elif schema_name == "PremiumReadingOutput":
+        _reading_output_semantics(data, issues)
+    elif schema_name == "PremiumReadingView":
+        _reading_view_semantics(data, issues)
+    elif schema_name == "PremiumOffer":
+        _reading_offer_semantics(data, issues)
+    elif schema_name == "RenderEnvelope":
+        _render_envelope_semantics(data, issues)
     return issues
 
 
