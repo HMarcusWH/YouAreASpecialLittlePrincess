@@ -5,7 +5,6 @@ import copy
 import hashlib
 import json
 import stat
-import warnings
 import zipfile
 from pathlib import Path
 
