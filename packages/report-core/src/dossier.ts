@@ -41,7 +41,7 @@ export function presentFact(fact: Fact, locale: Locale): FactPresentation {
   return { ...base, value: text, calibrated: formatted.calibrated, isVector: Array.isArray(fact.value) };
 }
 
-export type DossierSectionKind = "HIGHLIGHT_PRIMARY" | "HIGHLIGHT_SECONDARY" | "SECTION";
+export type DossierSectionKind = "HIGHLIGHT_PRIMARY" | "HIGHLIGHT_SECONDARY" | "CONNECTION" | "SECTION";
 
 export interface DossierSection {
   readonly sectionId: string;
@@ -65,6 +65,8 @@ export interface DossierModel {
   /** Server-selected First Reveal, in server order. Empty means no eligible highlight. */
   readonly highlights: readonly DossierSection[];
   readonly sections: readonly DossierSection[];
+  /** Noncausal, fact-backed Free co-occurrences selected and ordered by the server. */
+  readonly connections: readonly DossierSection[];
   readonly notices: readonly (Notice & { readonly text: string })[];
   readonly actions: readonly (Action & { readonly label: string; readonly reasonText: string | null })[];
   readonly sourceImageOmitted: boolean;
@@ -74,6 +76,7 @@ export interface DossierModel {
 function kindOf(section: ReportSection): DossierSectionKind {
   if (section.template === "HIGHLIGHT_PRIMARY") return "HIGHLIGHT_PRIMARY";
   if (section.template === "HIGHLIGHT_SECONDARY") return "HIGHLIGHT_SECONDARY";
+  if (section.template === "PATTERN_CONNECTION") return "CONNECTION";
   return "SECTION";
 }
 
@@ -96,8 +99,9 @@ export function buildDossier(view: ReportViewModel, locale: Locale): DossierMode
   return {
     reportId: view.source_report_id, revision: view.source_revision, projection: view.projection, locale,
     reportLocale: view.locale, generatedAt: view.generated_at,
-    highlights: sections.filter((s) => s.kind !== "SECTION"),
+    highlights: sections.filter((s) => s.kind === "HIGHLIGHT_PRIMARY" || s.kind === "HIGHLIGHT_SECONDARY"),
     sections: sections.filter((s) => s.kind === "SECTION"),
+    connections: sections.filter((s) => s.kind === "CONNECTION"),
     notices: view.notices.map((notice) => ({ ...notice, text: t(locale, notice.localization_key) })),
     actions: view.actions.map((action) => ({
       ...action, label: t(locale, `action.${action.kind}`),
