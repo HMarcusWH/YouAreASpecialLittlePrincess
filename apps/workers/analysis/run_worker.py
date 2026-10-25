@@ -31,6 +31,7 @@ from princess_app.application.intake import (  # noqa: E402
 )
 from princess_app.application.permissions import PermissionService  # noqa: E402
 from princess_app.config import load_runtime_config  # noqa: E402
+from princess_app.config_reports import resolve_report_reading_runtime  # noqa: E402
 from princess_app.ports.base import CallContext, Environment, ProviderMode, SystemClock, Unsupported  # noqa: E402
 from princess_graphology import GraphologyEngine, __version__  # noqa: E402
 
@@ -55,6 +56,14 @@ def main() -> int:
     config = load_runtime_config(os.environ, ROOT)
     if config.component != "analysis_worker":
         raise SystemExit("PRINCESS_COMPONENT must be analysis_worker")
+    # This entrypoint contains no approved R1 /4 compiled content loader yet.
+    # An opt-in without its reviewed source must fail *before* any DB/asset
+    # work; it must never silently create a /2 report after a /4 request.
+    report_runtime = resolve_report_reading_runtime(
+        os.environ, reviewed_reading_manifest={},
+    )
+    if report_runtime.story_writer_enabled:
+        raise Unsupported("report_story_source_not_installed")
     runtime = resolve_analysis_runtime(os.environ)
     active_config_sha256 = runtime.digest
     engine = GraphologyEngine(grid_profile=runtime.profile, evidence_guard_enabled=runtime.evidence_guard_enabled)
@@ -74,7 +83,8 @@ def main() -> int:
     local = config.environment in (Environment.LOCAL, Environment.TEST)
     worker = AnalysisWorker(
         queue=PostgresJobQueue(db, allow_draft_policy=local), store=store, decode=decode_image, engine=engine, clock=clock,
-        context=context, worker_id=f"analysis-{uuid.uuid4().hex[:8]}", engine_version=__version__)
+        context=context, worker_id=f"analysis-{uuid.uuid4().hex[:8]}", engine_version=__version__,
+        report_reading_runtime=report_runtime)
     permissions = PermissionService(PostgresPermissionStore(db), clock, UuidIds(), allow_draft_policy=local)
     repo = PostgresIntakeRepository(db, engine_version=__version__)
     erasure = ErasureWorker(outbox=PostgresErasureOutbox(db), store=store, permissions=permissions, clock=clock,
