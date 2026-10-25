@@ -853,3 +853,91 @@ def test_story_worker_fails_closed_on_unsupported_or_implicit_authority(env):  #
         with pytest.raises(InvalidInput) as rejected:
             AnalysisWorker(**{**base, **options})
         assert rejected.value.code == reason
+
+
+def test_job_writer_pin_survives_legacy_payload_and_deployment_restart(env, world):  # noqa: F811
+    owner = account(world, "sub-pin-restart").principal_id
+    _, run_id = env.analysis(owner)
+    with env.app_db.session(owner) as conn:
+        saved = conn.execute(text("SELECT payload, dedupe_key FROM app.job WHERE subject_ref = :r"),
+                             {"r": run_id}).mappings().one()
+    assert saved["payload"]["report_template"] == "individual-report/2"
+    assert saved["dedupe_key"].startswith("analysis:")
+    assert ":individual-report/2" not in saved["dedupe_key"]
+
+    # A rolling upgrade sees pre-existing jobs with *no* report pin.
+    with env.worker_db.session() as conn:
+        conn.execute(text("UPDATE app.job SET payload = payload - 'report_template' WHERE subject_ref = :r"),
+                     {"r": run_id})
+    assert env.queue.claim("v4-worker", 60, env.clock.now(),
+                           report_template="individual-report/4",
+                           analysis_config=analysis_config_sha256()) is None
+    with env.app_db.session(owner) as conn:
+        assert conn.execute(text("SELECT attempts FROM app.job WHERE subject_ref = :r"),
+                            {"r": run_id}).scalar() == 0
+    # A fresh /2 worker instance (e.g. rollback) completes the original job.
+    assert env.worker("restarted-legacy").run_once().outcome == "SUCCEEDED"
+    with env.app_db.session(owner) as conn:
+        state = conn.execute(text("SELECT state, attempts FROM app.job WHERE subject_ref = :r"),
+                             {"r": run_id}).one()
+    assert state == ("SUCCEEDED", 1)
+    report_id = f"report_{run_id}"
+    _, document = PostgresReportStore(env.app_db, owner).latest(report_id)
+    assert document.data["analysis"]["versions"]["template"] == "individual-report/2"
+
+
+def test_unknown_job_writer_and_explicit_null_cannot_be_claimed(env, world):  # noqa: F811
+    owner = account(world, "sub-pin-unknown").principal_id
+    _, run_id = env.analysis(owner)
+    with env.worker_db.session() as conn:
+        conn.execute(text("UPDATE app.job SET payload = jsonb_set(payload, '{report_template}', "
+                          "'null'::jsonb) WHERE subject_ref = :r"), {"r": run_id})
+    for version in ("individual-report/2", "individual-report/3", "individual-report/4"):
+        assert env.queue.claim("unqualified", 60, env.clock.now(),
+                               report_template=version,
+                               analysis_config=analysis_config_sha256()) is None
+    with env.app_db.session(owner) as conn:
+        assert conn.execute(text("SELECT state, attempts FROM app.job WHERE subject_ref = :r"),
+                            {"r": run_id}).one() == ("QUEUED", 0)
+    with pytest.raises(InvalidInput) as exc:
+        env.queue.claim("invalid-template", 60, env.clock.now(), report_template="individual-report/9")
+    assert exc.value.code == "report_writer_template_unknown"
+
+
+def test_claim_publication_fences_changed_template_without_partial_report(env, world):  # noqa: F811
+    from princess_app.application.analysis_worker import Fenced
+
+    owner = account(world, "sub-pin-publish").principal_id
+    _, run_id = env.analysis(owner)
+    claimed = env.queue.claim("claimed-before-edit", 60, env.clock.now(),
+                              report_template="individual-report/2",
+                              analysis_config=analysis_config_sha256())
+    assert claimed is not None and claimed.report_template == "individual-report/2"
+
+    # Simulate privileged tampering/rollback during a leased computation.
+    with env.worker_db.session() as conn:
+        conn.execute(text("UPDATE app.job SET payload = jsonb_set(payload, '{report_template}', "
+                          "to_jsonb('individual-report/4'::text)) WHERE job_id = :j"),
+                     {"j": claimed.job_id})
+    worker = env.worker("continues-old-claim")
+    with pytest.raises(Fenced, match="writer_template_changed"):
+        worker._process(claimed)
+    with env.app_db.session(owner) as conn:
+        assert conn.execute(text("SELECT state FROM app.job WHERE job_id = :j"),
+                            {"j": claimed.job_id}).scalar() == "CANCELLED"
+        assert conn.execute(text("SELECT status FROM app.analysis_run WHERE run_id = :r"),
+                            {"r": run_id}).scalar() == "CANCELLED"
+        assert conn.execute(text("SELECT count(*) FROM app.report WHERE run_id = :r"),
+                            {"r": run_id}).scalar() == 0
+        assert conn.execute(text("SELECT count(*) FROM app.measurement WHERE run_id = :r"),
+                            {"r": run_id}).scalar() == 0
+
+
+def test_writer_pin_fails_on_server_supplied_unknown_value(env):
+    with pytest.raises(InvalidInput) as exc:
+        IntakeService(
+            repo=env.repo, store=env.store, permissions=env.permissions,
+            challenge=env.challenge, inspect=inspect_header,
+            clock=env.clock, ids=env.intake._ids, challenge_site="app.test",
+            report_template="individual-report/9")
+    assert exc.value.code == "report_writer_template_unknown"
