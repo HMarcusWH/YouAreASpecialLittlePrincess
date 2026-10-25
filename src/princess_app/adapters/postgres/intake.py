@@ -333,7 +333,13 @@ class PostgresJobQueue:
                 "UPDATE app.job SET state = 'FAILED', lease_owner = NULL, lease_expires_at = NULL, "
                 "last_error = 'attempts_exhausted', updated_at = :now WHERE kind = :k "
                 "AND state = 'LEASED' AND lease_expires_at < :now AND attempts >= :max "
-                "RETURNING owner_id, subject_ref, payload"), {"now": now, "k": ANALYSIS_KIND, "max": MAX_ATTEMPTS}).all()
+                "AND (payload->>'report_template' = :template OR "
+                "(NOT (payload ? 'report_template') AND "
+                "(:template = :legacy OR (:template = :guard AND payload->>'analysis_config' = :cfg)))) "
+                "RETURNING owner_id, subject_ref, payload"),
+                {"now": now, "k": ANALYSIS_KIND, "max": MAX_ATTEMPTS, "template": report_template,
+                 "legacy": TEMPLATE_VERSION, "guard": EVIDENCE_SUPPORT_TEMPLATE_VERSION,
+                 "cfg": analysis_config}).all()
             for owner_id, run_id, payload in exhausted:
                 # Terminalize the run too, so clients stop polling a QUEUED run,
                 # and review the original like every other terminal path.
