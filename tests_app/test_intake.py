@@ -984,3 +984,38 @@ def test_incompatible_new_worker_cannot_exhaust_expired_legacy_lease(env, world)
     with env.app_db.session(owner) as conn:
         assert conn.execute(text("SELECT state, last_error FROM app.job WHERE subject_ref = :r"),
                             {"r": run_id}).one() == ("FAILED", "attempts_exhausted")
+
+
+def test_preclaim_payload_tampering_cannot_change_writer_identity(env, world):  # noqa: F811
+    owner = account(world, "sub-pin-preclaim").principal_id
+    capture, run_v2 = env.analysis(owner)
+    pinned_v4 = IntakeService(
+        repo=env.repo, store=env.store, permissions=env.permissions,
+        challenge=env.challenge, inspect=inspect_header,
+        clock=env.clock, ids=env.intake._ids, challenge_site="app.test",
+        report_template="individual-report/4",
+    )
+    run_v4 = pinned_v4.start_analysis(owner, capture.capture_id)
+    assert run_v2 != run_v4
+
+    # A mistaken migration/privileged operator changes only JSONB. The
+    # dedupe key still records the original admission writer version.
+    with env.worker_db.session() as conn:
+        conn.execute(text("UPDATE app.job SET payload = jsonb_set(payload, '{report_template}', "
+                          "to_jsonb('individual-report/4'::text)) WHERE subject_ref = :r"),
+                     {"r": run_v2})
+        conn.execute(text("UPDATE app.job SET payload = jsonb_set(payload, '{report_template}', "
+                          "to_jsonb('individual-report/2'::text)) WHERE subject_ref = :r"),
+                     {"r": run_v4})
+
+    # No process can claim those wrongly paired identities, or spend attempts.
+    for template in ("individual-report/2", "individual-report/4"):
+        assert env.queue.claim("mismatched-version", 60, env.clock.now(),
+                               report_template=template,
+                               analysis_config=analysis_config_sha256()) is None
+    with env.app_db.session(owner) as conn:
+        rows = conn.execute(text("SELECT subject_ref, state, attempts FROM app.job "
+                                 "WHERE subject_ref IN (:r2, :r4) ORDER BY subject_ref"),
+                            {"r2": run_v2, "r4": run_v4}).all()
+    assert len(rows) == 2
+    assert all(row.state == "QUEUED" and row.attempts == 0 for row in rows)
