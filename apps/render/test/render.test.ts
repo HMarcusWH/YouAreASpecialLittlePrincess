@@ -207,6 +207,11 @@ test("future Free chapters and connections retain full print detail without inve
     // interactive disclosure. PDF must never silently omit the 64-fact drawer.
     assert.ok(!html.includes("<details class=\"pr-measurement-details\""));
     assert.ok(html.includes('data-fact-id="fact.SLANT_RIGHT_FRACTION"'));
+    const saved = view.facts.find((fact: { fact_id: string }) => fact.fact_id === "fact.SLANT_RIGHT_FRACTION");
+    assert.ok(saved);
+    assert.ok(html.includes('class="pr-fact-provenance"'));
+    assert.ok(html.includes(saved.method_id), "technical export must retain the actual method ID");
+    assert.ok(html.includes(locale === "en" ? "Evidence regions" : "Underlagsregioner"));
   }
 
   // Unknown editorial IDs do not turn into synthetic prose or raw identifiers.
