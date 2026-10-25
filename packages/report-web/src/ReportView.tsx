@@ -193,8 +193,11 @@ export function ReportView({ view, locale, evidence, onAction, showHeader = true
   const highlights = view.sections.filter(isHighlight);
   const connections = view.sections.filter((section) => section.template === "PATTERN_CONNECTION");
   const reportSections = view.sections.filter((section) => !isHighlight(section) && section.template !== "PATTERN_CONNECTION");
-  const referenceAndPremium = reportSections.filter((section) => section.section_id === "section.reference"
-    || section.section_id === "section.premium");
+  const storyLayout = connections.length > 0 || reportSections.some((section) =>
+    /^section\.(slant|baseline|spacing|size|layout|ink)$/.test(section.section_id)
+    && section.content_ids.length > 0);
+  const referenceAndPremium = storyLayout ? reportSections.filter((section) =>
+    section.section_id === "section.reference" || section.section_id === "section.premium") : [];
   const technicalSections = reportSections.filter((section) => !referenceAndPremium.includes(section));
   // Presentation only: all canonical facts remain stored and authorized.
   const compactMissing = reportSections.some((section) => section.section_id === "section.sample"
