@@ -335,11 +335,12 @@ class PostgresJobQueue:
                 "AND state = 'LEASED' AND lease_expires_at < :now AND attempts >= :max "
                 "AND (payload->>'report_template' = :template OR "
                 "(NOT (payload ? 'report_template') AND "
-                "(:template = :legacy OR (:template = :guard AND payload->>'analysis_config' = :cfg)))) "
+                "((:template = :legacy AND COALESCE(payload->>'analysis_config', :legacy_cfg) = :cfg) "
+                "OR (:template = :guard AND payload->>'analysis_config' = :cfg)))) "
                 "RETURNING owner_id, subject_ref, payload"),
                 {"now": now, "k": ANALYSIS_KIND, "max": MAX_ATTEMPTS, "template": report_template,
                  "legacy": TEMPLATE_VERSION, "guard": EVIDENCE_SUPPORT_TEMPLATE_VERSION,
-                 "cfg": analysis_config}).all()
+                 "legacy_cfg": ANALYSIS_CONFIG_SHA256, "cfg": analysis_config}).all()
             for owner_id, run_id, payload in exhausted:
                 # Terminalize the run too, so clients stop polling a QUEUED run,
                 # and review the original like every other terminal path.
@@ -358,14 +359,15 @@ class PostgresJobQueue:
                 "OR (state = 'LEASED' AND lease_expires_at < :now)) "
                 "AND (payload->>'report_template' = :template OR "
                 "(NOT (payload ? 'report_template') AND "
-                "(:template = :legacy OR (:template = :guard AND payload->>'analysis_config' = :cfg)))) "
+                "((:template = :legacy AND COALESCE(payload->>'analysis_config', :legacy_cfg) = :cfg) "
+                "OR (:template = :guard AND payload->>'analysis_config' = :cfg)))) "
                 "ORDER BY created_at "
                 "FOR UPDATE SKIP LOCKED LIMIT 1) "
                 "RETURNING job_id, owner_id, subject_ref, fencing_token, attempts, payload"),
                 {"w": worker_id, "exp": now + timedelta(seconds=lease_seconds), "now": now,
                  "k": ANALYSIS_KIND, "max": MAX_ATTEMPTS, "template": report_template,
                  "legacy": TEMPLATE_VERSION, "guard": EVIDENCE_SUPPORT_TEMPLATE_VERSION,
-                 "cfg": analysis_config}).mappings().first()
+                 "legacy_cfg": ANALYSIS_CONFIG_SHA256, "cfg": analysis_config}).mappings().first()
             if row is None:
                 return None
             conn.execute(text("INSERT INTO app.job_attempt (job_id, fencing_token, worker_id, started_at) "
