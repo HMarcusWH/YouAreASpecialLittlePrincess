@@ -51,6 +51,7 @@ export interface DossierSection {
   readonly availabilityText: string;
   /** Reviewed authored copy for the server-selected highlight; unknown content IDs are skipped. */
   readonly copy: readonly string[];
+  readonly missingCopy: boolean;
   readonly facts: readonly FactPresentation[];
   readonly premiumSectionId: string | null;
 }
@@ -90,6 +91,7 @@ export function buildDossier(view: ReportViewModel, locale: Locale): DossierMode
       sectionId: section.section_id, kind, title, availability: section.availability,
       availabilityText: t(locale, `availability.${section.availability}`),
       copy: section.content_ids.map((id) => contentText(id, locale)).filter((c): c is string => c !== undefined),
+      missingCopy: section.content_ids.some((id) => contentText(id, locale) === undefined),
       // The guard already proved every referenced fact is present in this view.
       facts: section.fact_ids.map((id) => facts.get(id)).filter((f): f is Fact => f !== undefined)
         .map((fact) => presentFact(fact, locale)),
