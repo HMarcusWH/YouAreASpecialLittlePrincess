@@ -246,7 +246,7 @@ def test_source_staging_does_not_trust_unpinned_or_drifted_archives(tmp_path):
     assert not destination.exists()
 
     # No reviewed content may be written directly into the checkout.
-    with pytest.raises(preflight.SourceBundleError, match="outside the repository"):
+    with pytest.raises(preflight.SourceBundleError, match="inside the repository"):
         stage_archive(archive, preflight.ROOT / "unapproved-source-staging",
                       expected_sha256=hashlib.sha256(archive.read_bytes()).hexdigest())
     assert not (preflight.ROOT / "unapproved-source-staging").exists()
