@@ -124,7 +124,7 @@ PremiumPacket = TypedDict('PremiumPacket', {'contract_version': Literal['1.0.0']
 
 PremiumReadingOutput = TypedDict('PremiumReadingOutput', {'contract_version': Literal['1.0.0'], 'packet_id': str, 'output_schema_version': Literal['premium-reading-output/2'], 'selector_output': PremiumOutput, 'blocks': list[PremiumReadingOutputBlocksItem]})
 
-PremiumReadingPacket = TypedDict('PremiumReadingPacket', {'contract_version': Literal['1.0.0'], 'packet_id': str, 'reading_pack_version': Literal['premium-reading/2'], 'output_schema_version': Literal['premium-reading-output/2'], 'policy_manifest_sha256': str, 'selector_packet': PremiumPacket, 'support': ReadingSupport, 'block_specs': list[PremiumReadingPacketBlockSpecsItem]})
+PremiumReadingPacket = TypedDict('PremiumReadingPacket', {'contract_version': Literal['1.0.0'], 'packet_id': str, 'reading_pack_version': Literal['premium-reading/2'], 'output_schema_version': Literal['premium-reading-output/2'], 'policy_manifest_sha256': str, 'selector_packet': PremiumPacket, 'support': 'ReadingSupport', 'block_specs': list[PremiumReadingPacketBlockSpecsItem]})
 
 PremiumReadingView = TypedDict('PremiumReadingView', {'contract_version': Literal['1.0.0'], 'view_version': Literal['premium-reading-view/2'], 'source_report_id': str, 'source_revision': int, 'source_digest': str, 'overlay_id': str, 'overlay_digest': str, 'locale': Literal['en', 'sv'], 'blocks': list[PremiumReadingViewBlocksItem], 'reflection_content_id': str | None, 'basis_revision': int, 'basis_digest': str})
 
