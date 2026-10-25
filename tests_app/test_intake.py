@@ -941,3 +941,32 @@ def test_writer_pin_fails_on_server_supplied_unknown_value(env):
             clock=env.clock, ids=env.intake._ids, challenge_site="app.test",
             report_template="individual-report/9")
     assert exc.value.code == "report_writer_template_unknown"
+
+
+def test_incompatible_new_worker_cannot_exhaust_expired_legacy_lease(env, world):  # noqa: F811
+    owner = account(world, "sub-pin-expired-rollback").principal_id
+    _, run_id = env.analysis(owner)
+    with env.worker_db.session() as conn:
+        conn.execute(text("UPDATE app.job SET state = 'LEASED', lease_owner = 'old-v2-worker', "
+                          "lease_expires_at = :expired, attempts = :attempts, fencing_token = 3 "
+                          "WHERE subject_ref = :r"),
+                     {"expired": env.clock.now() - timedelta(seconds=1),
+                      "attempts": MAX_ATTEMPTS, "r": run_id})
+    # New /4 deployment has no authority over the pinned /2 lease, including
+    # its final-attempt cleanup. A rollback can still inspect/repair it.
+    assert env.queue.claim("v4-only", 60, env.clock.now(),
+                           report_template="individual-report/4",
+                           analysis_config=analysis_config_sha256()) is None
+    with env.app_db.session(owner) as conn:
+        assert conn.execute(text("SELECT state, attempts, last_error FROM app.job WHERE subject_ref = :r"),
+                            {"r": run_id}).one() == ("LEASED", MAX_ATTEMPTS, None)
+        assert conn.execute(text("SELECT status FROM app.analysis_run WHERE run_id = :r"),
+                            {"r": run_id}).scalar() == "QUEUED"
+    # Matching /2 cleanup is allowed to terminalize its genuinely exhausted
+    # lease. No other-template process can do so.
+    assert env.queue.claim("v2-only", 60, env.clock.now(),
+                           report_template="individual-report/2",
+                           analysis_config=analysis_config_sha256()) is None
+    with env.app_db.session(owner) as conn:
+        assert conn.execute(text("SELECT state, last_error FROM app.job WHERE subject_ref = :r"),
+                            {"r": run_id}).one() == ("FAILED", "attempts_exhausted")
