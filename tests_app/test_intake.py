@@ -685,6 +685,7 @@ def test_guarded_private_job_publishes_v3_and_preserves_missingness(env, world):
         report_template="individual-report/3",
     )
     run_id = guarded_intake.start_analysis(owner, capture.capture_id)
+    assert guarded_intake.start_analysis(owner, capture.capture_id) == run_id
     with env.app_db.session(owner) as conn:
         payload = conn.execute(text("SELECT payload FROM app.job WHERE subject_ref = :r"),
                                {"r": run_id}).scalar()
