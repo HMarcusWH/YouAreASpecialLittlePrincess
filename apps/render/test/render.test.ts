@@ -179,3 +179,41 @@ test("the Swedish PDF uses reviewed section headings instead of English template
   assert.ok(!markup.includes(">Sample suitability<"));
   assert.ok(!markup.includes(">Metric grid<"));
 });
+
+
+test("future Free chapters and connections retain full print detail without inventing copy", () => {
+  const view = structuredClone(fixture("export-v2-no-image"));
+  const chapter = view.sections.find((s: { section_id: string }) => s.section_id === "section.slant");
+  assert.ok(chapter);
+  chapter.content_ids = ["content.highlight.v1.slant.right.almost_all"];
+  view.sections.push({
+    section_id: "section.connection.1",
+    template: "PATTERN_CONNECTION",
+    availability: "UNCALIBRATED",
+    fact_ids: ["fact.SLANT_RIGHT_FRACTION", "fact.BASELINE_ANGLE_STD"],
+    content_ids: ["content.highlight.v1.slant.right.almost_all"],
+    premium_section_id: null,
+  });
+  for (const locale of ["en", "sv"] as const) {
+    const result = run({ view, layout: "A4", locale, generated_at: GENERATED }, "--html");
+    assert.equal(result.status, 0, result.stderr);
+    const html = result.stdout.toString();
+    assert.ok(html.includes('data-section="section.connection.1"'));
+    assert.ok(html.includes('data-section="section.slant"'));
+    assert.ok(html.includes('class="pr-chapter-copy"'));
+    assert.ok(html.includes(locale === "en" ? "Connections in this sample" : "Samband i detta prov"));
+    assert.ok(html.includes(locale === "en" ? "do not establish causes" : "fastställer inte orsaker"));
+    // Print is entirely static and every supported fact is visible without an
+    // interactive disclosure. PDF must never silently omit the 64-fact drawer.
+    assert.ok(!html.includes("<details class=\"pr-measurement-details\""));
+    assert.ok(html.includes('data-fact-id="fact.SLANT_RIGHT_FRACTION"'));
+  }
+
+  // Unknown editorial IDs do not turn into synthetic prose or raw identifiers.
+  chapter.content_ids = ["content.pending.review"];
+  const result = run({ view, layout: "A4", locale: "en", generated_at: GENERATED }, "--html");
+  assert.equal(result.status, 0, result.stderr);
+  const html = result.stdout.toString();
+  assert.ok(html.includes("reviewed description for this saved section is not installed"));
+  assert.ok(!html.includes("content.pending.review"));
+});

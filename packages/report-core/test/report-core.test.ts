@@ -211,3 +211,50 @@ test("EN/SV section headings and guarded abstention copy share one reviewed regi
   assert.match(t("sv", "report.premium_ineligible"), /inte tillgängligt/);
   assert.match(t("en", "report.withheld_details"), /Show all missing/);
 });
+
+
+test("Free connections are separate, server-ordered and bound to saved fact support", async () => {
+  const { buildDossier, sectionTitle, t } = await import("../src/index.ts");
+  const original = fixture<ReportViewModel>("view.free-v2.json");
+  const before = JSON.stringify(original);
+  const representative = original.sections.find((s) => s.section_id === "section.slant");
+  assert.ok(representative);
+  const relation = {
+    section_id: "section.connection.1",
+    template: "PATTERN_CONNECTION",
+    availability: "UNCALIBRATED",
+    fact_ids: ["fact.SLANT_RIGHT_FRACTION", "fact.BASELINE_ANGLE_STD"],
+    // Synthetic transport fixture: only the already reviewed copy is used;
+    // this is not approval of the new relationship's editorial wording.
+    content_ids: ["content.highlight.v1.slant.right.almost_all"],
+    premium_section_id: null,
+  } as ReportViewModel["sections"][number];
+  const future = {
+    ...original,
+    sections: [...original.sections, relation],
+  } satisfies ReportViewModel;
+  const en = buildDossier(future, "en");
+  const sv = buildDossier(future, "sv");
+  assert.equal(en.connections.length, 1);
+  assert.equal(en.connections[0]!.kind, "CONNECTION");
+  assert.equal(en.connections[0]!.title, "Connection 1");
+  assert.equal(sv.connections[0]!.title, "Samband 1");
+  assert.equal(en.connections[0]!.missingCopy, false);
+  assert.deepEqual(en.connections[0]!.facts.map((f) => f.factId), relation.fact_ids);
+  assert.ok(en.connections[0]!.copy[0]?.includes("slant"));
+  assert.deepEqual(en.highlights.map((h) => h.sectionId),
+    buildDossier(original, "en").highlights.map((h) => h.sectionId));
+  assert.deepEqual(en.sections.map((h) => h.sectionId),
+    buildDossier(original, "en").sections.map((h) => h.sectionId));
+  assert.equal(JSON.stringify(original), before);
+  assert.equal(sectionTitle("PATTERN_CONNECTION", "en", "section.connection.bad"), "Connection");
+  assert.match(t("en", "report.connections_noncausal"), /do not establish causes/);
+  assert.match(t("sv", "report.connections_noncausal"), /fastställer inte orsaker/);
+
+  const uninstalled = buildDossier({ ...original,
+    sections: [{ ...representative, content_ids: ["content.proposed.not.installed"] }],
+  }, "en");
+  assert.equal(uninstalled.sections[0]!.missingCopy, true);
+  assert.deepEqual(uninstalled.sections[0]!.copy, []);
+  assert.match(t("en", "report.copy_unavailable"), /not installed/);
+});

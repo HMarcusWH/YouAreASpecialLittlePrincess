@@ -56,6 +56,11 @@ const EN: Record<string, string> = {
   "projection.EXPORT": "Export preview",
   "report.dossier": "Personal dossier",
   "report.first_reveal": "First reveal",
+  "report.connections": "Connections in this sample",
+  "report.connections_noncausal": "These describe supported co-occurrences of measured handwriting properties. They do not establish causes, personality or population rankings.",
+  "report.see_measurements": "See measurements and evidence",
+  "report.hide_measurements": "Hide measurements",
+  "report.copy_unavailable": "The reviewed description for this saved section is not installed in this app version.",
   "report.mechanical_dossier": "Mechanical dossier",
   "report.revision": "Revision",
   "report.facts": "Measurements",
@@ -167,6 +172,11 @@ const SV: Record<string, string> = {
   "projection.EXPORT": "Förhandsgranskning av export",
   "report.dossier": "Personlig dossier",
   "report.first_reveal": "Första intrycket",
+  "report.connections": "Samband i detta prov",
+  "report.connections_noncausal": "Det här beskriver underbyggda samvariationer mellan uppmätta egenskaper i handstilen. Det fastställer inte orsaker, personlighet eller befolkningsrankning.",
+  "report.see_measurements": "Visa mätvärden och underlag",
+  "report.hide_measurements": "Dölj mätvärden",
+  "report.copy_unavailable": "Den granskade beskrivningen för det sparade avsnittet saknas i den här appversionen.",
   "report.mechanical_dossier": "Mekanisk dossier",
   "report.revision": "Version",
   "report.facts": "Mätvärden",
@@ -264,6 +274,11 @@ const TEMPLATE_TITLES: Record<string, Record<Locale, string>> = {
 };
 
 export function sectionTitle(template: string, locale: Locale = "en", sectionId?: string): string {
+  if (template === "PATTERN_CONNECTION") {
+    const index = /^section\.connection\.([1-8])$/.exec(sectionId ?? "")?.[1];
+    return index ? `${locale === "sv" ? "Samband" : "Connection"} ${index}`
+      : locale === "sv" ? "Samband" : "Connection";
+  }
   const generic = TEMPLATE_TITLES[template];
   const reviewed = (generic && sectionId && SECTION_TITLES[sectionId]) || generic;
   if (reviewed) return reviewed[locale];

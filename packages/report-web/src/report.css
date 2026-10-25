@@ -44,6 +44,30 @@
      historical v1/v2 print pagination stays untouched. */
   .pr-print .pr-report.pr-compact-unqualified .pr-section { margin-block: var(--space-2); }
 }
+/* /4 Free chapter treatment: source-backed copy precedes an opt-in technical drawer.
+   All rows remain in the document. Print/EXPORT always renders expanded data. */
+@media screen {
+  .pr-chapter-copy { margin: var(--space-3) 0; max-width: 46rem; font-size: var(--font-size-lg);
+    line-height: var(--font-line-height-relaxed); overflow-wrap: anywhere; }
+  .pr-measurement-details { margin-top: var(--space-4); padding: var(--space-2) 0; }
+  .pr-measurement-details > summary { cursor: pointer; color: var(--color-text);
+    min-height: var(--target-min-touch); display: list-item; padding: var(--space-2) var(--space-3);
+    border: 1px solid var(--color-border); border-radius: var(--radius-sm);
+    font-size: var(--font-size-sm); font-weight: var(--font-weight-medium); }
+  .pr-measurement-details > summary:focus-visible { outline: 3px solid var(--color-accent);
+    outline-offset: 2px; }
+  .pr-measurement-details[open] > .pr-table-wrap { margin-top: var(--space-3); }
+  .pr-connections { max-width: 54rem; padding-top: var(--space-4);
+    border-top: 2px solid var(--color-accent); }
+  .pr-connections > .pr-eyebrow { margin-bottom: var(--space-3); }
+  .pr-connections .pr-section { background: var(--color-surface-raised); border: 1px solid var(--color-border);
+    border-left: 3px solid var(--color-accent); padding: var(--space-4); border-radius: var(--radius-sm); }
+}
+@media print {
+  .pr-connections .pr-section { break-inside: avoid-page; }
+  .pr-measurement-details .pr-table-wrap { display: block; }
+}
+
 /* Print mode: expanded, static, paged. */
 .pr-print { font-size: 10.5pt; color: var(--color-text); }
 .pr-print-cover { margin: 0 0 var(--space-7); padding: 0 0 var(--space-6);
