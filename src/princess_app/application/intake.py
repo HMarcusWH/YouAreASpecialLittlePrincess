@@ -17,6 +17,8 @@ from princess_graphology.evidence_support import GUARD_POLICY_VERSION
 
 from ..domain import intake as policy
 from ..domain.intake import ImageHeader
+from ..domain.reports.story import STORY_TEMPLATE_VERSION
+from ..domain.reports.template import EVIDENCE_SUPPORT_TEMPLATE_VERSION, TEMPLATE_VERSION
 from ..domain.permissions import Decision, Scope
 from ..ports.abuse import AbuseChallengeProvider, Verdict
 from ..ports.base import (
@@ -34,6 +36,8 @@ from ..ports.storage import ObjectStore, StoredObject, UploadPolicy, UploadTicke
 from .permissions import PermissionService
 
 ANALYSIS_KIND = "analysis"
+# Persist selected report template with the job; /3 remains private research.
+REPORT_TEMPLATES = frozenset({TEMPLATE_VERSION, EVIDENCE_SUPPORT_TEMPLATE_VERSION, STORY_TEMPLATE_VERSION})
 SERVICE_PURPOSE = "service_processing"
 RETENTION_PURPOSE = "image_retention"
 CHALLENGE_ACTION = "upload"
@@ -210,7 +214,8 @@ class IntakeRepository(Protocol):
     def find_analysis(self, owner_id: str, dedupe_key: str) -> str | None: ...
 
     def create_analysis(self, capture: CaptureRow, *, run_id: str, job_id: str, dedupe_key: str,
-                        permission_epoch: int, analysis_config: str, at: datetime, max_active: int) -> str:
+                        permission_epoch: int, analysis_config: str, report_template: str,
+                        at: datetime, max_active: int) -> str:
         """Create the QUEUED run and job, or return the existing run for ``dedupe_key``.
         Counting active jobs and creating one is atomic per owner; raises
         ``RateLimited("too_many_active_analyses")`` at capacity."""
@@ -278,10 +283,14 @@ class IntakeService:
     def __init__(self, *, repo: IntakeRepository, store: ObjectStore, permissions: PermissionService,
                  challenge: AbuseChallengeProvider, inspect: Callable[[bytes], ImageHeader], clock: Clock,
                  ids: IdGenerator, challenge_site: str, uploads_enabled: Callable[[], bool] = lambda: True,
-                 analysis_config: str = ANALYSIS_CONFIG_SHA256) -> None:
+                 analysis_config: str = ANALYSIS_CONFIG_SHA256,
+                 report_template: str = TEMPLATE_VERSION) -> None:
         self._repo = repo
         self._site = challenge_site
         self._config = analysis_config
+        if type(report_template) is not str or report_template not in REPORT_TEMPLATES:
+            raise InvalidInput("report_writer_template_unknown")
+        self._report_template = report_template
         self._store = store
         self._permissions = permissions
         self._challenge = challenge
@@ -369,13 +378,18 @@ class IntakeService:
         if capture.original_erased:
             raise Conflict("original_not_retained")
         epoch = self._permissions.require(owner_id, SERVICE_PURPOSE, Scope("SPECIMEN", capture_id))
+        # Historical /2 dedupe IDs remain stable; new templates receive a
+        # distinct idempotency scope instead of inheriting a queued /2 run.
         dedupe_key = f"{ANALYSIS_KIND}:{capture_id}:{self._config[:16]}"
+        if self._report_template != TEMPLATE_VERSION:
+            dedupe_key += f":{self._report_template}"
         existing = self._repo.find_analysis(owner_id, dedupe_key)
         if existing is not None:
             return existing  # a retried submission recovers its run even at capacity
         return self._repo.create_analysis(
             capture, run_id=self._ids.new_id("run"), job_id=self._ids.new_id("job"), dedupe_key=dedupe_key,
-            permission_epoch=epoch, analysis_config=self._config, at=self._clock.now(),
+            permission_epoch=epoch, analysis_config=self._config,
+            report_template=self._report_template, at=self._clock.now(),
             max_active=policy.MAX_ACTIVE_JOBS)
 
     def status(self, owner_id: str, run_id: str) -> RunStatus:
