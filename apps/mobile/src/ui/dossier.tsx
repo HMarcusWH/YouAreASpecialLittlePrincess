@@ -73,7 +73,11 @@ export function FactRow({ fact, locale }: { fact: FactPresentation; locale: Loca
 function SectionView({ section, locale, compactMissing = false }: {
   section: DossierSection; locale: Locale; compactMissing?: boolean;
 }) {
-  const highlight = section.kind !== "SECTION";
+  const highlight = section.kind === "HIGHLIGHT_PRIMARY" || section.kind === "HIGHLIGHT_SECONDARY";
+  const connection = section.kind === "CONNECTION";
+  const chapter = /^section\.(slant|baseline|spacing|size|layout|ink)$/.test(section.sectionId);
+  const collapseFacts = connection || (chapter && section.copy.length > 0);
+  const [showMeasurements, setShowMeasurements] = useState(false);
   const [showMissing, setShowMissing] = useState(false);
   const fullyMissing = compactMissing && section.sectionId !== "section.sample"
     && section.facts.length > 0 && section.facts.every((fact) => fact.availability === "MISSING");
@@ -85,6 +89,7 @@ function SectionView({ section, locale, compactMissing = false }: {
   return (
     <EditorialSection style={highlight ? local.highlightSection : undefined}>
       <SectionLabel>{section.title}</SectionLabel>
+      {connection ? <Body muted>{reportText(locale, "report.connections_noncausal")}</Body> : null}
       {section.copy.map((text, index) => (
         <View key={`${section.sectionId}-copy-${index}`} style={local.copyRow}>
           <EvidenceBadge fact={{ evidenceClass: "AUTHORED_CONTENT", evidenceIcon: "✎",
@@ -96,6 +101,7 @@ function SectionView({ section, locale, compactMissing = false }: {
           )}
         </View>
       ))}
+      {section.missingCopy ? <Body muted>{reportText(locale, "report.copy_unavailable")}</Body> : null}
       {section.sectionId === "section.sample" && section.availability === "INELIGIBLE" ? (
         <Body muted>{reportText(locale, "report.handwriting_unverified")}</Body>
       ) : null}
@@ -105,7 +111,13 @@ function SectionView({ section, locale, compactMissing = false }: {
       ) : section.facts.length === 0 && section.availability !== "READY" && section.availability !== "UNCALIBRATED" ? (
         <Body muted>{section.availabilityText}</Body>
       ) : null}
-      {!fullyMissing ? shownFacts.map((fact) => <FactRow key={fact.factId} fact={fact} locale={locale} />) : null}
+      {collapseFacts && shownFacts.length > 0 ? (
+        <Button tone="secondary" label={reportText(locale, showMeasurements
+                  ? "report.hide_measurements" : "report.see_measurements")}
+                onPress={() => setShowMeasurements((value) => !value)} />
+      ) : null}
+      {!fullyMissing && (!collapseFacts || showMeasurements)
+        ? shownFacts.map((fact) => <FactRow key={fact.factId} fact={fact} locale={locale} />) : null}
       {compactedFacts.length > 0 ? (
         <View style={{ gap: space("2") }}>
           <Body muted>{reportText(locale, "report.withheld_family").replace("{count}", String(compactedFacts.length))}</Body>
@@ -469,6 +481,9 @@ export function DossierView({ model, onAction, busyAction }: {
   const locale = model.locale;
   const compactMissing = model.sections.some((section) => section.sectionId === "section.sample"
     && section.availability === "INELIGIBLE");
+  const additional = model.sections.filter((section) => section.sectionId === "section.reference"
+    || section.sectionId === "section.premium");
+  const chapters = model.sections.filter((section) => !additional.includes(section));
   return (
     <Paper style={local.dossier} elevated>
       <View style={local.header}>
@@ -491,9 +506,20 @@ export function DossierView({ model, onAction, busyAction }: {
       </View>
       <View style={local.group}>
         <SectionLabel>{reportText(locale, "report.mechanical_dossier")}</SectionLabel>
-        {model.sections.map((section) => <SectionView key={section.sectionId} section={section} locale={locale}
-                                                      compactMissing={compactMissing} />)}
+        {chapters.map((section) => <SectionView key={section.sectionId} section={section} locale={locale}
+                                                 compactMissing={compactMissing} />)}
       </View>
+      {model.connections.length > 0 ? (
+        <View style={local.group}>
+          <SectionLabel>{reportText(locale, "report.connections")}</SectionLabel>
+          {model.connections.map((section) => (
+            <SectionView key={section.sectionId} section={section} locale={locale}
+                         compactMissing={compactMissing} />
+          ))}
+        </View>
+      ) : null}
+      {additional.map((section) => <SectionView key={section.sectionId} section={section} locale={locale}
+                                               compactMissing={compactMissing} />)}
       <EditorialSection>
         <View accessibilityRole="toolbar" style={local.actions}>
           {model.actions.map((action) => (
