@@ -31,6 +31,7 @@ from ...application.intake import (
     UploadRow,
 )
 from ...ports.base import Conflict, InvalidInput, NotFound, RateLimited
+from ...domain.reports.story import STORY_TEMPLATE_VERSION
 from ...domain.reports.template import EVIDENCE_SUPPORT_TEMPLATE_VERSION, TEMPLATE_VERSION
 from ...domain.permissions import Scope, evaluate
 from .stores import (
@@ -337,10 +338,13 @@ class PostgresJobQueue:
                 "(NOT (payload ? 'report_template') AND "
                 "((:template = :legacy AND COALESCE(payload->>'analysis_config', :legacy_cfg) = :cfg) "
                 "OR (:template = :guard AND payload->>'analysis_config' = :cfg)))) "
+                "AND ((:template = :story AND right(dedupe_key, length(:marker)) = :marker) "
+                "OR (:template <> :story AND right(dedupe_key, length(:marker)) <> :marker)) "
                 "RETURNING owner_id, subject_ref, payload"),
                 {"now": now, "k": ANALYSIS_KIND, "max": MAX_ATTEMPTS, "template": report_template,
                  "legacy": TEMPLATE_VERSION, "guard": EVIDENCE_SUPPORT_TEMPLATE_VERSION,
-                 "legacy_cfg": ANALYSIS_CONFIG_SHA256, "cfg": analysis_config}).all()
+                 "legacy_cfg": ANALYSIS_CONFIG_SHA256, "cfg": analysis_config,
+                 "story": STORY_TEMPLATE_VERSION, "marker": ":" + STORY_TEMPLATE_VERSION}).all()
             for owner_id, run_id, payload in exhausted:
                 # Terminalize the run too, so clients stop polling a QUEUED run,
                 # and review the original like every other terminal path.
@@ -361,13 +365,16 @@ class PostgresJobQueue:
                 "(NOT (payload ? 'report_template') AND "
                 "((:template = :legacy AND COALESCE(payload->>'analysis_config', :legacy_cfg) = :cfg) "
                 "OR (:template = :guard AND payload->>'analysis_config' = :cfg)))) "
+                "AND ((:template = :story AND right(dedupe_key, length(:marker)) = :marker) "
+                "OR (:template <> :story AND right(dedupe_key, length(:marker)) <> :marker)) "
                 "ORDER BY created_at "
                 "FOR UPDATE SKIP LOCKED LIMIT 1) "
                 "RETURNING job_id, owner_id, subject_ref, fencing_token, attempts, payload"),
                 {"w": worker_id, "exp": now + timedelta(seconds=lease_seconds), "now": now,
                  "k": ANALYSIS_KIND, "max": MAX_ATTEMPTS, "template": report_template,
                  "legacy": TEMPLATE_VERSION, "guard": EVIDENCE_SUPPORT_TEMPLATE_VERSION,
-                 "legacy_cfg": ANALYSIS_CONFIG_SHA256, "cfg": analysis_config}).mappings().first()
+                 "legacy_cfg": ANALYSIS_CONFIG_SHA256, "cfg": analysis_config,
+                 "story": STORY_TEMPLATE_VERSION, "marker": ":" + STORY_TEMPLATE_VERSION}).mappings().first()
             if row is None:
                 return None
             conn.execute(text("INSERT INTO app.job_attempt (job_id, fencing_token, worker_id, started_at) "
@@ -390,8 +397,9 @@ class PostgresJobQueue:
                                          {"c": job.capture_id}).mappings().first())
 
     def _lock(self, conn: Connection, job: ClaimedJob, now: datetime) -> None:
-        row = conn.execute(text("SELECT state, fencing_token, lease_expires_at, payload FROM app.job WHERE job_id = :j "
-                                "FOR UPDATE"), {"j": job.job_id}).mappings().first()
+        row = conn.execute(text("SELECT state, fencing_token, lease_expires_at, payload, dedupe_key "
+                                "FROM app.job WHERE job_id = :j FOR UPDATE"),
+                           {"j": job.job_id}).mappings().first()
         if row is None or row["fencing_token"] != job.fencing_token:
             raise Fenced("stale_fencing_token")
         if row["state"] != "LEASED":
@@ -405,6 +413,11 @@ class PostgresJobQueue:
             and payload.get("analysis_config") == job.analysis_config else TEMPLATE_VERSION
         )
         if type(persisted) is not str or persisted != job.report_template:
+            raise Fenced("writer_template_changed")
+        # A saved /4 job has a version-specific idempotency identity.
+        # Changing its JSONB payload alone can never reinterpret a /2 job.
+        story_key = row["dedupe_key"].endswith(":" + STORY_TEMPLATE_VERSION)
+        if story_key != (job.report_template == STORY_TEMPLATE_VERSION):
             raise Fenced("writer_template_changed")
 
     def _finish_attempt(self, conn: Connection, job: ClaimedJob, outcome: str, code: str | None,
