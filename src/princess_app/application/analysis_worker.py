@@ -18,6 +18,7 @@ from princess_graphology.preprocessing.grid import GridQualityError
 from ..domain.analysis import analysis_reference
 from ..domain.evidence import build_evidence_bundle
 from ..domain.reports import assemble_report
+from ..domain.reports.story import STORY_TEMPLATE_VERSION, StoryPolicy
 from ..domain.reports.template import EVIDENCE_SUPPORT_TEMPLATE_VERSION, TEMPLATE_VERSION
 from ..ports.base import CallContext, Clock, Conflict, InvalidInput, PortError
 from ..ports.storage import ObjectStore
@@ -74,7 +75,9 @@ class WorkOutcome:
 class AnalysisWorker:
     def __init__(self, *, queue: JobQueue, store: ObjectStore, decode: Decoder, engine: Any, clock: Clock,
                  context: Callable[[], CallContext], worker_id: str, engine_version: str,
-                 lease_seconds: int = 120) -> None:
+                 lease_seconds: int = 120,
+                 writer_template: str = TEMPLATE_VERSION,
+                 story_policy: StoryPolicy | None = None) -> None:
         self._queue = queue
         self._store = store
         self._decode = decode
@@ -85,6 +88,20 @@ class AnalysisWorker:
         self._worker_id = worker_id
         self._engine_version = engine_version
         self._lease = lease_seconds
+        # The composition layer resolves strict deployment flags and approved
+        # source authority. This application service accepts only the resulting
+        # version, not config/env objects or HTTP-controlled values.
+        if writer_template not in (TEMPLATE_VERSION, STORY_TEMPLATE_VERSION):
+            raise InvalidInput("report_writer_template_unknown")
+        if writer_template == STORY_TEMPLATE_VERSION:
+            if not isinstance(story_policy, StoryPolicy):
+                raise InvalidInput("report_story_source_not_installed")
+            if getattr(engine, "evidence_guard_enabled", False):
+                raise InvalidInput("report_story_research_guard_conflict")
+        elif story_policy is not None:
+            raise InvalidInput("report_story_policy_without_writer")
+        self._writer_template = writer_template
+        self._story_policy = story_policy
 
     def run_once(self) -> WorkOutcome | None:
         job = self._queue.claim(self._worker_id, self._lease, self._clock.now())
@@ -127,12 +144,12 @@ class AnalysisWorker:
             quality_policy=("quality-policy/2" if getattr(self._engine, "grid_profile", "") == "qualified-v2"
                             else "quality-policy/1"),
             template=(EVIDENCE_SUPPORT_TEMPLATE_VERSION if getattr(self._engine, "evidence_guard_enabled", False)
-                      else TEMPLATE_VERSION))
+                      else self._writer_template))
         evidence = build_evidence_bundle(payload, reference, f"evidence_{job.run_id}")
         if evidence.value is None:
             raise Conflict("evidence_contract_rejected")
         report = assemble_report(report_id=f"report_{job.run_id}", analysis=reference, result=result, created_at=now,
-                                 locale="en", evidence=evidence.value)
+                                 locale="en", evidence=evidence.value, story_policy=self._story_policy)
         if report.value is None:
             raise Conflict("report_contract_rejected")
         self._queue.publish(job, result=result, evidence=evidence.value, report=report.value,
