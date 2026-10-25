@@ -66,8 +66,8 @@ Inventory only: consult [command safety](commands.md) and [testing](../developme
 | [tools/generate_feature_contract.py](../../tools/generate_feature_contract.py) | Generate the packaged runtime contract; never hand-edit its JSON output. |
 | [tools/generate_presentation_content.py](../../tools/generate_presentation_content.py) | Validate and compile the T08A presentation registry with standard-library-only tooling. |
 | [tools/generate_product_contracts.py](../../tools/generate_product_contracts.py) | Generate all T01 product contract artifacts from reviewed JSON Schema sources. |
-| [tools/generate_report_reading_content.py](../../tools/generate_report_reading_content.py) | Compile the recovered inactive R1 report-reading sources without altering v1. |
 | [tools/generate_report_fixtures.py](../../tools/generate_report_fixtures.py) | Generate shared report fixtures for web, native, PDF and share-card consumers. |
+| [tools/generate_report_reading_content.py](../../tools/generate_report_reading_content.py) | Compile the recovered inactive R1 report-reading sources without altering v1. |
 | [tools/graphology_db_common.py](../../tools/graphology_db_common.py) | Shared integrity helpers for the graphology interpretation database. |
 | [tools/product_contract_common.py](../../tools/product_contract_common.py) | Shared build-time helpers for T01 product contracts. |
 | [tools/qualification_bootstrap.py](../../tools/qualification_bootstrap.py) | Externally provisioned stdlib-only bootstrap for synthetic qualification. |
