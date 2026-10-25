@@ -15,11 +15,10 @@ from typing import Any, Callable, Mapping, Protocol
 from princess_contracts import ValidatedDocument
 from princess_graphology.preprocessing.grid import GridQualityError
 
-from ..config_reports import LEGACY_WRITER, STORY_WRITER, ReportReadingRuntime
 from ..domain.analysis import analysis_reference
 from ..domain.evidence import build_evidence_bundle
 from ..domain.reports import assemble_report
-from ..domain.reports.story import StoryPolicy
+from ..domain.reports.story import STORY_TEMPLATE_VERSION, StoryPolicy
 from ..domain.reports.template import EVIDENCE_SUPPORT_TEMPLATE_VERSION, TEMPLATE_VERSION
 from ..ports.base import CallContext, Clock, Conflict, InvalidInput, PortError
 from ..ports.storage import ObjectStore
@@ -77,7 +76,7 @@ class AnalysisWorker:
     def __init__(self, *, queue: JobQueue, store: ObjectStore, decode: Decoder, engine: Any, clock: Clock,
                  context: Callable[[], CallContext], worker_id: str, engine_version: str,
                  lease_seconds: int = 120,
-                 report_reading_runtime: ReportReadingRuntime | None = None,
+                 writer_template: str = TEMPLATE_VERSION,
                  story_policy: StoryPolicy | None = None) -> None:
         self._queue = queue
         self._store = store
@@ -89,26 +88,19 @@ class AnalysisWorker:
         self._worker_id = worker_id
         self._engine_version = engine_version
         self._lease = lease_seconds
-        # Writer selection is a trusted process-composition decision. Neither
-        # the capture nor an HTTP parameter can switch the saved template.
-        runtime = report_reading_runtime
-        if runtime is not None and not isinstance(runtime, ReportReadingRuntime):
-            raise InvalidInput("report_writer_configuration_invalid")
-        writer = TEMPLATE_VERSION if runtime is None else runtime.writer_template
-        if runtime is not None and writer != (
-            STORY_WRITER if runtime.story_writer_enabled else LEGACY_WRITER
-        ):
-            raise InvalidInput("report_writer_template_mismatch")
-        if writer == STORY_WRITER:
+        # The composition layer resolves strict deployment flags and approved
+        # source authority. This application service accepts only the resulting
+        # version, not config/env objects or HTTP-controlled values.
+        if writer_template not in (TEMPLATE_VERSION, STORY_TEMPLATE_VERSION):
+            raise InvalidInput("report_writer_template_unknown")
+        if writer_template == STORY_TEMPLATE_VERSION:
             if not isinstance(story_policy, StoryPolicy):
                 raise InvalidInput("report_story_source_not_installed")
             if getattr(engine, "evidence_guard_enabled", False):
                 raise InvalidInput("report_story_research_guard_conflict")
         elif story_policy is not None:
             raise InvalidInput("report_story_policy_without_writer")
-        if writer not in (TEMPLATE_VERSION, STORY_WRITER):
-            raise InvalidInput("report_writer_template_unknown")
-        self._writer_template = writer
+        self._writer_template = writer_template
         self._story_policy = story_policy
 
     def run_once(self) -> WorkOutcome | None:
