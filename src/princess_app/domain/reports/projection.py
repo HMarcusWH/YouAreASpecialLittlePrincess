@@ -23,7 +23,7 @@ from princess_contracts import (
 from princess_contracts import generated as g
 
 from ..analysis import rfc3339
-from .template import is_unqualified_research_report
+from .suitability import premium_sample_eligible
 
 ACTION_KINDS = ("COMPARE", "EXPORT", "SHARE", "SAVE", "DELETE", "PURCHASE")
 SOURCE_IMAGE_SCOPE = "source_image"
@@ -118,10 +118,11 @@ def project_report(report: ValidatedDocument, request: ProjectionRequest) -> Val
         notices.append({"notice_id": "notice.premium_revoked", "class": "AI",
                         "localization_key": "notice.premium_revoked"})
 
-    # An ineligible research sample must never offer a purchase, even when
-    # the API caller passed an enabled action. The direct commerce endpoint
-    # independently applies the same saved-report eligibility guard.
-    ineligible_premium = is_unqualified_research_report(source)
+    # Every saved report version uses the same read-only new-purchase gate;
+    # a /1 or /2 report with missing writing is no more eligible than /3.
+    # This only suppresses new purchase actions: existing authorized overlays
+    # remain readable under their separately resolved ledger permission.
+    ineligible_premium = not premium_sample_eligible(source)
     actions = [] if kind in {"SHARE", "EXPORT"} else [
         {"action_id": f"action.{k.lower()}", "kind": k,
          "enabled": request.actions[k] is None, "reason": request.actions[k]}

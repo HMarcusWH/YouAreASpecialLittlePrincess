@@ -432,3 +432,79 @@ def test_reports_with_reference_claims_fail_closed_until_the_view_contract_carri
     claimed = compile_document("ReportDocument", doc)
     assert claimed.ok, claimed.issues[:3]
     assert codes(project_report(claimed.value, ProjectionRequest("OWNER", T0))) == {"REFERENCE_PROJECTION_UNSUPPORTED"}
+
+
+
+def test_new_premium_purchase_uses_shared_suitability_across_legacy_templates():
+    """Old /1 and /2 technical READY sections must not imply usable writing."""
+    from princess_app.application.commerce import CommerceService
+    from princess_app.domain.commerce import Platform
+    from princess_app.domain.reports.suitability import (
+        ReportSuitability, assess_report_suitability, premium_sample_eligible,
+    )
+    from princess_app.ports.base import InvalidInput
+
+    blank = GraphologyEngine().analyze(np.full((80, 120), 255, np.uint8)).to_dict()
+
+    class SavedOnly:
+        def __init__(self, document):
+            self.document = document
+
+        def latest(self, report_id):
+            assert report_id == "report_1"
+            return "owner_fixture_1", self.document
+
+    for template in (BASE_TEMPLATE_VERSION, HIGHLIGHT_TEMPLATE_VERSION):
+        ref = analysis_reference(
+            analysis_id="analysis_blank_gate", run_id="run_blank_gate",
+            owner_id="owner_fixture_1", input_asset_id="asset_blank_gate",
+            input_sha256="0" * 64,
+            processed_sha256=blank["metadata"]["input_pixels_sha256"],
+            created_at=T0, engine_version="0.1.0",
+            analysis_config_sha256="1" * 64, template=template,
+        )
+        doc = report(result=blank, analysis=ref, evidence=None)
+        assert assess_report_suitability(doc) is ReportSuitability.UNQUALIFIED
+        assert not premium_sample_eligible(doc)
+        # The API may pass a syntactically enabled action. The server-owned
+        # projection must suppress it for unsuitable saved reports.
+        for kind in ("FREE", "OWNER"):
+            view = project_report(doc, ProjectionRequest(
+                projection=kind, generated_at=T0, actions={"PURCHASE": None},
+            ))
+            assert view.ok, view.issues
+            assert not any(action["kind"] == "PURCHASE" for action in view.value.data["actions"])
+
+        # The direct request must fail before any permission or ledger lookup.
+        commerce = CommerceService.__new__(CommerceService)
+        commerce._reports = lambda _owner: SavedOnly(doc)
+        with pytest.raises(InvalidInput) as rejected:
+            commerce.request_premium("owner_fixture_1", "report_1", Platform.WEB)
+        assert rejected.value.code == "premium_sample_ineligible"
+
+        # Historical published overlays are still readable when authorized;
+        # the new-purchase precondition does not retroactively revoke them.
+        prior = revise_report(doc, created_at=T0 + timedelta(minutes=1),
+                              premium_overlay_id="overlay_legacy")
+        assert prior.ok, prior.issues
+        old_view = project_report(prior.value, ProjectionRequest(
+            projection="OWNER", generated_at=T0 + timedelta(minutes=2),
+            premium=PremiumAuthorization(report_id="report_1",
+                                         overlay_id="overlay_legacy",
+                                         state=PremiumAccess.UNLOCKED),
+            actions={"PURCHASE": None},
+        ))
+        assert old_view.ok, old_view.issues
+        assert any(section["premium_section_id"] is not None
+                   for section in old_view.value.data["sections"])
+
+    # Positive observed handwriting is still eligible for presentation of a
+    # purchase action when a separately authorized caller supplies it.
+    supported = report()
+    assert premium_sample_eligible(supported)
+    allowed = project_report(supported, ProjectionRequest(
+        projection="FREE", generated_at=T0, actions={"PURCHASE": None},
+    ))
+    assert allowed.ok, allowed.issues
+    assert any(action["kind"] == "PURCHASE" and action["enabled"]
+               for action in allowed.value.data["actions"])
