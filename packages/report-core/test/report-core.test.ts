@@ -258,3 +258,39 @@ test("Free connections are separate, server-ordered and bound to saved fact supp
   assert.deepEqual(uninstalled.sections[0]!.copy, []);
   assert.match(t("en", "report.copy_unavailable"), /not installed/);
 });
+
+
+test("Free technical facts retain saved method, missingness and evidence-region provenance", async () => {
+  const { presentFact, buildDossier, t } = await import("../src/index.ts");
+  const view = fixture<ReportViewModel>("view.free-v2.json");
+  const observed = view.facts.find((f) => f.feature_id === "SLANT_ANGLE_MEAN");
+  assert.ok(observed);
+  const presented = presentFact(observed, "sv");
+  assert.equal(presented.methodId, observed.method_id);
+  assert.equal(presented.methodVersion, observed.method_version);
+  assert.equal(presented.missingReason, observed.quality.missing_reason);
+  assert.deepEqual(presented.sourceRegionIds, observed.source_region_ids);
+  assert.notEqual(presented.sourceRegionIds, observed.source_region_ids,
+                  "client model must not alias authoritative source arrays");
+
+  const missingFact = {
+    ...observed,
+    availability: "MISSING" as const,
+    value: null,
+    quality: { ...observed.quality, missing_reason: "synthetic_missing_reason" },
+    source_region_ids: [],
+  };
+  const missing = presentFact(missingFact, "en");
+  assert.equal(missing.value, null);
+  assert.equal(missing.missingReason, "synthetic_missing_reason");
+  assert.deepEqual(missing.sourceRegionIds, []);
+  assert.equal(t("en", "fact.reason_code"), "Unavailable reason code");
+  assert.equal(t("sv", "fact.source_regions"), "Underlagsregioner");
+
+  const dossier = buildDossier(view, "en");
+  const stored = dossier.sections.flatMap((section) => section.facts)
+    .find((fact) => fact.featureId === "SLANT_ANGLE_MEAN");
+  assert.ok(stored);
+  assert.equal(stored.methodId, observed.method_id);
+  assert.equal(stored.methodVersion, observed.method_version);
+});
