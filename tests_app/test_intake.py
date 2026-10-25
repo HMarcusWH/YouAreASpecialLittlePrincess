@@ -694,6 +694,10 @@ def test_guarded_private_job_publishes_v3_and_preserves_missingness(env, world):
     with env.worker_db.session() as conn:
         conn.execute(text("UPDATE app.job SET payload = payload - 'report_template' "
                           "WHERE subject_ref = :r"), {"r": run_id})
+    assert env.queue.claim(
+        "wrong-old-v2", 60, env.clock.now(), report_template="individual-report/2",
+        analysis_config=analysis_config_sha256(),
+    ) is None  # old guarded v3 work is not captured/exhausted by v2
     guarded_worker = AnalysisWorker(
         queue=env.queue, store=env.store, decode=decode_image,
         engine=GraphologyEngine(evidence_guard_enabled=True),
