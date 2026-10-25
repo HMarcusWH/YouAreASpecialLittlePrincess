@@ -194,3 +194,59 @@ def test_symlink_input_is_rejected(tmp_path):
         pytest.skip("symlinks unavailable")
     with pytest.raises(preflight.SourceBundleError, match="not a symlink"):
         preflight.inspect_bundle(link)
+
+
+def test_verified_source_staging_is_private_unapproved_and_outside_repo(tmp_path):
+    from stage_report_source_bundle import RECEIPT, stage_archive
+
+    files = _source_files()
+    files["unapproved/extra.py"] = b"raise RuntimeError('must never stage or run')"
+    archive = tmp_path / "original-synthetic.zip"
+    _zip(archive, files)
+    digest = hashlib.sha256(archive.read_bytes()).hexdigest()
+    destination = tmp_path / "source-review"
+    receipt = stage_archive(archive, destination, expected_sha256=digest)
+    assert receipt["status"] == "STAGED_UNREVIEWED_NOT_APPROVED"
+    assert receipt["archive_sha256"] == digest
+    assert receipt["required_members"] == len(preflight.REQUIRED)
+    assert (destination / RECEIPT).is_file()
+    assert {path.relative_to(destination).as_posix() for path in destination.rglob("*")
+            if path.is_file()} == {*preflight.REQUIRED, RECEIPT}
+    assert not (destination / "unapproved/extra.py").exists()
+    for name in preflight.REQUIRED:
+        staged = destination / name
+        assert staged.read_bytes() == files[name]
+        assert staged.stat().st_mode & 0o077 == 0  # no group/other read/write
+    marker = json.loads((destination / RECEIPT).read_text(encoding="utf-8"))
+    assert marker["member_sha256"] == receipt["member_sha256"]
+    assert "NOT_APPROVED" in marker["status"]
+    assert archive.is_file()
+
+    # Never silently replace staged source with another archive.
+    with pytest.raises(preflight.SourceBundleError, match="already exists"):
+        stage_archive(archive, destination, expected_sha256=digest)
+
+
+def test_source_staging_does_not_trust_unpinned_or_drifted_archives(tmp_path):
+    from stage_report_source_bundle import stage_archive
+
+    archive = tmp_path / "original.zip"
+    _zip(archive, _source_files())
+    destination = tmp_path / "unapproved"
+    for pin in ("", "X" * 64, "0" * 64):
+        with pytest.raises(preflight.SourceBundleError):
+            stage_archive(archive, destination, expected_sha256=pin)
+        assert not destination.exists()
+
+    corrupted = tmp_path / "corrupt.zip"
+    corrupted.write_bytes(b"not a zip")
+    with pytest.raises(preflight.SourceBundleError):
+        stage_archive(corrupted, destination, expected_sha256=hashlib.sha256(
+            corrupted.read_bytes()).hexdigest())
+    assert not destination.exists()
+
+    # No reviewed content may be written directly into the checkout.
+    with pytest.raises(preflight.SourceBundleError, match="inside the repository"):
+        stage_archive(archive, preflight.ROOT / "unapproved-source-staging",
+                      expected_sha256=hashlib.sha256(archive.read_bytes()).hexdigest())
+    assert not (preflight.ROOT / "unapproved-source-staging").exists()
