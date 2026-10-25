@@ -230,7 +230,7 @@ export function ReportView({ view, locale, evidence, onAction, showHeader = true
         <p className="pr-eyebrow">{t(locale, "report.mechanical_dossier")}</p>
         {technicalSections.map((section) => (
           <SectionBlock key={section.section_id} section={section} facts={facts} locale={locale}
-                          compactMissing={compactMissing} />
+                          compactMissing={compactMissing} printMode={view.projection === "EXPORT"} />
         ))}
       </section>
 
