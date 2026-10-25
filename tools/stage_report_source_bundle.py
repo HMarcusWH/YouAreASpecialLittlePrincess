@@ -81,6 +81,10 @@ def stage_archive(archive: Path, destination: Path, *, expected_sha256: str) -> 
                 outfile = tmp.joinpath(*name.split("/"))
                 outfile.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
                 _write_private(outfile, payload)
+        # The entire source ZIP, not merely the required members, must still
+        # match the independent pin after all staging reads.
+        if hashlib.sha256(archive.read_bytes()).hexdigest() != expected_sha256:
+            raise SourceBundleError("archive bytes changed during source staging")
         marker = {
             "status": "STAGED_UNREVIEWED_NOT_APPROVED",
             "archive_sha256": receipt["archive_sha256"],
