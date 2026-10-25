@@ -1,0 +1,147 @@
+{
+  "version": "chapter-copy/1",
+  "review_status": "DRAFT_FOR_REVIEW",
+  "runtime_activation": false,
+  "chapters": [
+    {
+      "section_id": "section.slant",
+      "family": "slant",
+      "title": {
+        "en": "Slant and direction",
+        "sv": "Lutning och riktning"
+      },
+      "neutral_content_id": "content.chapter.v2.slant.neutral",
+      "neutral": {
+        "en": "The diagram shows the directions of the measured strokes.",
+        "sv": "Diagrammet visar riktningarna hos de uppmätta strecken."
+      },
+      "unavailable_content_id": "content.chapter.v2.slant.unavailable",
+      "unavailable": {
+        "en": "This sample does not provide enough supported observations for this topic.",
+        "sv": "Det här provet ger inte tillräckligt med underbyggda observationer för detta avsnitt."
+      },
+      "max_summary_characters": 280,
+      "measurement_access": "FREE",
+      "evidence_mode": "SAVED_ONLY"
+    },
+    {
+      "section_id": "section.baseline",
+      "family": "baseline",
+      "title": {
+        "en": "Baseline and line flow",
+        "sv": "Baslinje och radförlopp"
+      },
+      "neutral_content_id": "content.chapter.v2.baseline.neutral",
+      "neutral": {
+        "en": "Follow the measured paths of the writing across the image.",
+        "sv": "Följ skriftens uppmätta radförlopp genom bilden."
+      },
+      "unavailable_content_id": "content.chapter.v2.baseline.unavailable",
+      "unavailable": {
+        "en": "This sample does not provide enough supported observations for this topic.",
+        "sv": "Det här provet ger inte tillräckligt med underbyggda observationer för detta avsnitt."
+      },
+      "max_summary_characters": 280,
+      "measurement_access": "FREE",
+      "evidence_mode": "SAVED_ONLY"
+    },
+    {
+      "section_id": "section.spacing",
+      "family": "spacing",
+      "title": {
+        "en": "Spacing",
+        "sv": "Avstånd"
+      },
+      "neutral_content_id": "content.chapter.v2.spacing.neutral",
+      "neutral": {
+        "en": "Inspect the accepted gaps between word groups and lines.",
+        "sv": "Granska de godkända mellanrummen mellan ordgrupper och rader."
+      },
+      "unavailable_content_id": "content.chapter.v2.spacing.unavailable",
+      "unavailable": {
+        "en": "This sample does not provide enough supported observations for this topic.",
+        "sv": "Det här provet ger inte tillräckligt med underbyggda observationer för detta avsnitt."
+      },
+      "max_summary_characters": 280,
+      "measurement_access": "FREE",
+      "evidence_mode": "SAVED_ONLY"
+    },
+    {
+      "section_id": "section.size",
+      "family": "size",
+      "title": {
+        "en": "Size and proportions",
+        "sv": "Storlek och proportioner"
+      },
+      "neutral_content_id": "content.chapter.v2.size.neutral",
+      "neutral": {
+        "en": "Compare the supported dimensions of connected ink shapes in this sample.",
+        "sv": "Jämför de dimensioner hos sammanhängande bläckformer som kan mätas i provet."
+      },
+      "unavailable_content_id": "content.chapter.v2.size.unavailable",
+      "unavailable": {
+        "en": "This sample does not provide enough supported observations for this topic.",
+        "sv": "Det här provet ger inte tillräckligt med underbyggda observationer för detta avsnitt."
+      },
+      "max_summary_characters": 280,
+      "measurement_access": "FREE",
+      "evidence_mode": "SAVED_ONLY"
+    },
+    {
+      "section_id": "section.layout",
+      "family": "layout",
+      "title": {
+        "en": "Page organization",
+        "sv": "Placering i bilden"
+      },
+      "neutral_content_id": "content.chapter.v2.layout.neutral",
+      "neutral": {
+        "en": "See where the detected text sits within the captured image.",
+        "sv": "Se var den upptäckta texten ligger i den tagna bilden."
+      },
+      "unavailable_content_id": "content.chapter.v2.layout.unavailable",
+      "unavailable": {
+        "en": "This sample does not provide enough supported observations for this topic.",
+        "sv": "Det här provet ger inte tillräckligt med underbyggda observationer för detta avsnitt."
+      },
+      "max_summary_characters": 280,
+      "measurement_access": "FREE",
+      "evidence_mode": "SAVED_ONLY"
+    },
+    {
+      "section_id": "section.ink",
+      "family": "ink",
+      "title": {
+        "en": "Stroke appearance",
+        "sv": "Streckens utseende"
+      },
+      "neutral_content_id": "content.chapter.v2.ink.neutral",
+      "neutral": {
+        "en": "Explore visible ink darkness and thickness, not physical pen pressure.",
+        "sv": "Utforska synlig bläckmörkhet och strecktjocklek, inte fysiskt penntryck."
+      },
+      "unavailable_content_id": "content.chapter.v2.ink.unavailable",
+      "unavailable": {
+        "en": "This sample does not provide enough supported observations for this topic.",
+        "sv": "Det här provet ger inte tillräckligt med underbyggda observationer för detta avsnitt."
+      },
+      "max_summary_characters": 280,
+      "measurement_access": "FREE",
+      "evidence_mode": "SAVED_ONLY"
+    }
+  ],
+  "states": {
+    "UNQUALIFIED": {
+      "en": "We could not separate enough handwriting from the image to give a supported reading.",
+      "sv": "Vi kunde inte skilja tillräckligt mycket handskrift från bilden för att ge en underbyggd beskrivning."
+    },
+    "PARTIAL": {
+      "en": "Some parts of this sample can be described; other topics need more supported writing.",
+      "sv": "Vissa delar av provet kan beskrivas; andra avsnitt behöver mer användbar handskrift."
+    },
+    "NEUTRAL": {
+      "en": "Here is what we could observe in this sample.",
+      "sv": "Det här kunde vi observera i provet."
+    }
+  }
+}
