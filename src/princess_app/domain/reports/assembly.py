@@ -23,7 +23,8 @@ from princess_contracts import generated as g
 
 from ..analysis import method_versions, rfc3339
 from ..content import presentation_registry, select_highlights
-from .suitability import premium_sample_eligible
+from .suitability import ReportSuitability, assess_report_suitability, premium_sample_eligible
+from .story import STORY_TEMPLATE_VERSION, StoryPolicy, build_story_sections
 from .template import (BASE_TEMPLATE_VERSION, EVIDENCE_SUPPORT_TEMPLATE_VERSION, FACT_SECTIONS, HIGHLIGHT_POLICY_VERSION,
                        HIGHLIGHT_PRESENTATION_VERSION, PREMIUM_SECTION, REFERENCE_SECTION,
                        SUPPORTED_TEMPLATE_VERSIONS, TEMPLATE_VERSION, formatting_for, is_unqualified_research_report)
@@ -201,6 +202,12 @@ def build_notices(facts: Sequence[Mapping[str, Any]], *, has_reference: bool,
     sample_facts = [by_feature[f] for f in FACT_SECTIONS[0][2] if f in by_feature]
     unqualified = (template_version == EVIDENCE_SUPPORT_TEMPLATE_VERSION
                    and _sample_support_availability(sample_facts) == "INELIGIBLE")
+    if template_version == STORY_TEMPLATE_VERSION:
+        assessed = assess_report_suitability({
+            "analysis": {"versions": {"template": template_version}},
+            "sections": [], "facts": list(facts),
+        })
+        unqualified = assessed is not ReportSuitability.SUPPORTED
     notices = []
     if "MEASURED" in classes:
         notices.append({"notice_id": "notice.measured", "class": "MEASURED",
@@ -228,8 +235,14 @@ def _finish(document: dict[str, Any]) -> ValidationResult[ValidatedDocument]:
 def assemble_report(*, report_id: str, analysis: Mapping[str, Any], result: Mapping[str, Any],
                     created_at: datetime, locale: str, evidence: ValidatedDocument | None = None,
                     reference_claims: Sequence[Mapping[str, Any]] = (),
-                    premium_overlay_id: str | None = None) -> ValidationResult[ValidatedDocument]:
-    """Assemble revision 1 of an individual report."""
+                    premium_overlay_id: str | None = None,
+                    story_policy: StoryPolicy | None = None) -> ValidationResult[ValidatedDocument]:
+    """Assemble revision 1 of an individual report.
+
+    /4 is an internal, explicitly content-pinned path until the R1 authoring
+    registry and every reader pass review. No worker or route supplies a
+    StoryPolicy today; the legacy writer remains the production default.
+    """
     metadata = result.get("metadata", {})
     if metadata.get("schema_version") != g.FEATURE_SCHEMA_VERSION:
         return _fail("RESULT_SCHEMA_DRIFT", "/metadata/schema_version", "result was produced for another schema")
@@ -237,7 +250,14 @@ def assemble_report(*, report_id: str, analysis: Mapping[str, Any], result: Mapp
         return _fail("RESULT_ANALYSIS_MISMATCH", "/metadata/input_pixels_sha256",
                      "result was produced from different pixels than this analysis")
     template_version = analysis.get("versions", {}).get("template")
-    if template_version not in SUPPORTED_TEMPLATE_VERSIONS:
+    if template_version == STORY_TEMPLATE_VERSION:
+        if not isinstance(story_policy, StoryPolicy):
+            return _fail("STORY_CONTENT_NOT_INSTALLED", "/analysis/versions/template",
+                         "version 4 requires the compiled, reviewed story content authority")
+        if premium_overlay_id is not None:
+            return _fail("STORY_PREMIUM_NOT_ENABLED", "/premium_overlay_id",
+                         "paid version 4 publication requires independent R3 qualification")
+    elif template_version not in SUPPORTED_TEMPLATE_VERSIONS:
         return _fail("TEMPLATE_VERSION_MISMATCH", "/analysis/versions/template",
                      f"supported templates are {sorted(SUPPORTED_TEMPLATE_VERSIONS)}")
     missing = set(free_feature_ids()) - set(result.get("measurements", {}))
@@ -255,6 +275,35 @@ def assemble_report(*, report_id: str, analysis: Mapping[str, Any], result: Mapp
     if issues:
         return ValidationResult(None, tuple(issues))
     claims = [dict(c) for c in reference_claims]
+    if template_version == STORY_TEMPLATE_VERSION:
+        # The only v4 path consumes exact saved facts and the explicit pinned
+        # analysis template. There is no v2 fallback, reanalysis or selector AI.
+        provisional = {"analysis": dict(analysis), "facts": facts, "sections": []}
+        try:
+            sections = list(build_story_sections(provisional, story_policy))
+        except (ValueError, KeyError, TypeError) as exc:
+            return _fail("STORY_CONTENT_UNAVAILABLE", "/sections",
+                         f"reviewed story content is unavailable: {type(exc).__name__}")
+        assessment = assess_report_suitability(provisional)
+        by_feature = {row["feature_id"]: row for row in facts}
+        claimed = [by_feature[c["feature_id"]]["fact_id"] for c in claims
+                   if c["feature_id"] in by_feature]
+        sections.append({
+            "section_id": REFERENCE_SECTION[0], "template": REFERENCE_SECTION[1],
+            "availability": "READY" if claimed else "INELIGIBLE",
+            "fact_ids": list(dict.fromkeys(claimed)), "content_ids": [],
+            "premium_section_id": None,
+        })
+        sections.append({
+            "section_id": PREMIUM_SECTION[0], "template": PREMIUM_SECTION[1],
+            "availability": ("LOCKED" if assessment is ReportSuitability.SUPPORTED
+                             else "INELIGIBLE"),
+            "fact_ids": [], "content_ids": [], "premium_section_id": None,
+        })
+    else:
+        sections = build_sections(facts, reference_claims=claims,
+                                  premium_overlay_id=premium_overlay_id,
+                                  template_version=template_version)
     document = {
         "contract_version": g.CONTRACT_VERSION,
         "report_id": report_id,
@@ -266,8 +315,7 @@ def assemble_report(*, report_id: str, analysis: Mapping[str, Any], result: Mapp
         "evidence_bundle_id": evidence.data["bundle_id"] if evidence is not None else None,
         "facts": facts,
         "reference_claims": claims,
-        "sections": build_sections(facts, reference_claims=claims, premium_overlay_id=premium_overlay_id,
-                                   template_version=template_version),
+        "sections": sections,
         "notices": build_notices(facts, has_reference=bool(claims), premium_overlay_id=premium_overlay_id,
                                  template_version=template_version),
         "premium_overlay_id": premium_overlay_id,
@@ -290,6 +338,9 @@ def revise_report(previous: ValidatedDocument, *, created_at: datetime,
     if previous.schema_name != "ReportDocument":
         return _fail("WRONG_DOCUMENT_KIND", "", "expected a ReportDocument")
     old = previous.to_dict()
+    if old["analysis"]["versions"]["template"] == STORY_TEMPLATE_VERSION:
+        return _fail("STORY_REVISION_NOT_ENABLED", "/analysis/versions/template",
+                     "version 4 revisions require the separately qualified R3 publisher")
     if premium_overlay_id is not None and not premium_sample_eligible(old):
         return _fail("PREMIUM_SAMPLE_INELIGIBLE", "/premium_overlay_id",
                      "unqualified handwriting cannot support a paid overlay")
@@ -313,6 +364,9 @@ IMMUTABLE_ACROSS_REVISIONS = ("report_id", "kind", "locale", "analysis", "eviden
 def check_revision(previous: ValidatedDocument, candidate: ValidatedDocument) -> tuple[ContractIssue, ...]:
     """Persistence-side guard: a stored revision may only extend its predecessor."""
     old, new = previous.to_dict(), candidate.to_dict()
+    if old["analysis"]["versions"]["template"] == STORY_TEMPLATE_VERSION:
+        return (ContractIssue("STORY_REVISION_NOT_ENABLED", "/analysis/versions/template",
+                              "version 4 revision validation requires reviewed publication policy"),)
     issues = [ContractIssue("REVISION_MUTATES_" + field.upper(), f"/{field}",
                             f"{field} is immutable across revisions")
               for field in IMMUTABLE_ACROSS_REVISIONS if old[field] != new[field]]

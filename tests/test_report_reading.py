@@ -160,3 +160,97 @@ def test_duplicate_facts_fail_closed_before_story_copy(synthetic_v2):
     doc["facts"][1] = dict(doc["facts"][0])
     with pytest.raises(ValueError, match="repeated"):
         build_story_sections(doc, copy_policy())
+
+
+def test_story_report_assembly_is_immutable_and_authorized_projection_is_free(synthetic_v2):
+    """The gated v4 assembler preserves original analysis and 64 facts."""
+    from datetime import datetime, timezone
+    from princess_app.domain.analysis import analysis_reference
+    from princess_app.domain.reports.assembly import assemble_report, check_revision, revise_report
+    from princess_app.domain.reports.projection import ProjectionRequest, project_report
+    import generate_report_fixtures as fixtures
+
+    now = datetime(2026, 10, 25, 12, 0, tzinfo=timezone.utc)
+    result = fixtures.load("engine-result.synthetic.json")
+    analysis = analysis_reference(
+        analysis_id="analysis_story_synthetic", run_id="run_story_synthetic",
+        owner_id="owner_story_synthetic", input_asset_id="asset_story_synthetic",
+        input_sha256="0" * 64,
+        processed_sha256=result["metadata"]["input_pixels_sha256"],
+        created_at=now, engine_version="0.1.0",
+        analysis_config_sha256="1" * 64, template=STORY_TEMPLATE_VERSION,
+    )
+    before_analysis, before_result = copy.deepcopy(analysis), copy.deepcopy(result)
+
+    absent = assemble_report(
+        report_id="report_story_synthetic", analysis=analysis, result=result,
+        created_at=now, locale="en", evidence=None,
+    )
+    assert {issue.code for issue in absent.issues} == {"STORY_CONTENT_NOT_INSTALLED"}
+
+    created = assemble_report(
+        report_id="report_story_synthetic", analysis=analysis, result=result,
+        created_at=now, locale="en", evidence=None, story_policy=copy_policy(),
+    )
+    assert created.ok, created.issues[:5]
+    snapshot = created.value
+    data = snapshot.to_dict()
+    assert data["revision"] == 1
+    assert data["analysis"] == before_analysis
+    assert len(data["facts"]) == 64
+    assert set(row["fact_id"] for row in data["facts"]) == {
+        f"fact.{feature_id}" for feature_id in result["measurements"]
+    }
+    assert data["premium_overlay_id"] is None
+    assert data["sections"][-2]["section_id"] == "section.reference"
+    assert data["sections"][-1]["section_id"] == "section.premium"
+    assert data["sections"][-1]["availability"] == "LOCKED"
+    assert analysis == before_analysis and result == before_result
+
+    projected = project_report(snapshot, ProjectionRequest(
+        projection="FREE", generated_at=now, actions={"PURCHASE": "commerce_disabled"},
+    ))
+    assert projected.ok, projected.issues[:5]
+    assert projected.value.data["source_digest"] == data["document_digest"]
+    assert len(projected.value.data["facts"]) == 64
+    assert not any(s["premium_section_id"] for s in projected.value.data["sections"])
+
+    blocked = revise_report(snapshot, created_at=now, premium_overlay_id="overlay_unreviewed")
+    assert {issue.code for issue in blocked.issues} == {"STORY_REVISION_NOT_ENABLED"}
+    assert {issue.code for issue in check_revision(snapshot, snapshot)} == {"STORY_REVISION_NOT_ENABLED"}
+    with_paid = assemble_report(
+        report_id="report_story_synthetic", analysis=analysis, result=result,
+        created_at=now, locale="en", story_policy=copy_policy(),
+        premium_overlay_id="overlay_unreviewed",
+    )
+    assert {issue.code for issue in with_paid.issues} == {"STORY_PREMIUM_NOT_ENABLED"}
+
+
+def test_partial_v4_free_dossier_preserves_missingness_and_disables_paid(synthetic_v2):
+    from datetime import datetime, timezone
+    from princess_app.domain.analysis import analysis_reference
+    from princess_app.domain.reports.assembly import assemble_report
+    import generate_report_fixtures as fixtures
+
+    now = datetime(2026, 10, 25, 12, 0, tzinfo=timezone.utc)
+    result = fixtures.load("engine-result.synthetic.json")
+    result["measurements"]["PAGE_WORD_COUNT"]["raw_value"] = 0
+    result["measurements"]["PAGE_WORD_COUNT"]["quality_flag"] = "EXPERIMENTAL"
+    analysis = analysis_reference(
+        analysis_id="analysis_story_partial", run_id="run_story_partial",
+        owner_id="owner_story_partial", input_asset_id="asset_story_partial",
+        input_sha256="0" * 64,
+        processed_sha256=result["metadata"]["input_pixels_sha256"], created_at=now,
+        engine_version="0.1.0", analysis_config_sha256="1" * 64,
+        template=STORY_TEMPLATE_VERSION,
+    )
+    compiled = assemble_report(
+        report_id="report_story_partial", analysis=analysis, result=result,
+        created_at=now, locale="sv", story_policy=copy_policy(),
+    )
+    assert compiled.ok, compiled.issues[:5]
+    data = compiled.value.data
+    word = next(x for x in data["facts"] if x["feature_id"] == "PAGE_WORD_COUNT")
+    assert word["value"] == 0  # observed zero is not silently renamed MISSING
+    assert data["sections"][-1]["availability"] == "INELIGIBLE"
+    assert any(n["localization_key"] == "notice.image_only" for n in data["notices"])
