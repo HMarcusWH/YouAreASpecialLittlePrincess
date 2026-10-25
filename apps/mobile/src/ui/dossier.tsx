@@ -481,8 +481,11 @@ export function DossierView({ model, onAction, busyAction }: {
   const locale = model.locale;
   const compactMissing = model.sections.some((section) => section.sectionId === "section.sample"
     && section.availability === "INELIGIBLE");
-  const additional = model.sections.filter((section) => section.sectionId === "section.reference"
-    || section.sectionId === "section.premium");
+  const storyLayout = model.connections.length > 0 || model.sections.some((section) =>
+    /^section\.(slant|baseline|spacing|size|layout|ink)$/.test(section.sectionId)
+    && section.copy.length > 0);
+  const additional = storyLayout ? model.sections.filter((section) => section.sectionId === "section.reference"
+    || section.sectionId === "section.premium") : [];
   const chapters = model.sections.filter((section) => !additional.includes(section));
   return (
     <Paper style={local.dossier} elevated>
