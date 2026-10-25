@@ -25,6 +25,11 @@ export interface FactPresentation {
   readonly evidenceIcon: string;
   readonly evidenceText: string;
   readonly observations: number;
+  /** Immutable report metadata, not reconstructed by the client. */
+  readonly methodId: string;
+  readonly methodVersion: string;
+  readonly missingReason: string | null;
+  readonly sourceRegionIds: readonly string[];
   readonly isVector: boolean;
 }
 
@@ -35,6 +40,8 @@ export function presentFact(fact: Fact, locale: Locale): FactPresentation {
     availability: fact.availability, availabilityText: t(locale, `availability.${fact.availability}`),
     evidenceClass: fact.evidence_class, evidenceIcon: EVIDENCE_ICON[fact.evidence_class],
     evidenceText: t(locale, `evidence.${fact.evidence_class}`), observations: fact.quality.n_observations,
+    methodId: fact.method_id, methodVersion: fact.method_version,
+    missingReason: fact.quality.missing_reason, sourceRegionIds: [...fact.source_region_ids],
   };
   if (formatted.state === "UNAVAILABLE") return { ...base, value: null, calibrated: false, isVector: false };
   const text = formatted.text.startsWith("value.") ? t(locale, formatted.text) : formatted.text;
