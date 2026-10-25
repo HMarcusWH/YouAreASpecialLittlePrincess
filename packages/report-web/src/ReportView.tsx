@@ -41,10 +41,25 @@ export function FactValue({ fact, locale }: { fact: Fact; locale: Locale }) {
   );
 }
 
-function FactRow({ fact, locale }: { fact: Fact; locale: Locale }) {
+function FactRow({ fact, locale, technical = false }: {
+  fact: Fact; locale: Locale; technical?: boolean;
+}) {
   return (
     <tr data-fact-id={fact.fact_id}>
-      <th scope="row">{featureName(fact.feature_id, locale)}</th>
+      <th scope="row">
+        {featureName(fact.feature_id, locale)}
+        {technical && (
+          <span className="pr-fact-provenance">
+            <span>{t(locale, "fact.method")}: {fact.method_id} · {fact.method_version}</span>
+            {fact.quality.missing_reason && (
+              <span>{t(locale, "fact.reason_code")}: {fact.quality.missing_reason}</span>
+            )}
+            {fact.source_region_ids.length > 0 && (
+              <span>{t(locale, "fact.source_regions")}: {fact.source_region_ids.join(", ")}</span>
+            )}
+          </span>
+        )}
+      </th>
       <td><FactValue fact={fact} locale={locale} /></td>
       <td><EvidenceBadge evidence={fact.evidence_class} locale={locale} /></td>
       <td className="pr-quality" title={t(locale, "quality.observations")}>n = {fact.quality.n_observations}</td>
@@ -70,12 +85,15 @@ function SectionBlock({ section, facts, locale, compactMissing, printMode }: { s
   const hasMissingCopy = copy.length !== section.content_ids.length;
   const chapter = /^section\.(slant|baseline|spacing|size|layout|ink)$/.test(section.section_id);
   const connection = section.template === "PATTERN_CONNECTION";
-  const collapseFacts = !printMode && (connection || (chapter && section.content_ids.length > 0));
+  const technicalDetails = connection || (chapter && section.content_ids.length > 0);
+  const collapseFacts = !printMode && technicalDetails;
   const factTable = !fullyMissing && shownRows.length > 0 ? (
     <div className="pr-table-wrap">
       <table className="pr-facts">
         <caption className="pr-visually-hidden">{heading}: {t(locale, "report.facts")}</caption>
-        <tbody>{shownRows.map((fact) => <FactRow key={fact.fact_id} fact={fact} locale={locale} />)}</tbody>
+        <tbody>{shownRows.map((fact) => (
+          <FactRow key={fact.fact_id} fact={fact} locale={locale} technical={technicalDetails} />
+        ))}</tbody>
       </table>
     </div>
   ) : null;
@@ -143,7 +161,9 @@ function SectionBlock({ section, facts, locale, compactMissing, printMode }: { s
             <div className="pr-table-wrap">
               <table className="pr-facts">
                 <caption className="pr-visually-hidden">{heading}: {t(locale, "report.facts")}</caption>
-                <tbody>{compactedRows.map((fact) => <FactRow key={fact.fact_id} fact={fact} locale={locale} />)}</tbody>
+                <tbody>{compactedRows.map((fact) => (
+                  <FactRow key={fact.fact_id} fact={fact} locale={locale} technical={technicalDetails} />
+                ))}</tbody>
               </table>
             </div>
           </details>

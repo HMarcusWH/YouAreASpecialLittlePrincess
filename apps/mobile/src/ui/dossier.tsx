@@ -43,12 +43,16 @@ export function EvidenceBadge({ fact }: { fact: Pick<FactPresentation, "evidence
   );
 }
 
-export function FactRow({ fact, locale }: { fact: FactPresentation; locale: Locale }) {
+export function FactRow({ fact, locale, technical = false }: {
+  fact: FactPresentation; locale: Locale; technical?: boolean;
+}) {
   const { theme } = useApp();
   const value = fact.value ?? fact.availabilityText;
   const calibration = fact.value !== null && !fact.calibrated ? reportText(locale, "availability.UNCALIBRATED") : null;
   const label = [fact.label, value, calibration, fact.evidenceText,
-                 `${reportText(locale, "fact.observations")} ${fact.observations}`].filter(Boolean).join(", ");
+                 `${reportText(locale, "fact.observations")} ${fact.observations}`,
+                 ...(technical ? [fact.methodId, fact.methodVersion, fact.missingReason,
+                                   ...fact.sourceRegionIds] : [])].filter(Boolean).join(", ");
   return (
     <View accessible accessibilityLabel={label} style={[local.factRow, { borderColor: theme.color.border }]}>
       <View style={local.factMain}>
@@ -57,6 +61,23 @@ export function FactRow({ fact, locale }: { fact: FactPresentation; locale: Loca
           <EvidenceBadge fact={fact} />
           <Text style={[base.small, { color: theme.color["text-muted"], fontFamily: theme.mono }]}>n = {fact.observations}</Text>
         </View>
+        {technical ? (
+          <View style={{ gap: space("1") }}>
+            <Text style={[base.small, { color: theme.color["text-muted"], fontFamily: theme.mono }]}>
+              {reportText(locale, "fact.method")}: {fact.methodId} · {fact.methodVersion}
+            </Text>
+            {fact.missingReason ? (
+              <Text style={[base.small, { color: theme.color["text-muted"], fontFamily: theme.mono }]}>
+                {reportText(locale, "fact.reason_code")}: {fact.missingReason}
+              </Text>
+            ) : null}
+            {fact.sourceRegionIds.length > 0 ? (
+              <Text style={[base.small, { color: theme.color["text-muted"], fontFamily: theme.mono }]}>
+                {reportText(locale, "fact.source_regions")}: {fact.sourceRegionIds.join(", ")}
+              </Text>
+            ) : null}
+          </View>
+        ) : null}
       </View>
       <View style={local.factValue}>
         {fact.value !== null ? (
@@ -117,14 +138,16 @@ function SectionView({ section, locale, compactMissing = false }: {
                 onPress={() => setShowMeasurements((value) => !value)} />
       ) : null}
       {!fullyMissing && (!collapseFacts || showMeasurements)
-        ? shownFacts.map((fact) => <FactRow key={fact.factId} fact={fact} locale={locale} />) : null}
+        ? shownFacts.map((fact) => <FactRow key={fact.factId} fact={fact} locale={locale}
+                                            technical={collapseFacts} />) : null}
       {compactedFacts.length > 0 ? (
         <View style={{ gap: space("2") }}>
           <Body muted>{reportText(locale, "report.withheld_family").replace("{count}", String(compactedFacts.length))}</Body>
           <Button tone="secondary" label={reportText(locale, showMissing
                    ? "report.hide_withheld_details" : "report.withheld_details")}
                   onPress={() => setShowMissing((value) => !value)} />
-          {showMissing ? compactedFacts.map((fact) => <FactRow key={fact.factId} fact={fact} locale={locale} />) : null}
+          {showMissing ? compactedFacts.map((fact) => <FactRow key={fact.factId} fact={fact} locale={locale}
+                                                        technical={collapseFacts} />) : null}
         </View>
       ) : null}
     </EditorialSection>
