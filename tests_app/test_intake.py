@@ -725,3 +725,118 @@ def test_guarded_worker_rejects_unguarded_queued_job(env, world):  # noqa: F811
     )
     assert worker.run_once().outcome == "FAILED"
     assert env.intake.status(owner, run_id).error_code == "analysis_config_mismatch"
+
+
+def test_story_worker_selects_v4_before_reference_and_persists_exact_free_report(
+        env, world, tmp_path, monkeypatch):  # noqa: F811
+    """Synthetic local-only content; this does not authorize production /4."""
+    import copy
+    import json
+
+    import generate_presentation_content as presentation_generator
+    from princess_app.config_reports import ReportReadingRuntime
+    from princess_app.domain.content import presentation as content_runtime
+    from princess_app.domain.reports.story import CHAPTER_ORDER, ChapterCopy, StoryPolicy
+
+    baseline = json.loads(presentation_generator.SOURCE.read_text(encoding="utf-8"))
+    proposed = copy.deepcopy(baseline)
+    proposed["version"] = "presentation/2"
+    proposed["policy_version"] = "highlight-policy/2"
+
+    def versioned(text):
+        assert text.startswith("content.highlight.v1.")
+        return text.replace("content.highlight.v1.", "content.highlight.v2.", 1)
+
+    proposed["content"] = {versioned(cid): copy for cid, copy in baseline["content"].items()}
+    proposed["fallback_content_id"] = versioned(baseline["fallback_content_id"])
+    for candidate in proposed["candidates"]:
+        candidate["content_id"] = versioned(candidate["content_id"])
+    presentation_generator.validate_v2(proposed, baseline)
+    content_file = tmp_path / "presentation-v2.synthetic.json"
+    content_file.write_text(presentation_generator.render(
+        presentation_generator.compiled_registry(proposed)), encoding="utf-8")
+    monkeypatch.setattr(content_runtime, "_V2_PATH", content_file)
+    content_runtime._load_v2_registry.cache_clear()
+    try:
+        policy = StoryPolicy(
+            presentation_version="presentation/2",
+            chapters=tuple(ChapterCopy(section_id=section,
+                                       neutral_content_id=f"synthetic.neutral.{section}",
+                                       unavailable_content_id=f"synthetic.unavailable.{section}")
+                           for section in CHAPTER_ORDER),
+            neutral_overview_content_id="synthetic.first-reveal.neutral",
+            unqualified_overview_content_id="synthetic.first-reveal.unqualified",
+            relation_registry={"policy_version": "combination-policy/1", "relations": []},
+        )
+        selection = ReportReadingRuntime(
+            story_writer_enabled=True, premium_v2_enabled=False,
+            writer_template="individual-report/4", reading_manifest_sha256=None,
+        )
+        owner = account(world, "sub-v4-worker-synthetic").principal_id
+        _, run_id = env.analysis(owner)
+        worker = AnalysisWorker(
+            queue=env.queue, store=env.store, decode=decode_image,
+            engine=GraphologyEngine(), clock=env.clock, context=env.ctx,
+            worker_id="story-worker-synthetic", engine_version=__version__,
+            report_reading_runtime=selection, story_policy=policy,
+        )
+        outcome = worker.run_once()
+        assert outcome.outcome == "SUCCEEDED", outcome
+        status = env.intake.status(owner, run_id)
+        assert status.state == "SUCCEEDED"
+        store = PostgresReportStore(env.app_db, owner)
+        _, saved = store.latest(status.report_id)
+        document = saved.to_dict()
+        assert document["analysis"]["versions"]["template"] == "individual-report/4"
+        assert document["analysis"]["versions"]["analysis_config"] == analysis_config_sha256()
+        assert document["premium_overlay_id"] is None
+        assert len(document["facts"]) == 64
+        ids = {section["section_id"] for section in document["sections"]}
+        assert set(CHAPTER_ORDER) <= ids
+        assert "section.sample" in ids and "section.premium" in ids
+        view = ReportReader(store, env.clock).view(
+            report_id=status.report_id, principal_id=owner, projection="FREE")
+        assert view.data["source_digest"] == document["document_digest"]
+        assert view.data["source_revision"] == 1
+        assert len(view.data["facts"]) == 64
+        assert all(section["premium_section_id"] is None for section in view.data["sections"])
+    finally:
+        content_runtime._load_v2_registry.cache_clear()
+
+
+def test_story_worker_fails_closed_on_unsupported_or_implicit_authority(env):  # noqa: F811
+    from princess_app.config_reports import ReportReadingRuntime
+    from princess_app.domain.reports.story import CHAPTER_ORDER, ChapterCopy, StoryPolicy
+
+    base = dict(
+        queue=env.queue, store=env.store, decode=decode_image,
+        engine=GraphologyEngine(), clock=env.clock, context=env.ctx,
+        worker_id="story-worker-invalid", engine_version=__version__,
+    )
+    enabled = ReportReadingRuntime(
+        story_writer_enabled=True, premium_v2_enabled=False,
+        writer_template="individual-report/4", reading_manifest_sha256=None,
+    )
+    disabled = ReportReadingRuntime(
+        story_writer_enabled=False, premium_v2_enabled=False,
+        writer_template="individual-report/2", reading_manifest_sha256=None,
+    )
+    policy = StoryPolicy(
+        presentation_version="presentation/2",
+        chapters=tuple(ChapterCopy(section_id=s, neutral_content_id=f"synthetic.neutral.{s}",
+                                   unavailable_content_id=f"synthetic.unavailable.{s}") for s in CHAPTER_ORDER),
+        neutral_overview_content_id="synthetic.overview.neutral",
+        unqualified_overview_content_id="synthetic.overview.unqualified",
+        relation_registry={"policy_version": "combination-policy/1", "relations": []},
+    )
+    for options, reason in (
+        ({"report_reading_runtime": enabled}, "report_story_source_not_installed"),
+        ({"report_reading_runtime": disabled, "story_policy": policy}, "report_story_policy_without_writer"),
+        ({"report_reading_runtime": ReportReadingRuntime(
+            True, False, "individual-report/2", None), "story_policy": policy}, "report_writer_template_mismatch"),
+        ({"report_reading_runtime": enabled, "story_policy": policy,
+          "engine": GraphologyEngine(evidence_guard_enabled=True)}, "report_story_research_guard_conflict"),
+    ):
+        with pytest.raises(InvalidInput) as rejected:
+            AnalysisWorker(**{**base, **options})
+        assert rejected.value.code == reason
