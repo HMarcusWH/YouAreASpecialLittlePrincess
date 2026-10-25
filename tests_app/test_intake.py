@@ -734,7 +734,6 @@ def test_story_worker_selects_v4_before_reference_and_persists_exact_free_report
     import json
 
     import generate_presentation_content as presentation_generator
-    from princess_app.config_reports import ReportReadingRuntime
     from princess_app.domain.content import presentation as content_runtime
     from princess_app.domain.reports.story import CHAPTER_ORDER, ChapterCopy, StoryPolicy
 
@@ -768,17 +767,13 @@ def test_story_worker_selects_v4_before_reference_and_persists_exact_free_report
             unqualified_overview_content_id="synthetic.first-reveal.unqualified",
             relation_registry={"policy_version": "combination-policy/1", "relations": []},
         )
-        selection = ReportReadingRuntime(
-            story_writer_enabled=True, premium_v2_enabled=False,
-            writer_template="individual-report/4", reading_manifest_sha256=None,
-        )
         owner = account(world, "sub-v4-worker-synthetic").principal_id
         _, run_id = env.analysis(owner)
         worker = AnalysisWorker(
             queue=env.queue, store=env.store, decode=decode_image,
             engine=GraphologyEngine(), clock=env.clock, context=env.ctx,
             worker_id="story-worker-synthetic", engine_version=__version__,
-            report_reading_runtime=selection, story_policy=policy,
+            writer_template="individual-report/4", story_policy=policy,
         )
         outcome = worker.run_once()
         assert outcome.outcome == "SUCCEEDED", outcome
@@ -805,21 +800,12 @@ def test_story_worker_selects_v4_before_reference_and_persists_exact_free_report
 
 
 def test_story_worker_fails_closed_on_unsupported_or_implicit_authority(env):  # noqa: F811
-    from princess_app.config_reports import ReportReadingRuntime
     from princess_app.domain.reports.story import CHAPTER_ORDER, ChapterCopy, StoryPolicy
 
     base = dict(
         queue=env.queue, store=env.store, decode=decode_image,
         engine=GraphologyEngine(), clock=env.clock, context=env.ctx,
         worker_id="story-worker-invalid", engine_version=__version__,
-    )
-    enabled = ReportReadingRuntime(
-        story_writer_enabled=True, premium_v2_enabled=False,
-        writer_template="individual-report/4", reading_manifest_sha256=None,
-    )
-    disabled = ReportReadingRuntime(
-        story_writer_enabled=False, premium_v2_enabled=False,
-        writer_template="individual-report/2", reading_manifest_sha256=None,
     )
     policy = StoryPolicy(
         presentation_version="presentation/2",
@@ -830,12 +816,14 @@ def test_story_worker_fails_closed_on_unsupported_or_implicit_authority(env):  #
         relation_registry={"policy_version": "combination-policy/1", "relations": []},
     )
     for options, reason in (
-        ({"report_reading_runtime": enabled}, "report_story_source_not_installed"),
-        ({"report_reading_runtime": disabled, "story_policy": policy}, "report_story_policy_without_writer"),
-        ({"report_reading_runtime": ReportReadingRuntime(
-            True, False, "individual-report/2", None), "story_policy": policy}, "report_writer_template_mismatch"),
-        ({"report_reading_runtime": enabled, "story_policy": policy,
-          "engine": GraphologyEngine(evidence_guard_enabled=True)}, "report_story_research_guard_conflict"),
+        ({"writer_template": "individual-report/4"}, "report_story_source_not_installed"),
+        ({"writer_template": "individual-report/2", "story_policy": policy},
+         "report_story_policy_without_writer"),
+        ({"writer_template": "individual-report/3", "story_policy": policy},
+         "report_writer_template_unknown"),
+        ({"writer_template": "individual-report/4", "story_policy": policy,
+          "engine": GraphologyEngine(evidence_guard_enabled=True)},
+         "report_story_research_guard_conflict"),
     ):
         with pytest.raises(InvalidInput) as rejected:
             AnalysisWorker(**{**base, **options})
