@@ -44,6 +44,13 @@
      historical v1/v2 print pagination stays untouched. */
   .pr-print .pr-report.pr-compact-unqualified .pr-section { margin-block: var(--space-2); }
 }
+/* Exact source provenance shown only in the new Free chapter detail layer.
+   Identifiers are saved report facts, never computed or inferred here. */
+.pr-fact-provenance { display: block; margin-top: var(--space-2);
+  font-family: var(--font-family-numeric); font-weight: var(--font-weight-normal);
+  font-size: var(--font-size-xs); color: var(--color-text-muted); overflow-wrap: anywhere; }
+.pr-fact-provenance > span { display: block; margin-top: var(--space-1); }
+
 /* /4 Free chapter treatment: source-backed copy precedes an opt-in technical drawer.
    All rows remain in the document. Print/EXPORT always renders expanded data. */
 @media screen {
