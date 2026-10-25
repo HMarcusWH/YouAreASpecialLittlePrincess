@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "premium-reading-packet.schema.json",
+  "title": "PremiumReadingPacket",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "contract_version": {
+      "const": "1.0.0"
+    },
+    "packet_id": {
+      "type": "string",
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$"
+    },
+    "reading_pack_version": {
+      "const": "premium-reading/2"
+    },
+    "output_schema_version": {
+      "const": "premium-reading-output/2"
+    },
+    "policy_manifest_sha256": {
+      "type": "string",
+      "maxLength": 64,
+      "minLength": 64,
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "selector_packet": {
+      "$ref": "premium-packet.schema.json"
+    },
+    "support": {
+      "$ref": "reading-support.schema.json"
+    },
+    "block_specs": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/PremiumReadingPacketBlockSpecsItem"
+      },
+      "minItems": 3,
+      "maxItems": 8
+    }
+  },
+  "required": [
+    "contract_version",
+    "packet_id",
+    "reading_pack_version",
+    "output_schema_version",
+    "policy_manifest_sha256",
+    "selector_packet",
+    "support",
+    "block_specs"
+  ]
+}
