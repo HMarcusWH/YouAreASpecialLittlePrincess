@@ -685,6 +685,15 @@ def test_guarded_private_job_publishes_v3_and_preserves_missingness(env, world):
         report_template="individual-report/3",
     )
     run_id = guarded_intake.start_analysis(owner, capture.capture_id)
+    with env.app_db.session(owner) as conn:
+        payload = conn.execute(text("SELECT payload FROM app.job WHERE subject_ref = :r"),
+                               {"r": run_id}).scalar()
+        assert payload["report_template"] == "individual-report/3"
+    # A historical, pre-pin guarded job still belongs to the /3 research
+    # worker when its saved engine configuration digest matches.
+    with env.worker_db.session() as conn:
+        conn.execute(text("UPDATE app.job SET payload = payload - 'report_template' "
+                          "WHERE subject_ref = :r"), {"r": run_id})
     guarded_worker = AnalysisWorker(
         queue=env.queue, store=env.store, decode=decode_image,
         engine=GraphologyEngine(evidence_guard_enabled=True),
