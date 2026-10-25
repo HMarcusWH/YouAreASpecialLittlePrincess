@@ -118,6 +118,8 @@ const EN: Record<string, string> = {
   "value.no": "No",
   "fact.observations": "Observations",
   "fact.method": "Method",
+  "fact.reason_code": "Unavailable reason code",
+  "fact.source_regions": "Evidence regions",
 };
 
 const SV: Record<string, string> = {
@@ -234,6 +236,8 @@ const SV: Record<string, string> = {
   "value.no": "Nej",
   "fact.observations": "Observationer",
   "fact.method": "Metod",
+  "fact.reason_code": "Orsakskod för saknat värde",
+  "fact.source_regions": "Underlagsregioner",
 };
 
 const CATALOGS: Record<Locale, Record<string, string>> = { en: EN, sv: SV };
