@@ -143,6 +143,7 @@ def select_relations(
         if not isinstance(descriptor, ReadingDescriptor) or descriptor.candidate_id in selected:
             raise ValueError("invalid or duplicate reading descriptor")
         if (not descriptor.support_fact_ids
+                or type(descriptor.strength) not in (int, float)
                 or not isfinite(descriptor.strength)
                 or any(not isinstance(fid, str) or not fid for fid in descriptor.support_fact_ids)):
             raise ValueError("invalid relation descriptor support")
@@ -159,7 +160,7 @@ def select_relations(
         required = rule.get("required_descriptors")
         if (not isinstance(relation_id, str) or not relation_id
                 or relation_id in seen_relations
-                or kind not in RELATION_KINDS
+                or not isinstance(kind, str) or kind not in RELATION_KINDS
                 or not isinstance(content_id, str) or not content_id
                 or not isinstance(required, (list, tuple))
                 or len(required) < 2
