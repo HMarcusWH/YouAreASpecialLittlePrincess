@@ -54,6 +54,7 @@ Inventory only: consult [command safety](commands.md) and [testing](../developme
 | [tools/check_environments.py](../../tools/check_environments.py) | Validate every reviewed environment manifest under infra/environments. |
 | [tools/check_graphology_research.py](../../tools/check_graphology_research.py) | Check the frozen research import; optionally reconstruct the original artifacts. |
 | [tools/check_release_compatibility.py](../../tools/check_release_compatibility.py) | Check runtime-release/1 compatibility and emit rollout-qualification/1. |
+| [tools/check_report_source_bundle.py](../../tools/check_report_source_bundle.py) | Inspect the exact R1 handover ZIP *before* any source import. |
 | [tools/check_supabase_staging_auth_closeout.py](../../tools/check_supabase_staging_auth_closeout.py) | Fail closed unless all three Supabase staging Auth evidence gates are complete. |
 | [tools/compile_premium_interpretation_db.py](../../tools/compile_premium_interpretation_db.py) | Compile the modular graphology interpretation database into one self-contained T15 artifact. |
 | [tools/consent_primitives.py](../../tools/consent_primitives.py) | Small, stdlib-only building blocks shared by consent contract boundaries. |
