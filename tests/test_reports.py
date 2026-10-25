@@ -482,9 +482,9 @@ def test_new_premium_purchase_uses_shared_suitability_across_legacy_templates():
             commerce.request_premium("owner_fixture_1", "report_1", Platform.WEB)
         assert rejected.value.code == "premium_sample_ineligible"
 
-        # Historical published overlays are still readable when authorized;
-        # the new-purchase precondition does not retroactively revoke them.
-        prior = revise_report(doc, created_at=T0 + timedelta(minutes=1),
+        # Historical authorized paid views remain available; the new
+        # suitability gate applies to newly created overlays, not reads.
+        prior = revise_report(report(), created_at=T0 + timedelta(minutes=1),
                               premium_overlay_id="overlay_legacy")
         assert prior.ok, prior.issues
         old_view = project_report(prior.value, ProjectionRequest(
@@ -508,3 +508,47 @@ def test_new_premium_purchase_uses_shared_suitability_across_legacy_templates():
     assert allowed.ok, allowed.issues
     assert any(action["kind"] == "PURCHASE" and action["enabled"]
                for action in allowed.value.data["actions"])
+
+def test_new_paid_publication_fails_closed_for_blank_legacy_versions():
+    blank = GraphologyEngine().analyze(np.full((80, 120), 255, np.uint8)).to_dict()
+    for version in ("individual-report/1", "individual-report/2", "individual-report/3"):
+        reference = analysis_reference(
+            analysis_id="analysis_blank_publish", run_id="run_blank_publish",
+            owner_id="owner_fixture_1", input_asset_id="asset_blank_publish",
+            input_sha256="0" * 64,
+            processed_sha256=blank["metadata"]["input_pixels_sha256"],
+            created_at=T0, engine_version="0.1.0",
+            analysis_config_sha256="1" * 64, template=version,
+        )
+        ordinary = report(analysis=reference, result=blank, evidence=None)
+        assert ordinary is not None
+        assert len(ordinary.data["facts"]) == 64
+
+        # New revision-1 paid overlays must be refused before publication.
+        injected = assemble_report(
+            report_id="report_1", analysis=reference, result=blank,
+            created_at=T0, locale="en", evidence=None,
+            premium_overlay_id="overlay_not_qualified",
+        )
+        assert codes(injected) == {"PREMIUM_SAMPLE_INELIGIBLE"}
+
+        # The same guard applies when adding an overlay to a saved revision.
+        appended = revise_report(
+            ordinary, created_at=T0 + timedelta(minutes=1),
+            premium_overlay_id="overlay_not_qualified",
+        )
+        assert codes(appended) == {"PREMIUM_SAMPLE_INELIGIBLE"}
+
+
+def test_partial_word_group_does_not_qualify_for_new_paid_publication():
+    sample = copy.deepcopy(RESULT)
+    # This is a synthetic mutation of the engine fixture, not a claim that
+    # real text with missing word groups has been accurately segmented.
+    sample["measurements"]["PAGE_WORD_COUNT"]["raw_value"] = 0
+    sample["measurements"]["PAGE_WORD_COUNT"]["quality_flag"] = "EXPERIMENTAL"
+    first = report(result=sample, evidence=evidence())
+    assert len(first.data["facts"]) == 64
+    assert codes(revise_report(
+        first, created_at=T0 + timedelta(minutes=1),
+        premium_overlay_id="overlay_partial",
+    )) == {"PREMIUM_SAMPLE_INELIGIBLE"}
