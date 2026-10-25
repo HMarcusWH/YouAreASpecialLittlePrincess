@@ -52,8 +52,8 @@ function FactRow({ fact, locale }: { fact: Fact; locale: Locale }) {
   );
 }
 
-function SectionBlock({ section, facts, locale, compactMissing }: { section: ReportSection; facts: Map<string, Fact>;
-                                                    locale: Locale; compactMissing: boolean }) {
+function SectionBlock({ section, facts, locale, compactMissing, printMode }: { section: ReportSection; facts: Map<string, Fact>;
+                                                    locale: Locale; compactMissing: boolean; printMode: boolean }) {
   const rows = section.fact_ids.map((id) => facts.get(id)).filter((f): f is Fact => f !== undefined);
   const headingId = `section-${section.section_id}`;
   const heading = sectionTitle(section.template, locale, section.section_id);
@@ -67,6 +67,18 @@ function SectionBlock({ section, facts, locale, compactMissing }: { section: Rep
   const copy = section.content_ids
     .map((contentId) => contentText(contentId, locale))
     .filter((value): value is string => value !== undefined);
+  const hasMissingCopy = copy.length !== section.content_ids.length;
+  const chapter = /^section\.(slant|baseline|spacing|size|layout|ink)$/.test(section.section_id);
+  const connection = section.template === "PATTERN_CONNECTION";
+  const collapseFacts = !printMode && (connection || (chapter && section.content_ids.length > 0));
+  const factTable = !fullyMissing && shownRows.length > 0 ? (
+    <div className="pr-table-wrap">
+      <table className="pr-facts">
+        <caption className="pr-visually-hidden">{heading}: {t(locale, "report.facts")}</caption>
+        <tbody>{shownRows.map((fact) => <FactRow key={fact.fact_id} fact={fact} locale={locale} />)}</tbody>
+      </table>
+    </div>
+  ) : null;
   if (highlight) {
     const title = section.template === "HIGHLIGHT_PRIMARY"
       ? t(locale, "report.what_stands_out")
@@ -80,6 +92,7 @@ function SectionBlock({ section, facts, locale, compactMissing }: { section: Rep
             <EvidenceBadge evidence="AUTHORED_CONTENT" locale={locale} /> {value}
           </p>
         ))}
+        {hasMissingCopy && <p className="pr-unavailable" role="status">{t(locale, "report.copy_unavailable")}</p>}
         {section.availability === "UNCALIBRATED" && (
           <p className="pr-hint">{t(locale, "availability.UNCALIBRATED")}</p>
         )}
@@ -98,6 +111,13 @@ function SectionBlock({ section, facts, locale, compactMissing }: { section: Rep
     <section className="pr-section" aria-labelledby={headingId} data-section={section.section_id}
              data-availability={section.availability}>
       <h2 id={headingId}>{heading}</h2>
+      {connection && <p className="pr-hint">{t(locale, "report.connections_noncausal")}</p>}
+      {copy.map((value, index) => (
+        <p className="pr-chapter-copy" key={`${section.section_id}-copy-${index}`}>
+          <EvidenceBadge evidence="AUTHORED_CONTENT" locale={locale} /> {value}
+        </p>
+      ))}
+      {hasMissingCopy && <p className="pr-unavailable" role="status">{t(locale, "report.copy_unavailable")}</p>}
       {section.template === "SAMPLE_SUITABILITY" && section.availability === "INELIGIBLE" && (
         <p className="pr-unavailable" role="status">{t(locale, "report.handwriting_unverified")}</p>
       )}
@@ -109,14 +129,12 @@ function SectionBlock({ section, facts, locale, compactMissing }: { section: Rep
       ) : section.availability !== "READY" && section.availability !== "UNCALIBRATED" && rows.length === 0 ? (
         <p className="pr-unavailable">{t(locale, `availability.${section.availability}`)}</p>
       ) : null}
-      {!fullyMissing && shownRows.length > 0 ? (
-        <div className="pr-table-wrap">
-          <table className="pr-facts">
-            <caption className="pr-visually-hidden">{heading}: {t(locale, "report.facts")}</caption>
-            <tbody>{shownRows.map((fact) => <FactRow key={fact.fact_id} fact={fact} locale={locale} />)}</tbody>
-          </table>
-        </div>
-      ) : null}
+      {collapseFacts && factTable ? (
+        <details className="pr-measurement-details">
+          <summary>{t(locale, "report.see_measurements")}</summary>
+          {factTable}
+        </details>
+      ) : factTable}
       {compactedRows.length > 0 ? (
         <div className="pr-missing-summary" data-withheld-count={compactedRows.length}>
           <p className="pr-unavailable">{t(locale, "report.withheld_family").replace("{count}", String(compactedRows.length))}</p>
@@ -173,7 +191,11 @@ export function ReportView({ view, locale, evidence, onAction, showHeader = true
   const isHighlight = (section: ReportSection) =>
     section.template === "HIGHLIGHT_PRIMARY" || section.template === "HIGHLIGHT_SECONDARY";
   const highlights = view.sections.filter(isHighlight);
-  const reportSections = view.sections.filter((section) => !isHighlight(section));
+  const connections = view.sections.filter((section) => section.template === "PATTERN_CONNECTION");
+  const reportSections = view.sections.filter((section) => !isHighlight(section) && section.template !== "PATTERN_CONNECTION");
+  const referenceAndPremium = reportSections.filter((section) => section.section_id === "section.reference"
+    || section.section_id === "section.premium");
+  const technicalSections = reportSections.filter((section) => !referenceAndPremium.includes(section));
   // Presentation only: all canonical facts remain stored and authorized.
   const compactMissing = reportSections.some((section) => section.section_id === "section.sample"
     && section.availability === "INELIGIBLE");
@@ -194,7 +216,7 @@ export function ReportView({ view, locale, evidence, onAction, showHeader = true
           <p className="pr-eyebrow">{t(locale, "report.first_reveal")}</p>
           {highlights.map((section) => (
             <SectionBlock key={section.section_id} section={section} facts={facts} locale={locale}
-                          compactMissing={compactMissing} />
+                          compactMissing={compactMissing} printMode={view.projection === "EXPORT"} />
           ))}
         </section>
       )}
@@ -203,11 +225,26 @@ export function ReportView({ view, locale, evidence, onAction, showHeader = true
 
       <section className="pr-dossier-body" aria-label={t(locale, "report.mechanical_dossier")}>
         <p className="pr-eyebrow">{t(locale, "report.mechanical_dossier")}</p>
-        {reportSections.map((section) => (
+        {technicalSections.map((section) => (
           <SectionBlock key={section.section_id} section={section} facts={facts} locale={locale}
                           compactMissing={compactMissing} />
         ))}
       </section>
+
+      {connections.length > 0 && (
+        <section className="pr-connections" aria-label={t(locale, "report.connections")}>
+          <p className="pr-eyebrow">{t(locale, "report.connections")}</p>
+          {connections.map((section) => (
+            <SectionBlock key={section.section_id} section={section} facts={facts} locale={locale}
+                          compactMissing={compactMissing} printMode={view.projection === "EXPORT"} />
+          ))}
+        </section>
+      )}
+
+      {referenceAndPremium.map((section) => (
+        <SectionBlock key={section.section_id} section={section} facts={facts} locale={locale}
+                      compactMissing={compactMissing} printMode={view.projection === "EXPORT"} />
+      ))}
 
       {evidence === null && (
         <section className="pr-evidence" aria-labelledby="evidence-unavailable-title">
