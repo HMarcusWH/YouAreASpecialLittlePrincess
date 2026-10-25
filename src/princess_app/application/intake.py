@@ -378,10 +378,12 @@ class IntakeService:
         if capture.original_erased:
             raise Conflict("original_not_retained")
         epoch = self._permissions.require(owner_id, SERVICE_PURPOSE, Scope("SPECIMEN", capture_id))
-        # Historical /2 dedupe IDs remain stable; new templates receive a
-        # distinct idempotency scope instead of inheriting a queued /2 run.
+        # /2 and private research /3 keep their historical dedupe keys:
+        # /3 already has a distinct, guard-bound engine configuration digest.
+        # Only /4 shares the ordinary engine config and requires a distinct
+        # writer suffix to avoid aliasing an existing queued /2 analysis.
         dedupe_key = f"{ANALYSIS_KIND}:{capture_id}:{self._config[:16]}"
-        if self._report_template != TEMPLATE_VERSION:
+        if self._report_template == STORY_TEMPLATE_VERSION:
             dedupe_key += f":{self._report_template}"
         existing = self._repo.find_analysis(owner_id, dedupe_key)
         if existing is not None:
