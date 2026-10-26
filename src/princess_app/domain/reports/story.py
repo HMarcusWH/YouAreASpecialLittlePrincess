@@ -1,13 +1,14 @@
 """Pure /4 Free Dossier section composition from saved canonical facts.
 
-Inactive until the reviewed R1 presentation/2 and six-chapter content
-catalogues are installed. The application assembles/persists the immutable
+The reviewed R1 presentation/2 and six-chapter catalogues are installed,
+but the production /4 worker remains disabled. The application assembles/persists the immutable
 ReportDocument and authorizes evidence separately; this domain module never
 reads a source image, creates a report revision or calls any provider.
 """
 from __future__ import annotations
 
 from dataclasses import dataclass
+from types import MappingProxyType
 from typing import Any, Mapping, Sequence
 
 from ..content.presentation import (
@@ -15,7 +16,10 @@ from ..content.presentation import (
     presentation_registry,
     select_highlights,
 )
-from ..content.reading import select_descriptors, select_relations
+from ..content.reading import (
+    reading_content_text, reading_registry, reading_state_content_id,
+    select_descriptors, select_relations,
+)
 from .suitability import ReportSuitability, assess_report_suitability
 from .template import FACT_SECTIONS
 
@@ -59,6 +63,57 @@ class StoryPolicy:
     neutral_overview_content_id: str
     unqualified_overview_content_id: str
     relation_registry: Mapping[str, Any]
+    # The pre-R1 synthetic story contract did not define a PARTIAL copy ID.
+    # Keep its historical fallback, but new source-bound policy supplies it.
+    partial_overview_content_id: str | None = None
+
+
+def story_policy_from_reviewed_reading() -> StoryPolicy:
+    """Build immutable Free /4 policy from exact reviewed, source-pinned R1.
+
+    No API, worker, provider, entitlement or payment state is consulted here.
+    The Premium selector remains inactive even though the shared source bundle
+    records its version. External callers cannot mutate the returned policy.
+    """
+    source = reading_registry()
+    if (source["presentation_version"] != STORY_PRESENTATION_VERSION
+            or tuple(row["section_id"] for row in source["chapters"]) != CHAPTER_ORDER):
+        raise ValueError("reviewed reading story source order/version mismatch")
+    chapters = tuple(ChapterCopy(
+        section_id=row["section_id"],
+        neutral_content_id=row["neutral_content_id"],
+        unavailable_content_id=row["unavailable_content_id"],
+    ) for row in source["chapters"])
+    # Every generated ID must actually resolve in both languages before this
+    # policy can be passed to the existing /4 assembler.
+    state_ids = {key: reading_state_content_id(key)
+                 for key in ("NEUTRAL", "PARTIAL", "UNQUALIFIED")}
+    authored_ids = [*state_ids.values(), *(
+        cid for chapter in chapters for cid in (
+            chapter.neutral_content_id, chapter.unavailable_content_id
+        )
+    ), *(row["content_id"] for row in source["relations"])]
+    if len(set(authored_ids)) != 21:
+        raise ValueError("reviewed reading story content ID collision")
+    for content_id in authored_ids:
+        for locale in ("en", "sv"):
+            reading_content_text(content_id, locale)
+    # Freeze all nested relationship records, not merely the StoryPolicy shell.
+    relations = tuple(MappingProxyType({
+        "relation_id": row["relation_id"], "kind": row["kind"],
+        "content_id": row["content_id"],
+        "required_descriptors": tuple(row["required_descriptors"]),
+    }) for row in source["relations"])
+    return StoryPolicy(
+        presentation_version=source["presentation_version"],
+        chapters=chapters,
+        neutral_overview_content_id=state_ids["NEUTRAL"],
+        unqualified_overview_content_id=state_ids["UNQUALIFIED"],
+        partial_overview_content_id=state_ids["PARTIAL"],
+        relation_registry=MappingProxyType({
+            "policy_version": source["policy_version"], "relations": relations,
+        }),
+    )
 
 
 def _fact_map(facts: object) -> dict[str, Mapping[str, Any]]:
@@ -117,12 +172,15 @@ def build_neutral_overview(
         and by_feature[feature_id]["value"] > 0
     ]
     unqualified = suitability is ReportSuitability.UNQUALIFIED
+    partial = suitability is ReportSuitability.PARTIAL
+    fallback_id = (policy.unqualified_overview_content_id if unqualified
+                   else policy.partial_overview_content_id if partial
+                   and policy.partial_overview_content_id is not None
+                   else policy.neutral_overview_content_id)
     return _section(
         "section.highlight.primary", "HIGHLIGHT_PRIMARY",
         "INELIGIBLE" if unqualified else "UNCALIBRATED",
-        [] if unqualified else usable,
-        [policy.unqualified_overview_content_id if unqualified
-         else policy.neutral_overview_content_id],
+        [] if unqualified else usable, [fallback_id],
     )
 
 
@@ -149,7 +207,9 @@ def build_story_sections(
                    for ch in policy.chapters)
             or tuple(ch.section_id for ch in policy.chapters) != CHAPTER_ORDER
             or not policy.neutral_overview_content_id
-            or not policy.unqualified_overview_content_id):
+            or not policy.unqualified_overview_content_id
+            or (policy.partial_overview_content_id is not None
+                and not policy.partial_overview_content_id)):
         raise ValueError("incomplete or misordered six-chapter content policy")
 
     facts = report_input.get("facts")
