@@ -369,8 +369,8 @@ class PostgresJobQueue:
                 "AND payload->>'story_source_sha256' = :source "
                 "AND jsonb_typeof(payload->'report_locale') = 'string' "
                 "AND payload->>'report_locale' IN ('en', 'sv') "
-                "AND right(dedupe_key, length(:source_prefix || payload->>'report_locale' || :marker)) "
-                "= (:source_prefix || payload->>'report_locale' || :marker))) "
+                "AND right(dedupe_key, length(:source_prefix || (payload->>'report_locale') || :marker)) "
+                "= (:source_prefix || (payload->>'report_locale') || :marker))) "
                 "RETURNING owner_id, subject_ref, payload"),
                 {"now": now, "k": ANALYSIS_KIND, "max": MAX_ATTEMPTS, "template": report_template,
                  "legacy": TEMPLATE_VERSION, "guard": EVIDENCE_SUPPORT_TEMPLATE_VERSION,
@@ -404,8 +404,8 @@ class PostgresJobQueue:
                 "AND payload->>'story_source_sha256' = :source "
                 "AND jsonb_typeof(payload->'report_locale') = 'string' "
                 "AND payload->>'report_locale' IN ('en', 'sv') "
-                "AND right(dedupe_key, length(:source_prefix || payload->>'report_locale' || :marker)) "
-                "= (:source_prefix || payload->>'report_locale' || :marker))) "
+                "AND right(dedupe_key, length(:source_prefix || (payload->>'report_locale') || :marker)) "
+                "= (:source_prefix || (payload->>'report_locale') || :marker))) "
                 "ORDER BY created_at "
                 "FOR UPDATE SKIP LOCKED LIMIT 1) "
                 "RETURNING job_id, owner_id, subject_ref, fencing_token, attempts, payload"),
