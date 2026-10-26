@@ -74,7 +74,7 @@ def test_support_detects_unknown_relation_member_and_forged_union():
     assert "READING_FOREIGN_DESCRIPTOR" in codes(compile_document("ReadingSupport", s))
 
     s = synthetic_support()
-    s["relations"][0]["support_fact_ids"] = ["fact.OTHER"]
+    s["relations"][0]["support_fact_ids"] = ["fact.OTHER", "fact.UNRELATED"]
     s["support_digest"] = None
     s["support_digest"] = canonical_digest(s)
     assert "READING_RELATION_FACT_MISMATCH" in codes(
@@ -137,3 +137,11 @@ def test_published_revision_must_be_later_than_source_basis():
     assert "READING_BASIS_REVISION_MISMATCH" in codes(
         compile_document("PremiumReadingView", view)
     )
+
+
+def test_relation_min_items_is_a_separate_structural_guard():
+    s = synthetic_support()
+    s["relations"][0]["support_fact_ids"] = ["fact.OTHER"]
+    s["support_digest"] = None
+    s["support_digest"] = canonical_digest(s)
+    assert "MIN_ITEMS" in codes(compile_document("ReadingSupport", s))
