@@ -145,6 +145,15 @@ def validate_reading_content(
         raise ValueError("Premium cannot waive independent review")
     if manifest.get("base_t26_sha256") != hashlib.sha256(T26_SOURCE.read_bytes()).hexdigest():
         raise ValueError("Premium selector source digest drift")
+    # Freeze the proposed allowlist to actual published T26 definitions. A
+    # valid-looking Q_* name alone must not create a new model question.
+    frozen = json.loads(T26_SOURCE.read_text(encoding="utf-8"), object_pairs_hook=_unique_pairs)
+    packs = [row for row in frozen["question_packs"]
+             if row["pack_id"] == manifest["base_selector_pack"]]
+    defined = {row["question_id"] for row in frozen["question_definitions"]}
+    if (len(packs) != 1 or
+            not set(selected) <= set(packs[0]["question_ids"]) & defined):
+        raise ValueError("Premium selector allowlist contains a foreign T26 question")
 
 
 def compile_registry(sources: dict[str, dict[str, Any]], digests: dict[str, str]) -> dict[str, Any]:
