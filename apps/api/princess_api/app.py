@@ -152,6 +152,9 @@ class CompleteBody(_Strict):
 
 class AnalysisBody(_Strict):
     capture_id: str = Field(pattern=r"^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$")
+    # R2-B: explicit, owner-authenticated admission locale on private Free /4.
+    # Legacy writers keep their previous request/response and saved locale.
+    locale: Literal["en", "sv"] | None = None
 
 
 class CheckoutBody(_Strict):
@@ -447,7 +450,7 @@ def create_app(services: Services) -> FastAPI:
 
     @app.post("/v1/analyses", status_code=202)
     def start_analysis(body: AnalysisBody, who: Principal = Depends(principal)) -> dict:
-        run_id = intake().start_analysis(who.principal_id, body.capture_id)
+        run_id = intake().start_analysis(who.principal_id, body.capture_id, locale=body.locale)
         status = intake().status(who.principal_id, run_id)
         return {"run_id": run_id, "state": status.state}
 

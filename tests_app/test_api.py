@@ -275,6 +275,12 @@ def test_composed_local_stack_upload_to_report(app_url, worker_db, tmp_path, mon
     grant = {"purpose_id": "service_processing", "scope_kind": "SPECIMEN", "scope_ref": capture["capture_id"],
              "decision": "GRANT", "notice_version": "notice.consent-choices:1"}
     assert api.post("/v1/me/permissions", json=grant, headers=auth).status_code == 201
+    # Legacy clients still omit the /4-only locale. They cannot accidentally
+    # re-label an existing /2 report, nor ask for a nonreviewed language.
+    for locale in ("sv", "fr"):
+        denied = api.post("/v1/analyses", json={"capture_id": capture["capture_id"],
+                                                "locale": locale}, headers=auth)
+        assert denied.status_code == 422
     started = api.post("/v1/analyses", json={"capture_id": capture["capture_id"]}, headers=auth)
     assert started.status_code == 202 and started.json()["state"] == "QUEUED"
     run_id = started.json()["run_id"]

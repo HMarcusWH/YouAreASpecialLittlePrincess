@@ -154,6 +154,16 @@ def _load_reading_registry() -> dict[str, Any]:
     return data
 
 
+def reviewed_reading_sha256() -> str:
+    """Return the exact vetted R1 server-registry hash after validating its bytes.
+
+    API admission and workers bind this identity to private /4 jobs. The
+    generated draft source never gives permission to activate Premium.
+    """
+    _load_reading_registry()
+    return _READING_SHA256
+
+
 def reading_registry() -> Mapping[str, Any]:
     """Expose a detached copy, never the cached mutable server authority."""
     return copy.deepcopy(_load_reading_registry())

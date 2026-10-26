@@ -12,11 +12,14 @@ import re
 from dataclasses import dataclass
 from typing import Mapping
 
+from .domain.content.reading import reviewed_reading_sha256
+from .domain.reports.story import StoryPolicy, story_policy_from_reviewed_reading
 from .ports.base import InvalidInput
 
 LEGACY_WRITER = "individual-report/2"
 STORY_WRITER = "individual-report/4"
 READING_PACK = "premium-reading/2"
+FREE_SOURCE_PIN_ENV = "PRINCESS_EXPECTED_FREE_READING_REGISTRY_SHA256"
 
 
 @dataclass(frozen=True)
@@ -25,6 +28,43 @@ class ReportReadingRuntime:
     premium_v2_enabled: bool
     writer_template: str
     reading_manifest_sha256: str | None
+
+
+@dataclass(frozen=True)
+class VerifiedFreeStorySource:
+    """Verified local/test Free story policy and content identity, not an activation token."""
+
+    sha256: str
+    policy: StoryPolicy
+
+
+def resolve_free_story_source(
+    environ: Mapping[str, str], *, report_runtime: ReportReadingRuntime,
+) -> VerifiedFreeStorySource | None:
+    """Fail closed *before* database or asset I/O on private /4 opt-in.
+
+    This remains unavailable to public guest deployments and all staging or
+    production providers while native/web/export /4 readers are unqualified.
+    Neither the Premium manifest nor any HTTP-supplied flag can enable it.
+    """
+    if not report_runtime.story_writer_enabled:
+        return None
+    if (environ.get("PRINCESS_ENV") not in ("local", "test")
+            or environ.get("PRINCESS_TEST_PUBLIC_GUEST_ONLY") == "1"):
+        raise InvalidInput("report_story_private_test_only")
+    if environ.get("PRINCESS_EVIDENCE_SUPPORT_RESEARCH_OPT_IN") == "1":
+        raise InvalidInput("report_story_research_guard_conflict")
+    expected = environ.get(FREE_SOURCE_PIN_ENV)
+    if not isinstance(expected, str) or re.fullmatch(r"[0-9a-f]{64}", expected) is None:
+        raise InvalidInput("report_story_source_pin_missing")
+    try:
+        current = reviewed_reading_sha256()
+        policy = story_policy_from_reviewed_reading()
+    except (OSError, ValueError, KeyError, TypeError) as exc:
+        raise InvalidInput("report_story_source_invalid") from exc
+    if expected != current:
+        raise InvalidInput("report_story_source_pin_mismatch")
+    return VerifiedFreeStorySource(current, policy)
 
 
 def _strict_switch(environ: Mapping[str, str], name: str) -> bool:

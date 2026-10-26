@@ -44,7 +44,7 @@ from princess_app.application.notices import NoticeCatalog
 from princess_app.application.notifications import NotificationService
 from princess_app.application.permissions import PermissionService
 from princess_app.config import RuntimeConfig, load_runtime_config
-from princess_app.config_reports import resolve_report_reading_runtime
+from princess_app.config_reports import resolve_free_story_source, resolve_report_reading_runtime
 from princess_app.domain.reports.template import EVIDENCE_SUPPORT_TEMPLATE_VERSION
 from princess_app.config_supabase import normalized_manifest_sha256, parse_supabase_staging_runtime_binding
 from princess_app.domain.commerce import CATALOG
@@ -111,10 +111,9 @@ def compose(config: RuntimeConfig) -> Services:
     report_runtime = resolve_report_reading_runtime(
         os.environ, reviewed_reading_manifest={},
     )
-    # The approved /4 source is not installed. Refuse its opt-in before
-    # accepting work, never silently enqueue it as a /2 report.
-    if report_runtime.story_writer_enabled:
-        raise Unsupported("report_story_source_not_installed")
+    # Source-bounded Free /4 remains a private local/test capability. Load
+    # and pin the exact R1 story before reaching any database/provider.
+    story_source = resolve_free_story_source(os.environ, report_runtime=report_runtime)
     writer_template = (EVIDENCE_SUPPORT_TEMPLATE_VERSION if analysis_runtime.evidence_guard_enabled
                        else report_runtime.writer_template)
     db = Database(make_engine(config.secret("PRINCESS_DATABASE_URL")))
@@ -139,7 +138,8 @@ def compose(config: RuntimeConfig) -> Services:
                            challenge_site=os.environ.get("PRINCESS_CHALLENGE_SITE", "localhost"),
                            uploads_enabled=lambda: config.enabled("uploads"),
                            analysis_config=active_config_sha256,
-                           report_template=writer_template)
+                           report_template=writer_template,
+                           story_source_sha256=story_source.sha256 if story_source is not None else None)
     if config.provider_mode("PaymentProvider") is not ProviderMode.FAKE:
         # Real Stripe/StoreKit/Play adapters wait on accounts, products and terms
         # (price_account_terms_before_charges); only the fake rails compose.

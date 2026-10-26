@@ -18,6 +18,7 @@ from princess_app.adapters.postgres.intake import PostgresIntakeRepository, Post
 from princess_app.adapters.postgres.outbox import PostgresErasureOutbox
 from princess_app.adapters.postgres.stores import PostgresIdentityStore, PostgresPermissionStore, PostgresReportStore
 from princess_app.application.analysis_worker import MAX_ATTEMPTS, AnalysisWorker
+from princess_app.domain.content.reading import reviewed_reading_sha256
 from princess_app.application.erasure import ErasureWorker
 from princess_app.application.intake import ChallengeProof, IntakeService, analysis_config_sha256, propagate_withdrawal
 from princess_app.application.permissions import PermissionService
@@ -796,15 +797,17 @@ def test_story_worker_selects_v4_before_reference_and_persists_exact_free_report
             challenge=env.challenge, inspect=inspect_header, clock=env.clock,
             ids=env.intake._ids, challenge_site="app.test",
             report_template="individual-report/4",
+            story_source_sha256=reviewed_reading_sha256(),
         )
-        run_id = pinned_intake.start_analysis(owner, capture.capture_id)
+        run_id = pinned_intake.start_analysis(owner, capture.capture_id, locale="en")
         assert run_id != old_run
-        assert pinned_intake.start_analysis(owner, capture.capture_id) == run_id
+        assert pinned_intake.start_analysis(owner, capture.capture_id, locale="en") == run_id
         worker = AnalysisWorker(
             queue=env.queue, store=env.store, decode=decode_image,
             engine=GraphologyEngine(), clock=env.clock, context=env.ctx,
             worker_id="story-worker-synthetic", engine_version=__version__,
             writer_template="individual-report/4", story_policy=policy,
+            story_source_sha256=reviewed_reading_sha256(),
         )
         outcome = worker.run_once()
         assert outcome.outcome == "SUCCEEDED", outcome
@@ -861,6 +864,7 @@ def test_story_worker_fails_closed_on_unsupported_or_implicit_authority(env):  #
         ({"writer_template": "individual-report/3", "story_policy": policy},
          "report_writer_template_unknown"),
         ({"writer_template": "individual-report/4", "story_policy": policy,
+          "story_source_sha256": reviewed_reading_sha256(),
           "engine": GraphologyEngine(evidence_guard_enabled=True)},
          "report_story_research_guard_conflict"),
     ):
@@ -885,6 +889,7 @@ def test_job_writer_pin_survives_legacy_payload_and_deployment_restart(env, worl
                      {"r": run_id})
     assert env.queue.claim("v4-worker", 60, env.clock.now(),
                            report_template="individual-report/4",
+                           story_source_sha256=reviewed_reading_sha256(),
                            analysis_config=analysis_config_sha256()) is None
     with env.app_db.session(owner) as conn:
         assert conn.execute(text("SELECT attempts FROM app.job WHERE subject_ref = :r"),
@@ -909,6 +914,8 @@ def test_unknown_job_writer_and_explicit_null_cannot_be_claimed(env, world):  # 
     for version in ("individual-report/2", "individual-report/3", "individual-report/4"):
         assert env.queue.claim("unqualified", 60, env.clock.now(),
                                report_template=version,
+                               story_source_sha256=(reviewed_reading_sha256()
+                                                    if version == "individual-report/4" else None),
                                analysis_config=analysis_config_sha256()) is None
     with env.app_db.session(owner) as conn:
         assert conn.execute(text("SELECT state, attempts FROM app.job WHERE subject_ref = :r"),
@@ -970,6 +977,7 @@ def test_incompatible_new_worker_cannot_exhaust_expired_legacy_lease(env, world)
     # its final-attempt cleanup. A rollback can still inspect/repair it.
     assert env.queue.claim("v4-only", 60, env.clock.now(),
                            report_template="individual-report/4",
+                           story_source_sha256=reviewed_reading_sha256(),
                            analysis_config=analysis_config_sha256()) is None
     with env.app_db.session(owner) as conn:
         assert conn.execute(text("SELECT state, attempts, last_error FROM app.job WHERE subject_ref = :r"),
@@ -994,8 +1002,9 @@ def test_preclaim_payload_tampering_cannot_change_writer_identity(env, world):  
         challenge=env.challenge, inspect=inspect_header,
         clock=env.clock, ids=env.intake._ids, challenge_site="app.test",
         report_template="individual-report/4",
+        story_source_sha256=reviewed_reading_sha256(),
     )
-    run_v4 = pinned_v4.start_analysis(owner, capture.capture_id)
+    run_v4 = pinned_v4.start_analysis(owner, capture.capture_id, locale="en")
     assert run_v2 != run_v4
 
     # A mistaken migration/privileged operator changes only JSONB. The
@@ -1012,6 +1021,8 @@ def test_preclaim_payload_tampering_cannot_change_writer_identity(env, world):  
     for template in ("individual-report/2", "individual-report/4"):
         assert env.queue.claim("mismatched-version", 60, env.clock.now(),
                                report_template=template,
+                               story_source_sha256=(reviewed_reading_sha256()
+                                                    if template == "individual-report/4" else None),
                                analysis_config=analysis_config_sha256()) is None
     with env.app_db.session(owner) as conn:
         rows = conn.execute(text("SELECT subject_ref, state, attempts FROM app.job "
@@ -1019,3 +1030,206 @@ def test_preclaim_payload_tampering_cannot_change_writer_identity(env, world):  
                             {"r2": run_v2, "r4": run_v4}).all()
     assert len(rows) == 2
     assert all(row.state == "QUEUED" and row.attempts == 0 for row in rows)
+
+
+def private_story_intake(env):
+    """Synthetic local/test owner authority; not a production deployment switch."""
+    return IntakeService(
+        repo=env.repo, store=env.store, permissions=env.permissions,
+        challenge=env.challenge, inspect=inspect_header, clock=env.clock,
+        ids=env.intake._ids, challenge_site="app.test",
+        report_template="individual-report/4",
+        story_source_sha256=reviewed_reading_sha256(),
+    )
+
+
+def private_story_worker(env, name="r2b-private", *, digest=None):
+    from princess_app.domain.reports.story import story_policy_from_reviewed_reading
+
+    return AnalysisWorker(
+        queue=env.queue, store=env.store, decode=decode_image,
+        engine=GraphologyEngine(), clock=env.clock, context=env.ctx,
+        worker_id=name, engine_version=__version__, lease_seconds=60,
+        writer_template="individual-report/4",
+        story_policy=story_policy_from_reviewed_reading(),
+        story_source_sha256=reviewed_reading_sha256() if digest is None else digest,
+    )
+
+
+def test_r2b_private_real_registry_two_locales_and_legacy_queue_coexist(env, world):  # noqa: F811
+    """One real photo fixture, exact R1 Free copy, same-owner EN/SV job pins."""
+    from princess_app.domain.reports.story import CHAPTER_ORDER
+
+    owner = account(world, "sub-r2b-locales").principal_id
+    capture, legacy = env.analysis(owner)
+    story = private_story_intake(env)
+    run_sv = story.start_analysis(owner, capture.capture_id, locale="sv")
+    run_en = story.start_analysis(owner, capture.capture_id, locale="en")
+    assert run_sv != run_en != legacy
+    assert story.start_analysis(owner, capture.capture_id, locale="sv") == run_sv
+    with env.app_db.session(owner) as conn:
+        rows = conn.execute(text(
+            "SELECT subject_ref, dedupe_key, payload FROM app.job WHERE subject_ref IN (:a,:b,:c)"),
+            {"a": run_sv, "b": run_en, "c": legacy},
+        ).mappings().all()
+    saved = {row["subject_ref"]: row for row in rows}
+    assert saved[legacy]["payload"].get("report_locale") is None
+    for run, language in ((run_sv, "sv"), (run_en, "en")):
+        job = saved[run]
+        assert job["payload"]["report_template"] == "individual-report/4"
+        assert job["payload"]["report_locale"] == language
+        assert job["payload"]["story_source_sha256"] == reviewed_reading_sha256()
+        assert job["dedupe_key"].endswith(
+            f":{reviewed_reading_sha256()[:16]}:{language}:individual-report/4"
+        )
+
+    private = private_story_worker(env)
+    assert private.run_once().outcome == "SUCCEEDED"
+    assert private.run_once().outcome == "SUCCEEDED"
+    assert env.intake.status(owner, legacy).state == "QUEUED"
+    store = PostgresReportStore(env.app_db, owner)
+    for run, language in ((run_sv, "sv"), (run_en, "en")):
+        status = story.status(owner, run)
+        assert status.state == "SUCCEEDED"
+        saved_owner, document = store.latest(status.report_id)
+        doc = document.data
+        assert saved_owner == owner
+        assert doc["revision"] == 1
+        assert doc["locale"] == language
+        assert doc["analysis"]["versions"]["template"] == "individual-report/4"
+        assert doc["premium_overlay_id"] is None
+        assert len(doc["facts"]) == len({f["fact_id"] for f in doc["facts"]}) == 64
+        assert {s["section_id"] for s in doc["sections"]} >= set(CHAPTER_ORDER)
+        authorized = ReportReader(store, env.clock).view(
+            report_id=status.report_id, principal_id=owner, projection="FREE",
+        )
+        assert authorized.data["source_revision"] == 1
+        assert len(authorized.data["facts"]) == 64
+    assert env.worker("rollback-old-v2").run_once().outcome == "SUCCEEDED"
+    _, old = store.latest(f"report_{legacy}")
+    assert old.data["analysis"]["versions"]["template"] == "individual-report/2"
+
+
+def test_r2b_private_story_requires_source_and_explicit_locale_without_side_effects(env, world):  # noqa: F811
+    owner = account(world, "sub-r2b-locale-required").principal_id
+    capture, legacy = env.analysis(owner)
+    with pytest.raises(InvalidInput, match="report_story_source_pin_missing"):
+        IntakeService(
+            repo=env.repo, store=env.store, permissions=env.permissions,
+            challenge=env.challenge, inspect=inspect_header, clock=env.clock,
+            ids=env.intake._ids, challenge_site="app.test",
+            report_template="individual-report/4",
+        )
+    story = private_story_intake(env)
+    for locale in (None, "en-US", "fr", "SV", "", 99):
+        with pytest.raises(InvalidInput, match="report_story_locale_required"):
+            story.start_analysis(owner, capture.capture_id, locale=locale)
+    with pytest.raises(InvalidInput, match="report_locale_unsupported_for_legacy"):
+        env.intake.start_analysis(owner, capture.capture_id, locale="sv")
+    with env.app_db.session(owner) as conn:
+        assert conn.execute(text("SELECT count(*) FROM app.job")).scalar() == 1
+    assert env.intake.status(owner, legacy).state == "QUEUED"
+
+
+def test_r2b_wrong_source_or_forged_locale_cannot_claim_or_spend_attempts(env, world):  # noqa: F811
+    owner = account(world, "sub-r2b-foreign-source").principal_id
+    capture = env.capture(owner)
+    env.grant(owner, capture.capture_id)
+    story = private_story_intake(env)
+    run = story.start_analysis(owner, capture.capture_id, locale="sv")
+    assert private_story_worker(env, digest="0" * 64).run_once() is None
+    # A compromised JSONB field cannot reinterpret the suffix of the original
+    # request; the job remains available for the correct worker after repair.
+    with env.worker_db.session() as conn:
+        conn.execute(text("UPDATE app.job SET payload = jsonb_set(payload, '{report_locale}', "
+                          "to_jsonb('en'::text)) WHERE subject_ref = :r"), {"r": run})
+    assert private_story_worker(env).run_once() is None
+    with env.app_db.session(owner) as conn:
+        assert conn.execute(text("SELECT state, attempts FROM app.job WHERE subject_ref=:r"),
+                            {"r": run}).one() == ("QUEUED", 0)
+    with env.worker_db.session() as conn:
+        conn.execute(text("UPDATE app.job SET payload = jsonb_set(payload, '{report_locale}', "
+                          "to_jsonb('sv'::text)) WHERE subject_ref = :r"), {"r": run})
+    assert private_story_worker(env).run_once().outcome == "SUCCEEDED"
+    assert story.status(owner, run).state == "SUCCEEDED"
+
+
+@pytest.mark.parametrize("field, replacement, expected_code", (
+    ("story_source_sha256", "0" * 64, "story_source_changed"),
+    ("report_locale", "en", "story_locale_changed"),
+    ("analysis_config", "0" * 64, "story_analysis_config_changed"),
+))
+def test_r2b_immutable_publication_fences_tampered_story_job(
+        env, world, field, replacement, expected_code):  # noqa: F811
+    from princess_app.application.analysis_worker import Fenced
+
+    owner = account(world, "sub-r2b-tampered-" + field).principal_id
+    capture = env.capture(owner)
+    env.grant(owner, capture.capture_id)
+    run = private_story_intake(env).start_analysis(owner, capture.capture_id, locale="sv")
+    claimed = env.queue.claim(
+        "r2b-claimed", 60, env.clock.now(),
+        report_template="individual-report/4", analysis_config=analysis_config_sha256(),
+        story_source_sha256=reviewed_reading_sha256(),
+    )
+    assert claimed is not None
+    assert claimed.report_locale == "sv" and claimed.story_source_sha256 == reviewed_reading_sha256()
+    with env.worker_db.session() as conn:
+        conn.execute(text("UPDATE app.job SET payload=jsonb_set(payload, CAST(:path AS text[]), "
+                          "to_jsonb(CAST(:value AS text))) WHERE job_id=:job"),
+                     {"path": "{" + field + "}", "value": replacement, "job": claimed.job_id})
+    with pytest.raises(Fenced, match=expected_code):
+        private_story_worker(env)._process(claimed)
+    with env.app_db.session(owner) as conn:
+        assert conn.execute(text("SELECT state FROM app.job WHERE job_id=:j"),
+                            {"j": claimed.job_id}).scalar() == "CANCELLED"
+        assert conn.execute(text("SELECT count(*) FROM app.report WHERE run_id=:r"),
+                            {"r": run}).scalar() == 0
+        assert conn.execute(text("SELECT count(*) FROM app.measurement WHERE run_id=:r"),
+                            {"r": run}).scalar() == 0
+        assert conn.execute(text("SELECT count(*) FROM app.outbox_event WHERE topic='report.ready' "
+                                 "AND aggregate_ref=:r"), {"r": f"report_{run}"}).scalar() == 0
+
+
+def test_r2b_rollback_worker_cannot_claim_expired_story_job(env, world):  # noqa: F811
+    owner = account(world, "sub-r2b-expired-story").principal_id
+    capture = env.capture(owner)
+    env.grant(owner, capture.capture_id)
+    run = private_story_intake(env).start_analysis(owner, capture.capture_id, locale="en")
+    with env.worker_db.session() as conn:
+        conn.execute(text("UPDATE app.job SET state='LEASED', lease_owner='before-restart', "
+                          "lease_expires_at=:expiry, attempts=:max, fencing_token=4 "
+                          "WHERE subject_ref=:r"),
+                     {"expiry": env.clock.now() - timedelta(seconds=1),
+                      "max": MAX_ATTEMPTS, "r": run})
+    assert env.worker("legacy-rollback").run_once() is None
+    with env.app_db.session(owner) as conn:
+        assert conn.execute(text("SELECT state, attempts FROM app.job WHERE subject_ref=:r"),
+                            {"r": run}).one() == ("LEASED", MAX_ATTEMPTS)
+    # Only the pinned source-version worker can terminate an exhausted story lease.
+    assert private_story_worker(env).run_once() is None
+    with env.app_db.session(owner) as conn:
+        assert conn.execute(text("SELECT state, last_error FROM app.job WHERE subject_ref=:r"),
+                            {"r": run}).one() == ("FAILED", "attempts_exhausted")
+
+
+def test_r2b_incompatible_engine_configuration_cannot_spend_story_attempts(env, world):  # noqa: F811
+    owner = account(world, "sub-r2b-engine-mismatch").principal_id
+    capture = env.capture(owner)
+    env.grant(owner, capture.capture_id)
+    run = private_story_intake(env).start_analysis(owner, capture.capture_id, locale="sv")
+    from princess_app.domain.reports.story import story_policy_from_reviewed_reading
+
+    incompatible = AnalysisWorker(
+        queue=env.queue, store=env.store, decode=decode_image,
+        engine=GraphologyEngine(max_dimension=700), clock=env.clock,
+        context=env.ctx, worker_id="wrong-engine-profile",
+        engine_version=__version__, writer_template="individual-report/4",
+        story_policy=story_policy_from_reviewed_reading(),
+        story_source_sha256=reviewed_reading_sha256(),
+    )
+    assert incompatible.run_once() is None
+    with env.app_db.session(owner) as conn:
+        assert conn.execute(text("SELECT state, attempts FROM app.job WHERE subject_ref=:r"),
+                            {"r": run}).one() == ("QUEUED", 0)
+    assert private_story_worker(env).run_once().outcome == "SUCCEEDED"
