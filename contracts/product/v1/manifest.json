@@ -24,7 +24,7 @@
       "version": "premium-interpretation-db/1"
     }
   },
-  "bundle_sha256": "a67bdf3180f487eb19d95fae971f7bbe2d54559a9a086b705b8476f32342ef23",
+  "bundle_sha256": "e37b78ad94aa250054d9538be5650736c0a694f4c43af20d684943bc248255c5",
   "canonicalization": "utf8-json-sort-keys-no-nonfinite-v1",
   "contract_id": "princess-product-contracts",
   "contract_version": "1.0.0",
@@ -35,8 +35,14 @@
     "EvidenceBundle": "evidence-bundle.schema.json",
     "ExportRequest": "export-request.schema.json",
     "GrantSnapshot": "grant-snapshot.schema.json",
+    "PremiumOffer": "premium-offer.schema.json",
     "PremiumOutput": "premium-output.schema.json",
     "PremiumPacket": "premium-packet.schema.json",
+    "PremiumReadingOutput": "premium-reading-output.schema.json",
+    "PremiumReadingPacket": "premium-reading-packet.schema.json",
+    "PremiumReadingView": "premium-reading-view.schema.json",
+    "ReadingSupport": "reading-support.schema.json",
+    "RenderEnvelope": "render-envelope.schema.json",
     "ReportDocument": "report-document.schema.json",
     "ReportViewModel": "report-view-model.schema.json"
   },
@@ -50,7 +56,7 @@
     {
       "path": "schemas/common.schema.json",
       "schema_id": "common.schema.json",
-      "sha256": "93ea5fd64333176b5cb96a90282f57d991dbf4e25461ec37ef5b993246b87cd1"
+      "sha256": "682364b889325afd216c7747f428fe644585afe99a2d1716c2cfd50b8ed2adb7"
     },
     {
       "path": "schemas/comparison.schema.json",
@@ -83,6 +89,12 @@
       "title": "GrantSnapshot"
     },
     {
+      "path": "schemas/premium-offer.schema.json",
+      "schema_id": "premium-offer.schema.json",
+      "sha256": "ce783d34c77e0bb8c971ba51d028a98a966ced390965ccc0b9c69b9f0818a1a6",
+      "title": "PremiumOffer"
+    },
+    {
       "path": "schemas/premium-output.schema.json",
       "schema_id": "premium-output.schema.json",
       "sha256": "b6dfef44d884c8439d504102141eef9399777151d4e3e052b1dfd393c17cf5df",
@@ -93,6 +105,36 @@
       "schema_id": "premium-packet.schema.json",
       "sha256": "4071b3c2bca1043e8f155e3dce1683c897f7df37ee03a77d0c4987359436e806",
       "title": "PremiumPacket"
+    },
+    {
+      "path": "schemas/premium-reading-output.schema.json",
+      "schema_id": "premium-reading-output.schema.json",
+      "sha256": "4742356c5199d45360e7e3fc99052f04403e26cfe31eb3f9a33d18893b71fb1c",
+      "title": "PremiumReadingOutput"
+    },
+    {
+      "path": "schemas/premium-reading-packet.schema.json",
+      "schema_id": "premium-reading-packet.schema.json",
+      "sha256": "8bf05244708c9ebaa43b35de73c3703232e78dbadc71d6c982bb62e59741ae41",
+      "title": "PremiumReadingPacket"
+    },
+    {
+      "path": "schemas/premium-reading-view.schema.json",
+      "schema_id": "premium-reading-view.schema.json",
+      "sha256": "08c286763700252b4c79a080ae7816cc28ea930612e5f2dfc94ff0df0899e24f",
+      "title": "PremiumReadingView"
+    },
+    {
+      "path": "schemas/reading-support.schema.json",
+      "schema_id": "reading-support.schema.json",
+      "sha256": "4d394e0bd97f4c8411c2817f8b0a718f2669bae38230723d01dd4e34aaf05f91",
+      "title": "ReadingSupport"
+    },
+    {
+      "path": "schemas/render-envelope.schema.json",
+      "schema_id": "render-envelope.schema.json",
+      "sha256": "6dfa455295b640217b227cc75333e55e21bb4708640b86b195ed8af33aed6c6d",
+      "title": "RenderEnvelope"
     },
     {
       "path": "schemas/report-document.schema.json",

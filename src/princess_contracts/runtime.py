@@ -637,6 +637,271 @@ def _grant_semantics(data: dict[str, Any], issues: list[ContractIssue]) -> None:
     _add(issues, effective >= recorded, "GRANT_BACKDATING", "/effective_at", "grant snapshot cannot claim effect before its recorded decision")
 
 
+def _reading_quad_valid(points: list[dict[str, float]]) -> bool:
+    """Only nondegenerate ordered convex quads can cite a local image region."""
+    if len(points) != 4:
+        return False
+    xy = [(point["x"], point["y"]) for point in points]
+    turns = []
+    for i in range(4):
+        a, b, c = xy[i], xy[(i + 1) % 4], xy[(i + 2) % 4]
+        turns.append((b[0] - a[0]) * (c[1] - b[1])
+                     - (b[1] - a[1]) * (c[0] - b[0]))
+    # Schema already checks numeric finiteness and normalized 0..1 bounds.
+    return all(t > 1e-9 for t in turns) or all(t < -1e-9 for t in turns)
+
+
+def _reading_support_semantics(data: dict[str, Any], issues: list[ContractIssue]) -> None:
+    """Validate saved support's internal bindings; report/rights checks remain upstream."""
+    descriptors = _unique(data["descriptors"], "descriptor_id", issues,
+                          "/descriptors", "DUPLICATE_READING_DESCRIPTOR")
+    regions = _unique(data["regions"], "region_ref", issues,
+                      "/regions", "DUPLICATE_READING_REGION")
+    _unique(data["relations"], "relation_id", issues,
+            "/relations", "DUPLICATE_READING_RELATION")
+    for i, region in enumerate(data["regions"]):
+        _add(issues, _reading_quad_valid(region["polygon_normalized_input"]),
+             "READING_REGION_GEOMETRY", f"/regions/{i}/polygon_normalized_input",
+             "local regions require an ordered nondegenerate convex quad")
+    allowed_features = set(free_feature_ids())
+    seen_candidates: set[str] = set()
+    for i, descriptor in enumerate(data["descriptors"]):
+        path = f"/descriptors/{i}"
+        candidate_id = descriptor["source_candidate_id"]
+        _add(issues, descriptor["descriptor_id"] == f"descriptor.{candidate_id}",
+             "READING_DESCRIPTOR_ID_MISMATCH", f"{path}/descriptor_id",
+             "descriptor must bind its versioned candidate ID")
+        _add(issues, candidate_id not in seen_candidates,
+             "READING_DUPLICATE_SOURCE_CANDIDATE", f"{path}/source_candidate_id",
+             "one selected descriptor per source candidate")
+        seen_candidates.add(candidate_id)
+        _add(issues, candidate_id.startswith(f"{descriptor['family']}.")
+             and descriptor["content_id"] == f"content.highlight.v2.{candidate_id}",
+             "READING_DESCRIPTOR_SOURCE_MISMATCH", f"{path}/content_id",
+             "descriptor family and reviewed v2 copy identity must agree")
+        facts = descriptor["support_fact_ids"]
+        _add(issues, all(
+            fid.startswith("fact.") and fid[5:] in allowed_features for fid in facts
+        ), "READING_UNKNOWN_FEATURE", f"{path}/support_fact_ids",
+            "descriptors may cite only canonical Free measured feature identities")
+        _add(issues, bool(facts) and len(facts) == len(set(facts))
+             and all(fid.startswith("fact.") for fid in facts),
+             "READING_DESCRIPTOR_SUPPORT_INVALID", f"{path}/support_fact_ids",
+             "descriptor needs distinct measured fact references")
+        region_ids = descriptor["support_region_ids"]
+        _add(issues, len(region_ids) == len(set(region_ids))
+             and set(region_ids) <= set(regions),
+             "READING_FOREIGN_REGION", f"{path}/support_region_ids",
+             "descriptor cannot cite an unbound region")
+    for i, relation in enumerate(data["relations"]):
+        path = f"/relations/{i}"
+        members = [descriptors.get(cid) for cid in relation["descriptor_ids"]]
+        _add(issues, len(members) >= 2 and all(row is not None for row in members),
+             "READING_FOREIGN_DESCRIPTOR", f"{path}/descriptor_ids",
+             "relation must cite selected descriptors")
+        if any(row is None for row in members):
+            continue
+        _add(issues, len(relation["descriptor_ids"]) == len(set(relation["descriptor_ids"]))
+             and len({row["family"] for row in members}) >= 2,
+             "READING_SAME_FAMILY_RELATION", f"{path}/descriptor_ids",
+             "relationship needs at least two distinct feature families")
+        support_facts = {fid for row in members for fid in row["support_fact_ids"]}
+        support_regions = {rid for row in members for rid in row["support_region_ids"]}
+        _add(issues, set(relation["support_fact_ids"]) == support_facts
+             and len(relation["support_fact_ids"]) == len(support_facts),
+             "READING_RELATION_FACT_MISMATCH", f"{path}/support_fact_ids",
+             "relationship cannot add or omit member facts")
+        _add(issues, set(relation["support_region_ids"]) <= support_regions
+             and len(relation["support_region_ids"]) == len(set(relation["support_region_ids"])),
+             "READING_RELATION_REGION_ESCAPE", f"{path}/support_region_ids",
+             "relationship cannot cite foreign evidence")
+    expected = canonical_digest({**data, "support_digest": None})
+    _add(issues, data["support_digest"] == expected,
+         "READING_SUPPORT_DIGEST_MISMATCH", "/support_digest",
+         "support must bind all fields with a canonical snapshot hash")
+
+
+def _reading_packet_semantics(data: dict[str, Any], issues: list[ContractIssue]) -> None:
+    """Enforce packet-local facts and witnesses without granting image/model rights."""
+    base = data["selector_packet"]
+    support = data["support"]
+    _packet_semantics(base, issues)
+    _reading_support_semantics(support, issues)
+    _add(issues, data["packet_id"] == base["packet_id"],
+         "READING_PACKET_ID_MISMATCH", "/packet_id",
+         "wrapper and T26 packet must agree")
+    for key in ("report_id", "report_revision", "report_digest"):
+        _add(issues, support[key] == base[key], "READING_PACKET_REPORT_MISMATCH",
+             f"/support/{key}", "wrapper cannot switch its source report")
+    _unique(data["block_specs"], "block_id", issues,
+            "/block_specs", "DUPLICATE_READING_BLOCK_SPEC")
+    descriptors = {row["descriptor_id"]: row for row in support["descriptors"]}
+    relations = {row["relation_id"]: row for row in support["relations"]}
+    selector_candidates = {row["candidate_id"]: row for row in base["candidates"]}
+    selector_questions = {row["question_id"]: row for row in base["questions"]}
+    allowed_facts = set(base["allowed_fact_ids"])
+    support_facts = {fid for d in support["descriptors"] for fid in d["support_fact_ids"]}
+    regions = {row["region_ref"] for row in support["regions"]}
+
+    counts = {kind: sum(block["kind"] == kind for block in data["block_specs"])
+              for kind in ("PORTRAIT", "RELATIONSHIP", "VISUAL_OBSERVATION", "QUALIFIER")}
+    for kind, low, high in (("PORTRAIT", 1, 1), ("RELATIONSHIP", 1, 3),
+                            ("VISUAL_OBSERVATION", 1, 3), ("QUALIFIER", 0, 1)):
+        _add(issues, low <= counts[kind] <= high,
+             "READING_BLOCK_COUNT", "/block_specs",
+             "block counts must match the fixed reading-v2 editorial contract")
+    bounds = {"PORTRAIT": (500, 3), "RELATIONSHIP": (350, 3),
+              "VISUAL_OBSERVATION": (280, 2), "QUALIFIER": (350, 3)}
+
+    for i, block in enumerate(data["block_specs"]):
+        path = f"/block_specs/{i}"
+        kind = block["kind"]
+        candidate_ids = block["allowed_candidate_ids"]
+        offered_facts = set(block["allowed_fact_ids"])
+        offered_regions = set(block["allowed_region_refs"])
+        question_id = block["question_id"]
+        witnessed_facts: set[str] = set()
+        witnessed_regions: set[str] = set()
+        if kind == "VISUAL_OBSERVATION":
+            question = selector_questions.get(question_id)
+            _add(issues, question is not None,
+                 "READING_BLOCK_QUESTION_INVALID", f"{path}/question_id",
+                 "visual blocks must cite a frozen T26 question")
+            if question is None:
+                continue
+            _add(issues, set(candidate_ids) <= set(question["candidate_ids"])
+                 and set(candidate_ids) <= set(selector_candidates),
+                 "READING_BLOCK_CANDIDATE_ESCAPE", f"{path}/allowed_candidate_ids",
+                 "visual candidate must belong to the offered frozen question")
+            witnessed_facts.update(question["support_fact_ids"])
+            for cid in candidate_ids:
+                if cid in selector_candidates:
+                    witnessed_facts.update(selector_candidates[cid]["support_fact_ids"])
+            # Region authorization is deliberately a separate R3 image/evidence gate:
+            # this structural layer can only check saved support membership.
+            witnessed_regions = regions
+        else:
+            _add(issues, question_id is None, "READING_BLOCK_QUESTION_INVALID",
+                 f"{path}/question_id", "nonvisual blocks may not masquerade as T26")
+            authority = descriptors if kind == "PORTRAIT" else (
+                relations if kind == "RELATIONSHIP" else {}
+            )
+            _add(issues, set(candidate_ids) <= set(authority)
+                 and (kind == "QUALIFIER" or bool(candidate_ids)),
+                 "READING_BLOCK_CANDIDATE_ESCAPE", f"{path}/allowed_candidate_ids",
+                 "nonvisual block needs valid selected factual witnesses")
+            for cid in candidate_ids:
+                row = authority.get(cid)
+                if row is not None:
+                    witnessed_facts.update(row["support_fact_ids"])
+                    witnessed_regions.update(row["support_region_ids"])
+            if kind == "PORTRAIT":
+                _add(issues, len({
+                    descriptors[cid]["family"] for cid in candidate_ids if cid in descriptors
+                }) >= 2, "READING_PORTRAIT_FAMILY_COVERAGE",
+                    f"{path}/allowed_candidate_ids",
+                    "portrait needs at least two supported mechanical families")
+            if kind == "QUALIFIER":
+                witnessed_facts = support_facts
+                witnessed_regions = regions
+        _add(issues, offered_facts <= allowed_facts and
+             offered_facts <= witnessed_facts,
+             "READING_BLOCK_FACT_ESCAPE", f"{path}/allowed_fact_ids",
+             "block facts must be frozen and witnessed by their own subject")
+        if kind in {"PORTRAIT", "RELATIONSHIP"}:
+            _add(issues, witnessed_facts == offered_facts,
+                 "READING_BLOCK_INCOMPLETE_SUPPORT", f"{path}/allowed_fact_ids",
+                 "mechanical summary must include the support of every offered witness")
+        _add(issues, offered_regions <= regions and
+             offered_regions <= witnessed_regions,
+             "READING_BLOCK_REGION_ESCAPE", f"{path}/allowed_region_refs",
+             "block regions must correspond to saved relevant evidence")
+        _add(issues, block["scope"] != "LOCAL" or bool(offered_regions),
+             "READING_LOCAL_REGION_MISSING", f"{path}/allowed_region_refs",
+             "a LOCAL claim requires a real mapped region")
+        max_characters, max_sentences = bounds[kind]
+        _add(issues, block["max_characters"] <= max_characters and
+             block["max_sentences"] <= max_sentences,
+             "READING_BLOCK_LIMIT_DRIFT", path,
+             "block must respect the reviewed per-kind text budget")
+
+
+def _reading_output_semantics(data: dict[str, Any], issues: list[ContractIssue]) -> None:
+    """Internal shape checks only. Cross-packet validation is a separate gate."""
+    _output_semantics(data["selector_output"], issues)
+    _add(issues, data["packet_id"] == data["selector_output"]["packet_id"],
+         "READING_OUTPUT_PACKET_MISMATCH", "/packet_id",
+         "editorial output cannot switch T26 packet identity")
+    _unique(data["blocks"], "block_id", issues,
+            "/blocks", "DUPLICATE_READING_OUTPUT_BLOCK")
+    for i, block in enumerate(data["blocks"]):
+        path = f"/blocks/{i}"
+        if block["answer_state"] != "ANSWERED":
+            _add(issues, block["text"] is None
+                 and not block["selected_candidate_ids"]
+                 and not block["support_fact_ids"]
+                 and not block["support_region_refs"],
+                 "READING_UNANSWERED_PAYLOAD", path,
+                 "non-answer cannot contain text or evidence")
+        else:
+            _add(issues, isinstance(block["text"], str) and bool(block["text"].strip()),
+                 "READING_EMPTY_ANSWER", f"{path}/text",
+                 "answered editorial block must contain text")
+
+
+def _reading_view_semantics(data: dict[str, Any], issues: list[ContractIssue]) -> None:
+    _add(issues, data["basis_revision"] + 1 == data["source_revision"],
+         "READING_BASIS_REVISION_MISMATCH", "/basis_revision",
+         "published Premium reading must append exactly one immutable revision")
+    _add(issues, data["basis_digest"] != data["source_digest"],
+         "READING_BASIS_DIGEST_MISMATCH", "/basis_digest",
+         "Premium base and published immutable snapshot are distinct")
+    _unique(data["blocks"], "block_id", issues,
+            "/blocks", "DUPLICATE_READING_VIEW_BLOCK")
+
+
+def _reading_offer_semantics(data: dict[str, Any], issues: list[ContractIssue]) -> None:
+    action = data["action"]
+    if action in {"PURCHASE", "GENERATE", "RETRY"}:
+        _add(issues, data["sample_state"] == "SUPPORTED"
+             and data["source_image_state"] == "AVAILABLE"
+             and data["support_state"] == "SUFFICIENT"
+             and data["runtime_state"] == "AVAILABLE",
+             "READING_UNAVAILABLE_ACTION", "/action",
+             "new paid actions require a supported, enabled offer")
+        _add(issues, data["permission_state"] == "GRANTED",
+             "READING_CONSENT_REQUIRED", "/permission_state",
+             "an offer cannot bypass separate AI-processing permission")
+    if action in {"GENERATE", "RETRY"}:
+        _add(issues, data["entitlement_state"] == "CREDIT",
+             "READING_CREDIT_REQUIRED", "/entitlement_state",
+             "client flags never grant a credit")
+    if action == "VIEW":
+        _add(issues, data["entitlement_state"] == "PUBLISHED",
+             "READING_VIEW_UNAUTHORIZED", "/entitlement_state",
+             "saved Premium requires a verified published entitlement")
+    if action == "WAIT":
+        _add(issues, data["job_state"] in {"QUEUED", "RUNNING", "AMBIGUOUS"},
+             "READING_WAIT_WITHOUT_JOB", "/job_state",
+             "waiting requires an existing durable job")
+
+
+def _render_envelope_semantics(data: dict[str, Any], issues: list[ContractIssue]) -> None:
+    premium = data["premium"]
+    if premium is None:
+        return
+    view = data["view"]
+    for left, right in (
+        ("source_report_id", "source_report_id"),
+        ("source_revision", "source_revision"),
+        ("source_digest", "source_digest"),
+        ("locale", "locale"),
+    ):
+        _add(issues, premium[left] == view[right],
+             "RENDER_PREMIUM_SOURCE_MISMATCH", f"/premium/{left}",
+             "Premium render must refer to the same authorized published view")
+
+
 def _semantic_issues(schema_name: str, data: dict[str, Any]) -> list[ContractIssue]:
     issues: list[ContractIssue] = []
     if schema_name == "AnalysisReference":
@@ -655,6 +920,18 @@ def _semantic_issues(schema_name: str, data: dict[str, Any]) -> list[ContractIss
         _output_semantics(data, issues)
     elif schema_name == "GrantSnapshot":
         _grant_semantics(data, issues)
+    elif schema_name == "ReadingSupport":
+        _reading_support_semantics(data, issues)
+    elif schema_name == "PremiumReadingPacket":
+        _reading_packet_semantics(data, issues)
+    elif schema_name == "PremiumReadingOutput":
+        _reading_output_semantics(data, issues)
+    elif schema_name == "PremiumReadingView":
+        _reading_view_semantics(data, issues)
+    elif schema_name == "PremiumOffer":
+        _reading_offer_semantics(data, issues)
+    elif schema_name == "RenderEnvelope":
+        _render_envelope_semantics(data, issues)
     return issues
 
 

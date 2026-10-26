@@ -1,0 +1,103 @@
+{
+  "version": "combination-policy/1",
+  "runtime_activation": false,
+  "review_status": "DRAFT_FOR_REVIEW",
+  "rules": [
+    {
+      "relation_id": "relation.space_direction_contrast",
+      "type": "CONTRAST",
+      "required_descriptor_ids": [
+        "spacing.words_consistent",
+        "slant.mixed"
+      ],
+      "claim_key": "content.relation.v1.space_direction_contrast",
+      "copy": {
+        "en": "Regular word gaps alongside varied stroke direction.",
+        "sv": "Regelbundna ordmellanrum tillsammans med varierad streckriktning."
+      },
+      "min_families": 2,
+      "causal_claim": false,
+      "population_claim": false
+    },
+    {
+      "relation_id": "relation.baseline_direction_contrast",
+      "type": "CONTRAST",
+      "required_descriptor_ids": [
+        "baseline.angle_stable",
+        "slant.mixed"
+      ],
+      "claim_key": "content.relation.v1.baseline_direction_contrast",
+      "copy": {
+        "en": "Similar baseline angles alongside mixed stroke direction.",
+        "sv": "Liknande baslinjevinklar tillsammans med blandad streckriktning."
+      },
+      "min_families": 2,
+      "causal_claim": false,
+      "population_claim": false
+    },
+    {
+      "relation_id": "relation.gap_length_contrast",
+      "type": "CONTRAST",
+      "required_descriptor_ids": [
+        "spacing.lines_consistent",
+        "layout.line_lengths_varied"
+      ],
+      "claim_key": "content.relation.v1.gap_length_contrast",
+      "copy": {
+        "en": "Consistent line gaps alongside varied line lengths.",
+        "sv": "Regelbundna radmellanrum tillsammans med varierande radlängder."
+      },
+      "min_families": 2,
+      "causal_claim": false,
+      "population_claim": false
+    },
+    {
+      "relation_id": "relation.shape_spacing_contrast",
+      "type": "CONTRAST",
+      "required_descriptor_ids": [
+        "size.aspect_varied",
+        "spacing.words_consistent"
+      ],
+      "claim_key": "content.relation.v1.shape_spacing_contrast",
+      "copy": {
+        "en": "Varied ink-shape proportions alongside consistent word gaps.",
+        "sv": "Varierade proportioner hos bläckformer tillsammans med regelbundna ordmellanrum."
+      },
+      "min_families": 2,
+      "causal_claim": false,
+      "population_claim": false
+    },
+    {
+      "relation_id": "relation.layout_regularity",
+      "type": "COOCCURRENCE",
+      "required_descriptor_ids": [
+        "baseline.angle_stable",
+        "spacing.words_consistent"
+      ],
+      "claim_key": "content.relation.v1.layout_regularity",
+      "copy": {
+        "en": "Repeated baseline angles and repeated word gaps occur together.",
+        "sv": "Återkommande baslinjevinklar och ordmellanrum förekommer tillsammans."
+      },
+      "min_families": 2,
+      "causal_claim": false,
+      "population_claim": false
+    },
+    {
+      "relation_id": "relation.stroke_length_contrast",
+      "type": "CONTRAST",
+      "required_descriptor_ids": [
+        "ink.stroke_variable",
+        "layout.line_lengths_consistent"
+      ],
+      "claim_key": "content.relation.v1.stroke_length_contrast",
+      "copy": {
+        "en": "Variable visible strokes alongside consistent line lengths.",
+        "sv": "Varierande synliga streck tillsammans med jämna radlängder."
+      },
+      "min_families": 2,
+      "causal_claim": false,
+      "population_claim": false
+    }
+  ]
+}

@@ -1,0 +1,104 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "render-envelope.schema.json",
+  "title": "RenderEnvelope",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "contract_version": {
+      "const": "1.0.0"
+    },
+    "renderer_version": {
+      "const": "render-template/3"
+    },
+    "view": {
+      "$ref": "report-view-model.schema.json"
+    },
+    "premium": {
+      "anyOf": [
+        {
+          "$ref": "premium-reading-view.schema.json"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "evidence": {
+      "anyOf": [
+        {
+          "$ref": "evidence-bundle.schema.json"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "source_image": {
+      "anyOf": [
+        {
+          "$ref": "common.schema.json#/$defs/RenderEnvelopeSourceImage"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "layout": {
+      "type": "string",
+      "maxLength": 64,
+      "enum": [
+        "A4",
+        "LETTER",
+        "CARD_SQUARE",
+        "CARD_STORY"
+      ]
+    },
+    "detail": {
+      "type": "string",
+      "maxLength": 64,
+      "enum": [
+        "SUMMARY",
+        "FULL"
+      ]
+    },
+    "locale": {
+      "type": "string",
+      "maxLength": 64,
+      "enum": [
+        "en",
+        "sv"
+      ]
+    },
+    "generated_at": {
+      "type": "string",
+      "maxLength": 64,
+      "minLength": 20
+    },
+    "presentation_version": {
+      "type": "string",
+      "maxLength": 64,
+      "enum": [
+        "presentation/1",
+        "presentation/2"
+      ]
+    },
+    "render_policy_version": {
+      "const": "render-policy/3"
+    }
+  },
+  "required": [
+    "contract_version",
+    "renderer_version",
+    "view",
+    "premium",
+    "evidence",
+    "source_image",
+    "layout",
+    "detail",
+    "locale",
+    "generated_at",
+    "presentation_version",
+    "render_policy_version"
+  ]
+}

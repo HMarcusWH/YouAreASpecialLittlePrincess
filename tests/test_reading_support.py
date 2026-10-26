@@ -55,8 +55,13 @@ def test_unreviewed_registry_cannot_change_salience_or_version():
     tampered["candidates"][0]["priority"] += 1000
     with pytest.raises(ValueError, match="reviewed source"):
         select_descriptors(facts, tampered)
-    with pytest.raises(ValueError, match="unavailable"):
+    # The v2 registry now exists on this R1 source-import branch. An
+    # incomplete/tampered copy must be rejected against the installed source,
+    # while an unknown version still fails closed as unavailable.
+    with pytest.raises(ValueError, match="reviewed source"):
         select_descriptors(facts, {"version": "presentation/2"})
+    with pytest.raises(ValueError, match="unavailable"):
+        select_descriptors(facts, {"version": "presentation/999"})
     with pytest.raises(ValueError, match="missing reading presentation"):
         select_descriptors(facts, {})
 
