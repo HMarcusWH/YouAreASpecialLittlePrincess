@@ -250,3 +250,29 @@ def test_source_staging_does_not_trust_unpinned_or_drifted_archives(tmp_path):
         stage_archive(archive, preflight.ROOT / "unapproved-source-staging",
                       expected_sha256=hashlib.sha256(archive.read_bytes()).hexdigest())
     assert not (preflight.ROOT / "unapproved-source-staging").exists()
+
+def test_dotdot_alias_cannot_stage_unapproved_bytes_inside_checkout(tmp_path, monkeypatch):
+    """A lexical outside path must not bypass the canonical checkout fence."""
+    import stage_report_source_bundle as staging
+
+    checkout = tmp_path / "checkout"
+    checkout.mkdir()
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    archive = tmp_path / "synthetic-source.zip"
+    _zip(archive, _source_files())
+    digest = hashlib.sha256(archive.read_bytes()).hexdigest()
+
+    # This parent exists, and Path.absolute() keeps ".." instead of
+    # resolving it. Physically the destination is under checkout.
+    destination = outside / ".." / "checkout" / "unapproved-source"
+    assert destination.parent.is_dir()
+    assert not destination.exists()
+    assert destination.resolve(strict=False).parent == checkout
+    monkeypatch.setattr(staging, "ROOT", checkout)
+
+    with pytest.raises(preflight.SourceBundleError, match="inside the repository"):
+        staging.stage_archive(archive, destination, expected_sha256=digest)
+
+    assert not (checkout / "unapproved-source").exists()
+    assert archive.is_file()

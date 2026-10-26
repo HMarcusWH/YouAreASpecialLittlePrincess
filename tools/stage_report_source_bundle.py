@@ -36,7 +36,10 @@ def _validated_destination(destination: Path) -> Path:
     # Do not permit output to escape through a renamed/symlinked ancestor.
     if any(parent.is_symlink() for parent in (destination, *destination.parents)):
         raise SourceBundleError("staging destination must not traverse a symlink")
-    final = destination.absolute()
+    # Path.absolute() preserves ".." components and can make a path that
+    # physically resolves inside the checkout look lexically outside it.
+    # Resolve the entire destination before enforcing the source-review fence.
+    final = destination.resolve(strict=False)
     if final.is_relative_to(ROOT.resolve()):
         raise SourceBundleError("refuse to stage unapproved sources inside the repository")
     return final
