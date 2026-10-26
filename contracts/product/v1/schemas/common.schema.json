@@ -1209,6 +1209,568 @@
         "affected_positions"
       ],
       "additionalProperties": false
+    },
+    "PremiumReadingOutputBlocksItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "block_id": {
+          "type": "string",
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$"
+        },
+        "kind": {
+          "type": "string",
+          "maxLength": 64,
+          "enum": [
+            "PORTRAIT",
+            "RELATIONSHIP",
+            "VISUAL_OBSERVATION",
+            "QUALIFIER"
+          ]
+        },
+        "scope": {
+          "type": "string",
+          "maxLength": 64,
+          "enum": [
+            "WHOLE_SAMPLE",
+            "LOCAL"
+          ]
+        },
+        "question_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "maxLength": 128,
+              "minLength": 1,
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "answer_state": {
+          "type": "string",
+          "maxLength": 64,
+          "enum": [
+            "ANSWERED",
+            "NOT_ASSESSABLE",
+            "CONFLICTING_EVIDENCE",
+            "NOT_APPLICABLE"
+          ]
+        },
+        "text": {
+          "anyOf": [
+            {
+              "type": "string",
+              "maxLength": 500,
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "selected_candidate_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$"
+          },
+          "minItems": 0,
+          "maxItems": 24,
+          "uniqueItems": true
+        },
+        "support_fact_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$"
+          },
+          "minItems": 0,
+          "maxItems": 32,
+          "uniqueItems": true
+        },
+        "support_region_refs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$"
+          },
+          "minItems": 0,
+          "maxItems": 16,
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "block_id",
+        "kind",
+        "scope",
+        "question_id",
+        "answer_state",
+        "text",
+        "selected_candidate_ids",
+        "support_fact_ids",
+        "support_region_refs"
+      ]
+    },
+    "PremiumReadingPacketBlockSpecsItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "block_id": {
+          "type": "string",
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$"
+        },
+        "kind": {
+          "type": "string",
+          "maxLength": 64,
+          "enum": [
+            "PORTRAIT",
+            "RELATIONSHIP",
+            "VISUAL_OBSERVATION",
+            "QUALIFIER"
+          ]
+        },
+        "scope": {
+          "type": "string",
+          "maxLength": 64,
+          "enum": [
+            "WHOLE_SAMPLE",
+            "LOCAL"
+          ]
+        },
+        "question_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "maxLength": 128,
+              "minLength": 1,
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "allowed_candidate_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$"
+          },
+          "minItems": 0,
+          "maxItems": 24,
+          "uniqueItems": true
+        },
+        "allowed_fact_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$"
+          },
+          "minItems": 0,
+          "maxItems": 32,
+          "uniqueItems": true
+        },
+        "allowed_region_refs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$"
+          },
+          "minItems": 0,
+          "maxItems": 32,
+          "uniqueItems": true
+        },
+        "max_characters": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 500
+        },
+        "max_sentences": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 3
+        }
+      },
+      "required": [
+        "block_id",
+        "kind",
+        "scope",
+        "question_id",
+        "allowed_candidate_ids",
+        "allowed_fact_ids",
+        "allowed_region_refs",
+        "max_characters",
+        "max_sentences"
+      ]
+    },
+    "PremiumReadingViewBlocksItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "block_id": {
+          "type": "string",
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$"
+        },
+        "kind": {
+          "type": "string",
+          "maxLength": 64,
+          "enum": [
+            "PORTRAIT",
+            "RELATIONSHIP",
+            "VISUAL_OBSERVATION",
+            "QUALIFIER"
+          ]
+        },
+        "scope": {
+          "type": "string",
+          "maxLength": 64,
+          "enum": [
+            "WHOLE_SAMPLE",
+            "LOCAL"
+          ]
+        },
+        "evidence_class": {
+          "const": "AI_SYNTHESIS"
+        },
+        "label_key": {
+          "type": "string",
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$"
+        },
+        "text": {
+          "type": "string",
+          "maxLength": 500,
+          "minLength": 1
+        },
+        "support_fact_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$"
+          },
+          "minItems": 0,
+          "maxItems": 32,
+          "uniqueItems": true
+        },
+        "support_region_refs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$"
+          },
+          "minItems": 0,
+          "maxItems": 16,
+          "uniqueItems": true
+        },
+        "visual_source_state": {
+          "type": "string",
+          "maxLength": 64,
+          "enum": [
+            "AVAILABLE",
+            "UNAVAILABLE"
+          ]
+        }
+      },
+      "required": [
+        "block_id",
+        "kind",
+        "scope",
+        "evidence_class",
+        "label_key",
+        "text",
+        "support_fact_ids",
+        "support_region_refs",
+        "visual_source_state"
+      ]
+    },
+    "ReadingSupportDescriptorsItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "descriptor_id": {
+          "type": "string",
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$"
+        },
+        "source_candidate_id": {
+          "type": "string",
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$"
+        },
+        "family": {
+          "type": "string",
+          "maxLength": 64,
+          "enum": [
+            "slant",
+            "baseline",
+            "spacing",
+            "size",
+            "layout",
+            "ink"
+          ]
+        },
+        "correlation_group": {
+          "type": "string",
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$"
+        },
+        "content_id": {
+          "type": "string",
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$"
+        },
+        "support_fact_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$"
+          },
+          "minItems": 1,
+          "maxItems": 16,
+          "uniqueItems": true
+        },
+        "support_region_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$"
+          },
+          "minItems": 0,
+          "maxItems": 8,
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "descriptor_id",
+        "source_candidate_id",
+        "family",
+        "correlation_group",
+        "content_id",
+        "support_fact_ids",
+        "support_region_ids"
+      ]
+    },
+    "ReadingSupportRelationsItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "relation_id": {
+          "type": "string",
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$"
+        },
+        "relation_kind": {
+          "type": "string",
+          "maxLength": 64,
+          "enum": [
+            "CONTRAST",
+            "COOCCURRENCE"
+          ]
+        },
+        "descriptor_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$"
+          },
+          "minItems": 2,
+          "maxItems": 3,
+          "uniqueItems": true
+        },
+        "support_fact_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$"
+          },
+          "minItems": 2,
+          "maxItems": 32,
+          "uniqueItems": true
+        },
+        "support_region_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$"
+          },
+          "minItems": 0,
+          "maxItems": 16,
+          "uniqueItems": true
+        },
+        "claim_key": {
+          "type": "string",
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$"
+        }
+      },
+      "required": [
+        "relation_id",
+        "relation_kind",
+        "descriptor_ids",
+        "support_fact_ids",
+        "support_region_ids",
+        "claim_key"
+      ]
+    },
+    "ReadingSupportRegionsItemPolygonNormalizedInputItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "x": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "y": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      },
+      "required": [
+        "x",
+        "y"
+      ]
+    },
+    "ReadingSupportRegionsItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "region_ref": {
+          "type": "string",
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$"
+        },
+        "source_region_id": {
+          "type": "string",
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$"
+        },
+        "frame_id": {
+          "type": "string",
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$"
+        },
+        "scope": {
+          "type": "string",
+          "maxLength": 64,
+          "enum": [
+            "LINE",
+            "WORD",
+            "COMPONENT",
+            "PAGE",
+            "BASELINE_POINT"
+          ]
+        },
+        "polygon_normalized_input": {
+          "type": "array",
+          "items": {
+            "$ref": "common.schema.json#/$defs/ReadingSupportRegionsItemPolygonNormalizedInputItem"
+          },
+          "minItems": 4,
+          "maxItems": 4
+        }
+      },
+      "required": [
+        "region_ref",
+        "source_region_id",
+        "frame_id",
+        "scope",
+        "polygon_normalized_input"
+      ]
+    },
+    "RenderEnvelopeSourceImage": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "media_type": {
+          "type": "string",
+          "maxLength": 64,
+          "enum": [
+            "image/png",
+            "image/jpeg"
+          ]
+        },
+        "sha256": {
+          "type": "string",
+          "maxLength": 64,
+          "minLength": 64,
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "width": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1600
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1600
+        },
+        "data_base64_chunks": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 65536,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9+/]+={0,2}$"
+          },
+          "minItems": 1,
+          "maxItems": 43
+        }
+      },
+      "required": [
+        "media_type",
+        "sha256",
+        "data_base64_chunks",
+        "width",
+        "height"
+      ]
     }
   }
 }

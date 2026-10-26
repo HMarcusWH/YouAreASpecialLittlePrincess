@@ -1,0 +1,98 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "premium-reading-view.schema.json",
+  "title": "PremiumReadingView",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "contract_version": {
+      "const": "1.0.0"
+    },
+    "view_version": {
+      "const": "premium-reading-view/2"
+    },
+    "source_report_id": {
+      "type": "string",
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$"
+    },
+    "source_revision": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 1000000
+    },
+    "source_digest": {
+      "type": "string",
+      "maxLength": 64,
+      "minLength": 64,
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "overlay_id": {
+      "type": "string",
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$"
+    },
+    "overlay_digest": {
+      "type": "string",
+      "maxLength": 64,
+      "minLength": 64,
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "locale": {
+      "type": "string",
+      "maxLength": 64,
+      "enum": [
+        "en",
+        "sv"
+      ]
+    },
+    "blocks": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/PremiumReadingViewBlocksItem"
+      },
+      "minItems": 0,
+      "maxItems": 8
+    },
+    "reflection_content_id": {
+      "anyOf": [
+        {
+          "type": "string",
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "basis_revision": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 1000000
+    },
+    "basis_digest": {
+      "type": "string",
+      "maxLength": 64,
+      "minLength": 64,
+      "pattern": "^[a-f0-9]{64}$"
+    }
+  },
+  "required": [
+    "contract_version",
+    "view_version",
+    "source_report_id",
+    "source_revision",
+    "source_digest",
+    "overlay_id",
+    "overlay_digest",
+    "locale",
+    "blocks",
+    "reflection_content_id",
+    "basis_revision",
+    "basis_digest"
+  ]
+}

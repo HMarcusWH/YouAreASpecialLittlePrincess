@@ -1,0 +1,153 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "premium-offer.schema.json",
+  "title": "PremiumOffer",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "contract_version": {
+      "const": "1.0.0"
+    },
+    "offer_version": {
+      "const": "premium-offer/1"
+    },
+    "source_report_id": {
+      "type": "string",
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$"
+    },
+    "source_revision": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 1000000
+    },
+    "source_digest": {
+      "type": "string",
+      "maxLength": 64,
+      "minLength": 64,
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "sample_state": {
+      "type": "string",
+      "maxLength": 64,
+      "enum": [
+        "SUPPORTED",
+        "PARTIAL",
+        "UNQUALIFIED",
+        "UNSUPPORTED_TEMPLATE"
+      ]
+    },
+    "source_image_state": {
+      "type": "string",
+      "maxLength": 64,
+      "enum": [
+        "AVAILABLE",
+        "UNAVAILABLE"
+      ]
+    },
+    "support_state": {
+      "type": "string",
+      "maxLength": 64,
+      "enum": [
+        "SUFFICIENT",
+        "INSUFFICIENT"
+      ]
+    },
+    "runtime_state": {
+      "type": "string",
+      "maxLength": 64,
+      "enum": [
+        "AVAILABLE",
+        "DISABLED"
+      ]
+    },
+    "permission_state": {
+      "type": "string",
+      "maxLength": 64,
+      "enum": [
+        "GRANTED",
+        "NOT_GRANTED",
+        "REVOKED"
+      ]
+    },
+    "entitlement_state": {
+      "type": "string",
+      "maxLength": 64,
+      "enum": [
+        "NONE",
+        "CREDIT",
+        "PUBLISHED",
+        "REVOKED"
+      ]
+    },
+    "job_state": {
+      "type": "string",
+      "maxLength": 64,
+      "enum": [
+        "NONE",
+        "QUEUED",
+        "RUNNING",
+        "SUCCEEDED",
+        "FAILED",
+        "AMBIGUOUS"
+      ]
+    },
+    "action": {
+      "type": "string",
+      "maxLength": 64,
+      "enum": [
+        "NONE",
+        "VIEW",
+        "WAIT",
+        "CONSENT",
+        "PURCHASE",
+        "GENERATE",
+        "RETRY"
+      ]
+    },
+    "reason": {
+      "anyOf": [
+        {
+          "type": "string",
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "catalog_product_id": {
+      "anyOf": [
+        {
+          "type": "string",
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "required": [
+    "contract_version",
+    "offer_version",
+    "source_report_id",
+    "source_revision",
+    "source_digest",
+    "sample_state",
+    "source_image_state",
+    "support_state",
+    "runtime_state",
+    "permission_state",
+    "entitlement_state",
+    "job_state",
+    "action",
+    "reason",
+    "catalog_product_id"
+  ]
+}

@@ -1,0 +1,78 @@
+{
+  "version": "premium-reading/2",
+  "policy_id": "premium-policy-2",
+  "runtime_activation": false,
+  "review_status": "DRAFT_FOR_REVIEW",
+  "base_selector_pack": "PREMIUM_INDIVIDUAL_GRAPHIC_V1",
+  "base_t26_sha256": "8b2dcc79fca0f9b6f8e32385464b9d329c316b0b2d714661111a1b0f19c2b37c",
+  "support_version": "reading-support/1",
+  "prompt_version": "premium-prompt/2",
+  "output_schema_version": "premium-reading-output/2",
+  "max_descriptor_candidates": 12,
+  "max_combination_candidates": 8,
+  "max_authorized_regions": 32,
+  "visual_question_ids": [
+    "Q_GLOBAL_FORM_MOVEMENT",
+    "Q_GLOBAL_COHERENCE",
+    "Q_GLOBAL_VARIATION",
+    "Q_DIRECTION_SHAPE",
+    "Q_DIRECTION_VARIATION",
+    "Q_FORM_GEOMETRY",
+    "Q_STROKE_APPEARANCE"
+  ],
+  "blocks": {
+    "PORTRAIT": {
+      "min": 1,
+      "max": 1,
+      "max_characters": 500,
+      "max_sentences": 3
+    },
+    "RELATIONSHIP": {
+      "min": 1,
+      "max": 3,
+      "max_characters": 350,
+      "max_sentences": 3
+    },
+    "VISUAL_OBSERVATION": {
+      "min": 1,
+      "max": 3,
+      "max_characters": 280,
+      "max_sentences": 2
+    },
+    "QUALIFIER": {
+      "min": 0,
+      "max": 1,
+      "max_characters": 350,
+      "max_sentences": 3
+    }
+  },
+  "editorial_word_target": [
+    250,
+    450
+  ],
+  "word_target_is_not_padding_quota": true,
+  "max_attempts": 2,
+  "max_model_output_tokens": 4000,
+  "minimum_value_version": "premium-value/1",
+  "traditional_runtime_eligible_associations": 0,
+  "reflection": "DETERMINISTIC_OPTIONAL_NOT_MODEL_GENERATED",
+  "semantic_release_review_required": true,
+  "selector_definition_source": "FROZEN_T26_V1_DEFINITIONS_ONLY",
+  "selector_question_ids": [
+    "Q_GLOBAL_FORM_MOVEMENT",
+    "Q_GLOBAL_COHERENCE",
+    "Q_GLOBAL_VARIATION",
+    "Q_SPACE_BALANCE",
+    "Q_SPACE_MARGIN_TREND",
+    "Q_DIRECTION_SHAPE",
+    "Q_DIRECTION_VARIATION",
+    "Q_FORM_GEOMETRY",
+    "Q_STROKE_APPEARANCE",
+    "Q_STROKE_DARKNESS",
+    "Q_STROKE_WIDTH",
+    "Q_MOVEMENT_IMPRESSION",
+    "Q_MOVEMENT_RHYTHM",
+    "Q_MOVEMENT_VARIATION"
+  ],
+  "does_not_activate_base_pack": true
+}
