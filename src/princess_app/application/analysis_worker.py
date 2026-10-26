@@ -9,6 +9,7 @@ the capture was deleted, or the service-processing permission epoch moved.
 from __future__ import annotations
 
 from dataclasses import dataclass
+import re
 from datetime import datetime
 from typing import Any, Callable, Mapping, Protocol
 
@@ -38,6 +39,8 @@ class ClaimedJob:
     permission_epoch: int
     analysis_config: str  # engine settings the run was requested under
     report_template: str  # saved at admission; NEVER selected by a later deployment
+    story_source_sha256: str | None = None  # /4 immutable authored source at admission
+    report_locale: str | None = None  # /4 explicit user-admitted EN/SV locale
 
 
 class Fenced(Exception):
@@ -50,7 +53,8 @@ class Fenced(Exception):
 
 class JobQueue(Protocol):
     def claim(self, worker_id: str, lease_seconds: int, now: datetime, *,
-              report_template: str, analysis_config: str) -> ClaimedJob | None: ...
+              report_template: str, analysis_config: str,
+              story_source_sha256: str | None = None) -> ClaimedJob | None: ...
 
     def capture(self, job: ClaimedJob) -> CaptureRow | None: ...
 
@@ -79,7 +83,8 @@ class AnalysisWorker:
                  context: Callable[[], CallContext], worker_id: str, engine_version: str,
                  lease_seconds: int = 120,
                  writer_template: str = TEMPLATE_VERSION,
-                 story_policy: StoryPolicy | None = None) -> None:
+                 story_policy: StoryPolicy | None = None,
+                 story_source_sha256: str | None = None) -> None:
         self._queue = queue
         self._store = store
         self._decode = decode
@@ -98,12 +103,16 @@ class AnalysisWorker:
         if writer_template == STORY_TEMPLATE_VERSION:
             if not isinstance(story_policy, StoryPolicy):
                 raise InvalidInput("report_story_source_not_installed")
+            if (not isinstance(story_source_sha256, str)
+                    or re.fullmatch(r"[0-9a-f]{64}", story_source_sha256) is None):
+                raise InvalidInput("report_story_source_pin_missing")
             if getattr(engine, "evidence_guard_enabled", False):
                 raise InvalidInput("report_story_research_guard_conflict")
-        elif story_policy is not None:
+        elif story_policy is not None or story_source_sha256 is not None:
             raise InvalidInput("report_story_policy_without_writer")
         self._writer_template = writer_template
         self._story_policy = story_policy
+        self._story_source_sha256 = story_source_sha256
 
     def run_once(self) -> WorkOutcome | None:
         # Select only jobs pinned to the writer this process can execute.
@@ -113,7 +122,8 @@ class AnalysisWorker:
                            if getattr(self._engine, "evidence_guard_enabled", False)
                            else self._writer_template)
         job = self._queue.claim(self._worker_id, self._lease, self._clock.now(),
-                                report_template=report_template, analysis_config=self._config)
+                                report_template=report_template, analysis_config=self._config,
+                                story_source_sha256=self._story_source_sha256)
         if job is None:
             return None
         try:
@@ -138,6 +148,11 @@ class AnalysisWorker:
                              else self._writer_template)
         if job.report_template != expected_template:
             raise InvalidInput("report_writer_template_mismatch")
+        if job.report_template == STORY_TEMPLATE_VERSION:
+            if job.story_source_sha256 != self._story_source_sha256:
+                raise InvalidInput("report_story_source_pin_mismatch")
+            if job.report_locale not in ("en", "sv"):
+                raise InvalidInput("report_story_locale_invalid")
         capture = self._queue.capture(job)
         if capture is None or capture.deleted:
             raise Fenced("capture_deleted")
@@ -162,7 +177,8 @@ class AnalysisWorker:
         if evidence.value is None:
             raise Conflict("evidence_contract_rejected")
         report = assemble_report(report_id=f"report_{job.run_id}", analysis=reference, result=result, created_at=now,
-                                 locale="en", evidence=evidence.value, story_policy=self._story_policy)
+                                 locale=job.report_locale if job.report_template == STORY_TEMPLATE_VERSION else "en",
+                                 evidence=evidence.value, story_policy=self._story_policy)
         if report.value is None:
             raise Conflict("report_contract_rejected")
         self._queue.publish(job, result=result, evidence=evidence.value, report=report.value,

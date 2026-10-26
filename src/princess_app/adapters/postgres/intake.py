@@ -9,6 +9,7 @@ lease, cancellation, capture deletion and permission epoch under locks.
 from __future__ import annotations
 
 import json
+import re
 from datetime import datetime, timedelta
 from typing import Any, Callable, Mapping
 
@@ -48,6 +49,7 @@ from .stores import (
 TERMINAL_FENCES = frozenset({
     "capture_deleted", "permission_changed", "owner_deleted",
     "writer_template_changed", "report_template_mismatch",
+    "story_source_changed", "story_locale_changed", "story_analysis_config_changed",
 })
 CAPTURE_SELECT = ("SELECT c.capture_id, c.owner_id, c.upload_id, c.asset_id, c.media_type, c.width, c.height, "
                   "c.exif_orientation, c.sha256, a.version_ref, a.size_bytes, (c.deleted_at IS NOT NULL) AS deleted, "
@@ -154,9 +156,20 @@ class PostgresIntakeRepository:
 
     def create_analysis(self, capture: CaptureRow, *, run_id: str, job_id: str, dedupe_key: str,
                         permission_epoch: int, analysis_config: str, report_template: str,
-                        at: datetime, max_active: int) -> str:
+                        at: datetime, max_active: int, story_source_sha256: str | None = None,
+                        report_locale: str | None = None) -> str:
         if type(report_template) is not str or report_template not in REPORT_TEMPLATES:
             raise InvalidInput("report_writer_template_unknown")
+        if report_template == STORY_TEMPLATE_VERSION:
+            if (not isinstance(story_source_sha256, str)
+                    or re.fullmatch(r"[0-9a-f]{64}", story_source_sha256) is None):
+                raise InvalidInput("report_story_source_pin_missing")
+            if report_locale not in ("en", "sv"):
+                raise InvalidInput("report_story_locale_required")
+            if not dedupe_key.endswith(f":{story_source_sha256[:16]}:{report_locale}:{report_template}"):
+                raise InvalidInput("report_story_dedupe_identity_invalid")
+        elif story_source_sha256 is not None or report_locale is not None:
+            raise InvalidInput("report_story_data_without_writer")
         owner = capture.owner_id
         try:
             with self.db.session(owner) as conn:
@@ -183,8 +196,13 @@ class PostgresIntakeRepository:
                     "INSERT INTO app.job (job_id, kind, owner_id, subject_ref, state, dedupe_key, payload, created_at, "
                     "updated_at) VALUES (:j, :k, :o, :r, 'QUEUED', :d, CAST(:p AS jsonb), :t, :t)"),
                     {"j": job_id, "k": ANALYSIS_KIND, "o": owner, "r": run_id, "d": dedupe_key, "t": at,
-                     "p": json.dumps({"capture_id": capture.capture_id, "permission_epoch": permission_epoch,
-                                      "analysis_config": analysis_config, "report_template": report_template})})
+                     "p": json.dumps({
+                         "capture_id": capture.capture_id, "permission_epoch": permission_epoch,
+                         "analysis_config": analysis_config, "report_template": report_template,
+                         **({"story_source_sha256": story_source_sha256,
+                             "report_locale": report_locale}
+                            if report_template == STORY_TEMPLATE_VERSION else {}),
+                     })})
             return run_id
         except IntegrityError:
             # A concurrent submission won the unique dedupe key; converge on its run.
@@ -325,9 +343,16 @@ class PostgresJobQueue:
 
     def claim(self, worker_id: str, lease_seconds: int, now: datetime, *,
               report_template: str = TEMPLATE_VERSION,
-              analysis_config: str = ANALYSIS_CONFIG_SHA256) -> ClaimedJob | None:
+              analysis_config: str = ANALYSIS_CONFIG_SHA256,
+              story_source_sha256: str | None = None) -> ClaimedJob | None:
         if type(report_template) is not str or report_template not in REPORT_TEMPLATES:
             raise InvalidInput("report_writer_template_unknown")
+        if report_template == STORY_TEMPLATE_VERSION:
+            if (not isinstance(story_source_sha256, str)
+                    or re.fullmatch(r"[0-9a-f]{64}", story_source_sha256) is None):
+                raise InvalidInput("report_story_source_pin_missing")
+        elif story_source_sha256 is not None:
+            raise InvalidInput("report_story_source_pin_without_writer")
         with self.db.session() as conn:
             # Workers that crash repeatedly must not reclaim a poison job forever.
             exhausted = conn.execute(text(
@@ -340,11 +365,19 @@ class PostgresJobQueue:
                 "OR (:template = :guard AND payload->>'analysis_config' = :cfg)))) "
                 "AND ((:template = :story AND right(dedupe_key, length(:marker)) = :marker) "
                 "OR (:template <> :story AND right(dedupe_key, length(:marker)) <> :marker)) "
+                "AND (:template <> :story OR (payload->>'analysis_config' = :cfg "
+                "AND payload->>'story_source_sha256' = :source "
+                "AND jsonb_typeof(payload->'report_locale') = 'string' "
+                "AND payload->>'report_locale' IN ('en', 'sv') "
+                "AND right(dedupe_key, length(:source_prefix || payload->>'report_locale' || :marker)) "
+                "= (:source_prefix || payload->>'report_locale' || :marker))) "
                 "RETURNING owner_id, subject_ref, payload"),
                 {"now": now, "k": ANALYSIS_KIND, "max": MAX_ATTEMPTS, "template": report_template,
                  "legacy": TEMPLATE_VERSION, "guard": EVIDENCE_SUPPORT_TEMPLATE_VERSION,
                  "legacy_cfg": ANALYSIS_CONFIG_SHA256, "cfg": analysis_config,
-                 "story": STORY_TEMPLATE_VERSION, "marker": ":" + STORY_TEMPLATE_VERSION}).all()
+                 "story": STORY_TEMPLATE_VERSION, "marker": ":" + STORY_TEMPLATE_VERSION,
+                 "source": story_source_sha256,
+                 "source_prefix": f":{story_source_sha256[:16]}:" if story_source_sha256 else None}).all()
             for owner_id, run_id, payload in exhausted:
                 # Terminalize the run too, so clients stop polling a QUEUED run,
                 # and review the original like every other terminal path.
@@ -367,6 +400,12 @@ class PostgresJobQueue:
                 "OR (:template = :guard AND payload->>'analysis_config' = :cfg)))) "
                 "AND ((:template = :story AND right(dedupe_key, length(:marker)) = :marker) "
                 "OR (:template <> :story AND right(dedupe_key, length(:marker)) <> :marker)) "
+                "AND (:template <> :story OR (payload->>'analysis_config' = :cfg "
+                "AND payload->>'story_source_sha256' = :source "
+                "AND jsonb_typeof(payload->'report_locale') = 'string' "
+                "AND payload->>'report_locale' IN ('en', 'sv') "
+                "AND right(dedupe_key, length(:source_prefix || payload->>'report_locale' || :marker)) "
+                "= (:source_prefix || payload->>'report_locale' || :marker))) "
                 "ORDER BY created_at "
                 "FOR UPDATE SKIP LOCKED LIMIT 1) "
                 "RETURNING job_id, owner_id, subject_ref, fencing_token, attempts, payload"),
@@ -374,7 +413,9 @@ class PostgresJobQueue:
                  "k": ANALYSIS_KIND, "max": MAX_ATTEMPTS, "template": report_template,
                  "legacy": TEMPLATE_VERSION, "guard": EVIDENCE_SUPPORT_TEMPLATE_VERSION,
                  "legacy_cfg": ANALYSIS_CONFIG_SHA256, "cfg": analysis_config,
-                 "story": STORY_TEMPLATE_VERSION, "marker": ":" + STORY_TEMPLATE_VERSION}).mappings().first()
+                 "story": STORY_TEMPLATE_VERSION, "marker": ":" + STORY_TEMPLATE_VERSION,
+                 "source": story_source_sha256,
+                 "source_prefix": f":{story_source_sha256[:16]}:" if story_source_sha256 else None}).mappings().first()
             if row is None:
                 return None
             conn.execute(text("INSERT INTO app.job_attempt (job_id, fencing_token, worker_id, started_at) "
@@ -389,7 +430,8 @@ class PostgresJobQueue:
         )
         return ClaimedJob(row["job_id"], row["owner_id"], row["subject_ref"], payload["capture_id"],
                           int(row["fencing_token"]), int(row["attempts"]), int(payload["permission_epoch"]),
-                          payload.get("analysis_config", ANALYSIS_CONFIG_SHA256), pinned)
+                          payload.get("analysis_config", ANALYSIS_CONFIG_SHA256), pinned,
+                          payload.get("story_source_sha256"), payload.get("report_locale"))
 
     def capture(self, job: ClaimedJob) -> CaptureRow | None:
         with self.db.session(job.owner_id) as conn:
@@ -419,6 +461,18 @@ class PostgresJobQueue:
         story_key = row["dedupe_key"].endswith(":" + STORY_TEMPLATE_VERSION)
         if story_key != (job.report_template == STORY_TEMPLATE_VERSION):
             raise Fenced("writer_template_changed")
+        if job.report_template == STORY_TEMPLATE_VERSION:
+            if payload.get("analysis_config") != job.analysis_config:
+                raise Fenced("story_analysis_config_changed")
+            if (payload.get("story_source_sha256") != job.story_source_sha256
+                    or not isinstance(job.story_source_sha256, str)):
+                raise Fenced("story_source_changed")
+            if (payload.get("report_locale") != job.report_locale
+                    or job.report_locale not in ("en", "sv")
+                    or not row["dedupe_key"].endswith(
+                        f":{job.story_source_sha256[:16]}:{job.report_locale}:{STORY_TEMPLATE_VERSION}"
+                    )):
+                raise Fenced("story_locale_changed")
 
     def _finish_attempt(self, conn: Connection, job: ClaimedJob, outcome: str, code: str | None,
                         now: datetime) -> None:
@@ -479,6 +533,9 @@ class PostgresJobQueue:
                     raise Fenced("report_template_mismatch") from None
                 if report_template != job.report_template or report_run != job.run_id:
                     raise Fenced("report_template_mismatch")
+                if (job.report_template == STORY_TEMPLATE_VERSION
+                        and report.data.get("locale") != job.report_locale):
+                    raise Fenced("story_locale_changed")
                 write_result(conn, job.owner_id, job.run_id, result=result, processed_sha256=processed_sha256,
                              at=now, evidence=evidence)
                 insert_first_revision(conn, job.owner_id, report)

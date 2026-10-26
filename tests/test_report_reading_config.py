@@ -90,3 +90,80 @@ def test_premium_requires_exact_reviewed_manifest_pin_and_isolation():
     assert result.story_writer_enabled is False
     assert result.writer_template == LEGACY_WRITER
     assert result.reading_manifest_sha256 == _digest(approved)
+
+
+def story_env(**updates):
+    from princess_app.domain.content.reading import reviewed_reading_sha256
+
+    setting = {
+        "PRINCESS_ENV": "local",
+        "PRINCESS_REPORT_STORY_V2_ENABLED": "1",
+        "PRINCESS_EXPECTED_REPORT_TEMPLATE_VERSION": STORY_WRITER,
+        "PRINCESS_EXPECTED_FREE_READING_REGISTRY_SHA256": reviewed_reading_sha256(),
+    }
+    setting.update(updates)
+    return setting
+
+
+def source_authority(settings):
+    from princess_app.config_reports import resolve_free_story_source
+
+    runtime = resolve_report_reading_runtime(settings, reviewed_reading_manifest=INACTIVE_MANIFEST)
+    return resolve_free_story_source(settings, report_runtime=runtime)
+
+
+def test_private_r2_story_policy_binds_exact_reviewed_source_without_premium():
+    from princess_app.domain.reports.story import CHAPTER_ORDER
+    from princess_app.domain.content.reading import reviewed_reading_sha256
+
+    for environment in ("local", "test"):
+        source = source_authority(story_env(PRINCESS_ENV=environment))
+        assert source.sha256 == reviewed_reading_sha256()
+        assert tuple(c.section_id for c in source.policy.chapters) == CHAPTER_ORDER
+        assert len(source.policy.relation_registry["relations"]) == 6
+        assert source.policy.presentation_version == "presentation/2"
+        assert source.policy.partial_overview_content_id == "content.reading.v2.state.partial"
+    assert source_authority({"PRINCESS_ENV": "test"}) is None
+    assert source_authority({
+        "PRINCESS_ENV": "test",
+        "PRINCESS_EXPECTED_FREE_READING_REGISTRY_SHA256": reviewed_reading_sha256(),
+    }) is None
+
+
+@pytest.mark.parametrize("invalid", (
+    {},
+    {"PRINCESS_EXPECTED_FREE_READING_REGISTRY_SHA256": ""},
+    {"PRINCESS_EXPECTED_FREE_READING_REGISTRY_SHA256": "0" * 64},
+    {"PRINCESS_EXPECTED_FREE_READING_REGISTRY_SHA256": "A" * 64},
+    {"PRINCESS_ENV": "production"},
+    {"PRINCESS_ENV": "staging"},
+    {"PRINCESS_ENV": "preview"},
+    {"PRINCESS_ENV": "test", "PRINCESS_TEST_PUBLIC_GUEST_ONLY": "1"},
+    {"PRINCESS_EVIDENCE_SUPPORT_RESEARCH_OPT_IN": "1"},
+))
+def test_private_story_startup_rejects_missing_foreign_or_public_authority(invalid):
+    from princess_app.config_reports import FREE_SOURCE_PIN_ENV
+
+    settings = story_env()
+    settings.update(invalid)
+    if not invalid:
+        del settings[FREE_SOURCE_PIN_ENV]
+    with pytest.raises(InvalidInput, match="report_story_"):
+        source_authority(settings)
+
+
+def test_private_story_startup_refuses_corrupted_baked_registry(monkeypatch):
+    from princess_app.domain.content import reading
+
+    monkeypatch.setattr(reading, "_READING_SHA256", "0" * 64)
+    reading._load_reading_registry.cache_clear()
+    try:
+        with pytest.raises(InvalidInput, match="report_story_source_invalid"):
+            source_authority({
+                "PRINCESS_ENV": "local",
+                "PRINCESS_REPORT_STORY_V2_ENABLED": "1",
+                "PRINCESS_EXPECTED_REPORT_TEMPLATE_VERSION": STORY_WRITER,
+                "PRINCESS_EXPECTED_FREE_READING_REGISTRY_SHA256": "0" * 64,
+            })
+    finally:
+        reading._load_reading_registry.cache_clear()

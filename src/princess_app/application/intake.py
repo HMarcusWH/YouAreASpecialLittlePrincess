@@ -9,6 +9,7 @@ epoch so the worker cannot publish after a withdrawal.
 from __future__ import annotations
 
 import hashlib
+import re
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Callable, Mapping, Protocol
@@ -215,7 +216,8 @@ class IntakeRepository(Protocol):
 
     def create_analysis(self, capture: CaptureRow, *, run_id: str, job_id: str, dedupe_key: str,
                         permission_epoch: int, analysis_config: str, report_template: str,
-                        at: datetime, max_active: int) -> str:
+                        at: datetime, max_active: int, story_source_sha256: str | None = None,
+                        report_locale: str | None = None) -> str:
         """Create the QUEUED run and job, or return the existing run for ``dedupe_key``.
         Counting active jobs and creating one is atomic per owner; raises
         ``RateLimited("too_many_active_analyses")`` at capacity."""
@@ -284,13 +286,21 @@ class IntakeService:
                  challenge: AbuseChallengeProvider, inspect: Callable[[bytes], ImageHeader], clock: Clock,
                  ids: IdGenerator, challenge_site: str, uploads_enabled: Callable[[], bool] = lambda: True,
                  analysis_config: str = ANALYSIS_CONFIG_SHA256,
-                 report_template: str = TEMPLATE_VERSION) -> None:
+                 report_template: str = TEMPLATE_VERSION,
+                 story_source_sha256: str | None = None) -> None:
         self._repo = repo
         self._site = challenge_site
         self._config = analysis_config
         if type(report_template) is not str or report_template not in REPORT_TEMPLATES:
             raise InvalidInput("report_writer_template_unknown")
+        if report_template == STORY_TEMPLATE_VERSION:
+            if (not isinstance(story_source_sha256, str)
+                    or re.fullmatch(r"[0-9a-f]{64}", story_source_sha256) is None):
+                raise InvalidInput("report_story_source_pin_missing")
+        elif story_source_sha256 is not None:
+            raise InvalidInput("report_story_source_pin_without_writer")
         self._report_template = report_template
+        self._story_source_sha256 = story_source_sha256
         self._store = store
         self._permissions = permissions
         self._challenge = challenge
@@ -371,7 +381,14 @@ class IntakeService:
             size_bytes=stored.size_bytes)
         return self._repo.record_capture(capture, self._clock.now())
 
-    def start_analysis(self, owner_id: str, capture_id: str) -> str:
+    def start_analysis(self, owner_id: str, capture_id: str, *, locale: str | None = None) -> str:
+        # The owner-authenticated request selects the immutable /4 language.
+        # There is no older intake language field: never silently invent one.
+        if self._report_template == STORY_TEMPLATE_VERSION:
+            if locale not in ("en", "sv"):
+                raise InvalidInput("report_story_locale_required")
+        elif locale is not None:
+            raise InvalidInput("report_locale_unsupported_for_legacy")
         capture = self._repo.capture(owner_id, capture_id)
         if capture is None or capture.deleted:
             raise NotFound("capture_not_found")
@@ -384,7 +401,9 @@ class IntakeService:
         # writer suffix to avoid aliasing an existing queued /2 analysis.
         dedupe_key = f"{ANALYSIS_KIND}:{capture_id}:{self._config[:16]}"
         if self._report_template == STORY_TEMPLATE_VERSION:
-            dedupe_key += f":{self._report_template}"
+            # The suffix still distinguishes /4 from historical /2 and /3.
+            # Source and locale are part of the immutable admission identity.
+            dedupe_key += f":{self._story_source_sha256[:16]}:{locale}:{self._report_template}"
         existing = self._repo.find_analysis(owner_id, dedupe_key)
         if existing is not None:
             return existing  # a retried submission recovers its run even at capacity
@@ -392,7 +411,9 @@ class IntakeService:
             capture, run_id=self._ids.new_id("run"), job_id=self._ids.new_id("job"), dedupe_key=dedupe_key,
             permission_epoch=epoch, analysis_config=self._config,
             report_template=self._report_template, at=self._clock.now(),
-            max_active=policy.MAX_ACTIVE_JOBS)
+            max_active=policy.MAX_ACTIVE_JOBS,
+            story_source_sha256=self._story_source_sha256,
+            report_locale=locale)
 
     def status(self, owner_id: str, run_id: str) -> RunStatus:
         status = self._repo.run_status(owner_id, run_id)

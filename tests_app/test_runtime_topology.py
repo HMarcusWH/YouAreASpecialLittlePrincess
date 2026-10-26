@@ -181,6 +181,10 @@ def test_railway_test_stack_forwards_git_provenance_only_to_api(monkeypatch):
         "PRINCESS_STORAGE_SIGNING_KEY": "synthetic-only-api-storage",
         "PRINCESS_STORAGE_READ_KEY": "synthetic-only-worker-storage",
         "RAILWAY_GIT_COMMIT_SHA": "a" * 40,
+        # User-facing synthetic stacks must not forward the private /4 switches.
+        "PRINCESS_REPORT_STORY_V2_ENABLED": "1",
+        "PRINCESS_EXPECTED_REPORT_TEMPLATE_VERSION": "individual-report/4",
+        "PRINCESS_EXPECTED_FREE_READING_REGISTRY_SHA256": "b" * 64,
     }.items():
         monkeypatch.setenv(key, value)
     api_env = railway_test_stack.role_env("api")
@@ -189,6 +193,12 @@ def test_railway_test_stack_forwards_git_provenance_only_to_api(monkeypatch):
     assert "RAILWAY_GIT_COMMIT_SHA" not in worker_env
     assert "PRINCESS_STORAGE_READ_KEY" not in api_env
     assert "PRINCESS_SESSION_SECRET" not in worker_env
+    for forbidden in (
+        "PRINCESS_REPORT_STORY_V2_ENABLED",
+        "PRINCESS_EXPECTED_REPORT_TEMPLATE_VERSION",
+        "PRINCESS_EXPECTED_FREE_READING_REGISTRY_SHA256",
+    ):
+        assert forbidden not in api_env and forbidden not in worker_env
     fingerprint = analysis_config_sha256(grid_profile="legacy")
     assert api_env["PRINCESS_EXPECTED_ANALYSIS_CONFIG_SHA256"] == fingerprint
     assert worker_env["PRINCESS_EXPECTED_ANALYSIS_CONFIG_SHA256"] == fingerprint
