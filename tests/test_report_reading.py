@@ -254,3 +254,254 @@ def test_partial_v4_free_dossier_preserves_missingness_and_disables_paid(synthet
     assert word["value"] == 0  # observed zero is not silently renamed MISSING
     assert data["sections"][-1]["availability"] == "INELIGIBLE"
     assert any(n["localization_key"] == "notice.image_only" for n in data["notices"])
+
+
+def test_reviewed_r1_policy_uses_exact_bilingual_copy_and_is_immutable():
+    """The real generated R1 source, not a synthetic StoryPolicy, is usable."""
+    from types import MappingProxyType
+    from princess_app.domain.content import reading
+    from princess_app.domain.reports.story import story_policy_from_reviewed_reading
+
+    policy = story_policy_from_reviewed_reading()
+    source = reading.reading_registry()
+    assert policy.presentation_version == "presentation/2"
+    assert tuple(ch.section_id for ch in policy.chapters) == CHAPTER_ORDER
+    assert tuple(row["relation_id"] for row in policy.relation_registry["relations"]) == tuple(
+        row["relation_id"] for row in source["relations"]
+    )
+    assert len(policy.relation_registry["relations"]) == 6
+    assert isinstance(policy.relation_registry, MappingProxyType)
+    assert all(isinstance(row, MappingProxyType)
+               and isinstance(row["required_descriptors"], tuple)
+               for row in policy.relation_registry["relations"])
+    with pytest.raises(TypeError):
+        policy.relation_registry["policy_version"] = "adversarial/1"
+    with pytest.raises(TypeError):
+        policy.relation_registry["relations"][0]["relation_id"] = "forged"
+
+    for state, content_id in (("NEUTRAL", policy.neutral_overview_content_id),
+                              ("PARTIAL", policy.partial_overview_content_id),
+                              ("UNQUALIFIED", policy.unqualified_overview_content_id)):
+        assert content_id == reading.reading_state_content_id(state)
+        for locale in ("en", "sv"):
+            assert reading.reading_content_text(content_id, locale) == source["states"][state][locale]
+    for chapter, record in zip(policy.chapters, source["chapters"]):
+        for locale in ("en", "sv"):
+            assert reading.reading_chapter_title(chapter.section_id, locale) == record["title"][locale]
+            assert reading.reading_content_text(chapter.neutral_content_id, locale) == record["neutral"][locale]
+            assert reading.reading_content_text(chapter.unavailable_content_id, locale) == record["unavailable"][locale]
+    for relation in source["relations"]:
+        for locale in ("en", "sv"):
+            assert reading.reading_content_text(relation["content_id"], locale) == relation["copy"][locale]
+
+    # A returned source copy cannot poison the independently cached authority.
+    source["chapters"][0]["title"]["en"] = "forged"
+    source["relations"][0]["required_descriptors"].clear()
+    assert reading.reading_chapter_title("section.slant", "en") == "Slant and direction"
+    assert len(story_policy_from_reviewed_reading().relation_registry["relations"][0]["required_descriptors"]) == 2
+
+
+def test_reviewed_r1_story_keeps_64_facts_and_resolves_every_emitted_copy():
+    from princess_app.domain.content import reading
+    from princess_app.domain.content.presentation import content_text
+    from princess_app.domain.reports.story import story_policy_from_reviewed_reading
+
+    source = saved_story_input()
+    before = copy.deepcopy(source)
+    sections = build_story_sections(source, story_policy_from_reviewed_reading())
+    assert source == before
+    assert len(technical_facts(sections)) == len(set(technical_facts(sections))) == 64
+    assert set(technical_facts(sections)) == {f["fact_id"] for f in source["facts"]}
+    assert tuple(row["section_id"] for row in sections if row["section_id"] in CHAPTER_ORDER) == CHAPTER_ORDER
+    for section in sections:
+        assert section["premium_section_id"] is None
+        for content_id in section["content_ids"]:
+            for locale in ("en", "sv"):
+                if content_id.startswith("content.highlight.v2."):
+                    assert content_text(content_id, locale, version="presentation/2").strip()
+                else:
+                    assert reading.reading_content_text(content_id, locale).strip()
+
+
+def test_reviewed_r1_fallbacks_are_honest_for_neutral_partial_and_unqualified():
+    from princess_app.domain.reports.story import story_policy_from_reviewed_reading
+
+    policy = story_policy_from_reviewed_reading()
+    sample = saved_story_input()
+    for fact in sample["facts"]:
+        if fact["feature_id"] not in {"PAGE_LINE_COUNT", "PAGE_WORD_COUNT"}:
+            fact["availability"], fact["value"] = "MISSING", None
+    neutral = build_story_sections(sample, policy)
+    assert neutral[0]["content_ids"] == [policy.neutral_overview_content_id]
+    assert neutral[0]["availability"] == "UNCALIBRATED"
+    assert len(technical_facts(neutral)) == 64
+
+    partial = copy.deepcopy(sample)
+    next(f for f in partial["facts"] if f["feature_id"] == "PAGE_WORD_COUNT")["value"] = 0
+    limited = build_story_sections(partial, policy)
+    assert limited[0]["content_ids"] == [policy.partial_overview_content_id]
+    assert limited[0]["availability"] == "UNCALIBRATED"
+    assert len(technical_facts(limited)) == 64
+
+    unqualified = copy.deepcopy(sample)
+    next(f for f in unqualified["facts"] if f["feature_id"] == "PAGE_LINE_COUNT")["value"] = 0
+    absent = build_story_sections(unqualified, policy)
+    assert absent[0]["content_ids"] == [policy.unqualified_overview_content_id]
+    assert absent[0]["availability"] == "INELIGIBLE"
+    assert not any(row["template"] == "PATTERN_CONNECTION" for row in absent)
+    assert len(technical_facts(absent)) == 64
+
+
+def test_reviewed_registry_requires_known_ids_and_locales_and_preserves_v1():
+    from princess_app.domain.content import reading
+    from princess_app.domain.content.presentation import presentation_registry, content_text
+    before = (ROOT / "src/princess_app/domain/content/_presentation_v1.json").read_bytes()
+    v1 = presentation_registry(version="presentation/1")
+    policy = reading.reading_registry()
+    assert policy["runtime_activation"] is False
+    assert policy["reading_pack_version"] == "premium-reading/2"
+    assert set(policy["source_sha256"]) == {"presentation", "chapters", "relations", "manifest"}
+    assert len(presentation_registry(version="presentation/2")["feature_labels"]) == 64
+    assert len(presentation_registry(version="presentation/2")["candidates"]) == 54
+    with pytest.raises(KeyError, match="unreviewed reading content"):
+        reading.reading_content_text("content.reading.v2.state.forged", "en")
+    with pytest.raises(KeyError, match="unknown reading chapter"):
+        reading.reading_chapter_title("section.foreign", "sv")
+    with pytest.raises(ValueError, match="unknown reviewed reading state"):
+        reading.reading_state_content_id("REWRITTEN")
+    with pytest.raises(ValueError, match="unsupported reading locale"):
+        reading.reading_content_text(reading.reading_state_content_id("NEUTRAL"), "de")
+    assert reading.reading_content_text(reading.reading_state_content_id("NEUTRAL"), "sv-SE").strip()
+    assert (ROOT / "src/princess_app/domain/content/_presentation_v1.json").read_bytes() == before
+    assert presentation_registry(version="presentation/1") == v1
+    assert content_text(v1["fallback_content_id"], "en").strip()
+
+
+def test_reviewed_registry_byte_and_source_pins_are_immutable(tmp_path, monkeypatch):
+    from princess_app.domain.content import reading
+    from hashlib import sha256
+
+    raw = reading._READING_PATH.read_bytes()
+    original_path = reading._READING_PATH
+    data = json.loads(raw)
+    source_paths = {
+        "presentation": ROOT / "content/presentation/v2/presentation.json",
+        "chapters": ROOT / "content/presentation/v2/chapters.json",
+        "relations": ROOT / "content/premium/reading-v2/relations.json",
+        "manifest": ROOT / "content/premium/reading-v2/manifest.json",
+    }
+    assert reading._READING_SOURCE_PINS == {
+        name: sha256(path.read_bytes()).hexdigest() for name, path in source_paths.items()
+    }
+    assert reading._READING_SHA256 == sha256(raw).hexdigest()
+    assert reading._PRESENTATION_SHA256 == sha256((
+        ROOT / "src/princess_app/domain/content/_presentation_v2.json"
+    ).read_bytes()).hexdigest()
+
+    try:
+        monkeypatch.setattr(reading, "_READING_PATH", tmp_path / "missing.json")
+        reading._load_reading_registry.cache_clear()
+        with pytest.raises(ValueError, match="not installed"):
+            reading.reading_registry()
+        malicious = tmp_path / "malicious.json"
+        malicious.write_bytes(raw)
+        symbolic = tmp_path / "symbolic.json"
+        symbolic.symlink_to(malicious)
+        monkeypatch.setattr(reading, "_READING_PATH", symbolic)
+        with pytest.raises(ValueError, match="not installed"):
+            reading.reading_registry()
+
+        modified = copy.deepcopy(data)
+        modified["chapters"][0]["neutral"]["en"] = "Unreviewed claim"
+        malicious.write_text(json.dumps(modified), encoding="utf-8")
+        monkeypatch.setattr(reading, "_READING_PATH", malicious)
+        with pytest.raises(ValueError, match="byte digest mismatch"):
+            reading.reading_registry()
+
+        # Even if a future generated byte hash is reviewed, source identity,
+        # chapter order, copy closure, and locale constraints still fail shut.
+        variants = [
+            ({**data, "source_sha256": {**data["source_sha256"], "manifest": "0" * 64}},
+             "source/version/inactivity mismatch"),
+            ({**data, "chapters": list(reversed(data["chapters"]))},
+             "chapter identity/locale drift"),
+            ({**data, "states": {**data["states"], "EXTRA": {"en": "x", "sv": "x"}}},
+             "state copy/locale drift"),
+            ({**data, "runtime_activation": True}, "source/version/inactivity mismatch"),
+            ({**data, "relations": [
+                {**data["relations"][0], "required_descriptors": [
+                    data["relations"][0]["required_descriptors"][0], "foreign.candidate",
+                ]}, *data["relations"][1:],
+            ]}, "relation requires two reviewed feature families"),
+        ]
+        for obj, message in variants:
+            # The test's altered byte pin stands in for a signed regeneration;
+            # production's installed pinned SHA never changes.
+            payload = json.dumps(obj, ensure_ascii=False).encode("utf-8")
+            malicious.write_bytes(payload)
+            monkeypatch.setattr(reading, "_READING_SHA256", sha256(payload).hexdigest())
+            reading._load_reading_registry.cache_clear()
+            with pytest.raises(ValueError, match=message):
+                reading.reading_registry()
+    finally:
+        monkeypatch.setattr(reading, "_READING_PATH", original_path)
+        reading._load_reading_registry.cache_clear()
+
+
+def test_loading_r1_free_copy_does_not_import_model_provider_or_enable_v4(monkeypatch):
+    import sys
+    from princess_app.domain.content import reading
+    from princess_app.domain.reports.story import story_policy_from_reviewed_reading
+    providers = {"openai", "anthropic", "supabase", "boto3", "stripe"}
+    before = providers & set(sys.modules)
+    reading._load_reading_registry.cache_clear()
+    policy = story_policy_from_reviewed_reading()
+    assert len(policy.chapters) == 6
+    assert providers & set(sys.modules) == before
+    # The worker and API require a separate reviewed activation seam; this
+    # pure function does not set process-level environmental activation flags.
+    assert policy.presentation_version == "presentation/2"
+
+
+def test_installed_r1_policy_assembles_an_immutable_free_v4_snapshot():
+    """First R2-A acceptance: real R1 policy fits the existing gated assembler."""
+    from datetime import datetime, timezone
+    from princess_app.domain.analysis import analysis_reference
+    from princess_app.domain.content import reading
+    from princess_app.domain.reports.story import story_policy_from_reviewed_reading
+    from princess_app.domain.reports.assembly import assemble_report
+    import generate_report_fixtures as fixtures
+
+    now = datetime(2026, 10, 26, 12, 0, tzinfo=timezone.utc)
+    result = fixtures.load("engine-result.synthetic.json")
+    analysis = analysis_reference(
+        analysis_id="analysis_r2a", run_id="run_r2a", owner_id="owner_r2a",
+        input_asset_id="asset_r2a", input_sha256="0" * 64,
+        processed_sha256=result["metadata"]["input_pixels_sha256"],
+        created_at=now, engine_version="0.1.0", analysis_config_sha256="1" * 64,
+        template=STORY_TEMPLATE_VERSION,
+    )
+    original_analysis, original_result = copy.deepcopy(analysis), copy.deepcopy(result)
+    approved = story_policy_from_reviewed_reading()
+    compiled = assemble_report(
+        report_id="report_r2a", analysis=analysis, result=result,
+        created_at=now, locale="sv", story_policy=approved,
+    )
+    assert compiled.ok, compiled.issues
+    doc = compiled.value.to_dict()
+    assert doc["revision"] == 1
+    assert doc["premium_overlay_id"] is None
+    assert doc["analysis"] == original_analysis
+    assert len(doc["facts"]) == 64
+    assert len({f["feature_id"] for f in doc["facts"]}) == 64
+    assert len({f["fact_id"] for f in doc["facts"]}) == 64
+    assert tuple(s["section_id"] for s in doc["sections"]
+                 if s["section_id"] in CHAPTER_ORDER) == CHAPTER_ORDER
+    assert doc["sections"][-1]["availability"] == "LOCKED"
+    assert all(not s["premium_section_id"] for s in doc["sections"])
+    assert result == original_result and analysis == original_analysis
+    # Saved content is versioned, not reevaluated from user/client input.
+    for section in doc["sections"]:
+        for content_id in section["content_ids"]:
+            if content_id.startswith("content.reading.") or content_id.startswith("content.chapter."):
+                assert reading.reading_content_text(content_id, "sv")
