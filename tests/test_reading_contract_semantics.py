@@ -133,6 +133,12 @@ def test_published_revision_must_be_later_than_source_basis():
         "basis_digest": "a" * 64,
     }
     assert compile_document("PremiumReadingView", view).ok
+    for nonadjacent_revision in (2, 3):
+        altered = copy.deepcopy(view)
+        altered["source_revision"] = nonadjacent_revision + 1
+        assert "READING_BASIS_REVISION_MISMATCH" in codes(
+            compile_document("PremiumReadingView", altered)
+        )
     view["basis_revision"] = 2
     assert "READING_BASIS_REVISION_MISMATCH" in codes(
         compile_document("PremiumReadingView", view)
