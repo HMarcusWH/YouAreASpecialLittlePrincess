@@ -761,9 +761,9 @@ def _reading_output_semantics(data: dict[str, Any], issues: list[ContractIssue])
 
 
 def _reading_view_semantics(data: dict[str, Any], issues: list[ContractIssue]) -> None:
-    _add(issues, data["basis_revision"] < data["source_revision"],
+    _add(issues, data["basis_revision"] + 1 == data["source_revision"],
          "READING_BASIS_REVISION_MISMATCH", "/basis_revision",
-         "published Premium reading must reference an earlier source revision")
+         "published Premium reading must append exactly one immutable revision")
     _add(issues, data["basis_digest"] != data["source_digest"],
          "READING_BASIS_DIGEST_MISMATCH", "/basis_digest",
          "Premium base and published immutable snapshot are distinct")
