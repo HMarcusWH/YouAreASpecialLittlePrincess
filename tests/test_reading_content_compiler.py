@@ -116,7 +116,9 @@ def test_compiled_copy_only_client_is_not_a_source_provenance_authority():
 def test_reading_policy_may_not_invent_t26_question_definitions():
     sources, baseline = prepared()
     modified = copy.deepcopy(sources["manifest"])
-    modified["selector_question_ids"][0] = "Q_UNREVIEWED_ORIGIN"
+    # Keep the seven visual questions present: exercise frozen T26 membership
+    # rather than the earlier subset/allowlist structural guard.
+    modified["selector_question_ids"][3] = "Q_UNREVIEWED_ORIGIN"
     with pytest.raises(ValueError, match="foreign T26 question"):
         compiler.validate_reading_content(
             sources["presentation"], sources["chapters"],
