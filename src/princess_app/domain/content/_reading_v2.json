@@ -194,7 +194,12 @@
     }
   ],
   "runtime_activation": false,
-  "source_sha256": {},
+  "source_sha256": {
+    "chapters": "ae09af84f7136cba500c46f2b7bfb6f36354251ba01b2c4685363b3e632c756e",
+    "manifest": "0461b9934b8df7d0f413db431bff6800b21beb3c792734538f9d48a3cea1fe05",
+    "presentation": "38db3638402399ee27476fcfdff8de82a3d38d47ba90acf10c26a4f877ade5b4",
+    "relations": "ba814ddc990456aa41d0e274f00d5d1c6174022093ff459b5e24a73aca51ff8b"
+  },
   "states": {
     "NEUTRAL": {
       "en": "Here is what we could observe in this sample.",
