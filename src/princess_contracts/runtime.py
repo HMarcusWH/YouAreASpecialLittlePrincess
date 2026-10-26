@@ -637,6 +637,20 @@ def _grant_semantics(data: dict[str, Any], issues: list[ContractIssue]) -> None:
     _add(issues, effective >= recorded, "GRANT_BACKDATING", "/effective_at", "grant snapshot cannot claim effect before its recorded decision")
 
 
+def _reading_quad_valid(points: list[dict[str, float]]) -> bool:
+    """Only nondegenerate ordered convex quads can cite a local image region."""
+    if len(points) != 4:
+        return False
+    xy = [(point["x"], point["y"]) for point in points]
+    turns = []
+    for i in range(4):
+        a, b, c = xy[i], xy[(i + 1) % 4], xy[(i + 2) % 4]
+        turns.append((b[0] - a[0]) * (c[1] - b[1])
+                     - (b[1] - a[1]) * (c[0] - b[0]))
+    # Schema already checks numeric finiteness and normalized 0..1 bounds.
+    return all(t > 1e-9 for t in turns) or all(t < -1e-9 for t in turns)
+
+
 def _reading_support_semantics(data: dict[str, Any], issues: list[ContractIssue]) -> None:
     """Validate saved support's internal bindings; report/rights checks remain upstream."""
     descriptors = _unique(data["descriptors"], "descriptor_id", issues,
@@ -645,6 +659,11 @@ def _reading_support_semantics(data: dict[str, Any], issues: list[ContractIssue]
                       "/regions", "DUPLICATE_READING_REGION")
     _unique(data["relations"], "relation_id", issues,
             "/relations", "DUPLICATE_READING_RELATION")
+    for i, region in enumerate(data["regions"]):
+        _add(issues, _reading_quad_valid(region["polygon_normalized_input"]),
+             "READING_REGION_GEOMETRY", f"/regions/{i}/polygon_normalized_input",
+             "local regions require an ordered nondegenerate convex quad")
+    allowed_features = set(free_feature_ids())
     seen_candidates: set[str] = set()
     for i, descriptor in enumerate(data["descriptors"]):
         path = f"/descriptors/{i}"
@@ -656,7 +675,15 @@ def _reading_support_semantics(data: dict[str, Any], issues: list[ContractIssue]
              "READING_DUPLICATE_SOURCE_CANDIDATE", f"{path}/source_candidate_id",
              "one selected descriptor per source candidate")
         seen_candidates.add(candidate_id)
+        _add(issues, candidate_id.startswith(f"{descriptor['family']}.")
+             and descriptor["content_id"] == f"content.highlight.v2.{candidate_id}",
+             "READING_DESCRIPTOR_SOURCE_MISMATCH", f"{path}/content_id",
+             "descriptor family and reviewed v2 copy identity must agree")
         facts = descriptor["support_fact_ids"]
+        _add(issues, all(
+            fid.startswith("fact.") and fid[5:] in allowed_features for fid in facts
+        ), "READING_UNKNOWN_FEATURE", f"{path}/support_fact_ids",
+            "descriptors may cite only canonical Free measured feature identities")
         _add(issues, bool(facts) and len(facts) == len(set(facts))
              and all(fid.startswith("fact.") for fid in facts),
              "READING_DESCRIPTOR_SUPPORT_INVALID", f"{path}/support_fact_ids",
