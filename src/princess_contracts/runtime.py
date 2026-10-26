@@ -722,46 +722,108 @@ def _reading_support_semantics(data: dict[str, Any], issues: list[ContractIssue]
 
 
 def _reading_packet_semantics(data: dict[str, Any], issues: list[ContractIssue]) -> None:
-    """The new packet wraps, but never weakens, the frozen T26 selector packet."""
+    """Enforce packet-local facts and witnesses without granting image/model rights."""
     base = data["selector_packet"]
     support = data["support"]
     _packet_semantics(base, issues)
     _reading_support_semantics(support, issues)
     _add(issues, data["packet_id"] == base["packet_id"],
-         "READING_PACKET_ID_MISMATCH", "/packet_id", "wrapper and T26 packet must agree")
-    for key, old in (("report_id", "report_id"), ("report_revision", "report_revision"),
-                     ("report_digest", "report_digest")):
-        _add(issues, support[key] == base[old], "READING_PACKET_REPORT_MISMATCH",
+         "READING_PACKET_ID_MISMATCH", "/packet_id",
+         "wrapper and T26 packet must agree")
+    for key in ("report_id", "report_revision", "report_digest"):
+        _add(issues, support[key] == base[key], "READING_PACKET_REPORT_MISMATCH",
              f"/support/{key}", "wrapper cannot switch its source report")
     _unique(data["block_specs"], "block_id", issues,
             "/block_specs", "DUPLICATE_READING_BLOCK_SPEC")
-    descriptor_ids = {d["descriptor_id"] for d in support["descriptors"]}
-    relation_ids = {r["relation_id"] for r in support["relations"]}
-    selector_ids = {c["candidate_id"] for c in base["candidates"]}
-    selector_questions = {q["question_id"] for q in base["questions"]}
+    descriptors = {row["descriptor_id"]: row for row in support["descriptors"]}
+    relations = {row["relation_id"]: row for row in support["relations"]}
+    selector_candidates = {row["candidate_id"]: row for row in base["candidates"]}
+    selector_questions = {row["question_id"]: row for row in base["questions"]}
     allowed_facts = set(base["allowed_fact_ids"])
     support_facts = {fid for d in support["descriptors"] for fid in d["support_fact_ids"]}
-    regions = {r["region_ref"] for r in support["regions"]}
+    regions = {row["region_ref"] for row in support["regions"]}
+
+    counts = {kind: sum(block["kind"] == kind for block in data["block_specs"])
+              for kind in ("PORTRAIT", "RELATIONSHIP", "VISUAL_OBSERVATION", "QUALIFIER")}
+    for kind, low, high in (("PORTRAIT", 1, 1), ("RELATIONSHIP", 1, 3),
+                            ("VISUAL_OBSERVATION", 1, 3), ("QUALIFIER", 0, 1)):
+        _add(issues, low <= counts[kind] <= high,
+             "READING_BLOCK_COUNT", "/block_specs",
+             "block counts must match the fixed reading-v2 editorial contract")
+    bounds = {"PORTRAIT": (500, 3), "RELATIONSHIP": (350, 3),
+              "VISUAL_OBSERVATION": (280, 2), "QUALIFIER": (350, 3)}
+
     for i, block in enumerate(data["block_specs"]):
         path = f"/block_specs/{i}"
-        if block["question_id"] is not None:
-            _add(issues, block["kind"] == "VISUAL_OBSERVATION"
-                 and block["question_id"] in selector_questions,
+        kind = block["kind"]
+        candidate_ids = block["allowed_candidate_ids"]
+        offered_facts = set(block["allowed_fact_ids"])
+        offered_regions = set(block["allowed_region_refs"])
+        question_id = block["question_id"]
+        witnessed_facts: set[str] = set()
+        witnessed_regions: set[str] = set()
+        if kind == "VISUAL_OBSERVATION":
+            question = selector_questions.get(question_id)
+            _add(issues, question is not None,
                  "READING_BLOCK_QUESTION_INVALID", f"{path}/question_id",
-                 "visual block must bind a selector question")
-        valid_candidates = selector_ids if block["kind"] == "VISUAL_OBSERVATION" else (
-            relation_ids if block["kind"] == "RELATIONSHIP" else descriptor_ids
-        )
-        _add(issues, set(block["allowed_candidate_ids"]) <= valid_candidates,
-             "READING_BLOCK_CANDIDATE_ESCAPE", f"{path}/allowed_candidate_ids",
-             "block candidate IDs must be compiled, not invented")
-        _add(issues, set(block["allowed_fact_ids"]) <= allowed_facts
-             and set(block["allowed_fact_ids"]) <= support_facts | allowed_facts,
+                 "visual blocks must cite a frozen T26 question")
+            if question is None:
+                continue
+            _add(issues, set(candidate_ids) <= set(question["candidate_ids"])
+                 and set(candidate_ids) <= set(selector_candidates),
+                 "READING_BLOCK_CANDIDATE_ESCAPE", f"{path}/allowed_candidate_ids",
+                 "visual candidate must belong to the offered frozen question")
+            witnessed_facts.update(question["support_fact_ids"])
+            for cid in candidate_ids:
+                if cid in selector_candidates:
+                    witnessed_facts.update(selector_candidates[cid]["support_fact_ids"])
+            # Region authorization is deliberately a separate R3 image/evidence gate:
+            # this structural layer can only check saved support membership.
+            witnessed_regions = regions
+        else:
+            _add(issues, question_id is None, "READING_BLOCK_QUESTION_INVALID",
+                 f"{path}/question_id", "nonvisual blocks may not masquerade as T26")
+            authority = descriptors if kind == "PORTRAIT" else (
+                relations if kind == "RELATIONSHIP" else {}
+            )
+            _add(issues, set(candidate_ids) <= set(authority)
+                 and (kind == "QUALIFIER" or bool(candidate_ids)),
+                 "READING_BLOCK_CANDIDATE_ESCAPE", f"{path}/allowed_candidate_ids",
+                 "nonvisual block needs valid selected factual witnesses")
+            for cid in candidate_ids:
+                row = authority.get(cid)
+                if row is not None:
+                    witnessed_facts.update(row["support_fact_ids"])
+                    witnessed_regions.update(row["support_region_ids"])
+            if kind == "PORTRAIT":
+                _add(issues, len({
+                    descriptors[cid]["family"] for cid in candidate_ids if cid in descriptors
+                }) >= 2, "READING_PORTRAIT_FAMILY_COVERAGE",
+                    f"{path}/allowed_candidate_ids",
+                    "portrait needs at least two supported mechanical families")
+            if kind == "QUALIFIER":
+                witnessed_facts = support_facts
+                witnessed_regions = regions
+        _add(issues, offered_facts <= allowed_facts and
+             offered_facts <= witnessed_facts,
              "READING_BLOCK_FACT_ESCAPE", f"{path}/allowed_fact_ids",
-             "block facts cannot exceed the frozen T26 packet")
-        _add(issues, set(block["allowed_region_refs"]) <= regions,
+             "block facts must be frozen and witnessed by their own subject")
+        if kind in {"PORTRAIT", "RELATIONSHIP"}:
+            _add(issues, witnessed_facts == offered_facts,
+                 "READING_BLOCK_INCOMPLETE_SUPPORT", f"{path}/allowed_fact_ids",
+                 "mechanical summary must include the support of every offered witness")
+        _add(issues, offered_regions <= regions and
+             offered_regions <= witnessed_regions,
              "READING_BLOCK_REGION_ESCAPE", f"{path}/allowed_region_refs",
-             "block regions must be present in saved support")
+             "block regions must correspond to saved relevant evidence")
+        _add(issues, block["scope"] != "LOCAL" or bool(offered_regions),
+             "READING_LOCAL_REGION_MISSING", f"{path}/allowed_region_refs",
+             "a LOCAL claim requires a real mapped region")
+        max_characters, max_sentences = bounds[kind]
+        _add(issues, block["max_characters"] <= max_characters and
+             block["max_sentences"] <= max_sentences,
+             "READING_BLOCK_LIMIT_DRIFT", path,
+             "block must respect the reviewed per-kind text budget")
 
 
 def _reading_output_semantics(data: dict[str, Any], issues: list[ContractIssue]) -> None:
