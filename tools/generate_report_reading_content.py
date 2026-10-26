@@ -148,6 +148,13 @@ def validate_reading_content(
 
 
 def compile_registry(sources: dict[str, dict[str, Any]], digests: dict[str, str]) -> dict[str, Any]:
+    # The source pins are evidence, not optional display metadata. A missing
+    # or stale digest must never yield a seemingly complete read-only registry.
+    if set(digests) != set(INPUTS) or any(
+        digests[name] != hashlib.sha256(path.read_bytes()).hexdigest()
+        for name, path in INPUTS.items()
+    ):
+        raise ValueError("reading-v2 source SHA-256 pins are absent or drifted")
     chapters = sources["chapters"]
     relations = sources["relations"]
     return {
