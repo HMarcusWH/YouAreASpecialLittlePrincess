@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import copy
+import json
+from pathlib import Path
 
 from princess_contracts import canonical_digest, compile_document
 
@@ -151,3 +153,184 @@ def test_relation_min_items_is_a_separate_structural_guard():
     s["support_digest"] = None
     s["support_digest"] = canonical_digest(s)
     assert "MIN_ITEMS" in codes(compile_document("ReadingSupport", s))
+
+
+FIXTURES = Path(__file__).resolve().parents[1] / "contracts/product/v1/fixtures/valid"
+
+
+def redigest(support):
+    support["support_digest"] = None
+    support["support_digest"] = canonical_digest(support)
+    return support
+
+
+def reading_packet():
+    base = json.loads((FIXTURES / "premium-packet.json").read_text(encoding="utf-8"))
+    support = synthetic_support()
+    support["report_id"] = base["report_id"]
+    support["report_revision"] = base["report_revision"]
+    support["report_digest"] = base["report_digest"]
+    redigest(support)
+    facts = ["fact.SLANT_LEFT_FRACTION", "fact.WORD_SPACING_CV"]
+    base["allowed_fact_ids"].extend(facts)
+    return {
+        "contract_version": "1.0.0",
+        "packet_id": base["packet_id"],
+        "reading_pack_version": "premium-reading/2",
+        "output_schema_version": "premium-reading-output/2",
+        "policy_manifest_sha256": "c" * 64,
+        "selector_packet": base,
+        "support": support,
+        "block_specs": [
+            {
+                "block_id": "block.portrait",
+                "kind": "PORTRAIT",
+                "scope": "WHOLE_SAMPLE",
+                "question_id": None,
+                "allowed_candidate_ids": [
+                    "descriptor.slant.mixed",
+                    "descriptor.spacing.words_consistent",
+                ],
+                "allowed_fact_ids": facts,
+                "allowed_region_refs": [],
+                "max_characters": 500,
+                "max_sentences": 3,
+            },
+            {
+                "block_id": "block.relation",
+                "kind": "RELATIONSHIP",
+                "scope": "WHOLE_SAMPLE",
+                "question_id": None,
+                "allowed_candidate_ids": ["relation.space_direction_contrast"],
+                "allowed_fact_ids": facts,
+                "allowed_region_refs": [],
+                "max_characters": 350,
+                "max_sentences": 3,
+            },
+            {
+                "block_id": "block.visual",
+                "kind": "VISUAL_OBSERVATION",
+                "scope": "WHOLE_SAMPLE",
+                "question_id": "Q_CTX_TASK",
+                "allowed_candidate_ids": ["candidate_task_copy"],
+                "allowed_fact_ids": ["fact_img_width"],
+                "allowed_region_refs": [],
+                "max_characters": 280,
+                "max_sentences": 2,
+            },
+        ],
+    }
+
+
+def test_reading_packet_binds_portrait_relation_and_visual_to_actual_support():
+    packet = reading_packet()
+    result = compile_document("PremiumReadingPacket", packet)
+    assert result.ok, result.issues
+
+
+def test_reading_packet_rejects_unsupported_but_base_allowlisted_editorial_fact():
+    packet = reading_packet()
+    packet["block_specs"][0]["allowed_fact_ids"][0] = "fact_img_width"
+    assert "READING_BLOCK_FACT_ESCAPE" in codes(
+        compile_document("PremiumReadingPacket", packet)
+    )
+
+
+def test_reading_packet_rejects_foreign_candidates_missing_families_and_regions():
+    packet = reading_packet()
+    packet["block_specs"][1]["allowed_candidate_ids"] = ["descriptor.slant.mixed"]
+    assert "READING_BLOCK_CANDIDATE_ESCAPE" in codes(
+        compile_document("PremiumReadingPacket", packet)
+    )
+    packet = reading_packet()
+    packet["block_specs"][0]["allowed_candidate_ids"] = ["descriptor.slant.mixed"]
+    assert "READING_PORTRAIT_FAMILY_COVERAGE" in codes(
+        compile_document("PremiumReadingPacket", packet)
+    )
+    packet = reading_packet()
+    packet["block_specs"][2]["scope"] = "LOCAL"
+    assert "READING_LOCAL_REGION_MISSING" in codes(
+        compile_document("PremiumReadingPacket", packet)
+    )
+
+
+def test_reading_packet_rejects_oversized_editorial_budget_and_missing_required_block():
+    packet = reading_packet()
+    packet["block_specs"][1]["max_characters"] = 400
+    assert "READING_BLOCK_LIMIT_DRIFT" in codes(
+        compile_document("PremiumReadingPacket", packet)
+    )
+    packet = reading_packet()
+    packet["block_specs"][1]["kind"] = "QUALIFIER"
+    assert "READING_BLOCK_COUNT" in codes(
+        compile_document("PremiumReadingPacket", packet)
+    )
+
+
+def test_descriptor_alias_foreign_fact_and_unknown_region_fail_closed():
+    s = synthetic_support()
+    s["descriptors"][1]["source_candidate_id"] = "slant.mixed"
+    assert "READING_DUPLICATE_SOURCE_CANDIDATE" in codes(
+        compile_document("ReadingSupport", redigest(s))
+    )
+    s = synthetic_support()
+    s["descriptors"][1]["support_fact_ids"] = ["fact.UNAUTHORIZED_FEATURE"]
+    assert "READING_UNKNOWN_FEATURE" in codes(
+        compile_document("ReadingSupport", redigest(s))
+    )
+    s = synthetic_support()
+    s["descriptors"][0]["support_region_ids"] = ["region.not_approved"]
+    assert "READING_FOREIGN_REGION" in codes(
+        compile_document("ReadingSupport", redigest(s))
+    )
+
+
+def sample_region():
+    return {
+        "region_ref": "region.synthetic",
+        "source_region_id": "source.synthetic",
+        "frame_id": "frame.synthetic",
+        "scope": "LINE",
+        "polygon_normalized_input": [
+            {"x": 0.1, "y": 0.1},
+            {"x": 0.4, "y": 0.1},
+            {"x": 0.4, "y": 0.3},
+            {"x": 0.1, "y": 0.3},
+        ],
+    }
+
+
+def test_mapped_regions_reject_collinear_self_crossed_and_duplicate_points():
+    s = synthetic_support()
+    s["regions"] = [sample_region()]
+    assert compile_document("ReadingSupport", redigest(s)).ok
+    for polygon in (
+        [{"x": 0.1 * i, "y": 0.1 * i} for i in (1, 2, 3, 4)],
+        [
+            {"x": 0.1, "y": 0.1}, {"x": 0.4, "y": 0.3},
+            {"x": 0.4, "y": 0.1}, {"x": 0.1, "y": 0.3},
+        ],
+        [
+            {"x": 0.1, "y": 0.1}, {"x": 0.1, "y": 0.1},
+            {"x": 0.4, "y": 0.3}, {"x": 0.1, "y": 0.3},
+        ],
+    ):
+        invalid = copy.deepcopy(s)
+        invalid["regions"][0]["polygon_normalized_input"] = polygon
+        assert "READING_REGION_GEOMETRY" in codes(
+            compile_document("ReadingSupport", redigest(invalid))
+        )
+
+
+def test_offer_refuses_removed_image_even_if_consent_and_credits_exist():
+    offer = {
+        "contract_version": "1.0.0", "offer_version": "premium-offer/1",
+        "source_report_id": "synthetic_report", "source_revision": 1,
+        "source_digest": "a" * 64,
+        "sample_state": "SUPPORTED", "source_image_state": "UNAVAILABLE",
+        "support_state": "SUFFICIENT", "runtime_state": "AVAILABLE",
+        "permission_state": "GRANTED", "entitlement_state": "CREDIT",
+        "job_state": "NONE", "action": "GENERATE",
+        "reason": None, "catalog_product_id": None,
+    }
+    assert "READING_UNAVAILABLE_ACTION" in codes(compile_document("PremiumOffer", offer))
