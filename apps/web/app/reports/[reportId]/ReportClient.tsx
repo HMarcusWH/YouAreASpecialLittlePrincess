@@ -5,6 +5,8 @@ import { useEffect, useRef, useState } from "react";
 import { ApiError, PrincessApi, pollDelayMs, type ExportStatus } from "@princess/api-client";
 import type { EvidenceBundle, ReportViewModel } from "@princess/contracts";
 import { ReportView, t, type Locale } from "@princess/report-web";
+import { focusSourceEvidence, sourceImageEligible } from "@princess/report-core";
+import { SourceEvidencePlate } from "./SourceEvidencePlate.tsx";
 
 type Phase = { kind: "idle" } | { kind: "preparing" } | { kind: "ready"; href: string } | { kind: "failed" };
 
@@ -14,7 +16,19 @@ export function ReportClient({ view, locale, evidence, evidenceUnreadable = fals
   view: ReportViewModel; locale: Locale; evidence: EvidenceBundle | null; evidenceUnreadable?: boolean;
 }) {
   const [phase, setPhase] = useState<Phase>({ kind: "idle" });
+  const [selectedSectionId, setSelectedSectionId] = useState<string | null>(null);
   const stopped = useRef(false);
+  const sourceUrl = sourceImageEligible(view)
+    ? `/api/v1/reports/${encodeURIComponent(view.source_report_id)}/source-image` : null;
+  const root = evidence?.frames.find((f) => f.parent_frame_id === null && f.unit === "px");
+  const inspectableSourceIds = sourceUrl !== null && root ? view.sections
+    .filter((section) => focusSourceEvidence(view, evidence, section.section_id,
+      root.width, root.height).status === "READY")
+    .map((section) => section.section_id) : [];
+  function inspectSource(sectionId: string) {
+    setSelectedSectionId(sectionId);
+    document.getElementById("source-evidence-plate")?.focus({ preventScroll: false });
+  }
   useEffect(() => () => { stopped.current = true; }, []);
 
   async function exportPdf() {
@@ -38,6 +52,10 @@ export function ReportClient({ view, locale, evidence, evidenceUnreadable = fals
   return (
     <>
       <ReportView view={view} locale={locale} evidence={evidence}
+                  sourceEvidence={<SourceEvidencePlate view={view} evidence={evidence} locale={locale}
+                    sourceUrl={sourceUrl} selectedSectionId={selectedSectionId} />}
+                  onInspectSource={sourceUrl === null ? undefined : inspectSource}
+                  inspectableSourceIds={inspectableSourceIds}
                   onAction={(kind) => { if (kind === "EXPORT") void exportPdf(); }} />
       {evidenceUnreadable && (
         <p role="alert" className="error">The saved evidence could not be read safely, so it is not shown.</p>

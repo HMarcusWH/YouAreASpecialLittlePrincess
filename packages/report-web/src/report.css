@@ -169,3 +169,33 @@
   .pr-first-reveal { padding: var(--space-4); margin: var(--space-6) 0; }
   .pr-first-reveal .pr-highlight h2 { font-size: var(--font-size-xl); }
 }
+
+/* R4-F2 source inspection: only authorised owner screens receive image bytes. */
+@media screen {
+  .pr-source-evidence { max-width: 54rem; margin: var(--space-6) 0; padding: var(--space-4);
+    background: var(--color-surface-raised); border: 1px solid var(--color-border);
+    border-radius: var(--radius-md); scroll-margin-top: var(--space-5); }
+  .pr-source-evidence:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 3px; }
+  .pr-source-evidence h2 { margin: 0 0 var(--space-3); font-size: var(--font-size-lg); }
+  .pr-source-figure { margin: 0; }
+  .pr-source-viewport { position: relative; width: 100%; overflow: hidden;
+    background: var(--color-surface-sunken); }
+  .pr-source-viewport img { display: block; width: 100%; height: auto; }
+  .pr-source-outline { position: absolute; inset: 0; width: 100%; height: 100%;
+    pointer-events: none; }
+  .pr-source-outline polyline { fill: none; stroke: var(--color-accent); stroke-width: 3;
+    vector-effect: non-scaling-stroke; }
+  .pr-source-inspector { display: flex; flex-wrap: wrap; gap: var(--space-3);
+    align-items: center; margin-top: var(--space-3); }
+  .pr-source-count { font: var(--font-size-sm) var(--font-family-numeric);
+    overflow-wrap: anywhere; min-width: 0; }
+  .pr-source-inspector .pr-hint { width: 100%; margin: 0; }
+  .pr-inspect-source, .pr-source-inspector button { min-height: var(--target-min-touch);
+    padding: var(--space-2) var(--space-3); border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius-sm); background: var(--color-surface-raised);
+    color: var(--color-text); font: inherit; cursor: pointer; }
+  .pr-source-inspector button:disabled { opacity: .45; cursor: default; }
+  .pr-inspect-source:focus-visible, .pr-source-inspector button:focus-visible {
+    outline: 2px solid var(--color-accent); outline-offset: 2px; }
+}
+@media print { .pr-source-evidence, .pr-inspect-source { display: none; } }
