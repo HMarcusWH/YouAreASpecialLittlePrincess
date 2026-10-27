@@ -49,7 +49,7 @@ def make_api(app_db, *, live_rights=True):
 
 def principal(api, subject):
     issued = api.post("/v1/dev/id-tokens", json={"subject": subject})
-    assert issued.status_code == 200
+    assert issued.status_code == 201
     auth = {"Authorization": f"Bearer {issued.json()['id_token']}"}
     who = api.get("/v1/me", headers=auth)
     assert who.status_code == 200
