@@ -9,3 +9,5 @@ export { contentText, featureName, highlightTitle, sectionTitle, t } from "./mes
 export type { Locale } from "./messages.ts";
 export { EVIDENCE_ICON, buildDossier, displayLocale, presentFact } from "./dossier.ts";
 export type { DossierModel, DossierSection, DossierSectionKind, FactPresentation } from "./dossier.ts";
+export { focusSourceEvidence, sourceImageEligible, MAX_SOURCE_FOCUS_REGIONS } from "./source-evidence.ts";
+export type { SourceEvidenceFocus, FocusedSourceRegion } from "./source-evidence.ts";
