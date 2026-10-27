@@ -294,3 +294,81 @@ test("Free technical facts retain saved method, missingness and evidence-region 
   assert.equal(stored.methodId, observed.method_id);
   assert.equal(stored.methodVersion, observed.method_version);
 });
+
+test("R4-F1 resolves all 76 source-authored /4 Free content IDs without client selector rules", async () => {
+  const { featureLabel, presentationContent, sectionTitle } = await import("../src/index.ts");
+  const presentation = JSON.parse(readFileSync(
+    new URL("../../../contracts/product/v1/presentation-content.v2.json", import.meta.url), "utf8"));
+  const reading = JSON.parse(readFileSync(
+    new URL("../../../src/princess_app/domain/content/_reading_v2.json", import.meta.url), "utf8"));
+  const expected = new Map<string, { en: string; sv: string }>(Object.entries(presentation.content));
+  for (const row of reading.chapters) {
+    expected.set(row.neutral_content_id, row.neutral);
+    expected.set(row.unavailable_content_id, row.unavailable);
+    assert.equal(sectionTitle("METRIC_GRID", "en", row.section_id, [row.neutral_content_id]), row.title.en);
+    assert.equal(sectionTitle("METRIC_GRID", "sv", row.section_id, [row.unavailable_content_id]), row.title.sv);
+  }
+  for (const [state, localized] of Object.entries(reading.states))
+    expected.set("content.reading.v2.state." + state.toLowerCase(), localized as { en: string; sv: string });
+  for (const row of reading.relations) expected.set(row.content_id, row.copy);
+  assert.equal(expected.size, 76);
+  for (const [id, localized] of expected) {
+    assert.equal(presentationContent(id, "en"), localized.en, id + "/en");
+    assert.equal(presentationContent(id, "sv"), localized.sv, id + "/sv");
+  }
+  for (const [featureId, localized] of Object.entries(presentation.feature_labels)) {
+    const copy = localized as { en: string; sv: string };
+    assert.equal(featureLabel(featureId, "en", "presentation/2"), copy.en);
+    assert.equal(featureLabel(featureId, "sv", "presentation/2"), copy.sv);
+    assert.equal(featureLabel(featureId, "en"), copy.en, "unchanged v1 labels");
+  }
+  assert.equal(presentationContent("content.chapter.v2.slant.unreviewed", "en"), undefined);
+  assert.equal(presentationContent("content.highlight.v2.slant.new_rule", "en"), undefined);
+});
+
+test("R4-F1 native/shared Dossier uses reviewed /4 chapters without reselecting facts", async () => {
+  const { buildDossier, highlightTitle, presentationContent } = await import("../src/index.ts");
+  const reading = JSON.parse(readFileSync(
+    new URL("../../../src/princess_app/domain/content/_reading_v2.json", import.meta.url), "utf8"));
+  const old = fixture<ReportViewModel>("view.free-v2.json");
+  const byId = new Map<string, { neutral_content_id: string; unavailable_content_id: string; title: { en: string; sv: string } }>(
+    reading.chapters.map((row: any) => [row.section_id, row]));
+  // Synthetic display-contract projection: existing sample, fact IDs, order and measurements untouched.
+  const view: ReportViewModel = {
+    ...old,
+    sections: old.sections.map((section) => {
+      const chapter = byId.get(section.section_id);
+      if (chapter) return { ...section, content_ids: [chapter.neutral_content_id] };
+      return section.template.startsWith("HIGHLIGHT_")
+        ? { ...section, content_ids: section.content_ids.map((id) => id.replace("content.highlight.v1.", "content.highlight.v2.")) }
+        : section;
+    }),
+  };
+  const en = buildDossier(view, "en");
+  const sv = buildDossier(view, "sv");
+  assert.equal(en.highlights[0]!.title, "What stands out");
+  assert.equal(en.highlights[0]!.copy[0], presentationContent("content.highlight.v2.slant.right.almost_all", "en"));
+  for (const [id, chapter] of byId) {
+    const enSection = en.sections.find((section) => section.sectionId === id)!;
+    const svSection = sv.sections.find((section) => section.sectionId === id)!;
+    assert.equal(enSection.title, chapter.title.en);
+    assert.equal(svSection.title, chapter.title.sv);
+    assert.equal(enSection.missingCopy, false);
+    assert.equal(svSection.missingCopy, false);
+    const original = old.sections.find((section) => section.section_id === id)!;
+    assert.deepEqual(enSection.facts.map((f) => f.factId), original.fact_ids);
+  }
+  assert.deepEqual(en.sections.map((s) => s.sectionId),
+                   old.sections.filter((s) => !s.template.startsWith("HIGHLIGHT_")).map((s) => s.section_id));
+  const neutral = { ...old, sections: [{ ...old.sections[0]!,
+    content_ids: ["content.reading.v2.state.partial"], fact_ids: [], availability: "UNCALIBRATED" as const }] };
+  assert.equal(buildDossier(neutral, "en").highlights[0]!.title, "Overview");
+  assert.equal(buildDossier(neutral, "sv").highlights[0]!.title, "Översikt");
+  assert.equal(buildDossier(neutral, "en").highlights[0]!.copy[0], reading.states.PARTIAL.en);
+  assert.equal(highlightTitle("HIGHLIGHT_PRIMARY", "en", ["content.highlight.v1.none"]), "What stands out");
+  const unknown = { ...view, sections: view.sections.map((section) => section.section_id === "section.slant"
+    ? { ...section, content_ids: ["content.chapter.v2.slant.unreviewed"] } : section) };
+  const unavailable = buildDossier(unknown, "en").sections.find((s) => s.sectionId === "section.slant")!;
+  assert.equal(unavailable.missingCopy, true);
+  assert.deepEqual(unavailable.copy, []);
+});

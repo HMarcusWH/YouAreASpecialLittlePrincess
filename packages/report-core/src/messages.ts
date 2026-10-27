@@ -1,4 +1,4 @@
-import { featureLabel, presentationContent } from "./presentation.ts";
+import { featureLabel, presentationContent, readingChapterTitle } from "./presentation.ts";
 
 // Display strings only. Fact IDs, units and values are never localized here.
 // T08A reviewed labels come from @princess/report-core; unknown future IDs render raw rather than inventing copy.
@@ -66,6 +66,7 @@ const EN: Record<string, string> = {
   "report.facts": "Measurements",
   "report.premium_saved": "The AI-assisted section is saved with this revision.",
   "report.what_stands_out": "What stands out",
+  "report.overview": "Overview",
   "report.also_noticeable": "Also noticeable",
   "report.image_omitted": "Source image omitted.",
   "report.handwriting_unverified": "Handwriting structure could not be verified. Handwriting-dependent results may be unavailable; image measurements remain separate.",
@@ -184,6 +185,7 @@ const SV: Record<string, string> = {
   "report.facts": "Mätvärden",
   "report.premium_saved": "Det AI-stödda avsnittet är sparat med denna version.",
   "report.what_stands_out": "Det som sticker ut",
+  "report.overview": "Översikt",
   "report.also_noticeable": "Också tydligt",
   "report.image_omitted": "Källbilden är utelämnad.",
   "report.handwriting_unverified": "Handskriftens struktur kunde inte verifieras. Handskriftsberoende resultat kan saknas; bildmått redovisas separat.",
@@ -277,7 +279,24 @@ const TEMPLATE_TITLES: Record<string, Record<Locale, string>> = {
   PREMIUM: SECTION_TITLES["section.premium"]!,
 };
 
-export function sectionTitle(template: string, locale: Locale = "en", sectionId?: string): string {
+/** A v2 neutral/partial/unqualified state is an overview, never a fabricated standout. */
+const V2_OVERVIEW_CONTENT = new Set([
+  "content.highlight.v2.none",
+  "content.reading.v2.state.neutral",
+  "content.reading.v2.state.partial",
+  "content.reading.v2.state.unqualified",
+]);
+
+export function highlightTitle(template: string, locale: Locale, contentIds: readonly string[]): string {
+  if (template === "HIGHLIGHT_SECONDARY") return t(locale, "report.also_noticeable");
+  return t(locale, contentIds.some((id) => V2_OVERVIEW_CONTENT.has(id))
+    ? "report.overview" : "report.what_stands_out");
+}
+
+export function sectionTitle(template: string, locale: Locale = "en", sectionId?: string,
+                             contentIds: readonly string[] = []): string {
+  const reviewedChapter = sectionId && readingChapterTitle(sectionId, contentIds, locale);
+  if (reviewedChapter) return reviewedChapter;
   if (template === "PATTERN_CONNECTION") {
     const index = /^section\.connection\.([1-8])$/.exec(sectionId ?? "")?.[1];
     return index ? `${locale === "sv" ? "Samband" : "Connection"} ${index}`
