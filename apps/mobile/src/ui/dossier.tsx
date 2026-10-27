@@ -93,7 +93,7 @@ export function FactRow({ fact, locale, technical = false }: {
 
 function SectionView({ section, locale, compactMissing = false, onInspectSource, inspectable = false }: {
   section: DossierSection; locale: Locale; compactMissing?: boolean;
-  onInspectSource?: (sectionId: string) => void; inspectable?: boolean;
+  onInspectSource?: ((sectionId: string) => void) | undefined; inspectable?: boolean;
 }) {
   const highlight = section.kind === "HIGHLIGHT_PRIMARY" || section.kind === "HIGHLIGHT_SECONDARY";
   const connection = section.kind === "CONNECTION";
@@ -557,7 +557,7 @@ export function SourceImage({ reportId, bundle, locale, view, focusSectionId = n
 export function DossierView({ model, onAction, busyAction, sourceEvidence, onInspectSource,
                               inspectableSections = [], onSourceLayout }: {
   model: DossierModel; onAction: (kind: string) => void; busyAction?: string | null;
-  sourceEvidence?: ReactNode; onInspectSource?: (sectionId: string) => void;
+  sourceEvidence?: ReactNode; onInspectSource?: ((sectionId: string) => void) | undefined;
   inspectableSections?: readonly string[]; onSourceLayout?: (offsetY: number) => void;
 }) {
   const { theme } = useApp();
