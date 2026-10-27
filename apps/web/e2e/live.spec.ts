@@ -39,6 +39,14 @@ test("upload, refresh queued work, report, history and export without any AI pro
   await expectAccessible(page, testInfo);
 
   const reportUrl = page.url();
+  const ownedReportId = reportUrl.split("/").pop()!;
+  // Image bytes are not logged or exported: validate the actual owner-only
+  // passthrough and its response MIME/cache contract on the synthetic sample.
+  const ownSource = await page.request.get("/api/v1/reports/" + encodeURIComponent(ownedReportId) + "/source-image");
+  expect(ownSource.status()).toBe(200);
+  expect(ownSource.headers()["content-type"]).toMatch(/^image\/(jpeg|png)/);
+  expect(ownSource.headers()["cache-control"]).toBe("no-store");
+  await expect(page.locator("#source-evidence-plate img")).toBeVisible();
   await page.goto("/reports");
   await expect(page.getByRole("heading", { level: 1, name: "Your reports" })).toBeVisible();
   await expect(page.locator(".report-list-item")).toHaveCount(1);
@@ -67,6 +75,7 @@ test("upload, refresh queued work, report, history and export without any AI pro
   await expect(other.locator("tr[data-fact-id]")).toHaveCount(0);
   const reportId = reportUrl.split("/").pop();
   expect((await other.request.get(origin + "/api/v1/reports/" + reportId + "/evidence")).status()).toBe(404);
+  expect((await other.request.get(origin + "/api/v1/reports/" + reportId + "/source-image")).status()).toBe(404);
   await other.goto(origin + "/reports");
   await expect(other.locator(".report-list-item")).toHaveCount(0);
   await stranger.close();
