@@ -5,7 +5,7 @@
 // reauthorized same-origin source image, and never retains image bytes.
 import type { EvidenceBundle, ReportViewModel } from "@princess/contracts";
 import { focusSourceEvidence, type Locale } from "@princess/report-core";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { t } from "@princess/report-web";
 
@@ -16,8 +16,23 @@ export function SourceEvidencePlate({ view, evidence, locale, sourceUrl, selecte
   const [image, setImage] = useState<{ width: number; height: number } | "loading" | "unavailable">(
     sourceUrl === null ? "unavailable" : "loading");
   const [index, setIndex] = useState(0);
+  const imageRef = useRef<HTMLImageElement | null>(null);
   useEffect(() => { setIndex(0); }, [selectedSectionId]);
-  useEffect(() => { setImage(sourceUrl === null ? "unavailable" : "loading"); }, [sourceUrl]);
+  useEffect(() => {
+    if (sourceUrl === null) {
+      setImage("unavailable");
+      return;
+    }
+    // Next.js may preload an SSR-rendered image before React hydrates and
+    // attaches onLoad/onError. Reading only its natural dimensions prevents a
+    // permanently "loading" specimen without guessing or duplicating pixels.
+    setImage("loading");
+    const element = imageRef.current;
+    if (element?.complete) {
+      const { naturalWidth: width, naturalHeight: height } = element;
+      setImage(width > 0 && height > 0 ? { width, height } : "unavailable");
+    }
+  }, [sourceUrl]);
 
   const focus = selectedSectionId !== null && image !== "loading" && image !== "unavailable"
     ? focusSourceEvidence(view, evidence, selectedSectionId, image.width, image.height)
@@ -43,7 +58,7 @@ export function SourceEvidencePlate({ view, evidence, locale, sourceUrl, selecte
           )}
           <figure className="pr-source-figure">
             <div className="pr-source-viewport">
-              <img key={sourceUrl} src={sourceUrl} alt={t(locale, "image.title")}
+              <img ref={imageRef} key={sourceUrl} src={sourceUrl} alt={t(locale, "image.title")}
                    referrerPolicy="no-referrer" draggable={false}
                    style={{ display: image === "unavailable" ? "none" : undefined }}
                    onLoad={(event) => {
