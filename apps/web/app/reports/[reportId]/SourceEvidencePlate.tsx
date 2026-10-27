@@ -26,8 +26,9 @@ export function SourceEvidencePlate({ view, evidence, locale, sourceUrl, selecte
   const current = regions.length ? Math.min(index, regions.length - 1) : 0;
   const active = regions[current];
   const root = evidence?.frames.find((frame) => frame.parent_frame_id === null && frame.unit === "px");
-  const frameMatches = image !== "loading" && image !== "unavailable" && root !== undefined
-    && root.width === image.width && root.height === image.height;
+  const dimensions = typeof image === "object" ? image : null;
+  const frameMatches = dimensions !== null && root !== undefined
+    && root.width === dimensions.width && root.height === dimensions.height;
 
   return (
     <section className="pr-source-evidence" id="source-evidence-plate" tabIndex={-1}
@@ -50,9 +51,9 @@ export function SourceEvidencePlate({ view, evidence, locale, sourceUrl, selecte
                      setImage(width > 0 && height > 0 ? { width, height } : "unavailable");
                    }}
                    onError={() => setImage("unavailable")} />
-              {frameMatches && active ? (
+              {frameMatches && dimensions && active ? (
                 <svg className="pr-source-outline" aria-hidden="true" role="presentation"
-                     viewBox={`0 0 ${image.width} ${image.height}`} preserveAspectRatio="none">
+                     viewBox={`0 0 ${dimensions.width} ${dimensions.height}`} preserveAspectRatio="none">
                   <polyline points={active.points.map(([x, y]) => `${x},${y}`).join(" ")} />
                 </svg>
               ) : null}

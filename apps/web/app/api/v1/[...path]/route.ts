@@ -21,54 +21,8 @@ const ROUTES: ReadonlyArray<[string, RegExp]> = [
   ["POST", new RegExp(`^analyses/${ID}/cancel$`)],
   ["DELETE", new RegExp(`^captures/${ID}$`)],
   ["GET", /^reports$/],
-  ["GET", new RegExp(`^reports/${ID}/evidence// Same-origin transport to the product API. It attaches the session credential
-// from the HttpOnly cookie, forwards only allowlisted routes and never
-// interprets business data: authorization happens in the API.
-import { NextResponse } from "next/server";
-
-import { apiBase, devLoginEnabled, sameOrigin, sessionCredential } from "../../../../lib/session.ts";
-
-const ID = "[A-Za-z0-9][A-Za-z0-9._:-]{0,127}";
-const ROUTES: ReadonlyArray<[string, RegExp]> = [
-  ["GET", /^me$/],
-  ["POST", /^me\/permissions$/],
-  ["GET", new RegExp(`^me/permissions/${ID}$`)],
-  ["POST", /^me\/logout-everywhere$/],
-  ["GET", /^me\/notification-preferences$/],
-  ["PUT", /^me\/notification-preferences$/],
-  ["DELETE", /^me$/],
-  ["POST", /^uploads$/],
-  ["POST", new RegExp(`^uploads/${ID}/complete$`)],
-  ["POST", /^analyses$/],
-  ["GET", new RegExp(`^analyses/${ID}$`)],
-  ["POST", new RegExp(`^analyses/${ID}/cancel$`)],
-  ["DELETE", new RegExp(`^captures/${ID}$`)],
-  ["GET", /^reports$/],
-)],
-  ["GET", new RegExp(`^reports/${ID}/source-image// Same-origin transport to the product API. It attaches the session credential
-// from the HttpOnly cookie, forwards only allowlisted routes and never
-// interprets business data: authorization happens in the API.
-import { NextResponse } from "next/server";
-
-import { apiBase, devLoginEnabled, sameOrigin, sessionCredential } from "../../../../lib/session.ts";
-
-const ID = "[A-Za-z0-9][A-Za-z0-9._:-]{0,127}";
-const ROUTES: ReadonlyArray<[string, RegExp]> = [
-  ["GET", /^me$/],
-  ["POST", /^me\/permissions$/],
-  ["GET", new RegExp(`^me/permissions/${ID}$`)],
-  ["POST", /^me\/logout-everywhere$/],
-  ["GET", /^me\/notification-preferences$/],
-  ["PUT", /^me\/notification-preferences$/],
-  ["DELETE", /^me$/],
-  ["POST", /^uploads$/],
-  ["POST", new RegExp(`^uploads/${ID}/complete$`)],
-  ["POST", /^analyses$/],
-  ["GET", new RegExp(`^analyses/${ID}$`)],
-  ["POST", new RegExp(`^analyses/${ID}/cancel$`)],
-  ["DELETE", new RegExp(`^captures/${ID}$`)],
-  ["GET", /^reports$/],
-)],
+  ["GET", new RegExp(`^reports/${ID}/evidence$`)],
+  ["GET", new RegExp(`^reports/${ID}/source-image$`)],
   ["GET", new RegExp(`^reports/${ID}$`)],
   ["POST", /^report-exports$/],
   ["GET", new RegExp(`^report-exports/${ID}$`)],
@@ -111,118 +65,7 @@ async function readLimited(request: Pick<Request, "headers" | "body">, limit: nu
 async function forward(request: Request, params: Promise<{ path: string[] }>): Promise<Response> {
   const path = (await params).path.join("/");
   const method = request.method.toUpperCase();
-  const sourceImage = method === "GET" && new RegExp(`^reports/${ID}/source-image// Same-origin transport to the product API. It attaches the session credential
-// from the HttpOnly cookie, forwards only allowlisted routes and never
-// interprets business data: authorization happens in the API.
-import { NextResponse } from "next/server";
-
-import { apiBase, devLoginEnabled, sameOrigin, sessionCredential } from "../../../../lib/session.ts";
-
-const ID = "[A-Za-z0-9][A-Za-z0-9._:-]{0,127}";
-const ROUTES: ReadonlyArray<[string, RegExp]> = [
-  ["GET", /^me$/],
-  ["POST", /^me\/permissions$/],
-  ["GET", new RegExp(`^me/permissions/${ID}$`)],
-  ["POST", /^me\/logout-everywhere$/],
-  ["GET", /^me\/notification-preferences$/],
-  ["PUT", /^me\/notification-preferences$/],
-  ["DELETE", /^me$/],
-  ["POST", /^uploads$/],
-  ["POST", new RegExp(`^uploads/${ID}/complete$`)],
-  ["POST", /^analyses$/],
-  ["GET", new RegExp(`^analyses/${ID}$`)],
-  ["POST", new RegExp(`^analyses/${ID}/cancel$`)],
-  ["DELETE", new RegExp(`^captures/${ID}$`)],
-  ["GET", /^reports$/],
-  ["GET", new RegExp(`^reports/${ID}/evidence// Same-origin transport to the product API. It attaches the session credential
-// from the HttpOnly cookie, forwards only allowlisted routes and never
-// interprets business data: authorization happens in the API.
-import { NextResponse } from "next/server";
-
-import { apiBase, devLoginEnabled, sameOrigin, sessionCredential } from "../../../../lib/session.ts";
-
-const ID = "[A-Za-z0-9][A-Za-z0-9._:-]{0,127}";
-const ROUTES: ReadonlyArray<[string, RegExp]> = [
-  ["GET", /^me$/],
-  ["POST", /^me\/permissions$/],
-  ["GET", new RegExp(`^me/permissions/${ID}$`)],
-  ["POST", /^me\/logout-everywhere$/],
-  ["GET", /^me\/notification-preferences$/],
-  ["PUT", /^me\/notification-preferences$/],
-  ["DELETE", /^me$/],
-  ["POST", /^uploads$/],
-  ["POST", new RegExp(`^uploads/${ID}/complete$`)],
-  ["POST", /^analyses$/],
-  ["GET", new RegExp(`^analyses/${ID}$`)],
-  ["POST", new RegExp(`^analyses/${ID}/cancel$`)],
-  ["DELETE", new RegExp(`^captures/${ID}$`)],
-  ["GET", /^reports$/],
-)],
-  ["GET", new RegExp(`^reports/${ID}/source-image// Same-origin transport to the product API. It attaches the session credential
-// from the HttpOnly cookie, forwards only allowlisted routes and never
-// interprets business data: authorization happens in the API.
-import { NextResponse } from "next/server";
-
-import { apiBase, devLoginEnabled, sameOrigin, sessionCredential } from "../../../../lib/session.ts";
-
-const ID = "[A-Za-z0-9][A-Za-z0-9._:-]{0,127}";
-const ROUTES: ReadonlyArray<[string, RegExp]> = [
-  ["GET", /^me$/],
-  ["POST", /^me\/permissions$/],
-  ["GET", new RegExp(`^me/permissions/${ID}$`)],
-  ["POST", /^me\/logout-everywhere$/],
-  ["GET", /^me\/notification-preferences$/],
-  ["PUT", /^me\/notification-preferences$/],
-  ["DELETE", /^me$/],
-  ["POST", /^uploads$/],
-  ["POST", new RegExp(`^uploads/${ID}/complete$`)],
-  ["POST", /^analyses$/],
-  ["GET", new RegExp(`^analyses/${ID}$`)],
-  ["POST", new RegExp(`^analyses/${ID}/cancel$`)],
-  ["DELETE", new RegExp(`^captures/${ID}$`)],
-  ["GET", /^reports$/],
-)],
-  ["GET", new RegExp(`^reports/${ID}$`)],
-  ["POST", /^report-exports$/],
-  ["GET", new RegExp(`^report-exports/${ID}$`)],
-  ["GET", new RegExp(`^report-exports/${ID}/file$`)],
-];
-// The local filesystem store's signed PUT (stands in for a provider's presigned URL).
-const DEV_UPLOAD = new RegExp(`^dev/uploads/${ID}$`);
-const MAX_JSON_BYTES = 64 * 1024;
-const MAX_UPLOAD_BYTES = 20 * 1024 * 1024;
-const MAX_SOURCE_IMAGE_BYTES = 20 * 1024 * 1024;
-
-/** Reads at most `limit` bytes: a larger declared length is refused before
- * reading, and the stream is cut off as soon as it passes the limit. */
-async function readLimited(request: Pick<Request, "headers" | "body">, limit: number): Promise<Uint8Array<ArrayBuffer> | null> {
-  const declared = request.headers.get("content-length");
-  if (declared !== null && (!/^\d+$/.test(declared) || Number(declared) > limit)) return null;
-  if (!request.body) return new Uint8Array(new ArrayBuffer(0));
-  const reader = request.body.getReader();
-  const chunks: Uint8Array[] = [];
-  let size = 0;
-  for (;;) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    size += value.byteLength;
-    if (size > limit) {
-      await reader.cancel();
-      return null;
-    }
-    chunks.push(value);
-  }
-  const out = new Uint8Array(new ArrayBuffer(size));
-  let offset = 0;
-  for (const chunk of chunks) {
-    out.set(chunk, offset);
-    offset += chunk.byteLength;
-  }
-  return out;
-}
-
-async function forward(request: Request, params: Promise<{ path: string[] }>): Promise<Response> {
-).test(path);
+  const sourceImage = method === "GET" && new RegExp(`^reports/${ID}/source-image$`).test(path);
   const devUpload = method === "PUT" && DEV_UPLOAD.test(path) && devLoginEnabled();
   if (!devUpload && !ROUTES.some(([m, pattern]) => m === method && pattern.test(path))) {
     return NextResponse.json({ error: "not_found" }, { status: 404 });
@@ -260,8 +103,8 @@ async function forward(request: Request, params: Promise<{ path: string[] }>): P
   let payload: ArrayBuffer | null;
   try {
     upstream = await fetch(target, { method, headers, body: body ?? null, cache: "no-store", redirect: "manual" });
-    // An image stays bounded and MIME allowlisted before sending any pixel bytes
-    // to the browser. Every GET still rechecks the owner's cookie at the API.
+    // Source raster responses alone are MIME allowlisted and stream-capped.
+    // The API reauthorizes the source under the session credential on each GET.
     if (sourceImage && upstream.ok) {
       const mediaType = (upstream.headers.get("content-type") ?? "").toLowerCase().split(";", 1)[0]!.trim();
       if (mediaType !== "image/jpeg" && mediaType !== "image/png") {
@@ -275,6 +118,7 @@ async function forward(request: Request, params: Promise<{ path: string[] }>): P
       }
       payload = bounded.buffer;
     } else {
+      // Other established proxy routes remain unchanged (JSON / export PDF/PNG).
       payload = upstream.status === 204 ? null : await upstream.arrayBuffer();
     }
   } catch {
