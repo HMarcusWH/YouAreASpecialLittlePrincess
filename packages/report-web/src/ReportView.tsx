@@ -4,7 +4,7 @@ import type { Action, EvidenceBundle, Fact, Notice, ReportSection, ReportViewMod
 import { formatFact } from "@princess/report-core";
 
 import { EvidenceView } from "./EvidenceView.tsx";
-import { contentText, featureName, sectionTitle, t, type Locale } from "./messages.ts";
+import { contentText, featureName, highlightTitle, sectionTitle, t, type Locale } from "./messages.ts";
 
 const EVIDENCE_ICON: Record<Fact["evidence_class"], string> = {
   MEASURED: "◆", COMPUTATIONAL_PROXY: "◇", REFERENCE_STATISTIC: "▲", AUTHORED_CONTENT: "✎",
@@ -71,7 +71,7 @@ function SectionBlock({ section, facts, locale, compactMissing, printMode }: { s
                                                     locale: Locale; compactMissing: boolean; printMode: boolean }) {
   const rows = section.fact_ids.map((id) => facts.get(id)).filter((f): f is Fact => f !== undefined);
   const headingId = `section-${section.section_id}`;
-  const heading = sectionTitle(section.template, locale, section.section_id);
+  const heading = sectionTitle(section.template, locale, section.section_id, section.content_ids);
   const highlight = section.template === "HIGHLIGHT_PRIMARY" || section.template === "HIGHLIGHT_SECONDARY";
   const fullyMissing = compactMissing && section.section_id !== "section.sample"
     && rows.length > 0 && rows.every((fact) => fact.availability === "MISSING");
@@ -98,9 +98,7 @@ function SectionBlock({ section, facts, locale, compactMissing, printMode }: { s
     </div>
   ) : null;
   if (highlight) {
-    const title = section.template === "HIGHLIGHT_PRIMARY"
-      ? t(locale, "report.what_stands_out")
-      : t(locale, "report.also_noticeable");
+    const title = highlightTitle(section.template, locale, section.content_ids);
     return (
       <section className="pr-section pr-highlight" aria-labelledby={headingId} data-section={section.section_id}
                data-availability={section.availability}>

@@ -124,3 +124,37 @@ def test_reading_policy_may_not_invent_t26_question_definitions():
             sources["presentation"], sources["chapters"],
             sources["relations"], modified, baseline,
         )
+
+def test_client_copy_ids_are_exhaustive_and_share_the_server_source():
+    sources, _ = prepared()
+    output = compiler.build()[compiler.CLIENT_OUTPUT]
+    client = json.loads(output.split(" = ", 1)[1].rsplit(" as const;", 1)[0])
+    assert client["presentation_version"] == "presentation/2"
+    assert client["feature_labels"] == sources["presentation"]["feature_labels"]
+    assert len(client["feature_labels"]) == 64
+    expected = dict(sources["presentation"]["content"])
+    server = json.loads(compiler.build()[compiler.SERVER_OUTPUT])
+    for row in server["chapters"]:
+        expected[row["neutral_content_id"]] = row["neutral"]
+        expected[row["unavailable_content_id"]] = row["unavailable"]
+        client_row = next(c for c in client["chapters"] if c["section_id"] == row["section_id"])
+        assert client_row["title"] == row["title"]
+        assert client_row["neutral_content_id"] == row["neutral_content_id"]
+    for state, localized in server["states"].items():
+        expected[f"content.reading.v2.state.{state.lower()}"] = localized
+    for row in server["relations"]:
+        expected[row["content_id"]] = row["copy"]
+    assert len(expected) == 76
+    assert client["content"] == expected
+    assert "content.highlight.v1.none" not in client["content"]
+    assert "source_sha256" not in client
+    assert "selector_question_ids" not in client
+
+
+def test_client_registry_rejects_colliding_authored_content_ids():
+    sources, _ = prepared()
+    server = json.loads(compiler.build()[compiler.SERVER_OUTPUT])
+    duplicate = copy.deepcopy(sources["presentation"])
+    duplicate["content"]["content.chapter.v2.slant.neutral"] = {"en": "forged", "sv": "förfalskad"}
+    with pytest.raises(ValueError, match="duplicate authored client content"):
+        compiler.render_typescript(server, duplicate)

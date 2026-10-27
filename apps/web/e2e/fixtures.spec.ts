@@ -48,6 +48,28 @@ test("the v2 fixture renders the real server-owned first reveal", async ({ page 
   await expect(page.getByText("content.highlight.v1.slant.right.almost_all")).toHaveCount(0);
 });
 
+test("v4 Free story copy resolves in EN/SV on the web without changing saved measurements", async ({ page }) => {
+  await page.goto("/fixtures/story-v4-copy");
+  const slant = page.locator('[data-section="section.slant"]');
+  await expect(slant.getByRole("heading", { name: "Slant and direction" })).toBeVisible();
+  await expect(slant).toContainText("The diagram shows the directions of the measured strokes.");
+  await expect(page.locator('[data-section="section.ink"]')).toContainText(
+    "Explore visible ink darkness and thickness, not physical pen pressure.");
+  await expect(page.getByText("content.chapter.v2.slant.neutral")).toHaveCount(0);
+  await page.goto("/fixtures/story-v4-copy?locale=sv");
+  const swedish = page.locator('[data-section="section.slant"]');
+  await expect(swedish.getByRole("heading", { name: "Lutning och riktning" })).toBeVisible();
+  await expect(swedish).toContainText("Diagrammet visar riktningarna hos de uppmätta strecken.");
+  await expect(page.locator("[data-evidence=AI_SYNTHESIS]")).toHaveCount(0);
+});
+
+test("v4 unknown copy fails visibly instead of substituting a historical claim", async ({ page }) => {
+  await page.goto("/fixtures/story-v4-unknown");
+  await expect(page.locator('[data-section="section.slant"]')).toContainText(
+    "The reviewed description for this saved section is not installed in this app version.");
+  await expect(page.getByText("content.chapter.v2.slant.unreviewed")).toHaveCount(0);
+});
+
 test("legacy v1 reports remain readable without a first reveal", async ({ page }) => {
   await page.goto("/fixtures/free");
   await expect(page.locator(".pr-first-reveal")).toHaveCount(0);

@@ -200,19 +200,43 @@ def render_registry(registry: dict[str, Any]) -> str:
     return json.dumps(registry, ensure_ascii=False, sort_keys=True, indent=2, allow_nan=False) + "\n"
 
 
-def render_typescript(registry: dict[str, Any]) -> str:
-    """Clients get authored copy only; never candidate rules or selector policy."""
+def render_typescript(registry: dict[str, Any], presentation: dict[str, Any]) -> str:
+    """Expose exact authored EN/SV copy and IDs to readers, not selector authority."""
+    copy_by_id = dict(presentation["content"])
+
+    def add(content_id: str, localized: dict[str, str]) -> None:
+        if content_id in copy_by_id:
+            raise ValueError(f"duplicate authored client content {content_id}")
+        copy_by_id[content_id] = localized
+
+    for row in registry["chapters"]:
+        add(row["neutral_content_id"], row["neutral"])
+        add(row["unavailable_content_id"], row["unavailable"])
+    for state, localized in registry["states"].items():
+        add(f"content.reading.v2.state.{state.lower()}", localized)
+    for row in registry["relations"]:
+        add(row["content_id"], row["copy"])
+
+    # 55 approved presentation copy IDs + 12 chapters + 3 states + 6 relations.
+    # This is a source-closure check, not a rule for choosing user-facing text.
+    if len(copy_by_id) != 76 or len(presentation["feature_labels"]) != 64:
+        raise ValueError("unexpected approved Free client content closure")
+
     content = {
         "version": registry["version"],
+        "presentation_version": registry["presentation_version"],
+        "feature_labels": presentation["feature_labels"],
+        "content": copy_by_id,
         "chapters": [
             {key: row[key] for key in (
-                "section_id", "title", "neutral", "unavailable",
+                "section_id", "title", "neutral_content_id", "unavailable_content_id",
+                "neutral", "unavailable",
             )}
             for row in registry["chapters"]
         ],
         "states": registry["states"],
         "relations": [
-            {key: row[key] for key in ("relation_id", "copy")}
+            {key: row[key] for key in ("relation_id", "content_id", "copy")}
             for row in registry["relations"]
         ],
     }
@@ -236,7 +260,7 @@ def build() -> dict[Path, str]:
     registry = compile_registry(sources, digests)
     return {
         SERVER_OUTPUT: render_registry(registry),
-        CLIENT_OUTPUT: render_typescript(registry),
+        CLIENT_OUTPUT: render_typescript(registry, sources["presentation"]),
     }
 
 

@@ -10,14 +10,14 @@ import type { ReportSection } from "@princess/contracts";
 import { ReportView } from "@princess/report-web";
 
 export const dynamic = "force-dynamic";
-const NAMES = new Set(["free", "free-v2", "free-v2-no-highlight", "owner-premium", "owner-image-revoked", "share", "export-no-image"]);
+const NAMES = new Set(["free", "free-v2", "free-v2-no-highlight", "story-v4-copy", "story-v4-unknown", "owner-premium", "owner-image-revoked", "share", "export-no-image"]);
 
 export default async function Fixture({ params, searchParams }: {
   params: Promise<{ name: string }>; searchParams: Promise<{ locale?: string }>;
 }) {
   const { name } = await params;
   if (process.env.PRINCESS_WEB_FIXTURES !== "1" || !NAMES.has(name)) notFound();
-  const sourceName = name === "free-v2-no-highlight" ? "free-v2" : name;
+  const sourceName = name === "free-v2-no-highlight" || name.startsWith("story-v4-") ? "free-v2" : name;
   const file = path.join(process.cwd(), "..", "..", "fixtures", "reports", `view.${sourceName}.json`);
   let view = parseReportView(JSON.parse(await readFile(file, "utf8")));
   if (name === "free-v2-no-highlight") {
@@ -33,6 +33,25 @@ export default async function Fixture({ params, searchParams }: {
       ...view,
       sections: [firstReveal, ...view.sections.filter((section) =>
         section.template !== "HIGHLIGHT_PRIMARY" && section.template !== "HIGHLIGHT_SECONDARY")],
+    };
+  }
+  if (name === "story-v4-copy" || name === "story-v4-unknown") {
+    // Synthetic client-copy contract only; not a report issued by a live /4 writer.
+    const chapters = new Set(["slant", "baseline", "spacing", "size", "layout", "ink"]);
+    view = {
+      ...view,
+      sections: view.sections.map((section) => {
+        const family = section.section_id.slice("section.".length);
+        if (chapters.has(family)) return {
+          ...section,
+          content_ids: [name === "story-v4-unknown" && family === "slant"
+            ? "content.chapter.v2.slant.unreviewed" : "content.chapter.v2." + family + ".neutral"],
+        };
+        return section.template.startsWith("HIGHLIGHT_") ? {
+          ...section,
+          content_ids: section.content_ids.map((id) => id.replace("content.highlight.v1.", "content.highlight.v2.")),
+        } : section;
+      }),
     };
   }
   const evidenceFile = name === "free" ? "evidence-bundle.json"

@@ -6,6 +6,7 @@ export const READING_CONTENT = {
         "en": "The diagram shows the directions of the measured strokes.",
         "sv": "Diagrammet visar riktningarna hos de uppmätta strecken."
       },
+      "neutral_content_id": "content.chapter.v2.slant.neutral",
       "section_id": "section.slant",
       "title": {
         "en": "Slant and direction",
@@ -14,13 +15,15 @@ export const READING_CONTENT = {
       "unavailable": {
         "en": "This sample does not provide enough supported observations for this topic.",
         "sv": "Det här provet ger inte tillräckligt med underbyggda observationer för detta avsnitt."
-      }
+      },
+      "unavailable_content_id": "content.chapter.v2.slant.unavailable"
     },
     {
       "neutral": {
         "en": "Follow the measured paths of the writing across the image.",
         "sv": "Följ skriftens uppmätta radförlopp genom bilden."
       },
+      "neutral_content_id": "content.chapter.v2.baseline.neutral",
       "section_id": "section.baseline",
       "title": {
         "en": "Baseline and line flow",
@@ -29,13 +32,15 @@ export const READING_CONTENT = {
       "unavailable": {
         "en": "This sample does not provide enough supported observations for this topic.",
         "sv": "Det här provet ger inte tillräckligt med underbyggda observationer för detta avsnitt."
-      }
+      },
+      "unavailable_content_id": "content.chapter.v2.baseline.unavailable"
     },
     {
       "neutral": {
         "en": "Inspect the accepted gaps between word groups and lines.",
         "sv": "Granska de godkända mellanrummen mellan ordgrupper och rader."
       },
+      "neutral_content_id": "content.chapter.v2.spacing.neutral",
       "section_id": "section.spacing",
       "title": {
         "en": "Spacing",
@@ -44,13 +49,15 @@ export const READING_CONTENT = {
       "unavailable": {
         "en": "This sample does not provide enough supported observations for this topic.",
         "sv": "Det här provet ger inte tillräckligt med underbyggda observationer för detta avsnitt."
-      }
+      },
+      "unavailable_content_id": "content.chapter.v2.spacing.unavailable"
     },
     {
       "neutral": {
         "en": "Compare the supported dimensions of connected ink shapes in this sample.",
         "sv": "Jämför de dimensioner hos sammanhängande bläckformer som kan mätas i provet."
       },
+      "neutral_content_id": "content.chapter.v2.size.neutral",
       "section_id": "section.size",
       "title": {
         "en": "Size and proportions",
@@ -59,13 +66,15 @@ export const READING_CONTENT = {
       "unavailable": {
         "en": "This sample does not provide enough supported observations for this topic.",
         "sv": "Det här provet ger inte tillräckligt med underbyggda observationer för detta avsnitt."
-      }
+      },
+      "unavailable_content_id": "content.chapter.v2.size.unavailable"
     },
     {
       "neutral": {
         "en": "See where the detected text sits within the captured image.",
         "sv": "Se var den upptäckta texten ligger i den tagna bilden."
       },
+      "neutral_content_id": "content.chapter.v2.layout.neutral",
       "section_id": "section.layout",
       "title": {
         "en": "Page organization",
@@ -74,13 +83,15 @@ export const READING_CONTENT = {
       "unavailable": {
         "en": "This sample does not provide enough supported observations for this topic.",
         "sv": "Det här provet ger inte tillräckligt med underbyggda observationer för detta avsnitt."
-      }
+      },
+      "unavailable_content_id": "content.chapter.v2.layout.unavailable"
     },
     {
       "neutral": {
         "en": "Explore visible ink darkness and thickness, not physical pen pressure.",
         "sv": "Utforska synlig bläckmörkhet och strecktjocklek, inte fysiskt penntryck."
       },
+      "neutral_content_id": "content.chapter.v2.ink.neutral",
       "section_id": "section.ink",
       "title": {
         "en": "Stroke appearance",
@@ -89,11 +100,578 @@ export const READING_CONTENT = {
       "unavailable": {
         "en": "This sample does not provide enough supported observations for this topic.",
         "sv": "Det här provet ger inte tillräckligt med underbyggda observationer för detta avsnitt."
-      }
+      },
+      "unavailable_content_id": "content.chapter.v2.ink.unavailable"
     }
   ],
+  "content": {
+    "content.chapter.v2.baseline.neutral": {
+      "en": "Follow the measured paths of the writing across the image.",
+      "sv": "Följ skriftens uppmätta radförlopp genom bilden."
+    },
+    "content.chapter.v2.baseline.unavailable": {
+      "en": "This sample does not provide enough supported observations for this topic.",
+      "sv": "Det här provet ger inte tillräckligt med underbyggda observationer för detta avsnitt."
+    },
+    "content.chapter.v2.ink.neutral": {
+      "en": "Explore visible ink darkness and thickness, not physical pen pressure.",
+      "sv": "Utforska synlig bläckmörkhet och strecktjocklek, inte fysiskt penntryck."
+    },
+    "content.chapter.v2.ink.unavailable": {
+      "en": "This sample does not provide enough supported observations for this topic.",
+      "sv": "Det här provet ger inte tillräckligt med underbyggda observationer för detta avsnitt."
+    },
+    "content.chapter.v2.layout.neutral": {
+      "en": "See where the detected text sits within the captured image.",
+      "sv": "Se var den upptäckta texten ligger i den tagna bilden."
+    },
+    "content.chapter.v2.layout.unavailable": {
+      "en": "This sample does not provide enough supported observations for this topic.",
+      "sv": "Det här provet ger inte tillräckligt med underbyggda observationer för detta avsnitt."
+    },
+    "content.chapter.v2.size.neutral": {
+      "en": "Compare the supported dimensions of connected ink shapes in this sample.",
+      "sv": "Jämför de dimensioner hos sammanhängande bläckformer som kan mätas i provet."
+    },
+    "content.chapter.v2.size.unavailable": {
+      "en": "This sample does not provide enough supported observations for this topic.",
+      "sv": "Det här provet ger inte tillräckligt med underbyggda observationer för detta avsnitt."
+    },
+    "content.chapter.v2.slant.neutral": {
+      "en": "The diagram shows the directions of the measured strokes.",
+      "sv": "Diagrammet visar riktningarna hos de uppmätta strecken."
+    },
+    "content.chapter.v2.slant.unavailable": {
+      "en": "This sample does not provide enough supported observations for this topic.",
+      "sv": "Det här provet ger inte tillräckligt med underbyggda observationer för detta avsnitt."
+    },
+    "content.chapter.v2.spacing.neutral": {
+      "en": "Inspect the accepted gaps between word groups and lines.",
+      "sv": "Granska de godkända mellanrummen mellan ordgrupper och rader."
+    },
+    "content.chapter.v2.spacing.unavailable": {
+      "en": "This sample does not provide enough supported observations for this topic.",
+      "sv": "Det här provet ger inte tillräckligt med underbyggda observationer för detta avsnitt."
+    },
+    "content.highlight.v2.baseline.angle_stable": {
+      "en": "Estimated baseline direction changes very little from line to line.",
+      "sv": "Den uppskattade baslinjens riktning ändras mycket lite mellan raderna."
+    },
+    "content.highlight.v2.baseline.angle_varied": {
+      "en": "Estimated baseline direction changes noticeably from line to line.",
+      "sv": "Den uppskattade baslinjens riktning ändras tydligt mellan raderna."
+    },
+    "content.highlight.v2.baseline.curved": {
+      "en": "The estimated line baselines show a clear curved component.",
+      "sv": "De uppskattade radbaslinjerna visar en tydlig krökt komponent."
+    },
+    "content.highlight.v2.baseline.falling": {
+      "en": "The estimated baselines fall to the right across the detected lines.",
+      "sv": "De uppskattade baslinjerna sjunker åt höger över de upptäckta raderna."
+    },
+    "content.highlight.v2.baseline.near_level": {
+      "en": "The estimated baselines stay close to level overall.",
+      "sv": "De uppskattade baslinjerna ligger överlag nära vågrätt."
+    },
+    "content.highlight.v2.baseline.rising": {
+      "en": "The estimated baselines rise to the right across the detected lines.",
+      "sv": "De uppskattade baslinjerna stiger åt höger över de upptäckta raderna."
+    },
+    "content.highlight.v2.baseline.smooth": {
+      "en": "The estimated lower writing edge stays comparatively smooth within the detected lines.",
+      "sv": "Den uppskattade nedre skrivkanten håller sig jämn inom de upptäckta raderna."
+    },
+    "content.highlight.v2.baseline.wavy": {
+      "en": "The estimated lower writing edge shows pronounced waviness within the detected lines.",
+      "sv": "Den uppskattade nedre skrivkanten visar tydlig vågighet inom de upptäckta raderna."
+    },
+    "content.highlight.v2.ink.dark_foreground": {
+      "en": "Detected foreground pixels are predominantly dark in this image.",
+      "sv": "De upptäckta förgrundspixlarna är övervägande mörka i den här bilden."
+    },
+    "content.highlight.v2.ink.darkness_uniform": {
+      "en": "Foreground darkness is highly consistent across this image.",
+      "sv": "Förgrundens mörkhet är mycket jämn över den här bilden."
+    },
+    "content.highlight.v2.ink.darkness_varied": {
+      "en": "Foreground darkness varies strongly across this image.",
+      "sv": "Förgrundens mörkhet varierar tydligt över den här bilden."
+    },
+    "content.highlight.v2.ink.light_foreground": {
+      "en": "Detected foreground pixels sit toward the light end of the 0–1 darkness scale in this image.",
+      "sv": "De upptäckta förgrundspixlarna ligger mot den ljusa delen av bildens mörkhetsskala 0–1."
+    },
+    "content.highlight.v2.ink.saturation_low": {
+      "en": "Very few detected foreground pixels are near-black in this image.",
+      "sv": "Mycket få av de upptäckta förgrundspixlarna är nästan svarta i den här bilden."
+    },
+    "content.highlight.v2.ink.saturation_visible": {
+      "en": "At least 5% of detected foreground pixels are near-black in this image.",
+      "sv": "Minst 5 % av de upptäckta förgrundspixlarna är nästan svarta i den här bilden."
+    },
+    "content.highlight.v2.ink.stroke_uniform": {
+      "en": "Stroke thickness is highly consistent across the ink detected in this image.",
+      "sv": "Strecktjockleken är mycket jämn i det bläck som upptäckts i den här bilden."
+    },
+    "content.highlight.v2.ink.stroke_variable": {
+      "en": "Stroke thickness varies strongly across the ink detected in this image.",
+      "sv": "Strecktjockleken varierar tydligt i det bläck som upptäckts i den här bilden."
+    },
+    "content.highlight.v2.layout.centered": {
+      "en": "The detected text block sits close to the horizontal centre of the image.",
+      "sv": "Det upptäckta textblocket ligger nära bildens horisontella mitt."
+    },
+    "content.highlight.v2.layout.ends_stable_starts_drift": {
+      "en": "Line endings stay aligned while line starts shift across the page.",
+      "sv": "Radsluten ligger stabilt medan radstarterna förskjuts över sidan."
+    },
+    "content.highlight.v2.layout.horizontally_dense": {
+      "en": "The detected text block spans at least three quarters of the image width.",
+      "sv": "Det upptäckta textblocket täcker minst tre fjärdedelar av bildens bredd."
+    },
+    "content.highlight.v2.layout.horizontally_open": {
+      "en": "The detected text block uses less than 45% of the image width.",
+      "sv": "Det upptäckta textblocket använder mindre än 45 % av bildens bredd."
+    },
+    "content.highlight.v2.layout.left_shifted": {
+      "en": "The detected text block sits clearly left of the image centre.",
+      "sv": "Det upptäckta textblocket ligger tydligt till vänster om bildens mitt."
+    },
+    "content.highlight.v2.layout.line_lengths_consistent": {
+      "en": "Detected line lengths are highly consistent across the page.",
+      "sv": "De upptäckta radlängderna är mycket jämna över sidan."
+    },
+    "content.highlight.v2.layout.line_lengths_varied": {
+      "en": "Detected line lengths vary substantially across the page.",
+      "sv": "De upptäckta radlängderna varierar tydligt över sidan."
+    },
+    "content.highlight.v2.layout.lines_narrow_down_page": {
+      "en": "The detected line edges move toward each other lower on the page.",
+      "sv": "De upptäckta radkanterna rör sig mot varandra längre ned på sidan."
+    },
+    "content.highlight.v2.layout.lines_widen_down_page": {
+      "en": "The detected line edges move apart lower on the page.",
+      "sv": "De upptäckta radkanterna rör sig isär längre ned på sidan."
+    },
+    "content.highlight.v2.layout.margins_asymmetric": {
+      "en": "The detected left and right margins are strongly asymmetric.",
+      "sv": "De upptäckta vänster- och högermarginalerna är tydligt asymmetriska."
+    },
+    "content.highlight.v2.layout.margins_balanced": {
+      "en": "The detected left and right margins are closely balanced.",
+      "sv": "De upptäckta vänster- och högermarginalerna är nära balanserade."
+    },
+    "content.highlight.v2.layout.right_shifted": {
+      "en": "The detected text block sits clearly right of the image centre.",
+      "sv": "Det upptäckta textblocket ligger tydligt till höger om bildens mitt."
+    },
+    "content.highlight.v2.layout.starts_stable_ends_drift": {
+      "en": "Line starts stay aligned while line endings shift across the page.",
+      "sv": "Radstarterna ligger stabilt medan radsluten förskjuts över sidan."
+    },
+    "content.highlight.v2.none": {
+      "en": "Explore the visible patterns we could measure in this sample.",
+      "sv": "Utforska de synliga mönster vi kunde mäta i det här provet."
+    },
+    "content.highlight.v2.size.aspect_consistent": {
+      "en": "The detected components keep a fairly consistent width-to-height shape.",
+      "sv": "De upptäckta komponenterna håller ett ganska jämnt förhållande mellan bredd och höjd."
+    },
+    "content.highlight.v2.size.aspect_varied": {
+      "en": "The detected components vary strongly in width-to-height shape.",
+      "sv": "De upptäckta komponenterna varierar tydligt i förhållandet mellan bredd och höjd."
+    },
+    "content.highlight.v2.size.balanced_aspect": {
+      "en": "The detected components are close to equal in width and height on average.",
+      "sv": "De upptäckta komponenterna ligger i genomsnitt nära samma bredd som höjd."
+    },
+    "content.highlight.v2.size.height_more_variable": {
+      "en": "Component heights vary more than component widths in this sample.",
+      "sv": "Komponenternas höjd varierar mer än deras bredd i detta prov."
+    },
+    "content.highlight.v2.size.taller_components": {
+      "en": "On average, the detected components are taller than they are wide.",
+      "sv": "I genomsnitt är de upptäckta komponenterna högre än de är breda."
+    },
+    "content.highlight.v2.size.wider_components": {
+      "en": "On average, the detected components are wider than they are tall.",
+      "sv": "I genomsnitt är de upptäckta komponenterna bredare än de är höga."
+    },
+    "content.highlight.v2.size.width_more_variable": {
+      "en": "Component widths vary more than component heights in this sample.",
+      "sv": "Komponenternas bredd varierar mer än deras höjd i detta prov."
+    },
+    "content.highlight.v2.slant.consistent": {
+      "en": "Accepted stroke slants cluster tightly around a common direction.",
+      "sv": "De godkända strecklutningarna ligger tätt samlade kring en gemensam riktning."
+    },
+    "content.highlight.v2.slant.extreme_heavy": {
+      "en": "A substantial share of accepted strokes sit beyond 30° from vertical.",
+      "sv": "En betydande andel av de godkända strecken ligger mer än 30° från lodrätt."
+    },
+    "content.highlight.v2.slant.left.almost_all": {
+      "en": "Almost every accepted slant observation leans left.",
+      "sv": "Nästan alla godkända lutningsobservationer lutar åt vänster."
+    },
+    "content.highlight.v2.slant.left.most": {
+      "en": "Most accepted slant observations lean left.",
+      "sv": "De flesta godkända lutningsobservationerna lutar åt vänster."
+    },
+    "content.highlight.v2.slant.mixed": {
+      "en": "The accepted slant observations are split across more than one direction.",
+      "sv": "De godkända lutningsobservationerna är fördelade över mer än en riktning."
+    },
+    "content.highlight.v2.slant.right.almost_all": {
+      "en": "Almost every accepted slant observation leans right.",
+      "sv": "Nästan alla godkända lutningsobservationer lutar åt höger."
+    },
+    "content.highlight.v2.slant.right.most": {
+      "en": "Most accepted slant observations lean right.",
+      "sv": "De flesta godkända lutningsobservationerna lutar åt höger."
+    },
+    "content.highlight.v2.slant.variable": {
+      "en": "Accepted stroke slants vary widely within this sample.",
+      "sv": "De godkända strecklutningarna varierar mycket inom detta prov."
+    },
+    "content.highlight.v2.slant.vertical.almost_all": {
+      "en": "Almost every accepted slant observation leans close to vertical.",
+      "sv": "Nästan alla godkända lutningsobservationer lutar nära lodrätt."
+    },
+    "content.highlight.v2.slant.vertical.most": {
+      "en": "Most accepted slant observations lean close to vertical.",
+      "sv": "De flesta godkända lutningsobservationerna lutar nära lodrätt."
+    },
+    "content.highlight.v2.spacing.lines_compact": {
+      "en": "The average gap between lines is less than one and a half estimated x-heights.",
+      "sv": "Det genomsnittliga mellanrummet mellan raderna är mindre än en och en halv uppskattad x-höjd."
+    },
+    "content.highlight.v2.spacing.lines_consistent": {
+      "en": "The detected line gaps are highly consistent in this sample.",
+      "sv": "De upptäckta radmellanrummen är mycket jämna i detta prov."
+    },
+    "content.highlight.v2.spacing.lines_more_consistent": {
+      "en": "Line gaps are more consistent than word gaps in the measurements available here.",
+      "sv": "Radmellanrummen är jämnare än ordmellanrummen i de mätningar som finns här."
+    },
+    "content.highlight.v2.spacing.lines_open": {
+      "en": "The average gap between lines is more than three estimated x-heights.",
+      "sv": "Det genomsnittliga mellanrummet mellan raderna är mer än tre uppskattade x-höjder."
+    },
+    "content.highlight.v2.spacing.lines_varied": {
+      "en": "The detected line gaps vary substantially in this sample.",
+      "sv": "De upptäckta radmellanrummen varierar tydligt i detta prov."
+    },
+    "content.highlight.v2.spacing.words_consistent": {
+      "en": "The detected word gaps are highly consistent in this sample.",
+      "sv": "De upptäckta ordmellanrummen är mycket jämna i detta prov."
+    },
+    "content.highlight.v2.spacing.words_more_consistent": {
+      "en": "Word gaps are more consistent than line gaps in the measurements available here.",
+      "sv": "Ordmellanrummen är jämnare än radmellanrummen i de mätningar som finns här."
+    },
+    "content.highlight.v2.spacing.words_varied": {
+      "en": "The detected word gaps vary substantially in this sample.",
+      "sv": "De upptäckta ordmellanrummen varierar tydligt i detta prov."
+    },
+    "content.reading.v2.state.neutral": {
+      "en": "Here is what we could observe in this sample.",
+      "sv": "Det här kunde vi observera i provet."
+    },
+    "content.reading.v2.state.partial": {
+      "en": "Some parts of this sample can be described; other topics need more supported writing.",
+      "sv": "Vissa delar av provet kan beskrivas; andra avsnitt behöver mer användbar handskrift."
+    },
+    "content.reading.v2.state.unqualified": {
+      "en": "We could not separate enough handwriting from the image to give a supported reading.",
+      "sv": "Vi kunde inte skilja tillräckligt mycket handskrift från bilden för att ge en underbyggd beskrivning."
+    },
+    "content.relation.v1.baseline_direction_contrast": {
+      "en": "Similar baseline angles alongside mixed stroke direction.",
+      "sv": "Liknande baslinjevinklar tillsammans med blandad streckriktning."
+    },
+    "content.relation.v1.gap_length_contrast": {
+      "en": "Consistent line gaps alongside varied line lengths.",
+      "sv": "Regelbundna radmellanrum tillsammans med varierande radlängder."
+    },
+    "content.relation.v1.layout_regularity": {
+      "en": "Repeated baseline angles and repeated word gaps occur together.",
+      "sv": "Återkommande baslinjevinklar och ordmellanrum förekommer tillsammans."
+    },
+    "content.relation.v1.shape_spacing_contrast": {
+      "en": "Varied ink-shape proportions alongside consistent word gaps.",
+      "sv": "Varierade proportioner hos bläckformer tillsammans med regelbundna ordmellanrum."
+    },
+    "content.relation.v1.space_direction_contrast": {
+      "en": "Regular word gaps alongside varied stroke direction.",
+      "sv": "Regelbundna ordmellanrum tillsammans med varierad streckriktning."
+    },
+    "content.relation.v1.stroke_length_contrast": {
+      "en": "Variable visible strokes alongside consistent line lengths.",
+      "sv": "Varierande synliga streck tillsammans med jämna radlängder."
+    }
+  },
+  "feature_labels": {
+    "BASELINE_ABS_SLOPE": {
+      "en": "Estimated absolute baseline slope",
+      "sv": "Uppskattad absolut baslinjelutning"
+    },
+    "BASELINE_ANGLE_MEAN": {
+      "en": "Estimated mean baseline angle",
+      "sv": "Uppskattad genomsnittlig baslinjevinkel"
+    },
+    "BASELINE_ANGLE_MEDIAN": {
+      "en": "Estimated median baseline angle",
+      "sv": "Uppskattad median för baslinjevinkel"
+    },
+    "BASELINE_ANGLE_STD": {
+      "en": "Estimated baseline-angle variability",
+      "sv": "Variation i uppskattad baslinjevinkel"
+    },
+    "BASELINE_CURVATURE": {
+      "en": "Estimated baseline curvature",
+      "sv": "Uppskattad baslinjekrökning"
+    },
+    "BASELINE_STABILITY": {
+      "en": "Derived estimated-baseline stability",
+      "sv": "Beräknad stabilitet i uppskattad baslinje"
+    },
+    "BASELINE_WAVINESS": {
+      "en": "Estimated within-line baseline waviness",
+      "sv": "Uppskattad baslinjevågighet inom rader"
+    },
+    "GLYPH_ASPECT_RATIO_CV": {
+      "en": "Glyph aspect-ratio variability",
+      "sv": "Variation i bredd/höjd-förhållande"
+    },
+    "GLYPH_ASPECT_RATIO_MEAN": {
+      "en": "Mean glyph width/height",
+      "sv": "Genomsnittligt bredd/höjd-förhållande"
+    },
+    "GLYPH_HEIGHT_CV": {
+      "en": "Glyph-height variability",
+      "sv": "Variation i teckenhöjd"
+    },
+    "GLYPH_HEIGHT_MEAN": {
+      "en": "Mean glyph/component height",
+      "sv": "Genomsnittlig tecken-/komponenthöjd"
+    },
+    "GLYPH_WIDTH_CV": {
+      "en": "Glyph-width variability",
+      "sv": "Variation i teckenbredd"
+    },
+    "GLYPH_WIDTH_MEAN": {
+      "en": "Mean glyph/component width",
+      "sv": "Genomsnittlig tecken-/komponentbredd"
+    },
+    "IMG_ASPECT_RATIO": {
+      "en": "Image aspect ratio",
+      "sv": "Bildens sidförhållande"
+    },
+    "IMG_HEIGHT_PX": {
+      "en": "Image height",
+      "sv": "Bildhöjd"
+    },
+    "IMG_MEGAPIXELS": {
+      "en": "Image megapixels",
+      "sv": "Bildens megapixlar"
+    },
+    "IMG_ROTATION_DEG": {
+      "en": "Page rotation/skew",
+      "sv": "Sidans rotation/skevhet"
+    },
+    "IMG_WIDTH_PX": {
+      "en": "Image width",
+      "sv": "Bildbredd"
+    },
+    "INK_DARKNESS_CV": {
+      "en": "Image ink darkness coefficient of variation",
+      "sv": "Variationskoefficient för bläckmörkhet i bilden"
+    },
+    "INK_DARKNESS_MEAN": {
+      "en": "Mean image ink darkness",
+      "sv": "Genomsnittlig bläckmörkhet i bilden"
+    },
+    "INK_DARKNESS_STD": {
+      "en": "Image ink darkness variation",
+      "sv": "Variation i bläckmörkhet i bilden"
+    },
+    "INK_SATURATION_FRACTION": {
+      "en": "Fraction of near-saturated dark foreground pixels in image",
+      "sv": "Andel nästan mättat mörka pixlar i bilden"
+    },
+    "LINE_END_DRIFT": {
+      "en": "Line-end drift across page",
+      "sv": "Förskjutning av radslut över sidan"
+    },
+    "LINE_LENGTH_MEAN_REL": {
+      "en": "Mean line length / page width",
+      "sv": "Genomsnittlig radlängd / sidbredd"
+    },
+    "LINE_LENGTH_VARIABILITY": {
+      "en": "Line length variability",
+      "sv": "Variation i radlängd"
+    },
+    "LINE_SPACING_CV": {
+      "en": "Line-spacing variability",
+      "sv": "Variation i radmellanrum"
+    },
+    "LINE_SPACING_PX": {
+      "en": "Mean interline whitespace",
+      "sv": "Genomsnittligt radmellanrum"
+    },
+    "LINE_SPACING_REL": {
+      "en": "Interline whitespace / x-height",
+      "sv": "Radmellanrum / x-höjd"
+    },
+    "LINE_START_DRIFT": {
+      "en": "Line-start drift across page",
+      "sv": "Förskjutning av radstarter över sidan"
+    },
+    "MARGIN_BOTTOM_REL": {
+      "en": "Bottom margin / x-height",
+      "sv": "Nedre marginal / x-höjd"
+    },
+    "MARGIN_LEFT_REL": {
+      "en": "Left margin / x-height",
+      "sv": "Vänster marginal / x-höjd"
+    },
+    "MARGIN_LEFT_VARIABILITY": {
+      "en": "Left margin variability",
+      "sv": "Variation i vänster marginal"
+    },
+    "MARGIN_RIGHT_REL": {
+      "en": "Right margin / x-height",
+      "sv": "Höger marginal / x-höjd"
+    },
+    "MARGIN_RIGHT_VARIABILITY": {
+      "en": "Right margin variability",
+      "sv": "Variation i höger marginal"
+    },
+    "MARGIN_SYMMETRY": {
+      "en": "Left-right margin symmetry",
+      "sv": "Symmetri mellan vänster och höger marginal"
+    },
+    "MARGIN_TOP_REL": {
+      "en": "Top margin / x-height",
+      "sv": "Övre marginal / x-höjd"
+    },
+    "PAGE_COMPONENT_COUNT": {
+      "en": "Connected components",
+      "sv": "Sammanhängande komponenter"
+    },
+    "PAGE_HORIZONTAL_DENSITY": {
+      "en": "Horizontal page utilization",
+      "sv": "Horisontell sidutnyttjandegrad"
+    },
+    "PAGE_INK_AREA_RATIO": {
+      "en": "Foreground ink coverage",
+      "sv": "Andel bildyta med bläck"
+    },
+    "PAGE_LINE_COUNT": {
+      "en": "Detected text lines",
+      "sv": "Upptäckta textrader"
+    },
+    "PAGE_TEXT_AREA_RATIO": {
+      "en": "Text bounding area / page area",
+      "sv": "Textområdets andel av sidan"
+    },
+    "PAGE_VERTICAL_DENSITY": {
+      "en": "Vertical page utilization",
+      "sv": "Vertikal sidutnyttjandegrad"
+    },
+    "PAGE_WORD_COUNT": {
+      "en": "Detected geometric word groups",
+      "sv": "Upptäckta geometriska ordgrupper"
+    },
+    "SLANT_ANGLE_MEAN": {
+      "en": "Mean dominant stroke slant",
+      "sv": "Genomsnittlig dominerande strecklutning"
+    },
+    "SLANT_ANGLE_MEDIAN": {
+      "en": "Median stroke slant",
+      "sv": "Median för strecklutning"
+    },
+    "SLANT_ANGLE_STD": {
+      "en": "Slant variability",
+      "sv": "Variation i strecklutning"
+    },
+    "SLANT_CONSISTENCY": {
+      "en": "Derived slant consistency",
+      "sv": "Beräknad konsekvens i strecklutning"
+    },
+    "SLANT_EXTREME_FRACTION": {
+      "en": "Fraction of extreme slant strokes",
+      "sv": "Andel kraftigt lutande streck"
+    },
+    "SLANT_LEFT_FRACTION": {
+      "en": "Fraction of left-slanted strokes",
+      "sv": "Andel vänsterlutande streck"
+    },
+    "SLANT_P05": {
+      "en": "Lower slant quantile (P05)",
+      "sv": "Nedre lutningskvantil (P05)"
+    },
+    "SLANT_P95": {
+      "en": "Upper slant quantile (P95)",
+      "sv": "Övre lutningskvantil (P95)"
+    },
+    "SLANT_RIGHT_FRACTION": {
+      "en": "Fraction of right-slanted strokes",
+      "sv": "Andel högerlutande streck"
+    },
+    "SLANT_VERTICAL_FRACTION": {
+      "en": "Fraction of near-vertical strokes",
+      "sv": "Andel nästan lodräta streck"
+    },
+    "STROKE_UNIFORMITY": {
+      "en": "Derived image stroke uniformity",
+      "sv": "Beräknad enhetlighet i strecktjocklek i bilden"
+    },
+    "STROKE_WIDTH_CV": {
+      "en": "Image stroke-width coefficient of variation",
+      "sv": "Variationskoefficient för strecktjocklek i bilden"
+    },
+    "STROKE_WIDTH_MEAN": {
+      "en": "Mean image stroke thickness",
+      "sv": "Genomsnittlig strecktjocklek i bilden"
+    },
+    "STROKE_WIDTH_MEDIAN": {
+      "en": "Median image stroke thickness",
+      "sv": "Median för strecktjocklek i bilden"
+    },
+    "STROKE_WIDTH_STD": {
+      "en": "Image stroke-width variation",
+      "sv": "Variation i strecktjocklek i bilden"
+    },
+    "TEXT_BLOCK_HORIZONTAL_CENTER": {
+      "en": "Text block horizontal center",
+      "sv": "Textblockets horisontella centrum"
+    },
+    "TEXT_BLOCK_VERTICAL_CENTER": {
+      "en": "Text block vertical center",
+      "sv": "Textblockets vertikala centrum"
+    },
+    "WORD_SPACING_CV": {
+      "en": "Word-spacing variability",
+      "sv": "Variation i ordmellanrum"
+    },
+    "WORD_SPACING_PX": {
+      "en": "Mean word spacing",
+      "sv": "Genomsnittligt ordmellanrum"
+    },
+    "WORD_SPACING_REL": {
+      "en": "Word spacing / x-height",
+      "sv": "Ordmellanrum / x-höjd"
+    },
+    "X_HEIGHT_PX": {
+      "en": "Estimated x-height / middle-zone height",
+      "sv": "Uppskattad x-höjd/mittzonshöjd"
+    }
+  },
+  "presentation_version": "presentation/2",
   "relations": [
     {
+      "content_id": "content.relation.v1.space_direction_contrast",
       "copy": {
         "en": "Regular word gaps alongside varied stroke direction.",
         "sv": "Regelbundna ordmellanrum tillsammans med varierad streckriktning."
@@ -101,6 +679,7 @@ export const READING_CONTENT = {
       "relation_id": "relation.space_direction_contrast"
     },
     {
+      "content_id": "content.relation.v1.baseline_direction_contrast",
       "copy": {
         "en": "Similar baseline angles alongside mixed stroke direction.",
         "sv": "Liknande baslinjevinklar tillsammans med blandad streckriktning."
@@ -108,6 +687,7 @@ export const READING_CONTENT = {
       "relation_id": "relation.baseline_direction_contrast"
     },
     {
+      "content_id": "content.relation.v1.gap_length_contrast",
       "copy": {
         "en": "Consistent line gaps alongside varied line lengths.",
         "sv": "Regelbundna radmellanrum tillsammans med varierande radlängder."
@@ -115,6 +695,7 @@ export const READING_CONTENT = {
       "relation_id": "relation.gap_length_contrast"
     },
     {
+      "content_id": "content.relation.v1.shape_spacing_contrast",
       "copy": {
         "en": "Varied ink-shape proportions alongside consistent word gaps.",
         "sv": "Varierade proportioner hos bläckformer tillsammans med regelbundna ordmellanrum."
@@ -122,6 +703,7 @@ export const READING_CONTENT = {
       "relation_id": "relation.shape_spacing_contrast"
     },
     {
+      "content_id": "content.relation.v1.layout_regularity",
       "copy": {
         "en": "Repeated baseline angles and repeated word gaps occur together.",
         "sv": "Återkommande baslinjevinklar och ordmellanrum förekommer tillsammans."
@@ -129,6 +711,7 @@ export const READING_CONTENT = {
       "relation_id": "relation.layout_regularity"
     },
     {
+      "content_id": "content.relation.v1.stroke_length_contrast",
       "copy": {
         "en": "Variable visible strokes alongside consistent line lengths.",
         "sv": "Varierande synliga streck tillsammans med jämna radlängder."

@@ -5,7 +5,7 @@
 import type { Action, Fact, Notice, ReportSection, ReportViewModel } from "@princess/contracts";
 
 import { formatFact } from "./format.ts";
-import { featureName, contentText, sectionTitle, t, type Locale } from "./messages.ts";
+import { featureName, contentText, highlightTitle, sectionTitle, t, type Locale } from "./messages.ts";
 
 export const EVIDENCE_ICON: Readonly<Record<Fact["evidence_class"], string>> = {
   MEASURED: "◆", COMPUTATIONAL_PROXY: "◇", REFERENCE_STATISTIC: "▲", AUTHORED_CONTENT: "✎",
@@ -92,8 +92,9 @@ export function buildDossier(view: ReportViewModel, locale: Locale): DossierMode
   const facts = new Map(view.facts.map((fact) => [fact.fact_id, fact] as const));
   const sections = view.sections.map((section): DossierSection => {
     const kind = kindOf(section);
-    const title = kind === "HIGHLIGHT_PRIMARY" ? t(locale, "report.what_stands_out")
-      : kind === "HIGHLIGHT_SECONDARY" ? t(locale, "report.also_noticeable") : sectionTitle(section.template, locale, section.section_id);
+    const title = kind === "HIGHLIGHT_PRIMARY" || kind === "HIGHLIGHT_SECONDARY"
+      ? highlightTitle(section.template, locale, section.content_ids)
+      : sectionTitle(section.template, locale, section.section_id, section.content_ids);
     return {
       sectionId: section.section_id, kind, title, availability: section.availability,
       availabilityText: t(locale, `availability.${section.availability}`),
