@@ -42,11 +42,25 @@ test("upload, refresh queued work, report, history and export without any AI pro
   const ownedReportId = reportUrl.split("/").pop()!;
   // Image bytes are not logged or exported: validate the actual owner-only
   // passthrough and its response MIME/cache contract on the synthetic sample.
-  const ownSource = await page.request.get("/api/v1/reports/" + encodeURIComponent(ownedReportId) + "/source-image");
-  expect(ownSource.status()).toBe(200);
-  expect(ownSource.headers()["content-type"]).toMatch(/^image\/(jpeg|png)/);
-  expect(ownSource.headers()["cache-control"]).toBe("no-store");
-  await expect(page.locator("#source-evidence-plate img")).toBeVisible();
+  const ownerViewResponse = await page.request.get(
+    "/api/v1/reports/" + encodeURIComponent(ownedReportId) + "?projection=OWNER");
+  expect(ownerViewResponse.status()).toBe(200);
+  const ownerView = await ownerViewResponse.json() as { authorized_asset_ids: string[] };
+  const ownSource = await page.request.get(
+    "/api/v1/reports/" + encodeURIComponent(ownedReportId) + "/source-image");
+  // Image retention is separately consented. Never demand a source from a
+  // saved report that deliberately has only its authorized measurements.
+  if (ownerView.authorized_asset_ids.length === 0) {
+    expect(ownSource.status()).toBe(404);
+    await expect(page.locator("#source-evidence-plate img")).toHaveCount(0);
+    await expect(page.locator("#source-evidence-plate")).toContainText(
+      "The source image is no longer stored");
+  } else {
+    expect(ownSource.status()).toBe(200);
+    expect(ownSource.headers()["content-type"]).toMatch(/^image\/(jpeg|png)/);
+    expect(ownSource.headers()["cache-control"]).toBe("no-store");
+    await expect(page.locator("#source-evidence-plate img")).toBeVisible();
+  }
   await page.goto("/reports");
   await expect(page.getByRole("heading", { level: 1, name: "Your reports" })).toBeVisible();
   await expect(page.locator(".report-list-item")).toHaveCount(1);
