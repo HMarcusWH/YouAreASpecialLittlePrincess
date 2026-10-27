@@ -239,3 +239,81 @@ test("report history has populated, empty and long Swedish states without horizo
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
   expect(overflow).toBeLessThanOrEqual(0);
 });
+
+// The source image below is a synthetic-only Playwright mock, never a real
+// user's handwriting or an image used by measurement/model production.
+const sourceSvg = (width: number, height: number) => (
+  `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}"><rect width="100%" height="100%" fill="#faf4e8"/><path d="M80,130 L220,140 M80,210 L220,205" stroke="#444" stroke-width="3"/></svg>`
+);
+
+test("the owner Free Dossier navigates only stored source regions, with keyboard controls and Swedish copy", async ({ page }) => {
+  await page.route("**/api/v1/reports/*/source-image", async (route) => {
+    await route.fulfill({ status: 200, contentType: "image/svg+xml", body: sourceSvg(900, 360) });
+  });
+  await page.goto("/fixtures/source-v4?locale=sv");
+  const plate = page.locator("#source-evidence-plate");
+  await expect(plate.getByRole("heading", { name: "Din handstil" })).toBeVisible();
+  await expect(plate.locator("img")).toHaveJSProperty("naturalWidth", 900);
+  await expect(plate.locator(".pr-source-outline")).toHaveCount(0);
+  const baseline = page.locator('[data-section="section.baseline"]');
+  const inspect = baseline.getByRole("button", { name: "Granska källregion" });
+  await inspect.focus();
+  await page.keyboard.press("Enter");
+  await expect(plate).toBeFocused();
+  const region = plate.locator(".pr-source-count");
+  await expect(region).toContainText("line_");
+  await expect(plate.locator(".pr-source-outline polyline")).toHaveCount(1);
+  const first = await region.textContent();
+  const next = plate.getByRole("button", { name: "Nästa" });
+  await expect(next).toBeEnabled();
+  await next.click();
+  await expect(region).not.toHaveText(first!);
+  await plate.getByRole("button", { name: "Föregående" }).click();
+  await expect(region).toHaveText(first!);
+  await expect(page.locator("[data-evidence=AI_SYNTHESIS]")).toHaveCount(0);
+});
+
+test("a mismatched image frame refuses the overlay, never guessing coordinates", async ({ page }) => {
+  await page.route("**/api/v1/reports/*/source-image", async (route) => {
+    await route.fulfill({ status: 200, contentType: "image/svg+xml", body: sourceSvg(200, 100) });
+  });
+  await page.goto("/fixtures/source-v4");
+  await page.locator('[data-section="section.slant"]').getByRole("button", { name: "Inspect source region" }).click();
+  await expect(page.locator("#source-evidence-plate")).toContainText(
+    "The stored image does not match the measured frame");
+  await expect(page.locator(".pr-source-outline")).toHaveCount(0);
+});
+
+test("revoked or denied source rights never display or retain a writing image", async ({ page }) => {
+  let requests = 0;
+  await page.route("**/api/v1/reports/*/source-image", async (route) => {
+    requests += 1;
+    await route.fulfill({ status: 403, contentType: "application/json", body: '{"error":"not_authorized"}' });
+  });
+  await page.goto("/fixtures/source-v4?revoke=1");
+  await expect(page.locator("#source-evidence-plate")).toContainText(
+    "The source image is no longer stored");
+  await expect(page.locator(".pr-inspect-source")).toHaveCount(0);
+  expect(requests).toBe(0);
+  await page.goto("/fixtures/source-v4");
+  await expect(page.locator("#source-evidence-plate")).toContainText(
+    "The source image is no longer stored");
+  expect(requests).toBe(1);
+  await expect(page.locator(".pr-source-outline")).toHaveCount(0);
+});
+
+test("the inspector survives narrow Swedish and 200-percent text without horizontal overflow", async ({ page }) => {
+  await page.route("**/api/v1/reports/*/source-image", async (route) => {
+    await route.fulfill({ status: 200, contentType: "image/svg+xml", body: sourceSvg(900, 360) });
+  });
+  await page.setViewportSize({ width: 320, height: 800 });
+  await page.goto("/fixtures/source-v4?locale=sv");
+  await page.locator('[data-section="section.baseline"]').getByRole("button", { name: "Granska källregion" }).click();
+  const narrowOverflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+  expect(narrowOverflow).toBeLessThanOrEqual(0);
+  await page.setViewportSize({ width: 640, height: 900 });
+  await page.addStyleTag({ content: "html { font-size: 200% !important; }" });
+  await expect(page.locator(".pr-source-count")).toBeVisible();
+  const enlargedOverflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+  expect(enlargedOverflow).toBeLessThanOrEqual(0);
+});
