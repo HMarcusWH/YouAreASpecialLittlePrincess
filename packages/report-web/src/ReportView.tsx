@@ -1,6 +1,7 @@
 // Renders one authorized ReportViewModel. Everything shown comes from the
 // saved projection: no measurement, percentile or model text is computed here.
 import type { Action, EvidenceBundle, Fact, Notice, ReportSection, ReportViewModel } from "@princess/contracts";
+import type { ReactNode } from "react";
 import { formatFact } from "@princess/report-core";
 
 import { EvidenceView } from "./EvidenceView.tsx";
@@ -67,8 +68,10 @@ function FactRow({ fact, locale, technical = false }: {
   );
 }
 
-function SectionBlock({ section, facts, locale, compactMissing, printMode }: { section: ReportSection; facts: Map<string, Fact>;
-                                                    locale: Locale; compactMissing: boolean; printMode: boolean }) {
+function SectionBlock({ section, facts, locale, compactMissing, printMode, onInspectSource, inspectableSourceIds }: {
+  section: ReportSection; facts: Map<string, Fact>; locale: Locale; compactMissing: boolean; printMode: boolean;
+  onInspectSource?: ((sectionId: string) => void) | undefined; inspectableSourceIds?: readonly string[] | undefined;
+}) {
   const rows = section.fact_ids.map((id) => facts.get(id)).filter((f): f is Fact => f !== undefined);
   const headingId = `section-${section.section_id}`;
   const heading = sectionTitle(section.template, locale, section.section_id, section.content_ids);
@@ -109,6 +112,10 @@ function SectionBlock({ section, facts, locale, compactMissing, printMode }: { s
           </p>
         ))}
         {hasMissingCopy && <p className="pr-unavailable" role="status">{t(locale, "report.copy_unavailable")}</p>}
+        {!printMode && onInspectSource && inspectableSourceIds?.includes(section.section_id) && (
+          <button type="button" className="pr-inspect-source"
+                  onClick={() => onInspectSource(section.section_id)}>{t(locale, "image.inspect_source")}</button>
+        )}
         {section.availability === "UNCALIBRATED" && (
           <p className="pr-hint">{t(locale, "availability.UNCALIBRATED")}</p>
         )}
@@ -134,6 +141,10 @@ function SectionBlock({ section, facts, locale, compactMissing, printMode }: { s
         </p>
       ))}
       {hasMissingCopy && <p className="pr-unavailable" role="status">{t(locale, "report.copy_unavailable")}</p>}
+      {!printMode && onInspectSource && inspectableSourceIds?.includes(section.section_id) && (
+        <button type="button" className="pr-inspect-source"
+                onClick={() => onInspectSource(section.section_id)}>{t(locale, "image.inspect_source")}</button>
+      )}
       {section.template === "SAMPLE_SUITABILITY" && section.availability === "INELIGIBLE" && (
         <p className="pr-unavailable" role="status">{t(locale, "report.handwriting_unverified")}</p>
       )}
@@ -201,9 +212,12 @@ export function ActionBar({ actions, locale, onAction }: { actions: readonly Act
   );
 }
 
-export function ReportView({ view, locale, evidence, onAction, showHeader = true }: {
+export function ReportView({ view, locale, evidence, onAction, showHeader = true,
+                             sourceEvidence, onInspectSource, inspectableSourceIds }: {
   view: ReportViewModel; locale: Locale; evidence?: EvidenceBundle | null;
   onAction?: (kind: Action["kind"]) => void; showHeader?: boolean;
+  sourceEvidence?: ReactNode; onInspectSource?: ((sectionId: string) => void) | undefined;
+  inspectableSourceIds?: readonly string[] | undefined;
 }) {
   const facts = new Map(view.facts.map((f) => [f.fact_id, f]));
   const isHighlight = (section: ReportSection) =>
@@ -237,18 +251,21 @@ export function ReportView({ view, locale, evidence, onAction, showHeader = true
           <p className="pr-eyebrow">{t(locale, "report.first_reveal")}</p>
           {highlights.map((section) => (
             <SectionBlock key={section.section_id} section={section} facts={facts} locale={locale}
-                          compactMissing={compactMissing} printMode={view.projection === "EXPORT"} />
+                          compactMissing={compactMissing} printMode={view.projection === "EXPORT"}
+                          onInspectSource={onInspectSource} inspectableSourceIds={inspectableSourceIds} />
           ))}
         </section>
       )}
 
       <NoticeBar notices={view.notices} locale={locale} />
+      {sourceEvidence}
 
       <section className="pr-dossier-body" aria-label={t(locale, "report.mechanical_dossier")}>
         <p className="pr-eyebrow">{t(locale, "report.mechanical_dossier")}</p>
         {technicalSections.map((section) => (
           <SectionBlock key={section.section_id} section={section} facts={facts} locale={locale}
-                          compactMissing={compactMissing} printMode={view.projection === "EXPORT"} />
+                          compactMissing={compactMissing} printMode={view.projection === "EXPORT"}
+                          onInspectSource={onInspectSource} inspectableSourceIds={inspectableSourceIds} />
         ))}
       </section>
 
@@ -257,14 +274,16 @@ export function ReportView({ view, locale, evidence, onAction, showHeader = true
           <p className="pr-eyebrow">{t(locale, "report.connections")}</p>
           {connections.map((section) => (
             <SectionBlock key={section.section_id} section={section} facts={facts} locale={locale}
-                          compactMissing={compactMissing} printMode={view.projection === "EXPORT"} />
+                          compactMissing={compactMissing} printMode={view.projection === "EXPORT"}
+                          onInspectSource={onInspectSource} inspectableSourceIds={inspectableSourceIds} />
           ))}
         </section>
       )}
 
       {referenceAndPremium.map((section) => (
         <SectionBlock key={section.section_id} section={section} facts={facts} locale={locale}
-                      compactMissing={compactMissing} printMode={view.projection === "EXPORT"} />
+                      compactMissing={compactMissing} printMode={view.projection === "EXPORT"}
+                      onInspectSource={onInspectSource} inspectableSourceIds={inspectableSourceIds} />
       ))}
 
       {evidence === null && (

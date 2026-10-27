@@ -6,6 +6,7 @@ for (const [name, url] of [
   ["start", "/start"],
   ["legacy free report", "/fixtures/free"],
   ["v2 Dossier report", "/fixtures/free-v2"],
+  ["Free source inspection unavailable state", "/fixtures/source-v4?revoke=1"],
   ["v2 Dossier no-highlight fallback", "/fixtures/free-v2-no-highlight"],
   ["report history", "/fixtures/history"],
   ["empty report history", "/fixtures/history?empty=1"],

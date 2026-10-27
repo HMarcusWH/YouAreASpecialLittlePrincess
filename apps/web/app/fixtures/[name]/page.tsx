@@ -8,16 +8,18 @@ import { notFound } from "next/navigation";
 import { parseEvidenceBundle, parseReportView } from "@princess/api-client";
 import type { ReportSection } from "@princess/contracts";
 import { ReportView } from "@princess/report-web";
+import { ReportClient } from "../../reports/[reportId]/ReportClient.tsx";
 
 export const dynamic = "force-dynamic";
-const NAMES = new Set(["free", "free-v2", "free-v2-no-highlight", "story-v4-copy", "story-v4-unknown", "owner-premium", "owner-image-revoked", "share", "export-no-image"]);
+const NAMES = new Set(["free", "free-v2", "free-v2-no-highlight", "story-v4-copy", "story-v4-unknown", "source-v4", "owner-premium", "owner-image-revoked", "share", "export-no-image"]);
 
 export default async function Fixture({ params, searchParams }: {
-  params: Promise<{ name: string }>; searchParams: Promise<{ locale?: string }>;
+  params: Promise<{ name: string }>; searchParams: Promise<{ locale?: string; revoke?: string }>;
 }) {
   const { name } = await params;
   if (process.env.PRINCESS_WEB_FIXTURES !== "1" || !NAMES.has(name)) notFound();
-  const sourceName = name === "free-v2-no-highlight" || name.startsWith("story-v4-") ? "free-v2" : name;
+  const sourceName = name === "free-v2-no-highlight" || name.startsWith("story-v4-") || name === "source-v4"
+    ? "free-v2" : name;
   const file = path.join(process.cwd(), "..", "..", "fixtures", "reports", `view.${sourceName}.json`);
   let view = parseReportView(JSON.parse(await readFile(file, "utf8")));
   if (name === "free-v2-no-highlight") {
@@ -35,7 +37,7 @@ export default async function Fixture({ params, searchParams }: {
         section.template !== "HIGHLIGHT_PRIMARY" && section.template !== "HIGHLIGHT_SECONDARY")],
     };
   }
-  if (name === "story-v4-copy" || name === "story-v4-unknown") {
+  if (name === "story-v4-copy" || name === "story-v4-unknown" || name === "source-v4") {
     // Synthetic client-copy contract only; not a report issued by a live /4 writer.
     const chapters = new Set(["slant", "baseline", "spacing", "size", "layout", "ink"]);
     view = {
@@ -55,11 +57,18 @@ export default async function Fixture({ params, searchParams }: {
     };
   }
   const evidenceFile = name === "free" ? "evidence-bundle.json"
-    : name === "free-v2" ? "evidence-bundle.v2.json" : null;
+    : (name === "free-v2" || name === "source-v4") ? "evidence-bundle.v2.json" : null;
   const evidence = evidenceFile
     ? parseEvidenceBundle(JSON.parse(await readFile(path.join(process.cwd(), "..", "..", "fixtures", "reports",
                                                                evidenceFile), "utf8")))
     : null;
-  const locale = (await searchParams).locale === "sv" ? "sv" : "en";
+  const query = await searchParams;
+  const locale = query.locale === "sv" ? "sv" : "en";
+  if (name === "source-v4") {
+    // Test-only simulated saved report. Browser tests serve a clearly synthetic
+    // vector raster under the source GET; no human handwriting is in Git.
+    if (query.revoke === "1") view = { ...view, authorized_asset_ids: [] };
+    return <ReportClient view={view} locale={locale} evidence={evidence} />;
+  }
   return <ReportView view={view} locale={locale} evidence={evidence} />;
 }

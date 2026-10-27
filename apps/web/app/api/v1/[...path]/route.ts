@@ -22,6 +22,7 @@ const ROUTES: ReadonlyArray<[string, RegExp]> = [
   ["DELETE", new RegExp(`^captures/${ID}$`)],
   ["GET", /^reports$/],
   ["GET", new RegExp(`^reports/${ID}/evidence$`)],
+  ["GET", new RegExp(`^reports/${ID}/source-image$`)],
   ["GET", new RegExp(`^reports/${ID}$`)],
   ["POST", /^report-exports$/],
   ["GET", new RegExp(`^report-exports/${ID}$`)],
@@ -31,10 +32,11 @@ const ROUTES: ReadonlyArray<[string, RegExp]> = [
 const DEV_UPLOAD = new RegExp(`^dev/uploads/${ID}$`);
 const MAX_JSON_BYTES = 64 * 1024;
 const MAX_UPLOAD_BYTES = 20 * 1024 * 1024;
+const MAX_SOURCE_IMAGE_BYTES = 20 * 1024 * 1024;
 
 /** Reads at most `limit` bytes: a larger declared length is refused before
  * reading, and the stream is cut off as soon as it passes the limit. */
-async function readLimited(request: Request, limit: number): Promise<Uint8Array<ArrayBuffer> | null> {
+async function readLimited(request: Pick<Request, "headers" | "body">, limit: number): Promise<Uint8Array<ArrayBuffer> | null> {
   const declared = request.headers.get("content-length");
   if (declared !== null && (!/^\d+$/.test(declared) || Number(declared) > limit)) return null;
   if (!request.body) return new Uint8Array(new ArrayBuffer(0));
@@ -63,6 +65,7 @@ async function readLimited(request: Request, limit: number): Promise<Uint8Array<
 async function forward(request: Request, params: Promise<{ path: string[] }>): Promise<Response> {
   const path = (await params).path.join("/");
   const method = request.method.toUpperCase();
+  const sourceImage = method === "GET" && new RegExp(`^reports/${ID}/source-image$`).test(path);
   const devUpload = method === "PUT" && DEV_UPLOAD.test(path) && devLoginEnabled();
   if (!devUpload && !ROUTES.some(([m, pattern]) => m === method && pattern.test(path))) {
     return NextResponse.json({ error: "not_found" }, { status: 404 });
@@ -72,7 +75,7 @@ async function forward(request: Request, params: Promise<{ path: string[] }>): P
   }
   const url = new URL(request.url);
   const target = `${apiBase()}/v1/${path}${url.search}`;
-  const headers: Record<string, string> = { accept: "application/json" };
+  const headers: Record<string, string> = { accept: sourceImage ? "image/jpeg, image/png" : "application/json" };
   const correlation = request.headers.get("x-correlation-id");
   if (correlation) headers["x-correlation-id"] = correlation.slice(0, 64);
   let body: BodyInit | undefined;
@@ -100,8 +103,24 @@ async function forward(request: Request, params: Promise<{ path: string[] }>): P
   let payload: ArrayBuffer | null;
   try {
     upstream = await fetch(target, { method, headers, body: body ?? null, cache: "no-store", redirect: "manual" });
-    // Bytes pass through untouched (JSON, or an export PDF/PNG); nothing is cached.
-    payload = upstream.status === 204 ? null : await upstream.arrayBuffer();
+    // Source raster responses alone are MIME allowlisted and stream-capped.
+    // The API reauthorizes the source under the session credential on each GET.
+    if (sourceImage && upstream.ok) {
+      const mediaType = (upstream.headers.get("content-type") ?? "").toLowerCase().split(";", 1)[0]!.trim();
+      if (mediaType !== "image/jpeg" && mediaType !== "image/png") {
+        return NextResponse.json({ error: "source_image_unsupported" },
+          { status: 502, headers: { "cache-control": "no-store" } });
+      }
+      const bounded = await readLimited(upstream, MAX_SOURCE_IMAGE_BYTES);
+      if (bounded === null) {
+        return NextResponse.json({ error: "source_image_too_large" },
+          { status: 502, headers: { "cache-control": "no-store" } });
+      }
+      payload = bounded.buffer;
+    } else {
+      // Other established proxy routes remain unchanged (JSON / export PDF/PNG).
+      payload = upstream.status === 204 ? null : await upstream.arrayBuffer();
+    }
   } catch {
     return NextResponse.json({ error: "upstream_unavailable" },
       { status: 502, headers: { "cache-control": "no-store" } });

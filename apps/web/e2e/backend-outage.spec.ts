@@ -29,3 +29,16 @@ test("test-only dev login fails closed and never issues a cookie on upstream fai
   expect(await response.json()).toEqual({ error: "login_unavailable" });
   expect(response.headers()["set-cookie"]).toBeUndefined();
 });
+
+
+test("the bounded source-image proxy is GET-only and never exposes upstream details on outage", async ({ request }) => {
+  const source = "/api/v1/reports/report_unavailable/source-image";
+  const refused = await request.post(source, { headers: { origin: ORIGIN }, data: {} });
+  expect(refused.status()).toBe(404);
+  expect(await refused.json()).toEqual({ error: "not_found" });
+  const response = await request.get(source);
+  expect(response.status()).toBe(502);
+  expect(response.headers()["cache-control"]).toBe("no-store");
+  expect(response.headers()["content-type"]).toContain("application/json");
+  expect(await response.json()).toEqual({ error: "upstream_unavailable" });
+});
