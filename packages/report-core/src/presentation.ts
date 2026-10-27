@@ -36,13 +36,18 @@ export function presentationContent(contentId: string, locale: string): string |
   return (CONTENT[contentId] ?? V2_CONTENT[contentId])?.[language(locale)];
 }
 
-/** A v2 title applies only when a saved section references that chapter's actual copy ID. */
+/** A /4 chapter may contain a reviewed chapter fallback OR its server-selected v2 highlight. */
 export function readingChapterTitle(sectionId: string, contentIds: readonly string[],
                                     locale: string): string | undefined {
   const chapter = READING_CONTENT.chapters.find((row) => row.section_id === sectionId);
-  if (!chapter || (!contentIds.includes(chapter.neutral_content_id)
-                   && !contentIds.includes(chapter.unavailable_content_id))) return undefined;
-  return chapter.title[language(locale)];
+  if (!chapter) return undefined;
+  // ReportViewModel has no template-version field. Match only real, approved
+  // v2 content IDs for this chapter's family; v1 and unknown IDs stay historical/unavailable.
+  const highlightPrefix = `content.highlight.v2.${sectionId.slice("section.".length)}.`;
+  const fromV2 = contentIds.some((id) =>
+    id === chapter.neutral_content_id || id === chapter.unavailable_content_id
+    || (id.startsWith(highlightPrefix) && Object.prototype.hasOwnProperty.call(V2_CONTENT, id)));
+  return fromV2 ? chapter.title[language(locale)] : undefined;
 }
 
 export function presentationDisplayDomain(featureId: string): PresentationDisplayDomain | undefined {

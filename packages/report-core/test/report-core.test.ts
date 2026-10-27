@@ -326,6 +326,39 @@ test("R4-F1 resolves all 76 source-authored /4 Free content IDs without client s
   assert.equal(presentationContent("content.highlight.v2.slant.new_rule", "en"), undefined);
 });
 
+test("R4-F1 titles supported /4 chapters with actual selected v2 highlights", async () => {
+  const { buildDossier, sectionTitle } = await import("../src/index.ts");
+  const presentation = JSON.parse(readFileSync(
+    new URL("../../../contracts/product/v1/presentation-content.v2.json", import.meta.url), "utf8"));
+  const reading = JSON.parse(readFileSync(
+    new URL("../../../src/princess_app/domain/content/_reading_v2.json", import.meta.url), "utf8"));
+  const original = fixture<ReportViewModel>("view.free-v2.json");
+  for (const chapter of reading.chapters) {
+    const family = chapter.section_id.slice("section.".length);
+    const selected = presentation.candidates.find((row: { family: string; content_id: string }) =>
+      row.family === family && row.content_id.startsWith(`content.highlight.v2.${family}.`));
+    assert.ok(selected, "reviewed /4 candidate for " + family);
+    const legacy = original.sections.find((section) => section.section_id === chapter.section_id)!;
+    assert.ok(legacy);
+    assert.equal(sectionTitle(legacy.template, "en", legacy.section_id, [selected.content_id]), chapter.title.en);
+    assert.equal(sectionTitle(legacy.template, "sv", legacy.section_id, [selected.content_id]), chapter.title.sv);
+    // Malformed/unknown and legacy content must not opt into new chapter titles.
+    assert.equal(
+      sectionTitle(legacy.template, "en", legacy.section_id, [`content.highlight.v2.${family}.invented`]),
+      sectionTitle(legacy.template, "en", legacy.section_id));
+    assert.equal(
+      sectionTitle(legacy.template, "en", legacy.section_id,
+                   [selected.content_id.replace("content.highlight.v2.", "content.highlight.v1.")]),
+      sectionTitle(legacy.template, "en", legacy.section_id));
+    const view: ReportViewModel = { ...original, sections: original.sections.map((section) =>
+      section.section_id === chapter.section_id ? { ...section, content_ids: [selected.content_id] } : section) };
+    const native = buildDossier(view, "sv").sections.find((section) => section.sectionId === chapter.section_id);
+    assert.equal(native?.title, chapter.title.sv);
+    assert.equal(native?.missingCopy, false);
+    assert.deepEqual(native?.facts.map((fact) => fact.factId), legacy.fact_ids);
+  }
+});
+
 test("R4-F1 native/shared Dossier uses reviewed /4 chapters without reselecting facts", async () => {
   const { buildDossier, highlightTitle, presentationContent } = await import("../src/index.ts");
   const reading = JSON.parse(readFileSync(
