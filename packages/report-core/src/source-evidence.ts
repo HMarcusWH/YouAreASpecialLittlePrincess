@@ -22,7 +22,8 @@ export interface SourceEvidenceFocus {
 
 /** Source rights are only an initial client hint. The image endpoint MUST reauthorize each GET. */
 export function sourceImageEligible(view: ReportViewModel): boolean {
-  return view.projection === "OWNER" && view.authorized_asset_ids.length > 0
+  return (view.projection === "OWNER" || view.projection === "FREE")
+    && view.authorized_asset_ids.length > 0
     && !view.notices.some((n) => n.localization_key === "notice.source_image_omitted");
 }
 

@@ -1,9 +1,9 @@
 import { ApiError, PayloadError, TransportError, type PrincessApi } from "@princess/api-client";
 import type { EvidenceBundle, ReportViewModel } from "@princess/contracts";
-import { buildDossier, t as reportText } from "@princess/report-core";
+import { buildDossier, focusSourceEvidence, sourceImageEligible, t as reportText } from "@princess/report-core";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
-import { useCallback, useState } from "react";
-import { Alert, useWindowDimensions, View } from "react-native";
+import { useCallback, useRef, useState } from "react";
+import { Alert, ScrollView, useWindowDimensions, View } from "react-native";
 
 import { useApp } from "../../../src/bootstrap/AppProvider.tsx";
 import { paperFor, type ExportPhase } from "../../../src/features/exports.ts";
@@ -40,6 +40,9 @@ export default function Report() {
   const [premiumState, setPremiumState] = useState<PremiumState | null>(null);
   const [exporting, setExporting] = useState<ExportPhase | null>(null);
   const [deleted, setDeleted] = useState(false);
+  const [focusSectionId, setFocusSectionId] = useState<string | null>(null);
+  const scrollRef = useRef<ScrollView>(null);
+  const sourceOffset = useRef(0);
 
   const load = useCallback(async () => {
     try {
@@ -83,6 +86,16 @@ export default function Report() {
   // Deletion and comparison have native report-scoped flows below; the action list keeps the server's other verdicts.
   const shown = { ...model, actions: model.actions.filter((a) => a.kind !== "DELETE" && a.kind !== "COMPARE") };
   const wide = width >= WIDE_LAYOUT;
+  const sourceAllowed = sourceImageEligible(view);
+  const originalFrame = evidence?.frames.find((f) => f.parent_frame_id === null && f.unit === "px");
+  const inspectableSections = sourceAllowed && originalFrame
+    ? view.sections.filter((section) => focusSourceEvidence(view, evidence, section.section_id,
+        originalFrame.width, originalFrame.height).status === "READY").map((section) => section.section_id)
+    : [];
+  function inspectSource(sectionId: string) {
+    setFocusSectionId(sectionId);
+    scrollRef.current?.scrollTo({ y: Math.max(0, sourceOffset.current - 24), animated: false });
+  }
 
   async function exportPdf() {
     setExporting({ status: "PREPARING" });
@@ -114,19 +127,22 @@ export default function Report() {
 
   const evidenceBlock = (
     <View style={{ gap: 16 }}>
-      {view.authorized_asset_ids.length > 0 ? <SourceImage reportId={id} bundle={evidence} locale={locale} /> : (
-        <Body muted>{reportText(locale, "image.unavailable")}</Body>
-      )}
       {evidenceUnreadable ? <Banner tone="danger">{t("report.evidence_unreadable")}</Banner> : null}
       {evidence ? <EvidencePanel bundle={evidence} locale={locale} /> : null}
     </View>
   );
 
   return (
-    <Screen>
+    <Screen scrollRef={scrollRef}>
       <View style={{ flexDirection: wide ? "row" : "column", gap: 24, alignItems: "flex-start" }}>
         <View style={{ flex: wide ? 3 : undefined, width: wide ? undefined : "100%", gap: 16 }}>
-          <DossierView model={shown} onAction={onAction} busyAction={exporting?.status === "PREPARING" ? "EXPORT" : null} />
+          <DossierView model={shown} onAction={onAction} busyAction={exporting?.status === "PREPARING" ? "EXPORT" : null}
+                       inspectableSections={inspectableSections} onInspectSource={inspectSource}
+                       onSourceLayout={(y) => { sourceOffset.current = y; }}
+                       sourceEvidence={sourceAllowed ? (
+                         <SourceImage reportId={id} bundle={evidence} locale={locale} view={view}
+                                      focusSectionId={focusSectionId} />
+                       ) : <Body muted>{reportText(locale, "image.unavailable")}</Body>} />
           {exporting?.status === "PREPARING" ? <Busy label={t("report.export_preparing")} /> : null}
           {exporting?.status === "READY" ? (
             <Card>

@@ -3,9 +3,9 @@
 // Reveal, every Free measurement with its evidence class and availability,
 // notices, actions with their reasons, and evidence drawn from stored points.
 // Missing values render as gaps with a reason, never as zero.
-import type { EvidenceBundle } from "@princess/contracts";
+import type { EvidenceBundle, ReportViewModel } from "@princess/contracts";
 import {
-  baselineTraces, mapToAncestor, spacingBrackets, t as reportText, type BaselineTrace, type DossierModel,
+  baselineTraces, focusSourceEvidence, mapToAncestor, spacingBrackets, t as reportText, type BaselineTrace, type DossierModel,
   type DossierSection, type FactPresentation, type Locale,
 } from "@princess/report-core";
 import { useEffect, useState, type ReactNode } from "react";
@@ -91,8 +91,9 @@ export function FactRow({ fact, locale, technical = false }: {
   );
 }
 
-function SectionView({ section, locale, compactMissing = false }: {
+function SectionView({ section, locale, compactMissing = false, onInspectSource, inspectable = false }: {
   section: DossierSection; locale: Locale; compactMissing?: boolean;
+  onInspectSource?: (sectionId: string) => void; inspectable?: boolean;
 }) {
   const highlight = section.kind === "HIGHLIGHT_PRIMARY" || section.kind === "HIGHLIGHT_SECONDARY";
   const connection = section.kind === "CONNECTION";
@@ -123,6 +124,10 @@ function SectionView({ section, locale, compactMissing = false }: {
         </View>
       ))}
       {section.missingCopy ? <Body muted>{reportText(locale, "report.copy_unavailable")}</Body> : null}
+      {onInspectSource && inspectable ? (
+        <Button tone="secondary" label={reportText(locale, "image.inspect_source")}
+                onPress={() => onInspectSource(section.sectionId)} />
+      ) : null}
       {section.sectionId === "section.sample" && section.availability === "INELIGIBLE" ? (
         <Body muted>{reportText(locale, "report.handwriting_unverified")}</Body>
       ) : null}
@@ -389,12 +394,20 @@ export function EvidencePanel({ bundle, locale }: { bundle: EvidenceBundle; loca
  * report-scoped route. Evidence is drawn on it only when the stored frame
  * matches the delivered image exactly; otherwise the image is shown plain.
  */
-export function SourceImage({ reportId, bundle, locale }: { reportId: string; bundle: EvidenceBundle | null; locale: Locale }) {
+export function SourceImage({ reportId, bundle, locale, view, focusSectionId = null }: {
+  reportId: string; bundle: EvidenceBundle | null; locale: Locale;
+  view: ReportViewModel; focusSectionId?: string | null;
+}) {
   const { services, theme, t } = useApp();
   const [state, setState] = useState<{ uri: string; width: number; height: number } | "loading" | "unavailable">("loading");
   const [overlay, setOverlay] = useState(true);
   const [selectedTrace, setSelectedTrace] = useState(0);
+  const [focusedIndex, setFocusedIndex] = useState(0);
   const [available, setAvailable] = useState(0);
+  useEffect(() => {
+    setFocusedIndex(0);
+    if (focusSectionId !== null) setOverlay(true);
+  }, [focusSectionId]);
   useEffect(() => {
     let alive = true;
     let downloaded: string | null = null;
@@ -431,6 +444,11 @@ export function SourceImage({ reportId, bundle, locale }: { reportId: string; bu
   })) : [];
   // Existing server-selected regions only; preserve bounded visibility for both scopes.
   const outlines = matches && bundle ? evidenceOutlines(bundle, root!.frame_id, scale) : [];
+  const focus = focusSectionId === null ? null
+    : focusSourceEvidence(view, bundle, focusSectionId, state.width, state.height);
+  const selectedRegions = focus?.status === "READY" ? focus.regions : [];
+  const focused = selectedRegions.length > 0
+    ? Math.min(focusedIndex, selectedRegions.length - 1) : 0;
   const selected = traces.length > 0 ? Math.min(selectedTrace, traces.length - 1) : 0;
   return (
     <Paper>
@@ -454,9 +472,48 @@ export function SourceImage({ reportId, bundle, locale }: { reportId: string; bu
                            color={outline.scope === "LINE" ? theme.color["evidence-measured"] : theme.color.accent}
                            thickness={1} opacity={outline.scope === "LINE" ? 0.55 : 0.35} />
            )) : null}
+           {scale > 0 && overlay && selectedRegions[focused] ? (
+             <TraceDrawing key={selectedRegions[focused].regionId + "-focused"}
+                           points={selectedRegions[focused].points.map(([x, y]) => [x * scale, y * scale] as const)}
+                           width={state.width * scale} height={state.height * scale}
+                           color={theme.color.accent} thickness={3} />
+           ) : null}
         </View>
       </ScrollView>
       {!matches && bundle ? <Body muted>{reportText(locale, "image.frame_mismatch")}</Body> : null}
+      {focus && focus.status === "READY" && selectedRegions[focused] ? (
+        <View style={{ gap: space("2") }}>
+          <View accessible accessibilityRole="adjustable"
+                accessibilityLabel={reportText(locale, "image.focus_region") + ": "
+                  + selectedRegions[focused].regionId + ", " + evidencePosition(focused, selectedRegions.length)}
+                accessibilityActions={[{ name: "decrement" }, { name: "increment" }]}
+                onAccessibilityAction={(event) => {
+                  if (event.nativeEvent.actionName === "decrement") {
+                    setFocusedIndex(stepEvidenceIndex(focused, "PREVIOUS", selectedRegions.length));
+                  }
+                  if (event.nativeEvent.actionName === "increment") {
+                    setFocusedIndex(stepEvidenceIndex(focused, "NEXT", selectedRegions.length));
+                  }
+                }}>
+            <SectionLabel>{reportText(locale, "image.focus_region")}</SectionLabel>
+            <Body>{selectedRegions[focused].regionId} · {evidencePosition(focused, selectedRegions.length)}</Body>
+          </View>
+          {focus.total > selectedRegions.length ? (
+            <Body muted>{reportText(locale, "image.focus_limit")
+              .replace("{shown}", String(selectedRegions.length)).replace("{total}", String(focus.total))}</Body>
+          ) : null}
+          {selectedRegions.length > 1 ? (
+            <View style={local.inspectorActions}>
+              <Button tone="secondary" label={reportText(locale, "evidence.previous_page")}
+                      disabled={focused === 0}
+                      onPress={() => setFocusedIndex(stepEvidenceIndex(focused, "PREVIOUS", selectedRegions.length))} />
+              <Button tone="secondary" label={reportText(locale, "evidence.next_page")}
+                      disabled={focused === selectedRegions.length - 1}
+                      onPress={() => setFocusedIndex(stepEvidenceIndex(focused, "NEXT", selectedRegions.length))} />
+            </View>
+          ) : null}
+        </View>
+      ) : focus ? <Body muted>{reportText(locale, "image.focus_unavailable")}</Body> : null}
       {matches && traces.length > 0 ? (
         <>
           <View style={local.inspector} accessible accessibilityRole="adjustable"
@@ -497,8 +554,11 @@ export function SourceImage({ reportId, bundle, locale }: { reportId: string; bu
   );
 }
 
-export function DossierView({ model, onAction, busyAction }: {
+export function DossierView({ model, onAction, busyAction, sourceEvidence, onInspectSource,
+                              inspectableSections = [], onSourceLayout }: {
   model: DossierModel; onAction: (kind: string) => void; busyAction?: string | null;
+  sourceEvidence?: ReactNode; onInspectSource?: (sectionId: string) => void;
+  inspectableSections?: readonly string[]; onSourceLayout?: (offsetY: number) => void;
 }) {
   const { theme } = useApp();
   const locale = model.locale;
@@ -530,17 +590,23 @@ export function DossierView({ model, onAction, busyAction }: {
       <View style={local.notices}>
         {model.notices.map((notice) => <Banner key={notice.notice_id} tone={notice.class === "PRIVACY" ? "ready" : "info"}>{notice.text}</Banner>)}
       </View>
+      {sourceEvidence ? <View onLayout={(event) => onSourceLayout?.(event.nativeEvent.layout.y)}>
+        {sourceEvidence}
+      </View> : null}
       <View style={local.group}>
         <SectionLabel>{reportText(locale, "report.mechanical_dossier")}</SectionLabel>
         {chapters.map((section) => <SectionView key={section.sectionId} section={section} locale={locale}
-                                                 compactMissing={compactMissing} />)}
+                                                 compactMissing={compactMissing}
+                                                 onInspectSource={onInspectSource}
+                                                 inspectable={inspectableSections.includes(section.sectionId)} />)}
       </View>
       {model.connections.length > 0 ? (
         <View style={local.group}>
           <SectionLabel>{reportText(locale, "report.connections")}</SectionLabel>
           {model.connections.map((section) => (
             <SectionView key={section.sectionId} section={section} locale={locale}
-                         compactMissing={compactMissing} />
+                         compactMissing={compactMissing} onInspectSource={onInspectSource}
+                         inspectable={inspectableSections.includes(section.sectionId)} />
           ))}
         </View>
       ) : null}

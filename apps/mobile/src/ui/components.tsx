@@ -1,7 +1,7 @@
 // Shared native primitives in the accepted Dossier language: editorial paper,
 // hairline rules, 44 pt targets, scalable text and state labels that never rely
 // on colour alone. Platform fonts remain local fallbacks in this implementation.
-import type { PropsWithChildren, ReactNode } from "react";
+import type { PropsWithChildren, ReactNode, RefObject } from "react";
 import {
   AccessibilityInfo, ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, Switch, Text, TextInput,
   View, type StyleProp, type TextStyle, type ViewStyle,
@@ -12,13 +12,15 @@ import { useEffect } from "react";
 import { useApp } from "../bootstrap/AppProvider.tsx";
 import { fontSize, MAX_COLUMN, MIN_TOUCH, radius, space } from "./theme.ts";
 
-export function Screen({ title, eyebrow, children, refreshing, onRefresh, footer }: PropsWithChildren<{
+export function Screen({ title, eyebrow, children, refreshing, onRefresh, footer, scrollRef }: PropsWithChildren<{
   title?: string; eyebrow?: string; refreshing?: boolean; onRefresh?: () => void; footer?: ReactNode;
+  scrollRef?: RefObject<ScrollView | null>;
 }>) {
   const { theme } = useApp();
   return (
     <SafeAreaView edges={["left", "right", "bottom"]} style={[styles.safe, { backgroundColor: theme.color.surface }]}>
       <ScrollView
+        ref={scrollRef}
         contentContainerStyle={styles.scroll}
         keyboardShouldPersistTaps="handled"
         {...(onRefresh ? { refreshControl: <RefreshControl refreshing={refreshing ?? false} onRefresh={onRefresh}
