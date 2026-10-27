@@ -16,6 +16,7 @@ from typing import Any, Mapping, Protocol
 from princess_contracts import ValidatedDocument
 
 from ..domain.reports import PremiumAuthorization, ProjectionRequest, check_revision, project_report
+from ..domain.reports.suitability import STORY_TEMPLATE_VERSION
 from ..ports.base import (
     Clock,
     Conflict,
@@ -181,6 +182,11 @@ class ReportReader:
             resolved = self._access.resolve(owner_id, report)
             source_image_available = source_image_available and resolved.source_image_available
             premium = premium if premium is not None else resolved.premium
+        elif report.data["analysis"]["versions"]["template"] == STORY_TEMPLATE_VERSION:
+            # Legacy offline readers keep their historical behavior. A new
+            # /4 report must never advertise source bytes without a live
+            # owner-scoped resolver, even if the caller passes True here.
+            source_image_available = False
         result = project_report(report, ProjectionRequest(
             projection=projection, generated_at=self._clock.now(), premium=premium,
             source_image_available=source_image_available, include_source_image=include_source_image,
@@ -237,6 +243,13 @@ class ReportReader:
             or data["analysis"]["processed_sha256"] != report.data["analysis"]["processed_sha256"]
         ):
             raise PermanentFailure("evidence_lineage_invalid")
+        if report.data["analysis"]["versions"]["template"] == STORY_TEMPLATE_VERSION:
+            # A stored /4 explanation must not link a canonical fact to a
+            # nonexistent evidence region. Only the saved, already-authorized
+            # evidence bundle is consulted; current source copy is not needed.
+            regions = {r["region_id"] for r in data["regions"]}
+            if any(not set(fact["source_region_ids"]) <= regions for fact in report.data["facts"]):
+                raise PermanentFailure("story_evidence_region_invalid")
         return evidence.to_dict()
 
     def premium_content(self, *, report_id: str, principal_id: str) -> dict[str, Any]:

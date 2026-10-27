@@ -23,7 +23,7 @@ from princess_contracts import (
 from princess_contracts import generated as g
 
 from ..analysis import rfc3339
-from .suitability import premium_sample_eligible
+from .suitability import STORY_TEMPLATE_VERSION, premium_sample_eligible
 
 ACTION_KINDS = ("COMPARE", "EXPORT", "SHARE", "SAVE", "DELETE", "PURCHASE")
 SOURCE_IMAGE_SCOPE = "source_image"
@@ -118,16 +118,26 @@ def project_report(report: ValidatedDocument, request: ProjectionRequest) -> Val
         notices.append({"notice_id": "notice.premium_revoked", "class": "AI",
                         "localization_key": "notice.premium_revoked"})
 
-    # Every saved report version uses the same read-only new-purchase gate;
-    # a /1 or /2 report with missing writing is no more eligible than /3.
-    # This only suppresses new purchase actions: existing authorized overlays
-    # remain readable under their separately resolved ledger permission.
-    ineligible_premium = not premium_sample_eligible(source)
-    actions = [] if kind in {"SHARE", "EXPORT"} else [
-        {"action_id": f"action.{k.lower()}", "kind": k,
-         "enabled": request.actions[k] is None, "reason": request.actions[k]}
-        for k in ACTION_KINDS
-        if k in request.actions and not (k == "PURCHASE" and ineligible_premium)]
+    # Preserve the legacy action contract verbatim. The new /4 saved reader
+    # can safely display its immutable facts before the /4 export and Premium
+    # consumers have qualified; it must not advertise either as available.
+    # A missing original also makes new image-informed Premium ineligible,
+    # without hiding already saved facts or a separately authorized overlay.
+    story = source["analysis"]["versions"]["template"] == STORY_TEMPLATE_VERSION
+    ineligible_premium = not premium_sample_eligible(source) or (story and not request.source_image_available)
+    actions = []
+    if kind not in {"SHARE", "EXPORT"}:
+        for action in ACTION_KINDS:
+            if action not in request.actions or (action == "PURCHASE" and ineligible_premium):
+                continue
+            reason = request.actions[action]
+            if story and reason is None:
+                if action == "PURCHASE":
+                    reason = "report_v4_premium_not_released"
+                elif action == "EXPORT":
+                    reason = "report_v4_export_not_released"
+            actions.append({"action_id": f"action.{action.lower()}", "kind": action,
+                            "enabled": reason is None, "reason": reason})
     view = {
         "contract_version": g.CONTRACT_VERSION,
         "source_report_id": source["report_id"],
