@@ -13,7 +13,7 @@ const evidence = fixture<EvidenceBundle>("evidence-bundle.v2.json");
 
 test("source navigation uses only source-region IDs attached to supported saved facts", () => {
   assert.equal(sourceImageEligible(view), true);
-  for (const sectionId of ["section.slant", "section.baseline", "section.spacing", "section.size", "section.layout", "section.ink"]) {
+  for (const sectionId of ["section.slant", "section.baseline", "section.spacing", "section.size", "section.layout"]) {
     const chosen = focusSourceEvidence(view, evidence, sectionId, 900, 360);
     assert.equal(chosen.status, "READY", sectionId);
     assert.ok(chosen.total >= chosen.regions.length);
@@ -31,6 +31,9 @@ test("source navigation uses only source-region IDs attached to supported saved 
       }
     }
   }
+  // page_0 is a derived analysis-frame page extent, not a guaranteed valid
+  // source-frame rectangle. Its mapped corners leave this fixture raster; refuse it.
+  assert.equal(focusSourceEvidence(view, evidence, "section.ink", 900, 360).status, "NO_SUPPORTED_REGIONS");
   assert.equal(focusSourceEvidence(view, evidence, "section.reference", 900, 360).status, "NO_SUPPORTED_REGIONS");
   assert.equal(focusSourceEvidence(view, evidence, "section.nonexistent", 900, 360).status, "NO_SUPPORTED_REGIONS");
 });
