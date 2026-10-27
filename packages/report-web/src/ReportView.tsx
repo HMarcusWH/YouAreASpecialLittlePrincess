@@ -70,7 +70,7 @@ function FactRow({ fact, locale, technical = false }: {
 
 function SectionBlock({ section, facts, locale, compactMissing, printMode, onInspectSource, inspectableSourceIds }: {
   section: ReportSection; facts: Map<string, Fact>; locale: Locale; compactMissing: boolean; printMode: boolean;
-  onInspectSource?: ((sectionId: string) => void) | undefined; inspectableSourceIds?: readonly string[];
+  onInspectSource?: ((sectionId: string) => void) | undefined; inspectableSourceIds?: readonly string[] | undefined;
 }) {
   const rows = section.fact_ids.map((id) => facts.get(id)).filter((f): f is Fact => f !== undefined);
   const headingId = `section-${section.section_id}`;
@@ -217,7 +217,7 @@ export function ReportView({ view, locale, evidence, onAction, showHeader = true
   view: ReportViewModel; locale: Locale; evidence?: EvidenceBundle | null;
   onAction?: (kind: Action["kind"]) => void; showHeader?: boolean;
   sourceEvidence?: ReactNode; onInspectSource?: ((sectionId: string) => void) | undefined;
-  inspectableSourceIds?: readonly string[];
+  inspectableSourceIds?: readonly string[] | undefined;
 }) {
   const facts = new Map(view.facts.map((f) => [f.fact_id, f]));
   const isHighlight = (section: ReportSection) =>
