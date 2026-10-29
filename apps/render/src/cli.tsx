@@ -25,7 +25,7 @@ async function main(): Promise<number> {
     if (v3) candidate = parseV3Envelope(raw);
     else legacy = parseInput(raw);
   } catch (error) {
-    const message = error instanceof Error && /^[a-z_]{1,64}$/.test(error.message)
+    const message = error instanceof Error && /^[a-z0-9_]{1,64}$/.test(error.message)
       ? error.message : "bad_input";
     process.stderr.write(message + "\n");
     return 2;
@@ -38,7 +38,7 @@ async function main(): Promise<number> {
     }
     return 0;
   } catch (error) {
-    const message = error instanceof Error && /^[a-z_]{1,64}$/.test(error.message)
+    const message = error instanceof Error && /^[a-z0-9_]{1,64}$/.test(error.message)
       ? error.message : "render_failed";
     process.stderr.write(message + "\n");
     return 1;
