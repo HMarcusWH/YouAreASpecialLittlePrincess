@@ -255,6 +255,10 @@ def compile_free_render_envelope(*, report: ValidatedDocument, view: ValidatedDo
     if (projection["projection"] != ("SHARE" if card else "EXPORT")
             or (card and (source_image is not None or evidence is not None))):
         _refuse("render_projection_scope_invalid")
+    # The Free envelope is not a back door for an unlocked paid projection.
+    # Premium-v2 saved bodies and paid revision parity belong to R5-P.
+    if any(section["premium_section_id"] is not None for section in projection["sections"]):
+        _refuse("render_free_premium_scope_invalid")
     if source_image is not None:
         if not isinstance(source_image, PreparedRaster) or evidence_doc is None:
             _refuse("render_source_evidence_required")
