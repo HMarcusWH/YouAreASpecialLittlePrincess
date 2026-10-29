@@ -30,6 +30,7 @@ from princess_app.adapters.postgres.stores import (  # noqa: E402
 from princess_app.adapters.render import DEFAULT_BUNDLE, SubprocessRenderer  # noqa: E402
 from princess_app.adapters.render.assets import clean_source_raster  # noqa: E402
 from princess_app.adapters.postgres.intake import PostgresIntakeRepository  # noqa: E402
+from princess_graphology import __version__ as ENGINE_VERSION  # noqa: E402
 from princess_app.application.exports import ExportService, ExportWorker  # noqa: E402
 from princess_app.application.permissions import PermissionService  # noqa: E402
 from princess_app.config import load_runtime_config  # noqa: E402
