@@ -183,8 +183,10 @@ def prepare_authorized_render_assets(*, owner_id: str, report_owner_id: str,
     if owner_id != report_owner_id:
         raise NotFound("report_not_found")
     original, projection, evidence_doc = _checked_source(report, view, evidence)
-    if projection["projection"] != "EXPORT" or evidence_doc is None:
+    if projection["projection"] != "EXPORT":
         _refuse("render_image_requires_owner_export_evidence")
+    if evidence_doc is None:
+        _refuse("render_evidence_required")
     asset_id = original["analysis"]["input_asset_id"]
     if (asset_id not in projection["authorized_asset_ids"]
             or source.asset_id != asset_id
