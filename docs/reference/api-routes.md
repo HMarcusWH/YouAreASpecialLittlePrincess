@@ -141,40 +141,7 @@ Types/default expressions below are source-derived Python declarations, not a pa
 | `report_id` | `str` | `Field(pattern='^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$')` |
 | `layout` | `Literal['A4', 'LETTER', 'CARD_SQUARE', 'CARD_STORY']` | `required` |
 | `sections` | `list[str]` | `Field(default_factory=list, max_length=8)` |
-| `share_grant_ref` | `str \| None` | `Field(default=None, pattern='^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}
-### ComparisonBody
-
-| Field | Source type | Source default/constraint expression |
-|---|---|---|
-| `kind` | `Literal['PAIR', 'HISTORY']` | `required` |
-| `report_ids` | `list[str]` | `Field(min_length=2, max_length=16)` |
-
-### FeedbackBody
-
-| Field | Source type | Source default/constraint expression |
-|---|---|---|
-| `category` | `Literal['MEASUREMENT_LOOKS_WRONG', 'HARD_TO_UNDERSTAND', 'HARMFUL_OR_OFFENSIVE', 'PREMIUM_TEXT_ISSUE', 'OTHER']` | `required` |
-| `target_kind` | `Literal['REPORT', 'SECTION', 'FACT', 'PREMIUM']` | `required` |
-| `target_ref` | `str \| None` | `Field(default=None, pattern='^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$')` |
-| `comment` | `str \| None` | `Field(default=None, max_length=500)` |
-| `request_id` | `str` | `Field(pattern='^[A-Za-z0-9][A-Za-z0-9._:-]{7,127}$')` |
-
-### PushInstallationBody
-
-| Field | Source type | Source default/constraint expression |
-|---|---|---|
-| `device_token` | `str` | `Field(min_length=8, max_length=4096)` |
-| `platform` | `Literal['apns', 'fcm']` | `required` |
-| `app_environment` | `str` | `Field(max_length=16)` |
-| `locale` | `str` | `Field(default='en', max_length=5)` |
-
-### NotificationPreferencesBody
-
-| Field | Source type | Source default/constraint expression |
-|---|---|---|
-| `mail_report_ready` | `bool` | `required` |
-| `locale` | `str` | `Field(default='en', max_length=5)` |
-)` |
+| `share_grant_ref` | `str \| None` | `Field(default=None, pattern='^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$')` |
 | `detail` | `Literal['SUMMARY', 'FULL'] \| None` | `None` |
 | `include_image` | `bool \| None` | `Field(default=None, strict=True)` |
 
