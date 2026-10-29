@@ -36,6 +36,7 @@ class VerifiedFreeStorySource:
 
     sha256: str
     policy: StoryPolicy
+    private_qualified_candidate: bool = False  # private v2+v5 and /4 only
 
 
 def resolve_free_story_source(
@@ -52,8 +53,19 @@ def resolve_free_story_source(
     if (environ.get("PRINCESS_ENV") not in ("local", "test")
             or environ.get("PRINCESS_TEST_PUBLIC_GUEST_ONLY") == "1"):
         raise InvalidInput("report_story_private_test_only")
-    if environ.get("PRINCESS_EVIDENCE_SUPPORT_RESEARCH_OPT_IN") == "1":
-        raise InvalidInput("report_story_research_guard_conflict")
+    # An opted-in guarded /4 is a private synthetic candidate only: require
+    # independently pinned qualified-v2, evidence-support/5 and story source.
+    # This does not create a new production flag or approve human data.
+    guarded_candidate = environ.get("PRINCESS_EVIDENCE_SUPPORT_RESEARCH_OPT_IN") == "1"
+    if guarded_candidate:
+        from .application.intake import resolve_analysis_runtime
+        try:
+            runtime = resolve_analysis_runtime(environ)
+        except ValueError as exc:
+            raise InvalidInput("report_story_research_guard_conflict") from exc
+        if (runtime.profile != "qualified-v2" or not runtime.evidence_guard_enabled
+                or environ.get("PRINCESS_EXPECTED_ANALYSIS_CONFIG_SHA256") != runtime.digest):
+            raise InvalidInput("report_story_research_guard_conflict")
     expected = environ.get(FREE_SOURCE_PIN_ENV)
     if not isinstance(expected, str) or re.fullmatch(r"[0-9a-f]{64}", expected) is None:
         raise InvalidInput("report_story_source_pin_missing")
@@ -64,7 +76,7 @@ def resolve_free_story_source(
         raise InvalidInput("report_story_source_invalid") from exc
     if expected != current:
         raise InvalidInput("report_story_source_pin_mismatch")
-    return VerifiedFreeStorySource(current, policy)
+    return VerifiedFreeStorySource(current, policy, guarded_candidate)
 
 
 def _strict_switch(environ: Mapping[str, str], name: str) -> bool:

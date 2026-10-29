@@ -167,3 +167,76 @@ def test_private_story_startup_refuses_corrupted_baked_registry(monkeypatch):
             })
     finally:
         reading._load_reading_registry.cache_clear()
+
+
+def test_private_guarded_story_candidate_requires_both_research_pins():
+    """Independent /4, qualified-v2 and v5 pins are necessary, never public."""
+    from princess_app.application.intake import analysis_config_sha256
+
+    digest = analysis_config_sha256(grid_profile="qualified-v2", evidence_guard_enabled=True)
+    settings = story_env(
+        PRINCESS_ENV="test", PRINCESS_COMPONENT="api",
+        PRINCESS_ANALYSIS_PROFILE="qualified-v2",
+        PRINCESS_SEGMENTATION_V2_RESEARCH_OPT_IN="1",
+        PRINCESS_EVIDENCE_SUPPORT_RESEARCH_OPT_IN="1",
+        PRINCESS_EXPECTED_ANALYSIS_CONFIG_SHA256=digest,
+    )
+    source = source_authority(settings)
+    assert source.private_qualified_candidate is True
+    assert source.policy.presentation_version == "presentation/2"
+    for change in (
+        {"PRINCESS_ANALYSIS_PROFILE": "legacy"},
+        {"PRINCESS_SEGMENTATION_V2_RESEARCH_OPT_IN": "0"},
+        {"PRINCESS_EXPECTED_ANALYSIS_CONFIG_SHA256": "f" * 64},
+        {"PRINCESS_EXPECTED_ANALYSIS_CONFIG_SHA256": ""},
+        {"PRINCESS_ENV": "staging"},
+        {"PRINCESS_ENV": "production"},
+        {"PRINCESS_TEST_PUBLIC_GUEST_ONLY": "1"},
+    ):
+        with pytest.raises(InvalidInput, match="report_story_"):
+            source_authority({**settings, **change})
+
+
+def test_private_guarded_story_worker_claims_only_exact_v4_candidate():
+    """A guarded /4 worker may claim only matching saved /4 configuration."""
+    from datetime import datetime, timezone
+    from princess_app.adapters.fakes import FakeClock
+    from princess_app.application.analysis_worker import AnalysisWorker
+    from princess_app.application.intake import analysis_config_sha256
+    from princess_app.domain.content.reading import reviewed_reading_sha256
+    from princess_app.domain.reports.story import story_policy_from_reviewed_reading
+    from princess_graphology import GraphologyEngine
+
+    digest = analysis_config_sha256(grid_profile="qualified-v2", evidence_guard_enabled=True)
+    engine = GraphologyEngine(grid_profile="qualified-v2", evidence_guard_enabled=True)
+    policy = story_policy_from_reviewed_reading()
+    source_sha = reviewed_reading_sha256()
+    clock = FakeClock(datetime(2026, 10, 29, tzinfo=timezone.utc))
+
+    class ClaimRecorder:
+        def __init__(self):
+            self.claims = []
+
+        def claim(self, _worker_id, _lease, _now, **kwargs):
+            self.claims.append(kwargs)
+            return None
+
+    queue = ClaimRecorder()
+    arguments = dict(
+        queue=queue, store=None, decode=None, engine=engine, clock=clock,
+        context=lambda: None, worker_id="issue92-synthetic-claim",
+        engine_version="0.1.0", writer_template=STORY_WRITER,
+        story_policy=policy, story_source_sha256=source_sha,
+    )
+    with pytest.raises(InvalidInput, match="report_story_research_guard_conflict"):
+        AnalysisWorker(**arguments)
+    worker = AnalysisWorker(**arguments, private_qualified_story_candidate=True)
+    assert worker.run_once() is None
+    assert queue.claims == [{
+        "report_template": STORY_WRITER,
+        "analysis_config": digest,
+        "story_source_sha256": source_sha,
+    }]
+    with pytest.raises(InvalidInput, match="report_story_candidate_invalid"):
+        AnalysisWorker(**{**arguments, "engine": GraphologyEngine()},
+                       private_qualified_story_candidate=True)
