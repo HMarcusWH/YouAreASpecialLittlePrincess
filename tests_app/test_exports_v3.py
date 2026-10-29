@@ -23,6 +23,7 @@ from princess_app.domain.permissions import Decision, Scope
 from princess_app.ports.base import InvalidInput, NotFound, Unsupported
 from test_intake import Env, NOTICE, erasure
 from test_persistence import account, world  # noqa: F401 - fixture re-export
+from princess_graphology import __version__ as ENGINE_VERSION
 
 
 class V3Renderer:
