@@ -1303,7 +1303,7 @@ def test_issue92_private_guarded_v2_story_isolated_from_legacy_jobs(env, world):
     view = ReportReader(store, env.clock).view(
         report_id=status.report_id, principal_id=owner, projection="FREE",
     )
-    assert view.data["source_digest"] == snapshot.digest
+    assert view.data["source_digest"] == snapshot.data["document_digest"]
     assert len(view.data["facts"]) == 64
     assert not any(section["premium_section_id"] for section in view.data["sections"])
     assert env.worker("issue92-legacy-after-v4").run_once().outcome == "SUCCEEDED"
