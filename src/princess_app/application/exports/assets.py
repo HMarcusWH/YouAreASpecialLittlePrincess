@@ -9,17 +9,15 @@ from __future__ import annotations
 import base64
 import binascii
 import hashlib
-import io
+
 import re
 from dataclasses import dataclass
+from typing import Callable
 
-import numpy as np
-from PIL import Image
 
 from princess_contracts import ValidatedDocument, canonical_json, compile_document, validate_projection
-from princess_graphology.engine import input_pixels_sha256
 
-from ...adapters.imaging import decode_image, inspect_header
+
 from ...domain.intake import MAX_UPLOAD_BYTES, sniff_media_type
 from ...ports.base import CallContext, InvalidInput, NotFound, PermanentFailure
 from ...ports.storage import ObjectStore, StoredObject
@@ -97,13 +95,37 @@ def _verified_raster(media_type: str, sha256: str, width: int, height: int,
     try:
         if sniff_media_type(blob) != media_type:
             _refuse("render_raster_media_mismatch")
-        header = inspect_header(blob)
     except InvalidInput:
         _refuse("render_raster_media_mismatch")
-    if (header.oriented_size != (width, height)
-            or header.exif_orientation != 1 or header.frames != 1):
-        _refuse("render_raster_geometry_mismatch")
+    # The image adapter verifies actual decoded dimensions and strips EXIF.
+    # Do not introduce a second image parser into this pure authority layer.
     return blob
+
+
+@dataclass(frozen=True)
+class CleanSourceRaster:
+    """Validated adapter result before report/owner-specific provenance is bound.
+
+    Only a trusted server-injected adapter may construct this record. It never
+    crosses an HTTP, database or renderer boundary independently.
+    """
+
+    media_type: str
+    sha256: str
+    width: int
+    height: int
+    data_base64_chunks: tuple[str, ...]
+    original_width: int
+    original_height: int
+    original_pixels_sha256: str
+
+    def __post_init__(self) -> None:
+        _verified_raster(self.media_type, self.sha256, self.width, self.height,
+                         self.data_base64_chunks)
+        if (type(self.original_width) is not int or type(self.original_height) is not int
+                or self.original_width < 1 or self.original_height < 1
+                or re.fullmatch(r"[a-f0-9]{64}", self.original_pixels_sha256) is None):
+            _refuse("render_source_provenance_invalid")
 
 
 @dataclass(frozen=True)
@@ -139,45 +161,6 @@ class PreparedRaster:
         }
 
 
-def _reencode_oriented(pixels: np.ndarray, *, source_asset_id: str,
-                       source_input_sha256: str, report_digest: str,
-                       report_revision: int, evidence_digest: str) -> PreparedRaster:
-    """Deterministic, metadata-free scaled raster; never crop or invent pixels."""
-    if pixels.ndim == 2:
-        image = Image.fromarray(pixels, "L")
-    elif pixels.ndim == 3 and pixels.shape[2] == 3:
-        image = Image.fromarray(np.ascontiguousarray(pixels[:, :, ::-1]), "RGB")
-    else:
-        _refuse("render_raster_pixels_invalid")
-    w, h = image.size
-    if w > MAX_SIDE or h > MAX_SIDE:
-        scale = min(MAX_SIDE / w, MAX_SIDE / h)
-        image = image.resize((max(1, int(round(w * scale))),
-                              max(1, int(round(h * scale)))), Image.Resampling.LANCZOS)
-    # Both outputs originate from the already oriented, metadata-free pixels.
-    # A photo PNG can exceed the strict 2 MiB envelope: use bounded JPEG
-    # quality reductions instead of discarding or retaining the source bytes.
-    for fmt, options in (
-        ("PNG", {"optimize": True}),
-        ("JPEG", {"quality": 88, "subsampling": 0}),
-        ("JPEG", {"quality": 78, "subsampling": 0}),
-        ("JPEG", {"quality": 64}),
-        ("JPEG", {"quality": 48}),
-    ):
-        stream = io.BytesIO()
-        image.save(stream, format=fmt, **options)
-        blob = stream.getvalue()
-        if len(blob) <= MAX_RASTER_BYTES:
-            media_type = "image/png" if fmt == "PNG" else "image/jpeg"
-            return PreparedRaster(
-                media_type, hashlib.sha256(blob).hexdigest(), image.width,
-                image.height, _encoded_chunks(blob), source_asset_id,
-                source_input_sha256, report_digest, report_revision,
-                evidence_digest,
-            )
-    _refuse("render_raster_too_large")
-
-
 def _frame_matches(evidence_doc: dict, original_width: int, original_height: int) -> None:
     roots = [frame for frame in evidence_doc["frames"] if frame["parent_frame_id"] is None]
     if (len(roots) != 1 or roots[0]["frame_id"] != "frame_input"
@@ -190,7 +173,8 @@ def prepare_authorized_render_assets(*, owner_id: str, report_owner_id: str,
                                      report: ValidatedDocument, view: ValidatedDocument,
                                      evidence: ValidatedDocument, source: StoredObject,
                                      store: ObjectStore, access: ReportAccessResolver,
-                                     ctx: CallContext) -> PreparedRaster:
+                                     ctx: CallContext,
+                                     sanitize: Callable[[bytes, str], CleanSourceRaster]) -> PreparedRaster:
     """Prepare one source raster after current owner/snapshot/source authorization.
 
     The source StoredObject must come from a trusted internal capture lookup,
@@ -217,20 +201,18 @@ def prepare_authorized_render_assets(*, owner_id: str, report_owner_id: str,
     if (not isinstance(blob, bytes) or len(blob) != source.size_bytes
             or hashlib.sha256(blob).hexdigest() != source.sha256):
         raise PermanentFailure("render_source_digest_mismatch")
-    decoded = decode_image(blob, source.media_type)
-    # The saved reference binds the exact decoded dtype/shape/pixel buffer,
-    # before deskew, crop or grid separation. A matching encoded upload SHA
-    # and plausible frame dimensions are not sufficient for overlay lineage.
-    if input_pixels_sha256(decoded.pixels) != original["analysis"]["processed_sha256"]:
+    if not callable(sanitize):
+        _refuse("render_source_sanitizer_required")
+    cleaned = sanitize(blob, source.media_type)
+    if not isinstance(cleaned, CleanSourceRaster):
+        _refuse("render_source_sanitizer_invalid")
+    if cleaned.original_pixels_sha256 != original["analysis"]["processed_sha256"]:
         raise PermanentFailure("render_processed_pixels_mismatch")
-    oriented_height, oriented_width = decoded.pixels.shape[:2]
-    _frame_matches(evidence_doc, oriented_width, oriented_height)
-    prepared = _reencode_oriented(
-        decoded.pixels, source_asset_id=asset_id,
-        source_input_sha256=source.sha256,
-        report_digest=projection["source_digest"],
-        report_revision=projection["source_revision"],
-        evidence_digest=evidence.digest,
+    _frame_matches(evidence_doc, cleaned.original_width, cleaned.original_height)
+    prepared = PreparedRaster(
+        cleaned.media_type, cleaned.sha256, cleaned.width, cleaned.height,
+        cleaned.data_base64_chunks, asset_id, source.sha256,
+        projection["source_digest"], projection["source_revision"], evidence.digest,
     )
     if not access.resolve(owner_id, report).source_image_available:
         raise NotFound("source_image_not_available")
@@ -291,7 +273,7 @@ def compile_free_render_envelope(*, report: ValidatedDocument, view: ValidatedDo
 
 __all__ = [
     "CHUNK_SIZE", "MAX_BASE64_CHARS", "MAX_CHUNKS", "MAX_ENVELOPE_BYTES",
-    "MAX_RASTER_BYTES", "MAX_SIDE", "PreparedRaster", "RENDERER_VERSION",
+    "MAX_RASTER_BYTES", "MAX_SIDE", "CleanSourceRaster", "PreparedRaster", "RENDERER_VERSION",
     "RENDER_POLICY_VERSION", "compile_free_render_envelope",
     "prepare_authorized_render_assets",
 ]
