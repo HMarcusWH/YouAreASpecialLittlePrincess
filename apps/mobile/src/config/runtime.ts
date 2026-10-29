@@ -16,6 +16,8 @@ export interface RuntimeConfig {
   readonly uploadOrigins: ReadonlySet<string>;
   /** Development sign-in through the fake identity provider; local/test development builds only. */
   readonly devIdentity: boolean;
+  /** Explicit, non-store local/test-only experiment; omitted from normal builds. */
+  readonly privateV3Exports?: boolean;
   /** Deep-link schemes this build answers to. */
   readonly linkSchemes: ReadonlySet<string>;
   readonly linkHosts: ReadonlySet<string>;
@@ -75,6 +77,14 @@ export function parseRuntimeConfig(raw: unknown): ConfigResult {
     // A release or staging binary never contains a path to mint development credentials.
     return { ok: false, code: "config_dev_identity_not_allowed" };
   }
+  if (value.privateV3Exports === true && (
+      variant !== "development" || !devIdentity ||
+      (backend !== "local" && backend !== "test"))) {
+    return { ok: false, code: "config_private_v3_not_allowed" };
+  }
+  if (value.privateV3Exports !== undefined && typeof value.privateV3Exports !== "boolean") {
+    return { ok: false, code: "config_private_v3_invalid" };
+  }
   const schemes = Array.isArray(value.linkSchemes) ? value.linkSchemes.filter((s): s is string =>
     typeof s === "string" && /^[a-z][a-z0-9+.-]{1,40}$/.test(s)) : [];
   const hosts = Array.isArray(value.linkHosts) ? value.linkHosts.filter((h): h is string =>
@@ -83,7 +93,8 @@ export function parseRuntimeConfig(raw: unknown): ConfigResult {
     ok: true,
     config: {
       variant, backendEnvironment: backend, apiBaseUrl: api.base, uploadOrigins,
-      devIdentity, linkSchemes: new Set(schemes), linkHosts: new Set(hosts),
+      devIdentity, ...(value.privateV3Exports === true ? { privateV3Exports: true } : {}),
+      linkSchemes: new Set(schemes), linkHosts: new Set(hosts),
     },
   };
 }
