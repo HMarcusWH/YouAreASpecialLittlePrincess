@@ -382,3 +382,19 @@ def test_private_v3_source_failure_does_not_affect_legacy_export(fixture):
     )
     assert legacy.data["projection"] == "EXPORT"
     assert legacy.data["authorized_asset_ids"] == ()
+
+
+def test_raw_source_sha_is_not_enough_if_decoded_analyzed_pixels_mismatch(fixture, monkeypatch):
+    from princess_app.application.exports import assets
+
+    blob, _mime, report, view, evidence, source = fixture
+    # Deliberately change the independent decoded-pixel identity without
+    # changing the signed stored source bytes: stale/different analysis fails.
+    monkeypatch.setattr(assets, "input_pixels_sha256", lambda _pixels: "0" * 64)
+    with pytest.raises(PermanentFailure, match="render_processed_pixels_mismatch"):
+        prepare_authorized_render_assets(
+            owner_id="owner_render_synthetic",
+            report_owner_id="owner_render_synthetic",
+            report=report, view=view, evidence=evidence, source=source,
+            store=SourceStore(blob), access=CurrentAccess(), ctx=CTX,
+        )
