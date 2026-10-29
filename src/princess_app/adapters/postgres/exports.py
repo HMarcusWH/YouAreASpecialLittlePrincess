@@ -19,7 +19,7 @@ from ...application.exports import (
 )
 from ...ports.base import InvalidInput, NotFound, RateLimited
 from ...ports.storage import StoredObject
-from .stores import Database, lock_live_owner, queue_asset_erasure, set_context
+from .stores import Database, epoch_for, lock_live_owner, queue_asset_erasure, set_context
 
 EXPORT_KIND = "export"
 MAX_PENDING_EXPORTS = 5
@@ -44,17 +44,21 @@ def _row(r: Mapping[str, Any] | None) -> ExportRow | None:
     detail = "FULL"
     image = False
     report_digest = raster_sha = evidence_digest = None
+    retention_epoch = None
     if template == V3_TEMPLATE_VERSION:
         detail = params.get("detail")
         image = params["include_image"]
         report_digest = params.get("source_report_digest")
         raster_sha = params.get("raster_sha256")
         evidence_digest = params.get("evidence_digest")
+        retention_epoch = params.get("image_retention_epoch")
         if (detail not in ("SUMMARY", "FULL") or params.get("font_identity") != V3_FONT_IDENTITY
                 or params.get("render_policy_version") != "render-policy/3"
                 or not isinstance(report_digest, str) or len(report_digest) != 64
                 or (image and (not isinstance(raster_sha, str) or len(raster_sha) != 64))
                 or (not image and raster_sha is not None)
+                or (image and (type(retention_epoch) is not int or retention_epoch < 0))
+                or (not image and retention_epoch is not None)
                 or (evidence_digest is not None and
                     (not isinstance(evidence_digest, str) or len(evidence_digest) != 64))
                 or r["layout"] not in ("A4", "LETTER") or params["sections"]
@@ -69,7 +73,7 @@ def _row(r: Mapping[str, Any] | None) -> ExportRow | None:
         version_ref=r["version_ref"], error_code=r["error_code"], completed_at=r["completed_at"],
         renderer_version=template, detail=detail, include_image=image,
         source_report_digest=report_digest, raster_sha256=raster_sha,
-        evidence_digest=evidence_digest,
+        evidence_digest=evidence_digest, image_retention_epoch=retention_epoch,
     )
 
 
@@ -212,6 +216,14 @@ class PostgresExportRepository:
                         or latest["digest"] != row.source_report_digest):
                     return False
                 if row.include_image:
+                    # A subject-wide withdrawal increments the epoch under
+                    # the same row this transaction share-locks. Revocation
+                    # before publication is refused, and one that starts
+                    # concurrently cannot commit until this publication does.
+                    if (type(row.image_retention_epoch) is not int
+                            or epoch_for(conn, row.owner_id, "image_retention", lock=True)
+                            != row.image_retention_epoch):
+                        return False
                     # The original asset/capture cannot be deleted, relinked
                     # or replaced during publication. Only current owner
                     # source bytes authorized by the saved report are usable.
@@ -221,7 +233,7 @@ class PostgresExportRepository:
                         "WHERE a.asset_id = :a AND a.owner_id = :o AND "
                         "a.deleted_at IS NULL AND a.kind = 'ORIGINAL' "
                         "AND a.sha256 = :h AND c.owner_id = :o "
-                        "AND c.deleted_at IS NULL AND c.sha256 = :h LIMIT 1"),
+                        "AND c.deleted_at IS NULL AND c.sha256 = :h LIMIT 1 FOR SHARE OF a,c"),
                         {"a": latest["source_id"], "o": row.owner_id,
                          "h": latest["source_sha"]}).scalar()
                     if active is None:
