@@ -1233,3 +1233,77 @@ def test_r2b_incompatible_engine_configuration_cannot_spend_story_attempts(env, 
         assert conn.execute(text("SELECT state, attempts FROM app.job WHERE subject_ref=:r"),
                             {"r": run}).one() == ("QUEUED", 0)
     assert private_story_worker(env).run_once().outcome == "SUCCEEDED"
+
+
+def test_issue92_private_guarded_v2_story_isolated_from_legacy_jobs(env, world):  # noqa: F811
+    """Real PostgreSQL queue, synthetic pixels; research v2+v5 stays private.
+
+    This is compatibility and fencing evidence, not a human handwriting
+    calibration, a public /4 writer switch, or a Premium-v2 qualification.
+    """
+    from princess_app.domain.reports.story import story_policy_from_reviewed_reading
+
+    owner = account(world, "sub-issue92-guarded-v4-synthetic").principal_id
+    capture, legacy_run = env.analysis(owner)
+    guarded_config = analysis_config_sha256(
+        grid_profile="qualified-v2", evidence_guard_enabled=True,
+    )
+    intake = IntakeService(
+        repo=env.repo, store=env.store, permissions=env.permissions,
+        challenge=env.challenge, inspect=inspect_header, clock=env.clock,
+        ids=env.intake._ids, challenge_site="app.test",
+        analysis_config=guarded_config,
+        report_template="individual-report/4",
+        story_source_sha256=reviewed_reading_sha256(),
+    )
+    guarded_run = intake.start_analysis(owner, capture.capture_id, locale="en")
+    assert guarded_run != legacy_run
+    assert intake.start_analysis(owner, capture.capture_id, locale="en") == guarded_run
+
+    # Neither a /2 worker nor a mismatched /4 config may claim this run.
+    assert env.queue.claim(
+        "wrong-v4", 60, env.clock.now(),
+        report_template="individual-report/4",
+        analysis_config=analysis_config_sha256(),
+        story_source_sha256=reviewed_reading_sha256(),
+    ) is None
+    with env.app_db.session(owner) as conn:
+        before = conn.execute(text(
+            "SELECT state, attempts, payload FROM app.job WHERE subject_ref = :r"),
+            {"r": guarded_run},
+        ).mappings().one()
+    assert before["state"] == "QUEUED" and before["attempts"] == 0
+    assert before["payload"]["analysis_config"] == guarded_config
+    assert before["payload"]["report_template"] == "individual-report/4"
+
+    worker = AnalysisWorker(
+        queue=env.queue, store=env.store, decode=decode_image,
+        engine=GraphologyEngine(grid_profile="qualified-v2",
+                               evidence_guard_enabled=True),
+        clock=env.clock, context=env.ctx, worker_id="issue92-private-guarded-v4",
+        engine_version=__version__, lease_seconds=60,
+        writer_template="individual-report/4",
+        story_policy=story_policy_from_reviewed_reading(),
+        story_source_sha256=reviewed_reading_sha256(),
+        private_qualified_story_candidate=True,
+    )
+    outcome = worker.run_once()
+    assert outcome is not None and outcome.outcome == "SUCCEEDED", outcome
+    assert env.intake.status(owner, legacy_run).state == "QUEUED"
+    status = intake.status(owner, guarded_run)
+    assert status.state == "SUCCEEDED"
+    store = PostgresReportStore(env.app_db, owner)
+    _, snapshot = store.latest(status.report_id)
+    assert snapshot.data["analysis"]["versions"]["template"] == "individual-report/4"
+    assert snapshot.data["analysis"]["versions"]["quality_policy"] == "quality-policy/2"
+    assert snapshot.data["analysis"]["versions"]["analysis_config"] == guarded_config
+    assert snapshot.data["evidence_bundle_id"] is not None
+    assert len(snapshot.data["facts"]) == 64
+    assert snapshot.data["premium_overlay_id"] is None
+    view = ReportReader(store, env.clock).view(
+        report_id=status.report_id, principal_id=owner, projection="FREE",
+    )
+    assert view.data["source_digest"] == snapshot.digest
+    assert len(view.data["facts"]) == 64
+    assert not any(section["premium_section_id"] for section in view.data["sections"])
+    assert env.worker("issue92-legacy-after-v4").run_once().outcome == "SUCCEEDED"
