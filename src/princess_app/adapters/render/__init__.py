@@ -22,7 +22,7 @@ from ...ports.base import InvalidInput, PermanentFailure, TransientUnavailable
 
 ROOT = Path(__file__).resolve().parents[4]
 DEFAULT_BUNDLE = ROOT / "apps" / "render" / "dist" / "render.mjs"
-_CODE = re.compile(r"^[a-z_]{1,64}$")
+_CODE = re.compile(r"^[a-z0-9_]{1,64}$")
 MAX_STDOUT = 10 * 1024 * 1024 + 1
 
 
