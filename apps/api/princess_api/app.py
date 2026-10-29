@@ -559,6 +559,11 @@ def create_app(services: Services) -> FastAPI:
     @app.post("/v1/report-exports", status_code=202)
     def request_export(body: ExportBody, request: Request, who: Principal = Depends(principal)) -> dict:
         """Render the authorized projection of the latest revision. Never calls a model."""
+        # Explicit null is not omission. It must not silently select the
+        # legacy v2 renderer after a caller attempted a v3 option.
+        if (("detail" in body.model_fields_set and body.detail is None)
+                or ("include_image" in body.model_fields_set and body.include_image is None)):
+            raise InvalidInput("render_v3_document_options_invalid")
         return export_status(exports().request(
             who.principal_id, body.report_id, body.layout,
             tuple(body.sections), body.share_grant_ref,
