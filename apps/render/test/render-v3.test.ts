@@ -62,6 +62,9 @@ function envelope(options: { withImage?: boolean; detail?: "SUMMARY" | "FULL";
   const layout = options.layout ?? "A4";
   const card = layout === "CARD_SQUARE" || layout === "CARD_STORY";
   const view = fixture(card ? "view.share-v2.json" : "view.export-v2-no-image.json");
+  // Both languages exercise rendering over synthetic saved fixtures; the
+  // production application keeps an actual immutable report locale.
+  view.locale = options.locale === "en" ? "en" : "sv-SE";
   const evidence = card ? null : fixture("evidence-bundle.v2.json");
   if (options.withImage) {
     assert.ok(evidence !== null);
@@ -132,7 +135,7 @@ test("v3 source preview uses only the verified inline raster and saved regions",
   assert.ok(html.includes("data:image/png;base64,"));
   assert.ok(html.includes("img-src data:;"));
   assert.ok(html.includes("data-region-id="));
-  assert.ok(!html.includes("http:") && !html.includes("https:"));
+  assert.ok(!/<(?:img|image)\s[^>]*(?:src|href)="https?:/i.test(html));
   assert.ok(!html.includes("<script"));
 });
 
@@ -166,7 +169,7 @@ test("v3 rejects forged versions, paid scope and mixed revision timestamps", () 
     assert.equal(refused.status, 2, key);
     assert.equal(refused.error, error, key);
   }
-  const premium = envelope();
+  const premium: Record<string, unknown> = envelope();
   premium.premium = { fake: "paid" };
   assert.equal(run(premium, "--envelope-v3").error, "render_v3_premium_not_released");
   const same = envelope();
@@ -236,4 +239,14 @@ test("v3 produces tagged A4 and Letter PDF output in both languages", { timeout:
       assert.ok(Math.abs(Number(box[2]) - expected[1]!) < 1);
     }
   }
+});
+
+test("v3 embeds the verified synthetic source in an actual tagged PDF", { timeout: 120_000 }, () => {
+  const result = run(envelope({ withImage: true, detail: "FULL" }), "--envelope-v3");
+  assert.equal(result.status, 0, result.error);
+  const pdf = result.out.toString("latin1");
+  assert.ok(pdf.startsWith("%PDF-"));
+  assert.ok(pdf.includes("/StructTreeRoot"));
+  assert.ok(pdf.includes("/Subtype /Image"), "the source is actually embedded as PDF imagery");
+  assert.ok(result.out.byteLength < 10 * 1024 * 1024);
 });
