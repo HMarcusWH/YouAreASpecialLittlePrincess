@@ -185,3 +185,105 @@ def test_saved_story_evidence_requires_real_saved_region_lineage():
             report_id=original.data["report_id"], principal_id=owner,
         )
     assert failed.value.code == "story_evidence_region_invalid"
+
+
+def test_story_direct_premium_request_is_fenced_before_ai_permission_or_credit():
+    """Positive /4 line+word counts alone cannot buy an inactive reading-v2.
+
+    This covers the direct service call, not merely the UI's disabled action.
+    Saved /4 historical reads and Free facts remain unmodified.
+    """
+    from princess_app.application.commerce import CommerceService
+    from princess_app.domain.commerce import Platform
+    from princess_app.ports.base import InvalidInput
+
+    class SavedOnly:
+        def __init__(self, report):
+            self.report = report
+
+        def latest(self, report_id):
+            assert report_id == self.report.data["report_id"]
+            return self.report.data["analysis"]["owner_id"], self.report
+
+    class ForbiddenSideEffect:
+        def __getattr__(self, name):
+            raise AssertionError(f"unreleased /4 must not call {name}")
+
+    for words, expected in ((3, "premium_reading_v2_not_released"),
+                            (0, "premium_sample_ineligible")):
+        saved = saved_story(word_count=words)
+        service = CommerceService.__new__(CommerceService)
+        service._reports = lambda _owner: SavedOnly(saved)
+        service._permissions = ForbiddenSideEffect()
+        service._ledger = ForbiddenSideEffect()
+        owner = saved.data["analysis"]["owner_id"]
+        with pytest.raises(InvalidInput) as rejected:
+            service.request_premium(owner, saved.data["report_id"], Platform.WEB)
+        assert rejected.value.code == expected
+        assert saved.data["premium_overlay_id"] is None
+
+
+def test_guarded_qualified_v2_can_form_private_synthetic_v4_dossier_without_activation():
+    """Pure contract integration witness; DOES NOT enable an API or worker path.
+
+    Verify that actual guarded v2 measurements, evidence and the byte-pinned
+    /4 deterministic content can coexist, including the unusable-ink state.
+    Neither test input is a photograph of human handwriting.
+    """
+    from grid_v2_cases import grid_only, page
+    from princess_graphology import GraphologyEngine
+    from princess_app.application.intake import analysis_config_sha256
+    from princess_app.domain.analysis import analysis_reference
+    from princess_app.domain.evidence import build_evidence_bundle
+    from princess_app.domain.reports.suitability import premium_sample_eligible
+
+    for usable in (True, False):
+        image = (page(ruling="gray", pen="black")[0] if usable
+                 else grid_only(ruling="none")[0])
+        result, payload = GraphologyEngine(
+            grid_profile="qualified-v2", deskew_enabled=False,
+            evidence_guard_enabled=True,
+        ).analyze_with_evidence(image)
+        expected_config = analysis_config_sha256(
+            deskew=False, grid_profile="qualified-v2", evidence_guard_enabled=True,
+        )
+        analysis = analysis_reference(
+            analysis_id=f"analysis_issue92_{usable}",
+            run_id=f"run_issue92_{usable}",
+            owner_id="owner_synthetic_issue92",
+            input_asset_id=f"asset_synthetic_issue92_{usable}",
+            input_sha256="f" * 64,
+            processed_sha256=result.metadata["input_pixels_sha256"],
+            created_at=T0, engine_version="0.1.0",
+            analysis_config_sha256=expected_config,
+            quality_policy="quality-policy/2", template="individual-report/4",
+        )
+        evidence = build_evidence_bundle(
+            payload, analysis, f"evidence_issue92_{usable}",
+        )
+        assert evidence.ok, evidence.issues
+        assembled = assemble_report(
+            report_id=f"report_synthetic_issue92_{usable}",
+            analysis=analysis, result=result.to_dict(),
+            created_at=T0, locale="en", evidence=evidence.value,
+            story_policy=story_policy_from_reviewed_reading(),
+        )
+        assert assembled.ok, assembled.issues
+        document = assembled.value
+        assert len(document.data["facts"]) == 64
+        assert document.data["evidence_bundle_id"] == f"evidence_issue92_{usable}"
+        assert document.data["analysis"]["versions"]["analysis_config"] == expected_config
+        assert document.data["analysis"]["versions"]["quality_policy"] == "quality-policy/2"
+        assert "evidence_support_audit" in result.metadata
+        if usable:
+            assert result.metadata["evidence_support_audit"]["reason"] is None
+            assert assess_report_suitability(document) is ReportSuitability.SUPPORTED
+            assert premium_sample_eligible(document)  # mechanical gate only
+        else:
+            assert result.measurements["PAGE_LINE_COUNT"].raw_value is None
+            assert result.measurements["PAGE_WORD_COUNT"].raw_value is None
+            assert assess_report_suitability(document) is ReportSuitability.UNQUALIFIED
+            assert not premium_sample_eligible(document)
+            assert not any(s["availability"] == "READY" for s in document.data["sections"]
+                           if s["section_id"].startswith("section.highlight."))
+
