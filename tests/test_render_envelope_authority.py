@@ -19,7 +19,7 @@ from PIL import Image
 from princess_app.adapters.imaging import decode_image
 from princess_app.application.exports.assets import (
     CHUNK_SIZE, MAX_CHUNKS, MAX_ENVELOPE_BYTES, MAX_RASTER_BYTES,
-    PreparedRaster, compile_free_render_envelope, prepare_authorized_render_assets,
+    compile_free_render_envelope, prepare_authorized_render_assets,
 )
 from princess_app.application.reports import ReportAccess
 from princess_app.domain.analysis import analysis_reference
