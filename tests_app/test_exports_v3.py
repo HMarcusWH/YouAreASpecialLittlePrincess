@@ -198,13 +198,15 @@ def test_v3_publish_fence_refuses_report_revision_changed_during_render(v3):
     row = request(v3)
     claim = v3.worker_service.repo.claim("manual-v3", 120, v3.env.clock.now())
     assert claim.row.export_id == row.export_id
-    # Stored report revision is an independently versioned authority. A
-    # publication from an old report revision cannot become READY.
-    with v3.env.app_db.session(v3.owner) as conn:
-        conn.execute(text("UPDATE app.report_revision SET document = jsonb_set(document, "
-                          "'{document_digest}', '"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"'::jsonb) "
-                          "WHERE report_id = :r AND revision = :v"),
-                     {"r": row.report_id, "v": row.revision})
+    # An independently valid newer immutable revision must prevent an old
+    # in-flight export from becoming READY; no destructive row mutation.
+    from princess_app.domain.reports import revise_report
+    saved = PostgresReportStore(v3.env.app_db, v3.owner)
+    previous = saved.latest(v3.report_id)[1]
+    revised = revise_report(previous, created_at=v3.env.clock.now() + timedelta(seconds=1),
+                            premium_overlay_id=None)
+    assert revised.ok, revised.issues
+    saved.append(v3.owner, revised.value)
     stored = v3.env.store.write_derivative(
         "asset_export_test_v3", None, b"%PDF-1.7\nsynthetic", "application/pdf", v3.env.ctx())
     assert v3.worker_service.repo.publish(claim, stored, v3.env.clock.now()) is False
