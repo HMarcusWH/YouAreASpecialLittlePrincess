@@ -308,6 +308,14 @@ def test_composed_local_stack_upload_to_report(app_url, worker_db, tmp_path, mon
     assert json.loads(capsys.readouterr().out) == {"command": "once", "outcomes": {"PUSH:ACCEPTED": 1}}
     export = api.post("/v1/report-exports", json={"report_id": status["report_id"], "layout": "A4"}, headers=auth)
     assert export.status_code == 202 and export.json()["state"] == "QUEUED"
+    # Explicit null is not omitted: a malformed v3 option cannot quietly
+    # enqueue another legacy full report.
+    for bogus in ({"detail": None}, {"include_image": None}):
+        refused = api.post("/v1/report-exports", json={
+            "report_id": status["report_id"], "layout": "A4", **bogus,
+        }, headers=auth)
+        assert refused.status_code == 400
+        assert refused.json()["error"] == "render_v3_document_options_invalid"
     assert export.json()["downloaded_copies"] == "downloaded_copies_cannot_be_recalled"
     export_id = export.json()["export_id"]
     assert api.get(f"/v1/report-exports/{export_id}", headers=auth).json()["state"] == "QUEUED"
