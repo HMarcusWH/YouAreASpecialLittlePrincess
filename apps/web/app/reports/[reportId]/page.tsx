@@ -15,7 +15,11 @@ export default async function Report({ params, searchParams }: {
   try {
     const api = await serverApi();
     const { view, evidence, evidenceUnreadable } = await loadOwnerReport(api, reportId);
-    return <ReportClient view={view} locale={locale} evidence={evidence} evidenceUnreadable={evidenceUnreadable} />;
+    const privateV3 = process.env.PRINCESS_RENDER_V3_RESEARCH_OPT_IN === "1"
+      && (process.env.PRINCESS_ENV === "local" || process.env.PRINCESS_ENV === "test")
+      && process.env.PRINCESS_TEST_PUBLIC_GUEST_ONLY !== "1";
+    return <ReportClient view={view} locale={locale} evidence={evidence}
+                         evidenceUnreadable={evidenceUnreadable} privateV3={privateV3} />;
   } catch (e) {
     if (e instanceof ApiError && e.status === 404) notFound();
     if (e instanceof ApiError && e.status === 401) {
