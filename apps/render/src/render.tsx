@@ -24,7 +24,10 @@ export interface RenderInput {
 
 export function parseInput(raw: string): RenderInput {
   if (Buffer.byteLength(raw) > MAX_INPUT_BYTES) throw new Error("input_too_large");
-  const input = JSON.parse(raw) as Partial<RenderInput>;
+  const input = JSON.parse(raw) as Partial<RenderInput> & { renderer_version?: unknown };
+  if (input.renderer_version === "render-template/3") {
+    throw new Error("render_v3_requires_explicit_mode");
+  }
   if (!LAYOUTS.has(input.layout as Layout)) throw new Error("unknown_layout");
   if (input.locale !== "en" && input.locale !== "sv") throw new Error("unsupported_locale");
   if (typeof input.generated_at !== "string" || !/^\d{4}-\d{2}-\d{2}T[\d:.]+Z$/.test(input.generated_at)) {

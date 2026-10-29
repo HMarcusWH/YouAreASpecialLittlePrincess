@@ -16,11 +16,13 @@ import subprocess
 from pathlib import Path
 from typing import Any, Mapping, Sequence
 
+from princess_contracts import ValidatedDocument, canonical_json
+
 from ...ports.base import InvalidInput, PermanentFailure, TransientUnavailable
 
 ROOT = Path(__file__).resolve().parents[4]
 DEFAULT_BUNDLE = ROOT / "apps" / "render" / "dist" / "render.mjs"
-_CODE = re.compile(r"^[a-z_]{1,64}$")
+_CODE = re.compile(r"^[a-z0-9_]{1,64}$")
 MAX_STDOUT = 10 * 1024 * 1024 + 1
 
 
@@ -45,6 +47,37 @@ class SubprocessRenderer:
                              ensure_ascii=False, allow_nan=False).encode("utf-8")
         try:
             done = subprocess.run(self.command, input=payload, capture_output=True, timeout=self.timeout_s,
+                                  env=self._env(), cwd=str(ROOT), check=False)
+        except subprocess.TimeoutExpired:
+            raise TransientUnavailable("render_timeout") from None
+        except OSError:
+            raise TransientUnavailable("renderer_unavailable") from None
+        lines = done.stderr.decode("utf-8", "replace").strip().splitlines()
+        code = lines[-1].strip() if lines else ""
+        code = code if _CODE.match(code) else "render_failed"
+        if done.returncode == 2:
+            raise InvalidInput(code)
+        if done.returncode != 0:
+            raise PermanentFailure(code)
+        if len(done.stdout) >= MAX_STDOUT:
+            raise PermanentFailure("render_output_size")
+        return done.stdout
+
+
+    def render_envelope_v3(self, envelope: ValidatedDocument) -> bytes:
+        """Private, explicit v3 subprocess entrypoint; does not affect render(v2).
+
+        The application must supply an already-compiled authorization-filtered
+        RenderEnvelope and reauthorize again before publishing or downloading.
+        """
+        if not isinstance(envelope, ValidatedDocument) or envelope.schema_name != "RenderEnvelope":
+            raise InvalidInput("render_v3_envelope_required")
+        data = canonical_json(envelope.to_dict()).encode("utf-8")
+        if len(data) > 8 * 1024 * 1024:
+            raise InvalidInput("render_v3_input_too_large")
+        try:
+            done = subprocess.run([*self.command, "--envelope-v3"], input=data,
+                                  capture_output=True, timeout=self.timeout_s,
                                   env=self._env(), cwd=str(ROOT), check=False)
         except subprocess.TimeoutExpired:
             raise TransientUnavailable("render_timeout") from None
