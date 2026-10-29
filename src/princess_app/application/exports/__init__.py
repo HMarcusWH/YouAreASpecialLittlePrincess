@@ -47,6 +47,8 @@ from ...ports.storage import ObjectStore, StoredObject
 from ...domain.permissions import Scope
 from ..permissions import PermissionService
 from ..reports import ReportAccessResolver, ReportReader, ReportStore, ShareAccess
+from ..intake import CaptureRow
+from .assets import compile_free_render_envelope, prepare_authorized_render_assets
 
 TEMPLATE_VERSION = "render-template/2"
 DOCUMENT_LAYOUTS = frozenset({"A4", "LETTER"})
@@ -174,6 +176,54 @@ class ExportService:
     ids: IdGenerator
     sharing_enabled: Callable[[], bool] = field(default=lambda: False)
     permissions: PermissionService | None = None
+    # Optional trusted internal capture record lookup. The existing /2 export
+    # API/worker does not call it; private v3 preview is not a release flag.
+    source_capture: Callable[[str, str], CaptureRow | None] | None = None
+
+    def private_free_v3_candidate(self, owner_id: str, report_id: str, layout: str, *,
+                                  detail: str = "SUMMARY", include_image: bool = False,
+                                  ctx: CallContext | None = None) -> ValidatedDocument:
+        """Assemble a bounded authorized Free RenderEnvelope, without rendering.
+
+        The HTTP export route still uses render-template/2. R5-F2/F3 must
+        explicitly route/persist this new envelope, bind cache disclosure
+        identities, and recheck access at publication and download.
+        """
+        if layout not in DOCUMENT_LAYOUTS or detail not in ("SUMMARY", "FULL"):
+            raise InvalidInput("render_v3_document_options_invalid")
+        current_store = self.reports(owner_id)
+        saved = current_store.latest(report_id)
+        if saved is None or saved[0] != owner_id:
+            raise NotFound("report_not_found")
+        report = saved[1]
+        reader = ReportReader(current_store, self.clock, self.access)
+        view = reader.view(report_id=report_id, principal_id=owner_id,
+                           projection="EXPORT", include_source_image=include_image)
+        proof = None
+        if report.data["evidence_bundle_id"] is not None:
+            # The reader checks the exact saved source/region lineage before
+            # the independent source raster may be disclosed.
+            reader.evidence(report_id=report_id, principal_id=owner_id)
+            proof = current_store.evidence(report_id)
+        prepared = None
+        if include_image:
+            if ctx is None or self.source_capture is None or self.access is None:
+                raise Unsupported("render_v3_source_adapter_not_configured")
+            if proof is None:
+                raise NotFound("source_image_not_available")
+            input_asset = report.data["analysis"]["input_asset_id"]
+            capture = self.source_capture(owner_id, input_asset)
+            if capture is None or capture.deleted or capture.original_erased:
+                raise NotFound("source_image_not_available")
+            prepared = prepare_authorized_render_assets(
+                owner_id=owner_id, report_owner_id=saved[0], report=report,
+                view=view, evidence=proof, source=capture.stored_object(),
+                store=self.store, access=self.access, ctx=ctx,
+            )
+        return compile_free_render_envelope(
+            report=report, view=view, layout=layout, detail=detail,
+            evidence=proof, source_image=prepared,
+        )
 
     def projection(self, owner_id: str, request: ExportRequest) -> ValidatedDocument:
         """The authorized projection an export may show, derived now."""
