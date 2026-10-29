@@ -77,6 +77,14 @@
 
 /* Print mode: expanded, static, paged. */
 .pr-print { font-size: 10.5pt; color: var(--color-text); }
+.pr-print-detail { color: var(--color-text-muted); font-size: var(--font-size-sm); margin: 0 0 var(--space-3); }
+.pr-print-summary .pr-dossier-body { break-inside: auto; }
+.pr-print-summary .pr-facts td, .pr-print-summary .pr-facts th { padding-block: var(--space-2); }
+.pr-v3-source { margin: var(--space-6) 0; break-inside: avoid-page; }
+.pr-v3-source figcaption { font-weight: var(--font-weight-bold); margin-bottom: var(--space-3); }
+.pr-v3-source svg { display: block; width: 100%; max-height: 92mm; background: #fff; border: 1px solid var(--color-border); }
+.pr-v3-source-region { stroke: var(--color-accent); stroke-width: 1.8; vector-effect: non-scaling-stroke; }
+.pr-v3-source .pr-hint { margin-top: var(--space-2); }
 .pr-print-cover { margin: 0 0 var(--space-7); padding: 0 0 var(--space-6);
   border-bottom: 2px solid var(--color-accent); break-after: avoid; }
 .pr-print-brand { margin: 0; color: var(--color-accent); font-weight: var(--font-weight-bold);
