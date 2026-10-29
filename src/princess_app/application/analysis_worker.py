@@ -84,7 +84,8 @@ class AnalysisWorker:
                  lease_seconds: int = 120,
                  writer_template: str = TEMPLATE_VERSION,
                  story_policy: StoryPolicy | None = None,
-                 story_source_sha256: str | None = None) -> None:
+                 story_source_sha256: str | None = None,
+                 private_qualified_story_candidate: bool = False) -> None:
         self._queue = queue
         self._store = store
         self._decode = decode
@@ -100,6 +101,9 @@ class AnalysisWorker:
         # version, not config/env objects or HTTP-controlled values.
         if writer_template not in (TEMPLATE_VERSION, STORY_TEMPLATE_VERSION):
             raise InvalidInput("report_writer_template_unknown")
+        if type(private_qualified_story_candidate) is not bool or (
+                private_qualified_story_candidate and writer_template != STORY_TEMPLATE_VERSION):
+            raise InvalidInput("report_story_candidate_invalid")
         if writer_template == STORY_TEMPLATE_VERSION:
             if not isinstance(story_policy, StoryPolicy):
                 raise InvalidInput("report_story_source_not_installed")
@@ -107,19 +111,25 @@ class AnalysisWorker:
                     or re.fullmatch(r"[0-9a-f]{64}", story_source_sha256) is None):
                 raise InvalidInput("report_story_source_pin_missing")
             if getattr(engine, "evidence_guard_enabled", False):
-                raise InvalidInput("report_story_research_guard_conflict")
+                if not (private_qualified_story_candidate
+                        and getattr(engine, "grid_profile", None) == "qualified-v2"):
+                    raise InvalidInput("report_story_research_guard_conflict")
+            elif private_qualified_story_candidate:
+                raise InvalidInput("report_story_candidate_invalid")
         elif story_policy is not None or story_source_sha256 is not None:
             raise InvalidInput("report_story_policy_without_writer")
         self._writer_template = writer_template
         self._story_policy = story_policy
         self._story_source_sha256 = story_source_sha256
+        self._private_qualified_story_candidate = private_qualified_story_candidate
 
     def run_once(self) -> WorkOutcome | None:
         # Select only jobs pinned to the writer this process can execute.
         # Old queued /2 work must stay QUEUED during a /4-only rollout;
         # it may be resumed by a compatible /2 worker after rollback.
         report_template = (EVIDENCE_SUPPORT_TEMPLATE_VERSION
-                           if getattr(self._engine, "evidence_guard_enabled", False)
+                           if (getattr(self._engine, "evidence_guard_enabled", False)
+                               and not self._private_qualified_story_candidate)
                            else self._writer_template)
         job = self._queue.claim(self._worker_id, self._lease, self._clock.now(),
                                 report_template=report_template, analysis_config=self._config,
@@ -144,7 +154,8 @@ class AnalysisWorker:
             # Never publish results computed under settings other than the run's.
             raise InvalidInput("analysis_config_mismatch")
         expected_template = (EVIDENCE_SUPPORT_TEMPLATE_VERSION
-                             if getattr(self._engine, "evidence_guard_enabled", False)
+                             if (getattr(self._engine, "evidence_guard_enabled", False)
+                                 and not self._private_qualified_story_candidate)
                              else self._writer_template)
         if job.report_template != expected_template:
             raise InvalidInput("report_writer_template_mismatch")
