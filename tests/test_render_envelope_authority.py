@@ -262,6 +262,21 @@ def test_canonical_chunks_refuse_tampering_and_source_disclosure_without_rights(
             report=report, view=view, evidence=None,
             layout="A4", detail="SUMMARY", source_image=image,
         )
+    # A cleaned and valid image from a different source/revision/evidence
+    # cannot be reattached merely because its own SHA-256 still verifies.
+    for wrong in (
+        {"source_input_sha256": "1" * 64},
+        {"source_asset_id": "another_source"},
+        {"report_digest": "1" * 64},
+        {"report_revision": image.report_revision + 1},
+        {"evidence_digest": "1" * 64},
+    ):
+        with pytest.raises(InvalidInput, match="render_image_source_mismatch"):
+            compile_free_render_envelope(
+                report=report, view=view, evidence=evidence,
+                layout="A4", detail="SUMMARY",
+                source_image=replace(image, **wrong),
+            )
 
 
 def test_new_envelope_is_separate_from_existing_legacy_export_identity(fixture):
