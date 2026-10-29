@@ -78,6 +78,7 @@ class ExportRequest:
     source_report_digest: str | None = None
     raster_sha256: str | None = None
     evidence_digest: str | None = None
+    image_retention_epoch: int | None = None
 
     @property
     def projection(self) -> str:
@@ -92,6 +93,7 @@ class ExportRequest:
                 "source_report_digest": self.source_report_digest,
                 "raster_sha256": self.raster_sha256,
                 "evidence_digest": self.evidence_digest,
+                "image_retention_epoch": self.image_retention_epoch,
                 "font_identity": V3_FONT_IDENTITY,
                 "render_policy_version": "render-policy/3",
             })
@@ -124,11 +126,13 @@ class ExportRow:
     source_report_digest: str | None = None
     raster_sha256: str | None = None
     evidence_digest: str | None = None
+    image_retention_epoch: int | None = None
 
     def request(self) -> ExportRequest:
         return ExportRequest(self.report_id, self.layout, self.sections, self.share_grant_ref,
                              self.renderer_version, self.detail, self.include_image,
-                             self.source_report_digest, self.raster_sha256, self.evidence_digest)
+                             self.source_report_digest, self.raster_sha256, self.evidence_digest,
+                             self.image_retention_epoch)
 
 
 @dataclass(frozen=True)
@@ -183,7 +187,7 @@ def cache_key(view: ValidatedDocument, request: ExportRequest) -> str:
     return hashlib.sha256(canonical_json(material).encode("utf-8")).hexdigest()
 
 
-def v3_cache_key(envelope: ValidatedDocument) -> str:
+def v3_cache_key(envelope: ValidatedDocument, image_retention_epoch: int | None = None) -> str:
     """Hash exact authorized saved content, source/evidence rights and print policy.
 
     The cleaned raster's *digest* goes into the key, never its private base64.
@@ -199,12 +203,17 @@ def v3_cache_key(envelope: ValidatedDocument) -> str:
     view.pop("generated_at", None)
     evidence = content["evidence"]
     source = content["source_image"]
+    if source is None and image_retention_epoch is not None:
+        raise InvalidInput("render_v3_unexpected_permission_pin")
+    if source is not None and (type(image_retention_epoch) is not int or image_retention_epoch < 0):
+        raise InvalidInput("render_v3_permission_pin_missing")
     material = {
         "template": V3_TEMPLATE_VERSION, "font_identity": V3_FONT_IDENTITY,
         "policy": content["render_policy_version"],
         "presentation": content["presentation_version"],
         "layout": content["layout"], "detail": content["detail"],
         "locale": content["locale"], "view": view,
+        "image_retention_epoch": image_retention_epoch,
         "evidence_digest": hashlib.sha256(canonical_json(evidence).encode()).hexdigest() if evidence else None,
         "raster": None if source is None else {
             key: source[key] for key in ("media_type", "sha256", "width", "height")
@@ -305,6 +314,23 @@ class ExportService:
             raise InvalidInput("render_v3_document_options_invalid")
         if request.source_report_digest is None:
             raise InvalidInput("render_v3_source_pin_missing")
+        # Exact permission-epoch pin prevents a withdrawal followed by a
+        # new grant from resurrecting a previously generated private image.
+        if request.include_image:
+            if self.permissions is None or self.source_capture is None:
+                raise Unsupported("render_v3_source_adapter_not_configured")
+            saved = self.reports(owner_id).latest(request.report_id)
+            if saved is None or saved[0] != owner_id:
+                raise NotFound("report_not_found")
+            capture = self.source_capture(owner_id, saved[1].data["analysis"]["input_asset_id"])
+            if capture is None or capture.deleted or capture.original_erased:
+                raise NotFound("source_image_not_available")
+            current = self.permissions.check(owner_id, "image_retention",
+                                             Scope("SPECIMEN", capture.capture_id))
+            if not current.allowed or current.epoch != request.image_retention_epoch:
+                raise Conflict("render_v3_image_permission_epoch_changed")
+        elif request.image_retention_epoch is not None:
+            raise InvalidInput("render_v3_unexpected_permission_pin")
         envelope = self.private_free_v3_candidate(
             owner_id, request.report_id, request.layout,
             detail=request.detail, include_image=request.include_image, ctx=ctx,
@@ -367,14 +393,26 @@ class ExportService:
             evidence = data["evidence"]
             evidence_digest = (hashlib.sha256(canonical_json(envelope.to_dict()["evidence"]).encode()).hexdigest()
                                if evidence is not None else None)
+            retention_epoch = None
+            if embed:
+                if self.permissions is None or self.source_capture is None:
+                    raise Unsupported("render_v3_source_adapter_not_configured")
+                capture = self.source_capture(owner_id, evidence["analysis"]["input_asset_id"])
+                if capture is None or capture.deleted or capture.original_erased:
+                    raise NotFound("source_image_not_available")
+                permission = self.permissions.check(owner_id, "image_retention",
+                                                    Scope("SPECIMEN", capture.capture_id))
+                if not permission.allowed:
+                    raise NotFound("source_image_not_available")
+                retention_epoch = permission.epoch
             row = ExportRow(
                 export_id=self.ids.new_id("export"), owner_id=owner_id, report_id=report_id,
                 revision=data["view"]["source_revision"], layout=layout, sections=(),
-                cache_key=v3_cache_key(envelope), state="QUEUED", created_at=self.clock.now(),
+                cache_key=v3_cache_key(envelope, retention_epoch), state="QUEUED", created_at=self.clock.now(),
                 renderer_version=V3_TEMPLATE_VERSION, detail=chosen, include_image=embed,
                 source_report_digest=data["view"]["source_digest"],
                 raster_sha256=source["sha256"] if source else None,
-                evidence_digest=evidence_digest,
+                evidence_digest=evidence_digest, image_retention_epoch=retention_epoch,
             )
             return self.repo.request(row, self.ids.new_id("job"))
         if layout in CARD_LAYOUTS:
@@ -410,7 +448,7 @@ class ExportService:
             try:
                 if row.renderer_version == V3_TEMPLATE_VERSION:
                     envelope = self._v3_envelope(owner_id, row.request(), ctx)
-                    return (v3_cache_key(envelope) == row.cache_key
+                    return (v3_cache_key(envelope, row.image_retention_epoch) == row.cache_key
                             and envelope.data["view"]["source_revision"] == row.revision)
                 return cache_key(self.projection(owner_id, row.request()), row.request()) == row.cache_key
             except (NotFound, InvalidInput, NotAuthorized, Conflict, PermanentFailure, Unsupported):
@@ -468,7 +506,7 @@ class ExportWorker:
         try:
             if versioned:
                 envelope = svc._v3_envelope(row.owner_id, request, ctx)
-                if v3_cache_key(envelope) != row.cache_key or envelope.data["view"]["source_revision"] != row.revision:
+                if v3_cache_key(envelope, row.image_retention_epoch) != row.cache_key or envelope.data["view"]["source_revision"] != row.revision:
                     return fail("projection_changed")
                 data = self._renderer.render_envelope_v3(envelope)
             else:
@@ -489,7 +527,7 @@ class ExportWorker:
         try:
             if versioned:
                 current = svc._v3_envelope(row.owner_id, request, ctx)
-                unchanged = (v3_cache_key(current) == row.cache_key
+                unchanged = (v3_cache_key(current, row.image_retention_epoch) == row.cache_key
                              and current.data["view"]["source_revision"] == row.revision)
             else:
                 unchanged = cache_key(svc.projection(row.owner_id, request), request) == row.cache_key
