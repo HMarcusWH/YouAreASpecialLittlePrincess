@@ -1,4 +1,4 @@
-import { ApiError, PayloadError, TransportError, type PrincessApi } from "@princess/api-client";
+import { ApiError, PayloadError, TransportError, type ExportDetail, type PrincessApi } from "@princess/api-client";
 import type { EvidenceBundle, ReportViewModel } from "@princess/contracts";
 import { buildDossier, focusSourceEvidence, sourceImageEligible, t as reportText } from "@princess/report-core";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
@@ -8,7 +8,7 @@ import { Alert, ScrollView, useWindowDimensions, View } from "react-native";
 import { useApp } from "../../../src/bootstrap/AppProvider.tsx";
 import { paperFor, type ExportPhase } from "../../../src/features/exports.ts";
 import type { PremiumState } from "../../../src/features/premium.ts";
-import { Banner, Body, Busy, Button, Card, Heading, Screen } from "../../../src/ui/components.tsx";
+import { Banner, Body, Busy, Button, Card, Choice, Heading, Screen, Toggle } from "../../../src/ui/components.tsx";
 import { DossierView, EvidencePanel, SourceImage } from "../../../src/ui/dossier.tsx";
 import { PremiumOverlay } from "../../../src/ui/premium.tsx";
 import { WIDE_LAYOUT } from "../../../src/ui/theme.ts";
@@ -34,11 +34,13 @@ async function loadReport(api: PrincessApi, reportId: string): Promise<Loaded> {
 export default function Report() {
   const { reportId } = useLocalSearchParams<{ reportId: string }>();
   const id = String(reportId);
-  const { t, services, session, locale, exports, premium } = useApp();
+  const { t, config, services, session, locale, exports, premium } = useApp();
   const { width } = useWindowDimensions();
   const [loaded, setLoaded] = useState<Loaded | "unavailable" | "error" | null>(null);
   const [premiumState, setPremiumState] = useState<PremiumState | null>(null);
   const [exporting, setExporting] = useState<ExportPhase | null>(null);
+  const [exportDetail, setExportDetail] = useState<ExportDetail>("SUMMARY");
+  const [includeExportImage, setIncludeExportImage] = useState(false);
   const [deleted, setDeleted] = useState(false);
   const [focusSectionId, setFocusSectionId] = useState<string | null>(null);
   const scrollRef = useRef<ScrollView>(null);
@@ -99,7 +101,13 @@ export default function Report() {
 
   async function exportPdf() {
     setExporting({ status: "PREPARING" });
-    const phase = await exports.prepare(id, paperFor(Intl.DateTimeFormat().resolvedOptions().locale));
+    const phase = await exports.prepare(
+      id, paperFor(Intl.DateTimeFormat().resolvedOptions().locale),
+      () => false,
+      config.privateV3Exports === true
+        ? { detail: exportDetail, includeImage: includeExportImage && sourceAllowed }
+        : {},
+    );
     setExporting(phase);
   }
 
@@ -143,6 +151,25 @@ export default function Report() {
                          <SourceImage reportId={id} bundle={evidence} locale={locale} view={view}
                                       focusSectionId={focusSectionId} />
                        ) : <Body muted>{reportText(locale, "image.unavailable")}</Body>} />
+          {config.privateV3Exports === true && view.actions.some((a) => a.kind === "EXPORT" && a.enabled) ? (
+            <Card>
+              <Heading>{locale === "sv" ? "PDF-export (privat testläge)" : "PDF export (private test mode)"}</Heading>
+              <Choice label={locale === "sv" ? "Innehåll" : "Content"}
+                      options={[
+                        { value: "SUMMARY" as const, label: locale === "sv" ? "Sammandrag" : "Summary" },
+                        { value: "FULL" as const, label: locale === "sv" ? "Full rapport" : "Full report" },
+                      ]}
+                      value={exportDetail}
+                      onChange={(value) => { setExportDetail(value); setExporting(null); }} />
+              <Toggle label={locale === "sv" ? "Inkludera tillåten handskriftsbild"
+                                              : "Include authorized handwriting image"}
+                      value={includeExportImage && sourceAllowed} disabled={!sourceAllowed}
+                      onChange={(value) => { setIncludeExportImage(value); setExporting(null); }} />
+              {!sourceAllowed ? <Body muted>
+                {locale === "sv" ? "Originalbilden kan inte bifogas." : "Original image cannot be included."}
+              </Body> : null}
+            </Card>
+          ) : null}
           {exporting?.status === "PREPARING" ? <Busy label={t("report.export_preparing")} /> : null}
           {exporting?.status === "READY" ? (
             <Card>
