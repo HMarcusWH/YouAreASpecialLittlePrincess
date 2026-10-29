@@ -115,10 +115,21 @@ class PreparedRaster:
     width: int
     height: int
     data_base64_chunks: tuple[str, ...]
+    # Private provenance, never serialized into the RenderEnvelope contract.
+    source_asset_id: str
+    source_input_sha256: str
+    report_digest: str
+    report_revision: int
+    evidence_digest: str
 
     def __post_init__(self) -> None:
         _verified_raster(self.media_type, self.sha256, self.width, self.height,
                          self.data_base64_chunks)
+        if (not self.source_asset_id or type(self.report_revision) is not int
+                or self.report_revision < 1
+                or any(re.fullmatch(r"[0-9a-f]{64}", value) is None for value in
+                       (self.source_input_sha256, self.report_digest, self.evidence_digest))):
+            _refuse("render_source_provenance_invalid")
 
     def to_dict(self) -> dict:
         return {
@@ -128,7 +139,9 @@ class PreparedRaster:
         }
 
 
-def _reencode_oriented(pixels: np.ndarray) -> PreparedRaster:
+def _reencode_oriented(pixels: np.ndarray, *, source_asset_id: str,
+                       source_input_sha256: str, report_digest: str,
+                       report_revision: int, evidence_digest: str) -> PreparedRaster:
     """Deterministic, metadata-free scaled raster; never crop or invent pixels."""
     if pixels.ndim == 2:
         image = Image.fromarray(pixels, "L")
@@ -156,8 +169,12 @@ def _reencode_oriented(pixels: np.ndarray) -> PreparedRaster:
         blob = stream.getvalue()
         if len(blob) <= MAX_RASTER_BYTES:
             media_type = "image/png" if fmt == "PNG" else "image/jpeg"
-            return PreparedRaster(media_type, hashlib.sha256(blob).hexdigest(),
-                                  image.width, image.height, _encoded_chunks(blob))
+            return PreparedRaster(
+                media_type, hashlib.sha256(blob).hexdigest(), image.width,
+                image.height, _encoded_chunks(blob), source_asset_id,
+                source_input_sha256, report_digest, report_revision,
+                evidence_digest,
+            )
     _refuse("render_raster_too_large")
 
 
@@ -203,7 +220,13 @@ def prepare_authorized_render_assets(*, owner_id: str, report_owner_id: str,
     decoded = decode_image(blob, source.media_type)
     oriented_height, oriented_width = decoded.pixels.shape[:2]
     _frame_matches(evidence_doc, oriented_width, oriented_height)
-    prepared = _reencode_oriented(decoded.pixels)
+    prepared = _reencode_oriented(
+        decoded.pixels, source_asset_id=asset_id,
+        source_input_sha256=source.sha256,
+        report_digest=projection["source_digest"],
+        report_revision=projection["source_revision"],
+        evidence_digest=evidence.digest,
+    )
     if not access.resolve(owner_id, report).source_image_available:
         raise NotFound("source_image_not_available")
     return prepared
@@ -232,6 +255,12 @@ def compile_free_render_envelope(*, report: ValidatedDocument, view: ValidatedDo
             _refuse("render_source_evidence_required")
         if original["analysis"]["input_asset_id"] not in projection["authorized_asset_ids"]:
             _refuse("render_image_not_authorized")
+        if (source_image.source_asset_id != original["analysis"]["input_asset_id"]
+                or source_image.source_input_sha256 != original["analysis"]["input_sha256"]
+                or source_image.report_digest != projection["source_digest"]
+                or source_image.report_revision != projection["source_revision"]
+                or source_image.evidence_digest != evidence.digest):
+            _refuse("render_image_source_mismatch")
     template = original["analysis"]["versions"]["template"]
     presentation = "presentation/2" if template == "individual-report/4" else "presentation/1"
     document = {
