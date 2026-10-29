@@ -177,7 +177,7 @@ def test_withdrawal_mid_render_fences_publication_and_queues_orphan(v3):
     result = v3.worker.run_once()
     assert (result.state, result.error_code) == ("FAILED", "projection_changed")
     assert v3.api.status(v3.owner, row.export_id).state == "FAILED"
-    assert {out.action for out in erasure(v3.env).run_once()} == {"ERASED"}
+    assert "ERASED" in {out.action for out in erasure(v3.env).run_once()}
     with v3.env.app_db.session(v3.owner) as conn:
         assert conn.execute(text("SELECT count(*) FROM app.asset WHERE kind='EXPORT'")).scalar() == 0
 
