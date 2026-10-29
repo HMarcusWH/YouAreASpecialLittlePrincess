@@ -12,7 +12,6 @@ import hashlib
 import io
 import re
 from dataclasses import dataclass
-from typing import Mapping
 
 import numpy as np
 from PIL import Image
