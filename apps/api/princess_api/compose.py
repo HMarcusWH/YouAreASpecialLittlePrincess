@@ -168,7 +168,7 @@ def compose(config: RuntimeConfig) -> Services:
     exports = ExportService(reports=reports, access=access, repo=PostgresExportRepository(db), store=store,
                             clock=clock, ids=UuidIds(), sharing_enabled=lambda: kill_switches.get("sharing", False),
                             permissions=permissions, private_v3_enabled=private_v3,
-                            source_capture=(PostgresIntakeRepository(db).capture_for_asset if private_v3 else None),
+                            source_capture=(PostgresIntakeRepository(db, engine_version=ENGINE_VERSION).capture_for_asset if private_v3 else None),
                             source_sanitizer=clean_source_raster if private_v3 else None)
     return Services(environment=config.environment, clock=clock, identity=identity, permissions=permissions,
                     report_store_for=reports, kill_switches=kill_switches,
