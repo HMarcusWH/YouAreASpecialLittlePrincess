@@ -35,6 +35,10 @@ Missing facts cannot provide content-selection support.
 A word *group* is a geometric spacing proxy, not proof of a linguistic word.
 Image darkness and stroke thickness remain photographic proxies, not pressure.
 
+The [Issue #92 acceptance matrix](../ci/ISSUE_92_ACCEPTANCE_MATRIX.md) is the
+current synthetic/real evidence ledger. A known-positive fixture is not allowed
+to pass through blanket abstention. Real-source and device gates remain separate.
+
 ## Mandatory fixtures / acceptance
 
 - Rights-safe full-frame gray and blue grid, dark-grid same-tone ambiguity,
