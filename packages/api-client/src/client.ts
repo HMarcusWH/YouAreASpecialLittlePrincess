@@ -91,6 +91,15 @@ export type Projection = "FREE" | "OWNER" | "EXPORT";
 
 export type ExportState = "QUEUED" | "READY" | "FAILED" | "REVOKED";
 export type ExportLayout = "A4" | "LETTER" | "CARD_SQUARE" | "CARD_STORY";
+export type ExportDetail = "SUMMARY" | "FULL";
+
+export interface ExportRequestOptions {
+  readonly sections?: readonly string[];
+  readonly shareGrantRef?: string;
+  // Explicit private v3 options; absent fields retain the legacy v2 job.
+  readonly detail?: ExportDetail;
+  readonly includeImage?: boolean;
+}
 
 export interface ExportStatus {
   readonly export_id: string;
@@ -101,6 +110,9 @@ export interface ExportStatus {
   readonly error_code: string | null;
   readonly media_type?: string | null;
   readonly size_bytes?: number | null;
+  readonly renderer_version?: "render-template/3";
+  readonly detail?: ExportDetail;
+  readonly include_image?: boolean;
 }
 
 const EXPORT_STATES = new Set<string>(["QUEUED", "READY", "FAILED", "REVOKED"]);
@@ -115,7 +127,12 @@ export function parseExportStatus(raw: unknown): ExportStatus {
       || (v.media_type !== undefined && v.media_type !== null
           && (typeof v.media_type !== "string" || !EXPORT_MEDIA.has(v.media_type)))
       || (v.size_bytes !== undefined && v.size_bytes !== null
-          && (!Number.isInteger(v.size_bytes) || (v.size_bytes as number) < 0))) {
+          && (!Number.isInteger(v.size_bytes) || (v.size_bytes as number) < 0))
+      || (v.renderer_version !== undefined && v.renderer_version !== "render-template/3")
+      || (v.detail !== undefined && v.detail !== "SUMMARY" && v.detail !== "FULL")
+      || (v.include_image !== undefined && typeof v.include_image !== "boolean")
+      || (v.renderer_version === "render-template/3"
+          && (v.detail === undefined || v.include_image === undefined))) {
     throw new ApiError(502, "unreadable_export_status");
   }
   return v as unknown as ExportStatus;
@@ -323,10 +340,20 @@ export class PrincessApi {
   // --- exports ---------------------------------------------------------------------------------
 
   async requestExport(reportId: string, layout: ExportLayout = "A4",
-                      options: { sections?: readonly string[]; shareGrantRef?: string } = {}): Promise<ExportStatus> {
+                      options: ExportRequestOptions = {}): Promise<ExportStatus> {
     const body: Record<string, unknown> = { report_id: reportId, layout };
     if (options.sections && options.sections.length > 0) body.sections = options.sections;
     if (options.shareGrantRef) body.share_grant_ref = options.shareGrantRef;
+    if (options.detail !== undefined) {
+      if (options.detail !== "SUMMARY" && options.detail !== "FULL") {
+        throw new ApiError(400, "render_detail_invalid");
+      }
+      body.detail = options.detail;
+    }
+    if (options.includeImage !== undefined) {
+      if (typeof options.includeImage !== "boolean") throw new ApiError(400, "render_image_flag_invalid");
+      body.include_image = options.includeImage;
+    }
     return parseExportStatus(await this.call("POST", "/v1/report-exports", body));
   }
 
