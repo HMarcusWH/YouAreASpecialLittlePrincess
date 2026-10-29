@@ -71,7 +71,7 @@ def main() -> int:
     service = ExportService(reports=lambda owner: PostgresReportStore(db, owner), access=PostgresReportAccess(db),
                             repo=PostgresExportRepository(db), store=store, clock=clock, ids=UuidIds(),
                             permissions=permissions, private_v3_enabled=private_v3,
-                            source_capture=(PostgresIntakeRepository(db).capture_for_asset if private_v3 else None),
+                            source_capture=(PostgresIntakeRepository(db, engine_version=ENGINE_VERSION).capture_for_asset if private_v3 else None),
                             source_sanitizer=clean_source_raster if private_v3 else None)
     worker = ExportWorker(
         service=service, renderer=SubprocessRenderer(chromium=os.environ.get("PRINCESS_CHROMIUM")),
