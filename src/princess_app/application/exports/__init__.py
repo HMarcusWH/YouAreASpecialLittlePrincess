@@ -280,6 +280,10 @@ class ExportService:
             capture = self.source_capture(owner_id, input_asset)
             if capture is None or capture.deleted or capture.original_erased:
                 raise NotFound("source_image_not_available")
+            if self.private_v3_enabled:
+                if self.permissions is None or not self.permissions.check(
+                        owner_id, "image_retention", Scope("SPECIMEN", capture.capture_id)).allowed:
+                    raise NotFound("source_image_not_available")
             prepared = prepare_authorized_render_assets(
                 owner_id=owner_id, report_owner_id=saved[0], report=report,
                 view=view, evidence=proof, source=capture.stored_object(),
