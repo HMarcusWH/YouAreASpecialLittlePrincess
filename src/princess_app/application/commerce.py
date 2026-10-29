@@ -24,7 +24,7 @@ from typing import Callable, Mapping, Protocol, Sequence
 from ..domain import commerce as policy
 from ..domain.commerce import GrantDecision, Platform
 from ..domain.permissions import Scope
-from ..domain.reports.suitability import premium_sample_eligible
+from ..domain.reports.suitability import STORY_TEMPLATE_VERSION, premium_sample_eligible
 from ..ports.base import (
     CallContext,
     Clock,
@@ -277,6 +277,14 @@ class CommerceService:
             # precondition before consent lookup, idempotency or reservation.
             # This does not re-evaluate already-published legacy overlays.
             raise InvalidInput("premium_sample_ineligible")
+        # A mechanically supported Free /4 Dossier is NOT a supported Premium
+        # reading-v2 purchase. The new support, image, value, policy and
+        # transactional publication contracts are not installed yet. Never
+        # let direct service callers reserve a credit by bypassing the /4 UI's
+        # intentionally disabled purchase action. An approved R3 versioned
+        # offer must replace this refusal; no request flag can override it.
+        if report.data["analysis"]["versions"]["template"] == STORY_TEMPLATE_VERSION:
+            raise InvalidInput("premium_reading_v2_not_released")
         epoch = self._permissions.require(owner_id, AI_PURPOSE, Scope("REPORT", report_id))
         revision = report.data["revision"]
         key = policy.premium_operation_key(owner_id, report_id, revision, report.data["locale"], POLICY_ID)
