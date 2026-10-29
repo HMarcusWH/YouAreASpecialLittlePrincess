@@ -39,6 +39,10 @@ export default ({ config }: ConfigContext): ExpoConfig => {
   }
   const devIdentity = !remoteGuestOnly && variant === "development" &&
     (backendEnvironment === "local" || backendEnvironment === "test");
+  const privateV3Exports = process.env.INKTROSPECT_RENDER_V3_PRIVATE === "1";
+  if (privateV3Exports && !devIdentity) {
+    throw new Error("INKTROSPECT_RENDER_V3_PRIVATE requires a local/test development build");
+  }
 
   return {
     ...config,
@@ -111,6 +115,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
         apiBaseUrl: process.env.INKTROSPECT_API_BASE ?? "",
         uploadOrigins: list(process.env.INKTROSPECT_UPLOAD_ORIGINS),
         devIdentity,
+        ...(privateV3Exports ? { privateV3Exports: true } : {}),
         linkSchemes: [profile.scheme],
         linkHosts,
       },

@@ -133,3 +133,21 @@ test("remote synthetic guest APK is HTTPS-only and has no development login", ()
     }), /INKTROSPECT_REMOTE_GUEST_ONLY/);
   }
 });
+
+test("native v3 export choices never enter staging/store or remote guest binaries", () => {
+  const config = build({ INKTROSPECT_API_BASE: "http://127.0.0.1:8000",
+                         INKTROSPECT_RENDER_V3_PRIVATE: "1" });
+  const runtime = parseRuntimeConfig((config.extra as { runtime: unknown }).runtime);
+  assert.ok(runtime.ok && runtime.config.privateV3Exports === true);
+  for (const variant of ["store", "staging"] as const) {
+    assert.throws(() => build({
+      INKTROSPECT_APP_VARIANT: variant, INKTROSPECT_RENDER_V3_PRIVATE: "1",
+      INKTROSPECT_API_BASE: "https://api.example.invalid",
+    }), /INKTROSPECT_RENDER_V3_PRIVATE/);
+  }
+  assert.throws(() => build({
+    INKTROSPECT_RENDER_V3_PRIVATE: "1", INKTROSPECT_APP_VARIANT: "development",
+    INKTROSPECT_BACKEND_ENV: "test", INKTROSPECT_REMOTE_GUEST_ONLY: "1",
+    INKTROSPECT_API_BASE: "https://guest.example.invalid",
+  }), /INKTROSPECT_RENDER_V3_PRIVATE/);
+});

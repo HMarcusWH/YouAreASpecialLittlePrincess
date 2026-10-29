@@ -3,12 +3,12 @@
 // into private temporary storage (size/type bounded), hand it to the share
 // sheet and delete the private copy afterwards. No model is ever involved.
 import { ApiError, TransportError, pollDelayMs, type AuthorizedDownload, type ExportLayout,
-         type ExportStatus } from "@princess/api-client";
+         type ExportRequestOptions, type ExportStatus } from "@princess/api-client";
 
 import type { AuthorizedFileClient, DownloadedFile, FileShareClient } from "../platform/contracts.ts";
 
 export interface ExportApi {
-  requestExport(reportId: string, layout?: ExportLayout): Promise<ExportStatus>;
+  requestExport(reportId: string, layout?: ExportLayout, options?: ExportRequestOptions): Promise<ExportStatus>;
   exportStatus(exportId: string): Promise<ExportStatus>;
   exportDownload(exportId: string): Promise<AuthorizedDownload>;
 }
@@ -42,10 +42,11 @@ export class ExportController {
     this.sleep = sleep;
   }
 
-  async prepare(reportId: string, layout: ExportLayout, cancelled: () => boolean = () => false): Promise<ExportPhase> {
+  async prepare(reportId: string, layout: ExportLayout, cancelled: () => boolean = () => false,
+                options: ExportRequestOptions = {}): Promise<ExportPhase> {
     let status: ExportStatus;
     try {
-      status = await this.api.requestExport(reportId, layout);
+      status = await this.api.requestExport(reportId, layout, options);
       for (let attempt = 0; status.state === "QUEUED" && attempt < MAX_POLLS; attempt += 1) {
         if (cancelled()) return { status: "CANCELLED", code: "cancelled" };
         await this.sleep(pollDelayMs(attempt));

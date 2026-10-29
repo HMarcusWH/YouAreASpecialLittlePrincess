@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import { test } from "node:test";
 
 import {
-  ApiError, PayloadError, PrincessApi, SessionEpoch, parseEvidenceBundle, parseNotificationPreferences,
+  ApiError, PayloadError, PrincessApi, SessionEpoch, parseEvidenceBundle, parseExportStatus, parseNotificationPreferences,
   parseReportPage, parseReportView, parseRunStatus, pollDelayMs, reportCacheKey, sha256Hex,
 } from "../src/index.ts";
 
@@ -151,4 +151,54 @@ test("notification preferences are strictly parsed and preserve backend errors",
   );
   assert.equal(calls[1]!.init.method, "PUT");
   assert.equal((calls[1]!.init.headers as Record<string, string>)["content-type"], "application/json");
+});
+
+test("legacy exports omit v3 fields while explicit private Summary/Full requests are typed", async () => {
+  const sent: Array<Record<string, unknown>> = [];
+  const fake = (async (_url: string, init: RequestInit) => {
+    sent.push(JSON.parse(String(init.body)) as Record<string, unknown>);
+    const v3 = "detail" in sent[sent.length - 1]!;
+    return new Response(JSON.stringify({
+      export_id: "export_synthetic", report_id: "report_synthetic", revision: 1,
+      layout: "A4", state: "QUEUED", error_code: null,
+      ...(v3 ? {
+        renderer_version: "render-template/3",
+        detail: sent[sent.length - 1]!.detail,
+        include_image: sent[sent.length - 1]!.include_image ?? false,
+      } : {}),
+    }), { status: 202 });
+  }) as unknown as typeof fetch;
+  const api = new PrincessApi({ baseUrl: "/api", fetch: fake });
+  assert.equal((await api.requestExport("report_synthetic")).renderer_version, undefined);
+  assert.deepEqual(sent[0], { report_id: "report_synthetic", layout: "A4" });
+  const next = await api.requestExport("report_synthetic", "A4", {
+    detail: "SUMMARY", includeImage: false,
+  });
+  assert.equal(next.renderer_version, "render-template/3");
+  assert.equal(next.detail, "SUMMARY");
+  assert.equal(next.include_image, false);
+  assert.deepEqual(sent[1], { report_id: "report_synthetic", layout: "A4",
+                             detail: "SUMMARY", include_image: false });
+  const full = await api.requestExport("report_synthetic", "A4", { detail: "FULL", includeImage: true });
+  assert.equal(full.detail, "FULL");
+  assert.equal(full.include_image, true);
+  await assert.rejects(api.requestExport("report_synthetic", "A4", { detail: "BAD" as "FULL" }),
+    (error: unknown) => error instanceof ApiError && error.code === "render_detail_invalid");
+  assert.equal(sent.length, 3);
+});
+
+
+test("versioned export status parser refuses missing options and unknown render versions", () => {
+  const valid = { export_id: "export_1", report_id: "report_1", revision: 1,
+                  layout: "A4", state: "READY", error_code: null };
+  assert.equal(parseExportStatus(valid).renderer_version, undefined);
+  const v3 = { ...valid, renderer_version: "render-template/3", detail: "SUMMARY", include_image: false };
+  assert.equal(parseExportStatus(v3).include_image, false);
+  for (const corrupt of [
+    { ...v3, detail: "summary" }, { ...v3, include_image: "true" },
+    { ...v3, renderer_version: "render-template/4" }, { ...v3, detail: undefined },
+  ]) {
+    assert.throws(() => parseExportStatus(corrupt),
+      (error: unknown) => error instanceof ApiError && error.code === "unreadable_export_status");
+  }
 });

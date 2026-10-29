@@ -3,7 +3,8 @@ export {
   parseNotificationPreferences, pollDelayMs, reportCacheKey, sha256Hex,
 } from "./client.ts";
 export type {
-  AuthorizedDownload, Capture, ClientOptions, CredentialSource, ExportLayout, ExportState, ExportStatus,
+  AuthorizedDownload, Capture, ClientOptions, CredentialSource, ExportDetail, ExportLayout,
+  ExportRequestOptions, ExportState, ExportStatus,
   NotificationPreferences, Projection, UploadTicket,
 } from "./client.ts";
 export { PayloadError, parseEvidenceBundle, parseReportPage, parseReportView, parseRunStatus } from "./guards.ts";

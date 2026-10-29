@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 
-import { ApiError, PrincessApi, pollDelayMs, type ExportStatus } from "@princess/api-client";
+import { ApiError, PrincessApi, pollDelayMs, type ExportDetail, type ExportStatus } from "@princess/api-client";
 import type { EvidenceBundle, ReportViewModel } from "@princess/contracts";
 import { ReportView, t, type Locale } from "@princess/report-web";
 import { focusSourceEvidence, sourceImageEligible } from "@princess/report-core";
@@ -12,10 +12,13 @@ type Phase = { kind: "idle" } | { kind: "preparing" } | { kind: "ready"; href: s
 
 /** The owner report with its working actions. Only EXPORT has a flow here;
  * the API marks the others disabled with a reason. */
-export function ReportClient({ view, locale, evidence, evidenceUnreadable = false }: {
+export function ReportClient({ view, locale, evidence, evidenceUnreadable = false, privateV3 = false }: {
   view: ReportViewModel; locale: Locale; evidence: EvidenceBundle | null; evidenceUnreadable?: boolean;
+  privateV3?: boolean;
 }) {
   const [phase, setPhase] = useState<Phase>({ kind: "idle" });
+  const [exportDetail, setExportDetail] = useState<ExportDetail>("SUMMARY");
+  const [includeImage, setIncludeImage] = useState(false);
   const [selectedSectionId, setSelectedSectionId] = useState<string | null>(null);
   const stopped = useRef(false);
   const sourceUrl = sourceImageEligible(view)
@@ -35,7 +38,10 @@ export function ReportClient({ view, locale, evidence, evidenceUnreadable = fals
     const api = new PrincessApi({ baseUrl: "/api" });
     setPhase({ kind: "preparing" });
     try {
-      let status: ExportStatus = await api.requestExport(view.source_report_id, "A4");
+      let status: ExportStatus = await api.requestExport(
+        view.source_report_id, "A4",
+        privateV3 ? { detail: exportDetail, includeImage: includeImage && sourceUrl !== null } : {},
+      );
       for (let attempt = 0; status.state === "QUEUED" && attempt < 40 && !stopped.current; attempt++) {
         await new Promise((resolve) => setTimeout(resolve, pollDelayMs(attempt)));
         status = await api.exportStatus(status.export_id);
@@ -59,6 +65,30 @@ export function ReportClient({ view, locale, evidence, evidenceUnreadable = fals
                   onAction={(kind) => { if (kind === "EXPORT") void exportPdf(); }} />
       {evidenceUnreadable && (
         <p role="alert" className="error">The saved evidence could not be read safely, so it is not shown.</p>
+      )}
+      {privateV3 && view.actions.some((action) => action.kind === "EXPORT" && action.enabled) && (
+        <fieldset className="stack" data-private-v3-export>
+          <legend>{locale === "sv" ? "PDF-export (privat testläge)" : "PDF export (private test mode)"}</legend>
+          <label htmlFor="export-detail">
+            {locale === "sv" ? "Innehåll" : "Content"}
+          </label>
+          <select id="export-detail" value={exportDetail} disabled={phase.kind === "preparing"}
+                  onChange={(event) => { setExportDetail(event.target.value as ExportDetail);
+                                        setPhase({ kind: "idle" }); }}>
+            <option value="SUMMARY">{locale === "sv" ? "Sammandrag" : "Summary"}</option>
+            <option value="FULL">{locale === "sv" ? "Full rapport" : "Full report"}</option>
+          </select>
+          <label>
+            <input type="checkbox" checked={includeImage} disabled={sourceUrl === null || phase.kind === "preparing"}
+                   onChange={(event) => { setIncludeImage(event.target.checked);
+                                         setPhase({ kind: "idle" }); }} />
+            {locale === "sv" ? "Inkludera tillåten handskriftsbild" : "Include authorized handwriting image"}
+          </label>
+          {sourceUrl === null && <p className="muted">
+            {locale === "sv" ? "Originalbilden är inte tillgänglig för export."
+                             : "The original image is not available for export."}
+          </p>}
+        </fieldset>
       )}
       <div className="stack" aria-live="polite" data-export={phase.kind}>
         {phase.kind === "preparing" && <p role="status">{t(locale, "export.preparing")}</p>}

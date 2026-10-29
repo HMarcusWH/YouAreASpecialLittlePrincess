@@ -18,6 +18,7 @@ from fastapi import FastAPI
 
 from princess_app.adapters.fakes import FakeAbuseChallenge, FakeIdentityProvider, FakePaymentProvider
 from princess_app.adapters.imaging import inspect_header
+from princess_app.adapters.render.assets import clean_source_raster
 from princess_app.adapters.localfs import LocalObjectStore
 from princess_app.adapters.localfs.tombstones import JsonlTombstoneLog
 from princess_app.adapters.postgres.access import PostgresReportAccess
@@ -49,7 +50,7 @@ from princess_app.domain.reports.template import EVIDENCE_SUPPORT_TEMPLATE_VERSI
 from princess_app.config_supabase import normalized_manifest_sha256, parse_supabase_staging_runtime_binding
 from princess_app.domain.commerce import CATALOG
 from princess_app.ports.payments import PaymentRail
-from princess_app.ports.base import Environment, ProviderMode, SystemClock, Unsupported
+from princess_app.ports.base import Environment, InvalidInput, ProviderMode, SystemClock, Unsupported
 from princess_graphology import __version__ as ENGINE_VERSION
 
 from .app import Services, create_app
@@ -125,6 +126,14 @@ def compose(config: RuntimeConfig) -> Services:
     provider = compose_identity_provider(config, clock)
     public_guest_only = (config.environment is Environment.TEST
                          and os.environ.get("PRINCESS_TEST_PUBLIC_GUEST_ONLY") == "1")
+    v3_flag = os.environ.get("PRINCESS_RENDER_V3_RESEARCH_OPT_IN", "0")
+    if v3_flag not in ("0", "1"):
+        raise InvalidInput("render_v3_opt_in_invalid")
+    if v3_flag == "1" and (
+            config.environment not in (Environment.LOCAL, Environment.TEST)
+            or public_guest_only):
+        raise Unsupported("render_v3_private_only")
+    private_v3 = v3_flag == "1"
     admission = GuestAdmission(limit=int(os.environ.get("PRINCESS_GUEST_ADMISSIONS_PER_MINUTE", "300")))
     identity = IdentityService(provider, PostgresIdentityStore(db), clock, UuidIds(),
                                guest_admission=admission)
@@ -158,7 +167,9 @@ def compose(config: RuntimeConfig) -> Services:
     access = PostgresReportAccess(db)
     exports = ExportService(reports=reports, access=access, repo=PostgresExportRepository(db), store=store,
                             clock=clock, ids=UuidIds(), sharing_enabled=lambda: kill_switches.get("sharing", False),
-                            permissions=permissions)
+                            permissions=permissions, private_v3_enabled=private_v3,
+                            source_capture=(PostgresIntakeRepository(db, engine_version=ENGINE_VERSION).capture_for_asset if private_v3 else None),
+                            source_sanitizer=clean_source_raster if private_v3 else None)
     return Services(environment=config.environment, clock=clock, identity=identity, permissions=permissions,
                     report_store_for=reports, kill_switches=kill_switches,
                     dev_identity=provider if isinstance(provider, FakeIdentityProvider) and not public_guest_only else None,

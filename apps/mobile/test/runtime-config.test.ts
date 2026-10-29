@@ -42,3 +42,20 @@ test("missing or malformed configuration fails closed with a code", () => {
   const withUploads = parseRuntimeConfig({ ...dev, uploadOrigins: ["https://uploads.example"] });
   assert.ok(withUploads.ok && withUploads.config.uploadOrigins.has("https://uploads.example"));
 });
+
+test("private v3 exports only exist in explicit development/local or development/test builds", () => {
+  const enabled = parseRuntimeConfig({ ...dev, privateV3Exports: true });
+  assert.ok(enabled.ok && enabled.config.privateV3Exports === true);
+  assert.equal(parseRuntimeConfig({ ...dev }).ok, true);
+  const denied = [
+    { ...dev, variant: "store", backendEnvironment: "production", apiBaseUrl: "https://api.example.invalid",
+      devIdentity: false, privateV3Exports: true },
+    { ...dev, backendEnvironment: "preview", devIdentity: false, privateV3Exports: true },
+    { ...dev, devIdentity: false, privateV3Exports: true },
+  ];
+  for (const candidate of denied) {
+    assert.deepEqual(parseRuntimeConfig(candidate), { ok: false, code: "config_private_v3_not_allowed" });
+  }
+  assert.deepEqual(parseRuntimeConfig({ ...dev, privateV3Exports: "true" }),
+                   { ok: false, code: "config_private_v3_invalid" });
+});

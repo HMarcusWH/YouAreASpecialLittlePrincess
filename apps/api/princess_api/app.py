@@ -177,6 +177,10 @@ class ExportBody(_Strict):
     sections: list[str] = Field(default_factory=list, max_length=8)
     # Cards: the ordinary_sharing grant (scope SHARE_GRANT) the card falls under.
     share_grant_ref: str | None = Field(default=None, pattern=r"^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$")
+    # Absence of both fields keeps existing FULL/no-image render-template/2.
+    # Any explicit option requests a separately private-gated v3 workflow.
+    detail: Literal["SUMMARY", "FULL"] | None = None
+    include_image: bool | None = Field(default=None, strict=True)
 
 
 class ComparisonBody(_Strict):
@@ -208,13 +212,17 @@ class NotificationPreferencesBody(_Strict):
 
 
 def export_status(row: ExportRow) -> dict:
-    return {"export_id": row.export_id, "report_id": row.report_id, "revision": row.revision,
-            "layout": row.layout, "sections": list(row.sections), "state": row.state,
-            "media_type": row.media_type, "size_bytes": row.size_bytes, "error_code": row.error_code,
-            "created_at": rfc3339(row.created_at),
-            "completed_at": rfc3339(row.completed_at) if row.completed_at else None,
-            # Revocation stops our copy being served; a file already saved elsewhere cannot be recalled.
-            "downloaded_copies": NOT_RECALLABLE}
+    result = {"export_id": row.export_id, "report_id": row.report_id, "revision": row.revision,
+              "layout": row.layout, "sections": list(row.sections), "state": row.state,
+              "media_type": row.media_type, "size_bytes": row.size_bytes, "error_code": row.error_code,
+              "created_at": rfc3339(row.created_at),
+              "completed_at": rfc3339(row.completed_at) if row.completed_at else None,
+              # Revocation stops our copy being served; a file already saved elsewhere cannot be recalled.
+              "downloaded_copies": NOT_RECALLABLE}
+    if row.renderer_version == "render-template/3":
+        result.update({"renderer_version": row.renderer_version,
+                       "detail": row.detail, "include_image": row.include_image})
+    return result
 
 
 async def read_bounded(request: Request, limit: int) -> bytes:
@@ -549,10 +557,19 @@ def create_app(services: Services) -> FastAPI:
         return services.exports
 
     @app.post("/v1/report-exports", status_code=202)
-    def request_export(body: ExportBody, who: Principal = Depends(principal)) -> dict:
+    def request_export(body: ExportBody, request: Request, who: Principal = Depends(principal)) -> dict:
         """Render the authorized projection of the latest revision. Never calls a model."""
-        return export_status(exports().request(who.principal_id, body.report_id, body.layout,
-                                               tuple(body.sections), body.share_grant_ref))
+        # Explicit null is not omission. It must not silently select the
+        # legacy v2 renderer after a caller attempted a v3 option.
+        if (("detail" in body.model_fields_set and body.detail is None)
+                or ("include_image" in body.model_fields_set and body.include_image is None)):
+            raise InvalidInput("render_v3_document_options_invalid")
+        return export_status(exports().request(
+            who.principal_id, body.report_id, body.layout,
+            tuple(body.sections), body.share_grant_ref,
+            detail=body.detail, include_image=body.include_image,
+            ctx=call_context(request),
+        ))
 
     @app.get("/v1/report-exports/{export_id}")
     def read_export(export_id: str, who: Principal = Depends(principal)) -> dict:
