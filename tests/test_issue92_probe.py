@@ -74,7 +74,8 @@ def test_same_decoded_input_is_compared_in_four_distinct_pinned_profiles(tmp_pat
     assert case["profiles"][-1]["word_audit"] is not None
     assert result["profiles"]["qualified-v2-guard-v5"]["lines"]["nonempty_coverage"] == 1.0
     encoded = json.dumps(result, allow_nan=False)
-    for forbidden in ("generated-0", "synthetic-writer", "image_path", "sha256\": \""):
+    for forbidden in ("generated-0", "synthetic-writer", "image_path",
+                      "input_pixels_sha256", "source_image_sha256", "capture_group"):
         assert forbidden not in encoded
 
 
