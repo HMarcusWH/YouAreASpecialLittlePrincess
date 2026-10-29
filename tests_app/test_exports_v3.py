@@ -160,7 +160,7 @@ def test_source_image_requires_current_explicit_specimen_retention_grant(v3):
     assert v3.worker.run_once().state == "READY"
     assert v3.worker.run_once().state == "READY"
     supplied = next(row for row in v3.renderer.v3 if row.data["source_image"] is not None)
-    assert supplied.data["view"]["authorized_asset_ids"] == [v3.capture.asset_id]
+    assert supplied.data["view"]["authorized_asset_ids"] == (v3.capture.asset_id,)
     assert supplied.data["source_image"]["sha256"] == image.raster_sha256
     v3.grant_image(Decision.WITHDRAW)
     with pytest.raises(NotFound, match="export_stale"):
