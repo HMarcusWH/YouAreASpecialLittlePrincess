@@ -26,6 +26,13 @@ from test_persistence import account, world  # noqa: F401 - fixture re-export
 from princess_graphology import __version__ as ENGINE_VERSION
 
 
+class V3ExportIds(SequentialIds):
+    """Export queue IDs cannot alias the analysis fixture's job namespace."""
+
+    def new_id(self, prefix: str) -> str:
+        return super().new_id(f"{prefix}_v3export")
+
+
 class V3Renderer:
     def __init__(self):
         self.v3 = []
@@ -54,7 +61,7 @@ class Harness:
         assert env.worker().run_once().outcome == "SUCCEEDED"
         self.report_id = env.intake.status(self.owner, run).report_id
         self.renderer = V3Renderer()
-        self.ids = SequentialIds()
+        self.ids = V3ExportIds()
 
         def build(db, enabled=True):
             return ExportService(
