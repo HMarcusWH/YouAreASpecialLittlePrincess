@@ -142,9 +142,10 @@ export function parseV3Envelope(raw: string): CheckedV3Envelope {
   // render a purchased overlay through this temporary offline v3 entrypoint.
   if (env.premium !== null) fail("render_v3_premium_not_released");
   const view = parseReportView(env.view);
+  const locale = env.locale as "en" | "sv";
   if (view.generated_at !== env.generated_at ||
-      (view.locale !== env.locale && view.locale !== env.locale + "-SE" &&
-       view.locale !== env.locale + "-GB" && view.locale !== env.locale + "-US") ||
+      (view.locale !== locale && view.locale !== locale + "-SE" &&
+       view.locale !== locale + "-GB" && view.locale !== locale + "-US") ||
       view.sections.some((s) => s.premium_section_id !== null)) {
     fail("render_v3_view_source_mismatch");
   }
