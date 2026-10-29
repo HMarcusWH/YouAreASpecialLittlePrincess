@@ -398,3 +398,55 @@ def test_raw_source_sha_is_not_enough_if_decoded_analyzed_pixels_mismatch(fixtur
             report=report, view=view, evidence=evidence, source=source,
             store=SourceStore(blob), access=CurrentAccess(), ctx=CTX,
         )
+
+
+def test_free_envelope_rejects_saved_paid_projection_instead_of_laundering_content():
+    import generate_report_fixtures as fixtures
+    from princess_contracts import compile_document
+    from princess_app.domain.reports import (
+        PremiumAccess, PremiumAuthorization, revise_report,
+    )
+
+    base = compile_document("ReportDocument", fixtures.load("report-document.v2.json"))
+    assert base.ok, base.issues
+    revised = revise_report(
+        base.value, created_at=NOW + timedelta(minutes=1),
+        premium_overlay_id="overlay_synthetic_paid",
+    )
+    assert revised.ok, revised.issues
+    paid = revised.value
+    authority = PremiumAuthorization(
+        report_id=paid.data["report_id"],
+        overlay_id="overlay_synthetic_paid",
+        state=PremiumAccess.UNLOCKED,
+    )
+    projection = project_report(paid, ProjectionRequest(
+        projection="EXPORT", generated_at=NOW, premium=authority,
+        include_source_image=False,
+    ))
+    assert projection.ok, projection.issues
+    assert any(s["premium_section_id"] is not None for s in projection.value.data["sections"])
+    with pytest.raises(InvalidInput, match="render_free_premium_scope_invalid"):
+        compile_free_render_envelope(
+            report=paid, view=projection.value, layout="A4", detail="FULL",
+        )
+
+
+def test_private_v3_candidate_rejects_nonboolean_image_selection(fixture):
+    from princess_app.adapters.fakes import FakeClock, SequentialIds
+    from princess_app.application.exports import ExportService
+    from princess_app.application.reports import InMemoryReportStore
+
+    _blob, _mime, report, _view, evidence, _source = fixture
+    reports = InMemoryReportStore()
+    reports.append("owner_render_synthetic", report)
+    reports.bind_evidence(report.data["report_id"], evidence)
+    service = ExportService(
+        reports=lambda _owner: reports, access=CurrentAccess(),
+        repo=None, store=None, clock=FakeClock(NOW), ids=SequentialIds(),
+    )
+    with pytest.raises(InvalidInput, match="render_v3_image_flag_invalid"):
+        service.private_free_v3_candidate(
+            "owner_render_synthetic", report.data["report_id"], "A4",
+            include_image="true",
+        )
