@@ -19,7 +19,7 @@ const PRINT_TEXT: Record<Locale, Record<string, string>> = {
     "print.summary": "Summary · selected evidence and facts",
     "print.full": "Full technical appendix · all authorized measurements",
     "print.source": "Authorized handwriting source and supported regions",
-    "print.source_limit": "Only saved, eligible regions are shown; other geometry is not evidence.",
+    "print.source_limit": "Up to 24 saved, eligible regions are shown; other geometry is not evidence.",
     "card.context": "Handwriting measurements — not a personality test",
     "card.no_handwriting_measurements": "No supported handwriting measurements shown",
   },
@@ -33,7 +33,7 @@ const PRINT_TEXT: Record<Locale, Record<string, string>> = {
     "print.summary": "Sammandrag · utvalt underlag och mätvärden",
     "print.full": "Fullständig teknisk bilaga · alla behöriga mätvärden",
     "print.source": "Godkänd handskriftsbild och belagda regioner",
-    "print.source_limit": "Endast sparade, godkända regioner visas; övrig geometri är inte belägg.",
+    "print.source_limit": "Högst 24 sparade, godkända regioner visas; övrig geometri är inte belägg.",
     "card.context": "Handstilsmätningar — inget personlighetstest",
     "card.no_handwriting_measurements": "Inga styrkta handskriftsmätvärden visas",
   },
@@ -55,7 +55,7 @@ export function summaryView(view: ReportViewModel): ReportViewModel {
   return { ...view, sections: selected, facts: view.facts.filter((f) => ids.has(f.fact_id)) };
 }
 
-export function PrintReport({ view, locale, generatedAt, detail = "FULL", evidence, sourceEvidence }: {
+export function PrintReport({ view, locale, generatedAt, detail, evidence, sourceEvidence }: {
   view: ReportViewModel; locale: Locale; generatedAt: string;
   detail?: "SUMMARY" | "FULL"; evidence?: EvidenceBundle | null; sourceEvidence?: ReactNode;
 }) {
@@ -66,7 +66,7 @@ export function PrintReport({ view, locale, generatedAt, detail = "FULL", eviden
         <p className="pr-print-brand">Inktrospect</p>
         <p className="pr-print-kicker">{p(locale, "print.dossier")}</p>
         <h1>{t(locale, `projection.${view.projection}`)}</h1>
-        <p className="pr-print-detail">{p(locale, detail === "SUMMARY" ? "print.summary" : "print.full")}</p>
+        {detail && <p className="pr-print-detail">{p(locale, detail === "SUMMARY" ? "print.summary" : "print.full")}</p>}
         <p className="pr-print-meta">
           {p(locale, "print.report")} {view.source_report_id} · {t(locale, "report.revision")} {view.source_revision}
           {" · "}{p(locale, "print.generated")} {generatedAt}
