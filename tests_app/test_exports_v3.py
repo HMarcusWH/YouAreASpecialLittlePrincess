@@ -61,7 +61,7 @@ class Harness:
                 reports=lambda owner: PostgresReportStore(db, owner),
                 access=PostgresReportAccess(db), repo=PostgresExportRepository(db),
                 store=env.store, clock=env.clock, ids=self.ids, permissions=env.permissions,
-                source_capture=PostgresIntakeRepository(db).capture_for_asset,
+                source_capture=PostgresIntakeRepository(db, engine_version=ENGINE_VERSION).capture_for_asset,
                 source_sanitizer=clean_source_raster, private_v3_enabled=enabled,
             )
 
