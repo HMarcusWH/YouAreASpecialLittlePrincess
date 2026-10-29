@@ -84,7 +84,10 @@ def main() -> int:
         context=context, worker_id=f"analysis-{uuid.uuid4().hex[:8]}", engine_version=__version__,
         writer_template=report_runtime.writer_template,
         story_policy=story_source.policy if story_source is not None else None,
-        story_source_sha256=story_source.sha256 if story_source is not None else None)
+        story_source_sha256=story_source.sha256 if story_source is not None else None,
+        private_qualified_story_candidate=(
+            story_source.private_qualified_candidate if story_source is not None else False),
+    )
     permissions = PermissionService(PostgresPermissionStore(db), clock, UuidIds(), allow_draft_policy=local)
     repo = PostgresIntakeRepository(db, engine_version=__version__)
     erasure = ErasureWorker(outbox=PostgresErasureOutbox(db), store=store, permissions=permissions, clock=clock,
