@@ -48,7 +48,7 @@ from ...domain.permissions import Scope
 from ..permissions import PermissionService
 from ..reports import ReportAccessResolver, ReportReader, ReportStore, ShareAccess
 from ..intake import CaptureRow
-from .assets import compile_free_render_envelope, prepare_authorized_render_assets
+from .assets import CleanSourceRaster, compile_free_render_envelope, prepare_authorized_render_assets
 
 TEMPLATE_VERSION = "render-template/2"
 DOCUMENT_LAYOUTS = frozenset({"A4", "LETTER"})
@@ -179,6 +179,7 @@ class ExportService:
     # Optional trusted internal capture record lookup. The existing /2 export
     # API/worker does not call it; private v3 preview is not a release flag.
     source_capture: Callable[[str, str], CaptureRow | None] | None = None
+    source_sanitizer: Callable[[bytes, str], CleanSourceRaster] | None = None
 
     def private_free_v3_candidate(self, owner_id: str, report_id: str, layout: str, *,
                                   detail: str = "SUMMARY", include_image: bool = False,
@@ -209,7 +210,8 @@ class ExportService:
             proof = current_store.evidence(report_id)
         prepared = None
         if include_image:
-            if ctx is None or self.source_capture is None or self.access is None:
+            if (ctx is None or self.source_capture is None or self.access is None
+                    or self.source_sanitizer is None):
                 raise Unsupported("render_v3_source_adapter_not_configured")
             if proof is None:
                 raise NotFound("source_image_not_available")
@@ -221,6 +223,7 @@ class ExportService:
                 owner_id=owner_id, report_owner_id=saved[0], report=report,
                 view=view, evidence=proof, source=capture.stored_object(),
                 store=self.store, access=self.access, ctx=ctx,
+                sanitize=self.source_sanitizer,
             )
         return compile_free_render_envelope(
             report=report, view=view, layout=layout, detail=detail,
