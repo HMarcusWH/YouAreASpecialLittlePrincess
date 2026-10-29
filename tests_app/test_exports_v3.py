@@ -74,6 +74,7 @@ class Harness:
         self.disabled = build(app_db, enabled=False)
 
     def grant_image(self, decision=Decision.GRANT):
+        self.env.clock.advance(1)
         self.env.permissions.record(
             subject_id=self.owner, actor_id=self.owner, purpose_id="image_retention",
             scope=Scope("SPECIMEN", self.capture.capture_id),
@@ -147,6 +148,8 @@ def test_source_image_requires_current_explicit_specimen_retention_grant(v3):
     assert image.raster_sha256 is not None
     assert image.evidence_digest is not None
     assert image.renderer_version == V3_TEMPLATE_VERSION
+    assert type(image.image_retention_epoch) is int
+    assert noimage.image_retention_epoch is None
     assert v3.worker.run_once().state == "READY"
     assert v3.worker.run_once().state == "READY"
     supplied = next(row for row in v3.renderer.v3 if row.data["source_image"] is not None)
@@ -233,3 +236,34 @@ def test_invalid_private_v3_options_never_silently_fall_back_to_legacy(v3, kwarg
         v3.api.request(v3.owner, v3.report_id, layout,
                        detail=kwargs["detail"], include_image=kwargs["include_image"],
                        ctx=v3.env.ctx())
+
+
+def test_withdrawal_then_regrant_does_not_resurrect_old_image_cache(v3):
+    v3.grant_image()
+    old = request(v3, image=True)
+    assert v3.worker.run_once().state == "READY"
+    old_epoch = old.image_retention_epoch
+    v3.grant_image(Decision.WITHDRAW)
+    v3.grant_image(Decision.GRANT)
+    new = request(v3, image=True)
+    assert new.image_retention_epoch > old_epoch
+    assert new.cache_key != old.cache_key
+    assert new.export_id != old.export_id
+    with pytest.raises(NotFound, match="export_stale"):
+        v3.api.download(v3.owner, old.export_id, v3.env.ctx())
+    assert v3.api.status(v3.owner, old.export_id).state == "REVOKED"
+    assert v3.worker.run_once().state == "READY"
+    assert v3.api.download(v3.owner, new.export_id, v3.env.ctx())[0].startswith(b"%PDF-")
+
+
+def test_transactional_publication_refuses_changed_image_permission_epoch(v3):
+    v3.grant_image()
+    row = request(v3, image=True)
+    claim = v3.worker_service.repo.claim("manual-epoch", 120, v3.env.clock.now())
+    assert claim.row.image_retention_epoch == row.image_retention_epoch
+    v3.grant_image(Decision.WITHDRAW)
+    # Even a previously rendered and digested PDF may not be published after
+    # revocation. This cannot be repaired by an outside-transaction precheck.
+    stored = v3.env.store.write_derivative(
+        "asset_epoch_export_v3", None, b"%PDF-1.7\\nsynthetic", "application/pdf", v3.env.ctx())
+    assert v3.worker_service.repo.publish(claim, stored, v3.env.clock.now()) is False
