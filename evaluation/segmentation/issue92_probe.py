@@ -141,8 +141,8 @@ def _profile_probe(image, reference_lines, reference_words, *, candidate, budget
 def _aggregate(rows, kind):
     labelled = [
         row for row in rows
-        if row["reference_" + kind + "_n"] is not None
-        and row["reference_" + kind + "_n"] > 0
+        if row["reference_" + kind + "s_n"] is not None
+        and row["reference_" + kind + "s_n"] > 0
     ]
     scores = [
         row["result"][kind + "_match"] for row in labelled
