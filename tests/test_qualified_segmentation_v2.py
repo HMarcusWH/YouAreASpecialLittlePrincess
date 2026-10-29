@@ -235,3 +235,62 @@ def test_qualified_v2_records_provenance_on_every_canonical_measurement():
         assert meta["grid_preprocessing"] == "grid-v2"
         assert meta["quality_policy"] == "quality-policy/2"
         assert meta["qualified_support"] is (measurement.raw_value is not None)
+
+
+@pytest.mark.parametrize("guard", [False, True], ids=["without-v5-guard", "with-v5-guard"])
+def test_predeclared_ruled_positive_requires_real_ink_with_both_guard_states(guard):
+    """An eligible synthetic ruled specimen must be accepted, not blanket-rejected.
+
+    This is engineering coverage, not accuracy evidence for human handwriting.
+    The two independent research switches must both be exercised so a passing
+    guarded case does not hide an unguarded segmentation regression.
+    """
+    image, source_pen, _boxes, references = page(
+        ruling="gray", pen="black", with_annotations=True,
+    )
+    result, evidence = GraphologyEngine(
+        grid_profile="qualified-v2", deskew_enabled=False,
+        evidence_guard_enabled=guard,
+    ).analyze_with_evidence(image)
+    assert len(result.measurements) == 64
+    assert result.measurements["PAGE_LINE_COUNT"].raw_value == 1
+    assert result.measurements["PAGE_WORD_COUNT"].raw_value >= 2
+    assert result.metadata["qualification"]["lines"] == "qualified"
+    assert result.metadata["qualification"]["words"] == "qualified"
+    assert len([r for r in result.regions if r.scope == "LINE"]) == 1
+    transformed_ink = source_mask_in_analysis_frame(source_pen, result)
+    transformed_ruling = source_mask_in_analysis_frame(references["ruling_mask"], result)
+    for region in result.regions:
+        if region.scope not in ("LINE", "WORD"):
+            continue
+        box = region.box
+        ink_support = transformed_ink[box.y:box.y2, box.x:box.x2]
+        assert np.count_nonzero(ink_support) > 0, "a printed rule became text"
+        assert np.count_nonzero(ink_support) >= np.count_nonzero(
+            transformed_ruling[box.y:box.y2, box.x:box.x2]
+        ) * 0.02, "text box has negligible independent pen support"
+    assert any(row["scope"] == "LINE" for row in evidence["regions"])
+    if guard:
+        assert result.metadata["evidence_support_audit"]["reason"] is None
+        assert "evidence_support" not in result.metadata
+    else:
+        assert "evidence_support_audit" not in result.metadata
+
+
+@pytest.mark.parametrize("guard", [False, True], ids=["without-v5-guard", "with-v5-guard"])
+def test_predeclared_blank_never_becomes_positive_with_either_guard_state(guard):
+    """The independent guard is not a substitute for qualified-v2's own gate."""
+    image, _pen_mask, _boxes = grid_only(ruling="none")
+    result, evidence = GraphologyEngine(
+        grid_profile="qualified-v2", deskew_enabled=False,
+        evidence_guard_enabled=guard,
+    ).analyze_with_evidence(image)
+    for feature_id in ("PAGE_LINE_COUNT", "PAGE_WORD_COUNT",
+                       "PAGE_TEXT_AREA_RATIO", "BASELINE_ANGLE_MEAN"):
+        measurement = result.measurements[feature_id]
+        assert measurement.raw_value is None
+        assert measurement.quality_flag == "MISSING"
+    assert not [region for region in result.regions if region.scope in ("LINE", "WORD")]
+    assert not [region for region in evidence["regions"]
+                if region["scope"] in ("LINE", "WORD", "BASELINE_POINT")]
+    assert len(result.measurements) == 64
