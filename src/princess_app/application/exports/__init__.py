@@ -189,6 +189,8 @@ class ExportService:
         explicitly route/persist this new envelope, bind cache disclosure
         identities, and recheck access at publication and download.
         """
+        if type(include_image) is not bool:
+            raise InvalidInput("render_v3_image_flag_invalid")
         if layout not in DOCUMENT_LAYOUTS or detail not in ("SUMMARY", "FULL"):
             raise InvalidInput("render_v3_document_options_invalid")
         current_store = self.reports(owner_id)
