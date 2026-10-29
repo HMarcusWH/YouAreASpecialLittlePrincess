@@ -18,7 +18,7 @@ from princess_app.application.intake import analysis_config_sha256
 def _manifest(tmp_path, cases, *, version=2, split="synthetic",
               synthetic=True, annotation_frame="original_image"):
     rows = []
-    for index, (image, paper, annotations) in enumerate(cases):
+    for index, (image, paper, truth_boxes) in enumerate(cases):
         payload = cv2.imencode(".png", image)[1].tobytes()
         name = f"generated-{index}.png"
         (tmp_path / name).write_bytes(payload)
@@ -29,7 +29,7 @@ def _manifest(tmp_path, cases, *, version=2, split="synthetic",
             "image_path": name,
             "sha256": hashlib.sha256(payload).hexdigest(),
             "paper": paper,
-            **annotations,
+            **truth_boxes,
         }
         rows.append(row)
     path = tmp_path / "synthetic-manifest.json"
