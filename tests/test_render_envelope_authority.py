@@ -280,3 +280,90 @@ def test_new_envelope_is_separate_from_existing_legacy_export_identity(fixture):
             compile_free_render_envelope(
                 report=report, view=view, layout="A4", detail=value,
             )
+
+
+def test_private_v3_service_resolves_exact_owner_and_saved_evidence(fixture):
+    """The private assembly seam can use real report and capture ports."""
+    from princess_app.adapters.fakes import FakeClock, SequentialIds
+    from princess_app.application.exports import ExportService
+    from princess_app.application.intake import CaptureRow
+    from princess_app.application.reports import InMemoryReportStore
+
+    blob, mime, report, _view, evidence, source = fixture
+    reports = InMemoryReportStore()
+    reports.append("owner_render_synthetic", report)
+    reports.bind_evidence(report.data["report_id"], evidence)
+    capture = CaptureRow(
+        capture_id="capture_render_synthetic",
+        owner_id="owner_render_synthetic",
+        upload_id="upload_render_synthetic",
+        asset_id=source.asset_id,
+        media_type=mime,
+        width=420,
+        height=260,
+        exif_orientation=1,
+        sha256=source.sha256,
+        version_ref=source.version_ref,
+        size_bytes=source.size_bytes,
+    )
+    store = SourceStore(blob)
+    lookups = []
+
+    def authorized_capture(owner, asset_id):
+        lookups.append((owner, asset_id))
+        return capture
+
+    service = ExportService(
+        reports=lambda _owner: reports, access=CurrentAccess(), repo=None,
+        store=store, clock=FakeClock(NOW), ids=SequentialIds(),
+        source_capture=authorized_capture,
+    )
+    no_image = service.private_free_v3_candidate(
+        "owner_render_synthetic", report.data["report_id"], "A4",
+        detail="SUMMARY", include_image=False,
+    )
+    assert no_image.data["source_image"] is None
+    assert len(no_image.data["view"]["facts"]) == 64
+    assert not lookups and store.reads == 0
+    with_image = service.private_free_v3_candidate(
+        "owner_render_synthetic", report.data["report_id"], "LETTER",
+        detail="FULL", include_image=True, ctx=CTX,
+    )
+    assert with_image.data["source_image"] is not None
+    assert with_image.data["evidence"]["bundle_id"] == report.data["evidence_bundle_id"]
+    assert with_image.data["view"]["source_digest"] == report.data["document_digest"]
+    assert lookups == [("owner_render_synthetic", source.asset_id)]
+    assert store.reads == 1
+    with pytest.raises(NotFound, match="report_not_found"):
+        service.private_free_v3_candidate(
+            "another_owner", report.data["report_id"], "A4",
+        )
+    assert store.reads == 1
+
+
+def test_private_v3_source_failure_does_not_affect_legacy_export(fixture):
+    from princess_app.adapters.fakes import FakeClock, SequentialIds
+    from princess_app.application.exports import ExportRequest, ExportService, TEMPLATE_VERSION
+    from princess_app.application.reports import InMemoryReportStore
+
+    blob, _mime, report, _view, evidence, _source = fixture
+    reports = InMemoryReportStore()
+    reports.append("owner_render_synthetic", report)
+    reports.bind_evidence(report.data["report_id"], evidence)
+    service = ExportService(
+        reports=lambda _owner: reports, access=CurrentAccess(),
+        repo=None, store=SourceStore(blob),
+        clock=FakeClock(NOW), ids=SequentialIds(),
+    )
+    with pytest.raises(Exception) as exc:
+        service.private_free_v3_candidate(
+            "owner_render_synthetic", report.data["report_id"], "A4",
+            detail="FULL", include_image=True, ctx=CTX,
+        )
+    assert getattr(exc.value, "code", None) == "render_v3_source_adapter_not_configured"
+    assert TEMPLATE_VERSION == "render-template/2"
+    legacy = service.projection(
+        "owner_render_synthetic", ExportRequest(report.data["report_id"], "A4"),
+    )
+    assert legacy.data["projection"] == "EXPORT"
+    assert legacy.data["authorized_asset_ids"] == ()
