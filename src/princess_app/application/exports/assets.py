@@ -17,6 +17,7 @@ import numpy as np
 from PIL import Image
 
 from princess_contracts import ValidatedDocument, canonical_json, compile_document, validate_projection
+from princess_graphology.engine import input_pixels_sha256
 
 from ...adapters.imaging import decode_image, inspect_header
 from ...domain.intake import MAX_UPLOAD_BYTES, sniff_media_type
@@ -217,6 +218,11 @@ def prepare_authorized_render_assets(*, owner_id: str, report_owner_id: str,
             or hashlib.sha256(blob).hexdigest() != source.sha256):
         raise PermanentFailure("render_source_digest_mismatch")
     decoded = decode_image(blob, source.media_type)
+    # The saved reference binds the exact decoded dtype/shape/pixel buffer,
+    # before deskew, crop or grid separation. A matching encoded upload SHA
+    # and plausible frame dimensions are not sufficient for overlay lineage.
+    if input_pixels_sha256(decoded.pixels) != original["analysis"]["processed_sha256"]:
+        raise PermanentFailure("render_processed_pixels_mismatch")
     oriented_height, oriented_width = decoded.pixels.shape[:2]
     _frame_matches(evidence_doc, oriented_width, oriented_height)
     prepared = _reencode_oriented(
