@@ -28,10 +28,14 @@ from princess_app.adapters.postgres.stores import (  # noqa: E402
     make_engine,
 )
 from princess_app.adapters.render import DEFAULT_BUNDLE, SubprocessRenderer  # noqa: E402
+from princess_app.adapters.render.assets import clean_source_raster  # noqa: E402
+from princess_app.adapters.postgres.intake import PostgresIntakeRepository  # noqa: E402
 from princess_app.application.exports import ExportService, ExportWorker  # noqa: E402
 from princess_app.application.permissions import PermissionService  # noqa: E402
 from princess_app.config import load_runtime_config  # noqa: E402
-from princess_app.ports.base import CallContext, Environment, ProviderMode, SystemClock, Unsupported  # noqa: E402
+from princess_app.ports.base import (  # noqa: E402
+    CallContext, Environment, InvalidInput, ProviderMode, SystemClock, Unsupported,
+)
 
 
 class UuidIds:
@@ -45,6 +49,15 @@ def main() -> int:
         raise SystemExit("PRINCESS_COMPONENT must be export_worker")
     if config.provider_mode("ObjectStore") is not ProviderMode.FAKE:
         raise Unsupported("object_store_adapter_not_configured", detail="ADR-004 provider pending")
+    v3_flag = os.environ.get("PRINCESS_RENDER_V3_RESEARCH_OPT_IN", "0")
+    if v3_flag not in ("0", "1"):
+        raise InvalidInput("render_v3_opt_in_invalid")
+    if v3_flag == "1" and (
+            config.environment not in (Environment.LOCAL, Environment.TEST)
+            or (config.environment is Environment.TEST
+                and os.environ.get("PRINCESS_TEST_PUBLIC_GUEST_ONLY") == "1")):
+        raise Unsupported("render_v3_private_only")
+    private_v3 = v3_flag == "1"
     if not DEFAULT_BUNDLE.exists():
         raise SystemExit("build the renderer first: pnpm --filter @princess/render run build")
     clock = SystemClock()
@@ -56,7 +69,9 @@ def main() -> int:
                                     allow_draft_policy=config.environment in (Environment.LOCAL, Environment.TEST))
     service = ExportService(reports=lambda owner: PostgresReportStore(db, owner), access=PostgresReportAccess(db),
                             repo=PostgresExportRepository(db), store=store, clock=clock, ids=UuidIds(),
-                            permissions=permissions)
+                            permissions=permissions, private_v3_enabled=private_v3,
+                            source_capture=(PostgresIntakeRepository(db).capture_for_asset if private_v3 else None),
+                            source_sanitizer=clean_source_raster if private_v3 else None)
     worker = ExportWorker(
         service=service, renderer=SubprocessRenderer(chromium=os.environ.get("PRINCESS_CHROMIUM")),
         worker_id=f"export-{uuid.uuid4().hex[:8]}",
