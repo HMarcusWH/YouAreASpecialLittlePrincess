@@ -314,7 +314,7 @@ def test_composed_local_stack_upload_to_report(app_url, worker_db, tmp_path, mon
         refused = api.post("/v1/report-exports", json={
             "report_id": status["report_id"], "layout": "A4", **bogus,
         }, headers=auth)
-        assert refused.status_code == 400
+        assert refused.status_code == 422
         assert refused.json()["error"] == "render_v3_document_options_invalid"
     assert export.json()["downloaded_copies"] == "downloaded_copies_cannot_be_recalled"
     export_id = export.json()["export_id"]
