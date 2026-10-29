@@ -51,6 +51,9 @@ from ..intake import CaptureRow
 from .assets import CleanSourceRaster, compile_free_render_envelope, prepare_authorized_render_assets
 
 TEMPLATE_VERSION = "render-template/2"
+V3_TEMPLATE_VERSION = "render-template/3"
+V3_FONT_IDENTITY = "dossier-print-fonts/1"
+V3_DETAILS = frozenset({"SUMMARY", "FULL"})
 DOCUMENT_LAYOUTS = frozenset({"A4", "LETTER"})
 CARD_LAYOUTS = frozenset({"CARD_SQUARE", "CARD_STORY"})
 MEDIA_TYPES = {"A4": "application/pdf", "LETTER": "application/pdf",
@@ -69,13 +72,30 @@ class ExportRequest:
     layout: str
     sections: tuple[str, ...] = ()  # cards only: the sections the owner chose to disclose
     share_grant_ref: str | None = None  # cards only: the ordinary_sharing grant they fall under
+    renderer_version: str = TEMPLATE_VERSION
+    detail: str = "FULL"
+    include_image: bool = False
+    source_report_digest: str | None = None
+    raster_sha256: str | None = None
+    evidence_digest: str | None = None
 
     @property
     def projection(self) -> str:
         return "SHARE" if self.layout in CARD_LAYOUTS else "EXPORT"
 
     def params(self) -> dict[str, Any]:
-        return {"sections": sorted(self.sections), "include_image": False, "share_grant_ref": self.share_grant_ref}
+        result = {"sections": sorted(self.sections), "include_image": False,
+                  "share_grant_ref": self.share_grant_ref}
+        if self.renderer_version == V3_TEMPLATE_VERSION:
+            result.update({
+                "include_image": self.include_image, "detail": self.detail,
+                "source_report_digest": self.source_report_digest,
+                "raster_sha256": self.raster_sha256,
+                "evidence_digest": self.evidence_digest,
+                "font_identity": V3_FONT_IDENTITY,
+                "render_policy_version": "render-policy/3",
+            })
+        return result
 
 
 @dataclass(frozen=True)
@@ -98,9 +118,17 @@ class ExportRow:
     completed_at: datetime | None = None
 
     share_grant_ref: str | None = None
+    renderer_version: str = TEMPLATE_VERSION
+    detail: str = "FULL"
+    include_image: bool = False
+    source_report_digest: str | None = None
+    raster_sha256: str | None = None
+    evidence_digest: str | None = None
 
     def request(self) -> ExportRequest:
-        return ExportRequest(self.report_id, self.layout, self.sections, self.share_grant_ref)
+        return ExportRequest(self.report_id, self.layout, self.sections, self.share_grant_ref,
+                             self.renderer_version, self.detail, self.include_image,
+                             self.source_report_digest, self.raster_sha256, self.evidence_digest)
 
 
 @dataclass(frozen=True)
@@ -113,9 +141,11 @@ class ClaimedExport:
 
 class Renderer(Protocol):
     def render(self, view: Mapping[str, Any], layout: str, locale: str, generated_at: str) -> bytes:
-        """Render trusted templates over one authorized projection. Raises
-        ``InvalidInput``/``PermanentFailure`` for input it refuses and
-        ``TransientUnavailable`` when it could not run."""
+        """Legacy, stable render-template/2 input."""
+        ...
+
+    def render_envelope_v3(self, envelope: ValidatedDocument) -> bytes:
+        """Explicit credential-free render-template/3 child, never a model call."""
         ...
 
 
@@ -153,6 +183,36 @@ def cache_key(view: ValidatedDocument, request: ExportRequest) -> str:
     return hashlib.sha256(canonical_json(material).encode("utf-8")).hexdigest()
 
 
+def v3_cache_key(envelope: ValidatedDocument) -> str:
+    """Hash exact authorized saved content, source/evidence rights and print policy.
+
+    The cleaned raster's *digest* goes into the key, never its private base64.
+    Changing revision, evidence, source, disclosure, localization, size,
+    template or content changes the identity; generation clock does not.
+    """
+    if not isinstance(envelope, ValidatedDocument) or envelope.schema_name != "RenderEnvelope":
+        raise InvalidInput("render_v3_envelope_required")
+    content = envelope.to_dict()
+    if content["renderer_version"] != V3_TEMPLATE_VERSION or content["premium"] is not None:
+        raise InvalidInput("render_v3_envelope_invalid")
+    view = dict(content["view"])
+    view.pop("generated_at", None)
+    evidence = content["evidence"]
+    source = content["source_image"]
+    material = {
+        "template": V3_TEMPLATE_VERSION, "font_identity": V3_FONT_IDENTITY,
+        "policy": content["render_policy_version"],
+        "presentation": content["presentation_version"],
+        "layout": content["layout"], "detail": content["detail"],
+        "locale": content["locale"], "view": view,
+        "evidence_digest": hashlib.sha256(canonical_json(evidence).encode()).hexdigest() if evidence else None,
+        "raster": None if source is None else {
+            key: source[key] for key in ("media_type", "sha256", "width", "height")
+        },
+    }
+    return hashlib.sha256(canonical_json(material).encode()).hexdigest()
+
+
 def render_asset_id(export_id: str, fencing_token: int) -> str:
     """The asset an attempt writes, derivable before the write: a crashed
     attempt's bytes can be found and erased from the job's fencing token."""
@@ -180,6 +240,7 @@ class ExportService:
     # API/worker does not call it; private v3 preview is not a release flag.
     source_capture: Callable[[str, str], CaptureRow | None] | None = None
     source_sanitizer: Callable[[bytes, str], CleanSourceRaster] | None = None
+    private_v3_enabled: bool = False
 
     def private_free_v3_candidate(self, owner_id: str, report_id: str, layout: str, *,
                                   detail: str = "SUMMARY", include_image: bool = False,
