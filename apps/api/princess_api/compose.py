@@ -114,7 +114,11 @@ def compose(config: RuntimeConfig) -> Services:
     # Source-bounded Free /4 remains a private local/test capability. Load
     # and pin the exact R1 story before reaching any database/provider.
     story_source = resolve_free_story_source(os.environ, report_runtime=report_runtime)
-    writer_template = (EVIDENCE_SUPPORT_TEMPLATE_VERSION if analysis_runtime.evidence_guard_enabled
+    # Guarded /4 remains private and requires the exact source/config pins;
+    # otherwise keep the historical research /3 writer. No public promotion.
+    guarded_story_candidate = bool(story_source and story_source.private_qualified_candidate)
+    writer_template = (EVIDENCE_SUPPORT_TEMPLATE_VERSION
+                       if analysis_runtime.evidence_guard_enabled and not guarded_story_candidate
                        else report_runtime.writer_template)
     db = Database(make_engine(config.secret("PRINCESS_DATABASE_URL")))
     clock = SystemClock()
