@@ -17,6 +17,7 @@ import pytest
 from PIL import Image
 
 from princess_app.adapters.imaging import decode_image
+from princess_app.adapters.render.assets import clean_source_raster
 from princess_app.application.exports.assets import (
     CHUNK_SIZE, MAX_CHUNKS, MAX_ENVELOPE_BYTES, MAX_RASTER_BYTES,
     compile_free_render_envelope, prepare_authorized_render_assets,
@@ -120,7 +121,7 @@ def test_source_raster_is_oriented_clean_bounded_and_exactly_reversible(fixture)
     prepared = prepare_authorized_render_assets(
         owner_id="owner_render_synthetic", report_owner_id="owner_render_synthetic",
         report=report, view=view, evidence=evidence, source=source,
-        store=store, access=access, ctx=CTX,
+        store=store, access=access, ctx=CTX, sanitize=clean_source_raster,
     )
     assert store.reads == 1 and access.calls == 2
     assert prepared.width == 420 and prepared.height == 260
@@ -157,7 +158,7 @@ def test_exif_orientation_and_synthetic_metadata_are_removed():
     prepared = prepare_authorized_render_assets(
         owner_id="owner_render_synthetic", report_owner_id="owner_render_synthetic",
         report=report, view=view, evidence=evidence, source=source,
-        store=SourceStore(raw), access=CurrentAccess(), ctx=CTX,
+        store=SourceStore(raw), access=CurrentAccess(), ctx=CTX, sanitize=clean_source_raster,
     )
     assert (prepared.width, prepared.height) == (260, 420)
     decoded = base64.b64decode("".join(prepared.data_base64_chunks))
@@ -203,7 +204,7 @@ def test_source_authority_refuses_cross_owner_or_stale_bytes(fixture, scenario):
             report_owner_id=("other_owner" if scenario == "wrong_owner"
                              else "owner_render_synthetic"),
             report=report, view=view, evidence=evidence, source=source,
-            store=store, access=access, ctx=CTX,
+            store=store, access=access, ctx=CTX, sanitize=clean_source_raster,
         )
     if scenario in ("wrong_owner", "no_live_right", "wrong_asset", "wrong_asset_digest"):
         assert store.reads == 0
@@ -216,7 +217,7 @@ def test_missing_or_wrong_evidence_fails_before_source_read(fixture):
         prepare_authorized_render_assets(
             owner_id="owner_render_synthetic", report_owner_id="owner_render_synthetic",
             report=report, view=view, evidence=None, source=source,
-            store=store, access=access, ctx=CTX,
+            store=store, access=access, ctx=CTX, sanitize=clean_source_raster,
         )
     assert store.reads == 0
     # No cleaned raster may be attached if the caller requested an image-free
@@ -229,7 +230,7 @@ def test_missing_or_wrong_evidence_fails_before_source_read(fixture):
         prepare_authorized_render_assets(
             owner_id="owner_render_synthetic", report_owner_id="owner_render_synthetic",
             report=report, view=unpictured, evidence=evidence, source=source,
-            store=store, access=access, ctx=CTX,
+            store=store, access=access, ctx=CTX, sanitize=clean_source_raster,
         )
     assert store.reads == 0
 
@@ -239,7 +240,7 @@ def test_canonical_chunks_refuse_tampering_and_source_disclosure_without_rights(
     image = prepare_authorized_render_assets(
         owner_id="owner_render_synthetic", report_owner_id="owner_render_synthetic",
         report=report, view=view, evidence=evidence, source=source,
-        store=SourceStore(blob), access=CurrentAccess(), ctx=CTX,
+        store=SourceStore(blob), access=CurrentAccess(), ctx=CTX, sanitize=clean_source_raster,
     )
     chunks = image.data_base64_chunks
     with pytest.raises(InvalidInput, match="render_raster"):
@@ -331,7 +332,7 @@ def test_private_v3_service_resolves_exact_owner_and_saved_evidence(fixture):
     service = ExportService(
         reports=lambda _owner: reports, access=CurrentAccess(), repo=None,
         store=store, clock=FakeClock(NOW), ids=SequentialIds(),
-        source_capture=authorized_capture,
+        source_capture=authorized_capture, source_sanitizer=clean_source_raster,
     )
     no_image = service.private_free_v3_candidate(
         "owner_render_synthetic", report.data["report_id"], "A4",
@@ -385,7 +386,7 @@ def test_private_v3_source_failure_does_not_affect_legacy_export(fixture):
 
 
 def test_raw_source_sha_is_not_enough_if_decoded_analyzed_pixels_mismatch(fixture, monkeypatch):
-    from princess_app.application.exports import assets
+    from princess_app.adapters.render import assets
 
     blob, _mime, report, view, evidence, source = fixture
     # Deliberately change the independent decoded-pixel identity without
@@ -396,18 +397,20 @@ def test_raw_source_sha_is_not_enough_if_decoded_analyzed_pixels_mismatch(fixtur
             owner_id="owner_render_synthetic",
             report_owner_id="owner_render_synthetic",
             report=report, view=view, evidence=evidence, source=source,
-            store=SourceStore(blob), access=CurrentAccess(), ctx=CTX,
+            store=SourceStore(blob), access=CurrentAccess(), ctx=CTX, sanitize=clean_source_raster,
         )
 
 
 def test_free_envelope_rejects_saved_paid_projection_instead_of_laundering_content():
-    import generate_report_fixtures as fixtures
+    import json
+    from pathlib import Path
     from princess_contracts import compile_document
     from princess_app.domain.reports import (
         PremiumAccess, PremiumAuthorization, revise_report,
     )
 
-    base = compile_document("ReportDocument", fixtures.load("report-document.v2.json"))
+    fixture_path = Path(__file__).resolve().parents[1] / "fixtures/reports/report-document.v2.json"
+    base = compile_document("ReportDocument", json.loads(fixture_path.read_text(encoding="utf-8")))
     assert base.ok, base.issues
     revised = revise_report(
         base.value, created_at=NOW + timedelta(minutes=1),
