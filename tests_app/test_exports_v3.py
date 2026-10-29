@@ -17,7 +17,7 @@ from princess_app.adapters.postgres.intake import PostgresIntakeRepository
 from princess_app.adapters.postgres.stores import PostgresReportStore
 from princess_app.adapters.render.assets import clean_source_raster
 from princess_app.application.exports import (
-    TEMPLATE_VERSION, V3_TEMPLATE_VERSION, ExportService, ExportWorker, v3_cache_key,
+    TEMPLATE_VERSION, V3_TEMPLATE_VERSION, ExportService, ExportWorker,
 )
 from princess_app.domain.permissions import Decision, Scope
 from princess_app.ports.base import InvalidInput, NotFound, Unsupported
