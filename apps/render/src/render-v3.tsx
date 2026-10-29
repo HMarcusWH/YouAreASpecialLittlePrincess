@@ -83,7 +83,7 @@ export async function renderBytesV3(input: CheckedV3Envelope, browser?: Browser)
     context = undefined;
     return Buffer.from(output);
   } catch (err) {
-    if (err instanceof Error && /^[a-z_]{1,64}$/.test(err.message)) throw err;
+    if (err instanceof Error && /^[a-z0-9_]{1,64}$/.test(err.message)) throw err;
     throw new Error(phase);
   } finally {
     if (context) await context.close().catch(() => undefined);
